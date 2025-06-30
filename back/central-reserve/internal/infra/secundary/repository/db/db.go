@@ -4,6 +4,7 @@ import (
 	"central_reserve/internal/pkg/env"
 	"central_reserve/internal/pkg/log"
 	"context"
+
 	"fmt"
 	"time"
 
@@ -42,13 +43,20 @@ func New(logger log.ILogger, config env.IConfig) IDatabase {
 
 // Connect establece la conexión con la base de datos
 func (d *database) Connect(ctx context.Context) error {
+	// Usar el valor de PGSSLMODE del entorno. Si no está definido, usar 'require' como valor por defecto para mayor seguridad.
+	sslmode := d.config.Get("PGSSLMODE")
+	if sslmode == "" {
+		sslmode = "require" // Default a 'require' por seguridad. El usuario puede sobreescribirlo a 'disable' en .env para desarrollo local.
+	}
+
 	dsn := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=UTC",
 		d.config.Get("DB_HOST"),
 		d.config.Get("DB_USER"),
 		d.config.Get("DB_PASS"),
 		d.config.Get("DB_NAME"),
 		d.config.Get("DB_PORT"),
+		sslmode,
 	)
 
 	var err error
