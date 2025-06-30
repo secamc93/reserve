@@ -1,0 +1,33 @@
+version: '3.9'
+
+services:
+  central_reserve:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: central_reserve
+    env_file:
+      - ../.env
+    ports:
+      - "3050:3050"
+    restart: unless-stopped
+
+  nats:
+    image: nats
+    ports:
+      - '8222:8222'
+      - '6222:6222'
+      - '4222:4222'
+    command: '-m 8222 -js'
+
+  dashboard:
+    image: mdawar/nats-dashboard
+    environment:
+      REVERSE_PROXY_UPSTREAM: 'nats:8222'
+    ports:
+      - target: 80
+        published: 8111
+        protocol: tcp
+
+
+  

@@ -1,0 +1,165 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Servicio REST para la gestión de reservas multi-restaurante.",
+        "title": "Restaurant Reservation API",
+        "termsOfService": "https://ejemplo.com/terminos",
+        "contact": {
+            "name": "Equipo de Backend",
+            "email": "backend@example.com"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/api/v1",
+    "paths": {
+        "/api/v1/holamundo": {
+            "get": {
+                "description": "Este endpoint retorna un mensaje de saludo básico del sistema.\nEs útil para verificar que la API está funcionando correctamente.\nNo requiere autenticación y siempre retorna un mensaje estático.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "HolaMundo"
+                ],
+                "summary": "Obtener saludo básico del sistema",
+                "responses": {
+                    "200": {
+                        "description": "Saludo obtenido exitosamente",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/holamundo/saludo": {
+            "get": {
+                "description": "Este endpoint retorna un mensaje de saludo personalizado y más detallado.\nIncluye información adicional como timestamp y versión de la API.\nIdeal para pruebas más avanzadas del sistema.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "HolaMundo"
+                ],
+                "summary": "Obtener saludo personalizado",
+                "responses": {
+                    "200": {
+                        "description": "Saludo personalizado obtenido exitosamente",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/holamundo/reserve": {
+            "post": {
+                "description": "Este endpoint permite crear una nueva reserva para una mesa en un restaurante.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reservas"
+                ],
+                "summary": "Crea una nueva reserva",
+                "parameters": [
+                    {
+                        "description": "Datos de la reserva",
+                        "name": "reservation",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.Reservation"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Reserva creada exitosamente",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Solicitud inválida",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "request.Reservation": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
+                "end_at": {
+                    "type": "string"
+                },
+                "number_of_guests": {
+                    "type": "integer"
+                },
+                "restaurant_id": {
+                    "type": "integer"
+                },
+                "start_at": {
+                    "type": "string"
+                },
+                "table_id": {
+                    "type": "integer"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Ingrese su token JWT con el prefijo **Bearer**",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}
