@@ -78,6 +78,7 @@ type Config struct {
 	DbPort     string `env:"DB_PORT,required"`
 	DbName     string `env:"DB_NAME,required"`
 	DbLogLevel string `env:"DB_LOG_LEVEL,required"`
+	PGSSLMODE  string `env:"PGSSLMODE,required"`
 	// S3Bucket   string `env:"S3_BUCKET,required"`
 	// S3Region   string `env:"S3_REGION,required"`
 	// S3Key      string `env:"S3_KEY,required"`
