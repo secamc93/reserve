@@ -107,15 +107,18 @@ func (s *AppServices) Shutdown(ctx context.Context) {
 
 func (s *AppServices) logStartupInfo(ctx context.Context) {
 	port := s.Env.Get("HTTP_PORT")
-
 	serverURL := fmt.Sprintf("http://localhost:%s", port)
 	coloredURL := fmt.Sprintf("\033[34;4m%s\033[0m", serverURL)
+
+	swaggerBaseURL := s.Env.Get("URL_BASE_SWAGGER")
+	docsURL := fmt.Sprintf("%s/docs/index.html", swaggerBaseURL)
+	coloredDocsURL := fmt.Sprintf("\033[33;4m%s\033[0m", docsURL)
 
 	s.Logger.Info(ctx).Msg("")
 	s.Logger.Info(ctx).Msg("")
 	s.Logger.Info(ctx).Msgf("    🚀 Servidor HTTP iniciado correctamente")
 	s.Logger.Info(ctx).Msgf("    📍 Disponible en: %s", coloredURL)
-	s.Logger.Info(ctx).Msgf("    📖 Documentación: \033[33;4m%s/docs/index.html\033[0m", serverURL)
+	s.Logger.Info(ctx).Msgf("    📖 Documentación: %s", coloredDocsURL)
 	s.Logger.Info(ctx).Msg("")
 
 	dbHost := s.Env.Get("DB_HOST")
