@@ -42,7 +42,7 @@ pipeline {
                 docker login --username AWS --password-stdin public.ecr.aws
 
               # Build y tag
-              docker build -t $ECR_REPO:$TAG .
+              docker build -f docker/Dockerfile -t $ECR_REPO:$TAG .
               docker tag $ECR_REPO:$TAG $ECR_REPO:latest
 
               # Push
