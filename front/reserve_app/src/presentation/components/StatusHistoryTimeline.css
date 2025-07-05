@@ -1,0 +1,220 @@
+/* StatusHistoryTimeline.css */
+.status-history-timeline {
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  margin-top: 16px;
+}
+
+.timeline-title {
+  margin: 0 0 16px 0;
+  color: #495057;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 8px;
+}
+
+.timeline-container {
+  position: relative;
+  padding-left: 20px;
+}
+
+.timeline-item {
+  display: flex;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.timeline-item:last-child {
+  margin-bottom: 0;
+}
+
+.timeline-item:last-child .timeline-line {
+  display: none;
+}
+
+.timeline-marker {
+  position: relative;
+  margin-right: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.status-icon {
+  background: white;
+  border: 2px solid #e9ecef;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  z-index: 2;
+  position: relative;
+}
+
+.timeline-line {
+  width: 2px;
+  height: 24px;
+  background: #e9ecef;
+  margin-top: 4px;
+  z-index: 1;
+}
+
+.timeline-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.status-change {
+  background: #f8f9fa;
+  padding: 12px;
+  border-radius: 6px;
+  border-left: 3px solid #e9ecef;
+  transition: all 0.2s ease;
+}
+
+.status-change:hover {
+  background: #e9ecef;
+  border-left-color: #6c757d;
+}
+
+.status-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.status-name {
+  font-weight: 600;
+  color: #212529;
+  font-size: 13px;
+}
+
+.change-date {
+  font-size: 11px;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.status-details {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.status-code {
+  font-size: 11px;
+  color: #6c757d;
+  font-family: 'Courier New', monospace;
+  background: #e9ecef;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.changed-by {
+  font-size: 11px;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.timeline-summary {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #e9ecef;
+  text-align: center;
+}
+
+.summary-text {
+  font-size: 12px;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+/* Status-specific colors */
+.timeline-item:has(.status-icon:contains('⏳')) .status-icon {
+  border-color: #FFA500;
+  background: #fff8e1;
+}
+
+.timeline-item:has(.status-icon:contains('🪑')) .status-icon {
+  border-color: #17A2B8;
+  background: #e6f7ff;
+}
+
+.timeline-item:has(.status-icon:contains('✅')) .status-icon {
+  border-color: #28A745;
+  background: #f0f9ff;
+}
+
+.timeline-item:has(.status-icon:contains('❌')) .status-icon {
+  border-color: #DC3545;
+  background: #fff5f5;
+}
+
+.timeline-item:has(.status-icon:contains('🎉')) .status-icon {
+  border-color: #6F42C1;
+  background: #f8f4ff;
+}
+
+/* Empty state */
+.status-history-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px dashed #dee2e6;
+  color: #6c757d;
+}
+
+.empty-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+  opacity: 0.6;
+}
+
+.status-history-empty p {
+  margin: 0;
+  font-size: 14px;
+  color: #6c757d;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .status-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .status-details {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .timeline-container {
+    padding-left: 16px;
+  }
+
+  .timeline-marker {
+    margin-right: 12px;
+  }
+
+  .status-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 11px;
+  }
+} 
