@@ -42,7 +42,28 @@ func MapToReserveDetail(dto domain.ReserveDetailDTO) response.ReserveDetail {
 		UsuarioID:            dto.UsuarioID,
 		UsuarioNombre:        dto.UsuarioNombre,
 		UsuarioEmail:         dto.UsuarioEmail,
+		StatusHistory:        MapStatusHistoryList(dto.StatusHistory),
 	}
+}
+
+func MapStatusHistory(history domain.ReservationStatusHistory) response.StatusHistoryResponse {
+	return response.StatusHistoryResponse{
+		ID:              history.ID,
+		StatusID:        history.StatusID,
+		StatusCode:      history.StatusCode,
+		StatusName:      history.StatusName,
+		ChangedAt:       history.CreatedAt,
+		ChangedByUserID: history.ChangedByUserID,
+		ChangedByUser:   history.ChangedByUser,
+	}
+}
+
+func MapStatusHistoryList(historyList []domain.ReservationStatusHistory) []response.StatusHistoryResponse {
+	var responseList []response.StatusHistoryResponse
+	for _, history := range historyList {
+		responseList = append(responseList, MapStatusHistory(history))
+	}
+	return responseList
 }
 
 func MapToReserveDetailList(dtoList []domain.ReserveDetailDTO) []response.ReserveDetail {

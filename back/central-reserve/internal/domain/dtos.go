@@ -68,6 +68,9 @@ type ReservationStatusHistory struct {
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 	DeletedAt       *time.Time
+	StatusCode      string
+	StatusName      string
+	ChangedByUser   *string
 }
 
 type ReserveDetailDTO struct {
@@ -105,4 +108,7 @@ type ReserveDetailDTO struct {
 	UsuarioID     *uint
 	UsuarioNombre *string
 	UsuarioEmail  *string
+
+	// Historial de Estados
+	StatusHistory []ReservationStatusHistory
 }

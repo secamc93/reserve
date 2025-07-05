@@ -25,4 +25,5 @@ type IHolaMundo interface {
 	GetReserveByID(ctx context.Context, id uint) (*ReserveDetailDTO, error)
 	CancelReservation(ctx context.Context, id uint, reason string) (string, error)
 	UpdateReservation(ctx context.Context, id uint, tableID *uint, startAt *time.Time, endAt *time.Time, numberOfGuests *int) (string, error)
+	GetReservationStatuses(ctx context.Context) ([]ReservationStatus, error)
 }

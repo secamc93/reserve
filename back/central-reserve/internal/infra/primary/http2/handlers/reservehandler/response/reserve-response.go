@@ -4,6 +4,16 @@ import (
 	"time"
 )
 
+type StatusHistory struct {
+	ID              uint      `json:"id"`
+	StatusID        uint      `json:"status_id"`
+	StatusCode      string    `json:"status_code"`
+	StatusName      string    `json:"status_name"`
+	ChangedAt       time.Time `json:"changed_at"`
+	ChangedByUserID *uint     `json:"changed_by_user_id"`
+	ChangedByUser   *string   `json:"changed_by_user"`
+}
+
 type ReserveDetail struct {
 	// Reserva
 	ReservaID          uint      `json:"reserva_id"`
@@ -39,4 +49,17 @@ type ReserveDetail struct {
 	UsuarioID     *uint   `json:"usuario_id"`
 	UsuarioNombre *string `json:"usuario_nombre"`
 	UsuarioEmail  *string `json:"usuario_email"`
+
+	// Historial de Estados - usando el struct del dominio con tags JSON
+	StatusHistory []StatusHistoryResponse `json:"status_history"`
+}
+
+type StatusHistoryResponse struct {
+	ID              uint      `json:"id"`
+	StatusID        uint      `json:"status_id"`
+	StatusCode      string    `json:"status_code"`
+	StatusName      string    `json:"status_name"`
+	ChangedAt       time.Time `json:"changed_at"`
+	ChangedByUserID *uint     `json:"changed_by_user_id"`
+	ChangedByUser   *string   `json:"changed_by_user"`
 }
