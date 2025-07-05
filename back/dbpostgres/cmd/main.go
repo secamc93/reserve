@@ -49,6 +49,8 @@ func main() {
 		&models.Client{},
 		&models.Table{},
 		&models.Reservation{},
+		&models.ReservationStatus{},
+		&models.ReservationStatusHistory{},
 	)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Falló la migración de la base de datos")

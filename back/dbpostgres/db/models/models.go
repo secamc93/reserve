@@ -67,6 +67,7 @@ type Client struct {
 	Name         string `gorm:"size:255;not null"`
 	Email        string `gorm:"size:255;uniqueIndex:idx_rest_client_email,priority:2"`
 	Phone        string `gorm:"size:20"`
+	Dni          int64  `gorm:"not null;uniqueIndex:idx_rest_client_dni,priority:2"`
 
 	Reservations []Reservation
 	Restaurant   Restaurant `gorm:"foreignKey:RestaurantID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
@@ -93,19 +94,48 @@ type Table struct {
 // ───────────────────────────────────────────
 type Reservation struct {
 	gorm.Model
-	RestaurantID uint `gorm:"not null;index"`
-	TableID      uint `gorm:"not null;index"`
-	ClientID     uint `gorm:"not null;index"`
+	RestaurantID uint  `gorm:"not null;index"`
+	TableID      *uint `gorm:"index"`
+	ClientID     uint  `gorm:"not null;index"`
 	// Opcional: quién registró la reserva (empleado o sistema)
 	CreatedByUserID *uint `gorm:"index"`
 
 	StartAt        time.Time `gorm:"not null;index"`
 	EndAt          time.Time `gorm:"not null"`
 	NumberOfGuests int       `gorm:"not null"`
-	Status         string    `gorm:"type:varchar(20);default:'pending';not null"`
+	StatusID       uint      `gorm:"not null;index"`
 
-	Restaurant Restaurant `gorm:"foreignKey:RestaurantID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	Table      Table      `gorm:"foreignKey:TableID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	Client     Client     `gorm:"foreignKey:ClientID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	CreatedBy  User       `gorm:"foreignKey:CreatedByUserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+	Restaurant Restaurant        `gorm:"foreignKey:RestaurantID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Table      Table             `gorm:"foreignKey:TableID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Client     Client            `gorm:"foreignKey:ClientID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	CreatedBy  User              `gorm:"foreignKey:CreatedByUserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+	Status     ReservationStatus `gorm:"foreignKey:StatusID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
+}
+
+// ───────────────────────────────────────────
+//
+//	RESERVATION STATUS
+//
+// ───────────────────────────────────────────
+type ReservationStatus struct {
+	gorm.Model
+	Code string `gorm:"size:20;unique;not null"` // Ej: "asignado"
+	Name string `gorm:"size:50;not null"`        // Ej: "Asignado"
+}
+
+// ───────────────────────────────────────────
+//
+//	RESERVATION STATUS HISTORY
+//
+// ───────────────────────────────────────────
+type ReservationStatusHistory struct {
+	gorm.Model
+	ReservationID   uint  `gorm:"not null;index"`
+	TableID         *uint `gorm:"index"` // Ahora opcional (nullable)
+	StatusID        uint  `gorm:"not null;index"`
+	ChangedByUserID *uint `gorm:"index"` // Quién hizo el cambio (puede ser null si fue automático)
+
+	Reservation Reservation       `gorm:"foreignKey:ReservationID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Status      ReservationStatus `gorm:"foreignKey:StatusID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
+	ChangedBy   User              `gorm:"foreignKey:ChangedByUserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
 }
