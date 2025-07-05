@@ -1,9 +1,13 @@
 package server
 
 import (
-	"central_reserve/internal/app/usecaseorders"
+	"central_reserve/internal/app/usecaseclient"
+	"central_reserve/internal/app/usecasereserve"
+	"central_reserve/internal/app/usecasetables"
 	"central_reserve/internal/infra/primary/http2"
-	"central_reserve/internal/infra/primary/http2/handlers/holamundohandler"
+	"central_reserve/internal/infra/primary/http2/handlers/clienthandler"
+	"central_reserve/internal/infra/primary/http2/handlers/reservehandler"
+	"central_reserve/internal/infra/primary/http2/handlers/tablehandler"
 	"central_reserve/internal/infra/primary/queue/nats"
 	"central_reserve/internal/infra/secundary/repository"
 	"central_reserve/internal/infra/secundary/repository/db"
@@ -56,12 +60,23 @@ func InitServer(ctx context.Context) (*AppServices, error) {
 }
 
 func setupDependencies(database db.IDatabase, logger log.ILogger) *http2.Handlers {
-	holamundoRepo := repository.New(database, logger)
-	holamundoUseCase := usecaseorders.NewOrderUseCase(holamundoRepo, logger)
-	holaMundoHandler := holamundohandler.New(holamundoUseCase, logger)
+	// Repository compartido
+	repo := repository.New(database, logger)
+
+	// Casos de uso por dominio
+	clientUseCase := usecaseclient.NewClientUseCase(repo, logger)
+	tableUseCase := usecasetables.NewTableUseCase(repo, logger)
+	reserveUseCase := usecasereserve.NewReserveUseCase(repo, logger)
+
+	// Handlers por dominio
+	clientHandler := clienthandler.New(clientUseCase, logger)
+	tableHandler := tablehandler.New(tableUseCase, logger)
+	reserveHandler := reservehandler.New(reserveUseCase, logger)
 
 	return &http2.Handlers{
-		HolaMundo: holaMundoHandler,
+		Client:  clientHandler,
+		Table:   tableHandler,
+		Reserve: reserveHandler,
 	}
 }
 

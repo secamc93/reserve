@@ -5,15 +5,18 @@ import (
 )
 
 type Reservation struct {
-	ID              uint
+	Id              uint
 	RestaurantID    uint
-	TableID         uint
+	TableID         *uint
 	ClientID        uint
 	CreatedByUserID *uint
 	StartAt         time.Time
 	EndAt           time.Time
 	NumberOfGuests  int
-	Status          string
+	StatusID        uint
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	DeletedAt       *time.Time
 }
 
 type Client struct {
@@ -22,6 +25,10 @@ type Client struct {
 	Name         string
 	Email        string
 	Phone        string
+	Dni          uint
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	DeletedAt    *time.Time
 }
 
 type Table struct {
@@ -29,6 +36,9 @@ type Table struct {
 	RestaurantID uint
 	Number       int
 	Capacity     int
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	DeletedAt    *time.Time
 }
 
 type RestaurantStaff struct {
@@ -36,4 +46,63 @@ type RestaurantStaff struct {
 	UserID       uint
 	RestaurantID uint
 	Role         string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	DeletedAt    *time.Time
+}
+
+type ReservationStatus struct {
+	ID        uint
+	Code      string
+	Name      string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt *time.Time
+}
+
+type ReservationStatusHistory struct {
+	ID              uint
+	ReservationID   uint
+	StatusID        uint
+	ChangedByUserID *uint
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	DeletedAt       *time.Time
+}
+
+type ReserveDetailDTO struct {
+	// Reserva
+	ReservaID          uint
+	StartAt            time.Time
+	EndAt              time.Time
+	NumberOfGuests     int
+	ReservaCreada      time.Time
+	ReservaActualizada time.Time
+
+	// Estado
+	EstadoCodigo string
+	EstadoNombre string
+
+	// Cliente
+	ClienteID       uint
+	ClienteNombre   string
+	ClienteEmail    string
+	ClienteTelefono string
+	ClienteDni      uint
+
+	// Mesa
+	MesaID        *uint
+	MesaNumero    *int
+	MesaCapacidad *int
+
+	// Restaurante
+	RestauranteID        uint
+	RestauranteNombre    string
+	RestauranteCodigo    string
+	RestauranteDireccion string
+
+	// Usuario
+	UsuarioID     *uint
+	UsuarioNombre *string
+	UsuarioEmail  *string
 }

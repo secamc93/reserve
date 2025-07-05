@@ -1,18 +1,97 @@
 basePath: /api/v1
 definitions:
+  request.CancelReservation:
+    properties:
+      reason:
+        description: Razón opcional de cancelación
+        type: string
+    type: object
+  request.Client:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      restaurant_id:
+        type: integer
+    required:
+    - email
+    - name
+    - phone
+    - restaurant_id
+    type: object
   request.Reservation:
     properties:
-      client_id:
+      dni:
         type: integer
+      email:
+        type: string
       end_at:
+        type: string
+      name:
         type: string
       number_of_guests:
         type: integer
+      phone:
+        type: string
       restaurant_id:
         type: integer
       start_at:
         type: string
+    required:
+    - dni
+    - email
+    - end_at
+    - name
+    - number_of_guests
+    - phone
+    - restaurant_id
+    - start_at
+    type: object
+  request.Table:
+    properties:
+      capacity:
+        type: integer
+      number:
+        type: integer
+      restaurant_id:
+        type: integer
+    required:
+    - capacity
+    - number
+    - restaurant_id
+    type: object
+  request.UpdateClient:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      restaurant_id:
+        type: integer
+    type: object
+  request.UpdateReservation:
+    properties:
+      end_at:
+        type: string
+      number_of_guests:
+        type: integer
+      start_at:
+        type: string
       table_id:
+        type: integer
+    type: object
+  request.UpdateTable:
+    properties:
+      capacity:
+        type: integer
+      number:
+        type: integer
+      restaurant_id:
         type: integer
     type: object
 host: localhost:8080
@@ -28,19 +107,16 @@ info:
   title: Restaurant Reservation API
   version: "1.0"
 paths:
-  /api/v1/holamundo:
+  /clients:
     get:
       consumes:
       - application/json
-      description: |-
-        Este endpoint retorna un mensaje de saludo básico del sistema.
-        Es útil para verificar que la API está funcionando correctamente.
-        No requiere autenticación y siempre retorna un mensaje estático.
+      description: Este endpoint permite obtener la lista de todos los clientes registrados.
       produces:
       - application/json
       responses:
         "200":
-          description: Saludo obtenido exitosamente
+          description: Lista de clientes obtenida exitosamente
           schema:
             additionalProperties: true
             type: object
@@ -49,39 +125,211 @@ paths:
           schema:
             additionalProperties: true
             type: object
-      summary: Obtener saludo básico del sistema
+      summary: Obtiene todos los clientes
       tags:
-      - HolaMundo
-  /api/v1/holamundo/saludo:
-    get:
-      consumes:
-      - application/json
-      description: |-
-        Este endpoint retorna un mensaje de saludo personalizado y más detallado.
-        Incluye información adicional como timestamp y versión de la API.
-        Ideal para pruebas más avanzadas del sistema.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Saludo personalizado obtenido exitosamente
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Error interno del servidor
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Obtener saludo personalizado
-      tags:
-      - HolaMundo
-  /holamundo/reserve:
+      - Clientes
     post:
       consumes:
       - application/json
-      description: Este endpoint permite crear una nueva reserva para una mesa en
-        un restaurante.
+      description: Este endpoint permite crear un nuevo cliente para un restaurante.
+      parameters:
+      - description: Datos del cliente
+        in: body
+        name: client
+        required: true
+        schema:
+          $ref: '#/definitions/request.Client'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Cliente creado exitosamente
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Solicitud inválida
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Crea un nuevo cliente
+      tags:
+      - Clientes
+  /clients/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Este endpoint permite eliminar un cliente existente del sistema.
+      parameters:
+      - description: ID del cliente
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Cliente eliminado exitosamente
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Solicitud inválida
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Cliente no encontrado
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Elimina un cliente
+      tags:
+      - Clientes
+    get:
+      consumes:
+      - application/json
+      description: Este endpoint permite obtener los datos de un cliente específico
+        por su ID.
+      parameters:
+      - description: ID del cliente
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Cliente obtenido exitosamente
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Solicitud inválida
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Cliente no encontrado
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Obtiene un cliente por ID
+      tags:
+      - Clientes
+    put:
+      consumes:
+      - application/json
+      description: Este endpoint permite actualizar parcialmente los datos de un cliente.
+        Solo se modifican los campos enviados.
+      parameters:
+      - description: ID del cliente
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Datos del cliente a actualizar
+        in: body
+        name: client
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateClient'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Cliente actualizado exitosamente
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Solicitud inválida
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Cliente no encontrado
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Actualiza un cliente existente
+      tags:
+      - Clientes
+  /reserves:
+    get:
+      consumes:
+      - application/json
+      description: Este endpoint obtiene todas las reservas con información completa
+        de cliente, mesa, restaurante y estado. Soporta filtros opcionales.
+      parameters:
+      - description: ID del estado de reserva
+        in: query
+        name: status_id
+        type: integer
+      - description: ID del cliente
+        in: query
+        name: client_id
+        type: integer
+      - description: ID de la mesa
+        in: query
+        name: table_id
+        type: integer
+      - description: 'Fecha de inicio (formato RFC3339: 2024-01-01T00:00:00Z)'
+        in: query
+        name: start_date
+        type: string
+      - description: 'Fecha de fin (formato RFC3339: 2024-12-31T23:59:59Z)'
+        in: query
+        name: end_date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de reservas obtenida exitosamente
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Parámetros inválidos
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Obtiene todas las reservas
+      tags:
+      - Reservas
+    post:
+      consumes:
+      - application/json
+      description: Este endpoint permite crear una nueva reserva. Si el cliente no
+        existe, se crea automáticamente.
       parameters:
       - description: Datos de la reserva
         in: body
@@ -110,6 +358,309 @@ paths:
       summary: Crea una nueva reserva
       tags:
       - Reservas
+  /reserves/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Este endpoint obtiene una reserva específica con información completa
+        de cliente, mesa, restaurante y estado
+      parameters:
+      - description: ID de la reserva
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Reserva obtenida exitosamente
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: ID inválido
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Reserva no encontrada
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Obtiene una reserva por ID
+      tags:
+      - Reservas
+    put:
+      consumes:
+      - application/json
+      description: Este endpoint permite actualizar campos específicos de una reserva
+        existente
+      parameters:
+      - description: ID de la reserva
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Datos para actualizar
+        in: body
+        name: update
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateReservation'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Reserva actualizada exitosamente
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Solicitud inválida
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Reserva no encontrada
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Actualiza una reserva
+      tags:
+      - Reservas
+  /reserves/{id}/cancel:
+    patch:
+      consumes:
+      - application/json
+      description: Este endpoint permite cancelar una reserva existente
+      parameters:
+      - description: ID de la reserva
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Razón de cancelación (opcional)
+        in: body
+        name: cancel
+        schema:
+          $ref: '#/definitions/request.CancelReservation'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Reserva cancelada exitosamente
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Solicitud inválida
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Reserva no encontrada
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Cancela una reserva
+      tags:
+      - Reservas
+  /tables:
+    get:
+      consumes:
+      - application/json
+      description: Este endpoint permite obtener la lista de todas las mesas registradas.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de mesas obtenida exitosamente
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Obtiene todas las mesas
+      tags:
+      - Mesas
+    post:
+      consumes:
+      - application/json
+      description: Este endpoint permite crear una nueva mesa para un restaurante.
+      parameters:
+      - description: Datos de la mesa
+        in: body
+        name: table
+        required: true
+        schema:
+          $ref: '#/definitions/request.Table'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Mesa creada exitosamente
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Solicitud inválida
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Mesa ya existe para este restaurante
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Crea una nueva mesa
+      tags:
+      - Mesas
+  /tables/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Este endpoint permite eliminar una mesa existente del sistema.
+      parameters:
+      - description: ID de la mesa
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Mesa eliminada exitosamente
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Solicitud inválida
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Mesa no encontrada
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Elimina una mesa
+      tags:
+      - Mesas
+    get:
+      consumes:
+      - application/json
+      description: Este endpoint permite obtener los datos de una mesa específica
+        por su ID.
+      parameters:
+      - description: ID de la mesa
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Mesa obtenida exitosamente
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Solicitud inválida
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Mesa no encontrada
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Obtiene una mesa por ID
+      tags:
+      - Mesas
+    put:
+      consumes:
+      - application/json
+      description: Este endpoint permite actualizar parcialmente los datos de una
+        mesa. Solo se modifican los campos enviados.
+      parameters:
+      - description: ID de la mesa
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Datos de la mesa a actualizar
+        in: body
+        name: table
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateTable'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Mesa actualizada exitosamente
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Solicitud inválida
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Mesa no encontrada
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Mesa con ese número ya existe
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Actualiza una mesa existente
+      tags:
+      - Mesas
 securityDefinitions:
   BearerAuth:
     description: Ingrese su token JWT con el prefijo **Bearer**

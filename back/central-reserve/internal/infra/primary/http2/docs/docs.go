@@ -23,9 +23,9 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/v1/holamundo": {
+        "/clients": {
             "get": {
-                "description": "Este endpoint retorna un mensaje de saludo básico del sistema.\nEs útil para verificar que la API está funcionando correctamente.\nNo requiere autenticación y siempre retorna un mensaje estático.",
+                "description": "Este endpoint permite obtener la lista de todos los clientes registrados.",
                 "consumes": [
                     "application/json"
                 ],
@@ -33,12 +33,12 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "HolaMundo"
+                    "Clientes"
                 ],
-                "summary": "Obtener saludo básico del sistema",
+                "summary": "Obtiene todos los clientes",
                 "responses": {
                     "200": {
-                        "description": "Saludo obtenido exitosamente",
+                        "description": "Lista de clientes obtenida exitosamente",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -52,42 +52,293 @@ const docTemplate = `{
                         }
                     }
                 }
-            }
-        },
-        "/api/v1/holamundo/saludo": {
-            "get": {
-                "description": "Este endpoint retorna un mensaje de saludo personalizado y más detallado.\nIncluye información adicional como timestamp y versión de la API.\nIdeal para pruebas más avanzadas del sistema.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "HolaMundo"
-                ],
-                "summary": "Obtener saludo personalizado",
-                "responses": {
-                    "200": {
-                        "description": "Saludo personalizado obtenido exitosamente",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Error interno del servidor",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                }
-            }
-        },
-        "/holamundo/reserve": {
+            },
             "post": {
-                "description": "Este endpoint permite crear una nueva reserva para una mesa en un restaurante.",
+                "description": "Este endpoint permite crear un nuevo cliente para un restaurante.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Clientes"
+                ],
+                "summary": "Crea un nuevo cliente",
+                "parameters": [
+                    {
+                        "description": "Datos del cliente",
+                        "name": "client",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.Client"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Cliente creado exitosamente",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Solicitud inválida",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{id}": {
+            "get": {
+                "description": "Este endpoint permite obtener los datos de un cliente específico por su ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Clientes"
+                ],
+                "summary": "Obtiene un cliente por ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del cliente",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Cliente obtenido exitosamente",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Solicitud inválida",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Cliente no encontrado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Este endpoint permite actualizar parcialmente los datos de un cliente. Solo se modifican los campos enviados.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Clientes"
+                ],
+                "summary": "Actualiza un cliente existente",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del cliente",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos del cliente a actualizar",
+                        "name": "client",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.UpdateClient"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Cliente actualizado exitosamente",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Solicitud inválida",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Cliente no encontrado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Este endpoint permite eliminar un cliente existente del sistema.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Clientes"
+                ],
+                "summary": "Elimina un cliente",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del cliente",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Cliente eliminado exitosamente",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Solicitud inválida",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Cliente no encontrado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/reserves": {
+            "get": {
+                "description": "Este endpoint obtiene todas las reservas con información completa de cliente, mesa, restaurante y estado. Soporta filtros opcionales.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reservas"
+                ],
+                "summary": "Obtiene todas las reservas",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del estado de reserva",
+                        "name": "status_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID del cliente",
+                        "name": "client_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la mesa",
+                        "name": "table_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Fecha de inicio (formato RFC3339: 2024-01-01T00:00:00Z)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Fecha de fin (formato RFC3339: 2024-12-31T23:59:59Z)",
+                        "name": "end_date",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de reservas obtenida exitosamente",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Parámetros inválidos",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Este endpoint permite crear una nueva reserva. Si el cliente no existe, se crea automáticamente.",
                 "consumes": [
                     "application/json"
                 ],
@@ -133,28 +384,579 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/reserves/{id}": {
+            "get": {
+                "description": "Este endpoint obtiene una reserva específica con información completa de cliente, mesa, restaurante y estado",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reservas"
+                ],
+                "summary": "Obtiene una reserva por ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la reserva",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reserva obtenida exitosamente",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "ID inválido",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Reserva no encontrada",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Este endpoint permite actualizar campos específicos de una reserva existente",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reservas"
+                ],
+                "summary": "Actualiza una reserva",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la reserva",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos para actualizar",
+                        "name": "update",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.UpdateReservation"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reserva actualizada exitosamente",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Solicitud inválida",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Reserva no encontrada",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/reserves/{id}/cancel": {
+            "patch": {
+                "description": "Este endpoint permite cancelar una reserva existente",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reservas"
+                ],
+                "summary": "Cancela una reserva",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la reserva",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Razón de cancelación (opcional)",
+                        "name": "cancel",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/request.CancelReservation"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reserva cancelada exitosamente",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Solicitud inválida",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Reserva no encontrada",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/tables": {
+            "get": {
+                "description": "Este endpoint permite obtener la lista de todas las mesas registradas.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Mesas"
+                ],
+                "summary": "Obtiene todas las mesas",
+                "responses": {
+                    "200": {
+                        "description": "Lista de mesas obtenida exitosamente",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Este endpoint permite crear una nueva mesa para un restaurante.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Mesas"
+                ],
+                "summary": "Crea una nueva mesa",
+                "parameters": [
+                    {
+                        "description": "Datos de la mesa",
+                        "name": "table",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.Table"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Mesa creada exitosamente",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Solicitud inválida",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "409": {
+                        "description": "Mesa ya existe para este restaurante",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/tables/{id}": {
+            "get": {
+                "description": "Este endpoint permite obtener los datos de una mesa específica por su ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Mesas"
+                ],
+                "summary": "Obtiene una mesa por ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la mesa",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mesa obtenida exitosamente",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Solicitud inválida",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Mesa no encontrada",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Este endpoint permite actualizar parcialmente los datos de una mesa. Solo se modifican los campos enviados.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Mesas"
+                ],
+                "summary": "Actualiza una mesa existente",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la mesa",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos de la mesa a actualizar",
+                        "name": "table",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.UpdateTable"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mesa actualizada exitosamente",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Solicitud inválida",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Mesa no encontrada",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "409": {
+                        "description": "Mesa con ese número ya existe",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Este endpoint permite eliminar una mesa existente del sistema.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Mesas"
+                ],
+                "summary": "Elimina una mesa",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la mesa",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mesa eliminada exitosamente",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Solicitud inválida",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Mesa no encontrada",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
-        "request.Reservation": {
+        "request.CancelReservation": {
             "type": "object",
             "properties": {
-                "client_id": {
+                "reason": {
+                    "description": "Razón opcional de cancelación",
+                    "type": "string"
+                }
+            }
+        },
+        "request.Client": {
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "phone",
+                "restaurant_id"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "restaurant_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "request.Reservation": {
+            "type": "object",
+            "required": [
+                "dni",
+                "email",
+                "end_at",
+                "name",
+                "number_of_guests",
+                "phone",
+                "restaurant_id",
+                "start_at"
+            ],
+            "properties": {
+                "dni": {
+                    "type": "integer"
+                },
+                "email": {
+                    "type": "string"
                 },
                 "end_at": {
                     "type": "string"
                 },
+                "name": {
+                    "type": "string"
+                },
                 "number_of_guests": {
                     "type": "integer"
+                },
+                "phone": {
+                    "type": "string"
                 },
                 "restaurant_id": {
                     "type": "integer"
                 },
                 "start_at": {
                     "type": "string"
+                }
+            }
+        },
+        "request.Table": {
+            "type": "object",
+            "required": [
+                "capacity",
+                "number",
+                "restaurant_id"
+            ],
+            "properties": {
+                "capacity": {
+                    "type": "integer"
+                },
+                "number": {
+                    "type": "integer"
+                },
+                "restaurant_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "request.UpdateClient": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "restaurant_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "request.UpdateReservation": {
+            "type": "object",
+            "properties": {
+                "end_at": {
+                    "type": "string"
+                },
+                "number_of_guests": {
+                    "type": "integer"
+                },
+                "start_at": {
+                    "type": "string"
                 },
                 "table_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "request.UpdateTable": {
+            "type": "object",
+            "properties": {
+                "capacity": {
+                    "type": "integer"
+                },
+                "number": {
+                    "type": "integer"
+                },
+                "restaurant_id": {
                     "type": "integer"
                 }
             }

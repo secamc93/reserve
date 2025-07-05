@@ -2,8 +2,9 @@ package http2
 
 import (
 	"central_reserve/internal/infra/primary/http2/docs"
-	"central_reserve/internal/infra/primary/http2/handlers/holamundohandler"
-	"central_reserve/internal/infra/primary/http2/handlers/holamundohandler/holamundorouter"
+	"central_reserve/internal/infra/primary/http2/handlers/clienthandler"
+	"central_reserve/internal/infra/primary/http2/handlers/reservehandler"
+	"central_reserve/internal/infra/primary/http2/handlers/tablehandler"
 	"central_reserve/internal/infra/primary/http2/middleware"
 	"central_reserve/internal/pkg/env"
 	"central_reserve/internal/pkg/log"
@@ -20,7 +21,9 @@ import (
 )
 
 type Handlers struct {
-	HolaMundo holamundohandler.IHolaMundoHandler
+	Client  clienthandler.IClientHandler
+	Table   tablehandler.ITableHandler
+	Reserve reservehandler.IReserveHandler
 }
 
 type HTTPServer struct {
@@ -92,7 +95,11 @@ func (s *HTTPServer) Routers() {
 	})
 
 	v1Group := s.router.Group("/api/v1")
-	holamundorouter.Routes(v1Group, s.handlers.HolaMundo)
+
+	// Registrar rutas por dominio
+	clienthandler.RegisterRoutes(v1Group, s.handlers.Client)
+	tablehandler.RegisterRoutes(v1Group, s.handlers.Table)
+	reservehandler.RegisterRoutes(v1Group, s.handlers.Reserve)
 }
 
 func (s *HTTPServer) Start() error {
