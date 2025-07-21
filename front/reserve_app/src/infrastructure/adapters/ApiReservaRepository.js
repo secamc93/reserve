@@ -14,9 +14,9 @@ export class ApiReservaRepository extends ReservaRepository {
   async getReservas(filters = {}) {
     try {
       console.log('Fetching reservas with filters:', filters);
-      
+
       const params = {};
-      
+
       // Map filters to API parameters
       if (filters.status_id) params.status_id = filters.status_id;
       if (filters.client_id) params.client_id = filters.client_id;
@@ -27,21 +27,21 @@ export class ApiReservaRepository extends ReservaRepository {
       console.log('API request params:', params);
 
       const response = await this.httpClient.get('/api/v1/reserves', params);
-      
+
       console.log('API response:', response);
-      
+
       // Validate response structure
       if (!response) {
         throw new Error('No response received from server');
       }
-      
+
       if (!response.success) {
         throw new Error(response.message || 'API returned error status');
       }
 
       // Ensure data is an array
       const dataArray = Array.isArray(response.data) ? response.data : [];
-      
+
       // Transform API response to domain entities
       const reservas = dataArray.map(reservaData => {
         try {
@@ -51,20 +51,20 @@ export class ApiReservaRepository extends ReservaRepository {
           return null;
         }
       }).filter(reserva => reserva !== null); // Filter out failed entities
-      
+
       const result = {
         data: reservas,
         total: response.total || reservas.length,
         filters: response.filters || {},
         message: response.message || 'Reservas obtenidas exitosamente'
       };
-      
+
       console.log('Processed result:', result);
-      
+
       return result;
     } catch (error) {
       console.error('Error in ApiReservaRepository.getReservas:', error);
-      
+
       // Return a safe default structure
       return {
         data: [],
@@ -78,15 +78,22 @@ export class ApiReservaRepository extends ReservaRepository {
   async createReserva(reservaData) {
     try {
       console.log('Creating reserva with data:', reservaData);
-      
-      const response = await this.httpClient.post('/api/v1/reserves', reservaData);
-      
+
+      // Map front-end field to backend expectation
+      const payload = { ...reservaData };
+      if (payload.restaurant_id !== undefined) {
+        payload.business_id = payload.restaurant_id;
+        delete payload.restaurant_id;
+      }
+
+      const response = await this.httpClient.post('/api/v1/reserves', payload);
+
       console.log('Create reserva response:', response);
-      
+
       if (!response) {
         throw new Error('No response received from server');
       }
-      
+
       if (!response.success) {
         throw new Error(response.message || 'Error creating reserva');
       }
@@ -102,7 +109,7 @@ export class ApiReservaRepository extends ReservaRepository {
   async getReservaById(id) {
     try {
       const response = await this.httpClient.get(`/api/v1/reserves/${id}`);
-      
+
       if (!response || !response.success) {
         throw new Error(response?.message || 'Error fetching reserva');
       }
@@ -119,7 +126,7 @@ export class ApiReservaRepository extends ReservaRepository {
       const response = await this.httpClient.put(`/api/v1/reserves/${id}/status`, {
         status: status
       });
-      
+
       if (!response || !response.success) {
         throw new Error(response?.message || 'Error updating reserva status');
       }
@@ -135,29 +142,29 @@ export class ApiReservaRepository extends ReservaRepository {
     try {
       console.log('🔥 INICIANDO CANCELACIÓN DE RESERVA');
       console.log('🔥 ID recibido:', id, 'Tipo:', typeof id);
-      
+
       const reservaId = parseInt(id);
       if (isNaN(reservaId)) {
         throw new Error('ID de reserva inválido');
       }
-      
+
       console.log('🔥 ID procesado:', reservaId);
       console.log('🔥 URL que se va a llamar:', `${config.API_BASE_URL}/api/v1/reserves/${reservaId}/cancel`);
-      
+
       const response = await this.httpClient.patch(`/api/v1/reserves/${reservaId}/cancel`);
-      
+
       console.log('🔥 RESPUESTA COMPLETA DEL BACKEND:', response);
       console.log('🔥 Tipo de respuesta:', typeof response);
       console.log('🔥 Keys de la respuesta:', Object.keys(response || {}));
-      
+
       if (!response) {
         throw new Error('No response received from server');
       }
-      
+
       console.log('🔥 response.success:', response.success);
       console.log('🔥 response.data:', response.data);
       console.log('🔥 Tipo de response.data:', typeof response.data);
-      
+
       if (!response.success) {
         throw new Error(response.message || 'Error canceling reserva');
       }
@@ -165,7 +172,7 @@ export class ApiReservaRepository extends ReservaRepository {
       if (!response.data) {
         throw new Error('No data received in response');
       }
-      
+
       console.log('🔥 Datos antes de crear Reserva entity:', response.data);
       console.log('🔥 Keys de response.data:', Object.keys(response.data || {}));
 
@@ -173,7 +180,7 @@ export class ApiReservaRepository extends ReservaRepository {
       const canceledReserva = new Reserva(response.data);
       console.log('🔥 Reserva entity creada:', canceledReserva);
       console.log('🔥 canceledReserva.reserva_id:', canceledReserva.reserva_id);
-      
+
       return canceledReserva;
     } catch (error) {
       console.error('🔥 ERROR EN CANCELACIÓN:', error);
@@ -188,7 +195,7 @@ export class ApiReservaRepository extends ReservaRepository {
       const response = await this.httpClient.put(`/api/v1/reserves/${reservaId}/table`, {
         table_id: tableId
       });
-      
+
       if (!response || !response.success) {
         throw new Error(response?.message || 'Error assigning table');
       }

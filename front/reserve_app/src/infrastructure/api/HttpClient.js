@@ -4,9 +4,21 @@ export class HttpClient {
     this.baseURL = baseURL;
   }
 
+  /**
+   * Returns default headers for every request including the Authorization header
+   * if an authToken exists in localStorage.
+   */
+  getDefaultHeaders() {
+    const token = typeof localStorage !== 'undefined' ? localStorage.getItem('authToken') : null;
+    return {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    };
+  }
+
   async get(endpoint, params = {}) {
     const url = new URL(endpoint, this.baseURL);
-    
+
     // Add query parameters
     Object.keys(params).forEach(key => {
       if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
@@ -19,9 +31,7 @@ export class HttpClient {
     try {
       const response = await fetch(url.toString(), {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: this.getDefaultHeaders(),
       });
 
       console.log('Response status:', response.status);
@@ -47,20 +57,20 @@ export class HttpClient {
 
       const data = await response.json();
       console.log('Response data:', data);
-      
+
       return data;
     } catch (error) {
       console.error('HTTP GET Error:', error);
-      
+
       // Handle different types of errors
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
         throw new Error('No se pudo conectar con el servidor. Verifique que la API esté ejecutándose en http://localhost:3050');
       }
-      
+
       if (error.name === 'SyntaxError') {
         throw new Error('Respuesta inválida del servidor');
       }
-      
+
       throw error;
     }
   }
@@ -69,9 +79,7 @@ export class HttpClient {
     try {
       const response = await fetch(`${this.baseURL}${endpoint}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: this.getDefaultHeaders(),
         body: JSON.stringify(data),
       });
 
@@ -90,11 +98,11 @@ export class HttpClient {
       return result;
     } catch (error) {
       console.error('HTTP POST Error:', error);
-      
+
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
         throw new Error('No se pudo conectar con el servidor');
       }
-      
+
       throw error;
     }
   }
@@ -103,9 +111,7 @@ export class HttpClient {
     try {
       const response = await fetch(`${this.baseURL}${endpoint}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: this.getDefaultHeaders(),
         body: JSON.stringify(data),
       });
 
@@ -124,11 +130,11 @@ export class HttpClient {
       return result;
     } catch (error) {
       console.error('HTTP PUT Error:', error);
-      
+
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
         throw new Error('No se pudo conectar con el servidor');
       }
-      
+
       throw error;
     }
   }
@@ -139,12 +145,10 @@ export class HttpClient {
       console.log('🌐 PATCH: Endpoint:', endpoint);
       console.log('🌐 PATCH: Data:', data);
       console.log('🌐 PATCH: URL completa:', `${this.baseURL}${endpoint}`);
-      
+
       const response = await fetch(`${this.baseURL}${endpoint}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: this.getDefaultHeaders(),
         body: JSON.stringify(data),
       });
 
@@ -155,7 +159,7 @@ export class HttpClient {
 
       if (!response.ok) {
         console.log('🌐 PATCH: Response no OK, procesando error');
-        
+
         let errorMessage = `HTTP error! status: ${response.status}`;
         try {
           const errorData = await response.json();
@@ -170,7 +174,7 @@ export class HttpClient {
       console.log('🌐 PATCH: Parseando respuesta JSON');
       const result = await response.json();
       console.log('🌐 PATCH: Resultado final:', result);
-      
+
       return result;
     } catch (error) {
       console.error('🌐 PATCH: ERROR CAPTURADO');
@@ -178,12 +182,12 @@ export class HttpClient {
       console.error('🌐 PATCH: Error message:', error.message);
       console.error('🌐 PATCH: Error stack:', error.stack);
       console.error('🌐 PATCH: Error completo:', error);
-      
+
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
         console.error('🌐 PATCH: Es un error de TypeError con fetch');
         throw new Error('No se pudo conectar con el servidor');
       }
-      
+
       console.error('🌐 PATCH: Relanzando error original');
       throw error;
     }
@@ -193,9 +197,7 @@ export class HttpClient {
     try {
       const response = await fetch(`${this.baseURL}${endpoint}`, {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: this.getDefaultHeaders(),
       });
 
       if (!response.ok) {
@@ -213,11 +215,11 @@ export class HttpClient {
       return result;
     } catch (error) {
       console.error('HTTP DELETE Error:', error);
-      
+
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
         throw new Error('No se pudo conectar con el servidor');
       }
-      
+
       throw error;
     }
   }

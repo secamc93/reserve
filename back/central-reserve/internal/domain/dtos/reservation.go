@@ -43,7 +43,7 @@ type ReserveDetailDTO struct {
 	UsuarioEmail  *string
 
 	// Historial de Estados
-	StatusHistory []entities.ReservationStatusHistory
+	StatusHistory []entities.ReservationStatusHistory `gorm:"-"`
 }
 
 // DBReservationStatusHistory representa el modelo de base de datos para crear historial

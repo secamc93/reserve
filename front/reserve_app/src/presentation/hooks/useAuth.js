@@ -18,12 +18,12 @@ export const useAuth = () => {
       const authenticated = authService.isAuthenticated();
       const user = authService.getUserInfo();
       const rolesPermissions = localStorage.getItem('userRolesPermissions');
-      
+
       console.log('🔐 useAuth: Verificando estado de autenticación');
       console.log('🔐 useAuth: Autenticado:', authenticated);
       console.log('🔐 useAuth: Usuario:', user);
       console.log('🔐 useAuth: Roles y permisos:', rolesPermissions);
-      
+
       setIsAuthenticated(authenticated);
       setUserInfo(user);
       setUserRolesPermissions(rolesPermissions ? JSON.parse(rolesPermissions) : null);
@@ -41,21 +41,18 @@ export const useAuth = () => {
     try {
       setLoading(true);
       const result = await authService.login(email, password);
-      
+
       if (result.success) {
         // Intentar obtener roles y permisos
         try {
-          const rolesPermissions = await authService.getUserRolesPermissions(
-            result.user.id, 
-            result.token
-          );
+          const rolesPermissions = await authService.getUserRolesPermissions();
           localStorage.setItem('userRolesPermissions', JSON.stringify(rolesPermissions));
           setUserRolesPermissions(rolesPermissions);
           console.log('🔐 useAuth: Roles y permisos obtenidos:', rolesPermissions);
         } catch (rolesError) {
           console.warn('🔐 useAuth: No se pudieron obtener roles y permisos:', rolesError);
         }
-        
+
         setIsAuthenticated(true);
         setUserInfo(result.user);
         return { success: true };
@@ -80,7 +77,7 @@ export const useAuth = () => {
     if (!userRolesPermissions || !userRolesPermissions.permissions) {
       return false;
     }
-    
+
     return userRolesPermissions.permissions.some(p => p.code === permission);
   };
 
@@ -88,7 +85,7 @@ export const useAuth = () => {
     if (!userRolesPermissions || !userRolesPermissions.roles) {
       return false;
     }
-    
+
     return userRolesPermissions.roles.some(r => r.code === role);
   };
 
@@ -100,8 +97,8 @@ export const useAuth = () => {
     if (!userRolesPermissions || !userRolesPermissions.permissions) {
       return false;
     }
-    
-    return userRolesPermissions.permissions.some(p => 
+
+    return userRolesPermissions.permissions.some(p =>
       p.resource === resource && p.action === 'manage'
     );
   };
@@ -110,8 +107,8 @@ export const useAuth = () => {
     if (!userRolesPermissions || !userRolesPermissions.permissions) {
       return false;
     }
-    
-    return userRolesPermissions.permissions.some(p => 
+
+    return userRolesPermissions.permissions.some(p =>
       p.resource === resource && p.action === 'read'
     );
   };

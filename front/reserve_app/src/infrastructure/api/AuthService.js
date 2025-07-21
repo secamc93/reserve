@@ -11,7 +11,7 @@ export class AuthService {
     try {
       console.log('🔐 AuthService: Iniciando login');
       console.log('🔐 AuthService: Email:', email);
-      
+
       const loginData = {
         email: email,
         password: password
@@ -20,14 +20,14 @@ export class AuthService {
       console.log('🔐 AuthService: Enviando datos de login:', loginData);
 
       const response = await this.httpClient.post('/api/v1/auth/login', loginData);
-      
+
       console.log('🔐 AuthService: Respuesta del servidor:', response);
 
       if (response.success && response.data) {
         // Guardar token en localStorage
         localStorage.setItem('authToken', response.data.token);
         localStorage.setItem('userInfo', JSON.stringify(response.data.user));
-        
+
         console.log('🔐 AuthService: Login exitoso, token guardado');
         return {
           success: true,
@@ -44,12 +44,12 @@ export class AuthService {
     }
   }
 
-  async getUserRolesPermissions(userId, token) {
+  async getUserRolesPermissions() {
     try {
-      console.log('🔐 AuthService: Obteniendo roles y permisos para usuario:', userId);
-      
-      const response = await this.httpClient.get(`/api/v1/auth/user/${userId}/roles-permissions`);
-      
+      console.log('🔐 AuthService: Obteniendo roles y permisos para usuario:');
+
+      const response = await this.httpClient.get(`/api/v1/auth/roles-permissions`);
+
       console.log('🔐 AuthService: Respuesta de roles y permisos:', response);
 
       if (response.success && response.data) {
