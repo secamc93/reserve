@@ -32,6 +32,21 @@ type UserInfo struct {
 	LastLoginAt *time.Time
 }
 
+// UserAuthInfo representa la información del usuario para autenticación (sin relaciones)
+type UserAuthInfo struct {
+	ID          uint
+	Name        string
+	Email       string
+	Password    string
+	Phone       string
+	AvatarURL   string
+	IsActive    bool
+	LastLoginAt *time.Time
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	DeletedAt   *time.Time
+}
+
 // RoleInfo representa la información del rol
 type RoleInfo struct {
 	ID          uint

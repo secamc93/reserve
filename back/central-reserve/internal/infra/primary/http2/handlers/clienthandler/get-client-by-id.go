@@ -12,9 +12,11 @@ import (
 // @Tags         Clientes
 // @Accept       json
 // @Produce      json
+// @Security     BearerAuth
 // @Param        id  path      int  true  "ID del cliente"
 // @Success      200 {object}  map[string]interface{} "Cliente obtenido exitosamente"
 // @Failure      400 {object}  map[string]interface{} "Solicitud inválida"
+// @Failure      401 {object}  map[string]interface{} "Token de acceso requerido"
 // @Failure      404 {object}  map[string]interface{} "Cliente no encontrado"
 // @Failure      500 {object}  map[string]interface{} "Error interno del servidor"
 // @Router       /clients/{id} [get]

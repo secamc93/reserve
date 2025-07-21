@@ -3,6 +3,8 @@ package log
 import (
 	"context"
 	"os"
+	"runtime"
+	"strings"
 
 	"github.com/rs/zerolog"
 )
@@ -108,6 +110,38 @@ func Init() {
 	New()
 }
 
+// getFunctionName obtiene el nombre de la función que está ejecutando el log
+func getFunctionName() string {
+	// Obtener el stack trace
+	pc := make([]uintptr, 10)
+	n := runtime.Callers(0, pc)
+	if n == 0 {
+		return "unknown"
+	}
+
+	// Buscar la función que no sea del paquete log o runtime
+	for i := 0; i < n; i++ {
+		fn := runtime.FuncForPC(pc[i])
+		if fn == nil {
+			continue
+		}
+
+		funcName := fn.Name()
+		// Filtrar funciones del logger y runtime
+		if !strings.Contains(funcName, "log.") &&
+			!strings.Contains(funcName, "runtime.") &&
+			!strings.Contains(funcName, "zerolog.") {
+			// Extraer solo el nombre de la función sin el paquete completo
+			parts := strings.Split(funcName, ".")
+			if len(parts) > 0 {
+				return parts[len(parts)-1]
+			}
+			return funcName
+		}
+	}
+	return "unknown"
+}
+
 type tracingHook struct{}
 
 func (h *tracingHook) Run(e *zerolog.Event, level zerolog.Level, msg string) {
@@ -116,6 +150,10 @@ func (h *tracingHook) Run(e *zerolog.Event, level zerolog.Level, msg string) {
 	if ok {
 		e.Str("req_id", reqId)
 	}
+
+	// Agregar el nombre de la función a todos los logs
+	functionName := getFunctionName()
+	e.Str("function", functionName)
 }
 
 type reqIdKey struct{}

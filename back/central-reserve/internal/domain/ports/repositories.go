@@ -40,7 +40,7 @@ type IReservationRepository interface {
 
 // IAuthRepository define las operaciones de autenticación
 type IAuthRepository interface {
-	GetUserByEmail(ctx context.Context, email string) (*entities.User, error)
+	GetUserByEmail(ctx context.Context, email string) (*dtos.UserAuthInfo, error)
 	GetUserRoles(ctx context.Context, userID uint) ([]entities.Role, error)
 	GetRolePermissions(ctx context.Context, roleID uint) ([]entities.Permission, error)
 	UpdateLastLogin(ctx context.Context, userID uint) error
@@ -76,4 +76,49 @@ type IBusinessRepository interface {
 	CreateBusiness(ctx context.Context, business entities.Business) (string, error)
 	UpdateBusiness(ctx context.Context, id uint, business entities.Business) (string, error)
 	DeleteBusiness(ctx context.Context, id uint) (string, error)
+}
+
+// IPermissionRepository define las operaciones para permisos
+type IPermissionRepository interface {
+	GetPermissions(ctx context.Context) ([]entities.Permission, error)
+	GetPermissionByID(ctx context.Context, id uint) (*entities.Permission, error)
+	GetPermissionByCode(ctx context.Context, code string) (*entities.Permission, error)
+	GetPermissionsByScopeID(ctx context.Context, scopeID uint) ([]entities.Permission, error)
+	GetPermissionsByResource(ctx context.Context, resource string) ([]entities.Permission, error)
+	CreatePermission(ctx context.Context, permission entities.Permission) (string, error)
+	UpdatePermission(ctx context.Context, id uint, permission entities.Permission) (string, error)
+	DeletePermission(ctx context.Context, id uint) (string, error)
+}
+
+// IScopeRepository define las operaciones para scopes
+type IScopeRepository interface {
+	GetScopes(ctx context.Context) ([]entities.Scope, error)
+	GetScopeByID(ctx context.Context, id uint) (*entities.Scope, error)
+	GetScopeByCode(ctx context.Context, code string) (*entities.Scope, error)
+	CreateScope(ctx context.Context, scope entities.Scope) (string, error)
+	UpdateScope(ctx context.Context, id uint, scope entities.Scope) (string, error)
+	DeleteScope(ctx context.Context, id uint) (string, error)
+}
+
+// IRoleRepository define los métodos del repositorio de roles
+type IRoleRepository interface {
+	GetRoles(ctx context.Context) ([]entities.Role, error)
+	GetRoleByID(ctx context.Context, id uint) (*entities.Role, error)
+	GetRolesByScopeID(ctx context.Context, scopeID uint) ([]entities.Role, error)
+	GetRolesByLevel(ctx context.Context, level int) ([]entities.Role, error)
+	GetSystemRoles(ctx context.Context) ([]entities.Role, error)
+}
+
+// IUserRepository define los métodos del repositorio de usuarios
+type IUserRepository interface {
+	GetUsers(ctx context.Context, filters dtos.UserFilters) ([]dtos.UserQueryDTO, int64, error)
+	GetUserByID(ctx context.Context, id uint) (*entities.User, error)
+	GetUserByEmail(ctx context.Context, email string) (*entities.User, error)
+	GetUserRoles(ctx context.Context, userID uint) ([]entities.Role, error)
+	GetUserBusinesses(ctx context.Context, userID uint) ([]entities.BusinessInfo, error)
+	CreateUser(ctx context.Context, user entities.User) (string, error)
+	UpdateUser(ctx context.Context, id uint, user entities.User) (string, error)
+	DeleteUser(ctx context.Context, id uint) (string, error)
+	AssignRolesToUser(ctx context.Context, userID uint, roleIDs []uint) error
+	AssignBusinessesToUser(ctx context.Context, userID uint, businessIDs []uint) error
 }

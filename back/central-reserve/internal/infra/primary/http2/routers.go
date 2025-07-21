@@ -6,8 +6,11 @@ import (
 	"central_reserve/internal/infra/primary/http2/handlers/businesshandler"
 	"central_reserve/internal/infra/primary/http2/handlers/businesstypehandler"
 	"central_reserve/internal/infra/primary/http2/handlers/clienthandler"
+	"central_reserve/internal/infra/primary/http2/handlers/permissionhandler"
 	"central_reserve/internal/infra/primary/http2/handlers/reservehandler"
+	"central_reserve/internal/infra/primary/http2/handlers/rolehandler"
 	"central_reserve/internal/infra/primary/http2/handlers/tablehandler"
+	"central_reserve/internal/infra/primary/http2/handlers/userhandler"
 	"central_reserve/internal/infra/primary/http2/middleware"
 	"central_reserve/internal/pkg/env"
 	"central_reserve/internal/pkg/jwt"
@@ -31,6 +34,9 @@ type Handlers struct {
 	Reserve      reservehandler.IReserveHandler
 	Business     businesshandler.IBusinessHandler
 	BusinessType businesstypehandler.IBusinessTypeHandler
+	Permission   permissionhandler.IPermissionHandler
+	Role         rolehandler.IRoleHandler
+	User         userhandler.IUserHandler
 }
 
 type HTTPServer struct {
@@ -113,6 +119,9 @@ func (s *HTTPServer) Routers() {
 	reservehandler.RegisterRoutes(v1Group, s.handlers.Reserve, s.jwtService, s.logger)
 	businesshandler.RegisterRoutes(v1Group, s.handlers.Business, s.jwtService, s.logger)
 	businesstypehandler.RegisterRoutes(v1Group, s.handlers.BusinessType, s.jwtService, s.logger)
+	permissionhandler.RegisterRoutes(v1Group, s.handlers.Permission, s.jwtService, s.logger)
+	rolehandler.RegisterRoutes(v1Group, s.handlers.Role, s.jwtService, s.logger)
+	userhandler.RegisterRoutes(v1Group, s.handlers.User, s.jwtService, s.logger)
 }
 
 func (s *HTTPServer) Start() error {

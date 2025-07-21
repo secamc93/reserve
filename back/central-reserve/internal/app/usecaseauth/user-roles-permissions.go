@@ -93,7 +93,7 @@ func (uc *AuthUseCase) GetUserRolesPermissions(ctx context.Context, userID uint,
 			Code:        role.Code,
 			Description: role.Description,
 			Level:       role.Level,
-			Scope:       role.Scope,
+			Scope:       role.ScopeName, // Usar ScopeName en lugar de Scope
 		}
 	}
 
@@ -109,7 +109,7 @@ func (uc *AuthUseCase) GetUserRolesPermissions(ctx context.Context, userID uint,
 				Description: permission.Description,
 				Resource:    permission.Resource,
 				Action:      permission.Action,
-				Scope:       permission.Scope,
+				Scope:       permission.ScopeName, // Usar ScopeName en lugar de Scope
 			}
 		}
 	}

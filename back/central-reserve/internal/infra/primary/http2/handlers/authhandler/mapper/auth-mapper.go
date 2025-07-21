@@ -77,7 +77,7 @@ func toPermissionInfoSlice(domainPermissions []dtos.PermissionInfo) []response.P
 			Description: permission.Description,
 			Resource:    permission.Resource,
 			Action:      permission.Action,
-			Scope:       permission.Scope,
+			Scope:       permission.Scope, // Este campo ya está correcto en el DTO
 		}
 	}
 	return permissions

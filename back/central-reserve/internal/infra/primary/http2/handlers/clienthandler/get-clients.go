@@ -11,7 +11,9 @@ import (
 // @Tags         Clientes
 // @Accept       json
 // @Produce      json
+// @Security     BearerAuth
 // @Success      200  {object}  map[string]interface{} "Lista de clientes obtenida exitosamente"
+// @Failure      401  {object}  map[string]interface{} "Token de acceso requerido"
 // @Failure      500  {object}  map[string]interface{} "Error interno del servidor"
 // @Router       /clients [get]
 func (h *ClientHandler) GetClientsHandler(c *gin.Context) {

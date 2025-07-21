@@ -21,6 +21,7 @@ type IDatabase interface {
 	Close() error
 	Conn(ctx context.Context) *gorm.DB
 	WithContext(ctx context.Context) *gorm.DB
+	DebugConn(ctx context.Context) *gorm.DB
 }
 
 // database implementa la interfaz IDatabase
@@ -114,6 +115,13 @@ func (d *database) WithContext(ctx context.Context) *gorm.DB {
 	return d.conn.WithContext(ctx)
 }
 
+// DebugConn retorna una conexión con debug habilitado para ver las consultas SQL
+func (d *database) DebugConn(ctx context.Context) *gorm.DB {
+	return d.conn.WithContext(ctx).Session(&gorm.Session{
+		Logger: d.conn.Logger.LogMode(logger.Info),
+	})
+}
+
 func getLogLevel(config env.IConfig) logger.LogLevel {
 	level := config.Get("DB_LOG_LEVEL")
 	switch level {
@@ -124,6 +132,6 @@ func getLogLevel(config env.IConfig) logger.LogLevel {
 	case "error":
 		return logger.Error
 	default:
-		return logger.Error
+		return logger.Info // Cambiado de Error a Info para ver las consultas SQL por defecto
 	}
 }

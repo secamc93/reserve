@@ -5,15 +5,21 @@ import (
 	"central_reserve/internal/app/usecasebusiness"
 	"central_reserve/internal/app/usecasebusinesstype"
 	"central_reserve/internal/app/usecaseclient"
+	"central_reserve/internal/app/usecasepermission"
 	"central_reserve/internal/app/usecasereserve"
+	"central_reserve/internal/app/usecaserole"
 	"central_reserve/internal/app/usecasetables"
+	"central_reserve/internal/app/usecaseuser"
 	"central_reserve/internal/infra/primary/http2"
 	"central_reserve/internal/infra/primary/http2/handlers/authhandler"
 	"central_reserve/internal/infra/primary/http2/handlers/businesshandler"
 	"central_reserve/internal/infra/primary/http2/handlers/businesstypehandler"
 	"central_reserve/internal/infra/primary/http2/handlers/clienthandler"
+	"central_reserve/internal/infra/primary/http2/handlers/permissionhandler"
 	"central_reserve/internal/infra/primary/http2/handlers/reservehandler"
+	"central_reserve/internal/infra/primary/http2/handlers/rolehandler"
 	"central_reserve/internal/infra/primary/http2/handlers/tablehandler"
+	"central_reserve/internal/infra/primary/http2/handlers/userhandler"
 	"central_reserve/internal/infra/primary/queue/nats"
 	"central_reserve/internal/infra/secundary/email"
 	"central_reserve/internal/infra/secundary/repository"
@@ -68,20 +74,16 @@ func InitServer(ctx context.Context) (*AppServices, error) {
 }
 
 func setupDependencies(database db.IDatabase, logger log.ILogger, environment env.IConfig) (*http2.Handlers, *jwt.JWTService) {
-	// Repositorios base por dominio
-	clientRepo := repository.NewClientRepository(database, logger)
-	tableRepo := repository.NewTableRepository(database, logger)
-	authRepo := repository.NewAuthRepository(database, logger)
-	businessRepo := repository.NewBusinessRepository(database, logger)
-	businessTypeRepo := repository.NewBusinessTypeRepository(database, logger)
-
 	// Repositorios específicos para casos de uso
-	clientUseCaseRepo := clientRepo             // IClientRepository implementa IClientUseCaseRepository
-	tableUseCaseRepo := tableRepo               // ITableRepository implementa ITableUseCaseRepository
-	authUseCaseRepo := authRepo                 // IAuthRepository implementa IAuthUseCaseRepository
-	businessUseCaseRepo := businessRepo         // IBusinessRepository implementa IBusinessUseCaseRepository
-	businessTypeUseCaseRepo := businessTypeRepo // IBusinessTypeRepository implementa IBusinessTypeUseCaseRepository
+	clientUseCaseRepo := repository.NewClientRepository(database, logger)             // IClientRepository implementa IClientUseCaseRepository
+	tableUseCaseRepo := repository.NewTableRepository(database, logger)               // ITableRepository implementa ITableUseCaseRepository
+	authUseCaseRepo := repository.NewAuthRepository(database, logger)                 // IAuthRepository implementa IAuthUseCaseRepository
+	businessUseCaseRepo := repository.NewBusinessRepository(database, logger)         // IBusinessRepository implementa IBusinessUseCaseRepository
+	businessTypeUseCaseRepo := repository.NewBusinessTypeRepository(database, logger) // IBusinessTypeRepository implementa IBusinessTypeUseCaseRepository
+	permissionUseCaseRepo := repository.NewPermissionRepository(database, logger)     // IPermissionRepository implementa IPermissionUseCaseRepository
 	reserveUseCaseRepo := repository.NewReserveUseCaseRepository(database, logger)
+	roleUseCaseRepo := repository.NewRoleRepository(database, logger)
+	userUseCaseRepo := repository.NewUserRepository(database, logger)
 
 	// Servicios
 	emailService := email.NewEmailService()
@@ -101,6 +103,9 @@ func setupDependencies(database db.IDatabase, logger log.ILogger, environment en
 	reserveUseCase := usecasereserve.NewReserveUseCase(reserveUseCaseRepo, emailService, logger)
 	businessUseCase := usecasebusiness.NewBusinessUseCase(businessUseCaseRepo, logger)
 	businessTypeUseCase := usecasebusinesstype.NewBusinessTypeUseCase(businessTypeUseCaseRepo, logger)
+	permissionUseCase := usecasepermission.NewPermissionUseCase(permissionUseCaseRepo, logger)
+	roleUseCase := usecaserole.NewRoleUseCase(roleUseCaseRepo, logger)
+	userUseCase := usecaseuser.NewUserUseCase(userUseCaseRepo, logger)
 
 	// Handlers por dominio
 	authHandler := authhandler.New(authUseCase, logger)
@@ -109,6 +114,9 @@ func setupDependencies(database db.IDatabase, logger log.ILogger, environment en
 	reserveHandler := reservehandler.New(reserveUseCase, logger)
 	businessHandler := businesshandler.New(businessUseCase, logger)
 	businessTypeHandler := businesstypehandler.New(businessTypeUseCase, logger)
+	permissionHandler := permissionhandler.New(permissionUseCase, logger)
+	roleHandler := rolehandler.New(roleUseCase, logger)
+	userHandler := userhandler.New(userUseCase, logger)
 
 	return &http2.Handlers{
 		Auth:         authHandler,
@@ -117,6 +125,9 @@ func setupDependencies(database db.IDatabase, logger log.ILogger, environment en
 		Reserve:      reserveHandler,
 		Business:     businessHandler,
 		BusinessType: businessTypeHandler,
+		Permission:   permissionHandler,
+		Role:         roleHandler,
+		User:         userHandler,
 	}, jwtService
 }
 

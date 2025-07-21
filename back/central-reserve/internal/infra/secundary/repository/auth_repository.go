@@ -1,12 +1,15 @@
 package repository
 
 import (
+	"central_reserve/internal/domain/dtos"
 	"central_reserve/internal/domain/entities"
 	"central_reserve/internal/domain/ports"
 	"central_reserve/internal/infra/secundary/repository/db"
 	"central_reserve/internal/pkg/log"
 	"context"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 // AuthRepository implementa ports.IAuthRepository
@@ -24,13 +27,21 @@ func NewAuthRepository(database db.IDatabase, logger log.ILogger) ports.IAuthRep
 }
 
 // GetUserByEmail obtiene un usuario por su email
-func (r *AuthRepository) GetUserByEmail(ctx context.Context, email string) (*entities.User, error) {
-	var user entities.User
-	if err := r.database.Conn(ctx).Table("user").Where("email = ?", email).First(&user).Error; err != nil {
-		r.logger.Error().Str("email", email).Msg("Error al obtener usuario por email")
+func (r *AuthRepository) GetUserByEmail(ctx context.Context, email string) (*dtos.UserAuthInfo, error) {
+	var userAuth dtos.UserAuthInfo
+	if err := r.database.Conn(ctx).
+		Table("user").
+		Select("id, name, email, password, phone, avatar_url, is_active, last_login_at, created_at, updated_at, deleted_at").
+		Where("email = ?", email).
+		First(&userAuth).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			r.logger.Debug().Str("email", email).Msg("Usuario no encontrado")
+			return nil, nil
+		}
+		r.logger.Error().Str("email", email).Err(err).Msg("Error al obtener usuario por email")
 		return nil, err
 	}
-	return &user, nil
+	return &userAuth, nil
 }
 
 // GetUserRoles obtiene los roles de un usuario

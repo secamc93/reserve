@@ -19,33 +19,64 @@ func (uc *AuthUseCase) Login(ctx context.Context, request dtos.LoginRequest) (*d
 	}
 
 	// Obtener usuario por email
-	user, err := uc.repository.GetUserByEmail(ctx, request.Email)
+	userAuth, err := uc.repository.GetUserByEmail(ctx, request.Email)
 	if err != nil {
 		uc.log.Error().Err(err).Str("email", request.Email).Msg("Error al obtener usuario por email")
 		return nil, fmt.Errorf("credenciales inválidas")
 	}
 
-	if user == nil {
+	if userAuth == nil {
 		uc.log.Error().Str("email", request.Email).Msg("Usuario no encontrado")
 		return nil, fmt.Errorf("credenciales inválidas")
 	}
 
 	// Verificar que el usuario esté activo
-	if !user.IsActive {
+	if !userAuth.IsActive {
 		uc.log.Error().Str("email", request.Email).Msg("Usuario inactivo")
 		return nil, fmt.Errorf("usuario inactivo")
 	}
 
 	// Validar contraseña
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password)); err != nil {
-		uc.log.Error().Err(err).Str("email", request.Email).Msg("Contraseña inválida")
+	uc.log.Debug().
+		Str("email", request.Email).
+		Str("stored_password_length", fmt.Sprintf("%d", len(userAuth.Password))).
+		Str("input_password_length", fmt.Sprintf("%d", len(request.Password))).
+		Str("stored_password_preview", userAuth.Password[:func() int {
+			if len(userAuth.Password) < 10 {
+				return len(userAuth.Password)
+			}
+			return 10
+		}()]).
+		Str("stored_password_starts_with_bcrypt", fmt.Sprintf("%t", len(userAuth.Password) >= 7 && userAuth.Password[:7] == "$2a$")).
+		Str("stored_password_first_7_chars", userAuth.Password[:func() int {
+			if len(userAuth.Password) < 7 {
+				return len(userAuth.Password)
+			}
+			return 7
+		}()]).
+		Msg("Comparando contraseñas")
+
+		// Verificar contraseña
+	uc.log.Debug().
+		Str("email", request.Email).
+		Str("input_password", request.Password).
+		Str("stored_password_hash", userAuth.Password).
+		Msg("Comparando contraseñas")
+
+	if err := bcrypt.CompareHashAndPassword([]byte(userAuth.Password), []byte(request.Password)); err != nil {
+		uc.log.Error().
+			Err(err).
+			Str("email", request.Email).
+			Str("input_password", request.Password).
+			Str("stored_password_hash", userAuth.Password).
+			Msg("Contraseña inválida")
 		return nil, fmt.Errorf("credenciales inválidas")
 	}
 
 	// Obtener roles del usuario para el token
-	roles, err := uc.repository.GetUserRoles(ctx, user.ID)
+	roles, err := uc.repository.GetUserRoles(ctx, userAuth.ID)
 	if err != nil {
-		uc.log.Error().Err(err).Uint("user_id", user.ID).Msg("Error al obtener roles del usuario")
+		uc.log.Error().Err(err).Uint("user_id", userAuth.ID).Msg("Error al obtener roles del usuario")
 		return nil, fmt.Errorf("error interno del servidor")
 	}
 
@@ -55,35 +86,35 @@ func (uc *AuthUseCase) Login(ctx context.Context, request dtos.LoginRequest) (*d
 		roleCodes[i] = role.Code
 	}
 
-	token, err := uc.jwtService.GenerateToken(user.ID, user.Email, roleCodes)
+	token, err := uc.jwtService.GenerateToken(userAuth.ID, userAuth.Email, roleCodes)
 	if err != nil {
-		uc.log.Error().Err(err).Uint("user_id", user.ID).Msg("Error al generar token JWT")
+		uc.log.Error().Err(err).Uint("user_id", userAuth.ID).Msg("Error al generar token JWT")
 		return nil, fmt.Errorf("error interno del servidor")
 	}
 
 	// Actualizar último login
-	if err := uc.repository.UpdateLastLogin(ctx, user.ID); err != nil {
-		uc.log.Warn().Err(err).Uint("user_id", user.ID).Msg("Error al actualizar último login")
+	if err := uc.repository.UpdateLastLogin(ctx, userAuth.ID); err != nil {
+		uc.log.Warn().Err(err).Uint("user_id", userAuth.ID).Msg("Error al actualizar último login")
 		// No retornamos error aquí porque el login ya fue exitoso
 	}
 
 	// Construir respuesta simplificada
 	response := &dtos.LoginResponse{
 		User: dtos.UserInfo{
-			ID:          user.ID,
-			Name:        user.Name,
-			Email:       user.Email,
-			Phone:       user.Phone,
-			AvatarURL:   user.AvatarURL,
-			IsActive:    user.IsActive,
-			LastLoginAt: user.LastLoginAt,
+			ID:          userAuth.ID,
+			Name:        userAuth.Name,
+			Email:       userAuth.Email,
+			Phone:       userAuth.Phone,
+			AvatarURL:   userAuth.AvatarURL,
+			IsActive:    userAuth.IsActive,
+			LastLoginAt: userAuth.LastLoginAt,
 		},
 		Token: token,
 	}
 
 	uc.log.Info().
-		Str("email", user.Email).
-		Uint("user_id", user.ID).
+		Str("email", userAuth.Email).
+		Uint("user_id", userAuth.ID).
 		Msg("Login exitoso")
 
 	return response, nil

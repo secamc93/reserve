@@ -13,9 +13,11 @@ import (
 // @Tags         Reservas
 // @Accept       json
 // @Produce      json
+// @Security     BearerAuth
 // @Param        reservation  body      request.Reservation  true  "Datos de la reserva"
 // @Success      201          {object}  map[string]interface{} "Reserva creada exitosamente"
 // @Failure      400          {object}  map[string]interface{} "Solicitud inválida"
+// @Failure      401          {object}  map[string]interface{} "Token de acceso requerido"
 // @Failure      500          {object}  map[string]interface{} "Error interno del servidor"
 // @Router       /reserves [post]
 func (h *ReserveHandler) CreateReserveHandler(c *gin.Context) {

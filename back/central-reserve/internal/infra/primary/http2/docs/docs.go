@@ -719,6 +719,11 @@ const docTemplate = `{
         },
         "/clients": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Este endpoint permite obtener la lista de todos los clientes registrados.",
                 "consumes": [
                     "application/json"
@@ -738,6 +743,13 @@ const docTemplate = `{
                             "additionalProperties": true
                         }
                     },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
@@ -748,6 +760,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Este endpoint permite crear un nuevo cliente para un restaurante.",
                 "consumes": [
                     "application/json"
@@ -785,6 +802,13 @@ const docTemplate = `{
                             "additionalProperties": true
                         }
                     },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
@@ -797,6 +821,11 @@ const docTemplate = `{
         },
         "/clients/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Este endpoint permite obtener los datos de un cliente específico por su ID.",
                 "consumes": [
                     "application/json"
@@ -832,6 +861,13 @@ const docTemplate = `{
                             "additionalProperties": true
                         }
                     },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
                     "404": {
                         "description": "Cliente no encontrado",
                         "schema": {
@@ -849,6 +885,11 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Este endpoint permite actualizar parcialmente los datos de un cliente. Solo se modifican los campos enviados.",
                 "consumes": [
                     "application/json"
@@ -893,6 +934,13 @@ const docTemplate = `{
                             "additionalProperties": true
                         }
                     },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
                     "404": {
                         "description": "Cliente no encontrado",
                         "schema": {
@@ -910,6 +958,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Este endpoint permite eliminar un cliente existente del sistema.",
                 "consumes": [
                     "application/json"
@@ -945,6 +998,13 @@ const docTemplate = `{
                             "additionalProperties": true
                         }
                     },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
                     "404": {
                         "description": "Cliente no encontrado",
                         "schema": {
@@ -962,8 +1022,423 @@ const docTemplate = `{
                 }
             }
         },
+        "/permissions": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene la lista completa de permisos del sistema",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Permissions"
+                ],
+                "summary": "Obtener todos los permisos",
+                "responses": {
+                    "200": {
+                        "description": "Lista de permisos obtenida exitosamente",
+                        "schema": {
+                            "$ref": "#/definitions/response.PermissionListResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Crea un nuevo permiso en el sistema",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Permissions"
+                ],
+                "summary": "Crear nuevo permiso",
+                "parameters": [
+                    {
+                        "description": "Datos del permiso a crear",
+                        "name": "permission",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CreatePermissionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Permiso creado exitosamente",
+                        "schema": {
+                            "$ref": "#/definitions/response.PermissionMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Datos de entrada inválidos",
+                        "schema": {
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Permiso con código duplicado",
+                        "schema": {
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/permissions/resource/{resource}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene todos los permisos de un recurso específico",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Permissions"
+                ],
+                "summary": "Obtener permisos por recurso",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "\"users\"",
+                        "description": "Recurso de los permisos",
+                        "name": "resource",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Permisos por recurso obtenidos exitosamente",
+                        "schema": {
+                            "$ref": "#/definitions/response.PermissionListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Recurso inválido",
+                        "schema": {
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/permissions/scope/{scope_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene todos los permisos de un scope específico",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Permissions"
+                ],
+                "summary": "Obtener permisos por scope",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "ID del scope",
+                        "name": "scope_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Permisos por scope obtenidos exitosamente",
+                        "schema": {
+                            "$ref": "#/definitions/response.PermissionListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Scope ID inválido",
+                        "schema": {
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/permissions/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene un permiso específico por su ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Permissions"
+                ],
+                "summary": "Obtener permiso por ID",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "ID del permiso",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Permiso obtenido exitosamente",
+                        "schema": {
+                            "$ref": "#/definitions/response.PermissionSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "ID inválido",
+                        "schema": {
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Permiso no encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Actualiza un permiso existente en el sistema",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Permissions"
+                ],
+                "summary": "Actualizar permiso",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "ID del permiso",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos del permiso a actualizar",
+                        "name": "permission",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.UpdatePermissionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Permiso actualizado exitosamente",
+                        "schema": {
+                            "$ref": "#/definitions/response.PermissionMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Datos de entrada inválidos",
+                        "schema": {
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Permiso no encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Permiso con código duplicado",
+                        "schema": {
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Elimina un permiso del sistema",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Permissions"
+                ],
+                "summary": "Eliminar permiso",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "ID del permiso",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Permiso eliminado exitosamente",
+                        "schema": {
+                            "$ref": "#/definitions/response.PermissionMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "ID inválido",
+                        "schema": {
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Permiso no encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/reserves": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Este endpoint obtiene todas las reservas con información completa de cliente, mesa, restaurante y estado. Soporta filtros opcionales.",
                 "consumes": [
                     "application/json"
@@ -1022,6 +1497,13 @@ const docTemplate = `{
                             "additionalProperties": true
                         }
                     },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
@@ -1032,6 +1514,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Este endpoint permite crear una nueva reserva para una mesa en un restaurante.",
                 "consumes": [
                     "application/json"
@@ -1069,6 +1556,13 @@ const docTemplate = `{
                             "additionalProperties": true
                         }
                     },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
@@ -1081,6 +1575,11 @@ const docTemplate = `{
         },
         "/reserves/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Este endpoint obtiene una reserva específica con información completa de cliente, mesa, restaurante y estado",
                 "consumes": [
                     "application/json"
@@ -1116,6 +1615,13 @@ const docTemplate = `{
                             "additionalProperties": true
                         }
                     },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
                     "404": {
                         "description": "Reserva no encontrada",
                         "schema": {
@@ -1133,6 +1639,11 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Este endpoint permite actualizar campos específicos de una reserva existente",
                 "consumes": [
                     "application/json"
@@ -1177,6 +1688,13 @@ const docTemplate = `{
                             "additionalProperties": true
                         }
                     },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
                     "404": {
                         "description": "Reserva no encontrada",
                         "schema": {
@@ -1196,6 +1714,11 @@ const docTemplate = `{
         },
         "/reserves/{id}/cancel": {
             "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Este endpoint permite cancelar una reserva existente",
                 "consumes": [
                     "application/json"
@@ -1239,6 +1762,13 @@ const docTemplate = `{
                             "additionalProperties": true
                         }
                     },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
                     "404": {
                         "description": "Reserva no encontrada",
                         "schema": {
@@ -1256,8 +1786,268 @@ const docTemplate = `{
                 }
             }
         },
+        "/roles": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene la lista completa de roles del sistema",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Obtener todos los roles",
+                "responses": {
+                    "200": {
+                        "description": "Roles obtenidos exitosamente",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleListResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/roles/by-level": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene todos los roles de un nivel específico con información del scope",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Obtener roles por nivel",
+                "parameters": [
+                    {
+                        "maximum": 10,
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "Nivel del rol",
+                        "name": "level",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Roles obtenidos exitosamente",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Nivel inválido",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/roles/scope/{scope_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene todos los roles de un scope específico",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Obtener roles por scope",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "ID del scope",
+                        "name": "scope_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Roles por scope obtenidos exitosamente",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Scope ID inválido",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/roles/system": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene solo los roles del sistema (is_system = true)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Obtener roles del sistema",
+                "responses": {
+                    "200": {
+                        "description": "Roles del sistema obtenidos exitosamente",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleListResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/roles/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene un rol específico por su ID con información del scope",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Obtener rol por ID",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "ID del rol",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Rol obtenido exitosamente",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "ID inválido",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Rol no encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/tables": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Este endpoint permite obtener la lista de todas las mesas registradas.",
                 "consumes": [
                     "application/json"
@@ -1277,6 +2067,13 @@ const docTemplate = `{
                             "additionalProperties": true
                         }
                     },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
@@ -1287,6 +2084,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Este endpoint permite crear una nueva mesa para un restaurante.",
                 "consumes": [
                     "application/json"
@@ -1324,6 +2126,13 @@ const docTemplate = `{
                             "additionalProperties": true
                         }
                     },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
                     "409": {
                         "description": "Mesa ya existe para este restaurante",
                         "schema": {
@@ -1343,6 +2152,11 @@ const docTemplate = `{
         },
         "/tables/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Este endpoint permite obtener los datos de una mesa específica por su ID.",
                 "consumes": [
                     "application/json"
@@ -1378,6 +2192,13 @@ const docTemplate = `{
                             "additionalProperties": true
                         }
                     },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
                     "404": {
                         "description": "Mesa no encontrada",
                         "schema": {
@@ -1395,6 +2216,11 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Este endpoint permite actualizar parcialmente los datos de una mesa. Solo se modifican los campos enviados.",
                 "consumes": [
                     "application/json"
@@ -1439,6 +2265,13 @@ const docTemplate = `{
                             "additionalProperties": true
                         }
                     },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
                     "404": {
                         "description": "Mesa no encontrada",
                         "schema": {
@@ -1463,6 +2296,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Este endpoint permite eliminar una mesa existente del sistema.",
                 "consumes": [
                     "application/json"
@@ -1498,6 +2336,13 @@ const docTemplate = `{
                             "additionalProperties": true
                         }
                     },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
                     "404": {
                         "description": "Mesa no encontrada",
                         "schema": {
@@ -1514,9 +2359,423 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/users": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene la lista filtrada y paginada de usuarios del sistema con sus roles y businesses",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Obtener usuarios filtrados y paginados",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Número de página",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Tamaño de página",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filtrar por nombre (búsqueda parcial)",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filtrar por email (búsqueda parcial)",
+                        "name": "email",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filtrar por teléfono (búsqueda parcial)",
+                        "name": "phone",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filtrar por estado activo",
+                        "name": "is_active",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filtrar por ID de rol",
+                        "name": "role_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filtrar por ID de business",
+                        "name": "business_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filtrar por fecha de creación (YYYY-MM-DD o YYYY-MM-DD,YYYY-MM-DD para rango)",
+                        "name": "created_at",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "name",
+                            "email",
+                            "phone",
+                            "is_active",
+                            "created_at",
+                            "updated_at"
+                        ],
+                        "type": "string",
+                        "default": "created_at",
+                        "description": "Campo para ordenar",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "default": "desc",
+                        "description": "Orden de clasificación",
+                        "name": "sort_order",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Usuarios obtenidos exitosamente",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Parámetros de filtro inválidos",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Crea un nuevo usuario con roles y businesses opcionales",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Crear usuario",
+                "parameters": [
+                    {
+                        "description": "Datos del usuario",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CreateUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Usuario creado exitosamente",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Datos inválidos",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Email ya existe",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene un usuario específico por su ID con sus roles y businesses",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Obtener usuario por ID",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "ID del usuario",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Usuario obtenido exitosamente",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "ID inválido",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Usuario no encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Actualiza un usuario existente en el sistema",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Actualizar usuario",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "ID del usuario",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos del usuario",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.UpdateUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Usuario actualizado exitosamente",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Datos inválidos",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Usuario no encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Email ya existe",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Elimina un usuario del sistema",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Eliminar usuario",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "ID del usuario",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Usuario eliminado exitosamente",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "ID inválido",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Usuario no encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "internal_infra_primary_http2_handlers_authhandler_response.RoleInfo": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "level": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "scope": {
+                    "type": "string"
+                }
+            }
+        },
         "internal_infra_primary_http2_handlers_businesshandler_response.BusinessTypeResponse": {
             "type": "object",
             "properties": {
@@ -1571,6 +2830,38 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_infra_primary_http2_handlers_userhandler_response.RoleInfo": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_system": {
+                    "type": "boolean"
+                },
+                "level": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "scope_code": {
+                    "type": "string"
+                },
+                "scope_id": {
+                    "type": "integer"
+                },
+                "scope_name": {
                     "type": "string"
                 }
             }
@@ -1688,6 +2979,86 @@ const docTemplate = `{
                 }
             }
         },
+        "request.CreatePermissionRequest": {
+            "type": "object",
+            "required": [
+                "action",
+                "code",
+                "name",
+                "resource",
+                "scope_id"
+            ],
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "example": "create"
+                },
+                "code": {
+                    "type": "string",
+                    "example": "users:create"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Permite crear nuevos usuarios en el sistema"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Crear usuarios"
+                },
+                "resource": {
+                    "type": "string",
+                    "example": "users"
+                },
+                "scope_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "request.CreateUserRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "password"
+            ],
+            "properties": {
+                "avatar_url": {
+                    "type": "string"
+                },
+                "business_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "email": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 6
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "role_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
         "request.LoginRequest": {
             "type": "object",
             "required": [
@@ -1777,6 +3148,42 @@ const docTemplate = `{
                 }
             }
         },
+        "request.UpdatePermissionRequest": {
+            "type": "object",
+            "required": [
+                "action",
+                "code",
+                "name",
+                "resource",
+                "scope_id"
+            ],
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "example": "create"
+                },
+                "code": {
+                    "type": "string",
+                    "example": "users:create"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Permite crear nuevos usuarios en el sistema"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Crear usuarios"
+                },
+                "resource": {
+                    "type": "string",
+                    "example": "users"
+                },
+                "scope_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
         "request.UpdateReservation": {
             "type": "object",
             "properties": {
@@ -1808,6 +3215,49 @@ const docTemplate = `{
                 }
             }
         },
+        "request.UpdateUserRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "name"
+            ],
+            "properties": {
+                "avatar_url": {
+                    "type": "string"
+                },
+                "business_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "email": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 6
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "role_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
         "response.BusinessErrorResponse": {
             "type": "object",
             "properties": {
@@ -1819,6 +3269,62 @@ const docTemplate = `{
                 },
                 "success": {
                     "type": "boolean"
+                }
+            }
+        },
+        "response.BusinessInfo": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "business_type_code": {
+                    "type": "string"
+                },
+                "business_type_id": {
+                    "type": "integer"
+                },
+                "business_type_name": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "custom_domain": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "enable_delivery": {
+                    "type": "boolean"
+                },
+                "enable_pickup": {
+                    "type": "boolean"
+                },
+                "enable_reservations": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "logo_url": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "primary_color": {
+                    "type": "string"
+                },
+                "secondary_color": {
+                    "type": "string"
+                },
+                "timezone": {
+                    "type": "string"
                 }
             }
         },
@@ -2034,6 +3540,15 @@ const docTemplate = `{
                 }
             }
         },
+        "response.PermissionErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "Error al procesar la solicitud"
+                }
+            }
+        },
         "response.PermissionInfo": {
             "type": "object",
             "properties": {
@@ -2060,6 +3575,91 @@ const docTemplate = `{
                 }
             }
         },
+        "response.PermissionListResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.PermissionResponse"
+                    }
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 10
+                }
+            }
+        },
+        "response.PermissionMessageResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Permiso creado exitosamente"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "response.PermissionResponse": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "example": "create"
+                },
+                "code": {
+                    "type": "string",
+                    "example": "users:create"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Permite crear nuevos usuarios en el sistema"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Crear usuarios"
+                },
+                "resource": {
+                    "type": "string",
+                    "example": "users"
+                },
+                "scope_code": {
+                    "type": "string",
+                    "example": "system"
+                },
+                "scope_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "scope_name": {
+                    "type": "string",
+                    "example": "Sistema"
+                }
+            }
+        },
+        "response.PermissionSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.PermissionResponse"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
         "response.ResourcePermissions": {
             "type": "object",
             "properties": {
@@ -2077,25 +3677,91 @@ const docTemplate = `{
                 }
             }
         },
-        "response.RoleInfo": {
+        "response.RoleErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "Error interno del servidor"
+                }
+            }
+        },
+        "response.RoleListResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.RoleResponse"
+                    }
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "response.RoleResponse": {
             "type": "object",
             "properties": {
                 "code": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "admin"
                 },
                 "description": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Rol de administrador del sistema"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_system": {
+                    "type": "boolean",
+                    "example": true
                 },
                 "level": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 2
                 },
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Administrador"
                 },
-                "scope": {
+                "scope_code": {
+                    "type": "string",
+                    "example": "system"
+                },
+                "scope_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "scope_name": {
+                    "type": "string",
+                    "example": "Sistema"
+                }
+            }
+        },
+        "response.RoleSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.RoleResponse"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "response.UserErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
                     "type": "string"
                 }
             }
@@ -2126,6 +3792,78 @@ const docTemplate = `{
                 }
             }
         },
+        "response.UserListResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.UserResponse"
+                    }
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "response.UserMessageResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "response.UserResponse": {
+            "type": "object",
+            "properties": {
+                "avatar_url": {
+                    "type": "string"
+                },
+                "businesses": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.BusinessInfo"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "last_login_at": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_infra_primary_http2_handlers_userhandler_response.RoleInfo"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "response.UserRolesPermissionsResponse": {
             "type": "object",
             "properties": {
@@ -2149,7 +3887,7 @@ const docTemplate = `{
                 "roles": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/response.RoleInfo"
+                        "$ref": "#/definitions/internal_infra_primary_http2_handlers_authhandler_response.RoleInfo"
                     }
                 }
             }
@@ -2159,6 +3897,17 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/response.UserRolesPermissionsResponse"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "response.UserSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.UserResponse"
                 },
                 "success": {
                     "type": "boolean"

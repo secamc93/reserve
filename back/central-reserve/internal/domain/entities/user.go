@@ -12,6 +12,8 @@ type User struct {
 	AvatarURL   string
 	IsActive    bool
 	LastLoginAt *time.Time
+	Roles       []Role
+	Businesses  []BusinessInfo
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	DeletedAt   *time.Time
@@ -25,7 +27,9 @@ type Role struct {
 	Description string
 	Level       int
 	IsSystem    bool
-	Scope       string
+	ScopeID     uint
+	ScopeName   string // Nombre del scope para mostrar
+	ScopeCode   string // Código del scope para mostrar
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	DeletedAt   *time.Time
@@ -39,7 +43,9 @@ type Permission struct {
 	Description string
 	Resource    string
 	Action      string
-	Scope       string
+	ScopeID     uint
+	ScopeName   string // Nombre del scope para mostrar
+	ScopeCode   string // Código del scope para mostrar
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	DeletedAt   *time.Time
@@ -50,6 +56,13 @@ type UserRole struct {
 	UserID    uint
 	RoleID    uint
 	CreatedAt time.Time
+}
+
+// UserBusiness representa la relación many-to-many entre usuarios y businesses
+type UserBusiness struct {
+	UserID     uint
+	BusinessID uint
+	CreatedAt  time.Time
 }
 
 // RolePermission representa la relación many-to-many entre roles y permisos
@@ -68,4 +81,37 @@ type BusinessStaff struct {
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
 	DeletedAt  *time.Time
+}
+
+// Scope representa un scope del sistema
+type Scope struct {
+	ID          uint
+	Name        string
+	Code        string
+	Description string
+	IsSystem    bool
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	DeletedAt   *time.Time
+}
+
+// BusinessInfo representa un business simplificado para usuarios
+type BusinessInfo struct {
+	ID                 uint
+	Name               string
+	Code               string
+	BusinessTypeID     uint
+	Timezone           string
+	Address            string
+	Description        string
+	LogoURL            string
+	PrimaryColor       string
+	SecondaryColor     string
+	CustomDomain       string
+	IsActive           bool
+	EnableDelivery     bool
+	EnablePickup       bool
+	EnableReservations bool
+	BusinessTypeName   string
+	BusinessTypeCode   string
 }

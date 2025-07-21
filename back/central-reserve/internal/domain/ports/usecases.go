@@ -28,7 +28,7 @@ type ITableUseCaseRepository interface {
 
 // IAuthUseCaseRepository define los métodos que necesita AuthUseCase
 type IAuthUseCaseRepository interface {
-	GetUserByEmail(ctx context.Context, email string) (*entities.User, error)
+	GetUserByEmail(ctx context.Context, email string) (*dtos.UserAuthInfo, error)
 	GetUserRoles(ctx context.Context, userID uint) ([]entities.Role, error)
 	GetRolePermissions(ctx context.Context, roleID uint) ([]entities.Permission, error)
 	UpdateLastLogin(ctx context.Context, userID uint) error
@@ -69,4 +69,87 @@ type IBusinessUseCaseRepository interface {
 	CreateBusiness(ctx context.Context, business entities.Business) (string, error)
 	UpdateBusiness(ctx context.Context, id uint, business entities.Business) (string, error)
 	DeleteBusiness(ctx context.Context, id uint) (string, error)
+}
+
+// IPermissionUseCaseRepository define los métodos que necesita PermissionUseCase
+type IPermissionUseCaseRepository interface {
+	GetPermissions(ctx context.Context) ([]entities.Permission, error)
+	GetPermissionByID(ctx context.Context, id uint) (*entities.Permission, error)
+	GetPermissionByCode(ctx context.Context, code string) (*entities.Permission, error)
+	GetPermissionsByScopeID(ctx context.Context, scopeID uint) ([]entities.Permission, error)
+	GetPermissionsByResource(ctx context.Context, resource string) ([]entities.Permission, error)
+	CreatePermission(ctx context.Context, permission entities.Permission) (string, error)
+	UpdatePermission(ctx context.Context, id uint, permission entities.Permission) (string, error)
+	DeletePermission(ctx context.Context, id uint) (string, error)
+}
+
+// IScopeUseCaseRepository define los métodos que necesita ScopeUseCase
+type IScopeUseCaseRepository interface {
+	GetScopes(ctx context.Context) ([]entities.Scope, error)
+	GetScopeByID(ctx context.Context, id uint) (*entities.Scope, error)
+	GetScopeByCode(ctx context.Context, code string) (*entities.Scope, error)
+	CreateScope(ctx context.Context, scope entities.Scope) (string, error)
+	UpdateScope(ctx context.Context, id uint, scope entities.Scope) (string, error)
+	DeleteScope(ctx context.Context, id uint) (string, error)
+}
+
+// IPermissionUseCase define las operaciones de casos de uso para permisos
+type IPermissionUseCase interface {
+	GetPermissions(ctx context.Context) ([]dtos.PermissionDTO, error)
+	GetPermissionByID(ctx context.Context, id uint) (*dtos.PermissionDTO, error)
+	GetPermissionsByScopeID(ctx context.Context, scopeID uint) ([]dtos.PermissionDTO, error)
+	GetPermissionsByResource(ctx context.Context, resource string) ([]dtos.PermissionDTO, error)
+	CreatePermission(ctx context.Context, permission dtos.CreatePermissionDTO) (string, error)
+	UpdatePermission(ctx context.Context, id uint, permission dtos.UpdatePermissionDTO) (string, error)
+	DeletePermission(ctx context.Context, id uint) (string, error)
+}
+
+// IScopeUseCase define las operaciones de casos de uso para scopes
+type IScopeUseCase interface {
+	GetScopes(ctx context.Context) ([]dtos.ScopeDTO, error)
+	GetScopeByID(ctx context.Context, id uint) (*dtos.ScopeDTO, error)
+	CreateScope(ctx context.Context, scope dtos.CreateScopeDTO) (string, error)
+	UpdateScope(ctx context.Context, id uint, scope dtos.UpdateScopeDTO) (string, error)
+	DeleteScope(ctx context.Context, id uint) (string, error)
+}
+
+// IRoleUseCaseRepository define los métodos que necesita RoleUseCase
+type IRoleUseCaseRepository interface {
+	GetRoles(ctx context.Context) ([]entities.Role, error)
+	GetRoleByID(ctx context.Context, id uint) (*entities.Role, error)
+	GetRolesByScopeID(ctx context.Context, scopeID uint) ([]entities.Role, error)
+	GetRolesByLevel(ctx context.Context, level int) ([]entities.Role, error)
+	GetSystemRoles(ctx context.Context) ([]entities.Role, error)
+}
+
+// IRoleUseCase define las operaciones de casos de uso para roles
+type IRoleUseCase interface {
+	GetRoles(ctx context.Context) ([]dtos.RoleDTO, error)
+	GetRoleByID(ctx context.Context, id uint) (*dtos.RoleDTO, error)
+	GetRolesByScopeID(ctx context.Context, scopeID uint) ([]dtos.RoleDTO, error)
+	GetRolesByLevel(ctx context.Context, filters dtos.RoleFilters) ([]dtos.RoleDTO, error)
+	GetSystemRoles(ctx context.Context) ([]dtos.RoleDTO, error)
+}
+
+// IUserUseCaseRepository define los métodos que necesita UserUseCase
+type IUserUseCaseRepository interface {
+	GetUsers(ctx context.Context, filters dtos.UserFilters) ([]dtos.UserQueryDTO, int64, error)
+	GetUserByID(ctx context.Context, id uint) (*entities.User, error)
+	GetUserByEmail(ctx context.Context, email string) (*entities.User, error)
+	GetUserRoles(ctx context.Context, userID uint) ([]entities.Role, error)
+	GetUserBusinesses(ctx context.Context, userID uint) ([]entities.BusinessInfo, error)
+	CreateUser(ctx context.Context, user entities.User) (string, error)
+	UpdateUser(ctx context.Context, id uint, user entities.User) (string, error)
+	DeleteUser(ctx context.Context, id uint) (string, error)
+	AssignRolesToUser(ctx context.Context, userID uint, roleIDs []uint) error
+	AssignBusinessesToUser(ctx context.Context, userID uint, businessIDs []uint) error
+}
+
+// IUserUseCase define las operaciones de casos de uso para usuarios
+type IUserUseCase interface {
+	GetUsers(ctx context.Context, filters dtos.UserFilters) (*dtos.UserListDTO, error)
+	GetUserByID(ctx context.Context, id uint) (*dtos.UserDTO, error)
+	CreateUser(ctx context.Context, user dtos.CreateUserDTO) (string, error)
+	UpdateUser(ctx context.Context, id uint, user dtos.UpdateUserDTO) (string, error)
+	DeleteUser(ctx context.Context, id uint) (string, error)
 }
