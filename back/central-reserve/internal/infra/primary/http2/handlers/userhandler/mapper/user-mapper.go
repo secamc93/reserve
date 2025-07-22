@@ -28,7 +28,6 @@ func ToCreateUserDTO(req request.CreateUserRequest) dtos.CreateUserDTO {
 	return dtos.CreateUserDTO{
 		Name:        req.Name,
 		Email:       req.Email,
-		Password:    req.Password,
 		Phone:       req.Phone,
 		AvatarURL:   req.AvatarURL,
 		IsActive:    req.IsActive,

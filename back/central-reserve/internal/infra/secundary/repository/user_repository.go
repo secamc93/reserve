@@ -220,22 +220,22 @@ func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*ent
 }
 
 // CreateUser crea un nuevo usuario
-func (r *UserRepository) CreateUser(ctx context.Context, user entities.User) (string, error) {
+func (r *UserRepository) CreateUser(ctx context.Context, user entities.User) (uint, error) {
 	// Hash de la contraseña
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		r.logger.Error().Err(err).Msg("Error al hashear contraseña")
-		return "", fmt.Errorf("error al procesar contraseña")
+		return 0, fmt.Errorf("error al procesar contraseña")
 	}
 	user.Password = string(hashedPassword)
 
 	if err := r.database.Conn(ctx).Table("user").Create(&user).Error; err != nil {
 		r.logger.Error().Err(err).Msg("Error al crear usuario")
-		return "", err
+		return 0, err
 	}
 
 	r.logger.Info().Uint("user_id", user.ID).Msg("Usuario creado exitosamente")
-	return fmt.Sprintf("Usuario creado con ID: %d", user.ID), nil
+	return user.ID, nil
 }
 
 // UpdateUser actualiza un usuario existente

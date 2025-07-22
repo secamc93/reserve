@@ -74,3 +74,12 @@ type UserMessageResponse struct {
 type UserErrorResponse struct {
 	Error string `json:"error"`
 }
+
+// UserCreatedResponse representa la respuesta al crear un usuario, incluyendo la contraseña generada
+// ¡La contraseña solo se muestra una vez en la creación!
+type UserCreatedResponse struct {
+	Success  bool   `json:"success"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Message  string `json:"message"`
+}

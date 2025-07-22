@@ -41,9 +41,11 @@ type IReservationRepository interface {
 // IAuthRepository define las operaciones de autenticación
 type IAuthRepository interface {
 	GetUserByEmail(ctx context.Context, email string) (*dtos.UserAuthInfo, error)
+	GetUserByID(ctx context.Context, userID uint) (*dtos.UserAuthInfo, error)
 	GetUserRoles(ctx context.Context, userID uint) ([]entities.Role, error)
 	GetRolePermissions(ctx context.Context, roleID uint) ([]entities.Permission, error)
 	UpdateLastLogin(ctx context.Context, userID uint) error
+	ChangePassword(ctx context.Context, userID uint, newPassword string) error
 }
 
 // IAuthService define las operaciones de autenticación (métodos de repositorio)

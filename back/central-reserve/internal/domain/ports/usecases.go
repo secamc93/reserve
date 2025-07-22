@@ -29,9 +29,11 @@ type ITableUseCaseRepository interface {
 // IAuthUseCaseRepository define los métodos que necesita AuthUseCase
 type IAuthUseCaseRepository interface {
 	GetUserByEmail(ctx context.Context, email string) (*dtos.UserAuthInfo, error)
+	GetUserByID(ctx context.Context, userID uint) (*dtos.UserAuthInfo, error)
 	GetUserRoles(ctx context.Context, userID uint) ([]entities.Role, error)
 	GetRolePermissions(ctx context.Context, roleID uint) ([]entities.Permission, error)
 	UpdateLastLogin(ctx context.Context, userID uint) error
+	ChangePassword(ctx context.Context, userID uint, newPassword string) error
 }
 
 // IReserveUseCaseRepository define los métodos que necesita ReserveUseCase
@@ -138,7 +140,7 @@ type IUserUseCaseRepository interface {
 	GetUserByEmail(ctx context.Context, email string) (*entities.User, error)
 	GetUserRoles(ctx context.Context, userID uint) ([]entities.Role, error)
 	GetUserBusinesses(ctx context.Context, userID uint) ([]entities.BusinessInfo, error)
-	CreateUser(ctx context.Context, user entities.User) (string, error)
+	CreateUser(ctx context.Context, user entities.User) (uint, error)
 	UpdateUser(ctx context.Context, id uint, user entities.User) (string, error)
 	DeleteUser(ctx context.Context, id uint) (string, error)
 	AssignRolesToUser(ctx context.Context, userID uint, roleIDs []uint) error
@@ -149,7 +151,7 @@ type IUserUseCaseRepository interface {
 type IUserUseCase interface {
 	GetUsers(ctx context.Context, filters dtos.UserFilters) (*dtos.UserListDTO, error)
 	GetUserByID(ctx context.Context, id uint) (*dtos.UserDTO, error)
-	CreateUser(ctx context.Context, user dtos.CreateUserDTO) (string, error)
+	CreateUser(ctx context.Context, user dtos.CreateUserDTO) (string, string, string, error)
 	UpdateUser(ctx context.Context, id uint, user dtos.UpdateUserDTO) (string, error)
 	DeleteUser(ctx context.Context, id uint) (string, error)
 }

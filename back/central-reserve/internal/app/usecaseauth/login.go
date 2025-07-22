@@ -92,10 +92,22 @@ func (uc *AuthUseCase) Login(ctx context.Context, request dtos.LoginRequest) (*d
 		return nil, fmt.Errorf("error interno del servidor")
 	}
 
-	// Actualizar último login
+	// Verificar si es el primer login (LastLoginAt es nil)
+	isFirstLogin := userAuth.LastLoginAt == nil
+
+	if isFirstLogin {
+		uc.log.Info().
+			Str("email", userAuth.Email).
+			Uint("user_id", userAuth.ID).
+			Msg("Primer login detectado - se requiere cambio de contraseña")
+	}
+
+	// Actualizar último login (siempre, excepto en el primer login real)
 	if err := uc.repository.UpdateLastLogin(ctx, userAuth.ID); err != nil {
 		uc.log.Warn().Err(err).Uint("user_id", userAuth.ID).Msg("Error al actualizar último login")
 		// No retornamos error aquí porque el login ya fue exitoso
+	} else {
+		uc.log.Info().Uint("user_id", userAuth.ID).Msg("Último login actualizado")
 	}
 
 	// Construir respuesta simplificada
@@ -107,14 +119,16 @@ func (uc *AuthUseCase) Login(ctx context.Context, request dtos.LoginRequest) (*d
 			Phone:       userAuth.Phone,
 			AvatarURL:   userAuth.AvatarURL,
 			IsActive:    userAuth.IsActive,
-			LastLoginAt: userAuth.LastLoginAt,
+			LastLoginAt: userAuth.LastLoginAt, // Mantiene el valor original (nil para primer login)
 		},
-		Token: token,
+		Token:                 token,
+		RequirePasswordChange: isFirstLogin,
 	}
 
 	uc.log.Info().
 		Str("email", userAuth.Email).
 		Uint("user_id", userAuth.ID).
+		Bool("require_password_change", isFirstLogin).
 		Msg("Login exitoso")
 
 	return response, nil

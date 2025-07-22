@@ -36,7 +36,7 @@ func (h *UserHandler) CreateUserHandler(c *gin.Context) {
 	h.logger.Info().Str("email", req.Email).Msg("Iniciando solicitud para crear usuario")
 
 	userDTO := mapper.ToCreateUserDTO(req)
-	message, err := h.usecase.CreateUser(c.Request.Context(), userDTO)
+	email, password, message, err := h.usecase.CreateUser(c.Request.Context(), userDTO)
 	if err != nil {
 		h.logger.Error().Err(err).Msg("Error al crear usuario desde el caso de uso")
 
@@ -55,8 +55,10 @@ func (h *UserHandler) CreateUserHandler(c *gin.Context) {
 	}
 
 	h.logger.Info().Str("email", req.Email).Msg("Usuario creado exitosamente")
-	c.JSON(http.StatusCreated, response.UserMessageResponse{
-		Success: true,
-		Message: message,
+	c.JSON(http.StatusCreated, response.UserCreatedResponse{
+		Success:  true,
+		Email:    email,
+		Password: password,
+		Message:  message,
 	})
 }

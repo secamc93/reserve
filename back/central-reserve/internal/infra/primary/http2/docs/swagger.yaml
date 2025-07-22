@@ -133,6 +133,20 @@ definitions:
         description: Razón opcional de cancelación
         type: string
     type: object
+  request.ChangePasswordRequest:
+    properties:
+      current_password:
+        maxLength: 100
+        minLength: 6
+        type: string
+      new_password:
+        maxLength: 100
+        minLength: 6
+        type: string
+    required:
+    - current_password
+    - new_password
+    type: object
   request.Client:
     properties:
       business_id:
@@ -194,20 +208,16 @@ definitions:
         maxLength: 100
         minLength: 2
         type: string
-      password:
-        maxLength: 100
-        minLength: 6
-        type: string
       phone:
         type: string
       role_ids:
+        description: Opcional
         items:
           type: integer
         type: array
     required:
     - email
     - name
-    - password
     type: object
   request.LoginRequest:
     properties:
@@ -498,6 +508,13 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/internal_infra_primary_http2_handlers_businesstypehandler_response.BusinessTypeResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  response.ChangePasswordResponse:
+    properties:
       message:
         type: string
       success:
@@ -797,6 +814,46 @@ info:
   title: Restaurant Reservation API
   version: "1.0"
 paths:
+  /auth/change-password:
+    post:
+      consumes:
+      - application/json
+      description: Cambia la contraseña del usuario autenticado
+      parameters:
+      - description: Datos para cambiar contraseña
+        in: body
+        name: password
+        required: true
+        schema:
+          $ref: '#/definitions/request.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Contraseña cambiada exitosamente
+          schema:
+            $ref: '#/definitions/response.ChangePasswordResponse'
+        "400":
+          description: Datos inválidos
+          schema:
+            $ref: '#/definitions/response.LoginErrorResponse'
+        "401":
+          description: Token de acceso requerido
+          schema:
+            $ref: '#/definitions/response.LoginErrorResponse'
+        "403":
+          description: Contraseña actual incorrecta
+          schema:
+            $ref: '#/definitions/response.LoginErrorResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/response.LoginErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Cambiar contraseña
+      tags:
+      - Auth
   /auth/login:
     post:
       consumes:

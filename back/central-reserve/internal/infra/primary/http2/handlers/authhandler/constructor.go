@@ -7,10 +7,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// IAuthHandler define la interfaz para el handler de autenticación
+// IAuthHandler define la interfaz del handler de autenticación
 type IAuthHandler interface {
 	LoginHandler(c *gin.Context)
 	GetUserRolesPermissionsHandler(c *gin.Context)
+	ChangePasswordHandler(c *gin.Context)
 }
 
 type AuthHandler struct {

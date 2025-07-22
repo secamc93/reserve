@@ -4,8 +4,9 @@ import "time"
 
 // LoginResponse representa la respuesta simplificada del login
 type LoginResponse struct {
-	User  UserInfo `json:"user"`
-	Token string   `json:"token"`
+	User                  UserInfo `json:"user"`
+	Token                 string   `json:"token"`
+	RequirePasswordChange bool     `json:"require_password_change"`
 }
 
 // UserInfo representa la información del usuario en la respuesta

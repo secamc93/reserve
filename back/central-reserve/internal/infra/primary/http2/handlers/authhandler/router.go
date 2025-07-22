@@ -21,6 +21,7 @@ func RegisterRoutes(v1Group *gin.RouterGroup, handler IAuthHandler, jwtService *
 		protectedGroup.Use(middleware.AuthMiddleware(jwtService, logger))
 		{
 			protectedGroup.GET("/roles-permissions", handler.GetUserRolesPermissionsHandler)
+			protectedGroup.POST("/change-password", handler.ChangePasswordHandler)
 		}
 	}
 }

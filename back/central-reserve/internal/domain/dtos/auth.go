@@ -10,8 +10,9 @@ type LoginRequest struct {
 
 // LoginResponse representa la respuesta simplificada del login
 type LoginResponse struct {
-	User  UserInfo
-	Token string
+	User                  UserInfo
+	Token                 string
+	RequirePasswordChange bool
 }
 
 // UserRolesPermissionsResponse representa la respuesta de roles y permisos del usuario
@@ -66,4 +67,17 @@ type PermissionInfo struct {
 	Resource    string
 	Action      string
 	Scope       string
+}
+
+// ChangePasswordRequest representa la solicitud de cambio de contraseña
+type ChangePasswordRequest struct {
+	UserID          uint
+	CurrentPassword string
+	NewPassword     string
+}
+
+// ChangePasswordResponse representa la respuesta del cambio de contraseña
+type ChangePasswordResponse struct {
+	Success bool
+	Message string
 }

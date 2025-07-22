@@ -23,6 +23,69 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/auth/change-password": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Cambia la contraseña del usuario autenticado",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Cambiar contraseña",
+                "parameters": [
+                    {
+                        "description": "Datos para cambiar contraseña",
+                        "name": "password",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.ChangePasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Contraseña cambiada exitosamente",
+                        "schema": {
+                            "$ref": "#/definitions/response.ChangePasswordResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Datos inválidos",
+                        "schema": {
+                            "$ref": "#/definitions/response.LoginErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "$ref": "#/definitions/response.LoginErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Contraseña actual incorrecta",
+                        "schema": {
+                            "$ref": "#/definitions/response.LoginErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/response.LoginErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/login": {
             "post": {
                 "description": "Autentica un usuario con email y contraseña, retornando información del usuario y token de acceso",
@@ -2953,6 +3016,25 @@ const docTemplate = `{
                 }
             }
         },
+        "request.ChangePasswordRequest": {
+            "type": "object",
+            "required": [
+                "current_password",
+                "new_password"
+            ],
+            "properties": {
+                "current_password": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 6
+                },
+                "new_password": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 6
+                }
+            }
+        },
         "request.Client": {
             "type": "object",
             "required": [
@@ -3019,8 +3101,7 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "email",
-                "name",
-                "password"
+                "name"
             ],
             "properties": {
                 "avatar_url": {
@@ -3043,15 +3124,11 @@ const docTemplate = `{
                     "maxLength": 100,
                     "minLength": 2
                 },
-                "password": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 6
-                },
                 "phone": {
                     "type": "string"
                 },
                 "role_ids": {
+                    "description": "Opcional",
                     "type": "array",
                     "items": {
                         "type": "integer"
@@ -3488,6 +3565,17 @@ const docTemplate = `{
                 "data": {
                     "$ref": "#/definitions/internal_infra_primary_http2_handlers_businesstypehandler_response.BusinessTypeResponse"
                 },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "response.ChangePasswordResponse": {
+            "type": "object",
+            "properties": {
                 "message": {
                     "type": "string"
                 },

@@ -12,8 +12,6 @@ type User struct {
 	AvatarURL   string
 	IsActive    bool
 	LastLoginAt *time.Time
-	Roles       []Role
-	Businesses  []BusinessInfo
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	DeletedAt   *time.Time
@@ -53,16 +51,14 @@ type Permission struct {
 
 // UserRole representa la relación many-to-many entre usuarios y roles
 type UserRole struct {
-	UserID    uint
-	RoleID    uint
-	CreatedAt time.Time
+	UserID uint
+	RoleID uint
 }
 
 // UserBusiness representa la relación many-to-many entre usuarios y businesses
 type UserBusiness struct {
 	UserID     uint
 	BusinessID uint
-	CreatedAt  time.Time
 }
 
 // RolePermission representa la relación many-to-many entre roles y permisos

@@ -21,7 +21,8 @@ func ToLoginResponse(domainResponse *dtos.LoginResponse) *response.LoginResponse
 			IsActive:    domainResponse.User.IsActive,
 			LastLoginAt: domainResponse.User.LastLoginAt,
 		},
-		Token: domainResponse.Token,
+		Token:                 domainResponse.Token,
+		RequirePasswordChange: domainResponse.RequirePasswordChange,
 	}
 }
 

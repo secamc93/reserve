@@ -7,8 +7,10 @@ import (
 	"central_reserve/internal/infra/secundary/repository/db"
 	"central_reserve/internal/pkg/log"
 	"context"
+	"fmt"
 	"time"
 
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -97,5 +99,45 @@ func (r *AuthRepository) UpdateLastLogin(ctx context.Context, userID uint) error
 		r.logger.Error().Uint("user_id", userID).Msg("Error al actualizar último login")
 		return err
 	}
+	return nil
+}
+
+// GetUserByID obtiene un usuario por su ID
+func (r *AuthRepository) GetUserByID(ctx context.Context, userID uint) (*dtos.UserAuthInfo, error) {
+	var userAuth dtos.UserAuthInfo
+	if err := r.database.Conn(ctx).
+		Table("user").
+		Select("id, name, email, password, phone, avatar_url, is_active, last_login_at, created_at, updated_at, deleted_at").
+		Where("id = ?", userID).
+		First(&userAuth).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			r.logger.Debug().Uint("user_id", userID).Msg("Usuario no encontrado")
+			return nil, nil
+		}
+		r.logger.Error().Uint("user_id", userID).Err(err).Msg("Error al obtener usuario por ID")
+		return nil, err
+	}
+	return &userAuth, nil
+}
+
+// ChangePassword cambia la contraseña de un usuario
+func (r *AuthRepository) ChangePassword(ctx context.Context, userID uint, newPassword string) error {
+	// Hash de la nueva contraseña
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		r.logger.Error().Err(err).Msg("Error al hashear nueva contraseña")
+		return fmt.Errorf("error al procesar contraseña")
+	}
+
+	// Actualizar contraseña en la base de datos
+	if err := r.database.Conn(ctx).
+		Table("user").
+		Where("id = ?", userID).
+		Update("password", string(hashedPassword)).Error; err != nil {
+		r.logger.Error().Uint("user_id", userID).Err(err).Msg("Error al actualizar contraseña")
+		return err
+	}
+
+	r.logger.Info().Uint("user_id", userID).Msg("Contraseña actualizada exitosamente")
 	return nil
 }
