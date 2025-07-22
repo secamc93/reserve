@@ -4,18 +4,16 @@ import UserInfo from '../components/UserInfo.js';
 import './AuthTestPage.css';
 
 const AuthTestPage = () => {
-  const { 
-    isAuthenticated, 
-    userInfo, 
-    userRolesPermissions, 
-    isSuperAdmin, 
-    hasPermission, 
-    hasRole, 
-    canManageResource, 
+  const {
+    isAuthenticated,
+    userInfo,
+    isSuperAdmin,
+    hasPermission,
+    canManageResource,
     canReadResource,
     getUserRoles,
     getUserPermissions,
-    logout 
+    logout
   } = useAuth();
 
   const roles = getUserRoles();

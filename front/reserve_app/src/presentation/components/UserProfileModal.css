@@ -1,0 +1,506 @@
+/* UserProfileModal.css - Modal elegante para perfil de usuario */
+
+.user-profile-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(43, 43, 43, 0.8);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        backdrop-filter: blur(0px);
+    }
+
+    to {
+        opacity: 1;
+        backdrop-filter: blur(10px);
+    }
+}
+
+.user-profile-modal {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border-radius: 20px;
+    box-shadow:
+        0 25px 50px rgba(43, 43, 43, 0.4),
+        0 10px 25px rgba(43, 43, 43, 0.25);
+    max-width: 900px;
+    width: 90%;
+    max-height: 90vh;
+    overflow: hidden;
+    animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(40px) scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Header del modal */
+.modal-header {
+    background: linear-gradient(135deg, #2b2b2b 0%, #1a1a1a 100%);
+    color: white;
+    padding: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 20px 20px 0 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.modal-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        left: -100%;
+    }
+
+    100% {
+        left: 100%;
+    }
+}
+
+.user-info-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.user-avatar-large {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    border: 4px solid rgba(255, 255, 255, 0.2);
+}
+
+.user-avatar-large img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.user-avatar-placeholder-large {
+    font-size: 32px;
+    font-weight: bold;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.user-details-modal {
+    flex: 1;
+}
+
+.user-name-modal {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.user-email-modal {
+    font-size: 1.1rem;
+    margin: 0 0 1rem 0;
+    color: #e2e8f0;
+    opacity: 0.9;
+}
+
+.super-admin-badge-modal {
+    display: inline-block;
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    color: #333;
+    font-size: 0.9rem;
+    font-weight: 700;
+    padding: 8px 16px;
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+    border: 1px solid rgba(255, 215, 0, 0.5);
+}
+
+.close-modal-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 12px;
+    border-radius: 12px;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    font-weight: bold;
+}
+
+.close-modal-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Contenido del modal */
+.modal-content {
+    padding: 30px;
+    max-height: calc(90vh - 180px);
+    overflow-y: auto;
+    background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+}
+
+/* Scrollbar personalizado */
+.modal-content::-webkit-scrollbar {
+    width: 12px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+    background: #f1f3f4;
+    border-radius: 6px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #2b2b2b 0%, #1a1a1a 100%);
+    border-radius: 6px;
+    border: 2px solid #f1f3f4;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #34495e 0%, #2b2b2b 100%);
+}
+
+/* Secciones */
+.roles-section-modal,
+.permissions-section-modal {
+    margin-bottom: 40px;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2b2b2b;
+    margin: 0 0 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 15px;
+    border-bottom: 3px solid rgba(43, 43, 43, 0.1);
+}
+
+/* Grid de roles */
+.roles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.role-card {
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid rgba(102, 126, 234, 0.2);
+    border-left: 6px solid #667eea;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.1);
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+}
+
+.role-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(102, 126, 234, 0.2);
+    border-color: rgba(102, 126, 234, 0.4);
+}
+
+.role-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.role-name-large {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #2b2b2b;
+}
+
+.role-level-badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.role-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.role-code-large {
+    font-family: 'Courier New', monospace;
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    align-self: flex-start;
+}
+
+.role-description {
+    color: #555;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin: 0;
+    font-style: italic;
+}
+
+/* Grid de permisos */
+.permissions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+.permission-card {
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid rgba(40, 167, 69, 0.2);
+    border-left: 6px solid #28a745;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.1);
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+}
+
+.permission-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(40, 167, 69, 0.2);
+    border-color: rgba(40, 167, 69, 0.4);
+}
+
+.permission-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    gap: 10px;
+}
+
+.permission-name-large {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #2b2b2b;
+    flex: 1;
+}
+
+.permission-action-badge {
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: white;
+    flex-shrink: 0;
+}
+
+.permission-action-badge.manage {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.permission-action-badge.create {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.permission-action-badge.update {
+    background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+    color: #333;
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+}
+
+.permission-action-badge.delete {
+    background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+.permission-details {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.permission-resource-large {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    align-self: flex-start;
+}
+
+.permission-description-large {
+    color: #555;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin: 0 0 8px 0;
+}
+
+.permission-description-large strong {
+    color: #2b2b2b;
+    font-weight: 700;
+}
+
+.permission-extra-description {
+    color: #777;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    margin: 0;
+    font-style: italic;
+    padding-top: 4px;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Estado vacío */
+.empty-state-modal {
+    text-align: center;
+    padding: 60px 40px;
+    color: #666;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    display: block;
+    margin-bottom: 20px;
+    opacity: 0.6;
+}
+
+.empty-state-modal h3 {
+    color: #2b2b2b;
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+}
+
+.empty-state-modal p {
+    font-size: 1.1rem;
+    color: #666;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .user-profile-modal {
+        width: 95%;
+        margin: 10px;
+        max-height: 95vh;
+        border-radius: 16px;
+    }
+
+    .modal-header {
+        padding: 20px;
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+    }
+
+    .user-info-header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .user-avatar-large {
+        width: 60px;
+        height: 60px;
+    }
+
+    .user-avatar-placeholder-large {
+        font-size: 24px;
+    }
+
+    .user-name-modal {
+        font-size: 1.5rem;
+    }
+
+    .modal-content {
+        padding: 20px;
+    }
+
+    .roles-grid,
+    .permissions-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .permission-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .permission-name-large {
+        margin-bottom: 5px;
+    }
+}
+
+@media (max-width: 480px) {
+    .user-profile-modal {
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+        max-height: 100vh;
+    }
+
+    .modal-header {
+        border-radius: 0;
+        padding: 16px;
+    }
+
+    .modal-content {
+        padding: 16px;
+    }
+
+    .role-card,
+    .permission-card {
+        padding: 16px;
+    }
+}

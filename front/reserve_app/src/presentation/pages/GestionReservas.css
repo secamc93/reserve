@@ -28,16 +28,16 @@
   font-weight: 700;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   /* Sombra en el texto */
-  color: #ecf0f1;
-  /* Color más suave */
+  color: #ffffff !important;
+  /* Color blanco forzado para mejor visibilidad */
 }
 
 .header-content p {
   font-size: 1.2rem;
   opacity: 0.9;
   margin-bottom: 30px;
-  color: #bdc3c7;
-  /* Color más sutil para la descripción */
+  color: #ffffff !important;
+  /* Color blanco forzado para mejor visibilidad */
 }
 
 .stats {

@@ -236,35 +236,35 @@
   .user-info-container {
     margin: 10px;
   }
-  
+
   .user-info-header {
     padding: 15px;
   }
-  
+
   .user-avatar {
     width: 40px;
     height: 40px;
     margin-right: 12px;
   }
-  
+
   .user-name {
     font-size: 14px;
   }
-  
+
   .user-email {
     font-size: 12px;
   }
-  
+
   .user-details-expanded {
     padding: 15px;
   }
-  
+
   .role-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
-  
+
   .permission-header {
     flex-direction: column;
     align-items: flex-start;
@@ -278,43 +278,43 @@
     background: #1a1a1a;
     color: white;
   }
-  
+
   .user-info-header {
     border-bottom-color: #333;
   }
-  
+
   .user-info-header:hover {
     background-color: #2a2a2a;
   }
-  
+
   .user-name {
     color: #fff;
   }
-  
+
   .user-email {
     color: #ccc;
   }
-  
+
   .user-details-expanded {
     background: #2a2a2a;
   }
-  
+
   .role-item,
   .permission-item {
     background: #333;
     color: white;
   }
-  
+
   .role-code {
     background: #444;
     color: #ccc;
   }
-  
+
   .permission-resource {
     color: #ccc;
   }
-  
+
   .permission-description {
     color: #aaa;
   }
-} 
+}

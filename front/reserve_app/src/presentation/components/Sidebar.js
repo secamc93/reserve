@@ -1,8 +1,12 @@
-import React from 'react';
-import UserInfo from './UserInfo.js';
+import React, { useState } from 'react';
+import UserProfileModal from './UserProfileModal.js';
+import { useAuth } from '../hooks/useAuth.js';
 import './Sidebar.css';
 
 const Sidebar = ({ activeView, onViewChange, userInfo, onLogout }) => {
+    const { isSuperAdmin, hasPermission } = useAuth();
+    const [showProfileModal, setShowProfileModal] = useState(false);
+
     const menuItems = [
         {
             id: 'calendario',
@@ -18,18 +22,40 @@ const Sidebar = ({ activeView, onViewChange, userInfo, onLogout }) => {
         },
         {
             id: 'auth-test',
-            icon: '🔐',
+            icon: '▢',
             label: 'Prueba Auth',
             path: '/auth-test'
         }
     ];
+
+    // Agregar menú de administración si tiene permisos
+    if (isSuperAdmin() || hasPermission('manage_users')) {
+        menuItems.push({
+            id: 'admin-users',
+            icon: '▤',
+            label: 'Administrar Usuarios',
+            path: '/admin-users'
+        });
+    }
+
+    const handleAvatarClick = () => {
+        setShowProfileModal(true);
+    };
+
+    const closeProfileModal = () => {
+        setShowProfileModal(false);
+    };
 
     return (
         <div className="sidebar">
             {/* Header con información del usuario */}
             <div className="sidebar-header">
                 <div className="user-info">
-                    <div className="user-avatar">
+                    <div
+                        className="user-avatar clickable-avatar"
+                        onClick={handleAvatarClick}
+                        title="Ver perfil y permisos"
+                    >
                         {userInfo?.avatar_url ? (
                             <img src={userInfo.avatar_url} alt="Avatar" />
                         ) : (
@@ -43,7 +69,7 @@ const Sidebar = ({ activeView, onViewChange, userInfo, onLogout }) => {
                         <div className="user-email">{userInfo?.email || 'usuario@ejemplo.com'}</div>
                     </div>
                 </div>
-                <button 
+                <button
                     className="logout-button"
                     onClick={onLogout}
                     title="Cerrar sesión"
@@ -74,10 +100,12 @@ const Sidebar = ({ activeView, onViewChange, userInfo, onLogout }) => {
                 </ul>
             </nav>
 
-            {/* Componente UserInfo expandido */}
-            <div className="sidebar-user-info">
-                <UserInfo />
-            </div>
+            {/* Modal de perfil de usuario */}
+            <UserProfileModal
+                isOpen={showProfileModal}
+                onClose={closeProfileModal}
+                userInfo={userInfo}
+            />
         </div>
     );
 };

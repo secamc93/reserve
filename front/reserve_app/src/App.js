@@ -3,6 +3,7 @@ import Layout from './presentation/components/Layout.js';
 import GestionReservas from './presentation/pages/GestionReservas.js';
 import CalendarioPage from './presentation/pages/CalendarioPage.js';
 import AuthTestPage from './presentation/pages/AuthTestPage.js';
+import { AdminUsersPage } from './presentation/pages/AdminUsersPage.js';
 import Login from './presentation/components/Login.js';
 import { useAuth } from './presentation/hooks/useAuth.js';
 import './App.css';
@@ -33,6 +34,8 @@ function App() {
         return <GestionReservas />;
       case 'auth-test':
         return <AuthTestPage />;
+      case 'admin-users':
+        return <AdminUsersPage />;
       default:
         return <CalendarioPage />;
     }
@@ -56,8 +59,8 @@ function App() {
   // Mostrar aplicación principal si está autenticado
   return (
     <div className="App">
-      <Layout 
-        activeView={activeView} 
+      <Layout
+        activeView={activeView}
         onViewChange={handleViewChange}
         userInfo={userInfo}
         onLogout={handleLogout}
