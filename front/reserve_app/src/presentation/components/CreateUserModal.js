@@ -8,28 +8,31 @@ import './CreateUserModal.css';
  * @param {Function} props.onClose - Función para cerrar el modal.
  * @param {Function} props.onSubmit - Función para enviar los datos del nuevo usuario.
  * @param {Array} props.roles - Lista de roles disponibles.
+ * @param {Array} props.businesses - Lista de negocios disponibles.
  */
-const CreateUserModal = ({ isOpen, onClose, onSubmit, roles }) => {
+const CreateUserModal = ({ isOpen, onClose, onSubmit, roles, businesses }) => {
     const [formData, setFormData] = useState({
+        name: '',
         email: '',
-        password: '',
-        first_name: '',
-        last_name: '',
-        username: '',
+        phone: '',
+        business_ids: [],
         role_ids: [],
         is_active: true,
     });
     const [errors, setErrors] = useState({});
 
+    // ✅ Asegurar que roles y businesses sean arrays
+    const safeRoles = Array.isArray(roles) ? roles : [];
+    const safeBusinesses = Array.isArray(businesses) ? businesses : [];
+
     // Limpiar formulario cuando el modal se abre o cierra
     useEffect(() => {
         if (!isOpen) {
             setFormData({
+                name: '',
                 email: '',
-                password: '',
-                first_name: '',
-                last_name: '',
-                username: '',
+                phone: '',
+                business_ids: [],
                 role_ids: [],
                 is_active: true,
             });
@@ -39,13 +42,21 @@ const CreateUserModal = ({ isOpen, onClose, onSubmit, roles }) => {
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
-        if (type === 'checkbox' && name !== 'is_active') {
+        if (type === 'checkbox' && name === 'role_ids') {
             const roleId = parseInt(value, 10);
             setFormData((prev) => ({
                 ...prev,
                 role_ids: checked
                     ? [...prev.role_ids, roleId]
                     : prev.role_ids.filter((id) => id !== roleId),
+            }));
+        } else if (type === 'checkbox' && name === 'business_ids') {
+            const businessId = parseInt(value, 10);
+            setFormData((prev) => ({
+                ...prev,
+                business_ids: checked
+                    ? [...prev.business_ids, businessId]
+                    : prev.business_ids.filter((id) => id !== businessId),
             }));
         } else {
             setFormData((prev) => ({
@@ -57,13 +68,11 @@ const CreateUserModal = ({ isOpen, onClose, onSubmit, roles }) => {
 
     const validateForm = () => {
         const newErrors = {};
+        if (!formData.name.trim()) newErrors.name = 'El nombre completo es obligatorio.';
         if (!formData.email.trim()) newErrors.email = 'El correo es obligatorio.';
         else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'El formato del correo no es válido.';
-        if (!formData.password) newErrors.password = 'La contraseña es obligatoria.';
-        if (!formData.first_name.trim()) newErrors.first_name = 'El nombre es obligatorio.';
-        if (!formData.last_name.trim()) newErrors.last_name = 'El apellido es obligatorio.';
-        if (!formData.username.trim()) newErrors.username = 'El nombre de usuario es obligatorio.';
         if (formData.role_ids.length === 0) newErrors.role_ids = 'Debe seleccionar al menos un rol.';
+        if (formData.business_ids.length === 0) newErrors.business_ids = 'Debe seleccionar al menos un negocio.';
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -91,29 +100,18 @@ const CreateUserModal = ({ isOpen, onClose, onSubmit, roles }) => {
                     <form onSubmit={handleSubmit} noValidate>
                         <div className="form-grid">
                             <div className="form-group">
-                                <label htmlFor="first_name">Nombre</label>
-                                <input type="text" id="first_name" name="first_name" value={formData.first_name} onChange={handleChange} />
-                                {errors.first_name && <p className="error-text">{errors.first_name}</p>}
+                                <label htmlFor="name">Nombre Completo</label>
+                                <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} />
+                                {errors.name && <p className="error-text">{errors.name}</p>}
                             </div>
                             <div className="form-group">
-                                <label htmlFor="last_name">Apellido</label>
-                                <input type="text" id="last_name" name="last_name" value={formData.last_name} onChange={handleChange} />
-                                {errors.last_name && <p className="error-text">{errors.last_name}</p>}
-                            </div>
-                            <div className="form-group">
-                                <label htmlFor="correo">Correo</label>
+                                <label htmlFor="email">Correo</label>
                                 <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} />
                                 {errors.email && <p className="error-text">{errors.email}</p>}
                             </div>
                             <div className="form-group">
-                                <label htmlFor="username">Nombre de usuario</label>
-                                <input type="text" id="username" name="username" value={formData.username} onChange={handleChange} />
-                                {errors.username && <p className="error-text">{errors.username}</p>}
-                            </div>
-                            <div className="form-group">
-                                <label htmlFor="password">Contraseña</label>
-                                <input type="password" id="password" name="password" value={formData.password} onChange={handleChange} />
-                                {errors.password && <p className="error-text">{errors.password}</p>}
+                                <label htmlFor="phone">Teléfono (opcional)</label>
+                                <input type="tel" id="phone" name="phone" value={formData.phone} onChange={handleChange} />
                             </div>
                             <div className="form-group form-group-checkbox">
                                 <label>Estado</label>
@@ -129,26 +127,64 @@ const CreateUserModal = ({ isOpen, onClose, onSubmit, roles }) => {
                             </div>
                         </div>
 
+                        {/* Nota informativa sobre contraseña */}
+                        <div className="info-box">
+                            <div className="info-content">
+                                <span className="info-icon">🔐</span>
+                                <p>La contraseña se generará automáticamente y se mostrará una vez creado el usuario.</p>
+                            </div>
+                        </div>
+
                         <div className="form-group roles-group">
                             <label>Roles</label>
                             <div className="roles-container">
-                                {roles && roles.map((role) => (
-                                    <label
-                                        key={role.id}
-                                        className={`role-label ${formData.role_ids.includes(role.id) ? 'selected' : ''}`}
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            name="role_ids"
-                                            value={role.id}
-                                            checked={formData.role_ids.includes(role.id)}
-                                            onChange={handleChange}
-                                        />
-                                        {role.name}
-                                    </label>
-                                ))}
+                                {safeRoles.length > 0 ? (
+                                    safeRoles.map((role) => (
+                                        <label
+                                            key={role.id}
+                                            className={`role-label ${formData.role_ids.includes(role.id) ? 'selected' : ''}`}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                name="role_ids"
+                                                value={role.id}
+                                                checked={formData.role_ids.includes(role.id)}
+                                                onChange={handleChange}
+                                            />
+                                            {role.name}
+                                        </label>
+                                    ))
+                                ) : (
+                                    <p className="no-data">Cargando roles...</p>
+                                )}
                             </div>
                             {errors.role_ids && <p className="error-text">{errors.role_ids}</p>}
+                        </div>
+
+                        <div className="form-group businesses-group">
+                            <label>Negocios</label>
+                            <div className="businesses-container">
+                                {safeBusinesses.length > 0 ? (
+                                    safeBusinesses.map((business) => (
+                                        <label
+                                            key={business.id}
+                                            className={`business-label ${formData.business_ids.includes(business.id) ? 'selected' : ''}`}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                name="business_ids"
+                                                value={business.id}
+                                                checked={formData.business_ids.includes(business.id)}
+                                                onChange={handleChange}
+                                            />
+                                            {business.name}
+                                        </label>
+                                    ))
+                                ) : (
+                                    <p className="no-data">Cargando negocios...</p>
+                                )}
+                            </div>
+                            {errors.business_ids && <p className="error-text">{errors.business_ids}</p>}
                         </div>
 
                         <div className="modal-footer">

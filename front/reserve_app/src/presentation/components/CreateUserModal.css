@@ -151,13 +151,15 @@
     background-color: rgba(0, 0, 0, 0.2);
 }
 
-.roles-container {
+.roles-container,
+.businesses-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 1rem;
 }
 
-.role-label {
+.role-label,
+.business-label {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -178,19 +180,22 @@
     transition: all 0.3s ease;
 }
 
-.role-label input[type="checkbox"] {
+.role-label input[type="checkbox"],
+.business-label input[type="checkbox"] {
     display: none;
     /* Ocultamos el checkbox */
 }
 
-.role-label:hover {
+.role-label:hover,
+.business-label:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.15));
     border-color: rgba(255, 255, 255, 0.2);
 }
 
-.role-label.selected {
+.role-label.selected,
+.business-label.selected {
     background: linear-gradient(145deg, #ffffff, #d4d4d4);
     color: #1a1a1a;
     border-color: #ffffff;
@@ -201,7 +206,8 @@
 }
 
 /* Eliminamos el pseudo-elemento que añade el check */
-.role-label.selected:before {
+.role-label.selected:before,
+.business-label.selected:before {
     content: '';
     margin-right: 0;
 }
@@ -278,4 +284,35 @@
     background-color: rgba(255, 255, 255, 0.1);
     color: white;
     border-color: rgba(255, 255, 255, 0.3);
+}
+
+.info-box {
+    margin: 1rem 0;
+    padding: 0.75rem;
+    background-color: #e3f2fd;
+    border: 1px solid #2196f3;
+    border-radius: 4px;
+}
+
+.info-content {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.info-icon {
+    font-size: 1.2rem;
+}
+
+.info-content p {
+    margin: 0;
+    color: #1976d2;
+    font-size: 0.9rem;
+}
+
+.no-data {
+    color: #666;
+    font-style: italic;
+    margin: 0.5rem 0;
+    text-align: center;
 }

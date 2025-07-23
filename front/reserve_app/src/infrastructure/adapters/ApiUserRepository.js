@@ -69,15 +69,18 @@ export class ApiUserRepository extends UserRepository {
     async createUser(userData) {
         try {
             console.log('ApiUserRepository: Creando usuario:', userData);
-
             const response = await this.userService.createUser(userData);
 
             if (!response || !response.success) {
                 throw new Error(response?.message || 'Error creating user');
             }
 
+            // ✅ Capturar ID del usuario recién creado
             return {
                 success: true,
+                user_id: response.user_id,    // ✅ ID para usar inmediatamente
+                email: response.email,
+                password: response.password,
                 message: response.message || 'Usuario creado exitosamente'
             };
         } catch (error) {

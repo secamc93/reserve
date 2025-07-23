@@ -19,14 +19,19 @@ export class HttpClient {
   async get(endpoint, params = {}) {
     const url = new URL(endpoint, this.baseURL);
 
+    // ✅ CORREGIDO: Validar y limpiar parámetros específicos para users
+    const cleanedParams = this.cleanParams(params, endpoint);
+
     // Add query parameters
-    Object.keys(params).forEach(key => {
-      if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
-        url.searchParams.append(key, params[key]);
+    Object.keys(cleanedParams).forEach(key => {
+      if (cleanedParams[key] !== null && cleanedParams[key] !== undefined && cleanedParams[key] !== '') {
+        url.searchParams.append(key, cleanedParams[key]);
       }
     });
 
-    console.log('Making GET request to:', url.toString());
+    console.log('🔧 Original params:', params);
+    console.log('✅ Cleaned params:', cleanedParams);
+    console.log('🌐 Making GET request to:', url.toString());
 
     try {
       const response = await fetch(url.toString(), {
@@ -73,6 +78,57 @@ export class HttpClient {
 
       throw error;
     }
+  }
+
+  // ✅ NUEVO: Método para limpiar parámetros según el endpoint
+  cleanParams(params, endpoint) {
+    const cleaned = { ...params };
+
+    // Limpiar específicamente para endpoints de usuarios
+    if (endpoint.includes('/users')) {
+      // Asegurar que page y page_size sean válidos
+      if (cleaned.page !== undefined) {
+        const page = parseInt(cleaned.page);
+        cleaned.page = (page && page >= 1) ? page : 1;
+      }
+
+      if (cleaned.page_size !== undefined) {
+        const pageSize = parseInt(cleaned.page_size);
+        cleaned.page_size = (pageSize && pageSize >= 1 && pageSize <= 100) ? pageSize : 10;
+      }
+
+      // Limpiar strings vacíos
+      ['name', 'email', 'phone', 'created_at', 'sort_by', 'sort_order'].forEach(field => {
+        if (cleaned[field] !== undefined && cleaned[field] !== null) {
+          const str = String(cleaned[field]).trim();
+          if (str === '') {
+            delete cleaned[field];
+          } else {
+            cleaned[field] = str;
+          }
+        }
+      });
+
+      // Validar email si existe
+      if (cleaned.email && !this.isValidEmail(cleaned.email)) {
+        delete cleaned.email;
+      }
+
+      // Limpiar valores null/undefined
+      Object.keys(cleaned).forEach(key => {
+        if (cleaned[key] === null || cleaned[key] === undefined) {
+          delete cleaned[key];
+        }
+      });
+    }
+
+    return cleaned;
+  }
+
+  // ✅ Helper para validar email
+  isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   }
 
   async post(endpoint, data) {

@@ -5,7 +5,7 @@ import CreateUserModal from '../components/CreateUserModal.js';
 import './AdminUsersPage.css';
 
 export const AdminUsersPage = () => {
-    const { users, roles, loading, error, pagination, loadUsers, createUser, deleteUser } = useUsers();
+    const { users, roles, businesses, loading, error, pagination, loadUsers, createUser, deleteUser } = useUsers();
     const { isSuperAdmin, hasPermission } = useAuth();
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [filters, setFilters] = useState({
@@ -51,12 +51,32 @@ export const AdminUsersPage = () => {
     };
 
     const handleDeleteUser = async (id, name) => {
-        if (window.confirm(`¿Estás seguro de eliminar al usuario "${name}"?`)) {
+        console.log('🗑️ Eliminando usuario:', { id, name });
+
+        if (window.confirm(`¿Eliminar usuario "${name}" (ID: ${id})?`)) {
             try {
                 await deleteUser(id);
-                alert('Usuario eliminado exitosamente');
+                alert(`✅ Usuario "${name}" eliminado exitosamente!`);
+
             } catch (error) {
-                alert(`Error eliminando usuario: ${error.message}`);
+                console.error('❌ Error eliminando:', error);
+
+                // ✅ Para cualquier error, simplemente recargar la lista
+                console.log('🔄 Recargando lista para sincronizar...');
+                await loadUsers({ page: 1, page_size: 10 });
+
+                // ✅ Verificar si el usuario sigue en la lista después de recargar
+                const stillExists = users.some(u => u.id === parseInt(id));
+
+                if (!stillExists) {
+                    alert(`✅ Usuario "${name}" eliminado exitosamente!
+                    
+(Se sincronizó con el backend)`);
+                } else {
+                    alert(`❌ Error eliminando usuario: ${error.message}
+                    
+El usuario sigue existiendo.`);
+                }
             }
         }
     };
@@ -238,6 +258,7 @@ export const AdminUsersPage = () => {
                 onClose={() => setShowCreateModal(false)}
                 onSubmit={handleCreateUser}
                 roles={roles}
+                businesses={businesses}
             />
         </div>
     );

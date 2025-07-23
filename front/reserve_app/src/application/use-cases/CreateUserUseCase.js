@@ -7,13 +7,17 @@ export class CreateUserUseCase {
         try {
             console.log('CreateUserUseCase: Ejecutando con datos:', userData);
 
-            // 1. Unir nombre y apellido para crear el campo 'name'
+            // 1. Preparar los datos exactamente como los espera la API (SIN avatar_url)
             const processedData = {
-                ...userData,
-                name: `${userData.first_name.trim()} ${userData.last_name.trim()}`.trim(),
+                name: userData.name.trim(),
+                email: userData.email.trim(),
+                phone: userData.phone ? userData.phone.trim() : '',
+                business_ids: userData.business_ids || [],
+                role_ids: userData.role_ids || [],
+                is_active: userData.is_active !== undefined ? userData.is_active : true,
             };
 
-            // 2. Validar los datos (ya con el campo 'name' construido)
+            // 2. Validar los datos
             this.validateUserData(processedData);
 
             const result = await this.userRepository.createUser(processedData);
@@ -28,8 +32,8 @@ export class CreateUserUseCase {
     }
 
     validateUserData(data) {
-        // Actualizamos los campos requeridos para que coincidan con el formulario
-        const requiredFields = ['first_name', 'last_name', 'username', 'email', 'password'];
+        // Validar campos requeridos
+        const requiredFields = ['name', 'email'];
 
         for (const field of requiredFields) {
             if (!data[field] || (typeof data[field] === 'string' && data[field].trim() === '')) {
@@ -42,26 +46,24 @@ export class CreateUserUseCase {
             throw new Error('Debe seleccionar al menos un rol');
         }
 
+        // Validar negocios
+        if (!data.business_ids || data.business_ids.length === 0) {
+            throw new Error('Debe seleccionar al menos un negocio');
+        }
+
         // Validar email
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(data.email)) {
             throw new Error('El formato del correo no es válido');
-        }
-
-        // Validar contraseña
-        if (data.password.length < 8) {
-            throw new Error('La contraseña debe tener al menos 8 caracteres');
         }
     }
 
     // Función de ayuda para obtener nombres de campo más amigables
     getFieldName(field) {
         const names = {
-            first_name: 'nombre',
-            last_name: 'apellido',
-            username: 'nombre de usuario',
+            name: 'nombre completo',
             email: 'correo',
-            password: 'contraseña',
+            phone: 'teléfono',
         };
         return names[field] || field;
     }
