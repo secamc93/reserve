@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
 import './Login.css';
 
-const Login = ({ onLoginSuccess }) => {
+const Login = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -11,6 +12,11 @@ const Login = ({ onLoginSuccess }) => {
   const [showPassword, setShowPassword] = useState(false);
 
   const { login, loading } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Obtener la página de destino desde el estado de la ubicación
+  const from = location.state?.from?.pathname || '/calendario';
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -34,7 +40,8 @@ const Login = ({ onLoginSuccess }) => {
       console.log('🔐 Login: Autenticación exitosa:', result);
       
       if (result.success) {
-        onLoginSuccess(result);
+        // Redirigir a la página de destino o al calendario por defecto
+        navigate(from, { replace: true });
       }
     } catch (error) {
       console.error('🔐 Login: Error en autenticación:', error);
@@ -51,16 +58,12 @@ const Login = ({ onLoginSuccess }) => {
       <div className="login-card">
         <div className="login-header">
           <div className="login-logo">
-            <h1>🍽️ Reserve App</h1>
+            <h1>⚡ Rupü</h1>
           </div>
-          <p className="login-subtitle">Sistema de Gestión de Reservas</p>
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
-            <label htmlFor="email" className="form-label">
-              Correo Electrónico
-            </label>
             <div className="input-container">
               <input
                 type="email"
@@ -69,7 +72,7 @@ const Login = ({ onLoginSuccess }) => {
                 value={formData.email}
                 onChange={handleInputChange}
                 className="form-input"
-                placeholder="usuario@ejemplo.com"
+                placeholder="Correo electrónico"
                 required
                 disabled={loading}
               />
@@ -78,9 +81,6 @@ const Login = ({ onLoginSuccess }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="password" className="form-label">
-              Contraseña
-            </label>
             <div className="input-container">
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -89,7 +89,7 @@ const Login = ({ onLoginSuccess }) => {
                 value={formData.password}
                 onChange={handleInputChange}
                 className="form-input"
-                placeholder="••••••••"
+                placeholder="Contraseña"
                 required
                 disabled={loading}
               />

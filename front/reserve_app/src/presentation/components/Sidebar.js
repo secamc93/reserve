@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import UserProfileModal from './UserProfileModal.js';
 import { useAuth } from '../hooks/useAuth.js';
 import './Sidebar.css';
 
-const Sidebar = ({ activeView, onViewChange, userInfo, onLogout }) => {
-    const { isSuperAdmin, hasPermission } = useAuth();
+const Sidebar = () => {
+    const { isSuperAdmin, hasPermission, userInfo, logout } = useAuth();
     const [showProfileModal, setShowProfileModal] = useState(false);
+    const navigate = useNavigate();
+    const location = useLocation();
 
     const menuItems = [
         {
@@ -28,15 +31,82 @@ const Sidebar = ({ activeView, onViewChange, userInfo, onLogout }) => {
         }
     ];
 
+    // Debug: Verificar permisos
+    const isSuper = isSuperAdmin();
+    const hasUsersManage = hasPermission('users:manage');
+    const hasUsersCreate = hasPermission('users:create');
+    const hasUsersUpdate = hasPermission('users:update');
+    const hasUsersDelete = hasPermission('users:delete');
+    const hasManageUsers = hasPermission('manage_users');
+    const hasBusinessesManage = hasPermission('businesses:manage');
+    const hasTablesManage = hasPermission('tables:manage');
+
+    console.log('🔍 Sidebar Debug - Permisos de Usuario:');
+    console.log('  - isSuperAdmin:', isSuper);
+    console.log('  - users:manage:', hasUsersManage);
+    console.log('  - users:create:', hasUsersCreate);
+    console.log('  - users:update:', hasUsersUpdate);
+    console.log('  - users:delete:', hasUsersDelete);
+    console.log('  - manage_users:', hasManageUsers);
+    console.log('  - businesses:manage:', hasBusinessesManage);
+    console.log('  - tables:manage:', hasTablesManage);
+
     // Agregar menú de administración si tiene permisos
-    if (isSuperAdmin() || hasPermission('manage_users')) {
+    // Verificar múltiples permisos relacionados con usuarios
+    const canManageUsers = isSuper || 
+                          hasManageUsers || 
+                          hasUsersManage ||
+                          hasUsersCreate ||
+                          hasUsersUpdate ||
+                          hasUsersDelete;
+
+    // Verificar permisos para negocios
+    const canManageBusinesses = isSuper || hasBusinessesManage;
+    
+    // Verificar permisos para mesas
+    const canManageTables = isSuper || hasTablesManage;
+
+    console.log('🔍 Sidebar Debug - canManageUsers:', canManageUsers);
+    console.log('🔍 Sidebar Debug - canManageBusinesses:', canManageBusinesses);
+    console.log('🔍 Sidebar Debug - canManageTables:', canManageTables);
+
+    if (canManageUsers) {
         menuItems.push({
             id: 'admin-users',
             icon: '▤',
             label: 'Administrar Usuarios',
             path: '/admin-users'
         });
+        console.log('🔍 Sidebar Debug - Agregando módulo "Administrar Usuarios"');
+    } else {
+        console.log('🔍 Sidebar Debug - NO se agrega módulo "Administrar Usuarios"');
     }
+
+    if (canManageBusinesses) {
+        menuItems.push({
+            id: 'admin-businesses',
+            icon: '🏪',
+            label: 'Administrar Negocios',
+            path: '/admin-businesses'
+        });
+        console.log('🔍 Sidebar Debug - Agregando módulo "Administrar Negocios"');
+    } else {
+        console.log('🔍 Sidebar Debug - NO se agrega módulo "Administrar Negocios"');
+    }
+
+    if (canManageTables) {
+        menuItems.push({
+            id: 'admin-tables',
+            icon: '🪑',
+            label: 'Administrar Mesas',
+            path: '/admin-tables'
+        });
+        console.log('🔍 Sidebar Debug - Agregando módulo "Administrar Mesas"');
+    } else {
+        console.log('🔍 Sidebar Debug - NO se agrega módulo "Administrar Mesas"');
+    }
+
+    console.log('🔍 Sidebar Debug - MenuItems finales:', menuItems.map(item => item.label));
 
     const handleAvatarClick = () => {
         setShowProfileModal(true);
@@ -44,6 +114,22 @@ const Sidebar = ({ activeView, onViewChange, userInfo, onLogout }) => {
 
     const closeProfileModal = () => {
         setShowProfileModal(false);
+    };
+
+    const handleLogout = () => {
+        logout();
+        navigate('/login');
+    };
+
+    const handleNavigation = (path) => {
+        navigate(path);
+    };
+
+    // Determinar la vista activa basada en la ruta actual
+    const getActiveView = () => {
+        const currentPath = location.pathname;
+        const menuItem = menuItems.find(item => item.path === currentPath);
+        return menuItem ? menuItem.id : 'calendario';
     };
 
     return (
@@ -71,7 +157,7 @@ const Sidebar = ({ activeView, onViewChange, userInfo, onLogout }) => {
                 </div>
                 <button
                     className="logout-button"
-                    onClick={onLogout}
+                    onClick={handleLogout}
                     title="Cerrar sesión"
                 >
                     <span className="logout-icon">🚪</span>
@@ -88,8 +174,8 @@ const Sidebar = ({ activeView, onViewChange, userInfo, onLogout }) => {
                             data-tooltip={item.label}
                         >
                             <button
-                                className={`nav-button ${activeView === item.id ? 'active' : ''}`}
-                                onClick={() => onViewChange(item.id)}
+                                className={`nav-button ${getActiveView() === item.id ? 'active' : ''}`}
+                                onClick={() => handleNavigation(item.path)}
                                 title={item.label}
                             >
                                 <span className="nav-icon">{item.icon}</span>

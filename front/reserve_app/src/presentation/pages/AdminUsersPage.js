@@ -83,12 +83,17 @@ El usuario sigue existiendo.`);
 
     const handleCreateUser = async (userData) => {
         try {
-            await createUser(userData);
-            setShowCreateModal(false);
-            alert('Usuario creado exitosamente');
+            const result = await createUser(userData);
+            // No cerrar el modal aquí, dejar que el modal maneje la respuesta
+            return result; // Devolver la respuesta para que el modal la maneje
         } catch (error) {
             alert(`Error creando usuario: ${error.message}`);
+            throw error; // Re-lanzar el error para que el modal lo maneje
         }
+    };
+
+    const handleCloseCreateModal = () => {
+        setShowCreateModal(false);
     };
 
     if (loading && users.length === 0) {
@@ -255,7 +260,7 @@ El usuario sigue existiendo.`);
 
             <CreateUserModal
                 isOpen={showCreateModal}
-                onClose={() => setShowCreateModal(false)}
+                onClose={handleCloseCreateModal}
                 onSubmit={handleCreateUser}
                 roles={roles}
                 businesses={businesses}

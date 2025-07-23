@@ -1,13 +1,20 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
 import './UserInfo.css';
 
 const UserInfo = () => {
-  const { userInfo, userRolesPermissions, isSuperAdmin, getUserRoles, getUserPermissions } = useAuth();
+  const { userInfo, userRolesPermissions, isSuperAdmin, getUserRoles, getUserPermissions, logout } = useAuth();
   const [showDetails, setShowDetails] = useState(false);
+  const navigate = useNavigate();
 
   const toggleDetails = () => {
     setShowDetails(!showDetails);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
   };
 
   if (!userInfo) {
@@ -36,9 +43,21 @@ const UserInfo = () => {
             <div className="super-admin-badge">👑 Super Admin</div>
           )}
         </div>
-        <button className="toggle-details-btn">
-          {showDetails ? '▼' : '▶'}
-        </button>
+        <div className="user-actions">
+          <button 
+            className="logout-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleLogout();
+            }}
+            title="Cerrar sesión"
+          >
+            🚪
+          </button>
+          <button className="toggle-details-btn">
+            {showDetails ? '▼' : '▶'}
+          </button>
+        </div>
       </div>
 
       {showDetails && (
@@ -58,24 +77,47 @@ const UserInfo = () => {
 
           <div className="permissions-section">
             <h4>🔐 Permisos ({permissions.length})</h4>
-            <div className="permissions-list">
-              {permissions.map((permission) => (
-                <div key={permission.id} className="permission-item">
-                  <div className="permission-header">
-                    <span className="permission-name">{permission.name}</span>
-                    <span className={`permission-action ${permission.action}`}>
-                      {permission.action}
-                    </span>
-                  </div>
-                  <div className="permission-resource">
-                    📁 {permission.resource}
-                  </div>
-                  <div className="permission-description">
-                    {permission.description}
-                  </div>
-                </div>
-              ))}
+            <div className="permissions-table-container">
+              <table className="permissions-table">
+                <thead>
+                  <tr>
+                    <th>Permiso</th>
+                    <th>Acción</th>
+                    <th>Recurso</th>
+                    <th>Descripción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {permissions.map((permission) => (
+                    <tr key={permission.id} className="permission-row">
+                      <td className="permission-name-cell">
+                        <span className="permission-name">{permission.name}</span>
+                      </td>
+                      <td className="permission-action-cell">
+                        <span className={`permission-action-badge ${permission.action}`}>
+                          {permission.action}
+                        </span>
+                      </td>
+                      <td className="permission-resource-cell">
+                        <span className="permission-resource">📁 {permission.resource}</span>
+                      </td>
+                      <td className="permission-description-cell">
+                        <span className="permission-description">{permission.description}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
+          </div>
+
+          <div className="logout-section">
+            <button 
+              className="logout-btn-expanded"
+              onClick={handleLogout}
+            >
+              🚪 Cerrar Sesión
+            </button>
           </div>
         </div>
       )}

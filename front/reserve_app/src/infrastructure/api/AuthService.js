@@ -29,8 +29,11 @@ export class AuthService {
         localStorage.setItem('userInfo', JSON.stringify(response.data.user));
 
         console.log('🔐 AuthService: Login exitoso, token guardado');
+        
+        // Devolver la respuesta completa para que useAuth pueda verificar require_password_change
         return {
           success: true,
+          data: response.data, // Incluir toda la estructura de data
           user: response.data.user,
           token: response.data.token
         };
@@ -65,6 +68,18 @@ export class AuthService {
       }
     } catch (error) {
       console.error('🔐 AuthService: Error obteniendo roles y permisos:', error);
+      throw error;
+    }
+  }
+
+  async changePassword(passwordData) {
+    try {
+      console.log('AuthService: Cambiando contraseña');
+      const response = await this.httpClient.post('/api/v1/auth/change-password', passwordData);
+      console.log('AuthService: Contraseña cambiada:', response);
+      return response;
+    } catch (error) {
+      console.error('AuthService: Error cambiando contraseña:', error);
       throw error;
     }
   }

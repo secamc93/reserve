@@ -1,0 +1,433 @@
+/* AuthTestPage.css */
+.auth-test-page {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  padding: 20px;
+}
+
+.auth-test-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 40px;
+  border-radius: 16px;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.auth-test-header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.auth-test-header p {
+  font-size: 1.2rem;
+  opacity: 0.9;
+  font-weight: 300;
+  margin: 0;
+}
+
+.auth-test-content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Permissions Groups Container */
+.permissions-groups-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Permission Group */
+.permission-group {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e1e5e9;
+  transition: all 0.3s ease;
+}
+
+.permission-group:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* Group Header */
+.permission-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-bottom: 1px solid #e1e5e9;
+}
+
+.permission-group-header:hover {
+  background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+}
+
+.group-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.group-icon {
+  font-size: 24px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.group-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.group-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+  text-transform: capitalize;
+}
+
+.group-count {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+
+.group-header-right {
+  display: flex;
+  align-items: center;
+}
+
+.expand-button {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #666;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+}
+
+.expand-button:hover {
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+  transform: scale(1.1);
+}
+
+/* Group Content */
+.permission-group-content {
+  background: white;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Permissions Table Styles */
+.permissions-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.permissions-table thead {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.permissions-table th {
+  padding: 16px 20px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.permissions-table tbody tr {
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s ease;
+}
+
+.permissions-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.permissions-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.permissions-table td {
+  padding: 16px 20px;
+  vertical-align: top;
+}
+
+.permission-name-cell {
+  font-weight: 600;
+  color: #333;
+  min-width: 200px;
+}
+
+.permission-action-cell {
+  min-width: 120px;
+}
+
+.permission-action-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.permission-action-badge.manage {
+  background: #dc3545;
+  color: white;
+}
+
+.permission-action-badge.read {
+  background: #28a745;
+  color: white;
+}
+
+.permission-action-badge.create {
+  background: #007bff;
+  color: white;
+}
+
+.permission-action-badge.update {
+  background: #ffc107;
+  color: #333;
+}
+
+.permission-action-badge.delete {
+  background: #6c757d;
+  color: white;
+}
+
+.permission-description-cell {
+  color: #666;
+  font-size: 13px;
+  line-height: 1.4;
+  max-width: 400px;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .auth-test-page {
+    padding: 15px;
+  }
+
+  .auth-test-header {
+    padding: 30px 20px;
+  }
+
+  .auth-test-header h1 {
+    font-size: 2rem;
+  }
+
+  .auth-test-header p {
+    font-size: 1rem;
+  }
+
+  .permission-group-header {
+    padding: 16px 20px;
+  }
+
+  .group-icon {
+    font-size: 20px;
+    width: 36px;
+    height: 36px;
+  }
+
+  .group-title {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .auth-test-header h1 {
+    font-size: 1.8rem;
+  }
+
+  .permission-group-header {
+    padding: 14px 16px;
+  }
+
+  .group-header-left {
+    gap: 12px;
+  }
+
+  .group-icon {
+    font-size: 18px;
+    width: 32px;
+    height: 32px;
+  }
+
+  .group-title {
+    font-size: 15px;
+  }
+
+  .group-count {
+    font-size: 12px;
+  }
+
+  .permissions-table-container {
+    overflow-x: auto;
+  }
+
+  .permissions-table {
+    min-width: 600px;
+  }
+
+  .permissions-table th,
+  .permissions-table td {
+    padding: 12px 16px;
+    font-size: 12px;
+  }
+
+  .permission-action-badge {
+    font-size: 10px;
+    padding: 4px 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-test-page {
+    padding: 10px;
+  }
+
+  .auth-test-header {
+    padding: 20px 15px;
+  }
+
+  .auth-test-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .permission-group-header {
+    padding: 12px 14px;
+  }
+
+  .group-header-left {
+    gap: 10px;
+  }
+
+  .group-icon {
+    font-size: 16px;
+    width: 28px;
+    height: 28px;
+  }
+
+  .group-title {
+    font-size: 14px;
+  }
+
+  .group-count {
+    font-size: 11px;
+  }
+
+  .permissions-table th,
+  .permissions-table td {
+    padding: 10px 12px;
+    font-size: 11px;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .auth-test-page {
+    background-color: #1a1a1a;
+  }
+
+  .permission-group {
+    background: #2a2a2a;
+    border-color: #444;
+  }
+
+  .permission-group-header {
+    background: linear-gradient(135deg, #333 0%, #2a2a2a 100%);
+    border-bottom-color: #444;
+  }
+
+  .permission-group-header:hover {
+    background: linear-gradient(135deg, #2a2a2a 0%, #333 100%);
+  }
+
+  .group-icon {
+    background: #333;
+    color: #fff;
+  }
+
+  .group-title {
+    color: #fff;
+  }
+
+  .group-count {
+    color: #ccc;
+  }
+
+  .permission-group-content {
+    background: #2a2a2a;
+  }
+
+  .permissions-table tbody tr {
+    border-bottom-color: #444;
+  }
+
+  .permissions-table tbody tr:hover {
+    background-color: #3a3a3a;
+  }
+
+  .permission-name-cell {
+    color: #fff;
+  }
+
+  .permission-description-cell {
+    color: #ccc;
+  }
+
+  .expand-button {
+    color: #ccc;
+  }
+
+  .expand-button:hover {
+    background: rgba(102, 126, 234, 0.2);
+    color: #667eea;
+  }
+}

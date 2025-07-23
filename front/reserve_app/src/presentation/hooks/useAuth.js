@@ -43,6 +43,20 @@ export const useAuth = () => {
       const result = await authService.login(email, password);
 
       if (result.success) {
+        // Verificar si requiere cambio de contraseña
+        if (result.data && result.data.require_password_change === true) {
+          console.log('🔐 useAuth: Requiere cambio de contraseña, redirigiendo...');
+          console.log('🔐 useAuth: Datos de respuesta:', result);
+          
+          // Guardar token temporalmente para el cambio de contraseña
+          localStorage.setItem('token', result.data.token);
+          localStorage.setItem('userInfo', JSON.stringify(result.data.user));
+          
+          // Redirigir a la página de cambio de contraseña
+          window.location.href = '/change-password';
+          return { success: true, requirePasswordChange: true };
+        }
+
         // Intentar obtener roles y permisos
         try {
           const rolesPermissions = await authService.getUserRolesPermissions();
@@ -73,12 +87,24 @@ export const useAuth = () => {
     setUserRolesPermissions(null);
   };
 
-  const hasPermission = (permission) => {
-    if (!userRolesPermissions || !userRolesPermissions.permissions) {
-      return false;
+  // Función para obtener todos los permisos como array plano
+  const getAllPermissions = () => {
+    if (!userRolesPermissions) {
+      return [];
     }
 
-    return userRolesPermissions.permissions.some(p => p.code === permission);
+    // Los permisos están directamente en userRolesPermissions.permissions
+    return userRolesPermissions.permissions || [];
+  };
+
+  const hasPermission = (permission) => {
+    const allPermissions = getAllPermissions();
+    const hasPerm = allPermissions.some(p => p.code === permission);
+    
+    console.log(`🔐 useAuth Debug - hasPermission("${permission}"):`, hasPerm);
+    console.log(`🔐 useAuth Debug - Permisos disponibles:`, allPermissions.map(p => p.code));
+    
+    return hasPerm;
   };
 
   const hasRole = (role) => {
@@ -90,25 +116,22 @@ export const useAuth = () => {
   };
 
   const isSuperAdmin = () => {
-    return userRolesPermissions?.isSuper === true;
+    const isSuper = userRolesPermissions?.isSuper === true;
+    console.log('🔐 useAuth Debug - isSuperAdmin():', isSuper);
+    console.log('🔐 useAuth Debug - userRolesPermissions.isSuper:', userRolesPermissions?.isSuper);
+    return isSuper;
   };
 
   const canManageResource = (resource) => {
-    if (!userRolesPermissions || !userRolesPermissions.permissions) {
-      return false;
-    }
-
-    return userRolesPermissions.permissions.some(p =>
+    const allPermissions = getAllPermissions();
+    return allPermissions.some(p =>
       p.resource === resource && p.action === 'manage'
     );
   };
 
   const canReadResource = (resource) => {
-    if (!userRolesPermissions || !userRolesPermissions.permissions) {
-      return false;
-    }
-
-    return userRolesPermissions.permissions.some(p =>
+    const allPermissions = getAllPermissions();
+    return allPermissions.some(p =>
       p.resource === resource && p.action === 'read'
     );
   };
@@ -118,7 +141,7 @@ export const useAuth = () => {
   };
 
   const getUserPermissions = () => {
-    return userRolesPermissions?.permissions || [];
+    return getAllPermissions();
   };
 
   return {

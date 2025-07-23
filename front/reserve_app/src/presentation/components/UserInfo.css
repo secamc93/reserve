@@ -81,6 +81,32 @@
   box-shadow: 0 2px 4px rgba(255, 215, 0, 0.3);
 }
 
+.user-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #dc3545;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logout-btn:hover {
+  background-color: #dc3545;
+  color: white;
+  transform: scale(1.1);
+}
+
 .toggle-details-btn {
   background: none;
   border: none;
@@ -90,7 +116,6 @@
   padding: 8px;
   border-radius: 50%;
   transition: all 0.3s ease;
-  margin-left: 10px;
 }
 
 .toggle-details-btn:hover {
@@ -157,78 +182,145 @@
   font-weight: 600;
 }
 
-.permissions-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.permission-item {
+/* Permissions Table Styles */
+.permissions-table-container {
   background: white;
-  padding: 16px;
   border-radius: 8px;
+  overflow: hidden;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  border-left: 4px solid #28a745;
 }
 
-.permission-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.permission-name {
-  font-weight: 600;
-  color: #333;
+.permissions-table {
+  width: 100%;
+  border-collapse: collapse;
   font-size: 14px;
 }
 
-.permission-action {
+.permissions-table thead {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.permissions-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.permissions-table tbody tr {
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s ease;
+}
+
+.permissions-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.permissions-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.permissions-table td {
+  padding: 12px 16px;
+  vertical-align: top;
+}
+
+.permission-name-cell {
+  font-weight: 600;
+  color: #333;
+  min-width: 150px;
+}
+
+.permission-action-cell {
+  min-width: 100px;
+}
+
+.permission-action-badge {
+  display: inline-block;
   font-size: 11px;
   font-weight: 600;
   padding: 4px 8px;
   border-radius: 12px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
-.permission-action.manage {
+.permission-action-badge.manage {
   background: #dc3545;
   color: white;
 }
 
-.permission-action.read {
+.permission-action-badge.read {
   background: #28a745;
   color: white;
 }
 
-.permission-action.create {
+.permission-action-badge.create {
   background: #007bff;
   color: white;
 }
 
-.permission-action.update {
+.permission-action-badge.update {
   background: #ffc107;
   color: #333;
 }
 
-.permission-action.delete {
+.permission-action-badge.delete {
   background: #6c757d;
   color: white;
 }
 
-.permission-resource {
+.permission-resource-cell {
+  font-family: monospace;
   font-size: 12px;
   color: #666;
-  margin-bottom: 6px;
-  font-family: monospace;
+  min-width: 120px;
 }
 
-.permission-description {
-  font-size: 12px;
-  color: #888;
+.permission-description-cell {
+  color: #666;
+  font-size: 13px;
   line-height: 1.4;
+  max-width: 200px;
+}
+
+.logout-section {
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.logout-btn-expanded {
+  width: 100%;
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+}
+
+.logout-btn-expanded:hover {
+  background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
+}
+
+.logout-btn-expanded:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
 }
 
 /* Responsive Design */
@@ -265,10 +357,37 @@
     gap: 8px;
   }
 
-  .permission-header {
-    flex-direction: column;
-    align-items: flex-start;
+  .permissions-table-container {
+    overflow-x: auto;
+  }
+
+  .permissions-table {
+    min-width: 600px;
+  }
+
+  .permissions-table th,
+  .permissions-table td {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .permission-action-badge {
+    font-size: 10px;
+    padding: 3px 6px;
+  }
+
+  .user-actions {
     gap: 6px;
+  }
+
+  .logout-btn {
+    font-size: 16px;
+    padding: 6px;
+  }
+
+  .toggle-details-btn {
+    font-size: 14px;
+    padding: 6px;
   }
 }
 
@@ -299,8 +418,7 @@
     background: #2a2a2a;
   }
 
-  .role-item,
-  .permission-item {
+  .role-item {
     background: #333;
     color: white;
   }
@@ -310,11 +428,40 @@
     color: #ccc;
   }
 
-  .permission-resource {
+  .permissions-table-container {
+    background: #333;
+  }
+
+  .permissions-table tbody tr {
+    border-bottom-color: #444;
+  }
+
+  .permissions-table tbody tr:hover {
+    background-color: #3a3a3a;
+  }
+
+  .permission-name-cell {
+    color: #fff;
+  }
+
+  .permission-resource-cell {
     color: #ccc;
   }
 
-  .permission-description {
-    color: #aaa;
+  .permission-description-cell {
+    color: #ccc;
+  }
+
+  .logout-section {
+    border-top-color: #444;
+  }
+
+  .logout-btn {
+    color: #ff6b6b;
+  }
+
+  .logout-btn:hover {
+    background-color: #ff6b6b;
+    color: white;
   }
 }

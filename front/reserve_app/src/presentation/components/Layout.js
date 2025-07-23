@@ -2,15 +2,10 @@ import React from 'react';
 import Sidebar from './Sidebar.js';
 import './Layout.css';
 
-const Layout = ({ children, activeView, onViewChange, userInfo, onLogout }) => {
+const Layout = ({ children }) => {
     return (
         <div className="layout">
-            <Sidebar 
-                activeView={activeView} 
-                onViewChange={onViewChange}
-                userInfo={userInfo}
-                onLogout={onLogout}
-            />
+            <Sidebar />
             <main className="main-content">
                 <div className="content-wrapper">
                     {children}

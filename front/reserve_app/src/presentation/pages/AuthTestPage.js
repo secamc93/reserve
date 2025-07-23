@@ -1,156 +1,114 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth.js';
-import UserInfo from '../components/UserInfo.js';
 import './AuthTestPage.css';
 
 const AuthTestPage = () => {
-  const {
-    isAuthenticated,
-    userInfo,
-    isSuperAdmin,
-    hasPermission,
-    canManageResource,
-    canReadResource,
-    getUserRoles,
-    getUserPermissions,
-    logout
-  } = useAuth();
+  const { userRolesPermissions } = useAuth();
+  const [expandedResources, setExpandedResources] = useState(new Set());
 
-  const roles = getUserRoles();
-  const permissions = getUserPermissions();
+  // Obtener permisos agrupados por recurso
+  const getGroupedPermissions = () => {
+    if (!userRolesPermissions || !userRolesPermissions.resources) {
+      return {};
+    }
 
-  const testPermissions = [
-    'reservations:manage',
-    'tables:manage',
-    'clients:manage',
-    'users:manage',
-    'businesses:manage'
-  ];
+    // Los recursos están directamente en userRolesPermissions.resources
+    return userRolesPermissions.resources.reduce((groups, resourceGroup) => {
+      groups[resourceGroup.resource] = resourceGroup.actions || [];
+      return groups;
+    }, {});
+  };
 
-  const testResources = [
-    'reservations',
-    'tables',
-    'clients',
-    'users',
-    'businesses'
-  ];
+  const groupedPermissions = getGroupedPermissions();
+
+  const toggleResource = (resource) => {
+    const newExpanded = new Set(expandedResources);
+    if (newExpanded.has(resource)) {
+      newExpanded.delete(resource);
+    } else {
+      newExpanded.add(resource);
+    }
+    setExpandedResources(newExpanded);
+  };
+
+  const getResourceIcon = (resource) => {
+    const icons = {
+      'reservations': '📅',
+      'tables': '🪑',
+      'clients': '👥',
+      'users': '👤',
+      'businesses': '🏢',
+      'roles': '🎭',
+      'permissions': '🔐',
+      'business_types': '🏷️',
+      'scopes': '🔍',
+      'reports': '📊',
+      'default': '📁'
+    };
+    return icons[resource] || icons.default;
+  };
 
   return (
     <div className="auth-test-page">
       <div className="auth-test-header">
-        <h1>🔐 Prueba de Autenticación</h1>
-        <p>Página para verificar el funcionamiento del sistema de autenticación</p>
+        <h1>🔐 Permisos del Usuario</h1>
+        <p>Permisos organizados por recurso</p>
       </div>
 
       <div className="auth-test-content">
-        <div className="auth-status-section">
-          <h2>📊 Estado de Autenticación</h2>
-          <div className="status-grid">
-            <div className="status-item">
-              <span className="status-label">Autenticado:</span>
-              <span className={`status-value ${isAuthenticated ? 'success' : 'error'}`}>
-                {isAuthenticated ? '✅ Sí' : '❌ No'}
-              </span>
-            </div>
-            <div className="status-item">
-              <span className="status-label">Super Admin:</span>
-              <span className={`status-value ${isSuperAdmin() ? 'success' : 'warning'}`}>
-                {isSuperAdmin() ? '👑 Sí' : '👤 No'}
-              </span>
-            </div>
-            <div className="status-item">
-              <span className="status-label">Usuario:</span>
-              <span className="status-value">{userInfo?.name || 'No disponible'}</span>
-            </div>
-            <div className="status-item">
-              <span className="status-label">Email:</span>
-              <span className="status-value">{userInfo?.email || 'No disponible'}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="permissions-test-section">
-          <h2>🔐 Prueba de Permisos</h2>
-          <div className="permissions-grid">
-            {testPermissions.map(permission => (
-              <div key={permission} className="permission-test-item">
-                <span className="permission-name">{permission}</span>
-                <span className={`permission-status ${hasPermission(permission) ? 'granted' : 'denied'}`}>
-                  {hasPermission(permission) ? '✅ Concedido' : '❌ Denegado'}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="resources-test-section">
-          <h2>📁 Prueba de Recursos</h2>
-          <div className="resources-grid">
-            {testResources.map(resource => (
-              <div key={resource} className="resource-test-item">
-                <span className="resource-name">{resource}</span>
-                <div className="resource-permissions">
-                  <span className={`resource-perm ${canReadResource(resource) ? 'granted' : 'denied'}`}>
-                    📖 Leer: {canReadResource(resource) ? '✅' : '❌'}
-                  </span>
-                  <span className={`resource-perm ${canManageResource(resource) ? 'granted' : 'denied'}`}>
-                    ⚙️ Gestionar: {canManageResource(resource) ? '✅' : '❌'}
-                  </span>
+        <div className="permissions-groups-container">
+          {Object.entries(groupedPermissions).map(([resource, resourcePermissions]) => (
+            <div key={resource} className="permission-group">
+              <div 
+                className="permission-group-header"
+                onClick={() => toggleResource(resource)}
+              >
+                <div className="group-header-left">
+                  <span className="group-icon">{getResourceIcon(resource)}</span>
+                  <div className="group-info">
+                    <h3 className="group-title">{resource}</h3>
+                    <span className="group-count">{resourcePermissions.length} permisos</span>
+                  </div>
+                </div>
+                <div className="group-header-right">
+                  <button className="expand-button">
+                    {expandedResources.has(resource) ? '▼' : '▶'}
+                  </button>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
 
-        <div className="roles-section">
-          <h2>🎭 Roles del Usuario ({roles.length})</h2>
-          <div className="roles-grid">
-            {roles.map(role => (
-              <div key={role.id} className="role-display-item">
-                <div className="role-header">
-                  <span className="role-name">{role.name}</span>
-                  <span className="role-level">Nivel {role.level}</span>
+              {expandedResources.has(resource) && (
+                <div className="permission-group-content">
+                  <table className="permissions-table">
+                    <thead>
+                      <tr>
+                        <th>Permiso</th>
+                        <th>Acción</th>
+                        <th>Descripción</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {resourcePermissions.map((permission) => (
+                        <tr key={permission.id} className="permission-row">
+                          <td className="permission-name-cell">
+                            <span className="permission-name">{permission.name}</span>
+                          </td>
+                          <td className="permission-action-cell">
+                            <span className={`permission-action-badge ${permission.action}`}>
+                              {permission.action}
+                            </span>
+                          </td>
+                          <td className="permission-description-cell">
+                            <span className="permission-description">{permission.description}</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-                <div className="role-code">{role.code}</div>
-                <div className="role-description">{role.description}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="permissions-section">
-          <h2>🔐 Permisos del Usuario ({permissions.length})</h2>
-          <div className="permissions-display-grid">
-            {permissions.map(permission => (
-              <div key={permission.id} className="permission-display-item">
-                <div className="permission-header">
-                  <span className="permission-name">{permission.name}</span>
-                  <span className={`permission-action ${permission.action}`}>
-                    {permission.action}
-                  </span>
-                </div>
-                <div className="permission-resource">📁 {permission.resource}</div>
-                <div className="permission-description">{permission.description}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="user-info-section">
-          <h2>👤 Información Detallada del Usuario</h2>
-          <UserInfo />
-        </div>
-
-        <div className="actions-section">
-          <h2>⚡ Acciones</h2>
-          <div className="actions-grid">
-            <button className="action-button primary" onClick={() => window.location.reload()}>
-              🔄 Recargar Página
-            </button>
-            <button className="action-button danger" onClick={logout}>
-              🚪 Cerrar Sesión
-            </button>
-          </div>
+              )}
+            </div>
+          ))}
         </div>
       </div>
     </div>

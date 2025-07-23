@@ -1,45 +1,21 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './presentation/components/Layout.js';
 import GestionReservas from './presentation/pages/GestionReservas.js';
 import CalendarioPage from './presentation/pages/CalendarioPage.js';
 import AuthTestPage from './presentation/pages/AuthTestPage.js';
 import { AdminUsersPage } from './presentation/pages/AdminUsersPage.js';
+import AdminBusinessesPage from './presentation/pages/AdminBusinessesPage.js';
+import AdminTablesPage from './presentation/pages/AdminTablesPage.js';
 import Login from './presentation/components/Login.js';
+import UnauthorizedPage from './presentation/pages/UnauthorizedPage.js';
+import ChangePasswordPage from './presentation/pages/ChangePasswordPage.js';
+import ProtectedRoute from './presentation/components/ProtectedRoute.js';
 import { useAuth } from './presentation/hooks/useAuth.js';
 import './App.css';
 
 function App() {
-  const [activeView, setActiveView] = useState('calendario');
-  const { isAuthenticated, userInfo, loading, logout } = useAuth();
-
-  const handleViewChange = (view) => {
-    setActiveView(view);
-  };
-
-  const handleLoginSuccess = (loginResult) => {
-    console.log('🔐 App: Login exitoso, actualizando estado');
-    // El hook useAuth ya maneja el estado de autenticación
-  };
-
-  const handleLogout = () => {
-    console.log('🔐 App: Cerrando sesión');
-    logout();
-  };
-
-  const renderContent = () => {
-    switch (activeView) {
-      case 'calendario':
-        return <CalendarioPage />;
-      case 'reservas':
-        return <GestionReservas />;
-      case 'auth-test':
-        return <AuthTestPage />;
-      case 'admin-users':
-        return <AdminUsersPage />;
-      default:
-        return <CalendarioPage />;
-    }
-  };
+  const { isAuthenticated, loading } = useAuth();
 
   // Mostrar loading mientras se verifica la autenticación
   if (loading) {
@@ -51,23 +27,105 @@ function App() {
     );
   }
 
-  // Mostrar login si no está autenticado
-  if (!isAuthenticated) {
-    return <Login onLoginSuccess={handleLoginSuccess} />;
-  }
-
-  // Mostrar aplicación principal si está autenticado
   return (
-    <div className="App">
-      <Layout
-        activeView={activeView}
-        onViewChange={handleViewChange}
-        userInfo={userInfo}
-        onLogout={handleLogout}
-      >
-        {renderContent()}
-      </Layout>
-    </div>
+    <Router>
+      <div className="App">
+        <Routes>
+          {/* Ruta de login - accesible sin autenticación */}
+          <Route 
+            path="/login" 
+            element={
+              isAuthenticated ? <Navigate to="/calendario" replace /> : <Login />
+            } 
+          />
+
+          {/* Ruta de no autorizado */}
+          <Route path="/unauthorized" element={<UnauthorizedPage />} />
+
+          {/* Ruta de cambio de contraseña - requiere token pero no autenticación completa */}
+          <Route path="/change-password" element={<ChangePasswordPage />} />
+
+          {/* Rutas protegidas */}
+          <Route
+            path="/calendario"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <CalendarioPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/reservas"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <GestionReservas />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/auth-test"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <AuthTestPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin-users"
+            element={
+              <ProtectedRoute requiredPermissions={['users:manage']}>
+                <Layout>
+                  <AdminUsersPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin-businesses"
+            element={
+              <ProtectedRoute requiredPermissions={['businesses:manage']}>
+                <Layout>
+                  <AdminBusinessesPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin-tables"
+            element={
+              <ProtectedRoute requiredPermissions={['tables:manage']}>
+                <Layout>
+                  <AdminTablesPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Ruta raíz - redirigir al calendario */}
+          <Route 
+            path="/" 
+            element={<Navigate to="/calendario" replace />} 
+          />
+
+          {/* Ruta para cualquier otra URL - redirigir al calendario */}
+          <Route 
+            path="*" 
+            element={<Navigate to="/calendario" replace />} 
+          />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
