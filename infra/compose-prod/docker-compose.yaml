@@ -1,0 +1,207 @@
+version: "3.8"
+
+services:
+  website:
+    image: public.ecr.aws/d3a6d4r1/cam/reserve:website-latest
+    container_name: reserve-website-1
+    ports:
+      - "80:80"
+    environment:
+      PUBLIC_API_BASE_URL: "http://central_reserve:3050"
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+
+  frontend:
+    platform: linux/arm64
+    image: public.ecr.aws/d3a6d4r1/cam/reserve:frontend-latest
+    container_name: frontend_prod
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - app-network
+    depends_on:
+      - central_reserve
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+
+  central_reserve:
+    image: public.ecr.aws/d3a6d4r1/cam/reserve:backend-latest
+    container_name: central_reserve_prod
+    ports:
+      - "3050:3050"
+    environment:
+      DB_HOST:             "postgres"
+      DB_PORT:             "5432"
+      DB_NAME:             "${DB_NAME:-central_reserve}"
+      DB_USER:             "${DB_USER:-postgres}"
+      DB_PASS:             "${DB_PASSWORD}"
+      DB_LOG_LEVEL:        "${DB_LOG_LEVEL:-info}"
+      PGSSLMODE:           "${DB_SSLMODE:-disable}"
+      APP_ENV:             "${APP_ENV:-production}"
+      HTTP_PORT:           "3050"
+      LOG_LEVEL:           "${LOG_LEVEL:-info}"
+      JWT_SECRET:          "${JWT_SECRET:-your-secret-key}"
+      URL_BASE_SWAGGER:    "${URL_BASE_SWAGGER:-/swagger/}"
+      SMTP_HOST:           "${SMTP_HOST:-}"
+      SMTP_PORT:           "${SMTP_PORT:-}"
+      SMTP_USER:           "${SMTP_USER:-}"
+      SMTP_PASS:           "${SMTP_PASS:-}"
+      FROM_EMAIL:          "${FROM_EMAIL:-}"
+      SMTP_USE_STARTTLS:   "${SMTP_USE_STARTTLS:-false}"
+      SMTP_USE_TLS:        "${SMTP_USE_TLS:-false}"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3050/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - app-network
+    depends_on:
+      - postgres
+      - db_migrator
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 512M
+        reservations:
+          cpus: "0.50"
+          memory: 256M
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres_prod
+    env_file:
+      - .env
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB:       "${DB_NAME:-central_reserve}"
+      POSTGRES_USER:     "${DB_USER:-postgres}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - app-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  db_migrator:
+    image: public.ecr.aws/d3a6d4r1/cam/reserve:migrator-latest
+    container_name: db_migrator_prod
+    env_file:
+      - .env
+    environment:
+      DB_HOST:      "postgres"
+      DB_PORT:      "5432"
+      DB_NAME:      "${DB_NAME:-central_reserve}"
+      DB_USER:      "${DB_USER:-postgres}"
+      DB_PASS:      "${DB_PASSWORD}"
+      DB_LOG_LEVEL: "${DB_LOG_LEVEL:-info}"
+      PGSSLMODE:    "${DB_SSLMODE:-disable}"
+      APP_ENV:      "${APP_ENV:-production}"
+      HTTP_PORT:    "8080"
+      LOG_LEVEL:    "${LOG_LEVEL:-info}"
+      JWT_SECRET:   "${JWT_SECRET:-your-secret-key}"
+      USER_PASS_DEFAULT:  "${USER_PASS_DEFAULT}"
+      EMAIL_USER_DEFAULT:  "${EMAIL_USER_DEFAULT}"
+
+
+    restart: "no"
+    depends_on:
+      - postgres
+    networks:
+      - app-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "2"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+        reservations:
+          memory: 64M
+
+  nginx:
+    build:
+      context: ./infra/nginx
+    container_name: nginx_prod
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: "${DOMAIN}"
+      SSL_CERT_PATH: "${SSL_CERT_PATH}"
+      SSL_KEY_PATH: "${SSL_KEY_PATH}"
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on:
+      - frontend
+    networks:
+      - app-network
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
