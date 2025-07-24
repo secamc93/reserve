@@ -46,7 +46,7 @@ func (uc *RolePermissionMigrationUseCase) Execute() error {
 		"businesses:manage", "businesses:read", "business_types:manage", "business_types:read",
 		"scopes:manage", "scopes:read", "users:manage", "users:read", "roles:manage", "roles:read",
 		"permissions:manage", "reports:read", "reservations:manage", "reservations:read",
-		"tables:manage", "tables:read", "clients:manage", "clients:read", "staff:manage", "staff:read",
+		"tables:manage", "tables:read", "rooms:manage", "rooms:read", "clients:manage", "clients:read", "staff:manage", "staff:read",
 		"business:configure", "business_reports:read",
 	}
 
@@ -77,6 +77,7 @@ func (uc *RolePermissionMigrationUseCase) Execute() error {
 		// Permisos de negocio
 		"reservations:manage", "reservations:read",
 		"tables:manage", "tables:read",
+		"rooms:manage", "rooms:read",
 		"clients:manage", "clients:read",
 		"staff:manage", "staff:read",
 		"business:configure", "business_reports:read",
@@ -129,6 +130,7 @@ func (uc *RolePermissionMigrationUseCase) Execute() error {
 		// Permisos completos del negocio
 		"reservations:manage", "reservations:read",
 		"tables:manage", "tables:read",
+		"rooms:manage", "rooms:read",
 		"clients:manage", "clients:read",
 		"staff:manage", "staff:read",
 		"business:configure", "business_reports:read",
@@ -146,6 +148,7 @@ func (uc *RolePermissionMigrationUseCase) Execute() error {
 		// Permisos de gestión del negocio (sin configuración)
 		"staff:manage", "staff:read",
 		"tables:manage", "tables:read",
+		"rooms:manage", "rooms:read",
 		"reservations:manage", "reservations:read",
 		"clients:manage", "clients:read",
 		"business_reports:read",
@@ -162,6 +165,7 @@ func (uc *RolePermissionMigrationUseCase) Execute() error {
 	businessStaffPermissions := []string{
 		// Permisos básicos del negocio
 		"tables:read",
+		"rooms:read",
 		"reservations:read",
 		"clients:read",
 	}
@@ -177,6 +181,7 @@ func (uc *RolePermissionMigrationUseCase) Execute() error {
 	waiterPermissions := []string{
 		// Permisos de mesero
 		"tables:read",
+		"rooms:read",
 		"reservations:read",
 		"clients:read",
 	}
@@ -192,6 +197,7 @@ func (uc *RolePermissionMigrationUseCase) Execute() error {
 	hostPermissions := []string{
 		// Permisos de anfitrión
 		"tables:read",
+		"rooms:read",
 		"reservations:manage", "reservations:read",
 		"clients:manage", "clients:read",
 	}

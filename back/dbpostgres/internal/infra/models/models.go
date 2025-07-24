@@ -68,11 +68,36 @@ type Business struct {
 
 	// Relaciones
 	BusinessType BusinessType
+	Rooms        []Room
 	Tables       []Table
 	Reservations []Reservation
 	Staff        []BusinessStaff
 	Clients      []Client
 	Users        []User `gorm:"many2many:user_businesses;"` // Usuarios del negocio (muchos a muchos)
+}
+
+// ───────────────────────────────────────────
+//
+//	ROOMS – salas dentro de un negocio
+//
+// ───────────────────────────────────────────
+type Room struct {
+	gorm.Model
+	BusinessID  uint   `gorm:"not null;index;uniqueIndex:idx_business_room_name,priority:1"`
+	Name        string `gorm:"size:100;not null;uniqueIndex:idx_business_room_name,priority:2"`
+	Code        string `gorm:"size:50;not null;uniqueIndex:idx_business_room_code,priority:2"` // Código interno de la sala
+	Description string `gorm:"size:500"`
+	Capacity    int    `gorm:"not null"` // Capacidad total de la sala
+	IsActive    bool   `gorm:"default:true"`
+
+	// Configuración de la sala
+	MinCapacity int `gorm:"default:1"` // Capacidad mínima para reservar
+	MaxCapacity int `gorm:"default:0"` // Capacidad máxima (0 = sin límite)
+
+	// Relaciones
+	Business     Business `gorm:"foreignKey:BusinessID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Tables       []Table  `gorm:"foreignKey:RoomID"` // Una sala puede tener varias mesas
+	Reservations []Reservation
 }
 
 // ───────────────────────────────────────────
@@ -179,11 +204,13 @@ type Client struct {
 // ───────────────────────────────────────────
 type Table struct {
 	gorm.Model
-	BusinessID uint `gorm:"not null;index;uniqueIndex:idx_business_table_number,priority:1"`
-	Number     int  `gorm:"not null;uniqueIndex:idx_business_table_number,priority:2"`
-	Capacity   int  `gorm:"not null"`
+	BusinessID uint  `gorm:"not null;index;uniqueIndex:idx_business_table_number,priority:1"`
+	Number     int   `gorm:"not null;uniqueIndex:idx_business_table_number,priority:2"`
+	Capacity   int   `gorm:"not null"`
+	RoomID     *uint `gorm:"index"` // Relación opcional con sala (nullable)
 
-	Business     Business
+	Business     Business `gorm:"foreignKey:BusinessID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Room         *Room    `gorm:"foreignKey:RoomID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"` // Relación opcional
 	Reservations []Reservation
 }
 
@@ -195,6 +222,7 @@ type Table struct {
 type Reservation struct {
 	gorm.Model
 	BusinessID uint  `gorm:"not null;index"`
+	RoomID     *uint `gorm:"index"` // Relación opcional con sala (nullable)
 	TableID    *uint `gorm:"index"`
 	ClientID   uint  `gorm:"not null;index"`
 	// Opcional: quién registró la reserva (empleado o sistema)
@@ -206,6 +234,7 @@ type Reservation struct {
 	StatusID       uint      `gorm:"not null;index"`
 
 	Business  Business          `gorm:"foreignKey:BusinessID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Room      *Room             `gorm:"foreignKey:RoomID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"` // Relación opcional
 	Table     Table             `gorm:"foreignKey:TableID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	Client    Client            `gorm:"foreignKey:ClientID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	CreatedBy User              `gorm:"foreignKey:CreatedByUserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`

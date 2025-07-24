@@ -9,6 +9,7 @@ import (
 	"central_reserve/internal/infra/primary/http2/handlers/permissionhandler"
 	"central_reserve/internal/infra/primary/http2/handlers/reservehandler"
 	"central_reserve/internal/infra/primary/http2/handlers/rolehandler"
+	"central_reserve/internal/infra/primary/http2/handlers/roomhandler"
 	"central_reserve/internal/infra/primary/http2/handlers/tablehandler"
 	"central_reserve/internal/infra/primary/http2/handlers/userhandler"
 	"central_reserve/internal/infra/primary/http2/middleware"
@@ -37,6 +38,7 @@ type Handlers struct {
 	Permission   permissionhandler.IPermissionHandler
 	Role         rolehandler.IRoleHandler
 	User         userhandler.IUserHandler
+	Room         roomhandler.IRoomHandler
 }
 
 type HTTPServer struct {
@@ -122,6 +124,7 @@ func (s *HTTPServer) Routers() {
 	permissionhandler.RegisterRoutes(v1Group, s.handlers.Permission, s.jwtService, s.logger)
 	rolehandler.RegisterRoutes(v1Group, s.handlers.Role, s.jwtService, s.logger)
 	userhandler.RegisterRoutes(v1Group, s.handlers.User, s.jwtService, s.logger)
+	roomhandler.RegisterRoutes(v1Group, s.handlers.Room, s.jwtService, s.logger)
 }
 
 func (s *HTTPServer) Start() error {

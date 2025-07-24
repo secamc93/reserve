@@ -27,6 +27,9 @@ export const useTables = () => {
             console.log('useTables: Obteniendo mesas con parámetros:', params);
             const result = await getTablesUseCase.execute(params);
             
+            console.log('useTables: Resultado del use case:', result);
+            console.log('useTables: Datos del resultado:', result.data);
+            
             setTables(result.data);
             console.log('useTables: Mesas obtenidas:', result.data.length);
         } catch (err) {

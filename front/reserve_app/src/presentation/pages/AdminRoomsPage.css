@@ -1,5 +1,5 @@
-/* AdminTablesPage.css - Diseño elegante siguiendo el tema de la app */
-.admin-tables-page {
+/* AdminRoomsPage.css - Diseño elegante siguiendo el tema de la app */
+.admin-rooms-page {
     min-height: 100vh;
     background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
     font-family: 'Arial', sans-serif;
@@ -151,7 +151,7 @@
 }
 
 /* Contenedor de tabla moderno */
-.tables-table-container {
+.rooms-table-container {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     border-radius: 15px;
@@ -163,12 +163,12 @@
 }
 
 /* Tabla elegante */
-.tables-table {
+.rooms-table {
     width: 100%;
     border-collapse: collapse;
 }
 
-.tables-table th {
+.rooms-table th {
     background: linear-gradient(135deg, #2b2b2b 0%, #1a1a1a 100%);
     padding: 1.5rem 1rem;
     text-align: left;
@@ -180,18 +180,18 @@
     border: none;
 }
 
-.tables-table td {
+.rooms-table td {
     padding: 1.25rem 1rem;
     border-bottom: 1px solid #e2e8f0;
     font-size: 0.95rem;
     color: #2d3748;
 }
 
-.tables-table tbody tr {
+.rooms-table tbody tr {
     transition: all 0.3s ease;
 }
 
-.tables-table tbody tr:hover {
+.rooms-table tbody tr:hover {
     background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
@@ -309,7 +309,7 @@
 }
 
 .empty-state::before {
-    content: "🪑";
+    content: "🏠";
     font-size: 4rem;
     display: block;
     margin-bottom: 1rem;
@@ -371,12 +371,12 @@
         grid-template-columns: 1fr;
     }
 
-    .tables-table {
+    .rooms-table {
         font-size: 0.8rem;
     }
 
-    .tables-table th,
-    .tables-table td {
+    .rooms-table th,
+    .rooms-table td {
         padding: 0.75rem 0.5rem;
     }
 } 

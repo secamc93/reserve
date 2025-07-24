@@ -1,13 +1,23 @@
 export class Table {
     constructor(data = {}) {
-        this.id = data.id || null;
-        this.businessId = data.business_id || data.businessId || null;
+        console.log('Table constructor - Datos recibidos:', data);
+        
+        this.id = data.id || data.ID || null;
+        this.businessId = data.business_id || data.businessId || data.BusinessID || null;
         this.business = data.business || null;
-        this.number = data.number || 0;
-        this.capacity = data.capacity || 0;
-        this.isActive = data.is_active !== undefined ? data.is_active : true;
-        this.createdAt = data.created_at ? new Date(data.created_at) : null;
-        this.updatedAt = data.updated_at ? new Date(data.updated_at) : null;
+        this.number = data.number || data.Number || 0;
+        this.capacity = data.capacity || data.Capacity || 0;
+        this.isActive = data.is_active !== undefined ? data.is_active : (data.IsActive !== undefined ? data.IsActive : true);
+        this.createdAt = data.created_at || data.CreatedAt ? new Date(data.created_at || data.CreatedAt) : null;
+        this.updatedAt = data.updated_at || data.UpdatedAt ? new Date(data.updated_at || data.UpdatedAt) : null;
+        
+        console.log('Table constructor - Objeto creado:', {
+            id: this.id,
+            businessId: this.businessId,
+            number: this.number,
+            capacity: this.capacity,
+            isActive: this.isActive
+        });
     }
 
     // Métodos de validación
@@ -56,7 +66,13 @@ export class Table {
 
     // Método para obtener el nombre del negocio
     getBusinessName() {
-        return this.business?.name || 'Negocio no especificado';
+        if (this.business?.name) {
+            return this.business.name;
+        }
+        if (this.businessId) {
+            return `Negocio ID: ${this.businessId}`;
+        }
+        return 'Negocio no especificado';
     }
 
     // Método para obtener información de capacidad

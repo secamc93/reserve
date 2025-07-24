@@ -102,12 +102,12 @@ const TableModal = ({
     if (!isOpen) return null;
 
     return (
-        <div className="table-modal-overlay">
-            <div className="table-modal">
-                <div className="table-modal-header">
-                    <h2>{table ? 'Editar Mesa' : 'Crear Nueva Mesa'}</h2>
+        <div className="modal-overlay">
+            <div className="modal-container">
+                <div className="modal-header">
+                    <h2>{table ? '🪑 Editar Mesa' : '🪑 Crear Nueva Mesa'}</h2>
                     <button 
-                        className="table-modal-close" 
+                        className="close-button" 
                         onClick={handleClose}
                         disabled={loading}
                     >
@@ -115,8 +115,8 @@ const TableModal = ({
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="table-modal-form">
-                    <div className="table-modal-body">
+                <form onSubmit={handleSubmit}>
+                    <div className="modal-body">
                         <div className="form-group">
                             <label htmlFor="business_id">Negocio *</label>
                             <select
@@ -134,10 +134,10 @@ const TableModal = ({
                                     </option>
                                 ))}
                             </select>
-                            {errors.business_id && <span className="error-message">{errors.business_id}</span>}
+                            {errors.business_id && <div className="error-text">{errors.business_id}</div>}
                         </div>
 
-                        <div className="form-row">
+                        <div className="form-grid">
                             <div className="form-group">
                                 <label htmlFor="number">Número de Mesa *</label>
                                 <input
@@ -151,7 +151,7 @@ const TableModal = ({
                                     min="1"
                                     placeholder="ej: 1"
                                 />
-                                {errors.number && <span className="error-message">{errors.number}</span>}
+                                {errors.number && <div className="error-text">{errors.number}</div>}
                             </div>
 
                             <div className="form-group">
@@ -168,30 +168,28 @@ const TableModal = ({
                                     max="20"
                                     placeholder="ej: 4"
                                 />
-                                {errors.capacity && <span className="error-message">{errors.capacity}</span>}
+                                {errors.capacity && <div className="error-text">{errors.capacity}</div>}
                             </div>
                         </div>
 
-                        <div className="form-info">
-                            <div className="info-item">
+                        <div className="info-box">
+                            <div className="info-content">
                                 <span className="info-icon">ℹ️</span>
-                                <span className="info-text">
-                                    El número de mesa debe ser único dentro del mismo negocio
-                                </span>
+                                <p>El número de mesa debe ser único dentro del mismo negocio</p>
                             </div>
-                            <div className="info-item">
+                        </div>
+                        <div className="info-box">
+                            <div className="info-content">
                                 <span className="info-icon">👥</span>
-                                <span className="info-text">
-                                    La capacidad máxima es de 20 personas por mesa
-                                </span>
+                                <p>La capacidad máxima es de 20 personas por mesa</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="table-modal-footer">
+                    <div className="modal-footer">
                         <button 
                             type="button" 
-                            className="btn-secondary" 
+                            className="btn btn-secondary" 
                             onClick={handleClose}
                             disabled={loading}
                         >
@@ -199,7 +197,7 @@ const TableModal = ({
                         </button>
                         <button 
                             type="submit" 
-                            className="btn-primary"
+                            className="btn btn-primary"
                             disabled={loading}
                         >
                             {loading ? 'Guardando...' : (table ? 'Actualizar' : 'Crear')}

@@ -50,7 +50,7 @@
 
 .form-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 1.5rem;
     margin-bottom: 1.5rem;
 }
@@ -123,7 +123,8 @@
 .modal-body input[type="tel"],
 .modal-body input[type="password"],
 .modal-body input[type="number"],
-.modal-body select {
+.modal-body select,
+.modal-body textarea {
     width: 100%;
     padding: 0.9rem;
     border: 1px solid rgba(255, 255, 255, 0.2);
@@ -136,10 +137,16 @@
 }
 
 .modal-body input:focus,
-.modal-body select:focus {
+.modal-body select:focus,
+.modal-body textarea:focus {
     border-color: #ffffff;
     outline: none;
     box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+}
+
+.modal-body textarea {
+    resize: vertical;
+    min-height: 80px;
 }
 
 /* Estilos específicos para select */

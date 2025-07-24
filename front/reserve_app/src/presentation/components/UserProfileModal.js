@@ -53,6 +53,7 @@ const UserProfileModal = ({ isOpen, onClose, userInfo }) => {
             'users': 'Usuarios',
             'reservations': 'Reservas',
             'tables': 'Mesas',
+            'rooms': 'Salas',
             'clients': 'Clientes',
             'businesses': 'Negocios',
             'roles': 'Roles',

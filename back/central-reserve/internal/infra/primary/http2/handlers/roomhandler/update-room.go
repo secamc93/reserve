@@ -1,0 +1,110 @@
+package roomhandler
+
+import (
+	"central_reserve/internal/infra/primary/http2/handlers/roomhandler/mapper"
+	"central_reserve/internal/infra/primary/http2/handlers/roomhandler/request"
+	"net/http"
+	"strconv"
+	"strings"
+
+	"github.com/gin-gonic/gin"
+)
+
+// @Summary      Actualiza una sala
+// @Description  Este endpoint permite actualizar una sala existente.
+// @Tags         Salas
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id  path      int  true  "ID de la sala"
+// @Param        room  body      request.UpdateRoom  true  "Datos de la sala"
+// @Success      200    {object}  map[string]interface{} "Sala actualizada exitosamente"
+// @Failure      400    {object}  map[string]interface{} "Solicitud inválida"
+// @Failure      401    {object}  map[string]interface{} "Token de acceso requerido"
+// @Failure      404    {object}  map[string]interface{} "Sala no encontrada"
+// @Failure      409    {object}  map[string]interface{} "Sala ya existe para este negocio"
+// @Failure      500    {object}  map[string]interface{} "Error interno del servidor"
+// @Router       /rooms/{id} [put]
+func (h *RoomHandler) UpdateRoomHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	// Obtener id de la URL
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		h.logger.Error().Err(err).Str("id", idStr).Msg("error al parsear id de sala")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"error":   "invalid_room_id",
+			"message": "ID de sala inválido",
+		})
+		return
+	}
+
+	// 1. Entrada ──────────────────────────────────────────────
+	var req request.UpdateRoom
+	if err := c.ShouldBindJSON(&req); err != nil {
+		h.logger.Error().Err(err).Msg("error al bindear JSON de sala")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"error":   "invalid_request",
+			"message": "Los datos de la sala no son válidos",
+		})
+		return
+	}
+
+	// 2. DTO → Dominio ───────────────────────────────────────
+	room := mapper.UpdateRoomToDomain(req)
+
+	// 3. Caso de uso ─────────────────────────────────────────
+	response, err := h.usecase.UpdateRoom(ctx, uint(id), room)
+	if err != nil {
+		// Manejar error de sala no encontrada
+		if strings.Contains(err.Error(), "no existe") {
+			h.logger.Warn().Err(err).Uint("id", uint(id)).Msg("sala no encontrada")
+			c.JSON(http.StatusNotFound, gin.H{
+				"success": false,
+				"error":   "room_not_found",
+				"message": err.Error(),
+			})
+			return
+		}
+
+		// Manejar error de sala duplicada
+		if strings.Contains(err.Error(), "ya existe otra sala con el código") {
+			h.logger.Warn().Err(err).Msg("sala ya existe para este negocio")
+			c.JSON(http.StatusConflict, gin.H{
+				"success": false,
+				"error":   "room_already_exists",
+				"message": err.Error(),
+			})
+			return
+		}
+
+		// Manejar errores de validación
+		if strings.Contains(err.Error(), "es requerido") || strings.Contains(err.Error(), "debe ser mayor") {
+			h.logger.Warn().Err(err).Msg("error de validación al actualizar sala")
+			c.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"error":   "validation_error",
+				"message": err.Error(),
+			})
+			return
+		}
+
+		h.logger.Error().Err(err).Msg("error interno al actualizar sala")
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"error":   "internal_error",
+			"message": "No se pudo actualizar la sala",
+		})
+		return
+	}
+
+	// 4. Salida ──────────────────────────────────────────────
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Sala actualizada exitosamente",
+		"data":    response,
+	})
+}

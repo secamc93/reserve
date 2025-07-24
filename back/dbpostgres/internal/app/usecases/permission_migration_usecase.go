@@ -74,6 +74,8 @@ func (uc *PermissionMigrationUseCase) Execute() error {
 		{Name: "Gestionar Configuración", Code: "business:configure", Description: "Configurar negocio (marca blanca)", Resource: "businesses", Action: models.ACTION_UPDATE, ScopeID: businessScope.ID},
 		{Name: "Gestionar Mesas", Code: "tables:manage", Description: "Gestionar mesas del negocio", Resource: "tables", Action: models.ACTION_MANAGE, ScopeID: businessScope.ID},
 		{Name: "Ver Mesas", Code: "tables:read", Description: "Ver mesas del negocio", Resource: "tables", Action: models.ACTION_READ, ScopeID: businessScope.ID},
+		{Name: "Gestionar Salas", Code: "rooms:manage", Description: "Gestionar salas del negocio", Resource: "rooms", Action: models.ACTION_MANAGE, ScopeID: businessScope.ID},
+		{Name: "Ver Salas", Code: "rooms:read", Description: "Ver salas del negocio", Resource: "rooms", Action: models.ACTION_READ, ScopeID: businessScope.ID},
 		{Name: "Gestionar Reservas", Code: "reservations:manage", Description: "Gestionar reservas del negocio", Resource: "reservations", Action: models.ACTION_MANAGE, ScopeID: businessScope.ID},
 		{Name: "Ver Reservas", Code: "reservations:read", Description: "Ver reservas del negocio", Resource: "reservations", Action: models.ACTION_READ, ScopeID: businessScope.ID},
 		{Name: "Gestionar Clientes", Code: "clients:manage", Description: "Gestionar clientes del negocio", Resource: "clients", Action: models.ACTION_MANAGE, ScopeID: businessScope.ID},

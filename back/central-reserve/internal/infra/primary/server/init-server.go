@@ -8,6 +8,7 @@ import (
 	"central_reserve/internal/app/usecasepermission"
 	"central_reserve/internal/app/usecasereserve"
 	"central_reserve/internal/app/usecaserole"
+	"central_reserve/internal/app/usecaseroom"
 	"central_reserve/internal/app/usecasetables"
 	"central_reserve/internal/app/usecaseuser"
 	"central_reserve/internal/infra/primary/http2"
@@ -18,6 +19,7 @@ import (
 	"central_reserve/internal/infra/primary/http2/handlers/permissionhandler"
 	"central_reserve/internal/infra/primary/http2/handlers/reservehandler"
 	"central_reserve/internal/infra/primary/http2/handlers/rolehandler"
+	"central_reserve/internal/infra/primary/http2/handlers/roomhandler"
 	"central_reserve/internal/infra/primary/http2/handlers/tablehandler"
 	"central_reserve/internal/infra/primary/http2/handlers/userhandler"
 	"central_reserve/internal/infra/primary/queue/nats"
@@ -84,6 +86,7 @@ func setupDependencies(database db.IDatabase, logger log.ILogger, environment en
 	reserveUseCaseRepo := repository.NewReserveUseCaseRepository(database, logger)
 	roleUseCaseRepo := repository.NewRoleRepository(database, logger)
 	userUseCaseRepo := repository.NewUserRepository(database, logger)
+	roomUseCaseRepo := repository.NewRoomRepository(database, logger)
 
 	// Servicios
 	emailService := email.NewEmailService()
@@ -106,6 +109,7 @@ func setupDependencies(database db.IDatabase, logger log.ILogger, environment en
 	permissionUseCase := usecasepermission.NewPermissionUseCase(permissionUseCaseRepo, logger)
 	roleUseCase := usecaserole.NewRoleUseCase(roleUseCaseRepo, logger)
 	userUseCase := usecaseuser.NewUserUseCase(userUseCaseRepo, logger)
+	roomUseCase := usecaseroom.NewRoomUseCase(roomUseCaseRepo, logger)
 
 	// Handlers por dominio
 	authHandler := authhandler.New(authUseCase, logger)
@@ -117,6 +121,7 @@ func setupDependencies(database db.IDatabase, logger log.ILogger, environment en
 	permissionHandler := permissionhandler.New(permissionUseCase, logger)
 	roleHandler := rolehandler.New(roleUseCase, logger)
 	userHandler := userhandler.New(userUseCase, logger)
+	roomHandler := roomhandler.New(roomUseCase, logger)
 
 	return &http2.Handlers{
 		Auth:         authHandler,
@@ -128,6 +133,7 @@ func setupDependencies(database db.IDatabase, logger log.ILogger, environment en
 		Permission:   permissionHandler,
 		Role:         roleHandler,
 		User:         userHandler,
+		Room:         roomHandler,
 	}, jwtService
 }
 

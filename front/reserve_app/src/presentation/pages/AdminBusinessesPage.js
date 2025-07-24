@@ -114,8 +114,8 @@ const AdminBusinessesPage = () => {
     if (loading && businesses.length === 0) {
         return (
             <div className="admin-businesses-page">
-                <div className="loading-container">
-                    <div className="loading-spinner"></div>
+                <div className="loading">
+                    <div className="spinner"></div>
                     <p>Cargando negocios...</p>
                 </div>
             </div>
@@ -126,52 +126,57 @@ const AdminBusinessesPage = () => {
         <div className="admin-businesses-page">
             <div className="page-header">
                 <div className="header-content">
-                    <h1>Administrar Negocios</h1>
-                    <p>Gestiona todos los negocios registrados en el sistema</p>
+                    <div className="header-text">
+                        <h1>🏢 Administrar Negocios</h1>
+                        <p>Gestiona todos los negocios registrados en el sistema</p>
+                    </div>
+                    <div className="header-actions">
+                        <button 
+                            className="btn-primary" 
+                            onClick={handleCreateNew}
+                            disabled={loading}
+                        >
+                            ✨ Crear Negocio
+                        </button>
+                    </div>
                 </div>
-                <button 
-                    className="btn-create" 
-                    onClick={handleCreateNew}
-                    disabled={loading}
-                >
-                    + Crear Negocio
-                </button>
             </div>
 
             {error && (
-                <div className="error-banner">
+                <div className="error-message">
                     <span>{error}</span>
-                    <button onClick={clearError}>×</button>
                 </div>
             )}
 
             <div className="filters-section">
-                <div className="search-box">
-                    <input
-                        type="text"
-                        placeholder="Buscar por nombre o código..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
-                
-                <div className="filter-controls">
-                    <select 
-                        value={filterStatus} 
-                        onChange={(e) => setFilterStatus(e.target.value)}
-                    >
-                        <option value="all">Todos los estados</option>
-                        <option value="active">Solo activos</option>
-                        <option value="inactive">Solo inactivos</option>
-                    </select>
+                <div className="filters-grid">
+                    <div className="filter-group">
+                        <label>Buscar negocios</label>
+                        <input
+                            type="text"
+                            placeholder="Buscar por nombre o código..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                    
+                    <div className="filter-group">
+                        <label>Filtrar por estado</label>
+                        <select 
+                            value={filterStatus} 
+                            onChange={(e) => setFilterStatus(e.target.value)}
+                        >
+                            <option value="all">Todos los estados</option>
+                            <option value="active">Solo activos</option>
+                            <option value="inactive">Solo inactivos</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
-            <div className="businesses-grid">
+            <div className="businesses-table-container">
                 {filteredBusinesses.length === 0 ? (
                     <div className="empty-state">
-                        <div className="empty-icon">🏪</div>
-                        <h3>No hay negocios</h3>
                         <p>
                             {searchTerm || filterStatus !== 'all' 
                                 ? 'No se encontraron negocios con los filtros aplicados'
@@ -179,72 +184,112 @@ const AdminBusinessesPage = () => {
                             }
                         </p>
                         {!searchTerm && filterStatus === 'all' && (
-                            <button className="btn-create" onClick={handleCreateNew}>
+                            <button className="btn-primary" onClick={handleCreateNew}>
                                 Crear el primer negocio
                             </button>
                         )}
                     </div>
                 ) : (
-                    filteredBusinesses.map(business => (
-                        <div key={business.id} className="business-card">
-                            <div className="business-header">
-                                <div className="business-info">
-                                    <h3>{business.name}</h3>
-                                    <p className="business-code">{business.code}</p>
-                                </div>
-                                {getStatusBadge(business.isActive)}
-                            </div>
-
-                            <div className="business-details">
-                                <div className="detail-item">
-                                    <span className="label">Tipo:</span>
-                                    <span className="value">{business.getBusinessTypeText()}</span>
-                                </div>
-                                
-                                {business.address && (
-                                    <div className="detail-item">
-                                        <span className="label">Dirección:</span>
-                                        <span className="value">{business.address}</span>
-                                    </div>
-                                )}
-                                
-                                {business.timezone && (
-                                    <div className="detail-item">
-                                        <span className="label">Zona horaria:</span>
-                                        <span className="value">{business.timezone}</span>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="business-features">
-                                <span className="label">Funcionalidades:</span>
-                                {getFeaturesBadge(business)}
-                            </div>
-
-                            {business.description && (
-                                <div className="business-description">
-                                    <p>{business.description}</p>
-                                </div>
-                            )}
-
-                            <div className="business-actions">
-                                <button 
-                                    className="btn-edit"
-                                    onClick={() => handleEditBusiness(business)}
-                                    disabled={loading}
-                                >
-                                    Editar
-                                </button>
-                                <button 
-                                    className="btn-delete"
-                                    onClick={() => handleDeleteBusiness(business)}
-                                    disabled={loading}
-                                >
-                                    Eliminar
-                                </button>
-                            </div>
-                        </div>
-                    ))
+                    <table className="businesses-table">
+                        <thead>
+                            <tr>
+                                <th>Negocio</th>
+                                <th>Tipo</th>
+                                <th>Estado</th>
+                                <th>Funcionalidades</th>
+                                <th>Creado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredBusinesses.map(business => (
+                                <tr key={business.id}>
+                                    <td>
+                                        <div>
+                                            <strong>{business.name}</strong>
+                                            <br />
+                                            <small style={{ color: '#718096', fontFamily: 'monospace' }}>
+                                                {business.code}
+                                            </small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span className="business-type-badge">
+                                            {business.getBusinessTypeText()}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {getStatusBadge(business.isActive)}
+                                    </td>
+                                    <td>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                                            {business.enableDelivery && (
+                                                <span style={{ 
+                                                    background: '#667eea', 
+                                                    color: 'white', 
+                                                    padding: '0.25rem 0.5rem', 
+                                                    borderRadius: '12px', 
+                                                    fontSize: '0.75rem' 
+                                                }}>
+                                                    Delivery
+                                                </span>
+                                            )}
+                                            {business.enablePickup && (
+                                                <span style={{ 
+                                                    background: '#48bb78', 
+                                                    color: 'white', 
+                                                    padding: '0.25rem 0.5rem', 
+                                                    borderRadius: '12px', 
+                                                    fontSize: '0.75rem' 
+                                                }}>
+                                                    Pickup
+                                                </span>
+                                            )}
+                                            {business.enableReservations && (
+                                                <span style={{ 
+                                                    background: '#ed8936', 
+                                                    color: 'white', 
+                                                    padding: '0.25rem 0.5rem', 
+                                                    borderRadius: '12px', 
+                                                    fontSize: '0.75rem' 
+                                                }}>
+                                                    Reservas
+                                                </span>
+                                            )}
+                                            {!business.enableDelivery && !business.enablePickup && !business.enableReservations && (
+                                                <span style={{ color: '#718096', fontSize: '0.8rem' }}>
+                                                    Sin funcionalidades
+                                                </span>
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {business.createdAt ? business.createdAt.toLocaleDateString() : '-'}
+                                    </td>
+                                    <td>
+                                        <div className="actions">
+                                            <button 
+                                                className="btn-edit"
+                                                onClick={() => handleEditBusiness(business)}
+                                                disabled={loading}
+                                                title="Editar negocio"
+                                            >
+                                                ✏️
+                                            </button>
+                                            <button 
+                                                className="btn-delete"
+                                                onClick={() => handleDeleteBusiness(business)}
+                                                disabled={loading}
+                                                title="Eliminar negocio"
+                                            >
+                                                🗑️
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 )}
             </div>
 

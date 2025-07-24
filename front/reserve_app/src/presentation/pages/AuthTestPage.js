@@ -35,6 +35,7 @@ const AuthTestPage = () => {
     const icons = {
       'reservations': '📅',
       'tables': '🪑',
+      'rooms': '🏠',
       'clients': '👥',
       'users': '👤',
       'businesses': '🏢',

@@ -11,12 +11,17 @@ export class ApiTableRepository {
             const response = await this.tableService.getTables(params);
 
             console.log('🔥 Full response from backend:', response);
+            console.log('🔥 Response.data:', response.data);
+            console.log('🔥 Response.data type:', typeof response.data, Array.isArray(response.data));
 
             if (!response || !response.success) {
                 throw new Error(response?.message || 'Error obteniendo mesas');
             }
 
-            return response.data || [];
+            const tablesData = response.data || [];
+            console.log('🔥 Datos a devolver:', tablesData);
+            
+            return tablesData;
         } catch (error) {
             console.error('ApiTableRepository: Error obteniendo mesas:', error);
             throw error;

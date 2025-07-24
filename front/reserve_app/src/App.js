@@ -7,6 +7,7 @@ import AuthTestPage from './presentation/pages/AuthTestPage.js';
 import { AdminUsersPage } from './presentation/pages/AdminUsersPage.js';
 import AdminBusinessesPage from './presentation/pages/AdminBusinessesPage.js';
 import AdminTablesPage from './presentation/pages/AdminTablesPage.js';
+import AdminRoomsPage from './presentation/pages/AdminRoomsPage.js';
 import Login from './presentation/components/Login.js';
 import UnauthorizedPage from './presentation/pages/UnauthorizedPage.js';
 import ChangePasswordPage from './presentation/pages/ChangePasswordPage.js';
@@ -107,6 +108,17 @@ function App() {
               <ProtectedRoute requiredPermissions={['tables:manage']}>
                 <Layout>
                   <AdminTablesPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin-rooms"
+            element={
+              <ProtectedRoute requiredPermissions={['rooms:manage']}>
+                <Layout>
+                  <AdminRoomsPage />
                 </Layout>
               </ProtectedRoute>
             }

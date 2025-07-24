@@ -40,6 +40,7 @@ const Sidebar = () => {
     const hasManageUsers = hasPermission('manage_users');
     const hasBusinessesManage = hasPermission('businesses:manage');
     const hasTablesManage = hasPermission('tables:manage');
+    const hasRoomsManage = hasPermission('rooms:manage');
 
     console.log('🔍 Sidebar Debug - Permisos de Usuario:');
     console.log('  - isSuperAdmin:', isSuper);
@@ -65,10 +66,14 @@ const Sidebar = () => {
     
     // Verificar permisos para mesas
     const canManageTables = isSuper || hasTablesManage;
+    
+    // Verificar permisos para salas
+    const canManageRooms = isSuper || hasRoomsManage;
 
     console.log('🔍 Sidebar Debug - canManageUsers:', canManageUsers);
     console.log('🔍 Sidebar Debug - canManageBusinesses:', canManageBusinesses);
     console.log('🔍 Sidebar Debug - canManageTables:', canManageTables);
+    console.log('🔍 Sidebar Debug - canManageRooms:', hasRoomsManage);
 
     if (canManageUsers) {
         menuItems.push({
@@ -104,6 +109,18 @@ const Sidebar = () => {
         console.log('🔍 Sidebar Debug - Agregando módulo "Administrar Mesas"');
     } else {
         console.log('🔍 Sidebar Debug - NO se agrega módulo "Administrar Mesas"');
+    }
+
+    if (canManageRooms) {
+        menuItems.push({
+            id: 'admin-rooms',
+            icon: '🏠',
+            label: 'Administrar Salas',
+            path: '/admin-rooms'
+        });
+        console.log('🔍 Sidebar Debug - Agregando módulo "Administrar Salas"');
+    } else {
+        console.log('🔍 Sidebar Debug - NO se agrega módulo "Administrar Salas"');
     }
 
     console.log('🔍 Sidebar Debug - MenuItems finales:', menuItems.map(item => item.label));

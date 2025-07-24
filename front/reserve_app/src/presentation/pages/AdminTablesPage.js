@@ -107,8 +107,8 @@ const AdminTablesPage = () => {
     if (loading && tables.length === 0) {
         return (
             <div className="admin-tables-page">
-                <div className="loading-container">
-                    <div className="loading-spinner"></div>
+                <div className="loading">
+                    <div className="spinner"></div>
                     <p>Cargando mesas...</p>
                 </div>
             </div>
@@ -119,55 +119,60 @@ const AdminTablesPage = () => {
         <div className="admin-tables-page">
             <div className="page-header">
                 <div className="header-content">
-                    <h1>Administrar Mesas</h1>
-                    <p>Gestiona todas las mesas registradas en el sistema</p>
+                    <div className="header-text">
+                        <h1>🪑 Administrar Mesas</h1>
+                        <p>Gestiona todas las mesas registradas en el sistema</p>
+                    </div>
+                    <div className="header-actions">
+                        <button 
+                            className="btn-primary" 
+                            onClick={handleCreateNew}
+                            disabled={loading}
+                        >
+                            ✨ Crear Mesa
+                        </button>
+                    </div>
                 </div>
-                <button 
-                    className="btn-create" 
-                    onClick={handleCreateNew}
-                    disabled={loading}
-                >
-                    + Crear Mesa
-                </button>
             </div>
 
             {error && (
-                <div className="error-banner">
+                <div className="error-message">
                     <span>{error}</span>
-                    <button onClick={clearError}>×</button>
                 </div>
             )}
 
             <div className="filters-section">
-                <div className="search-box">
-                    <input
-                        type="text"
-                        placeholder="Buscar por número de mesa o negocio..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
-                
-                <div className="filter-controls">
-                    <select 
-                        value={filterBusiness} 
-                        onChange={(e) => setFilterBusiness(e.target.value)}
-                    >
-                        <option value="all">Todos los negocios</option>
-                        {businesses.map(business => (
-                            <option key={business.id} value={business.id.toString()}>
-                                {business.name}
-                            </option>
-                        ))}
-                    </select>
+                <div className="filters-grid">
+                    <div className="filter-group">
+                        <label>Buscar mesas</label>
+                        <input
+                            type="text"
+                            placeholder="Buscar por número de mesa o negocio..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                    
+                    <div className="filter-group">
+                        <label>Filtrar por negocio</label>
+                        <select 
+                            value={filterBusiness} 
+                            onChange={(e) => setFilterBusiness(e.target.value)}
+                        >
+                            <option value="all">Todos los negocios</option>
+                            {businesses.map(business => (
+                                <option key={business.id} value={business.id.toString()}>
+                                    {business.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
             </div>
 
-            <div className="tables-grid">
+            <div className="tables-table-container">
                 {filteredTables.length === 0 ? (
                     <div className="empty-state">
-                        <div className="empty-icon">🪑</div>
-                        <h3>No hay mesas</h3>
                         <p>
                             {searchTerm || filterBusiness !== 'all' 
                                 ? 'No se encontraron mesas con los filtros aplicados'
@@ -175,61 +180,70 @@ const AdminTablesPage = () => {
                             }
                         </p>
                         {!searchTerm && filterBusiness === 'all' && (
-                            <button className="btn-create" onClick={handleCreateNew}>
+                            <button className="btn-primary" onClick={handleCreateNew}>
                                 Crear la primera mesa
                             </button>
                         )}
                     </div>
                 ) : (
-                    filteredTables.map(table => (
-                        <div key={table.id} className="table-card">
-                            <div className="table-header">
-                                <div className="table-info">
-                                    <h3>Mesa {table.number}</h3>
-                                    <p className="table-business">{table.getBusinessName()}</p>
-                                </div>
-                                {getStatusBadge(table.isActive)}
-                            </div>
-
-                            <div className="table-details">
-                                <div className="detail-item">
-                                    <span className="label">Capacidad:</span>
-                                    {getCapacityBadge(table.capacity)}
-                                </div>
-                                
-                                <div className="detail-item">
-                                    <span className="label">Negocio:</span>
-                                    <span className="value">{table.getBusinessName()}</span>
-                                </div>
-                                
-                                {table.createdAt && (
-                                    <div className="detail-item">
-                                        <span className="label">Creada:</span>
-                                        <span className="value">
-                                            {table.createdAt.toLocaleDateString()}
+                    <table className="tables-table">
+                        <thead>
+                            <tr>
+                                <th>Mesa</th>
+                                <th>Negocio</th>
+                                <th>Capacidad</th>
+                                <th>Estado</th>
+                                <th>Creada</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredTables.map(table => (
+                                <tr key={table.id}>
+                                    <td>
+                                        <strong>Mesa {table.number}</strong>
+                                    </td>
+                                    <td>
+                                        <span className="business-badge">
+                                            {(() => {
+                                                const business = businesses.find(b => b.id === table.businessId);
+                                                return business ? business.name : `Negocio ID: ${table.businessId}`;
+                                            })()}
                                         </span>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="table-actions">
-                                <button 
-                                    className="btn-edit"
-                                    onClick={() => handleEditTable(table)}
-                                    disabled={loading}
-                                >
-                                    Editar
-                                </button>
-                                <button 
-                                    className="btn-delete"
-                                    onClick={() => handleDeleteTable(table)}
-                                    disabled={loading}
-                                >
-                                    Eliminar
-                                </button>
-                            </div>
-                        </div>
-                    ))
+                                    </td>
+                                    <td>
+                                        <strong>{table.capacity} {table.capacity === 1 ? 'persona' : 'personas'}</strong>
+                                    </td>
+                                    <td>
+                                        {getStatusBadge(table.isActive)}
+                                    </td>
+                                    <td>
+                                        {table.createdAt ? table.createdAt.toLocaleDateString() : '-'}
+                                    </td>
+                                    <td>
+                                        <div className="actions">
+                                            <button 
+                                                className="btn-edit"
+                                                onClick={() => handleEditTable(table)}
+                                                disabled={loading}
+                                                title="Editar mesa"
+                                            >
+                                                ✏️
+                                            </button>
+                                            <button 
+                                                className="btn-delete"
+                                                onClick={() => handleDeleteTable(table)}
+                                                disabled={loading}
+                                                title="Eliminar mesa"
+                                            >
+                                                🗑️
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 )}
             </div>
 
