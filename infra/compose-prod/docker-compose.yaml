@@ -4,8 +4,6 @@ services:
   website:
     image: public.ecr.aws/d3a6d4r1/cam/reserve:website-latest
     container_name: reserve-website-1
-    ports:
-      - "80:80"
     environment:
       PUBLIC_API_BASE_URL: "http://central_reserve:3050"
     networks:
@@ -119,6 +117,7 @@ services:
     ports:
       - "5433:5432"
     environment:
+      JWT_SECRET: "${JWT_SECRET}"
       POSTGRES_DB:       "${DB_NAME:-central_reserve}"
       POSTGRES_USER:     "${DB_USER:-postgres}"
       POSTGRES_PASSWORD: "${DB_PASSWORD}"
