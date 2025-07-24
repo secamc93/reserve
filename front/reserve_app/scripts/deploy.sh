@@ -11,11 +11,6 @@ ECR_REPO="public.ecr.aws/d3a6d4r1/cam/reserve"
 VERSION=${1:-"latest"}
 DOCKERFILE_PATH="Dockerfile"
 
-# Variables de entorno para el build
-API_BASE_URL=${API_BASE_URL:-"https://api.tudominio.com"}
-APP_NAME=${APP_NAME:-"Reserve App"}
-APP_VERSION=${APP_VERSION:-"1.0.0"}
-
 # Colores para output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -25,7 +20,6 @@ NC='\033[0m' # No Color
 
 echo -e "${GREEN}🚀 Iniciando despliegue de Reserve App Frontend${NC}"
 echo -e "${YELLOW}Versión: ${VERSION}${NC}"
-echo -e "${BLUE}API Base URL: ${API_BASE_URL}${NC}"
 
 # Verificar que estamos en el directorio correcto
 if [ ! -f "package.json" ]; then
@@ -58,24 +52,25 @@ echo -e "${YELLOW}📦 Limpiando dependencias de Node.js...${NC}"
 if [ -d "node_modules" ]; then
     rm -rf node_modules
 fi
-npm ci
+npm install --legacy-peer-deps
 
-# Construir la imagen con argumentos de build
+# Construir la imagen con argumentos de build (opcional, solo si se pasa VITE_API_BASE_URL)
 echo -e "${YELLOW}🔨 Construyendo imagen Docker...${NC}"
-echo -e "${BLUE}Configuración de build:${NC}"
-echo -e "  - IMAGE_NAME: ${IMAGE_NAME}"
-echo -e "  - VERSION: ${VERSION}"
-echo -e "  - API_BASE_URL: ${API_BASE_URL}"
-echo -e "  - APP_NAME: ${APP_NAME}"
-echo -e "  - APP_VERSION: ${APP_VERSION}"
-
-docker build \
-  --build-arg REACT_APP_API_BASE_URL="${API_BASE_URL}" \
-  --build-arg REACT_APP_NAME="${APP_NAME}" \
-  --build-arg REACT_APP_VERSION="${APP_VERSION}" \
-  -f ${DOCKERFILE_PATH} \
-  -t ${IMAGE_NAME}:${VERSION} \
-  .
+if [ -n "$VITE_API_BASE_URL" ]; then
+  echo -e "${BLUE}Usando VITE_API_BASE_URL: $VITE_API_BASE_URL${NC}"
+  docker build \
+    --no-cache \
+    --build-arg VITE_API_BASE_URL="$VITE_API_BASE_URL" \
+    -f ${DOCKERFILE_PATH} \
+    -t ${IMAGE_NAME}:${VERSION} \
+    .
+else
+  docker build \
+    --no-cache \
+    -f ${DOCKERFILE_PATH} \
+    -t ${IMAGE_NAME}:${VERSION} \
+    .
+fi
 
 # Etiquetar para ECR con prefijo frontend
 echo -e "${YELLOW}🏷️ Etiquetando imagen para ECR...${NC}"
@@ -107,9 +102,9 @@ fi
 
 echo -e "${GREEN}🎉 Despliegue completado exitosamente!${NC}"
 echo -e "${YELLOW}📋 Para usar la imagen:${NC}"
-echo -e "docker run -p 80:80 \\"
-echo -e "  -e REACT_APP_API_BASE_URL=https://api.tudominio.com \\"
-echo -e "  ${ECR_REPO}:${FRONTEND_TAG}"
+echo -e "docker run -p 80:80 \\
+  -e VITE_API_BASE_URL=https://www.xn--rup-joa.com/central-reserve \\
+  ${ECR_REPO}:${FRONTEND_TAG}"
 echo -e ""
 echo -e "${YELLOW}🐳 Con Docker Compose:${NC}"
 echo -e "version: '3.8'"
@@ -119,7 +114,7 @@ echo -e "    image: ${ECR_REPO}:${FRONTEND_TAG}"
 echo -e "    ports:"
 echo -e "      - \"80:80\""
 echo -e "    environment:"
-echo -e "      - REACT_APP_API_BASE_URL=https://api.tudominio.com"
+echo -e "      - VITE_API_BASE_URL=https://www.xn--rup-joa.com/central-reserve"
 echo -e ""
 echo -e "${YELLOW}🌐 URL del repositorio ECR:${NC}"
 echo -e "https://gallery.ecr.aws/d3a6d4r1/cam/reserve" 
