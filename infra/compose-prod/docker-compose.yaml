@@ -180,8 +180,7 @@ services:
           memory: 64M
 
   nginx:
-    build:
-      context: ./infra/nginx
+    image: public.ecr.aws/d3a6d4r1/cam/reserve:nginx-latest
     container_name: nginx_prod
     ports:
       - "80:80"
