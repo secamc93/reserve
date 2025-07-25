@@ -5,6 +5,7 @@ import { config } from '../../config/env.js';
 export class AuthService {
   constructor() {
     this.httpClient = new HttpClient(config.API_BASE_URL);
+    console.log('BASE URL usada en AuthService:', config.API_BASE_URL);
   }
 
   async login(email, password) {
@@ -19,7 +20,7 @@ export class AuthService {
 
       console.log('🔐 AuthService: Enviando datos de login:', loginData);
 
-      const response = await this.httpClient.post('/api/v1/auth/login', loginData);
+      const response = await this.httpClient.post('/v1/auth/login', loginData);
 
       console.log('🔐 AuthService: Respuesta del servidor:', response);
 
@@ -51,7 +52,7 @@ export class AuthService {
     try {
       console.log('🔐 AuthService: Obteniendo roles y permisos para usuario:');
 
-      const response = await this.httpClient.get(`/api/v1/auth/roles-permissions`);
+      const response = await this.httpClient.get(`/v1/auth/roles-permissions`);
 
       console.log('🔐 AuthService: Respuesta de roles y permisos:', response);
 
@@ -75,7 +76,7 @@ export class AuthService {
   async changePassword(passwordData) {
     try {
       console.log('AuthService: Cambiando contraseña');
-      const response = await this.httpClient.post('/api/v1/auth/change-password', passwordData);
+      const response = await this.httpClient.post('/v1/auth/change-password', passwordData);
       console.log('AuthService: Contraseña cambiada:', response);
       return response;
     } catch (error) {

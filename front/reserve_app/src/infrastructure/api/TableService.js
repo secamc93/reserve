@@ -4,6 +4,7 @@ import { config } from '../../config/env.js';
 export class TableService {
     constructor() {
         this.httpClient = new HttpClient(config.API_BASE_URL);
+        console.log('BASE URL usada en TableService:', config.API_BASE_URL);
     }
 
     async getTables(params = {}) {

@@ -54,23 +54,15 @@ if [ -d "node_modules" ]; then
 fi
 npm install --legacy-peer-deps
 
-# Construir la imagen con argumentos de build (opcional, solo si se pasa REACT_APP_API_BASE_URL)
+# Construir la imagen con URL hardcodeada para producción
 echo -e "${YELLOW}🔨 Construyendo imagen Docker...${NC}"
-if [ -n "$REACT_APP_API_BASE_URL" ]; then
-  echo -e "${BLUE}Usando REACT_APP_API_BASE_URL: $REACT_APP_API_BASE_URL${NC}"
-  docker build \
-    --no-cache \
-    --build-arg REACT_APP_API_BASE_URL="$REACT_APP_API_BASE_URL" \
-    -f ${DOCKERFILE_PATH} \
-    -t ${IMAGE_NAME}:${VERSION} \
-    .
-else
-  docker build \
-    --no-cache \
-    -f ${DOCKERFILE_PATH} \
-    -t ${IMAGE_NAME}:${VERSION} \
-    .
-fi
+echo -e "${BLUE}Usando REACT_APP_API_BASE_URL: https://www.xn--rup-joa.com/api${NC}"
+docker build \
+  --no-cache \
+  --build-arg REACT_APP_API_BASE_URL="https://www.xn--rup-joa.com/api" \
+  -f ${DOCKERFILE_PATH} \
+  -t ${IMAGE_NAME}:${VERSION} \
+  .
 
 # Etiquetar para ECR con prefijo frontend
 echo -e "${YELLOW}🏷️ Etiquetando imagen para ECR...${NC}"
@@ -103,7 +95,7 @@ fi
 echo -e "${GREEN}🎉 Despliegue completado exitosamente!${NC}"
 echo -e "${YELLOW}📋 Para usar la imagen:${NC}"
 echo -e "docker run -p 80:80 \\
-  -e REACT_APP_API_BASE_URL=https://www.xn--rup-joa.com/central-reserve \\
+  -e REACT_APP_API_BASE_URL=https://www.xn--rup-joa.com/api \\
   ${ECR_REPO}:${FRONTEND_TAG}"
 echo -e ""
 echo -e "${YELLOW}🐳 Con Docker Compose:${NC}"
@@ -114,7 +106,7 @@ echo -e "    image: ${ECR_REPO}:${FRONTEND_TAG}"
 echo -e "    ports:"
 echo -e "      - \"80:80\""
 echo -e "    environment:"
-echo -e "      - REACT_APP_API_BASE_URL=https://www.xn--rup-joa.com/central-reserve"
+echo -e "      - REACT_APP_API_BASE_URL=https://www.xn--rup-joa.com/api"
 echo -e ""
 echo -e "${YELLOW}🌐 URL del repositorio ECR:${NC}"
 echo -e "https://gallery.ecr.aws/d3a6d4r1/cam/reserve" 

@@ -17,7 +17,9 @@ export class HttpClient {
   }
 
   async get(endpoint, params = {}) {
-    const url = new URL(endpoint, this.baseURL);
+    // Concatenar correctamente la base y el endpoint
+    let url = this.baseURL.replace(/\/$/, '') + endpoint;
+    const urlObj = new URL(url);
 
     // ✅ CORREGIDO: Validar y limpiar parámetros específicos para users
     const cleanedParams = this.cleanParams(params, endpoint);
@@ -25,16 +27,16 @@ export class HttpClient {
     // Add query parameters
     Object.keys(cleanedParams).forEach(key => {
       if (cleanedParams[key] !== null && cleanedParams[key] !== undefined && cleanedParams[key] !== '') {
-        url.searchParams.append(key, cleanedParams[key]);
+        urlObj.searchParams.append(key, cleanedParams[key]);
       }
     });
 
     console.log('🔧 Original params:', params);
     console.log('✅ Cleaned params:', cleanedParams);
-    console.log('🌐 Making GET request to:', url.toString());
+    console.log('🌐 Making GET request to:', urlObj.toString());
 
     try {
-      const response = await fetch(url.toString(), {
+      const response = await fetch(urlObj.toString(), {
         method: 'GET',
         headers: this.getDefaultHeaders(),
       });

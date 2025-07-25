@@ -26,7 +26,7 @@ export class ApiReservaRepository extends ReservaRepository {
 
       console.log('API request params:', params);
 
-      const response = await this.httpClient.get('/api/v1/reserves', params);
+      const response = await this.httpClient.get('/v1/reserves', params);
 
       console.log('API response:', response);
 
@@ -86,7 +86,7 @@ export class ApiReservaRepository extends ReservaRepository {
         delete payload.restaurant_id;
       }
 
-      const response = await this.httpClient.post('/api/v1/reserves', payload);
+      const response = await this.httpClient.post('/v1/reserves', payload);
 
       console.log('Create reserva response:', response);
 
@@ -108,7 +108,7 @@ export class ApiReservaRepository extends ReservaRepository {
 
   async getReservaById(id) {
     try {
-      const response = await this.httpClient.get(`/api/v1/reserves/${id}`);
+      const response = await this.httpClient.get(`/v1/reserves/${id}`);
 
       if (!response || !response.success) {
         throw new Error(response?.message || 'Error fetching reserva');
@@ -123,7 +123,7 @@ export class ApiReservaRepository extends ReservaRepository {
 
   async updateReservaStatus(id, status) {
     try {
-      const response = await this.httpClient.put(`/api/v1/reserves/${id}/status`, {
+      const response = await this.httpClient.put(`/v1/reserves/${id}/status`, {
         status: status
       });
 
@@ -149,9 +149,9 @@ export class ApiReservaRepository extends ReservaRepository {
       }
 
       console.log('🔥 ID procesado:', reservaId);
-      console.log('🔥 URL que se va a llamar:', `${config.API_BASE_URL}/api/v1/reserves/${reservaId}/cancel`);
+      console.log('🔥 URL que se va a llamar:', `${config.API_BASE_URL}/v1/reserves/${reservaId}/cancel`);
 
-      const response = await this.httpClient.patch(`/api/v1/reserves/${reservaId}/cancel`);
+      const response = await this.httpClient.patch(`/v1/reserves/${reservaId}/cancel`);
 
       console.log('🔥 RESPUESTA COMPLETA DEL BACKEND:', response);
       console.log('🔥 Tipo de respuesta:', typeof response);
@@ -192,7 +192,7 @@ export class ApiReservaRepository extends ReservaRepository {
 
   async assignTable(reservaId, tableId) {
     try {
-      const response = await this.httpClient.put(`/api/v1/reserves/${reservaId}/table`, {
+      const response = await this.httpClient.put(`/v1/reserves/${reservaId}/table`, {
         table_id: tableId
       });
 
