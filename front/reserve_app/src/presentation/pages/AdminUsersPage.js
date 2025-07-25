@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useUsers } from '../hooks/useUsers.js';
 import { useAuth } from '../hooks/useAuth.js';
-import CreateUserModal from '../components/CreateUserModal.js';
+import CreateUserModal from '../components/User/CreateUserModal';
 import './AdminUsersPage.css';
 
 export const AdminUsersPage = () => {

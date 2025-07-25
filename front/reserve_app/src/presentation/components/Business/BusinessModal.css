@@ -19,6 +19,7 @@
     from {
         opacity: 0;
     }
+
     to {
         opacity: 1;
     }
@@ -42,6 +43,7 @@
         transform: translateY(-20px) scale(0.95);
         opacity: 0;
     }
+
     to {
         transform: translateY(0) scale(1);
         opacity: 1;
@@ -168,6 +170,15 @@
     grid-column: 1 / -1;
 }
 
+.form-group-checkbox-row {
+    display: flex;
+    flex-direction: row;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    align-items: center;
+    justify-content: flex-start;
+}
+
 .checkbox-container {
     display: flex;
     align-items: center;
@@ -198,13 +209,22 @@
     color: #2d3748;
 }
 
+.checkbox-row-business {
+    display: flex;
+    flex-direction: row;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    align-items: center;
+    justify-content: flex-start;
+}
+
 .info-box {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: linear-gradient(135deg, #23272f 0%, #181a20 100%);
+    color: #fff;
     padding: 1rem;
     border-radius: 10px;
     margin-bottom: 1.5rem;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 4px 15px rgba(43, 43, 43, 0.3);
 }
 
 .info-content {
@@ -288,21 +308,21 @@
         max-width: 95vw;
         max-height: 95vh;
     }
-    
+
     .form-grid {
         grid-template-columns: 1fr;
         gap: 1rem;
     }
-    
+
     .modal-body {
         padding: 1.5rem;
     }
-    
+
     .modal-header,
     .modal-footer {
         padding: 1rem 1.5rem;
     }
-    
+
     .btn {
         min-width: 100px;
         font-size: 0.9rem;
@@ -326,4 +346,4 @@
 
 .modal-body::-webkit-scrollbar-thumb:hover {
     background: #a0aec0;
-} 
+}

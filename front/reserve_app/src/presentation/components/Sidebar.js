@@ -22,13 +22,8 @@ const Sidebar = () => {
             icon: '≡',
             label: 'Reservas',
             path: '/reservas'
-        },
-        {
-            id: 'auth-test',
-            icon: '▢',
-            label: 'Prueba Auth',
-            path: '/auth-test'
         }
+        // Eliminado el menú de prueba de autenticación
     ];
 
     // Debug: Verificar permisos
@@ -54,19 +49,19 @@ const Sidebar = () => {
 
     // Agregar menú de administración si tiene permisos
     // Verificar múltiples permisos relacionados con usuarios
-    const canManageUsers = isSuper || 
-                          hasManageUsers || 
-                          hasUsersManage ||
-                          hasUsersCreate ||
-                          hasUsersUpdate ||
-                          hasUsersDelete;
+    const canManageUsers = isSuper ||
+        hasManageUsers ||
+        hasUsersManage ||
+        hasUsersCreate ||
+        hasUsersUpdate ||
+        hasUsersDelete;
 
     // Verificar permisos para negocios
     const canManageBusinesses = isSuper || hasBusinessesManage;
-    
+
     // Verificar permisos para mesas
     const canManageTables = isSuper || hasTablesManage;
-    
+
     // Verificar permisos para salas
     const canManageRooms = isSuper || hasRoomsManage;
 

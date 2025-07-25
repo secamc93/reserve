@@ -10,7 +10,7 @@ export class BusinessTypeService {
     async getBusinessTypes(params = {}) {
         try {
             console.log('BusinessTypeService: Obteniendo tipos de negocio con filtros:', params);
-            const response = await this.httpClient.get('/v1/business-types', params);
+            const response = await this.httpClient.get('/api/v1/business-types', params);
             console.log('BusinessTypeService: Respuesta tipos de negocio:', response);
             return response;
         } catch (error) {
@@ -22,7 +22,7 @@ export class BusinessTypeService {
     async getBusinessTypeById(id) {
         try {
             console.log('BusinessTypeService: Obteniendo tipo de negocio ID:', id);
-            const response = await this.httpClient.get(`/v1/business-types/${id}`);
+            const response = await this.httpClient.get(`/api/v1/business-types/${id}`);
             console.log('BusinessTypeService: Respuesta tipo de negocio:', response);
             return response;
         } catch (error) {
@@ -34,7 +34,7 @@ export class BusinessTypeService {
     async createBusinessType(businessTypeData) {
         try {
             console.log('BusinessTypeService: Creando tipo de negocio:', businessTypeData);
-            const response = await this.httpClient.post('/v1/business-types', businessTypeData);
+            const response = await this.httpClient.post('/api/v1/business-types', businessTypeData);
             console.log('BusinessTypeService: Tipo de negocio creado:', response);
             return response;
         } catch (error) {
@@ -46,7 +46,7 @@ export class BusinessTypeService {
     async updateBusinessType(id, businessTypeData) {
         try {
             console.log('BusinessTypeService: Actualizando tipo de negocio ID:', id, 'Datos:', businessTypeData);
-            const response = await this.httpClient.put(`/v1/business-types/${id}`, businessTypeData);
+            const response = await this.httpClient.put(`/api/v1/business-types/${id}`, businessTypeData);
             console.log('BusinessTypeService: Tipo de negocio actualizado:', response);
             return response;
         } catch (error) {
@@ -58,7 +58,7 @@ export class BusinessTypeService {
     async deleteBusinessType(id) {
         try {
             console.log('BusinessTypeService: Eliminando tipo de negocio ID:', id);
-            const response = await this.httpClient.delete(`/v1/business-types/${id}`);
+            const response = await this.httpClient.delete(`/api/v1/business-types/${id}`);
             console.log('BusinessTypeService: Tipo de negocio eliminado:', response);
             return response;
         } catch (error) {

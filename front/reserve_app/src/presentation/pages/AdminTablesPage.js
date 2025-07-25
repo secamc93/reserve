@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTables } from '../hooks/useTables.js';
 import { useBusinesses } from '../hooks/useBusinesses.js';
-import TableModal from '../components/TableModal.js';
+import TableModal from '../components/Table/TableModal.js';
 import './AdminTablesPage.css';
 
 const AdminTablesPage = () => {
@@ -78,11 +78,11 @@ const AdminTablesPage = () => {
     // Filtrar mesas
     const filteredTables = tables.filter(table => {
         const matchesSearch = table.number.toString().includes(searchTerm) ||
-                             table.getBusinessName().toLowerCase().includes(searchTerm.toLowerCase());
-        
-        const matchesBusiness = filterBusiness === 'all' || 
-                               table.businessId.toString() === filterBusiness;
-        
+            table.getBusinessName().toLowerCase().includes(searchTerm.toLowerCase());
+
+        const matchesBusiness = filterBusiness === 'all' ||
+            table.businessId.toString() === filterBusiness;
+
         return matchesSearch && matchesBusiness;
     });
 
@@ -96,7 +96,7 @@ const AdminTablesPage = () => {
         let color = '#10b981'; // Verde para capacidad normal
         if (capacity > 8) color = '#f59e0b'; // Amarillo para capacidad alta
         if (capacity > 12) color = '#ef4444'; // Rojo para capacidad muy alta
-        
+
         return (
             <span className="capacity-badge" style={{ backgroundColor: color }}>
                 {capacity} {capacity === 1 ? 'persona' : 'personas'}
@@ -124,8 +124,8 @@ const AdminTablesPage = () => {
                         <p>Gestiona todas las mesas registradas en el sistema</p>
                     </div>
                     <div className="header-actions">
-                        <button 
-                            className="btn-primary" 
+                        <button
+                            className="btn-primary"
                             onClick={handleCreateNew}
                             disabled={loading}
                         >
@@ -152,11 +152,11 @@ const AdminTablesPage = () => {
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    
+
                     <div className="filter-group">
                         <label>Filtrar por negocio</label>
-                        <select 
-                            value={filterBusiness} 
+                        <select
+                            value={filterBusiness}
                             onChange={(e) => setFilterBusiness(e.target.value)}
                         >
                             <option value="all">Todos los negocios</option>
@@ -174,7 +174,7 @@ const AdminTablesPage = () => {
                 {filteredTables.length === 0 ? (
                     <div className="empty-state">
                         <p>
-                            {searchTerm || filterBusiness !== 'all' 
+                            {searchTerm || filterBusiness !== 'all'
                                 ? 'No se encontraron mesas con los filtros aplicados'
                                 : 'Aún no hay mesas registradas en el sistema'
                             }
@@ -222,7 +222,7 @@ const AdminTablesPage = () => {
                                     </td>
                                     <td>
                                         <div className="actions">
-                                            <button 
+                                            <button
                                                 className="btn-edit"
                                                 onClick={() => handleEditTable(table)}
                                                 disabled={loading}
@@ -230,7 +230,7 @@ const AdminTablesPage = () => {
                                             >
                                                 ✏️
                                             </button>
-                                            <button 
+                                            <button
                                                 className="btn-delete"
                                                 onClick={() => handleDeleteTable(table)}
                                                 disabled={loading}

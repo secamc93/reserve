@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useRooms } from '../hooks/useRooms.js';
 import { useBusinesses } from '../hooks/useBusinesses.js';
 import { useAuth } from '../hooks/useAuth.js';
-import RoomModal from '../components/RoomModal.js';
+import RoomModal from '../components/Room/RoomModal.js';
 import './AdminRoomsPage.css';
 
 const AdminRoomsPage = () => {
@@ -89,10 +89,10 @@ const AdminRoomsPage = () => {
 
     const filteredRooms = rooms.filter(room => {
         const matchesSearch = room.name.toLowerCase().includes(filters.search.toLowerCase()) ||
-                             room.code.toLowerCase().includes(filters.search.toLowerCase());
+            room.code.toLowerCase().includes(filters.search.toLowerCase());
         const matchesBusiness = !filters.businessId || room.businessId === parseInt(filters.businessId);
         const matchesStatus = filters.isActive === '' || room.isActive === (filters.isActive === 'true');
-        
+
         return matchesSearch && matchesBusiness && matchesStatus;
     });
 
@@ -209,8 +209,8 @@ const AdminRoomsPage = () => {
                                 </td>
                                 <td>
                                     <div className="actions">
-                                        <button 
-                                            className="btn-edit" 
+                                        <button
+                                            className="btn-edit"
                                             title="Editar"
                                             onClick={() => handleEditRoom(room)}
                                         >

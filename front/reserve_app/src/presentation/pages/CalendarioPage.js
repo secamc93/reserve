@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useReservas } from '../hooks/useReservas.js';
-import CreateReservaModal from '../components/CreateReservaModal.js';
+import CreateReservaModal from '../components/Reserva/CreateReservaModal';
 import './CalendarioPage.css';
 
 const CalendarioPage = () => {

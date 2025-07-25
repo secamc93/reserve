@@ -10,7 +10,7 @@ export class BusinessService {
     async getBusinesses(params = {}) {
         try {
             console.log('BusinessService: Obteniendo negocios con filtros:', params);
-            const response = await this.httpClient.get('/v1/businesses', params);
+            const response = await this.httpClient.get('/api/v1/businesses', params);
             console.log('BusinessService: Respuesta negocios:', response);
             return response;
         } catch (error) {
@@ -22,7 +22,7 @@ export class BusinessService {
     async getBusinessById(id) {
         try {
             console.log('BusinessService: Obteniendo negocio ID:', id);
-            const response = await this.httpClient.get(`/v1/businesses/${id}`);
+            const response = await this.httpClient.get(`/api/v1/businesses/${id}`);
             console.log('BusinessService: Respuesta negocio:', response);
             return response;
         } catch (error) {
@@ -34,7 +34,7 @@ export class BusinessService {
     async createBusiness(businessData) {
         try {
             console.log('BusinessService: Creando negocio:', businessData);
-            const response = await this.httpClient.post('/v1/businesses', businessData);
+            const response = await this.httpClient.post('/api/v1/businesses', businessData);
             console.log('BusinessService: Negocio creado:', response);
             return response;
         } catch (error) {
@@ -46,7 +46,7 @@ export class BusinessService {
     async updateBusiness(id, businessData) {
         try {
             console.log('BusinessService: Actualizando negocio ID:', id, 'Datos:', businessData);
-            const response = await this.httpClient.put(`/v1/businesses/${id}`, businessData);
+            const response = await this.httpClient.put(`/api/v1/businesses/${id}`, businessData);
             console.log('BusinessService: Negocio actualizado:', response);
             return response;
         } catch (error) {
@@ -58,7 +58,7 @@ export class BusinessService {
     async deleteBusiness(id) {
         try {
             console.log('BusinessService: Eliminando negocio ID:', id);
-            const response = await this.httpClient.delete(`/v1/businesses/${id}`);
+            const response = await this.httpClient.delete(`/api/v1/businesses/${id}`);
             console.log('BusinessService: Negocio eliminado:', response);
             return response;
         } catch (error) {

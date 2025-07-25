@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useReservas } from '../hooks/useReservas.js';
 import ReservaRow from '../components/ReservaRow.js';
 import ReservaFilters from '../components/ReservaFilters.js';
-import CreateReservaModal from '../components/CreateReservaModal.js';
+import CreateReservaModal from '../components/Reserva/CreateReservaModal';
 import './GestionReservas.css';
 
 const GestionReservas = () => {

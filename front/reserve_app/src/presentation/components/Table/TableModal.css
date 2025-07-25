@@ -52,7 +52,7 @@
 
 .form-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
     margin-bottom: 1.5rem;
 }
@@ -110,7 +110,7 @@
 }
 
 .modal-body .form-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: 2.5rem;
 }
 
 .modal-body label {
@@ -124,6 +124,7 @@
 .modal-body input[type="email"],
 .modal-body input[type="tel"],
 .modal-body input[type="password"],
+.modal-body input[type="number"],
 .modal-body select {
     width: 100%;
     padding: 0.9rem;
@@ -179,12 +180,6 @@
     font-size: 0.8rem;
     margin-top: 0.5rem;
     font-style: italic;
-}
-
-.error-text {
-    color: #ff6b6b;
-    font-size: 0.85rem;
-    margin-top: 0.5rem;
 }
 
 .form-group-checkbox {
@@ -263,27 +258,35 @@
 }
 
 .info-box {
-    margin: 1rem 0;
-    padding: 0.75rem;
-    background-color: #e3f2fd;
-    border: 1px solid #2196f3;
-    border-radius: 4px;
+    margin: 1.5rem 0;
+    padding: 1.25rem 1.5rem;
+    background-color: rgba(43, 43, 43, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
 }
 
 .info-content {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.75rem;
 }
 
 .info-icon {
     font-size: 1.2rem;
+    color: #fff;
 }
 
 .info-content p {
     margin: 0;
-    color: #1976d2;
-    font-size: 0.9rem;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.error-text {
+    color: #ff6b6b;
+    font-size: 0.95rem;
+    margin-top: 0.5rem;
 }
 
 .no-data {
@@ -293,119 +296,53 @@
     text-align: center;
 }
 
-/* Estilos para la pantalla de credenciales */
-.credentials-display {
-    padding: 1rem 0;
+.form-group-business {
+    margin-bottom: 2.0rem !important;
 }
 
-.success-message {
-    text-align: center;
-    margin-bottom: 2rem;
+/* Responsive design */
+@media (max-width: 768px) {
+    .modal-container {
+        width: 95%;
+        max-height: 95vh;
+    }
+
+    .modal-body {
+        padding: 1rem 1.5rem;
+    }
+
+    .modal-header {
+        padding: 1rem 1.5rem;
+    }
+
+    .modal-footer {
+        padding: 1rem 1.5rem;
+        flex-direction: column;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .btn {
+        width: 100%;
+    }
 }
 
-.success-icon {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-}
+@media (max-width: 480px) {
+    .modal-overlay {
+        padding: 0.5rem;
+    }
 
-.success-message h3 {
-    color: #4caf50;
-    margin: 0 0 0.5rem 0;
-    font-size: 1.5rem;
-}
+    .modal-header h2 {
+        font-size: 1.5rem;
+    }
 
-.success-message p {
-    color: #a0a0a0;
-    margin: 0;
-}
+    .info-box {
+        padding: 0.5rem;
+    }
 
-.credentials-box {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-}
-
-.credential-item {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 1rem;
-}
-
-.credential-item:last-child {
-    margin-bottom: 0;
-}
-
-.credential-item label {
-    font-weight: 600;
-    color: #a0a0a0;
-    margin-bottom: 0.5rem;
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.credential-value {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    background: rgba(0, 0, 0, 0.3);
-    padding: 0.75rem;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.credential-value span {
-    flex: 1;
-    font-family: 'Courier New', monospace;
-    font-size: 1rem;
-    color: #ffffff;
-    word-break: break-all;
-}
-
-.copy-button {
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
-    border-radius: 6px;
-    padding: 0.5rem;
-    cursor: pointer;
-    font-size: 1rem;
-    transition: all 0.2s ease;
-    min-width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.copy-button:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: scale(1.05);
-}
-
-.credentials-warning {
-    background: rgba(255, 193, 7, 0.1);
-    border: 1px solid rgba(255, 193, 7, 0.3);
-    border-radius: 8px;
-    padding: 1rem;
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-}
-
-.warning-icon {
-    font-size: 1.2rem;
-    margin-top: 0.1rem;
-}
-
-.credentials-warning p {
-    margin: 0;
-    color: #ffc107;
-    font-size: 0.9rem;
-    line-height: 1.4;
-}
-
-.credentials-warning strong {
-    color: #ffffff;
+    .info-content p {
+        font-size: 0.8rem;
+    }
 }

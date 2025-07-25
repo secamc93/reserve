@@ -25,10 +25,10 @@ export const useRooms = () => {
         try {
             setLoading(true);
             setError(null);
-            
+
             console.log('useRooms: Obteniendo salas con parámetros:', params);
             const result = await getRoomsUseCase.execute(params);
-            
+
             console.log('useRooms: Resultado del use case:', result);
             setRooms(result.data);
             console.log('useRooms: Salas obtenidas:', result.data.length);
@@ -45,10 +45,10 @@ export const useRooms = () => {
         try {
             setLoading(true);
             setError(null);
-            
+
             console.log('useRooms: Obteniendo salas del negocio:', businessId);
             const result = await getRoomsByBusinessUseCase.execute(businessId);
-            
+
             setRooms(result.data);
             console.log('useRooms: Salas del negocio obtenidas:', result.data.length);
         } catch (err) {
@@ -64,13 +64,13 @@ export const useRooms = () => {
         try {
             setLoading(true);
             setError(null);
-            
+
             console.log('useRooms: Creando sala:', roomData);
             const result = await createRoomUseCase.execute(roomData);
-            
+
             // Agregar la nueva sala a la lista
             setRooms(prev => [...prev, result.data]);
-            
+
             console.log('useRooms: Sala creada exitosamente:', result.data.id);
             return result;
         } catch (err) {
@@ -87,17 +87,17 @@ export const useRooms = () => {
         try {
             setLoading(true);
             setError(null);
-            
+
             console.log('useRooms: Actualizando sala ID:', id, 'Datos:', roomData);
             const result = await updateRoomUseCase.execute(id, roomData);
-            
+
             // Actualizar la sala en la lista
-            setRooms(prev => 
-                prev.map(room => 
+            setRooms(prev =>
+                prev.map(room =>
                     room.id === id ? result.data : room
                 )
             );
-            
+
             console.log('useRooms: Sala actualizada exitosamente:', result.data.id);
             return result;
         } catch (err) {
@@ -114,13 +114,13 @@ export const useRooms = () => {
         try {
             setLoading(true);
             setError(null);
-            
+
             console.log('useRooms: Eliminando sala ID:', id);
             const result = await deleteRoomUseCase.execute(id);
-            
+
             // Remover la sala de la lista
             setRooms(prev => prev.filter(room => room.id !== id));
-            
+
             console.log('useRooms: Sala eliminada exitosamente:', id);
             return result;
         } catch (err) {
@@ -158,7 +158,7 @@ export const useRooms = () => {
         loading,
         error,
         selectedRoom,
-        
+
         // Acciones
         fetchRooms,
         fetchRoomsByBusiness,

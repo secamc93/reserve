@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useBusinesses } from '../hooks/useBusinesses.js';
 import { useBusinessTypes } from '../hooks/useBusinessTypes.js';
-import BusinessModal from '../components/BusinessModal.js';
+import BusinessModal from '../components/Business/BusinessModal';
 import './AdminBusinessesPage.css';
 
 const AdminBusinessesPage = () => {
@@ -79,12 +79,12 @@ const AdminBusinessesPage = () => {
     // Filtrar negocios
     const filteredBusinesses = businesses.filter(business => {
         const matchesSearch = business.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                             business.code.toLowerCase().includes(searchTerm.toLowerCase());
-        
-        const matchesStatus = filterStatus === 'all' || 
-                             (filterStatus === 'active' && business.isActive) ||
-                             (filterStatus === 'inactive' && !business.isActive);
-        
+            business.code.toLowerCase().includes(searchTerm.toLowerCase());
+
+        const matchesStatus = filterStatus === 'all' ||
+            (filterStatus === 'active' && business.isActive) ||
+            (filterStatus === 'inactive' && !business.isActive);
+
         return matchesSearch && matchesStatus;
     });
 
@@ -99,9 +99,9 @@ const AdminBusinessesPage = () => {
         if (business.enableDelivery) features.push('Delivery');
         if (business.enablePickup) features.push('Pickup');
         if (business.enableReservations) features.push('Reservas');
-        
+
         if (features.length === 0) return <span className="no-features">Sin funcionalidades</span>;
-        
+
         return (
             <div className="features-badges">
                 {features.map(feature => (
@@ -131,8 +131,8 @@ const AdminBusinessesPage = () => {
                         <p>Gestiona todos los negocios registrados en el sistema</p>
                     </div>
                     <div className="header-actions">
-                        <button 
-                            className="btn-primary" 
+                        <button
+                            className="btn-primary"
                             onClick={handleCreateNew}
                             disabled={loading}
                         >
@@ -159,11 +159,11 @@ const AdminBusinessesPage = () => {
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    
+
                     <div className="filter-group">
                         <label>Filtrar por estado</label>
-                        <select 
-                            value={filterStatus} 
+                        <select
+                            value={filterStatus}
                             onChange={(e) => setFilterStatus(e.target.value)}
                         >
                             <option value="all">Todos los estados</option>
@@ -178,7 +178,7 @@ const AdminBusinessesPage = () => {
                 {filteredBusinesses.length === 0 ? (
                     <div className="empty-state">
                         <p>
-                            {searchTerm || filterStatus !== 'all' 
+                            {searchTerm || filterStatus !== 'all'
                                 ? 'No se encontraron negocios con los filtros aplicados'
                                 : 'Aún no hay negocios registrados en el sistema'
                             }
@@ -224,34 +224,34 @@ const AdminBusinessesPage = () => {
                                     <td>
                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
                                             {business.enableDelivery && (
-                                                <span style={{ 
-                                                    background: '#667eea', 
-                                                    color: 'white', 
-                                                    padding: '0.25rem 0.5rem', 
-                                                    borderRadius: '12px', 
-                                                    fontSize: '0.75rem' 
+                                                <span style={{
+                                                    background: '#667eea',
+                                                    color: 'white',
+                                                    padding: '0.25rem 0.5rem',
+                                                    borderRadius: '12px',
+                                                    fontSize: '0.75rem'
                                                 }}>
                                                     Delivery
                                                 </span>
                                             )}
                                             {business.enablePickup && (
-                                                <span style={{ 
-                                                    background: '#48bb78', 
-                                                    color: 'white', 
-                                                    padding: '0.25rem 0.5rem', 
-                                                    borderRadius: '12px', 
-                                                    fontSize: '0.75rem' 
+                                                <span style={{
+                                                    background: '#48bb78',
+                                                    color: 'white',
+                                                    padding: '0.25rem 0.5rem',
+                                                    borderRadius: '12px',
+                                                    fontSize: '0.75rem'
                                                 }}>
                                                     Pickup
                                                 </span>
                                             )}
                                             {business.enableReservations && (
-                                                <span style={{ 
-                                                    background: '#ed8936', 
-                                                    color: 'white', 
-                                                    padding: '0.25rem 0.5rem', 
-                                                    borderRadius: '12px', 
-                                                    fontSize: '0.75rem' 
+                                                <span style={{
+                                                    background: '#ed8936',
+                                                    color: 'white',
+                                                    padding: '0.25rem 0.5rem',
+                                                    borderRadius: '12px',
+                                                    fontSize: '0.75rem'
                                                 }}>
                                                     Reservas
                                                 </span>
@@ -268,7 +268,7 @@ const AdminBusinessesPage = () => {
                                     </td>
                                     <td>
                                         <div className="actions">
-                                            <button 
+                                            <button
                                                 className="btn-edit"
                                                 onClick={() => handleEditBusiness(business)}
                                                 disabled={loading}
@@ -276,7 +276,7 @@ const AdminBusinessesPage = () => {
                                             >
                                                 ✏️
                                             </button>
-                                            <button 
+                                            <button
                                                 className="btn-delete"
                                                 onClick={() => handleDeleteBusiness(business)}
                                                 disabled={loading}

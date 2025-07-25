@@ -52,9 +52,9 @@
 
 .form-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 1.5rem;
-    margin-bottom: 3rem;
+    margin-bottom: 1.5rem;
 }
 
 .form-group-full {
@@ -124,7 +124,6 @@
 .modal-body input[type="email"],
 .modal-body input[type="tel"],
 .modal-body input[type="password"],
-.modal-body input[type="number"],
 .modal-body select {
     width: 100%;
     padding: 0.9rem;
@@ -193,6 +192,7 @@
     flex-direction: column;
     justify-content: flex-start;
     height: auto;
+    color: #e3dada;
 }
 
 .form-group-checkbox .checkbox-container {
@@ -214,7 +214,7 @@
 }
 
 .form-group-checkbox input[type="checkbox"] {
-    accent-color: #ffffff;
+    accent-color: #f31818;
     width: 16px;
     height: 16px;
     margin: 0;
@@ -266,9 +266,9 @@
 .info-box {
     margin: 1rem 0;
     padding: 0.75rem;
-    background-color: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
+    background-color: #e3f2fd;
+    border: 1px solid #2196f3;
+    border-radius: 4px;
 }
 
 .info-content {
@@ -279,12 +279,11 @@
 
 .info-icon {
     font-size: 1.2rem;
-    color: #a0a0a0;
 }
 
 .info-content p {
     margin: 0;
-    color: #f0f0f0;
+    color: #1976d2;
     font-size: 0.9rem;
 }
 
@@ -295,49 +294,228 @@
     text-align: center;
 }
 
-/* Responsive design */
-@media (max-width: 768px) {
-    .modal-container {
-        width: 95%;
-        max-height: 95vh;
-    }
-
-    .modal-body {
-        padding: 1rem 1.5rem;
-    }
-
-    .modal-header {
-        padding: 1rem 1.5rem;
-    }
-
-    .modal-footer {
-        padding: 1rem 1.5rem;
-        flex-direction: column;
-    }
-
-    .form-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .btn {
-        width: 100%;
-    }
+/* Estilos para la pantalla de credenciales */
+.credentials-display {
+    padding: 1rem 0;
 }
 
-@media (max-width: 480px) {
-    .modal-overlay {
-        padding: 0.5rem;
-    }
+.success-message {
+    text-align: center;
+    margin-bottom: 2rem;
+}
 
-    .modal-header h2 {
-        font-size: 1.5rem;
-    }
+.success-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
 
-    .info-box {
-        padding: 0.5rem;
-    }
+.success-message h3 {
+    color: #4caf50;
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+}
 
-    .info-content p {
-        font-size: 0.8rem;
-    }
+.success-message p {
+    color: #a0a0a0;
+    margin: 0;
+}
+
+.credentials-box {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.credential-item {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+}
+
+.credential-item:last-child {
+    margin-bottom: 0;
+}
+
+.credential-item label {
+    font-weight: 600;
+    color: #a0a0a0;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.credential-value {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.credential-value span {
+    flex: 1;
+    font-family: 'Courier New', monospace;
+    font-size: 1rem;
+    color: #ffffff;
+    word-break: break-all;
+}
+
+.copy-button {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    min-width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.copy-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}
+
+.credentials-warning {
+    background: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    border-radius: 8px;
+    padding: 1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.warning-icon {
+    font-size: 1.2rem;
+    margin-top: 0.1rem;
+}
+
+.credentials-warning p {
+    margin: 0;
+    color: #ffc107;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.credentials-warning strong {
+    color: #ffffff;
+}
+
+.user-modal-checkbox-group {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    background: #fff;
+    border-radius: 12px;
+    border: 2px solid #e9ecef;
+    padding: 12px 18px;
+    transition: background 0.2s, border 0.2s;
+    margin-bottom: 0;
+}
+
+.user-modal-checkbox-group.active {
+    background: #e0f7e9;
+    border-color: #27ae60;
+}
+
+.user-modal-checkbox-label {
+    color: #23272f;
+    font-weight: 600;
+    margin-bottom: 0;
+    text-align: left;
+}
+
+.user-modal-checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-modal-checkbox {
+    accent-color: #27ae60;
+    width: 22px;
+    height: 22px;
+    margin: 0;
+    cursor: pointer;
+}
+
+.user-modal-checkbox-container span {
+    color: #23272f;
+    font-size: 1.05rem;
+    font-weight: 500;
+}
+
+.user-modal-toggle-btn {
+    width: 100%;
+    padding: 16px 20px;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    background: #fff;
+    color: #23272f;
+    font-size: 1.05rem;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border 0.2s;
+    outline: none;
+    margin: 0;
+    user-select: none;
+    box-shadow: 0 2px 8px rgba(43, 43, 43, 0.05);
+}
+
+.user-modal-toggle-btn.active {
+    background: #e0f7e9;
+    border-color: #27ae60;
+    color: #23272f;
+}
+
+.user-modal-toggle-btn:hover {
+    background: #e5e7eb;
+}
+
+.user-modal-toggle-btn.active:hover {
+    background: #f0fdf4;
+}
+
+.user-toggle-btn {
+    width: 100%;
+    padding: 16px 20px;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    background: #fff;
+    color: #23272f;
+    font-size: 1.05rem;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border 0.2s;
+    outline: none;
+    margin: 0;
+    user-select: none;
+    box-shadow: 0 2px 8px rgba(43, 43, 43, 0.05);
+}
+
+.user-toggle-btn.active {
+    background: #27ae60;
+    color: #fff;
+    border-color: #27ae60;
+}
+
+.user-toggle-btn:hover {
+    background: #f3f4f6;
+}
+
+.user-toggle-btn.active:hover {
+    background: #e0f7e9;
 }

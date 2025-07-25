@@ -13,7 +13,7 @@ export class UserService {
             const cleanParams = this.cleanGetUsersParams(params);
 
             console.log('UserService: Obteniendo usuarios con filtros:', cleanParams);
-            const response = await this.httpClient.get('/v1/users', cleanParams);
+            const response = await this.httpClient.get('/api/v1/users', cleanParams);
             console.log('UserService: Respuesta usuarios:', response);
             return response;
         } catch (error) {
@@ -86,7 +86,7 @@ export class UserService {
     async getUserById(id) {
         try {
             console.log('UserService: Obteniendo usuario ID:', id);
-            const response = await this.httpClient.get(`/v1/users/${id}`);
+            const response = await this.httpClient.get(`/api/v1/users/${id}`);
             console.log('UserService: Respuesta usuario:', response);
             return response;
         } catch (error) {
@@ -98,7 +98,7 @@ export class UserService {
     async createUser(userData) {
         try {
             console.log('UserService: Creando usuario:', userData);
-            const response = await this.httpClient.post('/v1/users', userData);
+            const response = await this.httpClient.post('/api/v1/users', userData);
             console.log('UserService: Usuario creado:', response);
             return response;
         } catch (error) {
@@ -110,7 +110,7 @@ export class UserService {
     async updateUser(id, userData) {
         try {
             console.log('UserService: Actualizando usuario ID:', id, 'Datos:', userData);
-            const response = await this.httpClient.put(`/v1/users/${id}`, userData);
+            const response = await this.httpClient.put(`/api/v1/users/${id}`, userData);
             console.log('UserService: Usuario actualizado:', response);
             return response;
         } catch (error) {
@@ -124,7 +124,7 @@ export class UserService {
             console.log('🗑️ UserService: Iniciando eliminación usuario ID:', id);
             console.log('🗑️ UserService: Tipo de ID:', typeof id);
             console.log('🌐 UserService: Base URL:', this.httpClient.baseURL);
-            console.log('🌐 UserService: URL completa:', `${this.httpClient.baseURL}/v1/users/${id}`);
+            console.log('🌐 UserService: URL completa:', `${this.httpClient.baseURL}/api/v1/users/${id}`);
 
             // Verificar que tenemos token
             const token = localStorage.getItem('authToken');
@@ -133,7 +133,7 @@ export class UserService {
                 console.log('🔑 UserService: Token preview:', token.substring(0, 20) + '...');
             }
 
-            const response = await this.httpClient.delete(`/v1/users/${id}`);
+            const response = await this.httpClient.delete(`/api/v1/users/${id}`);
 
             console.log('✅ UserService: Respuesta eliminación:', response);
             console.log('✅ UserService: Success:', response.success);
@@ -162,7 +162,7 @@ export class UserService {
     async getRoles(params = {}) {
         try {
             console.log('UserService: Obteniendo roles');
-            const response = await this.httpClient.get('/v1/roles', params);
+            const response = await this.httpClient.get('/api/v1/roles', params);
             console.log('UserService: Roles obtenidos:', response);
             return response;
         } catch (error) {
@@ -174,7 +174,7 @@ export class UserService {
     async getRoleById(id) {
         try {
             console.log('UserService: Obteniendo rol ID:', id);
-            const response = await this.httpClient.get(`/v1/roles/${id}`);
+            const response = await this.httpClient.get(`/api/v1/roles/${id}`);
             console.log('UserService: Rol obtenido:', response);
             return response;
         } catch (error) {

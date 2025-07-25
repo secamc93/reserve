@@ -1,0 +1,99 @@
+.form-group-business {
+    margin-bottom: 2.0rem !important;
+}
+
+.info-box {
+    margin: 1.5rem 0;
+    padding: 1.25rem 1.5rem;
+    background-color: rgba(43, 43, 43, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+}
+
+.info-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.info-icon {
+    font-size: 1.2rem;
+    color: #fff;
+}
+
+.info-content p {
+    margin: 0;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.error-text {
+    color: #ff6b6b;
+    font-size: 0.95rem;
+    margin-top: 0.5rem;
+}
+
+.form-group-checkbox {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    height: auto;
+}
+
+.room-toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    justify-content: center;
+}
+
+.room-toggle-checkbox {
+    width: 40px;
+    height: 22px;
+    appearance: none;
+    background: #ccc;
+    border-radius: 12px;
+    position: relative;
+    outline: none;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.room-toggle-checkbox:checked {
+    background: #22c55e;
+}
+
+.room-toggle-checkbox::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 4px;
+    width: 14px;
+    height: 14px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.3s;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+.room-toggle-checkbox:checked::before {
+    transform: translateX(18px);
+}
+
+.room-toggle-label {
+    font-weight: 600;
+    color: #bbb;
+    font-size: 1rem;
+    transition: color 0.3s;
+}
+
+.room-toggle-label.active {
+    color: #22c55e;
+}
+
+.form-group-full {
+    margin-bottom: 2.5rem;
+}
