@@ -47,6 +47,8 @@ type IReservationRepository interface {
 	CancelReservation(ctx context.Context, id uint, reason string) (string, error)
 	UpdateReservation(ctx context.Context, id uint, tableID *uint, startAt *time.Time, endAt *time.Time, numberOfGuests *int) (string, error)
 	CreateReservationStatusHistory(ctx context.Context, history entities.ReservationStatusHistory) error
+	GetClientByEmailAndBusiness(ctx context.Context, email string, businessID uint) (*entities.Client, error)
+	CreateClient(ctx context.Context, client entities.Client) (string, error)
 }
 
 // IAuthRepository define las operaciones de autenticación
@@ -62,7 +64,7 @@ type IAuthRepository interface {
 // IAuthService define las operaciones de autenticación (métodos de repositorio)
 type IAuthService interface {
 	Login(ctx context.Context, email, password string) (*dtos.LoginResponse, error)
-	GetUserByEmail(ctx context.Context, email string) (*entities.User, error)
+	GetUserByEmail(ctx context.Context, email string) (*dtos.UserAuthInfo, error)
 	GetUserRoles(ctx context.Context, userID uint) ([]entities.Role, error)
 	GetRolePermissions(ctx context.Context, roleID uint) ([]entities.Permission, error)
 	ValidatePassword(hashedPassword, password string) error
@@ -125,11 +127,11 @@ type IRoleRepository interface {
 // IUserRepository define los métodos del repositorio de usuarios
 type IUserRepository interface {
 	GetUsers(ctx context.Context, filters dtos.UserFilters) ([]dtos.UserQueryDTO, int64, error)
-	GetUserByID(ctx context.Context, id uint) (*entities.User, error)
-	GetUserByEmail(ctx context.Context, email string) (*entities.User, error)
+	GetUserByID(ctx context.Context, id uint) (*dtos.UserAuthInfo, error)
+	GetUserByEmail(ctx context.Context, email string) (*dtos.UserAuthInfo, error)
 	GetUserRoles(ctx context.Context, userID uint) ([]entities.Role, error)
 	GetUserBusinesses(ctx context.Context, userID uint) ([]entities.BusinessInfo, error)
-	CreateUser(ctx context.Context, user entities.User) (string, error)
+	CreateUser(ctx context.Context, user entities.User) (uint, error)
 	UpdateUser(ctx context.Context, id uint, user entities.User) (string, error)
 	DeleteUser(ctx context.Context, id uint) (string, error)
 	AssignRolesToUser(ctx context.Context, userID uint, roleIDs []uint) error

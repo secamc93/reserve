@@ -9,12 +9,12 @@ import (
 
 // UserUseCase implementa los casos de uso para usuarios
 type UserUseCase struct {
-	repository ports.IUserUseCaseRepository
+	repository ports.IUserRepository
 	log        log.ILogger
 }
 
 // NewUserUseCase crea una nueva instancia del caso de uso de usuarios
-func NewUserUseCase(repository ports.IUserUseCaseRepository, log log.ILogger) *UserUseCase {
+func NewUserUseCase(repository ports.IUserRepository, log log.ILogger) *UserUseCase {
 	return &UserUseCase{
 		repository: repository,
 		log:        log,

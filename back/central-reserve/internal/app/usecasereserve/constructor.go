@@ -18,12 +18,12 @@ type IUseCaseReserve interface {
 }
 
 type ReserveUseCase struct {
-	repository   ports.IReserveUseCaseRepository
+	repository   ports.IReservationRepository
 	emailService ports.IEmailService
 	log          log.ILogger
 }
 
-func NewReserveUseCase(repository ports.IReserveUseCaseRepository, emailService ports.IEmailService, log log.ILogger) *ReserveUseCase {
+func NewReserveUseCase(repository ports.IReservationRepository, emailService ports.IEmailService, log log.ILogger) *ReserveUseCase {
 	return &ReserveUseCase{
 		repository:   repository,
 		emailService: emailService,

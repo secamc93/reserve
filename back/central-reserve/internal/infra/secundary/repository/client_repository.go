@@ -2,29 +2,14 @@ package repository
 
 import (
 	"central_reserve/internal/domain/entities"
-	"central_reserve/internal/domain/ports"
-	"central_reserve/internal/infra/secundary/repository/db"
-	"central_reserve/internal/pkg/log"
 	"context"
 	"fmt"
 )
 
 // ClientRepository implementa ports.IClientRepository
-type ClientRepository struct {
-	database db.IDatabase
-	logger   log.ILogger
-}
-
-// NewClientRepository crea una nueva instancia del repositorio de clientes
-func NewClientRepository(database db.IDatabase, logger log.ILogger) ports.IClientRepository {
-	return &ClientRepository{
-		database: database,
-		logger:   logger,
-	}
-}
 
 // GetClients obtiene todos los clientes
-func (r *ClientRepository) GetClients(ctx context.Context) ([]entities.Client, error) {
+func (r *Repository) GetClients(ctx context.Context) ([]entities.Client, error) {
 	var clients []entities.Client
 	if err := r.database.Conn(ctx).Table("client").Find(&clients).Error; err != nil {
 		r.logger.Error().Msg("Error al obtener clientes")
@@ -34,7 +19,7 @@ func (r *ClientRepository) GetClients(ctx context.Context) ([]entities.Client, e
 }
 
 // GetClientByID obtiene un cliente por su ID
-func (r *ClientRepository) GetClientByID(ctx context.Context, id uint) (*entities.Client, error) {
+func (r *Repository) GetClientByID(ctx context.Context, id uint) (*entities.Client, error) {
 	var client entities.Client
 	if err := r.database.Conn(ctx).Table("client").Where("id = ?", id).First(&client).Error; err != nil {
 		r.logger.Error().Uint("id", id).Msg("Error al obtener cliente por ID")
@@ -44,7 +29,7 @@ func (r *ClientRepository) GetClientByID(ctx context.Context, id uint) (*entitie
 }
 
 // GetClientByEmail obtiene un cliente por su email
-func (r *ClientRepository) GetClientByEmail(ctx context.Context, email string) (*entities.Client, error) {
+func (r *Repository) GetClientByEmail(ctx context.Context, email string) (*entities.Client, error) {
 	var client entities.Client
 	if err := r.database.Conn(ctx).Table("client").Where("email = ?", email).First(&client).Error; err != nil {
 		r.logger.Error().Str("email", email).Msg("Error al obtener cliente por email")
@@ -54,7 +39,7 @@ func (r *ClientRepository) GetClientByEmail(ctx context.Context, email string) (
 }
 
 // GetClientByEmailAndBusiness obtiene un cliente por su email y business_id
-func (r *ClientRepository) GetClientByEmailAndBusiness(ctx context.Context, email string, businessID uint) (*entities.Client, error) {
+func (r *Repository) GetClientByEmailAndBusiness(ctx context.Context, email string, businessID uint) (*entities.Client, error) {
 	var client entities.Client
 	if err := r.database.Conn(ctx).Table("client").Where("email = ? AND business_id = ?", email, businessID).First(&client).Error; err != nil {
 		r.logger.Error().Str("email", email).Uint("business_id", businessID).Msg("Error al obtener cliente por email y business")
@@ -64,7 +49,7 @@ func (r *ClientRepository) GetClientByEmailAndBusiness(ctx context.Context, emai
 }
 
 // CreateClient crea un nuevo cliente
-func (r *ClientRepository) CreateClient(ctx context.Context, client entities.Client) (string, error) {
+func (r *Repository) CreateClient(ctx context.Context, client entities.Client) (string, error) {
 	if err := r.database.Conn(ctx).Table("client").Create(&client).Error; err != nil {
 		r.logger.Error().Err(err).Msg("Error al crear cliente")
 		return "", err
@@ -73,7 +58,7 @@ func (r *ClientRepository) CreateClient(ctx context.Context, client entities.Cli
 }
 
 // UpdateClient actualiza un cliente existente
-func (r *ClientRepository) UpdateClient(ctx context.Context, id uint, client entities.Client) (string, error) {
+func (r *Repository) UpdateClient(ctx context.Context, id uint, client entities.Client) (string, error) {
 	if err := r.database.Conn(ctx).Table("client").Where("id = ?", id).Updates(&client).Error; err != nil {
 		r.logger.Error().Uint("id", id).Err(err).Msg("Error al actualizar cliente")
 		return "", err
@@ -82,7 +67,7 @@ func (r *ClientRepository) UpdateClient(ctx context.Context, id uint, client ent
 }
 
 // DeleteClient elimina un cliente
-func (r *ClientRepository) DeleteClient(ctx context.Context, id uint) (string, error) {
+func (r *Repository) DeleteClient(ctx context.Context, id uint) (string, error) {
 	if err := r.database.Conn(ctx).Table("client").Where("id = ?", id).Delete(&entities.Client{}).Error; err != nil {
 		r.logger.Error().Uint("id", id).Err(err).Msg("Error al eliminar cliente")
 		return "", err

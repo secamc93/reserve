@@ -2,28 +2,13 @@ package repository
 
 import (
 	"central_reserve/internal/domain/entities"
-	"central_reserve/internal/domain/ports"
-	"central_reserve/internal/infra/secundary/repository/db"
-	"central_reserve/internal/pkg/log"
 	"context"
 )
 
 // RoleRepository implementa el repositorio de roles
-type RoleRepository struct {
-	database db.IDatabase
-	logger   log.ILogger
-}
-
-// NewRoleRepository crea una nueva instancia del repositorio de roles
-func NewRoleRepository(database db.IDatabase, logger log.ILogger) ports.IRoleUseCaseRepository {
-	return &RoleRepository{
-		database: database,
-		logger:   logger,
-	}
-}
 
 // GetRoles obtiene todos los roles
-func (r *RoleRepository) GetRoles(ctx context.Context) ([]entities.Role, error) {
+func (r *Repository) GetRoles(ctx context.Context) ([]entities.Role, error) {
 	var roles []entities.Role
 	if err := r.database.Conn(ctx).
 		Table("role").
@@ -37,7 +22,7 @@ func (r *RoleRepository) GetRoles(ctx context.Context) ([]entities.Role, error) 
 }
 
 // GetRoleByID obtiene un rol por su ID
-func (r *RoleRepository) GetRoleByID(ctx context.Context, id uint) (*entities.Role, error) {
+func (r *Repository) GetRoleByID(ctx context.Context, id uint) (*entities.Role, error) {
 	var role entities.Role
 	if err := r.database.Conn(ctx).
 		Table("role").
@@ -52,7 +37,7 @@ func (r *RoleRepository) GetRoleByID(ctx context.Context, id uint) (*entities.Ro
 }
 
 // GetRolesByScopeID obtiene roles por scope ID
-func (r *RoleRepository) GetRolesByScopeID(ctx context.Context, scopeID uint) ([]entities.Role, error) {
+func (r *Repository) GetRolesByScopeID(ctx context.Context, scopeID uint) ([]entities.Role, error) {
 	var roles []entities.Role
 	if err := r.database.Conn(ctx).
 		Table("role").
@@ -67,7 +52,7 @@ func (r *RoleRepository) GetRolesByScopeID(ctx context.Context, scopeID uint) ([
 }
 
 // GetRolesByLevel obtiene roles por nivel
-func (r *RoleRepository) GetRolesByLevel(ctx context.Context, level int) ([]entities.Role, error) {
+func (r *Repository) GetRolesByLevel(ctx context.Context, level int) ([]entities.Role, error) {
 	var roles []entities.Role
 	if err := r.database.Conn(ctx).
 		Table("role").
@@ -82,7 +67,7 @@ func (r *RoleRepository) GetRolesByLevel(ctx context.Context, level int) ([]enti
 }
 
 // GetSystemRoles obtiene solo los roles del sistema
-func (r *RoleRepository) GetSystemRoles(ctx context.Context) ([]entities.Role, error) {
+func (r *Repository) GetSystemRoles(ctx context.Context) ([]entities.Role, error) {
 	var roles []entities.Role
 	if err := r.database.Conn(ctx).
 		Table("role").

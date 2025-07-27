@@ -100,9 +100,43 @@ func (s *HTTPServer) Routers() {
 	docs.SwaggerInfo.Title = "Restaurant Reservation API"
 	docs.SwaggerInfo.Description = "Servicio REST para la gestión de reservas multi-restaurante."
 	docs.SwaggerInfo.Version = "1.0"
-	docs.SwaggerInfo.Host = fmt.Sprintf("localhost:%s", s.env.Get("HTTP_PORT"))
+
+	// Usar URL_BASE_SWAGGER para la configuración del host
+	swaggerBaseURL := s.env.Get("URL_BASE_SWAGGER")
+	if swaggerBaseURL == "" {
+		// Fallback a localhost si no está configurado
+		swaggerBaseURL = fmt.Sprintf("localhost:%s", s.env.Get("HTTP_PORT"))
+	}
+
+	// Log para debug
+	s.logger.Info().Str("swagger_base_url", swaggerBaseURL).Msg("Configurando Swagger con URL base")
+
+	// Extraer el host y puerto de la URL base
+	originalURL := swaggerBaseURL
+	if strings.HasPrefix(swaggerBaseURL, "http://") {
+		swaggerBaseURL = strings.TrimPrefix(swaggerBaseURL, "http://")
+	} else if strings.HasPrefix(swaggerBaseURL, "https://") {
+		swaggerBaseURL = strings.TrimPrefix(swaggerBaseURL, "https://")
+	}
+
+	docs.SwaggerInfo.Host = swaggerBaseURL
+	s.logger.Info().Str("swagger_host", swaggerBaseURL).Str("original_url", originalURL).Msg("Swagger configurado")
 	docs.SwaggerInfo.BasePath = "/api/v1"
-	docs.SwaggerInfo.Schemes = []string{"http", "https"}
+
+	// Configurar esquemas basado en la URL base
+	if strings.HasPrefix(s.env.Get("URL_BASE_SWAGGER"), "https://") {
+		docs.SwaggerInfo.Schemes = []string{"https"}
+	} else {
+		docs.SwaggerInfo.Schemes = []string{"http", "https"}
+	}
+
+	// Ruta de prueba simple para verificar que el backend responde
+	s.router.GET("/ping", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"message":   "pong",
+			"timestamp": time.Now().Format(time.RFC3339),
+		})
+	})
 
 	// Ruta para la documentación de Swagger UI
 	s.router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

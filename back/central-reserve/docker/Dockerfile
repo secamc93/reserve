@@ -12,11 +12,18 @@ RUN adduser -D -g '' appuser
 WORKDIR /app
 
 # Copiar go.mod y go.sum primero para aprovechar cache
-COPY go.mod go.sum ./
-RUN go mod download
+COPY central-reserve/go.mod central-reserve/go.sum ./
+
+# Copiar el módulo dbpostgres al contexto de build
+COPY dbpostgres ./dbpostgres/
 
 # Copiar el resto del código
-COPY . .
+COPY central-reserve .
+
+# Actualizar el replace directive para el contexto de Docker
+RUN sed -i 's|replace dbpostgres => ../dbpostgres|replace dbpostgres => ./dbpostgres|' go.mod
+
+RUN go mod download
 
 # Compilar la aplicación
 RUN go build -o central_reserve ./cmd/main.go

@@ -1,7 +1,7 @@
 package domain
 
 import (
-	"dbpostgres/internal/infra/models"
+	"dbpostgres/app/infra/models"
 )
 
 // Repository interfaces para cada entidad
