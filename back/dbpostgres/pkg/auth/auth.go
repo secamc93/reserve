@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"dbpostgres/internal/infra/models"
+	"dbpostgres/app/infra/models"
 
 	"gorm.io/gorm"
 )

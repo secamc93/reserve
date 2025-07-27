@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
-	"dbpostgres/internal/app/usecases"
-	"dbpostgres/internal/infra/db"
-	"dbpostgres/internal/infra/repository"
+	"dbpostgres/app/app/usecases"
+	"dbpostgres/app/infra/db"
+	"dbpostgres/app/infra/repository"
 	"dbpostgres/pkg/env"
 	"dbpostgres/pkg/log"
 	"time"

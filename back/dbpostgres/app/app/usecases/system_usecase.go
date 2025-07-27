@@ -1,8 +1,8 @@
 package usecases
 
 import (
-	"dbpostgres/internal/domain"
-	"dbpostgres/internal/infra/models"
+	"dbpostgres/app/domain"
+	"dbpostgres/app/infra/models"
 	"dbpostgres/pkg/log"
 )
 

@@ -45,8 +45,12 @@ echo -e "${YELLOW}📦 Limpiando dependencias...${NC}"
 go mod tidy
 
 # Construir la imagen
-echo -e "${YELLOW}🔨 Construyendo imagen Docker...${NC}"
-docker build -f ${DOCKERFILE_PATH} -t ${IMAGE_NAME}:${VERSION} .
+echo -e "${YELLOW}🔨 Construyendo imagen Docker para ARM64...${NC}"
+# Cambiar al directorio padre para incluir dbpostgres en el contexto de build
+cd ..
+docker buildx build --platform linux/arm64 -f central-reserve/${DOCKERFILE_PATH} -t ${IMAGE_NAME}:${VERSION} --load .
+# Volver al directorio original
+cd central-reserve
 
 # Etiquetar para ECR con nombres más descriptivos
 echo -e "${YELLOW}🏷️ Etiquetando imagen para ECR...${NC}"
@@ -55,8 +59,8 @@ echo -e "${YELLOW}🏷️ Etiquetando imagen para ECR...${NC}"
 if [ "${VERSION}" = "latest" ]; then
     # Para latest, crear múltiples tags descriptivos
     TIMESTAMP=$(date +%Y%m%d)
-    DESCRIPTIVE_TAG="backend-central-reserve-latest"
-    DATED_TAG="backend-central-reserve-${TIMESTAMP}"
+    DESCRIPTIVE_TAG="backend-latest"
+    DATED_TAG="backend-${TIMESTAMP}"
     
     docker tag ${IMAGE_NAME}:${VERSION} ${ECR_REPO}:${VERSION}
     docker tag ${IMAGE_NAME}:${VERSION} ${ECR_REPO}:${DESCRIPTIVE_TAG}
@@ -65,7 +69,7 @@ if [ "${VERSION}" = "latest" ]; then
     echo -e "${GREEN}📅 Tags creados: latest, ${DESCRIPTIVE_TAG}, ${DATED_TAG}${NC}"
 else
     # Para versiones específicas, crear tag descriptivo
-    DESCRIPTIVE_TAG="backend-central-reserve-${VERSION}"
+    DESCRIPTIVE_TAG="backend-${VERSION}"
     
     docker tag ${IMAGE_NAME}:${VERSION} ${ECR_REPO}:${VERSION}
     docker tag ${IMAGE_NAME}:${VERSION} ${ECR_REPO}:${DESCRIPTIVE_TAG}

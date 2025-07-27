@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"dbpostgres/internal/domain"
+	"dbpostgres/app/domain"
 	"dbpostgres/pkg/log"
 
 	"gorm.io/gorm"

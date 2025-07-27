@@ -39,7 +39,8 @@ func (r *Repository) GetLatestReservationByClient(ctx context.Context, clientID 
 func (r *Repository) GetReserves(ctx context.Context, statusID *uint, clientID *uint, tableID *uint, startDate *time.Time, endDate *time.Time) ([]dtos.ReserveDetailDTO, error) {
 	var gormReservations []models.Reservation
 
-	query := r.database.Conn(ctx).Preload("Status").Preload("Client").Preload("Table").Preload("Business").Preload("CreatedBy")
+	// Primero, intentar obtener reservas sin Preload para ver si hay datos básicos
+	query := r.database.Conn(ctx)
 
 	// Aplicar filtros
 	if statusID != nil {
@@ -58,8 +59,44 @@ func (r *Repository) GetReserves(ctx context.Context, statusID *uint, clientID *
 		query = query.Where("end_at <= ?", *endDate)
 	}
 
+	// Log para debugging
+	r.logger.Info().Msg("Ejecutando consulta de reservas sin Preload")
+
 	if err := query.Find(&gormReservations).Error; err != nil {
 		r.logger.Error().Err(err).Msg("Error al obtener reservas")
+		return []dtos.ReserveDetailDTO{}, nil
+	}
+
+	r.logger.Info().Int("count", len(gormReservations)).Msg("Reservas encontradas sin Preload")
+
+	// Si no hay reservas, retornar vacío
+	if len(gormReservations) == 0 {
+		r.logger.Info().Msg("No se encontraron reservas en la base de datos")
+		return []dtos.ReserveDetailDTO{}, nil
+	}
+
+	// Ahora intentar con Preload para obtener las relaciones
+	queryWithPreload := r.database.Conn(ctx).Preload("Status").Preload("Client").Preload("Table").Preload("Business").Preload("CreatedBy")
+
+	// Aplicar los mismos filtros
+	if statusID != nil {
+		queryWithPreload = queryWithPreload.Where("status_id = ?", *statusID)
+	}
+	if clientID != nil {
+		queryWithPreload = queryWithPreload.Where("client_id = ?", *clientID)
+	}
+	if tableID != nil {
+		queryWithPreload = queryWithPreload.Where("table_id = ?", *tableID)
+	}
+	if startDate != nil {
+		queryWithPreload = queryWithPreload.Where("start_at >= ?", *startDate)
+	}
+	if endDate != nil {
+		queryWithPreload = queryWithPreload.Where("end_at <= ?", *endDate)
+	}
+
+	if err := queryWithPreload.Find(&gormReservations).Error; err != nil {
+		r.logger.Error().Err(err).Msg("Error al obtener reservas con Preload")
 		return []dtos.ReserveDetailDTO{}, nil
 	}
 
@@ -73,25 +110,42 @@ func (r *Repository) GetReserves(ctx context.Context, statusID *uint, clientID *
 			NumberOfGuests:     reservation.NumberOfGuests,
 			ReservaCreada:      reservation.CreatedAt,
 			ReservaActualizada: reservation.UpdatedAt,
-			EstadoCodigo:       reservation.Status.Code,
-			EstadoNombre:       reservation.Status.Name,
-			ClienteID:          reservation.Client.ID,
-			ClienteNombre:      reservation.Client.Name,
-			ClienteEmail:       reservation.Client.Email,
-			ClienteTelefono:    reservation.Client.Phone,
-			ClienteDni:         reservation.Client.Dni,
-			MesaID:             &reservation.Table.ID,
-			MesaNumero:         &reservation.Table.Number,
-			MesaCapacidad:      &reservation.Table.Capacity,
-			NegocioID:          reservation.Business.ID,
-			NegocioNombre:      reservation.Business.Name,
-			NegocioCodigo:      reservation.Business.Code,
-			NegocioDireccion:   reservation.Business.Address,
-			UsuarioID:          &reservation.CreatedBy.ID,
-			UsuarioNombre:      &reservation.CreatedBy.Name,
-			UsuarioEmail:       &reservation.CreatedBy.Email,
 			StatusHistory:      []entities.ReservationStatusHistory{},
 		}
+
+		// Manejar relaciones de forma segura
+		if reservation.Status.ID != 0 {
+			dto.EstadoCodigo = reservation.Status.Code
+			dto.EstadoNombre = reservation.Status.Name
+		}
+
+		if reservation.Client.ID != 0 {
+			dto.ClienteID = reservation.Client.ID
+			dto.ClienteNombre = reservation.Client.Name
+			dto.ClienteEmail = reservation.Client.Email
+			dto.ClienteTelefono = reservation.Client.Phone
+			dto.ClienteDni = reservation.Client.Dni
+		}
+
+		if reservation.Table.ID != 0 {
+			dto.MesaID = &reservation.Table.ID
+			dto.MesaNumero = &reservation.Table.Number
+			dto.MesaCapacidad = &reservation.Table.Capacity
+		}
+
+		if reservation.Business.ID != 0 {
+			dto.NegocioID = reservation.Business.ID
+			dto.NegocioNombre = reservation.Business.Name
+			dto.NegocioCodigo = reservation.Business.Code
+			dto.NegocioDireccion = reservation.Business.Address
+		}
+
+		if reservation.CreatedBy.ID != 0 {
+			dto.UsuarioID = &reservation.CreatedBy.ID
+			dto.UsuarioNombre = &reservation.CreatedBy.Name
+			dto.UsuarioEmail = &reservation.CreatedBy.Email
+		}
+
 		results = append(results, dto)
 	}
 
@@ -126,7 +180,20 @@ func (r *Repository) GetReserves(ctx context.Context, statusID *uint, clientID *
 		}
 	}
 
+	r.logger.Info().Int("total_results", len(results)).Msg("Reservas mapeadas exitosamente")
 	return results, nil
+}
+
+// GetReservesCount obtiene el número total de reservas (para debugging)
+func (r *Repository) GetReservesCount(ctx context.Context) (int64, error) {
+	var count int64
+	err := r.database.Conn(ctx).Model(&models.Reservation{}).Count(&count).Error
+	if err != nil {
+		r.logger.Error().Err(err).Msg("Error al contar reservas")
+		return 0, err
+	}
+	r.logger.Info().Int64("count", count).Msg("Total de reservas en la base de datos")
+	return count, nil
 }
 
 // GetReserveByID obtiene una reserva por su ID

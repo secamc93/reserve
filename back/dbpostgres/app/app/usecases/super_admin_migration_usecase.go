@@ -1,7 +1,7 @@
 package usecases
 
 import (
-	"dbpostgres/internal/infra/models"
+	"dbpostgres/app/infra/models"
 	"dbpostgres/pkg/env"
 	"dbpostgres/pkg/log"
 	"fmt"
