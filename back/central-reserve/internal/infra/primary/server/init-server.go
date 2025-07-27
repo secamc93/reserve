@@ -77,16 +77,7 @@ func InitServer(ctx context.Context) (*AppServices, error) {
 
 func setupDependencies(database db.IDatabase, logger log.ILogger, environment env.IConfig) (*http2.Handlers, *jwt.JWTService) {
 	// Repositorios específicos para casos de uso
-	clientUseCaseRepo := repository.NewClientRepository(database, logger)             // IClientRepository implementa IClientUseCaseRepository
-	tableUseCaseRepo := repository.NewTableRepository(database, logger)               // ITableRepository implementa ITableUseCaseRepository
-	authUseCaseRepo := repository.NewAuthRepository(database, logger)                 // IAuthRepository implementa IAuthUseCaseRepository
-	businessUseCaseRepo := repository.NewBusinessRepository(database, logger)         // IBusinessRepository implementa IBusinessUseCaseRepository
-	businessTypeUseCaseRepo := repository.NewBusinessTypeRepository(database, logger) // IBusinessTypeRepository implementa IBusinessTypeUseCaseRepository
-	permissionUseCaseRepo := repository.NewPermissionRepository(database, logger)     // IPermissionRepository implementa IPermissionUseCaseRepository
-	reserveUseCaseRepo := repository.NewReserveUseCaseRepository(database, logger)
-	roleUseCaseRepo := repository.NewRoleRepository(database, logger)
-	userUseCaseRepo := repository.NewUserRepository(database, logger)
-	roomUseCaseRepo := repository.NewRoomRepository(database, logger)
+	repoFactory := repository.NewRepositoryFactory(database, logger)
 
 	// Servicios
 	emailService := email.NewEmailService()
@@ -100,16 +91,16 @@ func setupDependencies(database db.IDatabase, logger log.ILogger, environment en
 	jwtService := jwt.New(jwtSecret)
 
 	// Casos de uso por dominio
-	authUseCase := usecaseauth.NewAuthUseCase(authUseCaseRepo, jwtService, logger)
-	clientUseCase := usecaseclient.NewClientUseCase(clientUseCaseRepo)
-	tableUseCase := usecasetables.NewTableUseCase(tableUseCaseRepo)
-	reserveUseCase := usecasereserve.NewReserveUseCase(reserveUseCaseRepo, emailService, logger)
-	businessUseCase := usecasebusiness.NewBusinessUseCase(businessUseCaseRepo, logger)
-	businessTypeUseCase := usecasebusinesstype.NewBusinessTypeUseCase(businessTypeUseCaseRepo, logger)
-	permissionUseCase := usecasepermission.NewPermissionUseCase(permissionUseCaseRepo, logger)
-	roleUseCase := usecaserole.NewRoleUseCase(roleUseCaseRepo, logger)
-	userUseCase := usecaseuser.NewUserUseCase(userUseCaseRepo, logger)
-	roomUseCase := usecaseroom.NewRoomUseCase(roomUseCaseRepo, logger)
+	authUseCase := usecaseauth.NewAuthUseCase(repoFactory.AuthRepository, jwtService, logger)
+	clientUseCase := usecaseclient.NewClientUseCase(repoFactory.ClientRepository)
+	tableUseCase := usecasetables.NewTableUseCase(repoFactory.TableRepository)
+	reserveUseCase := usecasereserve.NewReserveUseCase(repoFactory.ReservationRepository, emailService, logger)
+	businessUseCase := usecasebusiness.NewBusinessUseCase(repoFactory.BusinessRepository, logger)
+	businessTypeUseCase := usecasebusinesstype.NewBusinessTypeUseCase(repoFactory.BusinessTypeRepository, logger)
+	permissionUseCase := usecasepermission.NewPermissionUseCase(repoFactory.PermissionRepository, logger)
+	roleUseCase := usecaserole.NewRoleUseCase(repoFactory.RoleRepository, logger)
+	userUseCase := usecaseuser.NewUserUseCase(repoFactory.UserRepository, logger)
+	roomUseCase := usecaseroom.NewRoomUseCase(repoFactory.RoomRepository, logger)
 
 	// Handlers por dominio
 	authHandler := authhandler.New(authUseCase, logger)
