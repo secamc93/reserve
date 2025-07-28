@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 
-import '../../views/../views/views.dart';
+import '../../views/views.dart';
 
-class LoginScreen extends StatelessWidget {
-  static const name = 'login-screen';
+class HomeScreen extends StatelessWidget {
+  static const name = 'home-screen';
   final int pageIndex;
 
-  const LoginScreen({super.key, required this.pageIndex});
+  const HomeScreen({super.key, required this.pageIndex});
 
   @override
   Widget build(BuildContext context) {
     final viewRoutes = <Widget>[
-      LoginView(pageIndex: pageIndex),
+      HomeView(pageIndex: pageIndex),
       const SizedBox(),
     ];
 

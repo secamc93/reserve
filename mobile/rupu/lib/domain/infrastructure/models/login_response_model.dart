@@ -3,10 +3,7 @@ class LoginResponseModel {
   final bool success;
   final LoginDataModel data;
 
-  LoginResponseModel({
-    required this.success,
-    required this.data,
-  });
+  LoginResponseModel({required this.success, required this.data});
 
   factory LoginResponseModel.fromJson(Map<String, dynamic> json) {
     return LoginResponseModel(
@@ -16,10 +13,7 @@ class LoginResponseModel {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'success': success,
-      'data': data.toJson(),
-    };
+    return {'success': success, 'data': data.toJson()};
   }
 }
 
@@ -60,7 +54,7 @@ class UserModel {
   final String phone;
   final String avatarUrl;
   final bool isActive;
-  final DateTime lastLoginAt;
+  final String lastLoginAt;
 
   UserModel({
     required this.id,
@@ -80,7 +74,7 @@ class UserModel {
       phone: json['phone'] as String,
       avatarUrl: json['avatar_url'] as String,
       isActive: json['is_active'] as bool,
-      lastLoginAt: DateTime.parse(json['last_login_at'] as String),
+      lastLoginAt: json['last_login_at'],
     );
   }
 
@@ -92,7 +86,7 @@ class UserModel {
       'phone': phone,
       'avatar_url': avatarUrl,
       'is_active': isActive,
-      'last_login_at': lastLoginAt.toIso8601String(),
+      'last_login_at': lastLoginAt,
     };
   }
 }

@@ -6,7 +6,9 @@ class User {
   final String phone;
   final String avatarUrl;
   final bool isActive;
-  final DateTime lastLoginAt;
+  final String lastLoginAt;
+  final String token;
+  final bool requirePasswordChange;
 
   User({
     required this.id,
@@ -16,5 +18,7 @@ class User {
     required this.avatarUrl,
     required this.isActive,
     required this.lastLoginAt,
+    required this.token,
+    required this.requirePasswordChange,
   });
 }

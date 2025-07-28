@@ -1,170 +1,103 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:go_router/go_router.dart';
+import 'package:rupu/presentation/views/login/login_controller.dart';
 
-/// Pantalla de login estilizada con campos validados y UI responsive.
-class LoginView extends StatefulWidget {
-  const LoginView({super.key});
+import '../../screens/screens.dart';
+import '../../widgets/widgets.dart';
 
-  @override
-  State<LoginView> createState() => _LoginViewState();
-}
-
-class _LoginViewState extends State<LoginView> {
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
+/// Vista de login sin estado, usando GetX para reactividad.
+class LoginView extends GetView<LoginController> {
+  final int pageIndex;
+  const LoginView({super.key, required this.pageIndex});
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(
-            horizontal: size.width * 0.1,
-            vertical: size.height * 0.05,
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              LogoPlaceholder(height: size.height * 0.2),
-              const SizedBox(height: 32),
-              LoginForm(
-                formKey: _formKey,
-                emailController: _emailController,
-                passwordController: _passwordController,
-                onSubmit: () {
-                  if (_formKey.currentState!.validate()) {
-                    // TODO: Implementar lógica de login
-                  }
-                },
-              ),
-            ],
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(
+              horizontal: size.width * 0.1,
+              vertical: size.height * 0.05,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text("Bienvenidos a Rufú"),
+                const SizedBox(height: 16),
+                Text("Iniciar sesión"),
+                const SizedBox(height: 30),
+                CustomLogo(height: size.height * 0.2),
+                const SizedBox(height: 32),
+                Form(
+                  key: controller.formKey,
+                  child: Column(
+                    children: [
+                      CustomEmailField(
+                        controller: controller.emailController,
+                        labelText: "Email",
+                        hintText: "ejemplo@dominio.com",
+                      ),
+                      const SizedBox(height: 16),
+                      CustomPasswordField(
+                        controller: controller.passwordController,
+                        labelText: "Contraseña",
+                        hintText: "Ingresa tu contraseña",
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        children: [
+                          const Spacer(),
+                          Text("¿Olvidaste contraseña?"),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Obx(() {
+                        return controller.isLoading.value
+                            ? const CircularProgressIndicator()
+                            : CustomButton(
+                                onPressed: () async {
+                                  final ok = await controller.submit();
+                                  if (!context.mounted) return;
+                                  if (ok) {
+                                    GoRouter.of(context).goNamed(
+                                      HomeScreen.name,
+                                      pathParameters: {'page': '0'},
+                                    );
+                                  } else if (controller.errorMessage.value !=
+                                      null) {
+                                    showDialog(
+                                      context: context,
+                                      builder: (_) => AlertDialog(
+                                        title: const Text('Error'),
+                                        content: Text(
+                                          controller.errorMessage.value!,
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.of(context).pop(),
+                                            child: const Text('OK'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
+                                },
+                                textButton: 'Iniciar sesion',
+                              );
+                      }),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// Placeholder para el logo de la aplicación.
-class LogoPlaceholder extends StatelessWidget {
-  final double height;
-  const LogoPlaceholder({super.key, required this.height});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: height,
-      alignment: Alignment.center,
-      child: const Placeholder(fallbackHeight: 80, fallbackWidth: 80),
-    );
-  }
-}
-
-/// Formulario de login separado en widget para mayor mantenibilidad.
-class LoginForm extends StatelessWidget {
-  final GlobalKey<FormState> formKey;
-  final TextEditingController emailController;
-  final TextEditingController passwordController;
-  final VoidCallback onSubmit;
-
-  const LoginForm({
-    super.key,
-    required this.formKey,
-    required this.emailController,
-    required this.passwordController,
-    required this.onSubmit,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Form(
-      key: formKey,
-      child: Column(
-        children: [
-          EmailField(controller: emailController),
-          const SizedBox(height: 16),
-          PasswordField(controller: passwordController),
-          const SizedBox(height: 24),
-          LoginButton(onPressed: onSubmit),
-        ],
-      ),
-    );
-  }
-}
-
-/// Campo de texto para email con validación de formato.
-class EmailField extends StatelessWidget {
-  final TextEditingController controller;
-  const EmailField({super.key, required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: 'Email',
-        hintText: 'ejemplo@dominio.com',
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-      keyboardType: TextInputType.emailAddress,
-      validator: (value) {
-        if (value == null || value.isEmpty) return 'El email es requerido';
-        final regex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+\$');
-        if (!regex.hasMatch(value)) return 'Ingresa un email válido';
-        return null;
-      },
-    );
-  }
-}
-
-/// Campo de texto para contraseña con validación de longitud mínima.
-class PasswordField extends StatelessWidget {
-  final TextEditingController controller;
-  const PasswordField({super.key, required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: 'Contraseña',
-        hintText: 'Ingresa tu contraseña',
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-      obscureText: true,
-      validator: (value) {
-        if (value == null || value.isEmpty) return 'La contraseña es requerida';
-        if (value.length < 6) return 'Mínimo 6 caracteres';
-        return null;
-      },
-    );
-  }
-}
-
-/// Botón de login con estilo y bordes redondeados.
-class LoginButton extends StatelessWidget {
-  final VoidCallback onPressed;
-  const LoginButton({super.key, required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-        child: const Text('Iniciar sesión'),
       ),
     );
   }
