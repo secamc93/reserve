@@ -15,12 +15,12 @@ type IUseCaseAuth interface {
 }
 
 type AuthUseCase struct {
-	repository ports.IAuthUseCaseRepository
+	repository ports.IAuthRepository
 	jwtService *jwt.JWTService
 	log        log.ILogger
 }
 
-func NewAuthUseCase(repository ports.IAuthUseCaseRepository, jwtService *jwt.JWTService, log log.ILogger) IUseCaseAuth {
+func NewAuthUseCase(repository ports.IAuthRepository, jwtService *jwt.JWTService, log log.ILogger) IUseCaseAuth {
 	return &AuthUseCase{
 		repository: repository,
 		jwtService: jwtService,

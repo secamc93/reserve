@@ -13,6 +13,7 @@ type LoginResponse struct {
 	User                  UserInfo
 	Token                 string
 	RequirePasswordChange bool
+	Businesses            []BusinessInfo // Lista de todos los businesses del usuario
 }
 
 // UserRolesPermissionsResponse representa la respuesta de roles y permisos del usuario
@@ -80,4 +81,33 @@ type ChangePasswordRequest struct {
 type ChangePasswordResponse struct {
 	Success bool
 	Message string
+}
+
+// BusinessInfo representa información simplificada del negocio para login
+type BusinessInfo struct {
+	ID                 uint
+	Name               string
+	Code               string
+	BusinessTypeID     uint
+	BusinessType       BusinessTypeInfo // Tipo de negocio incluido
+	Timezone           string
+	Address            string
+	Description        string
+	LogoURL            string
+	PrimaryColor       string
+	SecondaryColor     string
+	CustomDomain       string
+	IsActive           bool
+	EnableDelivery     bool
+	EnablePickup       bool
+	EnableReservations bool
+}
+
+// BusinessTypeInfo representa información simplificada del tipo de negocio
+type BusinessTypeInfo struct {
+	ID          uint
+	Name        string
+	Code        string
+	Description string
+	Icon        string
 }

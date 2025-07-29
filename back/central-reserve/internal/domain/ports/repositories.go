@@ -59,6 +59,7 @@ type IAuthRepository interface {
 	GetRolePermissions(ctx context.Context, roleID uint) ([]entities.Permission, error)
 	UpdateLastLogin(ctx context.Context, userID uint) error
 	ChangePassword(ctx context.Context, userID uint, newPassword string) error
+	GetUserBusinesses(ctx context.Context, userID uint) ([]entities.BusinessInfo, error)
 }
 
 // IAuthService define las operaciones de autenticación (métodos de repositorio)

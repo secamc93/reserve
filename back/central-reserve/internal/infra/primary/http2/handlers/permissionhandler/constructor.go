@@ -1,7 +1,7 @@
 package permissionhandler
 
 import (
-	"central_reserve/internal/domain/ports"
+	"central_reserve/internal/app/usecasepermission"
 	"central_reserve/internal/pkg/log"
 
 	"github.com/gin-gonic/gin"
@@ -19,12 +19,12 @@ type IPermissionHandler interface {
 }
 
 type PermissionHandler struct {
-	usecase ports.IPermissionUseCase
+	usecase usecasepermission.IUseCasePermission
 	logger  log.ILogger
 }
 
 // New crea una nueva instancia del handler de Permission
-func New(usecase ports.IPermissionUseCase, logger log.ILogger) IPermissionHandler {
+func New(usecase usecasepermission.IUseCasePermission, logger log.ILogger) IPermissionHandler {
 	return &PermissionHandler{
 		usecase: usecase,
 		logger:  logger,

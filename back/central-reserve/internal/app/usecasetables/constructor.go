@@ -15,10 +15,10 @@ type IUseCaseTable interface {
 }
 
 type TableUseCase struct {
-	repository ports.ITableUseCaseRepository
+	repository ports.ITableRepository
 }
 
-func NewTableUseCase(repository ports.ITableUseCaseRepository) *TableUseCase {
+func NewTableUseCase(repository ports.ITableRepository) IUseCaseTable {
 	return &TableUseCase{
 		repository: repository,
 	}

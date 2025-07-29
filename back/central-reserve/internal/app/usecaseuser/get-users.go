@@ -2,24 +2,8 @@ package usecaseuser
 
 import (
 	"central_reserve/internal/domain/dtos"
-	"central_reserve/internal/domain/ports"
-	"central_reserve/internal/pkg/log"
 	"context"
 )
-
-// UserUseCase implementa los casos de uso para usuarios
-type UserUseCase struct {
-	repository ports.IUserRepository
-	log        log.ILogger
-}
-
-// NewUserUseCase crea una nueva instancia del caso de uso de usuarios
-func NewUserUseCase(repository ports.IUserRepository, log log.ILogger) *UserUseCase {
-	return &UserUseCase{
-		repository: repository,
-		log:        log,
-	}
-}
 
 // GetUsers obtiene usuarios filtrados y paginados
 func (uc *UserUseCase) GetUsers(ctx context.Context, filters dtos.UserFilters) (*dtos.UserListDTO, error) {
