@@ -1,244 +1,473 @@
-# 🚀 Proyecto Base Backend en Go
+# 🚀 Central Reserve - Backend API
 
-Este repositorio sirve como una plantilla robusta y escalable para iniciar proyectos de backend en Go. Incluye una arquitectura limpia, configuración para dos tipos de servidores (HTTP y gRPC), conexión a base de datos, y flujos de trabajo de desarrollo automatizados.
+## 📋 Resumen
 
----
+**Central Reserve** es una API backend para gestión de reservas, desplegada en **AWS ECR Público** y lista para usar en cualquier entorno.
 
-## ✨ Características Principales
-
-- **🌐 Servidor HTTP**: Implementado con [Gin](https://gin-gonic.com/), uno de los frameworks más rápidos y populares de Go.
-- **🔌 Servidor gRPC**: Listo para comunicación de alto rendimiento entre microservicios.
-- **🗄️ Base de Datos**: Configurado para [PostgreSQL](https://www.postgresql.org/), con un repositorio listo para usar.
-- **📧 Sistema de Email**: Notificaciones automáticas por email para confirmaciones y cancelaciones de reservas.
-- **📄 Documentación de API**:
-    - **OpenAPI (Swagger)** para el servidor HTTP, totalmente interactiva.
-    - **HTML Estático** para los servicios gRPC, con estilos personalizados.
-- **⚙️ Tareas Automatizadas**: Un `Makefile` para simplificar tareas comunes como la generación de documentación.
-- **📝 Logging Estructurado**: Logs claros y consistentes para facilitar la depuración.
-- **🔑 Gestión de Entorno**: Carga de configuración desde archivos `.env`.
-- **🐳 Soporte para Docker**: Preparado para ser contenedorizado.
+- **📦 Imagen**: `public.ecr.aws/d3a6d4r1/cam/reserve`
+- **📏 Tamaño**: 55.4MB (optimizada con Alpine Linux)
+- **🔒 Seguridad**: Usuario no-root, imagen minimalista
+- **🌐 Galería**: https://gallery.ecr.aws/d3a6d4r1/cam/reserve
 
 ---
 
-## 📋 Prerrequisitos
+## 🚀 Inicio Rápido
 
-Antes de empezar, asegúrate de tener instalado lo siguiente:
-
-- **Go**: Versión 1.18 o superior.
-- **Make**: Para ejecutar los comandos del `Makefile`.
-- **Docker**: (Opcional) Si deseas levantar la base de datos PostgreSQL con Docker.
-
----
-
-## 🚀 Guía de Inicio Rápido
-
-Sigue estos pasos para poner en marcha el proyecto en tu máquina local:
-
-1.  **Clonar el repositorio:**
-    ```bash
-    git clone [URL_DEL_REPOSITORIO]
-    cd central_reserve
-    ```
-
-2.  **Configurar las variables de entorno:**
-    ```bash
-    # Crear archivo .env basado en las variables requeridas
-    touch .env
-    ```
-    
-    **⚠️ IMPORTANTE - Seguridad de Variables de Entorno:**
-    
-    Las siguientes variables son **OBLIGATORIAS** y contienen información sensible:
-    ```bash
-    # Configuración de la aplicación
-    APP_ENV=development
-    HTTP_PORT=3050
-    GRPC_PORT=9090
-    LOG_LEVEL=debug
-    
-    # 🔐 CRÍTICO: Usa un JWT secret fuerte en producción
-    JWT_SECRET=your-super-secret-jwt-key-here-change-this-in-production
-    
-    # 🗄️ Configuración de base de datos PostgreSQL
-    DB_HOST=localhost
-    DB_USER=your_db_user
-    DB_PASS=your_db_password
-    DB_PORT=5432
-    DB_NAME=central_reserve
-    DB_LOG_LEVEL=info
-    PGSSLMODE=disable
-    
-    # 📚 Configuración de Swagger
-    URL_BASE_SWAGGER=http://localhost:3050
-    
-    # 📧 Configuración de Email (Opcional)
-    SMTP_HOST=smtp.gmail.com
-    SMTP_PORT=587
-    SMTP_USER=tu-email@gmail.com
-    SMTP_PASS=tu-contraseña-de-aplicación
-    FROM_EMAIL=reservas@trattorialabella.com
-    ```
-    
-    **🛡️ Mejores Prácticas de Seguridad:**
-    - ❌ **NUNCA** subas el archivo `.env` al repositorio
-    - ❌ **NUNCA** hardcodees credenciales en el código
-    - ✅ Usa diferentes valores para dev/staging/prod
-    - ✅ Genera JWT secrets seguros: `openssl rand -base64 32`
-    - ✅ Usa gestores de secretos en producción (AWS Secrets Manager, HashiCorp Vault, etc.)
-    - ✅ Para Gmail, usa contraseñas de aplicación en lugar de tu contraseña normal
-
-3.  **Instalar dependencias:**
-    ```bash
-    go mod tidy
-    ```
-
-4.  **Levantar la base de datos (Opcional):**
-    Si usas Docker, puedes iniciar una instancia de PostgreSQL con:
-    ```bash
-    # (Asegúrate de tener un docker-compose.yml en la carpeta /docker)
-    docker-compose -f docker/docker-compose.yml up -d
-    ```
-
-5.  **Ejecutar la aplicación:**
-    ```bash
-    go run ./cmd/main.go
-    ```
-    ¡El servidor debería estar corriendo! Los logs de inicio te mostrarán las URLs disponibles.
-
----
-
-## 🐳 Despliegue con Docker
-
-### 🚀 Inicio Rápido con Docker
-
+### Opción 1: Script Automatizado (Recomendado)
 ```bash
-# Opción 1: Script automatizado (Recomendado)
+# Desarrollo completo con todos los servicios
 ./scripts/build-docker.sh dev
 
-# Opción 2: Makefile
-make docker-dev
-
-# Opción 3: Docker Compose directo
-cd docker && docker-compose -f docker-compose.dev.yml up -d
+# Solo build para producción
+./scripts/build-docker.sh prod
 ```
 
-### 📋 Servicios Incluidos
-- **API Backend**: http://localhost:3050
-- **Swagger Docs**: http://localhost:3050/docs
-- **PostgreSQL**: localhost:5432
-- **Redis**: localhost:6379
-- **NATS**: localhost:4222
-- **NATS Dashboard**: http://localhost:8111
-- **Adminer (DB)**: http://localhost:8080
-
-### 🔒 Características de Seguridad
-- ✅ Usuario no-root para ejecución
-- ✅ Imagen minimalista (Alpine)
-- ✅ Variables sensibles NO hardcodeadas
-- ✅ Certificados SSL incluidos
-- ✅ Healthcheck configurado
-- ✅ Red aislada para servicios
-- ✅ Volúmenes persistentes para datos
-
-### 📖 Documentación Completa
-Para más detalles sobre Docker, consulta: [README-DOCKER.md](README-DOCKER.md)
-
----
-
-## ☁️ Despliegue a AWS ECR
-
-La imagen está disponible públicamente en AWS ECR:
-
+### Opción 2: Ejecutar directamente desde ECR
 ```bash
-# 🌐 Imagen pública disponible
-docker pull public.ecr.aws/d3a6d4r1/cam/reserve:latest
+# Crear archivo .env con tus variables
+touch .env
 
-# 🚀 Ejecutar desde ECR
+# Ejecutar la aplicación
 docker run --env-file .env -p 3050:3050 public.ecr.aws/d3a6d4r1/cam/reserve:latest
 ```
 
-### 📦 **Despliegue Automatizado**
-
-Para desplegar nuevas versiones a ECR:
-
+### Opción 3: Usando docker-compose
 ```bash
-# Desplegar versión latest
+# Desarrollo
+cd docker
+docker-compose -f docker-compose.dev.yml up -d
+
+# Producción
+docker-compose -f docker-compose.prod.yml up -d
+
+# Verificar que esté funcionando
+curl http://localhost:3050/health
+```
+
+### Opción 4: Makefile
+```bash
+# Ver todos los comandos disponibles
+make help
+
+# Entorno de desarrollo
+make docker-dev
+
+# Entorno de producción
+make docker-prod
+
+# Ver logs
+make docker-logs
+```
+
+---
+
+## 📋 Versiones Disponibles
+
+| Tag | Descripción | Comando |
+|-----|-------------|---------|
+| `latest` | Última versión estable | `docker pull public.ecr.aws/d3a6d4r1/cam/reserve:latest` |
+| `v1.0.0` | Primera versión de producción | `docker pull public.ecr.aws/d3a6d4r1/cam/reserve:v1.0.0` |
+| `v1.0.1` | Versión mejorada | `docker pull public.ecr.aws/d3a6d4r1/cam/reserve:v1.0.1` |
+
+---
+
+## 🏗️ Servicios Incluidos
+
+### 🛠️ Entorno de Desarrollo
+- **central_reserve**: API Backend (puerto 3050)
+- **postgres**: Base de datos PostgreSQL (puerto 5432)
+- **redis**: Cache Redis (puerto 6379)
+- **nats**: Mensajería NATS (puerto 4222)
+- **nats_dashboard**: Dashboard NATS (puerto 8111)
+- **adminer**: Gestor de base de datos (puerto 8080)
+
+### 🚀 Entorno de Producción
+- **central_reserve**: API Backend optimizado
+- **postgres**: Base de datos PostgreSQL
+- **redis**: Cache Redis
+- **nats**: Mensajería NATS
+
+---
+
+## 🔧 Configuración
+
+### Variables de Entorno
+Crea un archivo `.env` en la raíz del proyecto:
+
+```env
+# Configuración de la aplicación
+APP_ENV=development
+HTTP_PORT=3050
+LOG_LEVEL=debug
+JWT_SECRET=tu-jwt-secret-aqui
+
+# Base de datos
+DB_HOST=postgres
+DB_USER=postgres
+DB_PASS=password
+DB_PORT=5432
+DB_NAME=central_reserve
+DB_LOG_LEVEL=info
+PGSSLMODE=disable
+
+# Swagger
+URL_BASE_SWAGGER=http://localhost:3050
+
+# Email (opcional)
+SMTP_HOST=smtp-mail.outlook.com
+SMTP_PORT=587
+SMTP_USER=tu-email@outlook.com
+SMTP_PASS=tu-contraseña
+FROM_EMAIL=tu-email@outlook.com
+SMTP_USE_STARTTLS=true
+SMTP_USE_TLS=false
+```
+
+### Puertos Utilizados
+- **3050**: API Backend
+- **5432**: PostgreSQL
+- **6379**: Redis
+- **4222**: NATS
+- **8111**: NATS Dashboard
+- **8080**: Adminer
+
+---
+
+## 🚀 Despliegue y Desarrollo
+
+### **Desplegar nueva versión**
+```bash
+# Versión automática (latest + timestamp)
 ./scripts/deploy.sh
 
-# Desplegar versión específica
-./scripts/deploy.sh v1.0.1
+# Versión específica
+./scripts/deploy.sh v1.0.2
 
-# Desplegar versión de desarrollo
+# Versión de desarrollo
 ./scripts/deploy.sh dev
 ```
 
-### 🔧 **Configuración Inicial de ECR**
-
-Si necesitas configurar ECR desde cero:
-
+### **Desarrollo local**
 ```bash
-# 1. Configurar permisos IAM para ECR público
-# Agregar política: AmazonElasticContainerRegistryPublicFullAccess
-# O crear política personalizada con:
-#   - ecr-public:*
-#   - sts:GetServiceBearerToken
+# Construir imagen local
+docker build -f docker/Dockerfile -t central-reserve .
 
-# 2. Hacer login
-aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
-
-# 3. Usar el script de despliegue
-./scripts/deploy.sh
+# Ejecutar en desarrollo
+docker run --env-file .env -p 3050:3050 central-reserve
 ```
 
-### 📋 **Versiones Disponibles**
-
-- `latest`: Última versión estable
-- `v1.0.0`: Primera versión de producción
-- `YYYYMMDD_HHMMSS`: Versiones con timestamp automático
-
-**🌐 Galería ECR:** https://gallery.ecr.aws/d3a6d4r1/cam/reserve
-
----
-
-## 🛠️ Comandos Disponibles
-
-Hemos configurado un `Makefile` para simplificar algunas tareas:
-
--   **`make docs`**: Regenera toda la documentación de la API gRPC (lee los `.proto`, aplica estilos y personalizaciones).
--   **`make clean`**: Elimina los binarios de compilación y la documentación generada.
+### **CI/CD Automático**
+El proyecto incluye GitHub Actions que automáticamente:
+- ✅ Ejecuta tests
+- ✅ Construye la imagen
+- ✅ Deploya a ECR en cada push a `main`
+- ✅ Crear tags automáticos para releases
 
 ---
 
-## 📚 Documentación de API
+## 🌐 Configuración de Entornos
 
-Una vez que el servidor esté corriendo, puedes acceder a la documentación en las siguientes rutas:
+### **Desarrollo**
+```bash
+# .env para desarrollo
+APP_ENV=development
+HTTP_PORT=3050
+LOG_LEVEL=debug
+DB_HOST=localhost
+# ... más variables
+```
 
--   **HTTP (OpenAPI)**:
-    -   Visita `http://localhost:[PUERTO_HTTP]/docs`
+### **Producción**
+```bash
+# .env para producción
+APP_ENV=production
+HTTP_PORT=3050
+LOG_LEVEL=info
+DB_HOST=prod-database-host
+JWT_SECRET=production-super-secret-key
+# ... más variables
+```
 
--   **gRPC (Estática)**:
-    -   Visita `http://localhost:[PUERTO_HTTP]/grpc-docs`
-
-*(Reemplaza `[PUERTO_HTTP]` por el puerto que configuraste en tu archivo `.env`)*
+### **Staging**
+```bash
+# Usar tag específico para staging
+docker run --env-file .env.staging -p 3050:3050 public.ecr.aws/d3a6d4r1/cam/reserve:v1.0.1
+```
 
 ---
 
-## 📧 Sistema de Email
+## 🛠️ Comandos Útiles
 
-El proyecto incluye un sistema completo de notificaciones por email que envía automáticamente:
+### Gestión de Contenedores
+```bash
+# Ver contenedores activos
+docker ps
 
-- ✅ **Confirmaciones de reserva** cuando se crea una nueva reserva
-- ✅ **Cancelaciones de reserva** cuando se cancela una reserva existente
+# Ver logs en tiempo real
+make docker-logs
 
-### Características del Sistema de Email:
-- **Envío asíncrono**: No bloquea la respuesta de la API
-- **Templates HTML profesionales**: Diseño responsivo con branding del restaurante
-- **Soporte múltiples proveedores**: Gmail, Outlook, SendGrid, etc.
-- **Logging detallado**: Seguimiento completo de envíos y errores
-- **Configuración flexible**: Variables de entorno para diferentes entornos
+# Ver logs de todos los servicios
+make docker-logs-all
 
-### Documentación Completa:
-Para más detalles sobre la configuración y uso del sistema de email, consulta:
-- 📖 [README-EMAIL.md](README-EMAIL.md) - Guía completa del sistema de email
-- 📋 [env-template-email.txt](env-template-email.txt) - Ejemplos de configuración
-- 🧪 [examples/email-test.go](examples/email-test.go) - Ejemplo de uso
+# Detener todos los servicios
+make docker-stop
+
+# Reiniciar servicios
+docker-compose -f docker/docker-compose.dev.yml restart
+```
+
+### Base de Datos
+```bash
+# Acceder a PostgreSQL
+docker exec -it postgres_dev psql -U postgres -d central_reserve
+
+# Resetear base de datos
+make db-reset
+
+# Ver logs de PostgreSQL
+docker logs postgres_dev
+```
+
+### Desarrollo
+```bash
+# Rebuild de la imagen
+make docker-build
+
+# Ejecutar tests
+make test
+
+# Verificar salud de servicios
+make health
+
+# Probar envío de emails
+make test-email
+```
+
+### Gestión de Imágenes
+```bash
+# Limpiar imágenes locales
+docker image prune -f
+
+# Ver todas las imágenes del proyecto
+docker images | grep central-reserve
+
+# Eliminar imagen específica
+docker rmi public.ecr.aws/d3a6d4r1/cam/reserve:old-version
+```
+
+---
+
+## 📊 Monitoreo y Salud
+
+### **Healthcheck**
+```bash
+# Verificar salud de la aplicación
+curl http://localhost:3050/health
+
+# Respuesta esperada: 200 OK
+```
+
+### **Logs**
+```bash
+# Ver logs en tiempo real
+docker logs -f central_reserve_prod
+
+# Logs con docker-compose
+docker-compose -f docker/docker-compose.prod.yml logs -f central_reserve
+```
+
+### **Métricas**
+```bash
+# Swagger UI disponible en:
+http://localhost:3050/docs
+
+# API docs:
+http://localhost:3050/api/v1/docs
+```
+
+### Logs Estructurados
+Los logs incluyen:
+- Timestamp
+- Nivel de log (INFO, ERROR, WARN)
+- Contexto de la operación
+- Métricas de rendimiento
+
+### Métricas Disponibles
+- Latencia de requests HTTP
+- Estado de conexiones a BD
+- Uso de memoria y CPU
+- Errores y excepciones
+
+---
+
+## 🔍 Troubleshooting
+
+### Problemas Comunes
+
+#### 1. Puerto ya en uso
+```bash
+# Ver qué está usando el puerto
+sudo lsof -i :3050
+
+# Matar proceso
+sudo kill -9 <PID>
+```
+
+#### 2. Contenedor no inicia
+```bash
+# Ver logs detallados
+docker logs central_reserve_dev
+
+# Verificar variables de entorno
+docker exec central_reserve_dev env | grep -E "(DB_|SMTP_)"
+```
+
+#### 3. Base de datos no conecta
+```bash
+# Verificar que PostgreSQL esté corriendo
+docker ps | grep postgres
+
+# Ver logs de PostgreSQL
+docker logs postgres_dev
+
+# Probar conexión
+docker exec -it postgres_dev pg_isready -U postgres
+```
+
+#### 4. Permisos de archivos
+```bash
+# Dar permisos al script
+chmod +x scripts/build-docker.sh
+
+# Si hay problemas con volúmenes
+sudo chown -R $USER:$USER .
+```
+
+### Troubleshooting Avanzado
+```bash
+# Ejecutar contenedor en modo interactivo
+docker run -it --env-file .env public.ecr.aws/d3a6d4r1/cam/reserve:latest sh
+
+# Verificar variables de entorno
+docker run --env-file .env public.ecr.aws/d3a6d4r1/cam/reserve:latest env
+
+# Verificar conectividad a base de datos
+docker run --env-file .env --rm public.ecr.aws/d3a6d4r1/cam/reserve:latest ping $DB_HOST
+```
+
+### Limpieza
+```bash
+# Limpieza completa
+make clean-all
+
+# Solo contenedores
+docker-compose -f docker/docker-compose.dev.yml down -v
+
+# Solo imágenes
+docker rmi central-reserve:latest
+```
+
+---
+
+## 🔒 Seguridad
+
+### **Variables de Entorno**
+- ❌ **NUNCA** hardcodear credenciales en la imagen
+- ✅ Usar archivos `.env` diferentes por entorno
+- ✅ Rotar credenciales regularmente
+- ✅ Usar gestores de secretos en producción
+
+### **Configuración Segura**
+```bash
+# Generar JWT secret fuerte
+openssl rand -base64 32
+
+# Ejecutar con usuario no-root (ya configurado)
+docker run --user 1000:1000 --env-file .env -p 3050:3050 public.ecr.aws/d3a6d4r1/cam/reserve:latest
+```
+
+### Buenas Prácticas Implementadas
+- ✅ Usuario no-root en contenedores
+- ✅ Imagen minimalista (Alpine)
+- ✅ Variables de entorno para secretos
+- ✅ Health checks configurados
+- ✅ Volúmenes persistentes para datos
+- ✅ Red aislada para servicios
+
+### Recomendaciones de Producción
+- Usar secrets management (Docker Secrets, AWS Secrets Manager)
+- Configurar backup automático de PostgreSQL
+- Implementar rate limiting
+- Configurar SSL/TLS para HTTPS
+- Monitoreo con Prometheus/Grafana
+
+---
+
+## 🚀 Despliegue a Producción
+
+### 1. Build de Producción
+```bash
+./scripts/build-docker.sh prod v1.0.0
+```
+
+### 2. Configurar Variables de Producción
+```env
+APP_ENV=production
+LOG_LEVEL=info
+# Configurar credenciales reales de BD y email
+```
+
+### 3. Desplegar
+```bash
+docker-compose -f docker/docker-compose.prod.yml up -d
+```
+
+### 4. Verificar
+```bash
+# Health check
+curl http://tu-servidor:3050/health
+
+# Logs
+docker-compose -f docker/docker-compose.prod.yml logs -f
+```
+
+---
+
+## 📞 Información del Sistema
+
+### **Especificaciones Técnicas**
+- **Go Version**: 1.23
+- **Base Image**: Alpine Linux 3.19
+- **Architecture**: Multi-stage build optimizado
+- **Size**: 55.4MB
+- **User**: appuser (non-root)
+
+### **Puertos**
+- **HTTP**: 3050
+- **Healthcheck**: 3050/health
+- **Docs**: 3050/docs
+
+### **Contacto**
+- **Repositorio**: https://github.com/your-repo/central-reserve
+- **ECR Gallery**: https://gallery.ecr.aws/d3a6d4r1/cam/reserve
+- **Issues**: GitHub Issues
+
+---
+
+## 🎯 Próximos Pasos
+
+1. **Configurar monitoreo** (Prometheus, Grafana)
+2. **Implementar alertas** (PagerDuty, Slack)
+3. **Configurar backup automático** de la base de datos
+4. **Implementar scaling horizontal** (Docker Swarm, Kubernetes)
+5. **Configurar CDN** para assets estáticos
+
+---
+
+## 📚 Recursos Adicionales
+
+- [Docker Documentation](https://docs.docker.com/)
+- [Docker Compose](https://docs.docker.com/compose/)
+- [PostgreSQL Docker](https://hub.docker.com/_/postgres)
+- [Redis Docker](https://hub.docker.com/_/redis)
+- [NATS Docker](https://hub.docker.com/_/nats)
