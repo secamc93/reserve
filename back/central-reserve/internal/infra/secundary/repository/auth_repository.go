@@ -3,7 +3,10 @@ package repository
 import (
 	"central_reserve/internal/domain/dtos"
 	"central_reserve/internal/domain/entities"
+	"central_reserve/internal/infra/secundary/repository/mapper"
+	"central_reserve/internal/pkg/apikey"
 	"context"
+	"dbpostgres/app/infra/models"
 	"fmt"
 	"time"
 
@@ -311,4 +314,124 @@ func (r *Repository) GetUserByID(ctx context.Context, id uint) (*dtos.UserAuthIn
 		return nil, err
 	}
 	return &user, nil
+}
+
+// ───────────────────────────────────────────
+//
+//	API KEYS - Métodos para manejo de API Keys
+//
+// ───────────────────────────────────────────
+
+// CreateAPIKey crea una nueva API Key en la base de datos
+func (r *Repository) CreateAPIKey(ctx context.Context, apiKey entities.APIKey, keyHash string) (uint, error) {
+	// Crear el registro en la tabla api_keys usando el mapper
+	dbAPIKey := mapper.CreateAPIKeyModel(apiKey, keyHash)
+
+	if err := r.database.Conn(ctx).Create(&dbAPIKey).Error; err != nil {
+		r.logger.Error().Err(err).
+			Uint("user_id", apiKey.UserID).
+			Uint("business_id", apiKey.BusinessID).
+			Msg("Error al crear API Key")
+		return 0, err
+	}
+
+	r.logger.Info().
+		Uint("api_key_id", dbAPIKey.ID).
+		Uint("user_id", apiKey.UserID).
+		Uint("business_id", apiKey.BusinessID).
+		Msg("API Key creada exitosamente")
+
+	return dbAPIKey.ID, nil
+}
+
+// ValidateAPIKey valida una API Key y retorna la información asociada
+func (r *Repository) ValidateAPIKey(ctx context.Context, apiKey string) (*entities.APIKey, error) {
+	var dbAPIKeys []models.APIKey
+
+	// Buscar todas las API Keys activas con su hash
+	err := r.database.Conn(ctx).
+		Where("revoked = ?", false).
+		Find(&dbAPIKeys).Error
+
+	if err != nil {
+		r.logger.Error().Err(err).Msg("Error al buscar API Keys")
+		return nil, err
+	}
+
+	// Validar cada API Key encontrada
+	apiKeyService := apikey.NewService()
+	for _, dbAPIKey := range dbAPIKeys {
+		// Verificar el hash de la API Key
+		if apiKeyService.ValidateAPIKey(apiKey, dbAPIKey.KeyHash) {
+			// Actualizar último uso
+			if err := r.UpdateAPIKeyLastUsed(ctx, dbAPIKey.ID); err != nil {
+				r.logger.Warn().Uint("api_key_id", dbAPIKey.ID).Err(err).Msg("Error al actualizar último uso")
+			}
+
+			// Convertir a entidad del dominio
+			entity := mapper.ToAPIKeyEntity(dbAPIKey)
+
+			r.logger.Debug().
+				Uint("api_key_id", dbAPIKey.ID).
+				Uint("user_id", dbAPIKey.UserID).
+				Msg("API Key validada exitosamente")
+
+			return &entity, nil
+		}
+	}
+
+	// Si llegamos aquí, la API Key no fue encontrada o no coincide
+	r.logger.Debug().Msg("API Key no encontrada o inválida")
+	return nil, nil
+}
+
+// UpdateAPIKeyLastUsed actualiza la fecha de último uso de una API Key
+func (r *Repository) UpdateAPIKeyLastUsed(ctx context.Context, apiKeyID uint) error {
+	now := time.Now()
+	if err := r.database.Conn(ctx).
+		Model(&models.APIKey{}).
+		Where("id = ?", apiKeyID).
+		Update("last_used_at", now).Error; err != nil {
+		r.logger.Error().Uint("api_key_id", apiKeyID).Err(err).Msg("Error al actualizar último uso de API Key")
+		return err
+	}
+
+	r.logger.Debug().Uint("api_key_id", apiKeyID).Msg("Último uso de API Key actualizado")
+	return nil
+}
+
+// GetAPIKeysByUser obtiene todas las API Keys de un usuario
+func (r *Repository) GetAPIKeysByUser(ctx context.Context, userID uint) ([]entities.APIKeyInfo, error) {
+	var dbAPIKeys []models.APIKey
+
+	err := r.database.Conn(ctx).
+		Where("user_id = ?", userID).
+		Find(&dbAPIKeys).Error
+
+	if err != nil {
+		r.logger.Error().Uint("user_id", userID).Err(err).Msg("Error al obtener API Keys del usuario")
+		return nil, err
+	}
+
+	// Convertir a entidades del dominio
+	apiKeys := mapper.ToAPIKeyInfoEntitySlice(dbAPIKeys)
+
+	r.logger.Debug().Uint("user_id", userID).Int("api_keys_count", len(apiKeys)).Msg("API Keys encontradas")
+	return apiKeys, nil
+}
+
+// RevokeAPIKey revoca una API Key
+func (r *Repository) RevokeAPIKey(ctx context.Context, apiKeyID uint) error {
+	now := time.Now()
+	if err := r.database.Conn(ctx).
+		Model(&models.APIKey{}).
+		Where("id = ?", apiKeyID).
+		Updates(map[string]interface{}{
+			"revoked":    true,
+			"revoked_at": now,
+			"updated_at": now,
+		}).Error; err != nil {
+		return err
+	}
+	return nil
 }

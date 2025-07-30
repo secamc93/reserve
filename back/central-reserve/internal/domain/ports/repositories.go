@@ -60,6 +60,11 @@ type IAuthRepository interface {
 	UpdateLastLogin(ctx context.Context, userID uint) error
 	ChangePassword(ctx context.Context, userID uint, newPassword string) error
 	GetUserBusinesses(ctx context.Context, userID uint) ([]entities.BusinessInfo, error)
+	CreateAPIKey(ctx context.Context, apiKey entities.APIKey, keyHash string) (uint, error)
+	ValidateAPIKey(ctx context.Context, apiKey string) (*entities.APIKey, error)
+	UpdateAPIKeyLastUsed(ctx context.Context, apiKeyID uint) error
+	GetAPIKeysByUser(ctx context.Context, userID uint) ([]entities.APIKeyInfo, error)
+	RevokeAPIKey(ctx context.Context, apiKeyID uint) error
 }
 
 // IAuthService define las operaciones de autenticación (métodos de repositorio)

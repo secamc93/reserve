@@ -35,6 +35,7 @@ Sigue estos 4 pasos para añadir una nueva ruta (por ejemplo, `POST /api/v1/usua
     // @Accept       json
     // @Produce      json
     // @Param        usuario  body      models.NuevoUsuarioRequest  true  "Datos del nuevo usuario"
+    // @Security     BearerAuth
     // @Success      201  {object}  models.UsuarioCreadoResponse
     // @Failure      400  {object}  map[string]string "Error: Datos inválidos"
     // @Failure      500  {object}  map[string]string "Error: Interno del servidor"

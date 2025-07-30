@@ -83,6 +83,47 @@ type ChangePasswordResponse struct {
 	Message string
 }
 
+// GenerateAPIKeyRequest representa la solicitud para generar una API Key
+type GenerateAPIKeyRequest struct {
+	UserID      uint   // ID del usuario para el cual se genera la API Key
+	BusinessID  uint   // ID del business al cual se asocia la API Key
+	Name        string // Nombre de referencia de la API Key
+	Description string // Descripción de la API Key
+	RequesterID uint   // ID del usuario que solicita la creación (debe ser super admin)
+}
+
+// GenerateAPIKeyResponse representa la respuesta de generación de API Key
+type GenerateAPIKeyResponse struct {
+	Success    bool
+	Message    string
+	APIKey     string     // La API Key generada (solo se muestra una vez)
+	APIKeyInfo APIKeyInfo // Información de la API Key guardada
+}
+
+// APIKeyInfo representa información de una API Key
+type APIKeyInfo struct {
+	ID          uint
+	UserID      uint
+	BusinessID  uint
+	Name        string
+	Description string
+	RateLimit   int
+	CreatedAt   time.Time
+}
+
+// ValidateAPIKeyRequest representa la solicitud para validar una API Key
+type ValidateAPIKeyRequest struct {
+	APIKey string // La API Key a validar
+}
+
+// ValidateAPIKeyResponse representa la respuesta de validación de API Key
+type ValidateAPIKeyResponse struct {
+	Valid      bool
+	UserID     uint
+	BusinessID uint
+	Message    string
+}
+
 // BusinessInfo representa información simplificada del negocio para login
 type BusinessInfo struct {
 	ID                 uint
