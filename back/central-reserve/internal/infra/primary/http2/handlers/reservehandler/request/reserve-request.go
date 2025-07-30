@@ -5,7 +5,7 @@ import (
 )
 
 type Reservation struct {
-	BusinessID     uint      `json:"business_id" binding:"required"`
+	BusinessID     uint      `json:"business_id"`
 	Name           string    `json:"name" binding:"required"`
 	Email          string    `json:"email" binding:"required"`
 	Phone          string    `json:"phone" binding:"required"`

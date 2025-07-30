@@ -3,6 +3,7 @@ package reservehandler
 import (
 	"central_reserve/internal/infra/primary/http2/handlers/reservehandler/mapper"
 	"central_reserve/internal/infra/primary/http2/handlers/reservehandler/request"
+	"central_reserve/internal/infra/primary/http2/middleware"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -35,10 +36,23 @@ func (h *ReserveHandler) CreateReserveHandler(c *gin.Context) {
 		return
 	}
 
-	// 2. DTO → Dominio ───────────────────────────────────────
+	// 2. Obtener business_id del contexto de autenticación ─────
+	businessID, exists := middleware.GetBusinessID(c)
+	if !exists {
+		h.logger.Error().Msg("business_id no disponible en el contexto de autenticación")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"error":   "invalid_business",
+			"message": "Business ID no disponible",
+		})
+		return
+	}
+	req.BusinessID = businessID
+
+	// 3. DTO → Dominio ───────────────────────────────────────
 	reserve := mapper.ReserveToDomain(req)
 
-	// 3. Caso de uso ─────────────────────────────────────────
+	// 4. Caso de uso ─────────────────────────────────────────
 	dni := ""
 	if req.Dni != nil {
 		dni = *req.Dni
@@ -54,7 +68,7 @@ func (h *ReserveHandler) CreateReserveHandler(c *gin.Context) {
 		return
 	}
 
-	// 4. Salida ──────────────────────────────────────────────
+	// 5. Salida ──────────────────────────────────────────────
 	c.JSON(http.StatusCreated, gin.H{
 		"success": true,
 		"message": "Reserva creada exitosamente",

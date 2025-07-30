@@ -22,12 +22,13 @@ const (
 
 // AuthInfo contiene la información de autenticación
 type AuthInfo struct {
-	Type      AuthType
-	UserID    uint
-	Email     string
-	Roles     []string
-	APIKey    string
-	JWTClaims *jwt.Claims
+	Type       AuthType
+	UserID     uint
+	Email      string
+	Roles      []string
+	BusinessID uint
+	APIKey     string
+	JWTClaims  *jwt.Claims
 }
 
 // AuthMiddleware crea un middleware de autenticación JWT (mantiene compatibilidad)
@@ -99,11 +100,12 @@ func APIKeyMiddleware(authUseCase usecaseauth.IAuthUseCase, logger log.ILogger) 
 		}
 
 		authInfo := &AuthInfo{
-			Type:   AuthTypeAPIKey,
-			UserID: response.UserID,
-			Email:  response.Email,
-			Roles:  response.Roles,
-			APIKey: apiKey,
+			Type:       AuthTypeAPIKey,
+			UserID:     response.UserID,
+			Email:      response.Email,
+			Roles:      response.Roles,
+			BusinessID: response.BusinessID,
+			APIKey:     apiKey,
 		}
 
 		c.Set("auth_info", authInfo)
@@ -274,6 +276,15 @@ func GetJWTClaims(c *gin.Context) (*jwt.Claims, bool) {
 		return c, true
 	}
 	return nil, false
+}
+
+// GetBusinessID obtiene el BusinessID desde el contexto de Gin
+func GetBusinessID(c *gin.Context) (uint, bool) {
+	authInfo, exists := GetAuthInfo(c)
+	if !exists {
+		return 0, false
+	}
+	return authInfo.BusinessID, true
 }
 
 // RequireRole crea un middleware que requiere un rol específico
