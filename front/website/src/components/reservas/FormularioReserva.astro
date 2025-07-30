@@ -4,7 +4,7 @@ let mostrarFormulario = true;
 ---
 
 <section
-  class="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-100 py-16 px-6 font-serif relative overflow-hidden"
+  class="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-100 py-8 px-6 font-serif relative overflow-hidden"
 >
   <!-- Background Pattern -->
   <div class="absolute inset-0 opacity-5">
@@ -24,82 +24,87 @@ let mostrarFormulario = true;
 
   <div class="relative z-10 max-w-7xl mx-auto">
     <!-- Header -->
-    <div class="text-center mb-16">
-      <h1 class="text-5xl md:text-6xl font-bold text-gray-800 mb-6">
+    <div class="text-center mb-8">
+      <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
         Haz tu <span class="text-gradient">Reserva</span>
       </h1>
-      <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+      <p class="text-lg text-gray-600 max-w-2xl mx-auto">
         Selecciona tus preferencias y disfruta de la mejor experiencia
         gastronómica italiana
       </p>
     </div>
 
     <!-- Progress Indicator -->
-    <div class="flex justify-center mb-12">
-      <div class="flex items-center space-x-4">
+    <div class="flex justify-center mb-8">
+      <div class="flex items-center space-x-3">
         <div class="flex items-center">
           <div
-            class="w-10 h-10 bg-amber-600 rounded-full flex items-center justify-center text-white font-bold"
+            class="w-8 h-8 bg-amber-600 rounded-full flex items-center justify-center text-white font-bold text-sm"
           >
             1
           </div>
-          <span class="ml-2 text-amber-600 font-semibold">Seleccionar</span>
+          <span class="ml-2 text-amber-600 font-semibold text-sm"
+            >Seleccionar</span
+          >
         </div>
-        <div class="w-16 h-1 bg-gray-300 rounded-full"></div>
+        <div class="w-12 h-1 bg-gray-300 rounded-full"></div>
         <div class="flex items-center">
           <div
-            class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-gray-500 font-bold"
+            class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-gray-500 font-bold text-sm"
           >
             2
           </div>
-          <span class="ml-2 text-gray-500 font-semibold">Confirmar</span>
+          <span class="ml-2 text-gray-500 font-semibold text-sm">Confirmar</span
+          >
         </div>
       </div>
     </div>
 
     <div
       id="reserva-container"
-      class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12"
+      class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8"
     >
       <!-- Invitados -->
       <div
-        class="group relative bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-white/20 lg:col-span-3"
+        class="group relative bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-white/20 lg:col-span-3"
       >
         <div
           class="absolute inset-0 bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
         >
         </div>
         <div class="relative z-10">
-          <div class="text-center mb-6">
+          <div class="text-center mb-4">
             <div
-              class="w-16 h-16 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg"
+              class="w-12 h-12 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg"
             >
-              <i class="fas fa-users text-white text-2xl"></i>
+              <i class="fas fa-users text-white text-xl"></i>
             </div>
-            <h3 class="text-2xl font-bold text-gray-800 mb-2">
+            <h3 class="text-xl font-bold text-gray-800 mb-2">
               Número de Personas
             </h3>
-            <p class="text-gray-600">Selecciona cuántas personas asistirán</p>
+            <p class="text-gray-600 text-sm">
+              Selecciona cuántas personas asistirán
+            </p>
           </div>
 
-          <div class="flex justify-center items-center gap-6 mb-6">
+          <div class="flex justify-center items-center gap-4 mb-4">
             <button
               id="decrement"
-              class="group/btn w-12 h-12 bg-gradient-to-r from-gray-100 to-gray-200 border-2 border-gray-300 rounded-full hover:from-amber-500 hover:to-amber-600 hover:border-amber-600 hover:text-white transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl"
+              class="group/btn w-10 h-10 bg-gradient-to-r from-gray-100 to-gray-200 border-2 border-gray-300 rounded-full hover:from-amber-500 hover:to-amber-600 hover:border-amber-600 hover:text-white transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl"
             >
               <i
-                class="fas fa-minus text-lg group-hover/btn:rotate-180 transition-transform duration-300"
+                class="fas fa-minus text-base group-hover/btn:rotate-180 transition-transform duration-300"
               ></i>
             </button>
 
             <div class="relative">
               <span
                 id="invitados"
-                class="text-4xl font-bold text-amber-600 bg-white px-6 py-3 rounded-xl shadow-lg border-2 border-amber-200"
+                class="text-3xl font-bold text-amber-600 bg-white px-4 py-2 rounded-xl shadow-lg border-2 border-amber-200"
                 >1</span
               >
               <div
-                class="absolute -top-2 -right-2 w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center"
+                class="absolute -top-1 -right-1 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center"
               >
                 <span class="text-white text-xs font-bold">👥</span>
               </div>
@@ -107,17 +112,17 @@ let mostrarFormulario = true;
 
             <button
               id="increment"
-              class="group/btn w-12 h-12 bg-gradient-to-r from-gray-100 to-gray-200 border-2 border-gray-300 rounded-full hover:from-amber-500 hover:to-amber-600 hover:border-amber-600 hover:text-white transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl"
+              class="group/btn w-10 h-10 bg-gradient-to-r from-gray-100 to-gray-200 border-2 border-gray-300 rounded-full hover:from-amber-500 hover:to-amber-600 hover:border-amber-600 hover:text-white transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl"
             >
               <i
-                class="fas fa-plus text-lg group-hover/btn:rotate-180 transition-transform duration-300"
+                class="fas fa-plus text-base group-hover/btn:rotate-180 transition-transform duration-300"
               ></i>
             </button>
           </div>
 
           <div class="text-center">
             <p
-              class="text-sm text-gray-500 bg-amber-50 px-4 py-2 rounded-lg border border-amber-200"
+              class="text-xs text-gray-500 bg-amber-50 px-3 py-2 rounded-lg border border-amber-200"
             >
               <i class="fas fa-info-circle mr-2 text-amber-600"></i>
               Máximo 20 personas por reserva
@@ -128,27 +133,27 @@ let mostrarFormulario = true;
 
       <!-- Calendario -->
       <div
-        class="group relative bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-white/20 lg:col-span-6"
+        class="group relative bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-white/20 lg:col-span-6"
       >
         <div
           class="absolute inset-0 bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
         >
         </div>
         <div class="relative z-10">
-          <div class="text-center mb-6">
+          <div class="text-center mb-4">
             <div
-              class="w-16 h-16 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg"
+              class="w-12 h-12 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg"
             >
-              <i class="fas fa-calendar-alt text-white text-2xl"></i>
+              <i class="fas fa-calendar-alt text-white text-xl"></i>
             </div>
-            <h3 class="text-2xl font-bold text-gray-800 mb-2">
+            <h3 class="text-xl font-bold text-gray-800 mb-2">
               Selecciona la Fecha
             </h3>
-            <p class="text-gray-600">Elige el día de tu reserva</p>
+            <p class="text-gray-600 text-sm">Elige el día de tu reserva</p>
           </div>
 
           <div
-            class="mb-6 flex items-center justify-between bg-white rounded-xl p-3 shadow-lg border border-amber-200"
+            class="mb-4 flex items-center justify-between bg-white rounded-xl p-3 shadow-lg border border-amber-200"
           >
             <button
               id="prevMonth"
@@ -176,64 +181,63 @@ let mostrarFormulario = true;
           </div>
 
           <div
-            class="bg-white rounded-xl p-6 shadow-lg border border-amber-200"
+            class="bg-white rounded-xl p-4 shadow-lg border border-amber-200"
           >
             <div
-              class="grid grid-cols-7 gap-3 text-sm font-bold text-amber-600 mb-4"
+              class="grid grid-cols-7 gap-2 text-sm font-bold text-amber-600 mb-3"
             >
-              <span class="text-center py-3">DOM</span>
-              <span class="text-center py-3">LUN</span>
-              <span class="text-center py-3">MAR</span>
-              <span class="text-center py-3">MIÉ</span>
-              <span class="text-center py-3">JUE</span>
-              <span class="text-center py-3">VIE</span>
-              <span class="text-center py-3">SÁB</span>
+              <span class="text-center py-2">DOM</span>
+              <span class="text-center py-2">LUN</span>
+              <span class="text-center py-2">MAR</span>
+              <span class="text-center py-2">MIÉ</span>
+              <span class="text-center py-2">JUE</span>
+              <span class="text-center py-2">VIE</span>
+              <span class="text-center py-2">SÁB</span>
             </div>
-            <div id="calendarDays" class="grid grid-cols-7 gap-3 text-base">
-            </div>
+            <div id="calendarDays" class="grid grid-cols-7 gap-2 text-sm"></div>
           </div>
         </div>
       </div>
 
       <!-- Hora -->
       <div
-        class="group relative bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-white/20 lg:col-span-3"
+        class="group relative bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-white/20 lg:col-span-3"
       >
         <div
           class="absolute inset-0 bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
         >
         </div>
         <div class="relative z-10">
-          <div class="text-center mb-6">
+          <div class="text-center mb-4">
             <div
-              class="w-16 h-16 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg"
+              class="w-12 h-12 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg"
             >
-              <i class="fas fa-clock text-white text-2xl"></i>
+              <i class="fas fa-clock text-white text-xl"></i>
             </div>
-            <h3 class="text-2xl font-bold text-gray-800 mb-2">Elige la Hora</h3>
-            <p class="text-gray-600">Selecciona tu horario preferido</p>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Elige la Hora</h3>
+            <p class="text-gray-600 text-sm">Selecciona tu horario preferido</p>
           </div>
 
           <div class="relative">
             <select
               id="selectHora"
-              class="w-full px-6 py-4 bg-white border-2 border-amber-200 rounded-xl text-gray-700 text-lg font-semibold hover:border-amber-400 focus:outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/20 transition-all duration-300 shadow-lg appearance-none cursor-pointer"
+              class="w-full px-4 py-3 bg-white border-2 border-amber-200 rounded-xl text-gray-700 text-base font-semibold hover:border-amber-400 focus:outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/20 transition-all duration-300 shadow-lg appearance-none cursor-pointer"
             >
               <option value="">-- Selecciona una hora --</option>
             </select>
             <div
               class="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none"
             >
-              <i class="fas fa-chevron-down text-amber-600 text-lg"></i>
+              <i class="fas fa-chevron-down text-amber-600 text-base"></i>
             </div>
           </div>
 
-          <div class="mt-6 text-center">
+          <div class="mt-4 text-center">
             <div
-              class="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl border border-green-200"
+              class="bg-gradient-to-r from-green-50 to-emerald-50 p-3 rounded-xl border border-green-200"
             >
-              <i class="fas fa-check-circle text-green-600 text-xl mb-2"></i>
-              <p class="text-sm text-green-700 font-medium">
+              <i class="fas fa-check-circle text-green-600 text-lg mb-2"></i>
+              <p class="text-xs text-green-700 font-medium">
                 Horarios disponibles según el día seleccionado
               </p>
             </div>
@@ -246,7 +250,7 @@ let mostrarFormulario = true;
     <div class="text-center">
       <button
         id="confirmarReserva"
-        class="group relative inline-flex items-center justify-center px-12 py-6 bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white font-bold text-xl rounded-full hover:from-amber-600 hover:via-amber-700 hover:to-amber-800 transform hover:scale-110 hover:-translate-y-2 transition-all duration-500 shadow-2xl hover:shadow-amber-500/30 overflow-hidden"
+        class="group relative inline-flex items-center justify-center px-10 py-5 bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white font-bold text-lg rounded-full hover:from-amber-600 hover:via-amber-700 hover:to-amber-800 transform hover:scale-110 hover:-translate-y-2 transition-all duration-500 shadow-2xl hover:shadow-amber-500/30 overflow-hidden"
       >
         <!-- Shine effect -->
         <div
@@ -261,7 +265,7 @@ let mostrarFormulario = true;
         </div>
 
         <i
-          class="fas fa-calendar-check mr-4 text-2xl group-hover:rotate-12 transition-transform duration-300"
+          class="fas fa-calendar-check mr-3 text-xl group-hover:rotate-12 transition-transform duration-300"
         ></i>
         <span class="relative z-10">Confirmar Reserva</span>
       </button>
@@ -355,7 +359,7 @@ let mostrarFormulario = true;
         const esDomingo = fechaBtn.getDay() === 0;
 
         btn.className =
-          "transition-all duration-300 p-4 rounded-xl font-semibold text-lg " +
+          "transition-all duration-300 p-3 rounded-lg font-semibold text-sm " +
           (esPasado || esDomingo
             ? "bg-gray-100 text-gray-400 cursor-not-allowed"
             : "bg-white hover:bg-amber-100 hover:text-amber-700 hover:scale-110 hover:shadow-lg border border-gray-200 hover:border-amber-300");

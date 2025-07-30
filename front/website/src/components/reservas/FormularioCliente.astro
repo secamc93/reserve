@@ -248,7 +248,11 @@ const { mostrar } = Astro.props;
 
           const response = await fetch(apiUrl, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              "X-API-Key":
+                "ak_344031d3bd06dc63dbfb5704a0fd8b6126dc089d9038fb01c59fafbf00bbce7b",
+            },
             body: JSON.stringify(datosReserva),
           });
 
