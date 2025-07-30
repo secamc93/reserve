@@ -51,10 +51,9 @@ type ResourcePermissions struct {
 
 // UserRolesPermissionsResponse representa la respuesta de roles y permisos del usuario
 type UserRolesPermissionsResponse struct {
-	IsSuper     bool                  `json:"is_super"`
-	Roles       []RoleInfo            `json:"roles"`
-	Permissions []PermissionInfo      `json:"permissions"` // Mantener para compatibilidad
-	Resources   []ResourcePermissions `json:"resources"`   // Nuevo: permisos agrupados por recurso
+	IsSuper   bool                  `json:"is_super"`
+	Roles     []RoleInfo            `json:"roles"`
+	Resources []ResourcePermissions `json:"resources"`
 }
 
 // LoginSuccessResponse representa la respuesta exitosa del login para Swagger

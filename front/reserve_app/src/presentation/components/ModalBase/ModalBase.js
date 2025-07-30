@@ -18,12 +18,12 @@ const ModalBase = ({
                     <h2>{title}</h2>
                     <button className="modal-close-btn" onClick={onClose}>✕</button>
                 </div>
-                <form className="modal-form">
+                <div className="modal-content">
                     {children}
                     <div className="modal-actions">
                         {actions}
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     );

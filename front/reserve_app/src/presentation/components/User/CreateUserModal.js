@@ -80,7 +80,13 @@ const CreateUserModal = ({ isOpen, onClose, onSubmit, roles, businesses }) => {
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
+        // Si es un evento, prevenir el comportamiento por defecto
+        if (e && e.preventDefault) {
+            e.preventDefault();
+        }
+        
+        console.log('🚀 CreateUserModal: handleSubmit ejecutándose - NO debería recargar la página');
+        
         if (validateForm()) {
             setIsSubmitting(true);
             try {
@@ -91,7 +97,11 @@ const CreateUserModal = ({ isOpen, onClose, onSubmit, roles, businesses }) => {
                     business_ids: formData.business_id ? [formData.business_id] : []
                 };
 
+                console.log('📤 CreateUserModal: Enviando datos:', submitData);
+
                 const result = await onSubmit(submitData);
+
+                console.log('✅ CreateUserModal: Respuesta recibida:', result);
 
                 // Si la API devuelve email y password, mostrarlos
                 if (result && (result.email || result.password)) {
@@ -101,7 +111,7 @@ const CreateUserModal = ({ isOpen, onClose, onSubmit, roles, businesses }) => {
                     });
                 }
             } catch (error) {
-                console.error('Error al crear usuario:', error);
+                console.error('❌ CreateUserModal: Error:', error);
             } finally {
                 setIsSubmitting(false);
             }
@@ -129,7 +139,12 @@ const CreateUserModal = ({ isOpen, onClose, onSubmit, roles, businesses }) => {
             ) : (
                 <>
                     <button type="button" className="btn btn-secondary" onClick={handleClose}>Cancelar</button>
-                    <button type="submit" className="btn btn-primary" disabled={isSubmitting} form="create-user-form">
+                    <button 
+                        type="button" 
+                        className="btn btn-primary" 
+                        disabled={isSubmitting} 
+                        onClick={handleSubmit}
+                    >
                         {isSubmitting ? 'Creando...' : 'Crear Usuario'}
                     </button>
                 </>
