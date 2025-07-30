@@ -80,6 +80,13 @@ func (uc *AuthUseCase) Login(ctx context.Context, request dtos.LoginRequest) (*d
 		return nil, fmt.Errorf("error interno del servidor")
 	}
 
+	// Obtener businesses del usuario
+	businesses, err := uc.repository.GetUserBusinesses(ctx, userAuth.ID)
+	if err != nil {
+		uc.log.Error().Err(err).Uint("user_id", userAuth.ID).Msg("Error al obtener businesses del usuario")
+		// No retornamos error aquí porque el login puede continuar sin businesses
+	}
+
 	// Generar token JWT
 	roleCodes := make([]string, len(roles))
 	for i, role := range roles {
@@ -110,6 +117,49 @@ func (uc *AuthUseCase) Login(ctx context.Context, request dtos.LoginRequest) (*d
 		uc.log.Info().Uint("user_id", userAuth.ID).Msg("Último login actualizado")
 	}
 
+	// Preparar información del business (tomar el primero si hay múltiples)
+	var businessesList []dtos.BusinessInfo
+
+	if len(businesses) > 0 {
+		// Convertir todos los businesses a DTOs
+		businessesList = make([]dtos.BusinessInfo, len(businesses))
+		for i, business := range businesses {
+			businessesList[i] = dtos.BusinessInfo{
+				ID:             business.ID,
+				Name:           business.Name,
+				Code:           business.Code,
+				BusinessTypeID: business.BusinessTypeID,
+				BusinessType: dtos.BusinessTypeInfo{
+					ID:          business.BusinessTypeID,
+					Name:        business.BusinessTypeName,
+					Code:        business.BusinessTypeCode,
+					Description: "", // No tenemos descripción en BusinessInfo
+					Icon:        "", // No tenemos icono en BusinessInfo
+				},
+				Timezone:           business.Timezone,
+				Address:            business.Address,
+				Description:        business.Description,
+				LogoURL:            business.LogoURL,
+				PrimaryColor:       business.PrimaryColor,
+				SecondaryColor:     business.SecondaryColor,
+				CustomDomain:       business.CustomDomain,
+				IsActive:           business.IsActive,
+				EnableDelivery:     business.EnableDelivery,
+				EnablePickup:       business.EnablePickup,
+				EnableReservations: business.EnableReservations,
+			}
+		}
+
+		uc.log.Info().
+			Uint("user_id", userAuth.ID).
+			Int("businesses_count", len(businesses)).
+			Msg("Businesses asignados al usuario")
+	} else {
+		uc.log.Info().
+			Uint("user_id", userAuth.ID).
+			Msg("Usuario sin businesses asignados")
+	}
+
 	// Construir respuesta simplificada
 	response := &dtos.LoginResponse{
 		User: dtos.UserInfo{
@@ -123,6 +173,7 @@ func (uc *AuthUseCase) Login(ctx context.Context, request dtos.LoginRequest) (*d
 		},
 		Token:                 token,
 		RequirePasswordChange: isFirstLogin,
+		Businesses:            businessesList,
 	}
 
 	uc.log.Info().

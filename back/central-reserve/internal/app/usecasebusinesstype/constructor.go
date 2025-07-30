@@ -16,11 +16,11 @@ type IUseCaseBusinessType interface {
 }
 
 type BusinessTypeUseCase struct {
-	repository ports.IBusinessTypeUseCaseRepository
+	repository ports.IBusinessTypeRepository
 	log        log.ILogger
 }
 
-func NewBusinessTypeUseCase(repository ports.IBusinessTypeUseCaseRepository, log log.ILogger) IUseCaseBusinessType {
+func NewBusinessTypeUseCase(repository ports.IBusinessTypeRepository, log log.ILogger) IUseCaseBusinessType {
 	return &BusinessTypeUseCase{
 		repository: repository,
 		log:        log,

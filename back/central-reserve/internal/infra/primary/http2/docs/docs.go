@@ -86,6 +86,75 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/generate-api-key": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Genera una API Key para un usuario específico (solo super administradores)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Generar API Key",
+                "parameters": [
+                    {
+                        "description": "Datos para generar API Key",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.GenerateAPIKeyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "API Key generada exitosamente",
+                        "schema": {
+                            "$ref": "#/definitions/response.GenerateAPIKeySuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Datos de entrada inválidos",
+                        "schema": {
+                            "$ref": "#/definitions/response.GenerateAPIKeyErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "$ref": "#/definitions/response.GenerateAPIKeyErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Acceso denegado - solo super administradores",
+                        "schema": {
+                            "$ref": "#/definitions/response.GenerateAPIKeyErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Usuario o business no encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/response.GenerateAPIKeyErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/response.GenerateAPIKeyErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/login": {
             "post": {
                 "description": "Autentica un usuario con email y contraseña, retornando información del usuario y token de acceso",
@@ -185,6 +254,65 @@ const docTemplate = `{
                         "description": "Error interno del servidor",
                         "schema": {
                             "$ref": "#/definitions/response.LoginErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/business-rooms/{business_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Este endpoint permite obtener todas las salas de un negocio específico.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Salas"
+                ],
+                "summary": "Obtiene salas por negocio",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del negocio",
+                        "name": "business_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de salas del negocio",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "ID de negocio inválido",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -581,65 +709,6 @@ const docTemplate = `{
                         "description": "Error interno del servidor",
                         "schema": {
                             "$ref": "#/definitions/response.BusinessErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/businesses/{business_id}/rooms": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Este endpoint permite obtener todas las salas de un negocio específico.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Salas"
-                ],
-                "summary": "Obtiene salas por negocio",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "ID del negocio",
-                        "name": "business_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Lista de salas del negocio",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "400": {
-                        "description": "ID de negocio inválido",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "401": {
-                        "description": "Token de acceso requerido",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Error interno del servidor",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
                         }
                     }
                 }
@@ -3194,6 +3263,59 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "internal_infra_primary_http2_handlers_authhandler_response.BusinessInfo": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "business_type": {
+                    "$ref": "#/definitions/response.BusinessTypeInfo"
+                },
+                "business_type_id": {
+                    "type": "integer"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "custom_domain": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "enable_delivery": {
+                    "type": "boolean"
+                },
+                "enable_pickup": {
+                    "type": "boolean"
+                },
+                "enable_reservations": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "logo_url": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "primary_color": {
+                    "type": "string"
+                },
+                "secondary_color": {
+                    "type": "string"
+                },
+                "timezone": {
+                    "type": "string"
+                }
+            }
+        },
         "internal_infra_primary_http2_handlers_authhandler_response.RoleInfo": {
             "type": "object",
             "properties": {
@@ -3271,6 +3393,62 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_infra_primary_http2_handlers_userhandler_response.BusinessInfo": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "business_type_code": {
+                    "type": "string"
+                },
+                "business_type_id": {
+                    "type": "integer"
+                },
+                "business_type_name": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "custom_domain": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "enable_delivery": {
+                    "type": "boolean"
+                },
+                "enable_pickup": {
+                    "type": "boolean"
+                },
+                "enable_reservations": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "logo_url": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "primary_color": {
+                    "type": "string"
+                },
+                "secondary_color": {
+                    "type": "string"
+                },
+                "timezone": {
                     "type": "string"
                 }
             }
@@ -3511,6 +3689,30 @@ const docTemplate = `{
                     "items": {
                         "type": "integer"
                     }
+                }
+            }
+        },
+        "request.GenerateAPIKeyRequest": {
+            "type": "object",
+            "required": [
+                "business_id",
+                "name",
+                "user_id"
+            ],
+            "properties": {
+                "business_id": {
+                    "type": "integer"
+                },
+                "description": {
+                    "description": "Descripción opcional",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Nombre de referencia de la API Key",
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -3797,62 +3999,6 @@ const docTemplate = `{
                 }
             }
         },
-        "response.BusinessInfo": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "business_type_code": {
-                    "type": "string"
-                },
-                "business_type_id": {
-                    "type": "integer"
-                },
-                "business_type_name": {
-                    "type": "string"
-                },
-                "code": {
-                    "type": "string"
-                },
-                "custom_domain": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "enable_delivery": {
-                    "type": "boolean"
-                },
-                "enable_pickup": {
-                    "type": "boolean"
-                },
-                "enable_reservations": {
-                    "type": "boolean"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "logo_url": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "primary_color": {
-                    "type": "string"
-                },
-                "secondary_color": {
-                    "type": "string"
-                },
-                "timezone": {
-                    "type": "string"
-                }
-            }
-        },
         "response.BusinessListResponse": {
             "type": "object",
             "properties": {
@@ -3973,6 +4119,26 @@ const docTemplate = `{
                 }
             }
         },
+        "response.BusinessTypeInfo": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "response.BusinessTypeListResponse": {
             "type": "object",
             "properties": {
@@ -4032,6 +4198,60 @@ const docTemplate = `{
                 }
             }
         },
+        "response.GenerateAPIKeyErrorResponse": {
+            "type": "object",
+            "properties": {
+                "details": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.GenerateAPIKeyResponse": {
+            "type": "object",
+            "properties": {
+                "api_key": {
+                    "type": "string"
+                },
+                "business_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "rate_limit": {
+                    "type": "integer"
+                },
+                "success": {
+                    "type": "boolean"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.GenerateAPIKeySuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.GenerateAPIKeyResponse"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "response.LoginBadRequestResponse": {
             "type": "object",
             "properties": {
@@ -4057,6 +4277,12 @@ const docTemplate = `{
         "response.LoginResponse": {
             "type": "object",
             "properties": {
+                "businesses": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_infra_primary_http2_handlers_authhandler_response.BusinessInfo"
+                    }
+                },
                 "require_password_change": {
                     "type": "boolean"
                 },
@@ -4368,7 +4594,7 @@ const docTemplate = `{
                 "businesses": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/response.BusinessInfo"
+                        "$ref": "#/definitions/internal_infra_primary_http2_handlers_userhandler_response.BusinessInfo"
                     }
                 },
                 "created_at": {

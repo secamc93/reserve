@@ -15,10 +15,10 @@ type IUseCaseClient interface {
 }
 
 type ClientUseCase struct {
-	repository ports.IClientUseCaseRepository
+	repository ports.IClientRepository
 }
 
-func NewClientUseCase(repository ports.IClientUseCaseRepository) *ClientUseCase {
+func NewClientUseCase(repository ports.IClientRepository) *ClientUseCase {
 	return &ClientUseCase{
 		repository: repository,
 	}

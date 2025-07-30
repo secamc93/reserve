@@ -53,6 +53,7 @@ func (uc *MigrationUseCase) MigrateDB() error {
 		&models.Reservation{},
 		&models.ReservationStatusHistory{},
 		&models.Room{},
+		&models.APIKey{},
 	); err != nil {
 		return err
 	}

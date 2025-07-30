@@ -8,20 +8,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// RegisterRoutes registra las rutas del handler de autenticación
 func RegisterRoutes(v1Group *gin.RouterGroup, handler IAuthHandler, jwtService *jwt.JWTService, logger log.ILogger) {
 	// Crear el subgrupo /auth dentro de /api/v1
 	authGroup := v1Group.Group("/auth")
 	{
-		// Rutas públicas (sin autenticación)
+		// Rutas públicas
 		authGroup.POST("/login", handler.LoginHandler)
 
-		// Rutas protegidas que requieren autenticación
-		protectedGroup := authGroup.Group("")
-		protectedGroup.Use(middleware.AuthMiddleware(jwtService, logger))
+		// Rutas protegidas (requieren JWT)
+		protected := authGroup.Group("/")
+		protected.Use(middleware.AuthMiddleware(jwtService, logger))
 		{
-			protectedGroup.GET("/roles-permissions", handler.GetUserRolesPermissionsHandler)
-			protectedGroup.POST("/change-password", handler.ChangePasswordHandler)
+			protected.GET("/roles-permissions", handler.GetUserRolesPermissionsHandler)
+			protected.POST("/change-password", handler.ChangePasswordHandler)
+			protected.POST("/generate-api-key", handler.GenerateAPIKeyHandler)
 		}
 	}
 }

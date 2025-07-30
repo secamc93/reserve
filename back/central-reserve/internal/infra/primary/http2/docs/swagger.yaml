@@ -1,5 +1,40 @@
 basePath: /api/v1
 definitions:
+  internal_infra_primary_http2_handlers_authhandler_response.BusinessInfo:
+    properties:
+      address:
+        type: string
+      business_type:
+        $ref: '#/definitions/response.BusinessTypeInfo'
+      business_type_id:
+        type: integer
+      code:
+        type: string
+      custom_domain:
+        type: string
+      description:
+        type: string
+      enable_delivery:
+        type: boolean
+      enable_pickup:
+        type: boolean
+      enable_reservations:
+        type: boolean
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      logo_url:
+        type: string
+      name:
+        type: string
+      primary_color:
+        type: string
+      secondary_color:
+        type: string
+      timezone:
+        type: string
+    type: object
   internal_infra_primary_http2_handlers_authhandler_response.RoleInfo:
     properties:
       code:
@@ -51,6 +86,43 @@ definitions:
       name:
         type: string
       updated_at:
+        type: string
+    type: object
+  internal_infra_primary_http2_handlers_userhandler_response.BusinessInfo:
+    properties:
+      address:
+        type: string
+      business_type_code:
+        type: string
+      business_type_id:
+        type: integer
+      business_type_name:
+        type: string
+      code:
+        type: string
+      custom_domain:
+        type: string
+      description:
+        type: string
+      enable_delivery:
+        type: boolean
+      enable_pickup:
+        type: boolean
+      enable_reservations:
+        type: boolean
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      logo_url:
+        type: string
+      name:
+        type: string
+      primary_color:
+        type: string
+      secondary_color:
+        type: string
+      timezone:
         type: string
     type: object
   internal_infra_primary_http2_handlers_userhandler_response.RoleInfo:
@@ -218,6 +290,23 @@ definitions:
     required:
     - email
     - name
+    type: object
+  request.GenerateAPIKeyRequest:
+    properties:
+      business_id:
+        type: integer
+      description:
+        description: Descripción opcional
+        type: string
+      name:
+        description: Nombre de referencia de la API Key
+        type: string
+      user_id:
+        type: integer
+    required:
+    - business_id
+    - name
+    - user_id
     type: object
   request.LoginRequest:
     properties:
@@ -414,43 +503,6 @@ definitions:
       success:
         type: boolean
     type: object
-  response.BusinessInfo:
-    properties:
-      address:
-        type: string
-      business_type_code:
-        type: string
-      business_type_id:
-        type: integer
-      business_type_name:
-        type: string
-      code:
-        type: string
-      custom_domain:
-        type: string
-      description:
-        type: string
-      enable_delivery:
-        type: boolean
-      enable_pickup:
-        type: boolean
-      enable_reservations:
-        type: boolean
-      id:
-        type: integer
-      is_active:
-        type: boolean
-      logo_url:
-        type: string
-      name:
-        type: string
-      primary_color:
-        type: string
-      secondary_color:
-        type: string
-      timezone:
-        type: string
-    type: object
   response.BusinessListResponse:
     properties:
       businesses:
@@ -530,6 +582,19 @@ definitions:
       success:
         type: boolean
     type: object
+  response.BusinessTypeInfo:
+    properties:
+      code:
+        type: string
+      description:
+        type: string
+      icon:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
   response.BusinessTypeListResponse:
     properties:
       business_types:
@@ -568,6 +633,41 @@ definitions:
       success:
         type: boolean
     type: object
+  response.GenerateAPIKeyErrorResponse:
+    properties:
+      details:
+        type: string
+      error:
+        type: string
+    type: object
+  response.GenerateAPIKeyResponse:
+    properties:
+      api_key:
+        type: string
+      business_id:
+        type: integer
+      created_at:
+        type: string
+      description:
+        type: string
+      message:
+        type: string
+      name:
+        type: string
+      rate_limit:
+        type: integer
+      success:
+        type: boolean
+      user_id:
+        type: integer
+    type: object
+  response.GenerateAPIKeySuccessResponse:
+    properties:
+      data:
+        $ref: '#/definitions/response.GenerateAPIKeyResponse'
+      success:
+        type: boolean
+    type: object
   response.LoginBadRequestResponse:
     properties:
       details:
@@ -584,6 +684,10 @@ definitions:
     type: object
   response.LoginResponse:
     properties:
+      businesses:
+        items:
+          $ref: '#/definitions/internal_infra_primary_http2_handlers_authhandler_response.BusinessInfo'
+        type: array
       require_password_change:
         type: boolean
       token:
@@ -795,7 +899,7 @@ definitions:
         type: string
       businesses:
         items:
-          $ref: '#/definitions/response.BusinessInfo'
+          $ref: '#/definitions/internal_infra_primary_http2_handlers_userhandler_response.BusinessInfo'
         type: array
       created_at:
         type: string
@@ -904,6 +1008,50 @@ paths:
       summary: Cambiar contraseña
       tags:
       - Auth
+  /auth/generate-api-key:
+    post:
+      consumes:
+      - application/json
+      description: Genera una API Key para un usuario específico (solo super administradores)
+      parameters:
+      - description: Datos para generar API Key
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.GenerateAPIKeyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: API Key generada exitosamente
+          schema:
+            $ref: '#/definitions/response.GenerateAPIKeySuccessResponse'
+        "400":
+          description: Datos de entrada inválidos
+          schema:
+            $ref: '#/definitions/response.GenerateAPIKeyErrorResponse'
+        "401":
+          description: No autorizado
+          schema:
+            $ref: '#/definitions/response.GenerateAPIKeyErrorResponse'
+        "403":
+          description: Acceso denegado - solo super administradores
+          schema:
+            $ref: '#/definitions/response.GenerateAPIKeyErrorResponse'
+        "404":
+          description: Usuario o business no encontrado
+          schema:
+            $ref: '#/definitions/response.GenerateAPIKeyErrorResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/response.GenerateAPIKeyErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Generar API Key
+      tags:
+      - Auth
   /auth/login:
     post:
       consumes:
@@ -972,6 +1120,45 @@ paths:
       summary: Obtener roles y permisos del usuario
       tags:
       - Auth
+  /business-rooms/{business_id}:
+    get:
+      consumes:
+      - application/json
+      description: Este endpoint permite obtener todas las salas de un negocio específico.
+      parameters:
+      - description: ID del negocio
+        in: path
+        name: business_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de salas del negocio
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: ID de negocio inválido
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Token de acceso requerido
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Obtiene salas por negocio
+      tags:
+      - Salas
   /business-types:
     get:
       consumes:
@@ -1225,45 +1412,6 @@ paths:
       summary: Crear negocio
       tags:
       - Business
-  /businesses/{business_id}/rooms:
-    get:
-      consumes:
-      - application/json
-      description: Este endpoint permite obtener todas las salas de un negocio específico.
-      parameters:
-      - description: ID del negocio
-        in: path
-        name: business_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Lista de salas del negocio
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: ID de negocio inválido
-          schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: Token de acceso requerido
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Error interno del servidor
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Obtiene salas por negocio
-      tags:
-      - Salas
   /businesses/{id}:
     delete:
       consumes:

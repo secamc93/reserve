@@ -283,3 +283,32 @@ const (
 	ACTION_DELETE = "delete" // Eliminar registros
 	ACTION_MANAGE = "manage" // Control total (incluye todas las acciones)
 )
+
+// ───────────────────────────────────────────
+//
+//	API KEYS - Claves de API para integraciones
+//
+// ───────────────────────────────────────────
+type APIKey struct {
+	gorm.Model
+	UserID      uint   `gorm:"not null;index"`    // Usuario para el cual se genera la API Key
+	BusinessID  uint   `gorm:"not null;index"`    // Business asociado
+	CreatedByID uint   `gorm:"not null;index"`    // Usuario que creó la API Key (super admin)
+	Name        string `gorm:"size:255;not null"` // Nombre de referencia (ej. "API para sitio web")
+	KeyHash     string `gorm:"size:255;not null"` // Hash de la API Key (bcrypt)
+	Description string `gorm:"size:500"`          // Descripción opcional
+
+	// Control de uso
+	LastUsedAt *time.Time `gorm:"index"`               // Última vez que se usó
+	Revoked    bool       `gorm:"default:false;index"` // Si está revocada
+	RevokedAt  *time.Time // Cuándo fue revocada
+
+	// Configuración opcional
+	RateLimit   int    `gorm:"default:1000"` // Límite de requests por hora
+	IPWhitelist string `gorm:"size:1000"`    // IPs permitidas (separadas por coma)
+
+	// Relaciones
+	User      User     `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Business  Business `gorm:"foreignKey:BusinessID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	CreatedBy User     `gorm:"foreignKey:CreatedByID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
+}

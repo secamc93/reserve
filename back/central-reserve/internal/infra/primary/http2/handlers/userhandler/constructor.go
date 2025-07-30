@@ -1,7 +1,7 @@
 package userhandler
 
 import (
-	"central_reserve/internal/domain/ports"
+	"central_reserve/internal/app/usecaseuser"
 	"central_reserve/internal/pkg/log"
 
 	"github.com/gin-gonic/gin"
@@ -18,12 +18,12 @@ type IUserHandler interface {
 
 // UserHandler maneja las solicitudes HTTP para usuarios
 type UserHandler struct {
-	usecase ports.IUserUseCase
+	usecase usecaseuser.IUseCaseUser
 	logger  log.ILogger
 }
 
 // New crea una nueva instancia del handler de usuarios
-func New(usecase ports.IUserUseCase, logger log.ILogger) IUserHandler {
+func New(usecase usecaseuser.IUseCaseUser, logger log.ILogger) IUserHandler {
 	return &UserHandler{
 		usecase: usecase,
 		logger:  logger,

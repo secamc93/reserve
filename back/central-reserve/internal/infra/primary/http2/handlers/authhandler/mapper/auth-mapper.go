@@ -11,6 +11,35 @@ func ToLoginResponse(domainResponse *dtos.LoginResponse) *response.LoginResponse
 		return nil
 	}
 
+	// Convertir businesses
+	businesses := make([]response.BusinessInfo, len(domainResponse.Businesses))
+	for i, business := range domainResponse.Businesses {
+		businesses[i] = response.BusinessInfo{
+			ID:             business.ID,
+			Name:           business.Name,
+			Code:           business.Code,
+			BusinessTypeID: business.BusinessTypeID,
+			BusinessType: response.BusinessTypeInfo{
+				ID:          business.BusinessType.ID,
+				Name:        business.BusinessType.Name,
+				Code:        business.BusinessType.Code,
+				Description: business.BusinessType.Description,
+				Icon:        business.BusinessType.Icon,
+			},
+			Timezone:           business.Timezone,
+			Address:            business.Address,
+			Description:        business.Description,
+			LogoURL:            business.LogoURL,
+			PrimaryColor:       business.PrimaryColor,
+			SecondaryColor:     business.SecondaryColor,
+			CustomDomain:       business.CustomDomain,
+			IsActive:           business.IsActive,
+			EnableDelivery:     business.EnableDelivery,
+			EnablePickup:       business.EnablePickup,
+			EnableReservations: business.EnableReservations,
+		}
+	}
+
 	return &response.LoginResponse{
 		User: response.UserInfo{
 			ID:          domainResponse.User.ID,
@@ -23,6 +52,7 @@ func ToLoginResponse(domainResponse *dtos.LoginResponse) *response.LoginResponse
 		},
 		Token:                 domainResponse.Token,
 		RequirePasswordChange: domainResponse.RequirePasswordChange,
+		Businesses:            businesses,
 	}
 }
 

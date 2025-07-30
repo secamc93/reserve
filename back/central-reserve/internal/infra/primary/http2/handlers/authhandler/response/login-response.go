@@ -4,9 +4,10 @@ import "time"
 
 // LoginResponse representa la respuesta simplificada del login
 type LoginResponse struct {
-	User                  UserInfo `json:"user"`
-	Token                 string   `json:"token"`
-	RequirePasswordChange bool     `json:"require_password_change"`
+	User                  UserInfo       `json:"user"`
+	Token                 string         `json:"token"`
+	RequirePasswordChange bool           `json:"require_password_change"`
+	Businesses            []BusinessInfo `json:"businesses"`
 }
 
 // UserInfo representa la información del usuario en la respuesta
@@ -78,4 +79,33 @@ type LoginErrorResponse struct {
 type LoginBadRequestResponse struct {
 	Error   string `json:"error"`
 	Details string `json:"details"`
+}
+
+// BusinessInfo representa la información del negocio en la respuesta
+type BusinessInfo struct {
+	ID                 uint             `json:"id"`
+	Name               string           `json:"name"`
+	Code               string           `json:"code"`
+	BusinessTypeID     uint             `json:"business_type_id"`
+	BusinessType       BusinessTypeInfo `json:"business_type"`
+	Timezone           string           `json:"timezone"`
+	Address            string           `json:"address"`
+	Description        string           `json:"description"`
+	LogoURL            string           `json:"logo_url"`
+	PrimaryColor       string           `json:"primary_color"`
+	SecondaryColor     string           `json:"secondary_color"`
+	CustomDomain       string           `json:"custom_domain"`
+	IsActive           bool             `json:"is_active"`
+	EnableDelivery     bool             `json:"enable_delivery"`
+	EnablePickup       bool             `json:"enable_pickup"`
+	EnableReservations bool             `json:"enable_reservations"`
+}
+
+// BusinessTypeInfo representa la información del tipo de negocio
+type BusinessTypeInfo struct {
+	ID          uint   `json:"id"`
+	Name        string `json:"name"`
+	Code        string `json:"code"`
+	Description string `json:"description"`
+	Icon        string `json:"icon"`
 }
