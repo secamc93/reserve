@@ -80,6 +80,10 @@ func (uc *AuthUseCase) GetUserRolesPermissions(ctx context.Context, userID uint,
 
 	// Construir respuesta
 	response := &dtos.UserRolesPermissionsResponse{
+		Success:     true,
+		Message:     "Roles y permisos obtenidos exitosamente",
+		UserID:      userID,
+		Email:       user.Email,
 		IsSuper:     isSuper,
 		Roles:       make([]dtos.RoleInfo, len(roles)),
 		Permissions: make([]dtos.PermissionInfo, 0),
@@ -93,6 +97,7 @@ func (uc *AuthUseCase) GetUserRolesPermissions(ctx context.Context, userID uint,
 			Code:        role.Code,
 			Description: role.Description,
 			Level:       role.Level,
+			IsSystem:    role.IsSystem,
 			Scope:       role.ScopeName, // Usar ScopeName en lugar de Scope
 		}
 	}

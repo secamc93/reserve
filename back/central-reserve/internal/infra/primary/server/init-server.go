@@ -56,9 +56,9 @@ func InitServer(ctx context.Context) (*AppServices, error) {
 		return nil, err
 	}
 
-	handlers, jwtService := setupDependencies(database, logger, environment)
+	handlers, jwtService, authUseCase := setupDependencies(database, logger, environment)
 
-	httpServer, err := startHttpServer(ctx, logger, handlers, environment, jwtService)
+	httpServer, err := startHttpServer(ctx, logger, handlers, environment, jwtService, authUseCase)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func InitServer(ctx context.Context) (*AppServices, error) {
 	return services, nil
 }
 
-func setupDependencies(database db.IDatabase, logger log.ILogger, environment env.IConfig) (*http2.Handlers, *jwt.JWTService) {
+func setupDependencies(database db.IDatabase, logger log.ILogger, environment env.IConfig) (*http2.Handlers, *jwt.JWTService, usecaseauth.IUseCaseAuth) {
 	// Repositorios específicos para casos de uso
 	repoFactory := repository.NewRepositoryFactory(database, logger)
 
@@ -125,13 +125,13 @@ func setupDependencies(database db.IDatabase, logger log.ILogger, environment en
 		Role:         roleHandler,
 		User:         userHandler,
 		Room:         roomHandler,
-	}, jwtService
+	}, jwtService, authUseCase
 }
 
-func startHttpServer(ctx context.Context, logger log.ILogger, handlers *http2.Handlers, environment env.IConfig, jwtService *jwt.JWTService) (*http2.HTTPServer, error) {
+func startHttpServer(ctx context.Context, logger log.ILogger, handlers *http2.Handlers, environment env.IConfig, jwtService *jwt.JWTService, authUseCase usecaseauth.IUseCaseAuth) (*http2.HTTPServer, error) {
 	port := environment.Get("HTTP_PORT")
 	httpAddr := fmt.Sprintf(":%s", port)
-	httpServer, err := http2.New(httpAddr, logger, handlers, environment, jwtService)
+	httpServer, err := http2.New(httpAddr, logger, handlers, environment, jwtService, authUseCase)
 	if err != nil {
 		return nil, err
 	}

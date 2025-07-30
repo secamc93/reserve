@@ -13,6 +13,7 @@ type IAuthHandler interface {
 	GetUserRolesPermissionsHandler(c *gin.Context)
 	ChangePasswordHandler(c *gin.Context)
 	GenerateAPIKeyHandler(c *gin.Context)
+	ValidateAPIKeyHandler(c *gin.Context)
 }
 
 type AuthHandler struct {

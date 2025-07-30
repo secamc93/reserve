@@ -1,6 +1,7 @@
 package http2
 
 import (
+	"central_reserve/internal/app/usecaseauth"
 	"central_reserve/internal/infra/primary/http2/docs"
 	"central_reserve/internal/infra/primary/http2/handlers/authhandler"
 	"central_reserve/internal/infra/primary/http2/handlers/businesshandler"
@@ -42,13 +43,14 @@ type Handlers struct {
 }
 
 type HTTPServer struct {
-	server     *http.Server
-	router     *gin.Engine
-	logger     log.ILogger
-	handlers   *Handlers
-	listener   net.Listener
-	env        env.IConfig
-	jwtService *jwt.JWTService
+	server      *http.Server
+	router      *gin.Engine
+	logger      log.ILogger
+	handlers    *Handlers
+	listener    net.Listener
+	env         env.IConfig
+	jwtService  *jwt.JWTService
+	authUseCase usecaseauth.IUseCaseAuth
 }
 
 func New(
@@ -57,6 +59,7 @@ func New(
 	handlers *Handlers,
 	env env.IConfig,
 	jwtService *jwt.JWTService,
+	authUseCase usecaseauth.IUseCaseAuth,
 ) (*HTTPServer, error) {
 	lis, err := net.Listen("tcp", address)
 	if err != nil {
@@ -78,11 +81,12 @@ func New(
 	router.Use(middleware.LoggingMiddleware(logger, env))
 
 	httpServer := &HTTPServer{
-		router:     router,
-		logger:     logger,
-		handlers:   handlers,
-		listener:   lis,
-		jwtService: jwtService,
+		router:      router,
+		logger:      logger,
+		handlers:    handlers,
+		listener:    lis,
+		jwtService:  jwtService,
+		authUseCase: authUseCase,
 		server: &http.Server{
 			Handler:      router,
 			ReadTimeout:  15 * time.Second,
@@ -96,22 +100,17 @@ func New(
 }
 
 func (s *HTTPServer) Routers() {
-	// Configuración estándar de Swagger
 	docs.SwaggerInfo.Title = "Restaurant Reservation API"
 	docs.SwaggerInfo.Description = "Servicio REST para la gestión de reservas multi-restaurante."
 	docs.SwaggerInfo.Version = "1.0"
 
-	// Usar URL_BASE_SWAGGER para la configuración del host
 	swaggerBaseURL := s.env.Get("URL_BASE_SWAGGER")
 	if swaggerBaseURL == "" {
-		// Fallback a localhost si no está configurado
 		swaggerBaseURL = fmt.Sprintf("localhost:%s", s.env.Get("HTTP_PORT"))
 	}
 
-	// Log para debug
 	s.logger.Info().Str("swagger_base_url", swaggerBaseURL).Msg("Configurando Swagger con URL base")
 
-	// Extraer el host y puerto de la URL base
 	originalURL := swaggerBaseURL
 	if strings.HasPrefix(swaggerBaseURL, "http://") {
 		swaggerBaseURL = strings.TrimPrefix(swaggerBaseURL, "http://")
@@ -123,14 +122,12 @@ func (s *HTTPServer) Routers() {
 	s.logger.Info().Str("swagger_host", swaggerBaseURL).Str("original_url", originalURL).Msg("Swagger configurado")
 	docs.SwaggerInfo.BasePath = "/api/v1"
 
-	// Configurar esquemas basado en la URL base
 	if strings.HasPrefix(s.env.Get("URL_BASE_SWAGGER"), "https://") {
 		docs.SwaggerInfo.Schemes = []string{"https"}
 	} else {
 		docs.SwaggerInfo.Schemes = []string{"http", "https"}
 	}
 
-	// Ruta de prueba simple para verificar que el backend responde
 	s.router.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message":   "pong",
@@ -138,21 +135,18 @@ func (s *HTTPServer) Routers() {
 		})
 	})
 
-	// Ruta para la documentación de Swagger UI
 	s.router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	// Redirigir /docs/ a /docs/index.html
 	s.router.GET("/docs", func(c *gin.Context) {
 		c.Redirect(http.StatusMovedPermanently, "/docs/index.html")
 	})
 
 	v1Group := s.router.Group("/api/v1")
 
-	// Registrar rutas por dominio
 	authhandler.RegisterRoutes(v1Group, s.handlers.Auth, s.jwtService, s.logger)
 	clienthandler.RegisterRoutes(v1Group, s.handlers.Client, s.jwtService, s.logger)
 	tablehandler.RegisterRoutes(v1Group, s.handlers.Table, s.jwtService, s.logger)
-	reservehandler.RegisterRoutes(v1Group, s.handlers.Reserve, s.jwtService, s.logger)
+	reservehandler.RegisterRoutes(v1Group, s.handlers.Reserve, s.jwtService, s.authUseCase, s.logger)
 	businesshandler.RegisterRoutes(v1Group, s.handlers.Business, s.jwtService, s.logger)
 	businesstypehandler.RegisterRoutes(v1Group, s.handlers.BusinessType, s.jwtService, s.logger)
 	permissionhandler.RegisterRoutes(v1Group, s.handlers.Permission, s.jwtService, s.logger)

@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"central_reserve/internal/app/usecaseauth"
+	"central_reserve/internal/domain/dtos"
 	"central_reserve/internal/pkg/jwt"
 	"central_reserve/internal/pkg/log"
 	"net/http"
@@ -61,6 +63,94 @@ func AuthMiddleware(jwtService *jwt.JWTService, logger log.ILogger) gin.HandlerF
 	}
 }
 
+func APIKeyMiddleware(authUseCase usecaseauth.IAuthUseCase, logger log.ILogger) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		apiKey := extractAPIKey(c)
+		if apiKey == "" {
+			logger.Error().Msg("API Key requerida")
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "API Key requerida",
+			})
+			c.Abort()
+			return
+		}
+
+		request := dtos.ValidateAPIKeyRequest{
+			APIKey: apiKey,
+		}
+
+		response, err := authUseCase.ValidateAPIKey(c.Request.Context(), request)
+		if err != nil {
+			logger.Error().Err(err).Msg("Error al validar API Key")
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": err.Error(),
+			})
+			c.Abort()
+			return
+		}
+
+		if !response.Success {
+			logger.Error().Str("message", response.Message).Msg("API Key inválida")
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": response.Message,
+			})
+			c.Abort()
+			return
+		}
+
+		authInfo := &AuthInfo{
+			Type:   AuthTypeAPIKey,
+			UserID: response.UserID,
+			Email:  response.Email,
+			Roles:  response.Roles,
+			APIKey: apiKey,
+		}
+
+		c.Set("auth_info", authInfo)
+		c.Set("auth_type", authInfo.Type)
+		c.Set("user_id", authInfo.UserID)
+		c.Set("user_email", authInfo.Email)
+		c.Set("user_roles", authInfo.Roles)
+		c.Set("jwt_claims", nil)
+
+		logger.Debug().
+			Str("auth_type", string(authInfo.Type)).
+			Uint("user_id", authInfo.UserID).
+			Str("user_email", authInfo.Email).
+			Strs("user_roles", authInfo.Roles).
+			Msg("Usuario autenticado con API Key")
+
+		c.Next()
+	}
+}
+
+func AutoAuthMiddleware(jwtService *jwt.JWTService, authUseCase usecaseauth.IAuthUseCase, logger log.ILogger) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Detectar si tiene Authorization header (JWT)
+		authHeader := c.GetHeader("Authorization")
+
+		// Detectar si tiene API Key header o query
+		apiKey := extractAPIKey(c)
+
+		if authHeader != "" {
+			// Usar JWT middleware
+			authMiddleware := AuthMiddleware(jwtService, logger)
+			authMiddleware(c)
+		} else if apiKey != "" {
+			// Usar API Key middleware
+			apiKeyMiddleware := APIKeyMiddleware(authUseCase, logger)
+			apiKeyMiddleware(c)
+		} else {
+			logger.Error().Msg("No se encontró método de autenticación")
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "Se requiere autenticación (JWT o API Key)",
+			})
+			c.Abort()
+			return
+		}
+	}
+}
+
 // validateJWT valida la autenticación por JWT
 func validateJWT(c *gin.Context, jwtService *jwt.JWTService) (*AuthInfo, error) {
 	token := c.GetHeader("Authorization")
@@ -88,117 +178,12 @@ func validateJWT(c *gin.Context, jwtService *jwt.JWTService) (*AuthInfo, error) 
 	}, nil
 }
 
-// validateAPIKey valida la autenticación por API Key (usando JWT con firma)
-func validateAPIKey(c *gin.Context, jwtService *jwt.JWTService, logger log.ILogger) (*AuthInfo, error) {
+func extractAPIKey(c *gin.Context) string {
 	apiKey := c.GetHeader("X-API-Key")
 	if apiKey == "" {
-		// También verificar en query parameters
 		apiKey = c.Query("api_key")
 	}
-
-	if apiKey == "" {
-		return nil, &AuthError{Message: "API Key requerida"}
-	}
-
-	// Validar que la API Key tenga el formato correcto de JWT
-	if !isValidJWTFormat(apiKey) {
-		return nil, &AuthError{Message: "API Key con formato inválido"}
-	}
-
-	// Validar la API Key como JWT
-	claims, err := validateAPIKeyAsJWT(apiKey, jwtService)
-	if err != nil {
-		return nil, &AuthError{Message: "API Key inválida o expirada"}
-	}
-
-	// Verificar que sea una API Key válida (no un JWT de usuario)
-	if !isValidAPIKeyClaims(claims) {
-		return nil, &AuthError{Message: "API Key no autorizada para este endpoint"}
-	}
-
-	return &AuthInfo{
-		Type:      AuthTypeAPIKey,
-		UserID:    claims.UserID,
-		Email:     claims.Email,
-		Roles:     claims.Roles,
-		APIKey:    apiKey,
-		JWTClaims: claims, // También almacenamos los claims para consistencia
-	}, nil
-}
-
-// isValidJWTFormat verifica que la API Key tenga el formato básico de JWT
-func isValidJWTFormat(token string) bool {
-	// JWT tiene 3 partes separadas por puntos
-	parts := strings.Split(token, ".")
-	if len(parts) != 3 {
-		return false
-	}
-
-	// Verificar que cada parte sea base64 válido
-	for _, part := range parts {
-		if part == "" {
-			return false
-		}
-	}
-
-	return true
-}
-
-// validateAPIKeyAsJWT valida la API Key como JWT usando la misma clave secreta
-func validateAPIKeyAsJWT(apiKey string, jwtService *jwt.JWTService) (*jwt.Claims, error) {
-	// Usar el mismo JWT service para validar la API Key
-	// Esto asegura que use la misma clave secreta y algoritmo
-	return jwtService.ValidateToken(apiKey)
-}
-
-// isValidAPIKeyClaims verifica que los claims sean válidos para una API Key
-func isValidAPIKeyClaims(claims *jwt.Claims) bool {
-	// Verificar que tenga roles apropiados para API Key
-	validAPIRoles := []string{"api_user", "api_admin", "webhook", "integration"}
-	hasValidRole := false
-
-	for _, role := range claims.Roles {
-		for _, validRole := range validAPIRoles {
-			if role == validRole {
-				hasValidRole = true
-				break
-			}
-		}
-		if hasValidRole {
-			break
-		}
-	}
-
-	return hasValidRole
-}
-
-// isValidAPIKey valida si una API Key es válida (ahora deprecated, usar JWT)
-// TODO: Eliminar esta función una vez que se migre completamente a JWT
-func isValidAPIKey(apiKey string) bool {
-	// Si es un JWT válido, aceptarlo
-	if isValidJWTFormat(apiKey) {
-		// Crear un JWT service temporal para validación
-		// En producción, deberías pasar el JWT service como parámetro
-		jwtService := jwt.New("temporary-secret-key")
-		claims, err := validateAPIKeyAsJWT(apiKey, jwtService)
-		if err == nil && isValidAPIKeyClaims(claims) {
-			return true
-		}
-	}
-
-	// Fallback para API Keys legacy (eliminar en el futuro)
-	if len(apiKey) < 10 {
-		return false
-	}
-
-	// Aquí podrías:
-	// 1. Verificar contra una base de datos
-	// 2. Verificar contra variables de entorno
-	// 3. Verificar contra un servicio de gestión de API Keys
-	// 4. Validar formato específico
-
-	// Por ahora, aceptamos cualquier API Key de al menos 10 caracteres
-	return true
+	return apiKey
 }
 
 // AuthError representa un error de autenticación
@@ -236,14 +221,11 @@ func GetAuthType(c *gin.Context) (AuthType, bool) {
 
 // GetAPIKey obtiene la API Key desde el contexto
 func GetAPIKey(c *gin.Context) (string, bool) {
-	apiKey, exists := c.Get("api_key")
-	if !exists {
+	authInfo, exists := GetAuthInfo(c)
+	if !exists || authInfo.Type != AuthTypeAPIKey {
 		return "", false
 	}
-	if a, ok := apiKey.(string); ok {
-		return a, true
-	}
-	return "", false
+	return authInfo.APIKey, true
 }
 
 // GetUserID obtiene el ID del usuario desde el contexto de Gin
@@ -397,4 +379,35 @@ func RequireJWT() gin.HandlerFunc {
 // RequireAPIKey crea un middleware que requiere autenticación por API Key específicamente
 func RequireAPIKey() gin.HandlerFunc {
 	return RequireAuthType(AuthTypeAPIKey)
+}
+
+// AuthBuilder permite especificar el tipo de autenticación de forma fluida
+type AuthBuilder struct {
+	jwtService  *jwt.JWTService
+	authUseCase usecaseauth.IAuthUseCase
+	logger      log.ILogger
+}
+
+// NewAuthBuilder crea un nuevo builder de autenticación
+func NewAuthBuilder(jwtService *jwt.JWTService, authUseCase usecaseauth.IAuthUseCase, logger log.ILogger) *AuthBuilder {
+	return &AuthBuilder{
+		jwtService:  jwtService,
+		authUseCase: authUseCase,
+		logger:      logger,
+	}
+}
+
+// JWT especifica que solo se debe usar autenticación JWT
+func (ab *AuthBuilder) JWT() gin.HandlerFunc {
+	return AuthMiddleware(ab.jwtService, ab.logger)
+}
+
+// APIKey especifica que solo se debe usar autenticación por API Key
+func (ab *AuthBuilder) APIKey() gin.HandlerFunc {
+	return APIKeyMiddleware(ab.authUseCase, ab.logger)
+}
+
+// Auto permite ambos tipos de autenticación (detección automática)
+func (ab *AuthBuilder) Auto() gin.HandlerFunc {
+	return AutoAuthMiddleware(ab.jwtService, ab.authUseCase, ab.logger)
 }

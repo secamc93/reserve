@@ -13,6 +13,11 @@ type IUseCaseAuth interface {
 	GetUserRolesPermissions(ctx context.Context, userID uint, token string) (*dtos.UserRolesPermissionsResponse, error)
 	ChangePassword(ctx context.Context, request dtos.ChangePasswordRequest) (*dtos.ChangePasswordResponse, error)
 	GenerateAPIKey(ctx context.Context, request dtos.GenerateAPIKeyRequest) (*dtos.GenerateAPIKeyResponse, error)
+	ValidateAPIKey(ctx context.Context, request dtos.ValidateAPIKeyRequest) (*dtos.ValidateAPIKeyResponse, error)
+}
+
+type IAuthUseCase interface {
+	ValidateAPIKey(ctx context.Context, request dtos.ValidateAPIKeyRequest) (*dtos.ValidateAPIKeyResponse, error)
 }
 
 type AuthUseCase struct {

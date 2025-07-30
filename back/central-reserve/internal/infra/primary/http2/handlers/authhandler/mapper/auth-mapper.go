@@ -5,7 +5,7 @@ import (
 	"central_reserve/internal/infra/primary/http2/handlers/authhandler/response"
 )
 
-// ToLoginResponse convierte el dominio LoginResponse a response.LoginResponse (simplificado)
+// ToLoginResponse convierte el dominio LoginResponse a response.LoginResponse
 func ToLoginResponse(domainResponse *dtos.LoginResponse) *response.LoginResponse {
 	if domainResponse == nil {
 		return nil
