@@ -84,5 +84,13 @@ func (u *ReserveUseCase) CreateReserve(ctx context.Context, req entities.Reserva
 
 	u.log.Info().Uint("client_id", clientID).Str("email", email).Msg("Reserva creada exitosamente")
 
+	// Enviar email de confirmación
+	if err := u.emailService.SendReservationConfirmation(ctx, email, name, reservation); err != nil {
+		u.log.Warn().Err(err).Str("email", email).Msg("Error al enviar email de confirmación")
+		// No retornamos error aquí porque la reserva ya fue creada exitosamente
+	} else {
+		u.log.Info().Str("email", email).Msg("Email de confirmación enviado exitosamente")
+	}
+
 	return result, nil
 }
