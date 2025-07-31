@@ -4,6 +4,8 @@ services:
   website:
     image: public.ecr.aws/d3a6d4r1/cam/reserve:website-latest
     container_name: reserve-website-1
+    ports:
+      - "8081:8081"
     environment:
       PUBLIC_API_BASE_URL: "http://central_reserve:3050"
     networks:
