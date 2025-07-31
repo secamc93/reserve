@@ -9,8 +9,9 @@ import (
 	"time"
 )
 
+// IReserveUseCase define las operaciones para reservas
 type IUseCaseReserve interface {
-	CreateReserve(ctx context.Context, reserve entities.Reservation, name, email, phone string, dni string) (string, error)
+	CreateReserve(ctx context.Context, reserve entities.Reservation, name, email, phone string, dni string) (*dtos.ReserveDetailDTO, error)
 	GetReserves(ctx context.Context, statusID *uint, clientID *uint, tableID *uint, startDate *time.Time, endDate *time.Time) ([]dtos.ReserveDetailDTO, error)
 	GetReserveByID(ctx context.Context, id uint) (*dtos.ReserveDetailDTO, error)
 	CancelReservation(ctx context.Context, id uint, reason string) (string, error)

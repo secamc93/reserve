@@ -1,15 +1,15 @@
 package roomhandler
 
 import (
+	"central_reserve/internal/domain/ports"
 	"central_reserve/internal/infra/primary/http2/middleware"
-	"central_reserve/internal/pkg/jwt"
 	"central_reserve/internal/pkg/log"
 
 	"github.com/gin-gonic/gin"
 )
 
 // RegisterRoutes registra las rutas del handler de salas
-func RegisterRoutes(router *gin.RouterGroup, handler IRoomHandler, jwtService *jwt.JWTService, logger log.ILogger) {
+func RegisterRoutes(router *gin.RouterGroup, handler IRoomHandler, jwtService ports.IJWTService, logger log.ILogger) {
 	// Crear el subgrupo /rooms dentro de /api/v1
 	rooms := router.Group("/rooms")
 	// Aplicar middleware de autenticación a todas las rutas de salas

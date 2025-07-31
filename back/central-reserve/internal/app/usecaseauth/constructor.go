@@ -3,7 +3,6 @@ package usecaseauth
 import (
 	"central_reserve/internal/domain/dtos"
 	"central_reserve/internal/domain/ports"
-	"central_reserve/internal/pkg/jwt"
 	"central_reserve/internal/pkg/log"
 	"context"
 )
@@ -22,11 +21,11 @@ type IAuthUseCase interface {
 
 type AuthUseCase struct {
 	repository ports.IAuthRepository
-	jwtService *jwt.JWTService
+	jwtService ports.IJWTService
 	log        log.ILogger
 }
 
-func NewAuthUseCase(repository ports.IAuthRepository, jwtService *jwt.JWTService, log log.ILogger) IUseCaseAuth {
+func NewAuthUseCase(repository ports.IAuthRepository, jwtService ports.IJWTService, log log.ILogger) IUseCaseAuth {
 	return &AuthUseCase{
 		repository: repository,
 		jwtService: jwtService,

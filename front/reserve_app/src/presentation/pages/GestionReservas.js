@@ -22,16 +22,17 @@ const GestionReservas = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   const handleCreateReserva = async (reservaData) => {
+    console.log('🎯 handleCreateReserva llamado con:', reservaData);
     const result = await createReserva(reservaData);
+    console.log('📊 Resultado de createReserva:', result);
     if (result.success) {
       setShowCreateModal(false);
-
-      // 🔧 OPCIÓN 1: Recargar solo los datos (más eficiente)
-      await fetchReservas();
-
-      // 🔧 OPCIÓN 2: O si prefieres recargar toda la página (descomenta la línea de abajo)
-      // setTimeout(() => window.location.reload(), 500);
-
+      
+      // ✅ NO necesitamos fetchReservas() porque createReserva() ya actualiza el estado local automáticamente
+      // El hook useReservas se encarga de agregar la nueva reserva al estado sin recargar
+      
+      // 🎉 Opcional: Mostrar notificación sutil de éxito
+      console.log('✅ Reserva creada exitosamente - Estado actualizado automáticamente');
     }
     return result;
   };

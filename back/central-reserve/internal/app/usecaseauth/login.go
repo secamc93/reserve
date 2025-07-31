@@ -2,6 +2,7 @@ package usecaseauth
 
 import (
 	"central_reserve/internal/domain/dtos"
+	"central_reserve/internal/domain/entities"
 	"context"
 	"fmt"
 
@@ -87,17 +88,111 @@ func (uc *AuthUseCase) Login(ctx context.Context, request dtos.LoginRequest) (*d
 		// No retornamos error aquí porque el login puede continuar sin businesses
 	}
 
+	// Log detallado de businesses
+	uc.log.Info().
+		Uint("user_id", userAuth.ID).
+		Int("businesses_count", len(businesses)).
+		Msg("Businesses obtenidos del usuario")
+
+	if len(businesses) > 0 {
+		for i, business := range businesses {
+			uc.log.Info().
+				Uint("user_id", userAuth.ID).
+				Int("business_index", i).
+				Uint("business_id", business.ID).
+				Str("business_name", business.Name).
+				Str("business_code", business.Code).
+				Msg("Business encontrado")
+		}
+	} else {
+		uc.log.Warn().
+			Uint("user_id", userAuth.ID).
+			Msg("Usuario sin businesses asociados")
+	}
+
+	// Log de roles del usuario
+	uc.log.Info().
+		Uint("user_id", userAuth.ID).
+		Int("roles_count", len(roles)).
+		Msg("Roles obtenidos del usuario")
+
+	for i, role := range roles {
+		uc.log.Info().
+			Uint("user_id", userAuth.ID).
+			Int("role_index", i).
+			Uint("role_id", role.ID).
+			Str("role_name", role.Name).
+			Str("role_code", role.Code).
+			Msg("Rol encontrado")
+	}
+
+	// Verificar si es super admin
+	if isSuperAdmin(roles) {
+		uc.log.Info().
+			Uint("user_id", userAuth.ID).
+			Msg("Usuario identificado como SUPER ADMIN")
+	} else {
+		uc.log.Info().
+			Uint("user_id", userAuth.ID).
+			Msg("Usuario NO es super admin")
+	}
+
+	// Log detallado de verificación de super admin
+	for i, role := range roles {
+		isSuper := role.ScopeCode == "platform"
+		uc.log.Info().
+			Uint("user_id", userAuth.ID).
+			Int("role_index", i).
+			Uint("role_id", role.ID).
+			Str("role_code", role.Code).
+			Str("role_scope_code", role.ScopeCode).
+			Str("role_scope_name", role.ScopeName).
+			Bool("is_super_admin", isSuper).
+			Msg("Verificación de rol super admin por scope")
+	}
+
 	// Generar token JWT
 	roleCodes := make([]string, len(roles))
 	for i, role := range roles {
 		roleCodes[i] = role.Code
 	}
 
-	token, err := uc.jwtService.GenerateToken(userAuth.ID, userAuth.Email, roleCodes)
+	// Usar el primer business para el token (si existe)
+	var businessID uint
+	if len(businesses) > 0 {
+		businessID = businesses[0].ID
+		uc.log.Info().
+			Uint("user_id", userAuth.ID).
+			Uint("business_id", businessID).
+			Msg("Usando primer business para token JWT")
+	} else {
+		// Verificar si el usuario es super admin
+		if isSuperAdmin(roles) {
+			businessID = 1 // Super admin siempre tiene business_id = 1
+			uc.log.Info().
+				Uint("user_id", userAuth.ID).
+				Uint("business_id", businessID).
+				Msg("Usuario super admin - asignando business_id = 1")
+		} else {
+			uc.log.Warn().
+				Uint("user_id", userAuth.ID).
+				Msg("Usuario sin businesses y no es super admin - usando business_id = 0")
+		}
+	}
+
+	token, err := uc.jwtService.GenerateToken(userAuth.ID, userAuth.Email, roleCodes, businessID)
 	if err != nil {
 		uc.log.Error().Err(err).Uint("user_id", userAuth.ID).Msg("Error al generar token JWT")
 		return nil, fmt.Errorf("error interno del servidor")
 	}
+
+	// Log del token generado
+	uc.log.Info().
+		Uint("user_id", userAuth.ID).
+		Uint("token_business_id", businessID).
+		Str("user_email", userAuth.Email).
+		Strs("user_roles", roleCodes).
+		Msg("Token JWT generado exitosamente")
 
 	// Verificar si es el primer login (LastLoginAt es nil)
 	isFirstLogin := userAuth.LastLoginAt == nil
@@ -183,4 +278,15 @@ func (uc *AuthUseCase) Login(ctx context.Context, request dtos.LoginRequest) (*d
 		Msg("Login exitoso")
 
 	return response, nil
+}
+
+// isSuperAdmin verifica si el usuario tiene el rol de super administrador
+func isSuperAdmin(roles []entities.Role) bool {
+	for _, role := range roles {
+		// Validar por scope del rol (super admin tiene scope de plataforma)
+		if role.ScopeCode == "platform" {
+			return true
+		}
+	}
+	return false
 }

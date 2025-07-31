@@ -56,9 +56,11 @@ const CreateReservaModal = ({ isOpen, onClose, onSubmit, loading, initialDate })
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (!validateForm()) return;
+    const handleCreateReserva = async () => {
+        if (!validateForm()) {
+            return;
+        }
+        
         const processedData = {
             ...formData,
             start_at: new Date(formData.start_at).toISOString(),
@@ -67,7 +69,14 @@ const CreateReservaModal = ({ isOpen, onClose, onSubmit, loading, initialDate })
             number_of_guests: parseInt(formData.number_of_guests, 10),
             restaurant_id: parseInt(formData.restaurant_id, 10)
         };
-        await onSubmit(processedData);
+        
+        try {
+            await onSubmit(processedData);
+            // El modal se cerrará automáticamente desde el componente padre si es exitoso
+        } catch (error) {
+            console.error('Error al crear reserva:', error);
+            // Aquí podrías mostrar un toast o notificación de error sutil
+        }
     };
 
     const getMinDateTime = () => {
@@ -83,54 +92,129 @@ const CreateReservaModal = ({ isOpen, onClose, onSubmit, loading, initialDate })
             title="Crear Nueva Reserva"
             actions={
                 <>
-                    <button type="button" className="btn-cancel" onClick={onClose} disabled={loading}>Cancelar</button>
-                    <button type="submit" className="btn-submit" disabled={loading}>{loading ? 'Creando...' : 'Crear Reserva'}</button>
+                    <button 
+                        type="button" 
+                        className="btn-cancel" 
+                        onClick={onClose}
+                        disabled={loading}
+                    >
+                        Cancelar
+                    </button>
+                    <button 
+                        type="button" 
+                        className="btn-submit" 
+                        onClick={handleCreateReserva}
+                        disabled={loading}
+                    >
+                        {loading ? 'Creando...' : 'Crear Reserva'}
+                    </button>
                 </>
             }
         >
             <div className="form-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
                 <div className="form-group">
                     <label htmlFor="name">Nombre Completo *</label>
-                    <input type="text" id="name" value={formData.name} onChange={e => handleInputChange('name', e.target.value)} className={errors.name ? 'error' : ''} placeholder="Ej: Juan Pérez" disabled={loading} />
+                    <input 
+                        type="text" 
+                        id="name" 
+                        value={formData.name} 
+                        onChange={e => handleInputChange('name', e.target.value)} 
+                        className={errors.name ? 'error' : ''} 
+                        placeholder="Ej: Juan Pérez" 
+                        disabled={loading} 
+                    />
                     {errors.name && <span className="error-text">{errors.name}</span>}
                 </div>
                 <div className="form-group">
                     <label htmlFor="email">Email *</label>
-                    <input type="email" id="email" value={formData.email} onChange={e => handleInputChange('email', e.target.value)} className={errors.email ? 'error' : ''} placeholder="Ej: juan@example.com" disabled={loading} />
+                    <input 
+                        type="email" 
+                        id="email" 
+                        value={formData.email} 
+                        onChange={e => handleInputChange('email', e.target.value)} 
+                        className={errors.email ? 'error' : ''} 
+                        placeholder="Ej: juan@example.com" 
+                        disabled={loading} 
+                    />
                     {errors.email && <span className="error-text">{errors.email}</span>}
                 </div>
                 <div className="form-group">
                     <label htmlFor="phone">📱 Teléfono *</label>
-                    <input type="tel" id="phone" value={formData.phone} onChange={e => handleInputChange('phone', e.target.value)} className={errors.phone ? 'error' : ''} placeholder="Ej: 3001234567" disabled={loading} />
+                    <input 
+                        type="tel" 
+                        id="phone" 
+                        value={formData.phone} 
+                        onChange={e => handleInputChange('phone', e.target.value)} 
+                        className={errors.phone ? 'error' : ''} 
+                        placeholder="Ej: 3001234567" 
+                        disabled={loading} 
+                    />
                     {errors.phone && <span className="error-text">{errors.phone}</span>}
                 </div>
 
                 <div className="form-group">
                     <label htmlFor="dni">DNI (opcional)</label>
-                    <input type="number" id="dni" value={formData.dni} onChange={e => handleInputChange('dni', e.target.value)} className={errors.dni ? 'error' : ''} placeholder="Ej: 12345678 (opcional)" disabled={loading} />
+                    <input 
+                        type="number" 
+                        id="dni" 
+                        value={formData.dni} 
+                        onChange={e => handleInputChange('dni', e.target.value)} 
+                        className={errors.dni ? 'error' : ''} 
+                        placeholder="Ej: 12345678 (opcional)" 
+                        disabled={loading} 
+                    />
                     {errors.dni && <span className="error-text">{errors.dni}</span>}
                 </div>
                 <div className="form-group">
                     <label htmlFor="start_at">Fecha y Hora de Inicio *</label>
-                    <input type="datetime-local" id="start_at" value={formData.start_at} onChange={e => handleInputChange('start_at', e.target.value)} className={errors.start_at ? 'error' : ''} min={getMinDateTime()} disabled={loading} />
+                    <input 
+                        type="datetime-local" 
+                        id="start_at" 
+                        value={formData.start_at} 
+                        onChange={e => handleInputChange('start_at', e.target.value)} 
+                        className={errors.start_at ? 'error' : ''} 
+                        min={getMinDateTime()} 
+                        disabled={loading} 
+                    />
                     {errors.start_at && <span className="error-text">{errors.start_at}</span>}
                 </div>
                 <div className="form-group">
                     <label htmlFor="end_at">Fecha y Hora de Fin *</label>
-                    <input type="datetime-local" id="end_at" value={formData.end_at} onChange={e => handleInputChange('end_at', e.target.value)} className={errors.end_at ? 'error' : ''} min={formData.start_at || getMinDateTime()} disabled={loading} />
+                    <input 
+                        type="datetime-local" 
+                        id="end_at" 
+                        value={formData.end_at} 
+                        onChange={e => handleInputChange('end_at', e.target.value)} 
+                        className={errors.end_at ? 'error' : ''} 
+                        min={formData.start_at || getMinDateTime()} 
+                        disabled={loading} 
+                    />
                     {errors.end_at && <span className="error-text">{errors.end_at}</span>}
                 </div>
 
                 <div className="form-group">
                     <label htmlFor="number_of_guests">Número de Invitados</label>
-                    <input type="number" id="number_of_guests" value={formData.number_of_guests} onChange={e => handleInputChange('number_of_guests', e.target.value)} className={errors.number_of_guests ? 'error' : ''} min="1" max="20" disabled={loading} />
+                    <input 
+                        type="number" 
+                        id="number_of_guests" 
+                        value={formData.number_of_guests} 
+                        onChange={e => handleInputChange('number_of_guests', e.target.value)} 
+                        className={errors.number_of_guests ? 'error' : ''} 
+                        min="1" 
+                        max="20" 
+                        disabled={loading} 
+                    />
                     {errors.number_of_guests && <span className="error-text">{errors.number_of_guests}</span>}
                 </div>
                 <div className="form-group">
                     <label htmlFor="restaurant_id">Restaurante *</label>
-                    <select id="restaurant_id" value={formData.restaurant_id} onChange={e => handleInputChange('restaurant_id', e.target.value)} disabled={loading}>
+                    <select 
+                        id="restaurant_id" 
+                        value={formData.restaurant_id} 
+                        onChange={e => handleInputChange('restaurant_id', e.target.value)} 
+                        disabled={loading}
+                    >
                         <option value="1">Trattoria la bella</option>
-                        {/* Agrega más restaurantes si es necesario */}
                     </select>
                 </div>
                 <div style={{ visibility: 'hidden' }}></div>

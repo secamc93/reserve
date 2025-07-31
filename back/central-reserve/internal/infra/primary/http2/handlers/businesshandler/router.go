@@ -1,15 +1,15 @@
 package businesshandler
 
 import (
+	"central_reserve/internal/domain/ports"
 	"central_reserve/internal/infra/primary/http2/middleware"
-	"central_reserve/internal/pkg/jwt"
 	"central_reserve/internal/pkg/log"
 
 	"github.com/gin-gonic/gin"
 )
 
 // RegisterRoutes registra las rutas del handler de Business
-func RegisterRoutes(router *gin.RouterGroup, handler IBusinessHandler, jwtService *jwt.JWTService, logger log.ILogger) {
+func RegisterRoutes(router *gin.RouterGroup, handler IBusinessHandler, jwtService ports.IJWTService, logger log.ILogger) {
 	// Aplicar middleware de autenticación a todas las rutas
 	router.Use(middleware.AuthMiddleware(jwtService, logger))
 

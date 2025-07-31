@@ -3,7 +3,7 @@ package middleware
 import (
 	"central_reserve/internal/app/usecaseauth"
 	"central_reserve/internal/domain/dtos"
-	"central_reserve/internal/pkg/jwt"
+	"central_reserve/internal/domain/ports"
 	"central_reserve/internal/pkg/log"
 	"net/http"
 	"strings"
@@ -11,16 +11,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// AuthType representa el tipo de autenticación
 type AuthType string
 
 const (
+	AuthTypeUnknown AuthType = "unknown"
 	AuthTypeJWT     AuthType = "jwt"
 	AuthTypeAPIKey  AuthType = "api_key"
-	AuthTypeUnknown AuthType = "unknown"
 )
 
-// AuthInfo contiene la información de autenticación
 type AuthInfo struct {
 	Type       AuthType
 	UserID     uint
@@ -28,11 +26,10 @@ type AuthInfo struct {
 	Roles      []string
 	BusinessID uint
 	APIKey     string
-	JWTClaims  *jwt.Claims
+	JWTClaims  *dtos.JWTClaims
 }
 
-// AuthMiddleware crea un middleware de autenticación JWT (mantiene compatibilidad)
-func AuthMiddleware(jwtService *jwt.JWTService, logger log.ILogger) gin.HandlerFunc {
+func AuthMiddleware(jwtService ports.IJWTService, logger log.ILogger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authInfo, err := validateJWT(c, jwtService)
 		if err != nil {
@@ -50,7 +47,28 @@ func AuthMiddleware(jwtService *jwt.JWTService, logger log.ILogger) gin.HandlerF
 		c.Set("user_id", authInfo.UserID)
 		c.Set("user_email", authInfo.Email)
 		c.Set("user_roles", authInfo.Roles)
+		c.Set("business_id", authInfo.BusinessID)
 		c.Set("jwt_claims", authInfo.JWTClaims)
+
+		// Log adicional para verificar que se guardó correctamente
+		logger.Debug().
+			Uint("business_id_stored", authInfo.BusinessID).
+			Msg("BusinessID guardado en contexto")
+
+		// Verificar que se guardó correctamente en el contexto
+		if storedBusinessID, exists := c.Get("business_id"); exists {
+			if businessID, ok := storedBusinessID.(uint); ok {
+				logger.Debug().
+					Uint("business_id_verified", businessID).
+					Msg("BusinessID verificado en contexto")
+			} else {
+				logger.Error().
+					Interface("stored_business_id", storedBusinessID).
+					Msg("BusinessID no es del tipo correcto en contexto")
+			}
+		} else {
+			logger.Error().Msg("BusinessID no encontrado en contexto después de guardarlo")
+		}
 
 		// Agregar información al logger para trazabilidad
 		logger.Debug().
@@ -58,6 +76,7 @@ func AuthMiddleware(jwtService *jwt.JWTService, logger log.ILogger) gin.HandlerF
 			Uint("user_id", authInfo.UserID).
 			Str("user_email", authInfo.Email).
 			Strs("user_roles", authInfo.Roles).
+			Uint("business_id", authInfo.BusinessID).
 			Msg("Usuario autenticado con JWT")
 
 		c.Next()
@@ -113,6 +132,7 @@ func APIKeyMiddleware(authUseCase usecaseauth.IAuthUseCase, logger log.ILogger) 
 		c.Set("user_id", authInfo.UserID)
 		c.Set("user_email", authInfo.Email)
 		c.Set("user_roles", authInfo.Roles)
+		c.Set("business_id", authInfo.BusinessID)
 		c.Set("jwt_claims", nil)
 
 		logger.Debug().
@@ -120,13 +140,14 @@ func APIKeyMiddleware(authUseCase usecaseauth.IAuthUseCase, logger log.ILogger) 
 			Uint("user_id", authInfo.UserID).
 			Str("user_email", authInfo.Email).
 			Strs("user_roles", authInfo.Roles).
+			Uint("business_id", authInfo.BusinessID).
 			Msg("Usuario autenticado con API Key")
 
 		c.Next()
 	}
 }
 
-func AutoAuthMiddleware(jwtService *jwt.JWTService, authUseCase usecaseauth.IAuthUseCase, logger log.ILogger) gin.HandlerFunc {
+func AutoAuthMiddleware(jwtService ports.IJWTService, authUseCase usecaseauth.IAuthUseCase, logger log.ILogger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Detectar si tiene Authorization header (JWT)
 		authHeader := c.GetHeader("Authorization")
@@ -154,7 +175,7 @@ func AutoAuthMiddleware(jwtService *jwt.JWTService, authUseCase usecaseauth.IAut
 }
 
 // validateJWT valida la autenticación por JWT
-func validateJWT(c *gin.Context, jwtService *jwt.JWTService) (*AuthInfo, error) {
+func validateJWT(c *gin.Context, jwtService ports.IJWTService) (*AuthInfo, error) {
 	token := c.GetHeader("Authorization")
 	if token == "" {
 		return nil, &AuthError{Message: "Token de autorización requerido"}
@@ -171,13 +192,30 @@ func validateJWT(c *gin.Context, jwtService *jwt.JWTService) (*AuthInfo, error) 
 		return nil, &AuthError{Message: "Token JWT inválido"}
 	}
 
-	return &AuthInfo{
-		Type:      AuthTypeJWT,
-		UserID:    claims.UserID,
-		Email:     claims.Email,
-		Roles:     claims.Roles,
-		JWTClaims: claims,
-	}, nil
+	// Log para debuggear los claims
+	logger := log.New()
+	logger.Debug().
+		Uint("claims_user_id", claims.UserID).
+		Str("claims_email", claims.Email).
+		Strs("claims_roles", claims.Roles).
+		Uint("claims_business_id", claims.BusinessID).
+		Msg("Claims extraídos del JWT")
+
+	authInfo := &AuthInfo{
+		Type:       AuthTypeJWT,
+		UserID:     claims.UserID,
+		Email:      claims.Email,
+		Roles:      claims.Roles,
+		BusinessID: claims.BusinessID,
+		JWTClaims:  claims,
+	}
+
+	// Log para debuggear el AuthInfo creado
+	logger.Debug().
+		Uint("auth_info_business_id", authInfo.BusinessID).
+		Msg("AuthInfo creado con BusinessID")
+
+	return authInfo, nil
 }
 
 func extractAPIKey(c *gin.Context) string {
@@ -267,12 +305,12 @@ func GetUserRoles(c *gin.Context) ([]string, bool) {
 }
 
 // GetJWTClaims obtiene los claims completos del JWT desde el contexto de Gin
-func GetJWTClaims(c *gin.Context) (*jwt.Claims, bool) {
+func GetJWTClaims(c *gin.Context) (*dtos.JWTClaims, bool) {
 	claims, exists := c.Get("jwt_claims")
 	if !exists {
 		return nil, false
 	}
-	if c, ok := claims.(*jwt.Claims); ok {
+	if c, ok := claims.(*dtos.JWTClaims); ok {
 		return c, true
 	}
 	return nil, false
@@ -285,6 +323,18 @@ func GetBusinessID(c *gin.Context) (uint, bool) {
 		return 0, false
 	}
 	return authInfo.BusinessID, true
+}
+
+// GetBusinessIDFromContext obtiene el BusinessID directamente del contexto
+func GetBusinessIDFromContext(c *gin.Context) (uint, bool) {
+	businessID, exists := c.Get("business_id")
+	if !exists {
+		return 0, false
+	}
+	if id, ok := businessID.(uint); ok {
+		return id, true
+	}
+	return 0, false
 }
 
 // RequireRole crea un middleware que requiere un rol específico
@@ -394,13 +444,13 @@ func RequireAPIKey() gin.HandlerFunc {
 
 // AuthBuilder permite especificar el tipo de autenticación de forma fluida
 type AuthBuilder struct {
-	jwtService  *jwt.JWTService
+	jwtService  ports.IJWTService
 	authUseCase usecaseauth.IAuthUseCase
 	logger      log.ILogger
 }
 
 // NewAuthBuilder crea un nuevo builder de autenticación
-func NewAuthBuilder(jwtService *jwt.JWTService, authUseCase usecaseauth.IAuthUseCase, logger log.ILogger) *AuthBuilder {
+func NewAuthBuilder(jwtService ports.IJWTService, authUseCase usecaseauth.IAuthUseCase, logger log.ILogger) *AuthBuilder {
 	return &AuthBuilder{
 		jwtService:  jwtService,
 		authUseCase: authUseCase,

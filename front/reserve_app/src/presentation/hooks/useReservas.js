@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { GetReservasUseCase, CreateReservaUseCase, CancelReservaUseCase, UpdateReservaStatusUseCase } from '../../application/use-cases/GetReservasUseCase.js';
 import { ApiReservaRepository } from '../../infrastructure/adapters/ApiReservaRepository.js';
+import { Reserva } from '../../domain/entities/Reserva.js';
 
 export const useReservas = () => {
   const [reservas, setReservas] = useState([]);
@@ -52,32 +53,60 @@ export const useReservas = () => {
 
   // Create new reserva
   const createReserva = useCallback(async (reservaData) => {
+    console.log('🎯 HOOK createReserva llamado con:', reservaData);
     setLoading(true);
     setError(null);
     
     try {
       const result = await createReservaUseCase.execute(reservaData);
+      console.log('🎯 HOOK Resultado del use case:', result);
       
       if (result.success) {
-        // Add the new reserva to the local state
+        // ✅ SOLUCIÓN PROFESIONAL: Verificar que tenemos datos válidos
+        if (!result.data) {
+          console.error('❌ ERROR: result.data es null/undefined');
+          throw new Error('No se recibieron datos de la reserva creada');
+        }
+
+        // ✅ SOLUCIÓN PROFESIONAL: Verificar que es una instancia válida de Reserva
+        if (!(result.data instanceof Reserva)) {
+          console.error('❌ ERROR: result.data no es una instancia de Reserva:', result.data);
+          throw new Error('Datos de reserva inválidos');
+        }
+
+        // ✅ SOLUCIÓN PROFESIONAL: Actualizar estado local de forma atómica
         setReservas(prevReservas => {
           if (!Array.isArray(prevReservas)) {
-            console.warn('prevReservas is not an array:', prevReservas);
+            console.warn('⚠️ WARNING: prevReservas no es un array, inicializando...');
             return [result.data];
           }
+          
+          // ✅ Verificar que la reserva no existe ya (evitar duplicados)
+          const existingReserva = prevReservas.find(r => 
+            r.reserva_id === result.data.reserva_id ||
+            (r.cliente_email === result.data.cliente_email && 
+             r.start_at.getTime() === result.data.start_at.getTime())
+          );
+          
+          if (existingReserva) {
+            console.warn('⚠️ WARNING: Reserva ya existe en el estado, no duplicando');
+            return prevReservas;
+          }
+          
           return [result.data, ...prevReservas];
         });
         
         // Update total count
         setTotal(prevTotal => prevTotal + 1);
         
-        return { success: true, message: result.message };
+        console.log('✅ HOOK: Estado local actualizado correctamente');
+        return { success: true, message: result.message, data: result.data };
       } else {
         setError(result.error || 'Error al crear reserva');
         return { success: false, error: result.error };
       }
     } catch (err) {
-      console.error('Error in createReserva:', err);
+      console.error('❌ ERROR en createReserva:', err);
       setError(err.message || 'Error de conexión al crear reserva');
       return { success: false, error: err.message };
     } finally {

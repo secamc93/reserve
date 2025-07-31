@@ -11,15 +11,15 @@ import (
 )
 
 // CreateReserve crea una nueva reserva
-func (r *Repository) CreateReserve(ctx context.Context, reserve entities.Reservation) (string, error) {
+func (r *Repository) CreateReserve(ctx context.Context, reserve entities.Reservation) (uint, error) {
 	// Mapear de entities.Reservation a models.Reservation
 	gormReservation := mapper.EntityToReservation(reserve)
 
 	if err := r.database.Conn(ctx).Create(&gormReservation).Error; err != nil {
 		r.logger.Error().Err(err).Msg("Error al crear reserva")
-		return "", err
+		return 0, err
 	}
-	return fmt.Sprintf("Reserva creada con ID: %d", gormReservation.ID), nil
+	return gormReservation.ID, nil
 }
 
 // GetLatestReservationByClient obtiene la última reserva de un cliente
