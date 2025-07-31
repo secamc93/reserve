@@ -231,56 +231,340 @@ func (e *EmailService) getSecurityMethod(useTLS, useSTARTTLS bool) string {
 }
 
 func (e *EmailService) generateReservationConfirmationEmail(name string, reservation entities.Reservation) (string, error) {
-	const emailTemplate = `...
-
-<!DOCTYPE html>
-<html>
+	const emailTemplate = `<!DOCTYPE html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Confirmación de Reserva</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmación de Reserva - Trattoria La Bella</title>
     <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background-color: #8B4513; color: white; padding: 20px; text-align: center; }
-        .content { padding: 20px; background-color: #f9f9f9; }
-        .reservation-details { background-color: white; padding: 20px; margin: 20px 0; border-left: 4px solid #8B4513; }
-        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-        .highlight { color: #8B4513; font-weight: bold; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #2c3e50;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #d4af37 0%, #f4d03f 50%, #f7dc6f 100%);
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.1)"/><circle cx="10" cy="60" r="0.5" fill="rgba(255,255,255,0.1)"/><circle cx="90" cy="40" r="0.5" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.3;
+        }
+        
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 10px;
+            border-radius: 50%;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .restaurant-name {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 5px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        .header-subtitle {
+            font-size: 18px;
+            color: #34495e;
+            font-weight: 500;
+        }
+        
+        .content {
+            padding: 40px 30px;
+            background: #ffffff;
+        }
+        
+        .greeting {
+            font-size: 20px;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+        
+        .message {
+            font-size: 16px;
+            color: #5a6c7d;
+            margin-bottom: 30px;
+            line-height: 1.8;
+        }
+        
+        .reservation-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            border-left: 5px solid #d4af37;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .reservation-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(45deg, transparent 30%, rgba(212, 175, 55, 0.1) 30%, rgba(212, 175, 55, 0.1) 70%, transparent 70%);
+            border-radius: 50%;
+            transform: translate(30px, -30px);
+        }
+        
+        .card-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .card-title::before {
+            content: '📋';
+            font-size: 24px;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+        }
+        
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #34495e;
+            font-size: 15px;
+        }
+        
+        .detail-value {
+            font-weight: 700;
+            color: #d4af37;
+            font-size: 15px;
+        }
+        
+        .status-badge {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .info-box {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 25px 0;
+            border-left: 4px solid #2196f3;
+        }
+        
+        .info-box p {
+            color: #1565c0;
+            font-weight: 500;
+            margin: 0;
+        }
+        
+        .cta-section {
+            text-align: center;
+            margin: 35px 0;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #d4af37 0%, #f4d03f 100%);
+            color: #2c3e50;
+            padding: 15px 30px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 16px;
+            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(212, 175, 55, 0.4);
+        }
+        
+        .signature {
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 2px solid #ecf0f1;
+        }
+        
+        .signature p {
+            color: #7f8c8d;
+            font-style: italic;
+            margin-bottom: 5px;
+        }
+        
+        .team-name {
+            color: #d4af37;
+            font-weight: 700;
+            font-size: 16px;
+        }
+        
+        .footer {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: #bdc3c7;
+            padding: 30px;
+            text-align: center;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        
+        .footer p {
+            margin-bottom: 8px;
+        }
+        
+        .footer a {
+            color: #d4af37;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            
+            .email-container {
+                border-radius: 15px;
+            }
+            
+            .header {
+                padding: 30px 20px;
+            }
+            
+            .content {
+                padding: 30px 20px;
+            }
+            
+            .reservation-card {
+                padding: 20px;
+            }
+            
+            .detail-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="email-container">
         <div class="header">
-            <h1>🍝 Trattoria La Bella</h1>
-            <h2>Confirmación de Reserva</h2>
+            <div class="header-content">
+                <div class="logo">🍝</div>
+                <h1 class="restaurant-name">Trattoria La Bella</h1>
+                <p class="header-subtitle">Confirmación de Reserva</p>
+            </div>
         </div>
         
         <div class="content">
-            <p>Estimado/a <span class="highlight">{{.Name}}</span>,</p>
+            <p class="greeting">¡Hola {{.Name}}!</p>
             
-            <p>Su reserva ha sido confirmada exitosamente. A continuación encontrará los detalles:</p>
+            <p class="message">
+                Nos complace informarle que su reserva ha sido <strong>confirmada exitosamente</strong>. 
+                A continuación encontrará todos los detalles de su reservación.
+            </p>
             
-            <div class="reservation-details">
-                <h3>📋 Detalles de la Reserva</h3>
-                <p><strong>Fecha:</strong> {{.Date}}</p>
-                <p><strong>Hora:</strong> {{.Time}}</p>
-                <p><strong>Número de personas:</strong> {{.NumberOfGuests}}</p>
-                <p><strong>Estado:</strong> <span class="highlight">Confirmada</span></p>
+            <div class="reservation-card">
+                <h3 class="card-title">Detalles de la Reserva</h3>
+                
+                <div class="detail-row">
+                    <span class="detail-label">📅 Fecha:</span>
+                    <span class="detail-value">{{.Date}}</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">🕐 Hora:</span>
+                    <span class="detail-value">{{.Time}}</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">👥 Número de personas:</span>
+                    <span class="detail-value">{{.NumberOfGuests}} {{if eq .NumberOfGuests 1}}persona{{else}}personas{{end}}</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Estado:</span>
+                    <span class="status-badge">✅ Confirmada</span>
+                </div>
             </div>
             
-            <p>Por favor, llegue 10 minutos antes de su hora de reserva.</p>
+            <div class="info-box">
+                <p>⏰ <strong>Importante:</strong> Le recomendamos llegar 10 minutos antes de su hora de reserva para una mejor experiencia.</p>
+            </div>
             
-            <p>Si necesita modificar o cancelar su reserva, puede hacerlo contactándonos directamente.</p>
+            <div class="cta-section">
+                <p class="message">
+                    Si necesita modificar o cancelar su reserva, puede hacerlo contactándonos directamente.
+                </p>
+            </div>
             
-            <p>¡Esperamos su visita!</p>
-            
-            <p>Saludos cordiales,<br>
-            <strong>Equipo de Trattoria La Bella</strong></p>
+            <div class="signature">
+                <p>¡Esperamos su visita con gran entusiasmo!</p>
+                <p class="team-name">— Equipo de Trattoria La Bella</p>
+            </div>
         </div>
         
         <div class="footer">
             <p>Este es un email automático, por favor no responda a este mensaje.</p>
             <p>Para consultas, contacte directamente con el restaurante.</p>
+            <p>📍 Dirección del restaurante • 📞 Teléfono • 🌐 Sitio web</p>
         </div>
     </div>
 </body>
@@ -318,54 +602,340 @@ func (e *EmailService) generateReservationConfirmationEmail(name string, reserva
 }
 
 func (e *EmailService) generateReservationCancellationEmail(name string, reservation entities.Reservation) (string, error) {
-	const emailTemplate = `...
-
-<!DOCTYPE html>
-<html>
+	const emailTemplate = `<!DOCTYPE html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Cancelación de Reserva</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cancelación de Reserva - Trattoria La Bella</title>
     <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background-color: #DC143C; color: white; padding: 20px; text-align: center; }
-        .content { padding: 20px; background-color: #f9f9f9; }
-        .reservation-details { background-color: white; padding: 20px; margin: 20px 0; border-left: 4px solid #DC143C; }
-        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-        .highlight { color: #DC143C; font-weight: bold; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #2c3e50;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            padding: 20px;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 50%, #a93226 100%);
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.1)"/><circle cx="10" cy="60" r="0.5" fill="rgba(255,255,255,0.1)"/><circle cx="90" cy="40" r="0.5" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.3;
+        }
+        
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 10px;
+            border-radius: 50%;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .restaurant-name {
+            font-size: 28px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 5px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        .header-subtitle {
+            font-size: 18px;
+            color: #f8f9fa;
+            font-weight: 500;
+        }
+        
+        .content {
+            padding: 40px 30px;
+            background: #ffffff;
+        }
+        
+        .greeting {
+            font-size: 20px;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+        
+        .message {
+            font-size: 16px;
+            color: #5a6c7d;
+            margin-bottom: 30px;
+            line-height: 1.8;
+        }
+        
+        .reservation-card {
+            background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            border-left: 5px solid #e74c3c;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .reservation-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(45deg, transparent 30%, rgba(231, 76, 60, 0.1) 30%, rgba(231, 76, 60, 0.1) 70%, transparent 70%);
+            border-radius: 50%;
+            transform: translate(30px, -30px);
+        }
+        
+        .card-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .card-title::before {
+            content: '❌';
+            font-size: 24px;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(231, 76, 60, 0.2);
+        }
+        
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #34495e;
+            font-size: 15px;
+        }
+        
+        .detail-value {
+            font-weight: 700;
+            color: #e74c3c;
+            font-size: 15px;
+        }
+        
+        .status-badge {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .info-box {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 25px 0;
+            border-left: 4px solid #f39c12;
+        }
+        
+        .info-box p {
+            color: #856404;
+            font-weight: 500;
+            margin: 0;
+        }
+        
+        .cta-section {
+            text-align: center;
+            margin: 35px 0;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: #ffffff;
+            padding: 15px 30px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 16px;
+            box-shadow: 0 8px 20px rgba(231, 76, 60, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(231, 76, 60, 0.4);
+        }
+        
+        .signature {
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 2px solid #ecf0f1;
+        }
+        
+        .signature p {
+            color: #7f8c8d;
+            font-style: italic;
+            margin-bottom: 5px;
+        }
+        
+        .team-name {
+            color: #e74c3c;
+            font-weight: 700;
+            font-size: 16px;
+        }
+        
+        .footer {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: #bdc3c7;
+            padding: 30px;
+            text-align: center;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        
+        .footer p {
+            margin-bottom: 8px;
+        }
+        
+        .footer a {
+            color: #e74c3c;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            
+            .email-container {
+                border-radius: 15px;
+            }
+            
+            .header {
+                padding: 30px 20px;
+            }
+            
+            .content {
+                padding: 30px 20px;
+            }
+            
+            .reservation-card {
+                padding: 20px;
+            }
+            
+            .detail-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="email-container">
         <div class="header">
-            <h1>🍝 Trattoria La Bella</h1>
-            <h2>Cancelación de Reserva</h2>
+            <div class="header-content">
+                <div class="logo">🍝</div>
+                <h1 class="restaurant-name">Trattoria La Bella</h1>
+                <p class="header-subtitle">Cancelación de Reserva</p>
+            </div>
         </div>
         
         <div class="content">
-            <p>Estimado/a <span class="highlight">{{.Name}}</span>,</p>
+            <p class="greeting">Estimado/a {{.Name}},</p>
             
-            <p>Su reserva ha sido cancelada exitosamente. A continuación encontrará los detalles de la reserva cancelada:</p>
+            <p class="message">
+                Le informamos que su reserva ha sido <strong>cancelada exitosamente</strong>. 
+                A continuación encontrará los detalles de la reserva cancelada.
+            </p>
             
-            <div class="reservation-details">
-                <h3>📋 Reserva Cancelada</h3>
-                <p><strong>Fecha:</strong> {{.Date}}</p>
-                <p><strong>Hora:</strong> {{.Time}}</p>
-                <p><strong>Número de personas:</strong> {{.NumberOfGuests}}</p>
-                <p><strong>Estado:</strong> <span class="highlight">Cancelada</span></p>
+            <div class="reservation-card">
+                <h3 class="card-title">Reserva Cancelada</h3>
+                
+                <div class="detail-row">
+                    <span class="detail-label">📅 Fecha:</span>
+                    <span class="detail-value">{{.Date}}</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">🕐 Hora:</span>
+                    <span class="detail-value">{{.Time}}</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">👥 Número de personas:</span>
+                    <span class="detail-value">{{.NumberOfGuests}} {{if eq .NumberOfGuests 1}}persona{{else}}personas{{end}}</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Estado:</span>
+                    <span class="status-badge">❌ Cancelada</span>
+                </div>
             </div>
             
-            <p>Si desea realizar una nueva reserva, no dude en contactarnos.</p>
+            <div class="info-box">
+                <p>🔄 <strong>¿Desea realizar una nueva reserva?</strong> No dude en contactarnos, estaremos encantados de ayudarle.</p>
+            </div>
             
-            <p>Gracias por su comprensión.</p>
+            <div class="cta-section">
+                <p class="message">
+                    Gracias por su comprensión. Esperamos poder servirle en una próxima ocasión.
+                </p>
+            </div>
             
-            <p>Saludos cordiales,<br>
-            <strong>Equipo de Trattoria La Bella</strong></p>
+            <div class="signature">
+                <p>Atentamente,</p>
+                <p class="team-name">— Equipo de Trattoria La Bella</p>
+            </div>
         </div>
         
         <div class="footer">
             <p>Este es un email automático, por favor no responda a este mensaje.</p>
             <p>Para consultas, contacte directamente con el restaurante.</p>
+            <p>📍 Dirección del restaurante • 📞 Teléfono • 🌐 Sitio web</p>
         </div>
     </div>
 </body>

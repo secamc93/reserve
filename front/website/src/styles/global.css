@@ -73,6 +73,30 @@
     }
 }
 
+@keyframes bounce {
+
+    0%,
+    20%,
+    53%,
+    80%,
+    100% {
+        transform: translate3d(0, 0, 0);
+    }
+
+    40%,
+    43% {
+        transform: translate3d(0, -30px, 0);
+    }
+
+    70% {
+        transform: translate3d(0, -15px, 0);
+    }
+
+    90% {
+        transform: translate3d(0, -4px, 0);
+    }
+}
+
 /* Utility classes */
 .animate-fade-in-up {
     animation: fadeInUp 0.8s ease-out;
@@ -96,6 +120,10 @@
 
 .animate-pulse-glow {
     animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-bounce {
+    animation: bounce 1s ease-in-out;
 }
 
 /* Smooth scrolling */

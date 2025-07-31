@@ -98,23 +98,25 @@ func (u *ReserveUseCase) CreateReserve(ctx context.Context, req entities.Reserva
 
 	u.log.Info().Uint("client_id", clientID).Str("email", email).Msg("Reserva creada exitosamente")
 
-	// Enviar email de confirmación usando la reserva con ID
-	reservationWithID := entities.Reservation{
-		Id:             reservationID,
-		ClientID:       clientID,
-		TableID:        req.TableID,
-		BusinessID:     req.BusinessID,
-		StartAt:        req.StartAt,
-		EndAt:          req.EndAt,
-		NumberOfGuests: req.NumberOfGuests,
-		StatusID:       1,
-	}
+	// ✅ OPTIMIZADO: Enviar email de confirmación de forma asíncrona (en background)
+	go func() {
+		reservationWithID := entities.Reservation{
+			Id:             reservationID,
+			ClientID:       clientID,
+			TableID:        req.TableID,
+			BusinessID:     req.BusinessID,
+			StartAt:        req.StartAt,
+			EndAt:          req.EndAt,
+			NumberOfGuests: req.NumberOfGuests,
+			StatusID:       1,
+		}
 
-	if err := u.emailService.SendReservationConfirmation(ctx, email, name, reservationWithID); err != nil {
-		u.log.Warn().Err(err).Str("email", email).Msg("Error al enviar email de confirmación")
-	} else {
-		u.log.Info().Str("email", email).Msg("Email de confirmación enviado exitosamente")
-	}
+		if err := u.emailService.SendReservationConfirmation(ctx, email, name, reservationWithID); err != nil {
+			u.log.Warn().Err(err).Str("email", email).Msg("Error al enviar email de confirmación")
+		} else {
+			u.log.Info().Str("email", email).Msg("Email de confirmación enviado exitosamente")
+		}
+	}()
 
 	return completeReservation, nil
 }
