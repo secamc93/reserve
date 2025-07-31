@@ -1,0 +1,190 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import ProductCard from "../components/ProductCard.astro";
+
+// Datos de productos de lubricantes
+const products = [
+    {
+        id: "mobil-super-10w30",
+        name: "MobilSuper 10w-30",
+        price: 25.99,
+        image: "http://localhost:9000/imagenes-trattoria/motos-fondo.jpg",
+        description:
+            "Aceite de motor de alto rendimiento para motores de gasolina y diésel. Protección superior contra el desgaste.",
+        viscosity: "10W-30",
+    },
+    {
+        id: "ecstar-10w40",
+        name: "Ecstar 10w-40",
+        price: 28.5,
+        image: "http://localhost:9000/imagenes-trattoria/crro.jpg",
+        description:
+            "Aceite sintético premium para motores de alto rendimiento. Excelente estabilidad térmica y protección.",
+        viscosity: "10W-40",
+    },
+    {
+        id: "yamalube-10w40",
+        name: "Yamalube 10w-40",
+        price: 32.75,
+        image: "http://localhost:9000/imagenes-trattoria/mula.jpg",
+        description:
+            "Aceite específicamente formulado para motocicletas Yamaha. Máxima protección para tu motor.",
+        viscosity: "10W-40",
+    },
+    {
+        id: "pro-honda-10w30",
+        name: "Pro-Honda 10w-30",
+        price: 29.99,
+        image: "http://localhost:9000/imagenes-trattoria/motos-fondo.jpg",
+        description:
+            "Aceite de motor recomendado por Honda. Garantiza el rendimiento óptimo de tu vehículo.",
+        viscosity: "10W-30",
+    },
+    {
+        id: "motul-15w50",
+        name: "Motul 15w-50",
+        price: 45.0,
+        image: "http://localhost:9000/imagenes-trattoria/crro.jpg",
+        description:
+            "Aceite de motor de alta viscosidad para condiciones extremas. Ideal para motores de alto rendimiento.",
+        viscosity: "15W-50",
+    },
+];
+---
+
+<BaseLayout title="Productos - Lubricantes">
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <h1 class="text-4xl font-bold mb-4">Nuestros Productos</h1>
+                <p class="text-xl opacity-90">
+                    Descubre nuestra selección de lubricantes de alta calidad
+                    para tu motor
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grid de productos -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {
+                products.map((product) => (
+                    <ProductCard
+                        id={product.id}
+                        name={product.name}
+                        price={product.price}
+                        image={product.image}
+                        description={product.description}
+                        viscosity={product.viscosity}
+                    />
+                ))
+            }
+        </div>
+    </div>
+
+    <!-- Información adicional -->
+    <div class="bg-gray-50 py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">
+                    ¿Por qué elegir nuestros lubricantes?
+                </h2>
+                <p class="text-xl text-gray-600">
+                    Calidad garantizada para el cuidado de tu motor
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="text-center">
+                    <div
+                        class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4"
+                    >
+                        <svg
+                            class="w-8 h-8 text-blue-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                            ></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">
+                        Calidad Premium
+                    </h3>
+                    <p class="text-gray-600">
+                        Todos nuestros lubricantes cumplen con los más altos
+                        estándares de calidad.
+                    </p>
+                </div>
+
+                <div class="text-center">
+                    <div
+                        class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"
+                    >
+                        <svg
+                            class="w-8 h-8 text-green-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">
+                        Protección Superior
+                    </h3>
+                    <p class="text-gray-600">
+                        Protección avanzada contra el desgaste y la corrosión
+                        del motor.
+                    </p>
+                </div>
+
+                <div class="text-center">
+                    <div
+                        class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4"
+                    >
+                        <svg
+                            class="w-8 h-8 text-purple-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                            ></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">
+                        Precios Competitivos
+                    </h3>
+                    <p class="text-gray-600">
+                        Ofrecemos los mejores precios sin comprometer la calidad
+                        del producto.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</BaseLayout>
+
+<script>
+    // Limpiar cualquier dato del carrito que pueda estar en localStorage
+    if (typeof window !== "undefined") {
+        localStorage.removeItem("lubricantes_cart");
+        console.log("Datos del carrito eliminados del localStorage");
+    }
+</script>

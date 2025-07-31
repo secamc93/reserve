@@ -1,0 +1,78 @@
+---
+
+---
+
+<section class="relative w-full h-[85vh] overflow-hidden">
+  <div class="relative w-full h-full">
+    <div class="carousel relative h-full overflow-hidden">
+      <!-- Slides -->
+      <div
+        class="whitespace-nowrap transition-transform duration-700 ease-in-out animate-carousel"
+      >
+        <img
+          src="http://localhost:9000/imagenes-trattoria/motos-fondo.jpg"
+          alt="Moto"
+          class="inline-block w-full h-[85vh] object-cover"
+        />
+        <img
+          src="http://localhost:9000/imagenes-trattoria/crro.jpg"
+          alt="Carro"
+          class="inline-block w-full h-[85vh] object-cover"
+        />
+        <img
+          src="http://localhost:9000/imagenes-trattoria/mula.jpg"
+          alt="Mula"
+          class="inline-block w-full h-[85vh] object-cover"
+        />
+      </div>
+
+      <!-- Overlay y texto -->
+      <div
+        class="absolute inset-0 bg-black/40 z-10 flex items-center justify-center"
+      >
+        <div class="text-center px-4 max-w-3xl text-white">
+          <h1 class="text-4xl md:text-6xl font-bold mb-4 drop-shadow-lg">
+            Lubricantes de Alta Calidad
+          </h1>
+          <p class="text-lg md:text-xl mb-6 drop-shadow-sm">
+            Protege tu motor con la mejor tecnología en aceites.
+          </p>
+          <a
+            href="/productos"
+            class="bg-[#0074B8] hover:bg-[#005B96] text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-300"
+          >
+            Ver Productos
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  @keyframes carousel {
+    0%,
+    20% {
+      transform: translateX(0%);
+    }
+    25%,
+    45% {
+      transform: translateX(-100%);
+    }
+    50%,
+    70% {
+      transform: translateX(-100%);
+    }
+    75%,
+    95% {
+      transform: translateX(-200%);
+    }
+    100% {
+      transform: translateX(0%);
+    }
+  }
+
+  .animate-carousel {
+    animation: carousel 15s infinite;
+  }
+</style>

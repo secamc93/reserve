@@ -1,0 +1,516 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="Contacto - Lubricantes Premium">
+    <!-- Hero Section -->
+    <section
+        class="relative py-20 bg-gradient-to-r from-blue-600 to-blue-800 overflow-hidden"
+    >
+        <div class="absolute inset-0 bg-black/20"></div>
+        <div class="container mx-auto px-6 relative z-10">
+            <div class="text-center text-white">
+                <h1 class="text-5xl md:text-7xl font-bold mb-6 drop-shadow-2xl">
+                    Contáctanos
+                </h1>
+                <p
+                    class="text-xl md:text-2xl text-blue-100 max-w-4xl mx-auto leading-relaxed"
+                >
+                    Estamos aquí para ayudarte. Nuestro equipo de expertos está
+                    listo para responder todas tus preguntas y brindarte el
+                    mejor asesoramiento
+                </p>
+            </div>
+        </div>
+
+        <!-- Elementos decorativos -->
+        <div
+            class="absolute top-10 left-10 w-20 h-20 bg-white/10 rounded-full blur-xl"
+        >
+        </div>
+        <div
+            class="absolute bottom-10 right-10 w-32 h-32 bg-white/5 rounded-full blur-2xl"
+        >
+        </div>
+    </section>
+
+    <!-- Información de Contacto -->
+    <section class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="grid md:grid-cols-2 gap-12 items-start">
+                <!-- Información de contacto -->
+                <div>
+                    <h2
+                        class="text-4xl md:text-5xl font-bold text-gray-800 mb-8"
+                    >
+                        Información de Contacto
+                    </h2>
+                    <p class="text-lg text-gray-600 mb-8 leading-relaxed">
+                        Nuestro equipo está disponible para atenderte en
+                        múltiples canales. No dudes en contactarnos para
+                        cualquier consulta sobre nuestros productos.
+                    </p>
+
+                    <div class="space-y-6">
+                        <!-- Teléfono -->
+                        <div
+                            class="flex items-center p-6 bg-gray-50 rounded-2xl hover:bg-blue-50 transition-all duration-300 group"
+                        >
+                            <div
+                                class="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center mr-6 group-hover:scale-110 transition-transform duration-300"
+                            >
+                                <svg
+                                    class="w-8 h-8 text-white"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                                    ></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3
+                                    class="text-xl font-bold text-gray-800 mb-1"
+                                >
+                                    Teléfono
+                                </h3>
+                                <p class="text-gray-600 text-lg">
+                                    +1 (555) 123-4567
+                                </p>
+                                <p class="text-gray-500 text-sm">
+                                    Lun - Vie: 8:00 AM - 6:00 PM
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Email -->
+                        <div
+                            class="flex items-center p-6 bg-gray-50 rounded-2xl hover:bg-green-50 transition-all duration-300 group"
+                        >
+                            <div
+                                class="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center mr-6 group-hover:scale-110 transition-transform duration-300"
+                            >
+                                <svg
+                                    class="w-8 h-8 text-white"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                                    ></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3
+                                    class="text-xl font-bold text-gray-800 mb-1"
+                                >
+                                    Email
+                                </h3>
+                                <p class="text-gray-600 text-lg">
+                                    info@lubricantes.com
+                                </p>
+                                <p class="text-gray-500 text-sm">
+                                    Respuesta en 24 horas
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Dirección -->
+                        <div
+                            class="flex items-center p-6 bg-gray-50 rounded-2xl hover:bg-purple-50 transition-all duration-300 group"
+                        >
+                            <div
+                                class="w-16 h-16 bg-purple-500 rounded-2xl flex items-center justify-center mr-6 group-hover:scale-110 transition-transform duration-300"
+                            >
+                                <svg
+                                    class="w-8 h-8 text-white"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                                    ></path>
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                                    ></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3
+                                    class="text-xl font-bold text-gray-800 mb-1"
+                                >
+                                    Dirección
+                                </h3>
+                                <p class="text-gray-600 text-lg">
+                                    Av. Principal 123
+                                </p>
+                                <p class="text-gray-500 text-sm">
+                                    Ciudad, Estado 12345
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Horarios -->
+                        <div
+                            class="flex items-center p-6 bg-gray-50 rounded-2xl hover:bg-orange-50 transition-all duration-300 group"
+                        >
+                            <div
+                                class="w-16 h-16 bg-orange-500 rounded-2xl flex items-center justify-center mr-6 group-hover:scale-110 transition-transform duration-300"
+                            >
+                                <svg
+                                    class="w-8 h-8 text-white"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    ></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3
+                                    class="text-xl font-bold text-gray-800 mb-1"
+                                >
+                                    Horarios
+                                </h3>
+                                <p class="text-gray-600 text-lg">
+                                    Lunes - Viernes: 8:00 AM - 6:00 PM
+                                </p>
+                                <p class="text-gray-500 text-sm">
+                                    Sábados: 9:00 AM - 2:00 PM
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulario de contacto -->
+                <div
+                    class="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100"
+                >
+                    <h3 class="text-3xl font-bold text-gray-800 mb-6">
+                        Envíanos un mensaje
+                    </h3>
+                    <p class="text-gray-600 mb-8">
+                        Completa el formulario y nos pondremos en contacto
+                        contigo lo antes posible.
+                    </p>
+
+                    <form class="space-y-6">
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label
+                                    class="block text-sm font-semibold text-gray-700 mb-2"
+                                >
+                                    Nombre *
+                                </label>
+                                <input
+                                    type="text"
+                                    required
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                                    placeholder="Tu nombre completo"
+                                />
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-sm font-semibold text-gray-700 mb-2"
+                                >
+                                    Email *
+                                </label>
+                                <input
+                                    type="email"
+                                    required
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                                    placeholder="tu@email.com"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label
+                                class="block text-sm font-semibold text-gray-700 mb-2"
+                            >
+                                Teléfono
+                            </label>
+                            <input
+                                type="tel"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                                placeholder="+1 (555) 123-4567"
+                            />
+                        </div>
+
+                        <div>
+                            <label
+                                class="block text-sm font-semibold text-gray-700 mb-2"
+                            >
+                                Asunto *
+                            </label>
+                            <select
+                                required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                            >
+                                <option value="">Selecciona un asunto</option>
+                                <option value="consulta-producto"
+                                    >Consulta sobre productos</option
+                                >
+                                <option value="asesoramiento"
+                                    >Asesoramiento técnico</option
+                                >
+                                <option value="cotizacion">Cotización</option>
+                                <option value="soporte">Soporte técnico</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label
+                                class="block text-sm font-semibold text-gray-700 mb-2"
+                            >
+                                Mensaje *
+                            </label>
+                            <textarea
+                                required
+                                rows="5"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 resize-none"
+                                placeholder="Describe tu consulta o solicitud..."
+                            ></textarea>
+                        </div>
+
+                        <button
+                            type="submit"
+                            class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl"
+                        >
+                            Enviar Mensaje
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Mapa y Ubicación -->
+    <section class="py-20 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+                    Nuestra Ubicación
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Visítanos en nuestras instalaciones para recibir
+                    asesoramiento personalizado
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <!-- Mapa placeholder -->
+                <div
+                    class="bg-white rounded-2xl shadow-xl p-8 border border-gray-200"
+                >
+                    <div
+                        class="w-full h-80 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center"
+                    >
+                        <div class="text-center">
+                            <svg
+                                class="w-16 h-16 text-blue-500 mx-auto mb-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                                ></path>
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            <p class="text-blue-600 font-semibold">
+                                Mapa Interactivo
+                            </p>
+                            <p class="text-blue-500 text-sm">
+                                Av. Principal 123, Ciudad
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información adicional -->
+                <div>
+                    <h3 class="text-3xl font-bold text-gray-800 mb-6">
+                        Cómo llegar
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="flex items-start">
+                            <div
+                                class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm mr-4 mt-1"
+                            >
+                                1
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-800 mb-1">
+                                    En Auto
+                                </h4>
+                                <p class="text-gray-600">
+                                    Toma la Av. Principal hacia el norte,
+                                    estamos a 2 cuadras del centro comercial.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div
+                                class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-sm mr-4 mt-1"
+                            >
+                                2
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-800 mb-1">
+                                    En Transporte Público
+                                </h4>
+                                <p class="text-gray-600">
+                                    Líneas 15, 23 y 45. Baja en la parada
+                                    "Centro Comercial".
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div
+                                class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm mr-4 mt-1"
+                            >
+                                3
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-800 mb-1">
+                                    Estacionamiento
+                                </h4>
+                                <p class="text-gray-600">
+                                    Contamos con estacionamiento gratuito para
+                                    nuestros clientes.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+                    Preguntas Frecuentes
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Resolvemos las dudas más comunes sobre nuestros productos y
+                    servicios
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <div
+                    class="bg-gray-50 rounded-2xl p-6 hover:bg-blue-50 transition-all duration-300"
+                >
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">
+                        ¿Qué tipo de lubricantes ofrecen?
+                    </h3>
+                    <p class="text-gray-600">
+                        Ofrecemos una amplia gama de lubricantes para motores de
+                        gasolina, diesel, motocicletas y vehículos pesados,
+                        todos de la más alta calidad.
+                    </p>
+                </div>
+
+                <div
+                    class="bg-gray-50 rounded-2xl p-6 hover:bg-blue-50 transition-all duration-300"
+                >
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">
+                        ¿Hacen envíos a domicilio?
+                    </h3>
+                    <p class="text-gray-600">
+                        Sí, ofrecemos servicio de entrega a domicilio en toda la
+                        ciudad con un tiempo de entrega de 24-48 horas.
+                    </p>
+                </div>
+
+                <div
+                    class="bg-gray-50 rounded-2xl p-6 hover:bg-blue-50 transition-all duration-300"
+                >
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">
+                        ¿Tienen garantía en sus productos?
+                    </h3>
+                    <p class="text-gray-600">
+                        Todos nuestros productos cuentan con garantía de calidad
+                        y satisfacción del cliente. Si no estás satisfecho, te
+                        reembolsamos.
+                    </p>
+                </div>
+
+                <div
+                    class="bg-gray-50 rounded-2xl p-6 hover:bg-blue-50 transition-all duration-300"
+                >
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">
+                        ¿Ofrecen asesoramiento técnico?
+                    </h3>
+                    <p class="text-gray-600">
+                        Sí, nuestro equipo de técnicos especializados está
+                        disponible para brindarte el mejor asesoramiento sobre
+                        qué lubricante usar.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="py-20 bg-gradient-to-r from-blue-600 to-blue-800">
+        <div class="container mx-auto px-6 text-center">
+            <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">
+                ¿Necesitas ayuda inmediata?
+            </h2>
+            <p class="text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
+                Nuestro equipo está disponible para atenderte. No dudes en
+                contactarnos para cualquier consulta o emergencia.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a
+                    href="tel:+15551234567"
+                    class="bg-white text-blue-600 px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl"
+                >
+                    📞 Llamar Ahora
+                </a>
+                <a
+                    href="mailto:info@lubricantes.com"
+                    class="bg-transparent border-2 border-white text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 hover:bg-white hover:text-blue-600"
+                >
+                    ✉️ Enviar Email
+                </a>
+            </div>
+        </div>
+    </section>
+</BaseLayout>
+
