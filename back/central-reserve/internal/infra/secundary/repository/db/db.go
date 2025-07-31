@@ -32,14 +32,23 @@ type database struct {
 	config   env.IConfig
 }
 
-// New crea una nueva instancia de IDatabase con logger y config inyectados
+// New crea una nueva instancia de la base de datos y conecta automáticamente
 func New(logger log.ILogger, config env.IConfig) IDatabase {
-	dbLog := logger.With().Str("component", "database").Logger()
-	return &database{
+	d := &database{
 		log:      logger,
-		dbLogger: NewDBLogger(dbLog).LogMode(getLogLevel(config)),
+		dbLogger: NewDBLogger(logger.With().Str("component", "database").Logger()).LogMode(getLogLevel(config)),
 		config:   config,
 	}
+
+	// Conectar automáticamente a la base de datos
+	if err := d.Connect(context.Background()); err != nil {
+		logger.Fatal(context.Background()).
+			Err(err).
+			Msg("Error al conectar a la base de datos - la aplicación no puede continuar")
+		// El panic se ejecutará automáticamente después del log fatal
+	}
+
+	return d
 }
 
 // Connect establece la conexión con la base de datos

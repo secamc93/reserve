@@ -77,7 +77,7 @@ export class ApiReservaRepository extends ReservaRepository {
 
   async createReserva(reservaData) {
     try {
-      console.log('Creating reserva with data:', reservaData);
+      console.log('🔥 REPOSITORY: Creating reserva with data:', reservaData);
 
       // Map front-end field to backend expectation
       const payload = { ...reservaData };
@@ -88,7 +88,7 @@ export class ApiReservaRepository extends ReservaRepository {
 
       const response = await this.httpClient.post('/api/v1/reserves', payload);
 
-      console.log('Create reserva response:', response);
+      console.log('🔥 REPOSITORY: Raw server response:', response);
 
       if (!response) {
         throw new Error('No response received from server');
@@ -99,9 +99,12 @@ export class ApiReservaRepository extends ReservaRepository {
       }
 
       // Transform response to domain entity if creation was successful
-      return new Reserva(response.data);
+      const reservaEntity = new Reserva(response.data);
+      console.log('🔥 REPOSITORY: Reserva entity created successfully:', reservaEntity);
+
+      return reservaEntity;
     } catch (error) {
-      console.error('Error creating reserva:', error);
+      console.error('🔥 REPOSITORY: Error creating reserva:', error);
       throw error;
     }
   }

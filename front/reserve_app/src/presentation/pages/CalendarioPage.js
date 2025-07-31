@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useReservas } from '../hooks/useReservas.js';
 import CreateReservaModal from '../components/Reserva/CreateReservaModal';
 import './CalendarioPage.css';
@@ -14,6 +14,9 @@ const CalendarioPage = () => {
     const [showReservasModals, setShowReservasModals] = useState(false);
     const [selectedReserva, setSelectedReserva] = useState(null);
     const [dayReservas, setDayReservas] = useState([]);
+    
+    // ✅ NUEVO: Estado para trackear días recientemente actualizados
+    const [recentlyUpdatedDays, setRecentlyUpdatedDays] = useState(new Set());
 
     const {
         reservas,
@@ -107,6 +110,11 @@ const CalendarioPage = () => {
         });
     };
 
+    // ✅ OPTIMIZACIÓN: Calcular días solo cuando cambien reservas o currentDate
+    const days = useMemo(() => {
+        return getDaysInMonth(currentDate);
+    }, [currentDate, reservas]); // Re-calcular solo cuando cambien estas dependencias
+
     // 🔧 MODIFICADO: Manejar click en día con reservas
     const handleDayClick = (dayData) => {
         setSelectedDate(dayData.date);
@@ -196,15 +204,31 @@ const CalendarioPage = () => {
         if (result.success) {
             setShowCreateModal(false);
             setSelectedDateForCreate(null);
-            // Recargar datos
+            
+            // ✅ ACTUALIZACIÓN GRANULAR: Marcar el día específico como actualizado
+            const reservaDate = new Date(reservaData.start_at);
+            const dayKey = reservaDate.toDateString();
+            
+            setRecentlyUpdatedDays(prev => new Set([...prev, dayKey]));
+            
+            // Limpiar el indicador después de 3 segundos
             setTimeout(() => {
-                window.location.reload();
-            }, 500);
+                setRecentlyUpdatedDays(prev => {
+                    const newSet = new Set(prev);
+                    newSet.delete(dayKey);
+                    return newSet;
+                });
+            }, 3000);
+            
+            console.log(`✅ Nueva reserva creada para ${dayKey} - Día actualizado automáticamente`);
+        } else {
+            // ✅ MANEJO PROFESIONAL DE ERRORES
+            console.error('❌ Error al crear reserva:', result.error);
+            // Aquí podrías mostrar un toast de error al usuario
         }
         return result;
     };
 
-    const days = getDaysInMonth(currentDate);
     const monthNames = [
         'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
         'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
@@ -295,50 +319,58 @@ const CalendarioPage = () => {
                     </div>
 
                     <div className="calendar-body">
-                        {days.map((dayData, index) => (
-                            <div
-                                key={index}
-                                className={`calendar-day ${!dayData.isCurrentMonth ? 'other-month' : ''} ${dayData.isToday ? 'today' : ''
-                                    } ${selectedDate && selectedDate.toDateString() === dayData.date.toDateString() ? 'selected' : ''}`}
-                                onClick={() => handleDayClick(dayData)}
-                            >
-                                <div className="day-number">{dayData.date.getDate()}</div>
+                        {days.map((dayData, index) => {
+                            const dayKey = dayData.date.toDateString();
+                            const isRecentlyUpdated = recentlyUpdatedDays.has(dayKey);
+                            
+                            return (
+                                <div
+                                    key={index}
+                                    className={`calendar-day ${!dayData.isCurrentMonth ? 'other-month' : ''} ${dayData.isToday ? 'today' : ''
+                                        } ${selectedDate && selectedDate.toDateString() === dayData.date.toDateString() ? 'selected' : ''} ${isRecentlyUpdated ? 'recently-updated' : ''}`}
+                                    onClick={() => handleDayClick(dayData)}
+                                >
+                                    <div className="day-number">
+                                        {dayData.date.getDate()}
+                                        {isRecentlyUpdated && <span className="update-indicator">✨</span>}
+                                    </div>
 
-                                <div className="day-reservas">
-                                    {dayData.reservas.slice(0, 3).map((reserva, idx) => (
-                                        <div
-                                            key={idx}
-                                            className={`reserva-item ${reserva.estado_codigo}`}
-                                            title={`${reserva.name} - ${reserva.start_at ? new Date(reserva.start_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : ''}`}
-                                        >
-                                            <span className="reserva-time">
-                                                {reserva.start_at ? new Date(reserva.start_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : ''}
-                                            </span>
-                                            <span className="reserva-name">{reserva.name}</span>
-                                        </div>
-                                    ))}
+                                    <div className="day-reservas">
+                                        {dayData.reservas.slice(0, 3).map((reserva, idx) => (
+                                            <div
+                                                key={idx}
+                                                className={`reserva-item ${reserva.estado_codigo}`}
+                                                title={`${reserva.name} - ${reserva.start_at ? new Date(reserva.start_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : ''}`}
+                                            >
+                                                <span className="reserva-time">
+                                                    {reserva.start_at ? new Date(reserva.start_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : ''}
+                                                </span>
+                                                <span className="reserva-name">{reserva.name}</span>
+                                            </div>
+                                        ))}
 
-                                    {dayData.reservas.length > 3 && (
-                                        <div className="more-reservas">
-                                            +{dayData.reservas.length - 3} más
-                                        </div>
-                                    )}
+                                        {dayData.reservas.length > 3 && (
+                                            <div className="more-reservas">
+                                                +{dayData.reservas.length - 3} más
+                                            </div>
+                                        )}
 
-                                    {dayData.isCurrentMonth && (
-                                        <button
-                                            className="add-reserva-btn"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleCreateReserva(dayData.date);
-                                            }}
-                                            title="Agregar reserva"
-                                        >
-                                            +
-                                        </button>
-                                    )}
+                                        {dayData.isCurrentMonth && (
+                                            <button
+                                                className="add-reserva-btn"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleCreateReserva(dayData.date);
+                                                }}
+                                                title="Agregar reserva"
+                                            >
+                                                +
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
             </div>

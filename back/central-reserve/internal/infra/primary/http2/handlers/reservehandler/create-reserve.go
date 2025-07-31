@@ -68,10 +68,13 @@ func (h *ReserveHandler) CreateReserveHandler(c *gin.Context) {
 		return
 	}
 
-	// 5. Salida ──────────────────────────────────────────────
+	// 5. Dominio → Response ─────────────────────────────────
+	reserveResponse := mapper.MapToReserveDetail(*responseReserve)
+
+	// 6. Salida ──────────────────────────────────────────────
 	c.JSON(http.StatusCreated, gin.H{
 		"success": true,
 		"message": "Reserva creada exitosamente",
-		"data":    responseReserve,
+		"data":    reserveResponse,
 	})
 }

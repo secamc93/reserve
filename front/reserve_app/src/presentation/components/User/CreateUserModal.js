@@ -82,7 +82,7 @@ const CreateUserModal = ({ isOpen, onClose, onSubmit, roles, businesses }) => {
     const handleSubmit = async (e) => {
         // Si es un evento, prevenir el comportamiento por defecto
         if (e && e.preventDefault) {
-            e.preventDefault();
+        e.preventDefault();
         }
         
         console.log('🚀 CreateUserModal: handleSubmit ejecutándose - NO debería recargar la página');

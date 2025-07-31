@@ -3,7 +3,6 @@ package env
 import (
 	"central_reserve/internal/pkg/log"
 	"context"
-	"fmt"
 	"os"
 	"reflect"
 
@@ -19,7 +18,7 @@ type config struct {
 	logger log.ILogger
 }
 
-func New(logger log.ILogger) (IConfig, error) {
+func New(logger log.ILogger) IConfig {
 	_ = godotenv.Load()
 
 	cfg := &Config{}
@@ -46,12 +45,52 @@ func New(logger log.ILogger) (IConfig, error) {
 	}
 
 	if len(missing) > 0 {
-		logger.Error(context.Background()).
+		// Log del error y hacer panic - la aplicación no puede funcionar sin variables obligatorias
+		logger.Fatal(context.Background()).
 			Strs("missing_env_vars", missing).
-			Msg("Faltan variables de entorno obligatorias")
-		return nil, fmt.Errorf("faltan variables de entorno obligatorias: %v", missing)
+			Msg("Faltan variables de entorno obligatorias - la aplicación no puede continuar")
+		// El panic se ejecutará automáticamente después del log fatal
 	}
-	return &config{values: values, logger: logger}, nil
+
+	return &config{values: values, logger: logger}
+}
+
+// NewWithLogging crea una nueva configuración con logging automático de errores
+func NewWithLogging(logger log.ILogger) IConfig {
+	_ = godotenv.Load()
+
+	cfg := &Config{}
+	missing := []string{}
+	values := make(map[string]string)
+
+	v := reflect.ValueOf(cfg).Elem()
+	t := v.Type()
+
+	for i := 0; i < v.NumField(); i++ {
+		field := t.Field(i)
+		tag := field.Tag.Get("env")
+		if tag == "" {
+			continue
+		}
+		parts := splitTag(tag)
+		key := parts[0]
+		required := len(parts) > 1 && parts[1] == "required"
+		val := os.Getenv(key)
+		if val == "" && required {
+			missing = append(missing, key)
+		}
+		values[key] = val
+	}
+
+	if len(missing) > 0 {
+		// Log del error y hacer panic - la aplicación no puede funcionar sin variables obligatorias
+		logger.Fatal(context.Background()).
+			Strs("missing_env_vars", missing).
+			Msg("Faltan variables de entorno obligatorias - la aplicación no puede continuar")
+		// El panic se ejecutará automáticamente después del log fatal
+	}
+
+	return &config{values: values, logger: logger}
 }
 
 // Get retorna el valor de una variable de entorno cargada

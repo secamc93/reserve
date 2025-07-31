@@ -11,12 +11,29 @@ const ModalBase = ({
 }) => {
     if (!isOpen) return null;
 
+    const handleOverlayClick = (e) => {
+        // Solo prevenir si es exactamente el overlay, no sus hijos
+        if (e.target === e.currentTarget) {
+            onClose();
+        }
+    };
+
+    const handleContainerClick = (e) => {
+        // Prevenir que el click en el contenedor cierre el modal
+        e.stopPropagation();
+    };
+
+    const handleCloseClick = (e) => {
+        e.stopPropagation();
+        onClose();
+    };
+
     return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className={`modal-container-base ${className}`} onClick={e => e.stopPropagation()}>
+        <div className="modal-overlay" onClick={handleOverlayClick}>
+            <div className={`modal-container-base ${className}`} onClick={handleContainerClick}>
                 <div className="modal-header">
                     <h2>{title}</h2>
-                    <button className="modal-close-btn" onClick={onClose}>✕</button>
+                    <button type="button" className="modal-close-btn" onClick={handleCloseClick}>✕</button>
                 </div>
                 <div className="modal-content">
                     {children}

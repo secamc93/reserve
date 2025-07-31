@@ -1,15 +1,15 @@
 package permissionhandler
 
 import (
+	"central_reserve/internal/domain/ports"
 	"central_reserve/internal/infra/primary/http2/middleware"
-	"central_reserve/internal/pkg/jwt"
 	"central_reserve/internal/pkg/log"
 
 	"github.com/gin-gonic/gin"
 )
 
 // RegisterRoutes registra las rutas para el handler de permisos
-func RegisterRoutes(router *gin.RouterGroup, handler IPermissionHandler, jwtService *jwt.JWTService, logger log.ILogger) {
+func RegisterRoutes(router *gin.RouterGroup, handler IPermissionHandler, jwtService ports.IJWTService, logger log.ILogger) {
 	permissionsGroup := router.Group("/permissions")
 	permissionsGroup.Use(middleware.AuthMiddleware(jwtService, logger))
 

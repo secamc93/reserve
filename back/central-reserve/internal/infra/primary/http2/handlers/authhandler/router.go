@@ -1,14 +1,14 @@
 package authhandler
 
 import (
+	"central_reserve/internal/domain/ports"
 	"central_reserve/internal/infra/primary/http2/middleware"
-	"central_reserve/internal/pkg/jwt"
 	"central_reserve/internal/pkg/log"
 
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterRoutes(v1Group *gin.RouterGroup, handler IAuthHandler, jwtService *jwt.JWTService, logger log.ILogger) {
+func RegisterRoutes(v1Group *gin.RouterGroup, handler IAuthHandler, jwtService ports.IJWTService, logger log.ILogger) {
 	// Crear el subgrupo /auth dentro de /api/v1
 	authGroup := v1Group.Group("/auth")
 	{

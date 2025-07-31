@@ -40,7 +40,7 @@ type IRoomRepository interface {
 
 // IReservationRepository define las operaciones para reservas
 type IReservationRepository interface {
-	CreateReserve(ctx context.Context, reserve entities.Reservation) (string, error)
+	CreateReserve(ctx context.Context, reserve entities.Reservation) (uint, error)
 	GetLatestReservationByClient(ctx context.Context, clientID uint) (*entities.Reservation, error)
 	GetReserves(ctx context.Context, statusID *uint, clientID *uint, tableID *uint, startDate *time.Time, endDate *time.Time) ([]dtos.ReserveDetailDTO, error)
 	GetReserveByID(ctx context.Context, id uint) (*dtos.ReserveDetailDTO, error)
@@ -74,7 +74,7 @@ type IAuthService interface {
 	GetUserRoles(ctx context.Context, userID uint) ([]entities.Role, error)
 	GetRolePermissions(ctx context.Context, roleID uint) ([]entities.Permission, error)
 	ValidatePassword(hashedPassword, password string) error
-	GenerateToken(userID uint, email string, roles []string) (string, error)
+	GenerateToken(userID uint, email string, roles []string, businessID uint) (string, error)
 	UpdateLastLogin(ctx context.Context, userID uint) error
 }
 
