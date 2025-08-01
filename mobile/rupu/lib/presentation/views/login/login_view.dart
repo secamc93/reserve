@@ -27,12 +27,21 @@ class LoginView extends GetView<LoginController> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text("Bienvenidos a Rufú"),
-                const SizedBox(height: 16),
-                Text("Iniciar sesión"),
-                const SizedBox(height: 30),
-                CustomLogo(height: size.height * 0.2),
-                const SizedBox(height: 32),
+                Text(
+                  "Bienvenidos a Rufü",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  "Iniciar sesión",
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 5),
+                CustomLogo(
+                  height: size.height * 0.23,
+                  imagePath: "assets/images/logorufu.png",
+                ),
+                const SizedBox(height: 5),
                 Form(
                   key: controller.formKey,
                   child: Column(
@@ -48,14 +57,14 @@ class LoginView extends GetView<LoginController> {
                         labelText: "Contraseña",
                         hintText: "Ingresa tu contraseña",
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 25),
                       Row(
                         children: [
                           const Spacer(),
                           Text("¿Olvidaste contraseña?"),
                         ],
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 25),
                       Obx(() {
                         return controller.isLoading.value
                             ? const CircularProgressIndicator()

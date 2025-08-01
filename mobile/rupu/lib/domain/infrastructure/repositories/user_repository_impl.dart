@@ -1,4 +1,4 @@
-import 'package:rupu/domain/infrastructure/datasources/user_datasource.dart';
+import 'package:rupu/domain/infrastructure/datasources/user_datasource_impl.dart';
 import 'package:rupu/domain/repositories/user_repository.dart';
 
 class UserRepositoryImpl extends UserRepository {

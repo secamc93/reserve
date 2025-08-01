@@ -1,9 +1,7 @@
-import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
-import 'package:rupu/presentation/views/cambiar/cambiar_contrasena_controller.dart';
+import 'package:rupu/config/routers/app_bindings.dart';
 
 import '../../presentation/screens/screens.dart';
-import '../../presentation/views/views.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/login/0',
@@ -14,8 +12,7 @@ final appRouter = GoRouter(
       name: LoginScreen.name,
       builder: (context, state) {
         final pageIndex = state.pathParameters['page'] ?? '0';
-        Get.put(LoginController());
-
+        LoginBinding.register();
         // if (pageIndex > 2 || pageIndex < 0) {
 
         // }
@@ -28,8 +25,7 @@ final appRouter = GoRouter(
       name: HomeScreen.name,
       builder: (context, state) {
         final pageIndex = state.pathParameters['page'] ?? '0';
-        Get.put(LoginController());
-
+        HomeBinding.register();
         // Get.put(LoginController());
 
         // if (pageIndex > 2 || pageIndex < 0) {
@@ -42,7 +38,7 @@ final appRouter = GoRouter(
           path: 'cambiar_contrasena',
           name: CambiarContrasenaScreen.name,
           builder: (context, state) {
-            Get.put(CambiarContrasenaController());
+            CambiarContrasenaBinding.register();
 
             return CambiarContrasenaScreen();
           },

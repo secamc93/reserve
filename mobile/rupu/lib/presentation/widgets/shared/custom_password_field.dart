@@ -19,7 +19,7 @@ class CustomPasswordField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: labelText,
         hintText: hintText,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
       ),
       obscureText: true,
       validator: (value) {

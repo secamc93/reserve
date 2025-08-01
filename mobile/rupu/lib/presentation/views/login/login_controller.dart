@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:get/get.dart';
 import 'package:rupu/config/constants/secure_storage/token_storage.dart';
-import 'package:rupu/domain/infrastructure/datasources/user_datasource.dart';
+import 'package:rupu/domain/infrastructure/datasources/user_datasource_impl.dart';
 import 'package:rupu/domain/infrastructure/models/login_response_model.dart';
 import 'package:rupu/domain/infrastructure/repositories/user_repository_impl.dart';
 import 'package:rupu/domain/repositories/user_repository.dart';

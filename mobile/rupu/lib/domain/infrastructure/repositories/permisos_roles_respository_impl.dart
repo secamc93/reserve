@@ -1,0 +1,13 @@
+import 'package:rupu/domain/datasource/permisos_roles_datasource.dart';
+import 'package:rupu/domain/entities/roles_permisos.dart';
+import 'package:rupu/domain/repositories/permisos_roles_repository.dart';
+
+class PermisosRolesRespositoryImpl extends PermisosRolesRepository {
+  final PermisosRolesDatasource datasource;
+  PermisosRolesRespositoryImpl(this.datasource);
+
+  @override
+  Future<RolesPermisos> obtenerRolesPermisos() {
+    return datasource.obtenerRolesPermisos();
+  }
+}

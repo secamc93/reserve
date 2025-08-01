@@ -20,7 +20,7 @@ class CustomEmailField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: labelText,
         hintText: hintText,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
       ),
       keyboardType: TextInputType.emailAddress,
       validator: (value) {
