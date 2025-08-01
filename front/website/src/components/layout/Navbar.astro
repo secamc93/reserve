@@ -10,7 +10,7 @@
       <!-- Desktop Menu -->
       <div class="hidden lg:flex items-center space-x-8">
         <a
-          href="/inicio"
+          href="/trattoria/inicio"
           class="relative text-lg font-medium text-gray-700 hover:text-amber-600 transition-colors duration-300 group"
         >
           Inicio
@@ -31,7 +31,7 @@
         </a>
 
         <a
-          href="/contacto"
+          href={`/contacto`}
           class="relative text-lg font-medium text-gray-700 hover:text-amber-600 transition-colors duration-300 group"
         >
           Contacto
@@ -42,8 +42,7 @@
 
         <!-- CTA Button -->
         <a
-          href="/reservas"
-          onclick="event.preventDefault(); setTimeout(() => window.location.href = '/reservas', 50);"
+          href={`/reservas`}
           class="group relative inline-flex items-center justify-center px-8 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold rounded-full hover:from-amber-600 hover:to-amber-700 transform hover:scale-105 hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-amber-500/25 overflow-hidden"
         >
           <!-- Shine effect -->
@@ -88,7 +87,7 @@
         class="px-2 pt-2 pb-3 space-y-1 bg-white/95 backdrop-blur-md rounded-lg mt-4 shadow-lg"
       >
         <a
-          href="/inicio"
+          href={`/inicio`}
           class="block px-3 py-3 text-lg font-medium text-gray-700 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all duration-300"
         >
           <i class="fas fa-home mr-3"></i>
@@ -109,7 +108,7 @@
         </div>
 
         <a
-          href="/contacto"
+          href={`/contacto`}
           class="block px-3 py-3 text-lg font-medium text-gray-700 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all duration-300"
         >
           <i class="fas fa-envelope mr-3"></i>
@@ -119,8 +118,7 @@
         <!-- Mobile CTA Button -->
         <div class="px-3 py-3">
           <a
-            href="/reservas"
-            onclick="event.preventDefault(); setTimeout(() => window.location.href = '/reservas', 50);"
+            href={`/reservas`}
             class="group relative block w-full text-center px-8 py-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold rounded-full hover:from-amber-600 hover:to-amber-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-amber-500/25 overflow-hidden"
           >
             <!-- Shine effect -->

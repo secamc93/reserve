@@ -1,5 +1,7 @@
 ---
 // HeroCarrusel.astro
+// Asegurar que BASE_URL siempre termine con barra
+const baseUrl = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : import.meta.env.BASE_URL + '/';
 const images = [
   "images/hero1.jpeg",
   "images/hero2.jpeg",
@@ -39,7 +41,9 @@ const images = [
       <div class="text-center lg:text-left space-y-4 animate-fade-in-up">
         <div class="flex justify-center mb-8">
           <img
+
             src="https://images-cam93.s3.us-east-1.amazonaws.com/trattoria-la-bella-main-logo-sec.png"
+
             alt="Logo Trattoria La Bella"
             class="max-h-48 lg:max-h-56 w-auto object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500"
           />
@@ -63,8 +67,7 @@ const images = [
             class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-2"
           >
             <a
-              href="/reservas"
-              onclick="event.preventDefault(); setTimeout(() => window.location.href = '/reservas', 50);"
+              href={`/reservas`}
               class="group relative inline-flex items-center justify-center px-10 py-5 bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white font-bold text-lg rounded-full hover:from-amber-600 hover:via-amber-700 hover:to-amber-800 transform hover:scale-110 hover:-translate-y-2 transition-all duration-500 shadow-xl hover:shadow-2xl hover:shadow-amber-500/30 overflow-hidden animate-pulse-glow"
             >
               <!-- Shine effect -->
@@ -382,8 +385,7 @@ const images = [
           class="absolute -bottom-6 -right-6 bg-gradient-to-r from-amber-500 to-amber-600 text-white p-4 rounded-2xl shadow-2xl hover:shadow-amber-500/25 transform hover:scale-110 transition-all duration-300"
         >
           <a
-            href="/reservas"
-            onclick="event.preventDefault(); setTimeout(() => window.location.href = '/reservas', 50);"
+            href={`/reservas`}
             class="flex items-center space-x-2 hover:scale-105 transition-transform duration-300"
           >
             <i class="fas fa-calendar-check text-xl animate-pulse"></i>
