@@ -89,7 +89,7 @@ class HomeView extends StatelessWidget {
                 const SizedBox(height: 16),
                 if (isSuper)
                   const Text(
-                    'Eres superusuario!',
+                    'Eres superusuario!!!',
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                 if (!isSuper && hasSomePermission)
