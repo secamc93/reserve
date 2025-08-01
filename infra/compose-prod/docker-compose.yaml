@@ -207,6 +207,8 @@ services:
       - "3000:3000"
     environment:
       NODE_ENV: production
+      NEXT_PUBLIC_BASE_PATH: "/flow-print"
+      BASE_PATH: "/flow-print"
     networks:
       - app-network
     restart: unless-stopped
