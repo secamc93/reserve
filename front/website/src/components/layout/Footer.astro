@@ -1,5 +1,7 @@
 ---
 // Footer moderno para Trattoria La Bella
+// Asegurar que BASE_URL siempre termine con barra
+const baseUrl = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : import.meta.env.BASE_URL + '/';
 ---
 
 <footer
@@ -12,7 +14,7 @@
       <div class="lg:col-span-2">
         <div class="mb-6">
           <img
-            src="/images/trattoria-la-bella-main-logo-sec.png"
+            src="images/trattoria-la-bella-main-logo-sec.png"
             alt="Trattoria La Bella"
             class="h-16 w-auto filter brightness-0 invert opacity-90"
           />
@@ -70,7 +72,7 @@
         <ul class="space-y-3">
           <li>
             <a
-              href="/inicio"
+              href={`/inicio`}
               class="text-gray-300 hover:text-amber-400 transition-colors duration-300 flex items-center group"
             >
               <i
@@ -81,8 +83,7 @@
           </li>
           <li>
             <a
-              href="/reservas"
-              onclick="event.preventDefault(); setTimeout(() => window.location.href = '/reservas', 50);"
+              href={`/reservas`}
               class="text-gray-300 hover:text-amber-400 transition-colors duration-300 flex items-center group"
             >
               <i
@@ -106,7 +107,7 @@
           </li>
           <li>
             <a
-              href="/contacto"
+              href={`/contacto`}
               class="text-gray-300 hover:text-amber-400 transition-colors duration-300 flex items-center group"
             >
               <i
