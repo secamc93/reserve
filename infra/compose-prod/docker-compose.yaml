@@ -200,6 +200,32 @@ services:
       - app-network
     restart: unless-stopped
 
+  calculate-flow-print:
+    image: public.ecr.aws/d3a6d4r1/cam/reserve:dtf-calculator
+    container_name: alculate_flow_print_prod
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+    networks:
+      - app-network
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+
+  
+
 networks:
   app-network:
     driver: bridge
