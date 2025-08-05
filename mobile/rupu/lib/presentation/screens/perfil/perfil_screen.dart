@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 
-import '../../views/views.dart';
+import '../../views/../views/views.dart';
 
-class HomeScreen extends StatelessWidget {
-  static const name = 'home-screen';
+class PerfilScreen extends StatelessWidget {
+  static const name = 'perfil-screen';
   final int pageIndex;
 
-  const HomeScreen({super.key, required this.pageIndex});
+  const PerfilScreen({super.key, required this.pageIndex});
 
   @override
   Widget build(BuildContext context) {
     final viewRoutes = <Widget>[
-      HomeView(pageIndex: pageIndex),
+      PerfilView(pageIndex: pageIndex),
       const SizedBox(),
     ];
 

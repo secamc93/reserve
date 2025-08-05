@@ -13,5 +13,33 @@ class UserMapper {
     lastLoginAt: user.data.user.lastLoginAt,
     token: user.data.token,
     requirePasswordChange: user.data.requirePasswordChange,
+    businesses: user.data.businesses
+        .map(
+          (b) => Business(
+            id: b.id,
+            name: b.name,
+            code: b.code,
+            businessTypeId: b.businessTypeId,
+            businessType: BusinessType(
+              id: b.businessType.id,
+              name: b.businessType.name,
+              code: b.businessType.code,
+              description: b.businessType.description,
+              icon: b.businessType.icon,
+            ),
+            timezone: b.timezone,
+            address: b.address,
+            description: b.description,
+            logoUrl: b.logoUrl,
+            primaryColor: b.primaryColor,
+            secondaryColor: b.secondaryColor,
+            customDomain: b.customDomain,
+            isActive: b.isActive,
+            enableDelivery: b.enableDelivery,
+            enablePickup: b.enablePickup,
+            enableReservations: b.enableReservations,
+          ),
+        )
+        .toList(),
   );
 }

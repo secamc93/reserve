@@ -74,7 +74,6 @@ class _SideMenuState extends State<SideMenu> {
           ),
         ),
 
-        const Spacer(),
         const Padding(
           padding: EdgeInsets.fromLTRB(28, 16, 28, 10),
           child: Divider(),

@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:rupu/presentation/views/login/login_controller.dart';
 import 'package:rupu/presentation/views/home/home_controller.dart';
 import 'package:rupu/presentation/views/cambiar/cambiar_contrasena_controller.dart';
+import 'package:rupu/presentation/views/perfil/perfil_controller.dart';
 
 /// Bindings independientes para mantener el router limpio.
 class LoginBinding {
@@ -26,6 +27,14 @@ class CambiarContrasenaBinding {
   static void register() {
     if (!Get.isRegistered<CambiarContrasenaController>()) {
       Get.put(CambiarContrasenaController());
+    }
+  }
+}
+
+class PerfilBinding {
+  static void register() {
+    if (!Get.isRegistered<PerfilController>()) {
+      Get.put(PerfilController());
     }
   }
 }

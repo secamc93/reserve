@@ -1,3 +1,4 @@
+export 'package:rupu/presentation/widgets/shared/custom_bottom_navigation.dart';
 export 'package:rupu/presentation/widgets/side_menu.dart';
 export 'package:rupu/presentation/widgets/shared/custom_field.dart';
 export 'package:rupu/presentation/widgets/shared/custom_text_button.dart';

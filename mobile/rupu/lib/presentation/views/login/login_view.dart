@@ -28,7 +28,7 @@ class LoginView extends GetView<LoginController> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  "Bienvenidos a Rufü",
+                  "Bienvenidos a Rupü",
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 14),
