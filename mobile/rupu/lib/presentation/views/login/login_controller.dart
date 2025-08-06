@@ -44,6 +44,12 @@ class LoginController extends GetxController {
     }
   }
 
+  /// Limpia los campos de email y contraseña.
+  void clearFields() {
+    emailController.clear();
+    passwordController.clear();
+  }
+
   @override
   void onClose() {
     emailController.dispose();

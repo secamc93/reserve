@@ -42,71 +42,113 @@ class CambiarContrasenaView extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
+
+                // Contraseña actual
                 CustomField(
                   controller: controller.currentPasswordController,
                   labelText: 'Contraseña actual',
                   hintText: 'Ingresa contraseña actual',
                   obscureText: true,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Por favor ingresa la contraseña actual';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 16),
+
+                // Nueva contraseña
                 CustomField(
                   controller: controller.newPasswordController,
                   labelText: 'Nueva contraseña',
                   hintText: 'Ingresa nueva contraseña',
                   obscureText: true,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Por favor ingresa la nueva contraseña';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 16),
+
+                // Repite nueva contraseña
                 CustomField(
                   controller: controller.repeatPasswordController,
                   labelText: 'Repite nueva contraseña',
                   hintText: 'Vuelve a ingresar la nueva contraseña',
                   obscureText: true,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Por favor repite la nueva contraseña';
+                    }
+                    if (value != controller.newPasswordController.text) {
+                      return 'Las contraseñas no coinciden';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 24),
+
                 Obx(() {
                   if (controller.isLoading.value) {
                     return const Center(child: CircularProgressIndicator());
                   }
                   return CustomButton(
                     onPressed: () async {
+                      // Primero validamos el formulario
+                      if (!controller.formKey.currentState!.validate()) {
+                        return;
+                      }
+
                       final ok = await controller.submit();
                       if (!context.mounted) return;
+
                       if (ok) {
-                        // Mostrar diálogo de éxito antes de navegar
-                        showDialog(
+                        await showDialog(
                           context: context,
-                          builder: (_) => AlertDialog(
-                            title: const Text('Éxito'),
-                            content: const Text(
-                              'La contraseña se cambió correctamente.',
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                  GoRouter.of(context).goNamed(
-                                    HomeScreen.name,
-                                    pathParameters: {'page': '0'},
-                                  );
-                                },
-                                child: const Text('OK'),
+                          builder: (dialogContext) {
+                            return AlertDialog(
+                              title: const Text('Éxito'),
+                              content: const Text(
+                                'La contraseña se cambió correctamente.',
                               ),
-                            ],
-                          ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.of(dialogContext).pop(),
+                                  child: const Text('OK'),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                        controller.currentPasswordController.clear();
+                        controller.newPasswordController.clear();
+                        controller.repeatPasswordController.clear();
+
+                        if (!context.mounted) return;
+                        GoRouter.of(context).goNamed(
+                          PerfilScreen.name,
+                          pathParameters: {'page': '0'},
                         );
                       } else if (controller.errorMessage.value != null) {
-                        showDialog(
+                        await showDialog(
                           context: context,
-                          builder: (_) => AlertDialog(
-                            title: const Text('Error'),
-                            content: Text(controller.errorMessage.value!),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.of(context).pop(),
-                                child: const Text('OK'),
-                              ),
-                            ],
-                          ),
+                          builder: (dialogContext) {
+                            return AlertDialog(
+                              title: const Text('Error'),
+                              content: Text(controller.errorMessage.value!),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.of(dialogContext).pop(),
+                                  child: const Text('OK'),
+                                ),
+                              ],
+                            );
+                          },
                         );
                       }
                     },

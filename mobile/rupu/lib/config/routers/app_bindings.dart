@@ -1,8 +1,8 @@
 import 'package:get/get.dart';
 import 'package:rupu/presentation/views/login/login_controller.dart';
 import 'package:rupu/presentation/views/home/home_controller.dart';
-import 'package:rupu/presentation/views/cambiar/cambiar_contrasena_controller.dart';
-import 'package:rupu/presentation/views/perfil/perfil_controller.dart';
+import 'package:rupu/presentation/views/change_password/cambiar_contrasena_controller.dart';
+import 'package:rupu/presentation/views/profile/perfil_controller.dart';
 
 /// Bindings independientes para mantener el router limpio.
 class LoginBinding {

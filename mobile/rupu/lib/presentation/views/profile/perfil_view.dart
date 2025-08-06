@@ -106,7 +106,7 @@ class PerfilView extends StatelessWidget {
           SizedBox(height: size.height * 0.09),
           CustomTextButton(
             onPressed: () {
-              GoRouter.of(context).goNamed(
+              GoRouter.of(context).pushNamed(
                 CambiarContrasenaScreen.name,
                 pathParameters: {'page': '0'},
               );
@@ -120,6 +120,8 @@ class PerfilView extends StatelessWidget {
               GoRouter.of(
                 context,
               ).goNamed(LoginScreen.name, pathParameters: {'page': '0'});
+
+              loginController.clearFields();
             },
             textButton: 'Cerrar sesión',
           ),

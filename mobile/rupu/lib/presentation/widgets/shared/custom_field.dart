@@ -6,6 +6,7 @@ class CustomField extends StatelessWidget {
   final String labelText;
   final String hintText;
   final bool? obscureText;
+  final String? Function(String?)? validator;
 
   const CustomField({
     super.key,
@@ -13,6 +14,7 @@ class CustomField extends StatelessWidget {
     required this.labelText,
     required this.hintText,
     this.obscureText,
+    this.validator,
   });
 
   @override
@@ -26,6 +28,7 @@ class CustomField extends StatelessWidget {
       ),
       obscureText: obscureText ?? false,
       keyboardType: TextInputType.text,
+      validator: validator,
     );
   }
 }
