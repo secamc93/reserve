@@ -88,8 +88,9 @@ class PerfilView extends StatelessWidget {
           SizedBox(height: size.height * 0.08),
           ClipRRect(
             borderRadius: BorderRadius.circular(20),
-            child: SizedBox(
+            child: Container(
               height: size.height * 0.06,
+              color: Theme.of(context).colorScheme.onPrimary,
               child: Image.network(
                 negocio.first.logoUrl,
                 fit: BoxFit.cover,
@@ -102,6 +103,7 @@ class PerfilView extends StatelessWidget {
               ),
             ),
           ),
+
           SizedBox(height: size.height * 0.03),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,

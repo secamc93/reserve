@@ -34,7 +34,10 @@ class HomeView extends StatelessWidget {
     if (negocio.isNotEmpty) {
       // Para evitar setState en build, lo hacemos tras el frame:
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        AppTheme.instance.updateColors("#00FF00", "#00FF00");
+        AppTheme.instance.updateColors(
+          negocio.first.primaryColor,
+          negocio.first.secondaryColor,
+        );
       });
     }
     // Tamaño de fuente responsivo
