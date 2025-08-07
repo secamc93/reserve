@@ -1,6 +1,9 @@
 package dtos
 
-import "time"
+import (
+	"mime/multipart"
+	"time"
+)
 
 // UserQueryDTO representa un usuario para consultas sin relaciones
 type UserQueryDTO struct {
@@ -38,7 +41,8 @@ type CreateUserDTO struct {
 	Email       string
 	Password    string
 	Phone       string
-	AvatarURL   string
+	AvatarURL   string                // URL completa (para compatibilidad)
+	AvatarFile  *multipart.FileHeader // Archivo de imagen para subir a S3
 	IsActive    bool
 	RoleIDs     []uint
 	BusinessIDs []uint
@@ -50,7 +54,8 @@ type UpdateUserDTO struct {
 	Email       string
 	Password    string // Opcional, solo si se quiere cambiar
 	Phone       string
-	AvatarURL   string
+	AvatarURL   string                // URL completa (para compatibilidad)
+	AvatarFile  *multipart.FileHeader // Archivo de imagen para subir a S3
 	IsActive    bool
 	RoleIDs     []uint
 	BusinessIDs []uint

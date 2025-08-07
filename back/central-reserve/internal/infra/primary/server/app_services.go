@@ -1,10 +1,10 @@
 package server
 
 import (
+	"central_reserve/internal/domain/ports"
 	"central_reserve/internal/infra/primary/http2"
 	"central_reserve/internal/infra/primary/queue/nats"
 	"central_reserve/internal/infra/secundary/repository/db"
-	"central_reserve/internal/infra/secundary/storage/s3"
 	"central_reserve/internal/pkg/env"
 	"central_reserve/internal/pkg/log"
 	"context"
@@ -17,7 +17,7 @@ type AppServices struct {
 	Logger     log.ILogger
 	DB         db.IDatabase
 	Nats       nats.INatsClient
-	S3         s3.IS3
+	S3         ports.IS3Service
 	HTTPServer *http2.HTTPServer
 }
 
@@ -69,5 +69,15 @@ func (s *AppServices) logStartupInfo(ctx context.Context) {
 
 	s.Logger.Info(ctx).Msgf("    🗄️  Conexión PostgreSQL establecida")
 	s.Logger.Info(ctx).Msgf("    📍 Base de datos: %s", coloredDBURL)
+	s.Logger.Info(ctx).Msg("")
+
+	// Logs de conexión S3
+	s3Region := s.Env.Get("S3_REGION")
+	s3Bucket := s.Env.Get("S3_BUCKET")
+	s3URL := fmt.Sprintf("s3://%s (%s)", s3Bucket, s3Region)
+	coloredS3URL := fmt.Sprintf("\033[35;4m%s\033[0m", s3URL)
+
+	s.Logger.Info(ctx).Msgf("    ☁️  Conexión AWS S3 establecida")
+	s.Logger.Info(ctx).Msgf("    📍 Bucket: %s", coloredS3URL)
 	s.Logger.Info(ctx).Msg("")
 }

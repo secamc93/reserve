@@ -4,6 +4,7 @@ import (
 	"central_reserve/internal/domain/dtos"
 	"context"
 	"fmt"
+	"strings"
 )
 
 // GetUserByID obtiene un usuario por su ID
@@ -21,13 +22,42 @@ func (uc *UserUseCase) GetUserByID(ctx context.Context, id uint) (*dtos.UserDTO,
 		return nil, fmt.Errorf("usuario no encontrado")
 	}
 
+	// Procesar URL del avatar
+	avatarURL := user.AvatarURL
+	if avatarURL != "" {
+		// Verificar si es un path relativo (no empieza con http)
+		if !strings.HasPrefix(avatarURL, "http") {
+			// Verificar si la imagen existe en S3
+			exists, err := uc.s3.ImageExists(ctx, avatarURL)
+			if err != nil {
+				uc.log.Error().Err(err).Str("avatar_path", avatarURL).Msg("Error al verificar existencia de imagen en S3")
+				// No fallar si hay error al verificar, continuar con URL por defecto
+			} else if exists {
+				// Generar URL completa usando la variable de entorno
+				urlBaseDomain := uc.getURLBaseDomain()
+				if urlBaseDomain != "" {
+					// Construir URL completa: URL_BASE_DOMAIN + /api/v1/images/ + avatar_path
+					avatarURL = fmt.Sprintf("%s/api/v1/images/%s", urlBaseDomain, avatarURL)
+					uc.log.Info().Str("avatar_path", user.AvatarURL).Str("full_url", avatarURL).Msg("URL de avatar generada")
+				} else {
+					uc.log.Warn().Str("avatar_path", avatarURL).Msg("URL_BASE_DOMAIN no configurada, usando path relativo")
+				}
+			} else {
+				uc.log.Warn().Str("avatar_path", avatarURL).Msg("Imagen de avatar no encontrada en S3")
+				// Si la imagen no existe, limpiar la URL
+				avatarURL = ""
+			}
+		}
+		// Si ya es una URL completa (empieza con http), mantenerla tal como está
+	}
+
 	// Convertir entidad a DTO
 	userDTO := dtos.UserDTO{
 		ID:          user.ID,
 		Name:        user.Name,
 		Email:       user.Email,
 		Phone:       user.Phone,
-		AvatarURL:   user.AvatarURL,
+		AvatarURL:   avatarURL, // URL completa o vacía
 		IsActive:    user.IsActive,
 		LastLoginAt: user.LastLoginAt,
 		CreatedAt:   user.CreatedAt,
@@ -89,4 +119,15 @@ func (uc *UserUseCase) GetUserByID(ctx context.Context, id uint) (*dtos.UserDTO,
 
 	uc.log.Info().Uint("id", id).Msg("Usuario obtenido exitosamente")
 	return &userDTO, nil
+}
+
+// getURLBaseDomain obtiene la URL base del dominio desde la configuración
+func (uc *UserUseCase) getURLBaseDomain() string {
+	// Obtener la URL base del dominio desde la configuración
+	urlBaseDomain := uc.env.Get("URL_BASE_DOMAIN")
+	if urlBaseDomain == "" {
+		uc.log.Warn().Msg("URL_BASE_DOMAIN no configurada en variables de entorno")
+		return ""
+	}
+	return urlBaseDomain
 }

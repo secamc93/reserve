@@ -68,13 +68,31 @@ func (uc *UserUseCase) CreateUser(ctx context.Context, userDTO dtos.CreateUserDT
 		return "", "", "", fmt.Errorf("error al generar contraseña")
 	}
 
+	// Procesar imagen de avatar si se proporciona
+	avatarURL := userDTO.AvatarURL
+	if userDTO.AvatarFile != nil {
+		uc.log.Info().Str("email", userDTO.Email).Msg("Subiendo imagen de avatar a S3")
+
+		// Subir imagen a S3 en la carpeta "avatars"
+		// Retorna el path relativo (ej: "avatars/1234567890_imagen.jpg")
+		avatarPath, err := uc.s3.UploadImage(ctx, userDTO.AvatarFile, "avatars")
+		if err != nil {
+			uc.log.Error().Err(err).Str("email", userDTO.Email).Msg("Error al subir imagen de avatar")
+			return "", "", "", fmt.Errorf("error al subir imagen de avatar: %w", err)
+		}
+
+		// Guardar solo el path relativo en la base de datos
+		avatarURL = avatarPath
+		uc.log.Info().Str("email", userDTO.Email).Str("avatar_path", avatarPath).Msg("Imagen de avatar subida exitosamente")
+	}
+
 	// Convertir DTO a entidad, usando la contraseña generada
 	user := entities.User{
 		Name:      userDTO.Name,
 		Email:     userDTO.Email,
 		Password:  generatedPassword, // El repo la hashea
 		Phone:     userDTO.Phone,
-		AvatarURL: userDTO.AvatarURL,
+		AvatarURL: avatarURL, // URL relativa o completa según corresponda
 		IsActive:  userDTO.IsActive,
 	}
 

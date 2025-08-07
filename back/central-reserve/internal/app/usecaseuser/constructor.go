@@ -3,6 +3,7 @@ package usecaseuser
 import (
 	"central_reserve/internal/domain/dtos"
 	"central_reserve/internal/domain/ports"
+	"central_reserve/internal/pkg/env"
 	"central_reserve/internal/pkg/log"
 	"context"
 )
@@ -19,12 +20,16 @@ type IUseCaseUser interface {
 type UserUseCase struct {
 	repository ports.IUserRepository
 	log        log.ILogger
+	s3         ports.IS3Service
+	env        env.IConfig
 }
 
 // NewUserUseCase crea una nueva instancia del caso de uso de usuarios
-func NewUserUseCase(repository ports.IUserRepository, log log.ILogger) IUseCaseUser {
+func NewUserUseCase(repository ports.IUserRepository, log log.ILogger, s3 ports.IS3Service, env env.IConfig) IUseCaseUser {
 	return &UserUseCase{
 		repository: repository,
 		log:        log,
+		s3:         s3,
+		env:        env,
 	}
 }

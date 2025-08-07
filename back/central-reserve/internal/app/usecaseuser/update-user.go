@@ -5,6 +5,7 @@ import (
 	"central_reserve/internal/domain/entities"
 	"context"
 	"fmt"
+	"strings"
 )
 
 // UpdateUser actualiza un usuario existente
@@ -27,12 +28,54 @@ func (uc *UserUseCase) UpdateUser(ctx context.Context, id uint, userDTO dtos.Upd
 		}
 	}
 
+	// Procesar imagen de avatar si se proporciona una nueva
+	avatarURL := userDTO.AvatarURL
+	if userDTO.AvatarFile != nil {
+		uc.log.Info().Uint("user_id", id).Msg("Subiendo nueva imagen de avatar a S3")
+
+		// Subir nueva imagen a S3 en la carpeta "avatars"
+		// Retorna el path relativo (ej: "avatars/1234567890_imagen.jpg")
+		avatarPath, err := uc.s3.UploadImage(ctx, userDTO.AvatarFile, "avatars")
+		if err != nil {
+			uc.log.Error().Err(err).Uint("user_id", id).Msg("Error al subir nueva imagen de avatar")
+			return "", fmt.Errorf("error al subir nueva imagen de avatar: %w", err)
+		}
+
+		// Guardar solo el path relativo en la base de datos
+		avatarURL = avatarPath
+		uc.log.Info().Uint("user_id", id).Str("avatar_path", avatarPath).Msg("Nueva imagen de avatar subida exitosamente")
+
+		// Eliminar imagen anterior si existe y es diferente
+		if existingUser.AvatarURL != "" && existingUser.AvatarURL != avatarPath {
+			// Verificar si la imagen anterior es un path relativo (no URL completa)
+			if !strings.HasPrefix(existingUser.AvatarURL, "http") {
+				uc.log.Info().Uint("user_id", id).Str("old_avatar", existingUser.AvatarURL).Msg("Eliminando imagen anterior de avatar")
+				if err := uc.s3.DeleteImage(ctx, existingUser.AvatarURL); err != nil {
+					uc.log.Warn().Err(err).Str("old_avatar", existingUser.AvatarURL).Msg("Error al eliminar imagen anterior (no crítico)")
+					// No fallar la actualización si no se puede eliminar la imagen anterior
+				}
+			}
+		}
+	} else if userDTO.AvatarURL == "" && existingUser.AvatarURL != "" {
+		// Si se quiere eliminar la imagen (AvatarURL vacío) y existe una imagen anterior
+		uc.log.Info().Uint("user_id", id).Str("old_avatar", existingUser.AvatarURL).Msg("Eliminando imagen de avatar")
+
+		// Verificar si la imagen anterior es un path relativo (no URL completa)
+		if !strings.HasPrefix(existingUser.AvatarURL, "http") {
+			if err := uc.s3.DeleteImage(ctx, existingUser.AvatarURL); err != nil {
+				uc.log.Warn().Err(err).Str("old_avatar", existingUser.AvatarURL).Msg("Error al eliminar imagen anterior (no crítico)")
+				// No fallar la actualización si no se puede eliminar la imagen
+			}
+		}
+		avatarURL = "" // Limpiar la URL
+	}
+
 	// Convertir DTO a entidad
 	user := entities.User{
 		Name:      userDTO.Name,
 		Email:     userDTO.Email,
 		Phone:     userDTO.Phone,
-		AvatarURL: userDTO.AvatarURL,
+		AvatarURL: avatarURL, // URL relativa o vacía según corresponda
 		IsActive:  userDTO.IsActive,
 	}
 

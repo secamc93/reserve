@@ -10,6 +10,7 @@ import (
 	"central_reserve/internal/infra/secundary/email"
 	"central_reserve/internal/infra/secundary/repository"
 	"central_reserve/internal/infra/secundary/repository/db"
+	"central_reserve/internal/infra/secundary/storage/s3"
 	"central_reserve/internal/pkg/env"
 	"central_reserve/internal/pkg/jwt"
 	"central_reserve/internal/pkg/log"
@@ -30,10 +31,11 @@ func NewDependencies(database db.IDatabase, logger log.ILogger, environment env.
 
 	jwtSecret := environment.Get("JWT_SECRET")
 	jwtService := jwt.New(jwtSecret)
+	s3Service := s3.New(environment, logger)
 
 	serviceFactory := factory.NewServiceFactory(environment, logger, emailService, jwtService)
 	repoFactory := repository.NewRepositoryFactory(database, logger)
-	useCaseFactory := usecasefactory.NewUseCaseFactory(repoFactory, jwtService, emailService, logger)
+	useCaseFactory := usecasefactory.NewUseCaseFactory(repoFactory, jwtService, emailService, logger, s3Service, environment)
 	handlerFactory := factoryhanlder.NewHandlerFactory(useCaseFactory, logger)
 
 	return &Dependencies{
