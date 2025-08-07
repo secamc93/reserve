@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:get/get_navigation/src/root/get_material_app.dart';
+import 'package:get/get.dart';
 import 'package:rupu/config/routers/app_router.dart';
 import 'package:rupu/config/theme/app_theme.dart';
+import 'package:rupu/config/theme/app_theme_controller.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  Get.put(AppThemeController());
   runApp(const MainApp());
 }
 
@@ -21,9 +22,8 @@ class MainApp extends StatelessWidget {
       routeInformationParser: appRouter.routeInformationParser,
       routerDelegate: appRouter.routerDelegate,
       routeInformationProvider: appRouter.routeInformationProvider,
-      theme: AppTheme().getTheme(),
-
-      // opcional
+      theme: AppTheme.instance.lightTheme,
+      darkTheme: AppTheme.instance.darkTheme,
       // backButtonDispatcher: appRouter.backButtonDispatcher,
     );
   }

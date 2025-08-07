@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:rupu/config/theme/app_theme.dart';
 import 'package:rupu/presentation/views/home/home_controller.dart';
+import 'package:rupu/presentation/views/login/login_controller.dart';
 import 'package:rupu/presentation/widgets/shared/custom_appbar.dart';
 
 import '../../widgets/widgets.dart';
@@ -14,6 +16,8 @@ class HomeView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scaffoldKey = GlobalKey<ScaffoldState>();
+    final loginController = Get.find<LoginController>();
+    final negocio = loginController.sessionModel.value!.data.businesses;
 
     final homeController = Get.find<HomeController>();
 
@@ -27,6 +31,12 @@ class HomeView extends StatelessWidget {
     final horizontalPadding = isPortrait ? size.width * 0.1 : size.width * 0.2;
     final verticalPadding = isPortrait ? size.height * 0.05 : size.height * 0.1;
 
+    if (negocio.isNotEmpty) {
+      // Para evitar setState en build, lo hacemos tras el frame:
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        AppTheme.instance.updateColors("#00FF00", "#00FF00");
+      });
+    }
     // Tamaño de fuente responsivo
     // final fontSize = isPortrait ? size.width * 0.08 : size.height * 0.08;
 

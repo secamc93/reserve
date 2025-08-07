@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rupu/config/theme/app_theme_controller.dart';
 
 import '../../screens/screens.dart';
 import '../../widgets/widgets.dart';
@@ -17,6 +18,7 @@ class PerfilView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // final homeController = Get.find<HomeController>();
+    final themeCtrl = Get.find<AppThemeController>();
     final loginController = Get.find<LoginController>();
     final user = loginController.sessionModel.value!.data.user;
     final negocio = loginController.sessionModel.value!.data.businesses;
@@ -37,6 +39,19 @@ class PerfilView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          Obx(() {
+            return SwitchListTile.adaptive(
+              title: Text(
+                themeCtrl.isDark.value ? 'Modo Oscuro' : 'Modo Claro',
+              ),
+              value: themeCtrl.isDark.value,
+              onChanged: (_) => themeCtrl.toggleTheme(),
+              secondary: Icon(
+                themeCtrl.isDark.value ? Icons.nights_stay : Icons.wb_sunny,
+              ),
+            );
+          }),
+
           Padding(
             padding: const EdgeInsets.all(4.0),
             child: CircleAvatar(

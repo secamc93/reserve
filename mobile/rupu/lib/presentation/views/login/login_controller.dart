@@ -25,7 +25,7 @@ class LoginController extends GetxController {
     errorMessage.value = null;
     try {
       final session = await repository.getUser(
-        email: emailController.text.trim(),
+        email: emailController.text.trim().toLowerCase(),
         password: passwordController.text,
       );
 

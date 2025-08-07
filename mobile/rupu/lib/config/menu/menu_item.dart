@@ -16,6 +16,12 @@ class MenuItem {
 
 const appMenuItems = <MenuItem>[
   MenuItem(
+    tittle: 'Perfil',
+    subTittle: '',
+    link: '/home/0/perfil',
+    icon: Icons.person,
+  ),
+  MenuItem(
     tittle: 'Cambiar contraseña',
     subTittle: 'Cambiar contraseña',
     link: '/home/0/cambiar_contrasena',
