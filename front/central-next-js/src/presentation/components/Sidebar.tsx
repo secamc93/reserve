@@ -76,7 +76,7 @@ const Sidebar: React.FC = () => {
             id: 'admin-users',
             icon: '▤',
             label: 'Administrar Usuarios',
-            path: '/admin-users'
+            path: '/users'
         });
         console.log('🔍 Sidebar Debug - Agregando módulo "Administrar Usuarios"');
     } else {
@@ -155,8 +155,8 @@ const Sidebar: React.FC = () => {
                         onClick={handleAvatarClick}
                         title="Ver perfil y permisos"
                     >
-                        {userInfo?.avatar_url ? (
-                            <img src={userInfo.avatar_url} alt="Avatar" />
+                        {userInfo?.avatarURL ? (
+                            <img src={userInfo.avatarURL} alt="Avatar" />
                         ) : (
                             <span className="user-avatar-placeholder">
                                 {userInfo?.name?.charAt(0)?.toUpperCase() || 'U'}

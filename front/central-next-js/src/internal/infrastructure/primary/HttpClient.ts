@@ -139,14 +139,33 @@ export class HttpClient {
     try {
       console.log('🌐 POST: Iniciando request POST');
       console.log('🌐 POST: Endpoint:', endpoint);
+      console.log('🌐 POST: Data type:', data instanceof FormData ? 'FormData' : 'JSON');
       console.log('🌐 POST: Data:', data);
+
+      // Determinar headers y body según el tipo de datos
+      let headers: Record<string, string> = {};
+      let body: string | FormData;
+
+      if (data instanceof FormData) {
+        // Para FormData, no establecer Content-Type (el navegador lo hace automáticamente)
+        headers = {
+          ...(this.getDefaultHeaders()),
+        };
+        delete headers['Content-Type']; // Eliminar Content-Type para FormData
+        body = data;
+      } else {
+        // Para JSON, usar headers normales
+        headers = this.getDefaultHeaders();
+        body = JSON.stringify(data);
+      }
+
+      console.log('🌐 POST: Headers finales:', headers);
       console.log('🌐 POST: URL completa:', `${this.baseURL}${endpoint}`);
-      console.log('🌐 POST: Headers:', this.getDefaultHeaders());
 
       const response = await fetch(`${this.baseURL}${endpoint}`, {
         method: 'POST',
-        headers: this.getDefaultHeaders(),
-        body: JSON.stringify(data),
+        headers,
+        body,
       });
 
       console.log('🌐 POST: Response recibida');
@@ -186,30 +205,65 @@ export class HttpClient {
 
   async put(endpoint: string, data: any): Promise<any> {
     try {
+      console.log('🌐 PUT: Iniciando request PUT');
+      console.log('🌐 PUT: Endpoint:', endpoint);
+      console.log('🌐 PUT: Data type:', data instanceof FormData ? 'FormData' : 'JSON');
+      console.log('🌐 PUT: Data:', data);
+
+      // Determinar headers y body según el tipo de datos
+      let headers: Record<string, string> = {};
+      let body: string | FormData;
+
+      if (data instanceof FormData) {
+        // Para FormData, no establecer Content-Type (el navegador lo hace automáticamente)
+        headers = {
+          ...(this.getDefaultHeaders()),
+        };
+        delete headers['Content-Type']; // Eliminar Content-Type para FormData
+        body = data;
+      } else {
+        // Para JSON, usar headers normales
+        headers = this.getDefaultHeaders();
+        body = JSON.stringify(data);
+      }
+
+      console.log('🌐 PUT: Headers finales:', headers);
+      console.log('🌐 PUT: URL completa:', `${this.baseURL}${endpoint}`);
+
       const response = await fetch(`${this.baseURL}${endpoint}`, {
         method: 'PUT',
-        headers: this.getDefaultHeaders(),
-        body: JSON.stringify(data),
+        headers,
+        body,
       });
 
+      console.log('🌐 PUT: Response recibida');
+      console.log('🌐 PUT: Status:', response.status);
+      console.log('🌐 PUT: StatusText:', response.statusText);
+
       if (!response.ok) {
+        console.log('🌐 PUT: Response no OK, procesando error');
+
         let errorMessage = `HTTP error! status: ${response.status}`;
         try {
           const errorData = await response.json();
+          console.log('🌐 PUT: Error data:', errorData);
           errorMessage = errorData.message || errorMessage;
         } catch (parseError) {
-          console.warn('Could not parse error response:', parseError);
+          console.warn('🌐 PUT: No se pudo parsear error response:', parseError);
         }
         throw new Error(errorMessage);
       }
 
+      console.log('🌐 PUT: Parseando respuesta JSON');
       const result = await response.json();
+      console.log('🌐 PUT: Resultado final:', result);
+
       return result;
     } catch (error) {
-      console.error('HTTP PUT Error:', error);
+      console.error('🌐 PUT: Error completo:', error);
 
       if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('No se pudo conectar con el servidor');
+        throw new Error('No se pudo conectar con el servidor. Verifique que la API esté ejecutándose en http://localhost:3050');
       }
 
       throw error;
