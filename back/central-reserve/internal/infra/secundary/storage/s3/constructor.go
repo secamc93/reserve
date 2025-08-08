@@ -34,21 +34,50 @@ type S3Uploader struct {
 
 // New crea una nueva instancia de S3Uploader y retorna la interfaz IS3Service
 func New(env env.IConfig, logger log.ILogger) ports.IS3Service {
+	s3Key := env.Get("S3_KEY")
+	s3Secret := env.Get("S3_SECRET")
+	s3Region := env.Get("S3_REGION")
+	s3Bucket := env.Get("S3_BUCKET")
+
+	logger.Info(context.Background()).
+		Str("bucket", s3Bucket).
+		Str("region", s3Region).
+		Msg("🔧 Intentando conectar a S3...")
+
+	// Intentar conectar a S3
 	awsCfg, err := config.LoadDefaultConfig(context.Background(),
-		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(env.Get("S3_ACCESS_KEY"), env.Get("S3_SECRET_KEY"), "")),
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(s3Key, s3Secret, "")),
 	)
 	if err != nil {
-		logger.Panic(context.Background()).Err(err).Msg("error cargando configuración de AWS para S3")
-		panic("No se pudo cargar la configuración de AWS para S3")
+		logger.Fatal(context.Background()).
+			Err(err).
+			Msg("❌ No se pudo conectar a S3 - verifica las credenciales")
+		panic("Error conectando a S3: " + err.Error())
 	}
 
 	s3Client := s3.NewFromConfig(awsCfg, func(o *s3.Options) {
-		o.Region = env.Get("S3_REGION")
+		o.Region = s3Region
 	})
+
+	// Probar la conexión
+	_, err = s3Client.HeadBucket(context.Background(), &s3.HeadBucketInput{
+		Bucket: &s3Bucket,
+	})
+	if err != nil {
+		logger.Fatal(context.Background()).
+			Err(err).
+			Msg("❌ No se pudo conectar a S3 - verifica credenciales y permisos")
+		panic("Error conectando a S3: " + err.Error())
+	}
+
+	logger.Info(context.Background()).
+		Str("bucket", s3Bucket).
+		Str("region", s3Region).
+		Msg("✅ Conexión S3 exitosa")
 
 	return &S3Uploader{
 		client: s3Client,
-		bucket: env.Get("S3_BUCKET"),
+		bucket: s3Bucket,
 		log:    logger,
 	}
 }

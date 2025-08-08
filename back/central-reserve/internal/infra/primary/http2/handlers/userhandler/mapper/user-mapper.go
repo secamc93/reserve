@@ -44,6 +44,7 @@ func ToUpdateUserDTO(req request.UpdateUserRequest) dtos.UpdateUserDTO {
 		Password:    req.Password,
 		Phone:       req.Phone,
 		AvatarURL:   req.AvatarURL,
+		AvatarFile:  req.AvatarFile,
 		IsActive:    req.IsActive,
 		RoleIDs:     req.RoleIDs,
 		BusinessIDs: req.BusinessIDs,

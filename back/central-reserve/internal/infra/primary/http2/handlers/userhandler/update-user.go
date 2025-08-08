@@ -38,8 +38,8 @@ func (h *UserHandler) UpdateUserHandler(c *gin.Context) {
 		return
 	}
 
-	// Binding automático para el body JSON
-	if err := c.ShouldBindJSON(&bodyReq); err != nil {
+	// Binding automático para el body (multipart/form-data o JSON)
+	if err := c.ShouldBind(&bodyReq); err != nil {
 		h.logger.Error().Err(err).Msg("Error al validar datos de la solicitud")
 		c.JSON(http.StatusBadRequest, response.UserErrorResponse{
 			Error: "Datos inválidos: " + err.Error(),
@@ -48,6 +48,13 @@ func (h *UserHandler) UpdateUserHandler(c *gin.Context) {
 	}
 
 	h.logger.Info().Uint("id", uriReq.ID).Str("email", bodyReq.Email).Msg("Iniciando solicitud para actualizar usuario")
+
+	// Log para verificar si el archivo está llegando
+	if bodyReq.AvatarFile != nil {
+		h.logger.Info().Uint("id", uriReq.ID).Str("filename", bodyReq.AvatarFile.Filename).Int64("size", bodyReq.AvatarFile.Size).Msg("Archivo de avatar recibido")
+	} else {
+		h.logger.Info().Uint("id", uriReq.ID).Msg("No se recibió archivo de avatar")
+	}
 
 	userDTO := mapper.ToUpdateUserDTO(bodyReq)
 	message, err := h.usecase.UpdateUser(c.Request.Context(), uriReq.ID, userDTO)
