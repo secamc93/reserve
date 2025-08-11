@@ -1,10 +1,10 @@
 // Domain - Auth Repository (Port)
 import { LoginCredentials, LoginResponse, ChangePasswordData } from '../entities/Auth';
-import { UserRolesPermissions } from '../entities/User';
+import { UserRolesPermissions, ApiRolesPermissionsResponse } from '../entities/User';
 
 export interface AuthRepository {
   login(credentials: LoginCredentials): Promise<LoginResponse>;
-  getUserRolesPermissions(): Promise<UserRolesPermissions>;
+  getUserRolesPermissions(): Promise<ApiRolesPermissionsResponse>;
   changePassword(passwordData: ChangePasswordData): Promise<any>;
   logout(): void;
   isAuthenticated(): boolean;

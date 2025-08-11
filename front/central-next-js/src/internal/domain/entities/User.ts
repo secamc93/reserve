@@ -55,10 +55,37 @@ export interface Permission {
   description?: string;
 }
 
+export interface ResourceAction {
+  id: number;
+  name: string;
+  code: string;
+  description: string;
+  resource: string;
+  action: string;
+  scope: string;
+}
+
+export interface Resource {
+  resource: string;
+  resource_name: string;
+  actions: ResourceAction[];
+}
+
 export interface UserRolesPermissions {
   isSuper: boolean;
   roles: Role[];
   permissions: Permission[];
+}
+
+// Nueva interfaz para la respuesta real de la API
+export interface ApiRolesPermissionsResponse {
+  success: boolean;
+  data: {
+    is_super: boolean;
+    roles: Role[];
+    resources: Resource[];
+    permissions?: Permission[];
+  };
 }
 
 // DTOs para operaciones

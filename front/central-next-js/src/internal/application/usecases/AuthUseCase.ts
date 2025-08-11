@@ -1,7 +1,7 @@
 // Application - Auth Use Case
 import { AuthRepository } from '../../domain/ports/AuthRepository';
 import { LoginCredentials, LoginResponse, ChangePasswordData } from '../../domain/entities/Auth';
-import { UserRolesPermissions } from '../../domain/entities/User';
+import { UserRolesPermissions, ApiRolesPermissionsResponse } from '../../domain/entities/User';
 
 export class AuthUseCase {
   constructor(private authRepository: AuthRepository) {}
@@ -29,7 +29,7 @@ export class AuthUseCase {
     }
   }
 
-  async getUserRolesPermissions(): Promise<UserRolesPermissions> {
+  async getUserRolesPermissions(): Promise<ApiRolesPermissionsResponse> {
     return this.authRepository.getUserRolesPermissions();
   }
 

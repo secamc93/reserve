@@ -1,149 +1,184 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useAuth } from '../hooks/useAuth';
+import { useAppContext } from '../contexts/AppContext';
+import { useModuleNavigation } from '../hooks/useModuleNavigation';
 import UserProfileModal from './UserProfileModal';
 import './Sidebar.css';
 
 const Sidebar: React.FC = () => {
-    const { isSuperAdmin, hasPermission, userInfo, logout } = useAuth();
+    const { user, hasPermission, isSuperAdmin } = useAppContext();
+    const { navigateToModule, preloadModule } = useModuleNavigation();
     const [showProfileModal, setShowProfileModal] = useState(false);
     const router = useRouter();
     const pathname = usePathname();
 
-    const menuItems = [
-        {
-            id: 'calendario',
-            icon: '▦',
-            label: 'Calendario',
-            path: '/calendar'
-        },
-        {
-            id: 'reservas',
-            icon: '≡',
-            label: 'Reservas',
-            path: '/reservas'
+    // Memoizar permisos para evitar recálculos en cada render
+    const permissions = useMemo(() => {
+        const isSuper = isSuperAdmin();
+        
+        // Verificar permisos específicos
+        const hasUsersManage = hasPermission('users:manage');
+        const hasUsersCreate = hasPermission('users:create');
+        const hasUsersUpdate = hasPermission('users:update');
+        const hasUsersDelete = hasPermission('users:delete');
+        const hasManageUsers = hasPermission('manage_users');
+        const hasBusinessesManage = hasPermission('businesses:manage');
+        const hasTablesManage = hasPermission('tables:manage');
+        const hasRoomsManage = hasPermission('rooms:manage');
+        
+        // Verificar permisos basados en roles (fallback)
+        const hasRoleSuperAdmin = hasPermission('role:super_admin');
+        const hasRoleAdmin = hasPermission('role:admin');
+        const hasRoleManager = hasPermission('role:manager');
+
+        return {
+            isSuper,
+            hasUsersManage,
+            hasUsersCreate,
+            hasUsersUpdate,
+            hasUsersDelete,
+            hasManageUsers,
+            hasBusinessesManage,
+            hasTablesManage,
+            hasRoomsManage,
+            hasRoleSuperAdmin,
+            hasRoleAdmin,
+            hasRoleManager
+        };
+    }, [isSuperAdmin, hasPermission]);
+
+    // Memoizar menú para evitar recreaciones
+    const menuItems = useMemo(() => {
+        const items = [
+            {
+                id: 'calendario',
+                icon: '▦',
+                label: 'Calendario',
+                path: '/calendar'
+            },
+            {
+                id: 'reservas',
+                icon: '≡',
+                label: 'Reservas',
+                path: '/reservas'
+            }
+        ];
+
+        // Verificar múltiples permisos relacionados con usuarios
+        const canManageUsers = permissions.isSuper ||
+            permissions.hasManageUsers ||
+            permissions.hasUsersManage ||
+            permissions.hasUsersCreate ||
+            permissions.hasUsersUpdate ||
+            permissions.hasUsersDelete ||
+            permissions.hasRoleSuperAdmin ||
+            permissions.hasRoleAdmin ||
+            permissions.hasRoleManager;
+
+        // Verificar permisos para negocios
+        const canManageBusinesses = permissions.isSuper || 
+            permissions.hasBusinessesManage ||
+            permissions.hasRoleSuperAdmin ||
+            permissions.hasRoleAdmin;
+
+        // Verificar permisos para mesas
+        const canManageTables = permissions.isSuper || 
+            permissions.hasTablesManage ||
+            permissions.hasRoleSuperAdmin ||
+            permissions.hasRoleAdmin ||
+            permissions.hasRoleManager;
+
+        // Verificar permisos para salas
+        const canManageRooms = permissions.isSuper || 
+            permissions.hasRoomsManage ||
+            permissions.hasRoleSuperAdmin ||
+            permissions.hasRoleAdmin ||
+            permissions.hasRoleManager;
+
+        if (canManageUsers) {
+            items.push({
+                id: 'admin-users',
+                icon: '▤',
+                label: 'Administrar Usuarios',
+                path: '/users'
+            });
         }
-    ];
 
-    // Debug: Verificar permisos
-    const isSuper = isSuperAdmin();
-    const hasUsersManage = hasPermission('users:manage');
-    const hasUsersCreate = hasPermission('users:create');
-    const hasUsersUpdate = hasPermission('users:update');
-    const hasUsersDelete = hasPermission('users:delete');
-    const hasManageUsers = hasPermission('manage_users');
-    const hasBusinessesManage = hasPermission('businesses:manage');
-    const hasTablesManage = hasPermission('tables:manage');
-    const hasRoomsManage = hasPermission('rooms:manage');
+        if (canManageBusinesses) {
+            items.push({
+                id: 'admin-businesses',
+                icon: '🏪',
+                label: 'Administrar Negocios',
+                path: '/admin-businesses'
+            });
+        }
 
-    console.log('🔍 Sidebar Debug - Permisos de Usuario:');
-    console.log('  - isSuperAdmin:', isSuper);
-    console.log('  - users:manage:', hasUsersManage);
-    console.log('  - users:create:', hasUsersCreate);
-    console.log('  - users:update:', hasUsersUpdate);
-    console.log('  - users:delete:', hasUsersDelete);
-    console.log('  - manage_users:', hasManageUsers);
-    console.log('  - businesses:manage:', hasBusinessesManage);
-    console.log('  - tables:manage:', hasTablesManage);
+        if (canManageTables) {
+            items.push({
+                id: 'admin-tables',
+                icon: '🪑',
+                label: 'Administrar Mesas',
+                path: '/admin-tables'
+            });
+        }
 
-    // Agregar menú de administración si tiene permisos
-    // Verificar múltiples permisos relacionados con usuarios
-    const canManageUsers = isSuper ||
-        hasManageUsers ||
-        hasUsersManage ||
-        hasUsersCreate ||
-        hasUsersUpdate ||
-        hasUsersDelete;
+        if (canManageRooms) {
+            items.push({
+                id: 'admin-rooms',
+                icon: '🏠',
+                label: 'Administrar Salas',
+                path: '/admin-rooms'
+            });
+        }
 
-    // Verificar permisos para negocios
-    const canManageBusinesses = isSuper || hasBusinessesManage;
+        return { items, canManageUsers, canManageBusinesses, canManageTables, canManageRooms };
+    }, [permissions]);
 
-    // Verificar permisos para mesas
-    const canManageTables = isSuper || hasTablesManage;
+    // Debug: Verificar qué permisos se están detectando
+    useEffect(() => {
+        console.log('🔍 Sidebar Debug - Permisos detectados:', permissions);
+        console.log('🔍 Sidebar Debug - canManageUsers:', menuItems.canManageUsers);
+        console.log('🔍 Sidebar Debug - canManageBusinesses:', menuItems.canManageBusinesses);
+        console.log('🔍 Sidebar Debug - canManageTables:', menuItems.canManageTables);
+        console.log('🔍 Sidebar Debug - canManageRooms:', menuItems.canManageRooms);
+        console.log('🔍 Sidebar Debug - MenuItems finales:', menuItems.items.map(item => item.label));
+    }, [permissions, menuItems]);
 
-    // Verificar permisos para salas
-    const canManageRooms = isSuper || hasRoomsManage;
-
-    console.log('🔍 Sidebar Debug - canManageUsers:', canManageUsers);
-    console.log('🔍 Sidebar Debug - canManageBusinesses:', canManageBusinesses);
-    console.log('🔍 Sidebar Debug - canManageTables:', canManageTables);
-    console.log('🔍 Sidebar Debug - canManageRooms:', hasRoomsManage);
-
-    if (canManageUsers) {
-        menuItems.push({
-            id: 'admin-users',
-            icon: '▤',
-            label: 'Administrar Usuarios',
-            path: '/users'
+    // Pre-cargar módulos en background cuando se monta el componente
+    useEffect(() => {
+        menuItems.items.forEach(item => {
+            if (item.path !== pathname) {
+                preloadModule(item.path);
+            }
         });
-        console.log('🔍 Sidebar Debug - Agregando módulo "Administrar Usuarios"');
-    } else {
-        console.log('🔍 Sidebar Debug - NO se agrega módulo "Administrar Usuarios"');
-    }
+    }, [menuItems.items, pathname, preloadModule]);
 
-    if (canManageBusinesses) {
-        menuItems.push({
-            id: 'admin-businesses',
-            icon: '🏪',
-            label: 'Administrar Negocios',
-            path: '/admin-businesses'
-        });
-        console.log('🔍 Sidebar Debug - Agregando módulo "Administrar Negocios"');
-    } else {
-        console.log('🔍 Sidebar Debug - NO se agrega módulo "Administrar Negocios"');
-    }
-
-    if (canManageTables) {
-        menuItems.push({
-            id: 'admin-tables',
-            icon: '🪑',
-            label: 'Administrar Mesas',
-            path: '/admin-tables'
-        });
-        console.log('🔍 Sidebar Debug - Agregando módulo "Administrar Mesas"');
-    } else {
-        console.log('🔍 Sidebar Debug - NO se agrega módulo "Administrar Mesas"');
-    }
-
-    if (canManageRooms) {
-        menuItems.push({
-            id: 'admin-rooms',
-            icon: '🏠',
-            label: 'Administrar Salas',
-            path: '/admin-rooms'
-        });
-        console.log('🔍 Sidebar Debug - Agregando módulo "Administrar Salas"');
-    } else {
-        console.log('🔍 Sidebar Debug - NO se agrega módulo "Administrar Salas"');
-    }
-
-    console.log('🔍 Sidebar Debug - MenuItems finales:', menuItems.map(item => item.label));
-
-    const handleAvatarClick = () => {
+    // Memoizar handlers para evitar recreaciones
+    const handleAvatarClick = useMemo(() => () => {
         setShowProfileModal(true);
-    };
+    }, []);
 
-    const closeProfileModal = () => {
+    const closeProfileModal = useMemo(() => () => {
         setShowProfileModal(false);
-    };
+    }, []);
 
-    const handleLogout = () => {
-        logout();
+    const handleLogout = useMemo(() => () => {
+        // Limpiar contexto y redirigir
         router.push('/auth/login');
-    };
+    }, [router]);
 
-    const handleNavigation = (path: string) => {
-        router.push(path);
-    };
+    const handleNavigation = useMemo(() => (path: string) => {
+        navigateToModule(path);
+    }, [navigateToModule]);
 
     // Determinar la vista activa basada en la ruta actual
-    const getActiveView = () => {
+    const activeView = useMemo(() => {
         const currentPath = pathname;
-        const menuItem = menuItems.find(item => item.path === currentPath);
+        const menuItem = menuItems.items.find(item => item.path === currentPath);
         return menuItem ? menuItem.id : 'calendario';
-    };
+    }, [pathname, menuItems.items]);
 
     return (
         <div className="sidebar">
@@ -155,17 +190,17 @@ const Sidebar: React.FC = () => {
                         onClick={handleAvatarClick}
                         title="Ver perfil y permisos"
                     >
-                        {userInfo?.avatarURL ? (
-                            <img src={userInfo.avatarURL} alt="Avatar" />
+                        {user?.avatarURL ? (
+                            <img src={user.avatarURL} alt="Avatar" />
                         ) : (
                             <span className="user-avatar-placeholder">
-                                {userInfo?.name?.charAt(0)?.toUpperCase() || 'U'}
+                                {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                             </span>
                         )}
                     </div>
                     <div className="user-details">
-                        <div className="user-name">{userInfo?.name || 'Usuario'}</div>
-                        <div className="user-email">{userInfo?.email || 'usuario@ejemplo.com'}</div>
+                        <div className="user-name">{user?.name || 'Usuario'}</div>
+                        <div className="user-email">{user?.email || 'usuario@ejemplo.com'}</div>
                     </div>
                 </div>
                 <button
@@ -180,14 +215,14 @@ const Sidebar: React.FC = () => {
 
             <nav className="sidebar-nav">
                 <ul className="nav-list">
-                    {menuItems.map((item) => (
+                    {menuItems.items.map((item) => (
                         <li
                             key={item.id}
                             className="nav-item"
                             data-tooltip={item.label}
                         >
                             <button
-                                className={`nav-button ${getActiveView() === item.id ? 'active' : ''}`}
+                                className={`nav-button ${activeView === item.id ? 'active' : ''}`}
                                 onClick={() => handleNavigation(item.path)}
                                 title={item.label}
                             >
@@ -203,7 +238,7 @@ const Sidebar: React.FC = () => {
             <UserProfileModal
                 isOpen={showProfileModal}
                 onClose={closeProfileModal}
-                userInfo={userInfo}
+                userInfo={user}
             />
         </div>
     );

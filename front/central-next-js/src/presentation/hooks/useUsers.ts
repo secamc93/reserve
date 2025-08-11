@@ -1,14 +1,11 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import { UserRepositoryImpl } from '../../internal/infrastructure/secondary/UserRepositoryImpl';
-import { BusinessService } from '../../internal/infrastructure/secondary/BusinessService';
 import { GetUsersUseCase } from '../../internal/application/usecases/GetUsersUseCase';
 import { CreateUserUseCase } from '../../internal/application/usecases/CreateUserUseCase';
 import { User, CreateUserDTO, UserFilters, UserListDTO, Role, Business } from '../../internal/domain/entities/User';
 
 export const useUsers = () => {
   const [users, setUsers] = useState<User[]>([]);
-  const [roles, setRoles] = useState<Role[]>([]);
-  const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState({
@@ -18,22 +15,55 @@ export const useUsers = () => {
     totalPages: 1
   });
 
+  // Ref para evitar múltiples cargas simultáneas
+  const loadingRef = useRef(false);
+
   // Memoize instances to avoid recreating on each render
   const userRepository = useMemo(() => new UserRepositoryImpl(), []);
-  const businessService = useMemo(() => new BusinessService(), []);
   const getUsersUseCase = useMemo(() => new GetUsersUseCase(userRepository), [userRepository]);
   const createUserUseCase = useMemo(() => new CreateUserUseCase(userRepository), [userRepository]);
 
+  // Extraer roles y businesses únicos de los usuarios cargados
+  const roles = useMemo(() => {
+    const uniqueRoles = new Map<number, Role>();
+    users.forEach(user => {
+      user.roles?.forEach(role => {
+        if (!uniqueRoles.has(role.id)) {
+          uniqueRoles.set(role.id, role);
+        }
+      });
+    });
+    return Array.from(uniqueRoles.values());
+  }, [users]);
+
+  const businesses = useMemo(() => {
+    const uniqueBusinesses = new Map<number, Business>();
+    users.forEach(user => {
+      user.businesses?.forEach(business => {
+        if (!uniqueBusinesses.has(business.id)) {
+          uniqueBusinesses.set(business.id, business);
+        }
+      });
+    });
+    return Array.from(uniqueBusinesses.values());
+  }, [users]);
+
   const loadUsers = useCallback(async (filters: UserFilters = {}) => {
+    if (loadingRef.current) return;
+    
     setLoading(true);
     setError(null);
+    loadingRef.current = true;
     
     try {
       console.log('🔍 useUsers: Loading users with filters:', filters);
       const result = await getUsersUseCase.execute(filters);
       console.log('🔍 useUsers: Users loaded successfully:', result);
       
+      // Los usuarios ya vienen mapeados correctamente del UserService
+      // No necesitamos mapear de nuevo
       setUsers(result.users || []);
+      
       setPagination({
         page: result.page || 1,
         pageSize: result.pageSize || 10,
@@ -53,31 +83,16 @@ export const useUsers = () => {
       });
     } finally {
       setLoading(false);
+      loadingRef.current = false;
     }
   }, [getUsersUseCase]);
 
-  const loadRoles = useCallback(async () => {
-    try {
-      const result = await userRepository.getRoles();
-      setRoles(result || []);
-    } catch (err: any) {
-      console.error("Error loading roles:", err);
-      setRoles([]);
-    }
-  }, [userRepository]);
-
-  const loadBusinesses = useCallback(async () => {
-    try {
-      const result = await businessService.getBusinesses();
-      setBusinesses(result || []);
-    } catch (err: any) {
-      console.error("Error loading businesses:", err);
-      setBusinesses([]);
-    }
-  }, [businessService]);
-
   const createUser = useCallback(async (userData: CreateUserDTO) => {
+    if (loadingRef.current) return;
+    
     setLoading(true);
+    loadingRef.current = true;
+    
     try {
       const result = await createUserUseCase.execute(userData);
 
@@ -88,21 +103,30 @@ export const useUsers = () => {
           name: userData.name,
           email: result.email || userData.email,
           phone: userData.phone || '',
+          avatarURL: '',
           isActive: userData.isActive,
-          roles: userData.roleIds?.map(id => ({ id, name: 'Loading...', code: '', level: 1, isSystem: false, scopeId: 1 })) || [],
+          roles: userData.roleIds?.map(id => ({ id, name: 'Loading...', code: '', level: 1, isSystem: false, scopeId: 1, description: '', scopeName: '', scopeCode: '' })) || [],
           businesses: userData.businessIds?.map(id => ({ 
             id, 
             name: 'Loading...', 
             code: '', 
             businessTypeId: 1, 
             timezone: 'UTC',
+            address: '',
+            description: '',
+            logoURL: '',
+            primaryColor: '',
+            secondaryColor: '',
+            customDomain: '',
             isActive: true,
             enableDelivery: false,
             enablePickup: false,
-            enableReservations: true
+            enableReservations: true,
+            businessTypeName: '',
+            businessTypeCode: '',
           })) || [],
           createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
+          updatedAt: new Date().toISOString(),
         };
 
         // Add to list immediately
@@ -118,13 +142,17 @@ export const useUsers = () => {
       throw err;
     } finally {
       setLoading(false);
+      loadingRef.current = false;
     }
   }, [createUserUseCase]);
 
   const updateUser = useCallback(async (id: number, userData: any) => {
+    if (loadingRef.current) return;
+    
     try {
       setLoading(true);
       setError(null);
+      loadingRef.current = true;
 
       const result = await userRepository.updateUser(id, userData);
 
@@ -137,13 +165,17 @@ export const useUsers = () => {
       throw err;
     } finally {
       setLoading(false);
+      loadingRef.current = false;
     }
   }, [userRepository, loadUsers]);
 
   const deleteUser = useCallback(async (id: number) => {
+    if (loadingRef.current) return;
+    
     console.log('🗑️ useUsers: Starting user deletion ID:', id);
     setLoading(true);
     setError(null);
+    loadingRef.current = true;
 
     try {
       const result = await userRepository.deleteUser(id);
@@ -164,13 +196,17 @@ export const useUsers = () => {
       throw err;
     } finally {
       setLoading(false);
+      loadingRef.current = false;
     }
   }, [userRepository, loadUsers]);
 
   const getUserById = useCallback(async (id: number) => {
+    if (loadingRef.current) return;
+    
     try {
       setLoading(true);
       setError(null);
+      loadingRef.current = true;
 
       const result = await userRepository.getUserById(id);
 
@@ -180,14 +216,9 @@ export const useUsers = () => {
       throw err;
     } finally {
       setLoading(false);
+      loadingRef.current = false;
     }
   }, [userRepository]);
-
-  // Load roles and businesses only once when hook initializes
-  useEffect(() => {
-    loadRoles();
-    loadBusinesses();
-  }, [loadRoles, loadBusinesses]);
 
   return { 
     users, 
@@ -197,8 +228,6 @@ export const useUsers = () => {
     error, 
     pagination, 
     loadUsers, 
-    loadRoles, 
-    loadBusinesses, 
     createUser, 
     updateUser, 
     deleteUser, 

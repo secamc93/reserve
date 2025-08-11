@@ -14,17 +14,19 @@
 }
 
 @keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
+
+/* Forzar esquema claro para evitar invertir colores en dark mode del SO */
+html { color-scheme: light; }
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #111827; /* Texto negro/gris muy oscuro (mejor contraste) */
+  /* Colores de tema dinámicos (se actualizan tras login) */
+  --primary-color: #3b82f6;   /* azul por defecto */
+  --secondary-color: #8b5cf6; /* púrpura por defecto */
 }
 
 @theme inline {
@@ -34,10 +36,11 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* No cambiar foreground en modo oscuro para mantener texto oscuro globalmente */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #ffffff; /* mantenemos fondo claro */
+    --foreground: #111827; /* mantenemos texto oscuro */
   }
 }
 
@@ -46,3 +49,11 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Asegurar buen contraste en elementos comunes */
+body, p, span, li, label, input, button, small, h1, h2, h3, h4, h5, h6, th, td {
+  color: var(--foreground);
+}
+
+/* Enlaces usan el color primario dinámico */
+a { color: var(--primary-color); }

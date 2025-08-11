@@ -2,7 +2,7 @@
 import { AuthUseCase } from '../usecases/AuthUseCase';
 import { AuthRepositoryImpl } from '../../infrastructure/secondary/AuthRepositoryImpl';
 import { LoginCredentials, LoginResponse, ChangePasswordData } from '../../domain/entities/Auth';
-import { UserRolesPermissions } from '../../domain/entities/User';
+import { UserRolesPermissions, ApiRolesPermissionsResponse } from '../../domain/entities/User';
 
 export class AuthService {
   private authUseCase: AuthUseCase;
@@ -16,7 +16,7 @@ export class AuthService {
     return this.authUseCase.login(credentials);
   }
 
-  async getUserRolesPermissions(): Promise<UserRolesPermissions> {
+  async getUserRolesPermissions(): Promise<ApiRolesPermissionsResponse> {
     return this.authUseCase.getUserRolesPermissions();
   }
 

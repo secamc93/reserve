@@ -24,8 +24,19 @@ export class UserService {
         
         // El backend devuelve { success: true, data: [...], count: 4 }
         if (response.success && Array.isArray(response.data)) {
+          console.log('🔍 UserService: Mapeando usuarios del backend:', response.data);
+          
           // Mapear los usuarios del backend al formato del frontend
-          const mappedUsers = response.data.map(this.mapUserFromBackend);
+          const mappedUsers = response.data.map((user: any) => {
+            const mappedUser = this.mapUserFromBackend(user);
+            console.log('🔍 UserService: Usuario mapeado:', {
+              original: { id: user.id, is_active: user.is_active, avatar_url: user.avatar_url },
+              mapped: { id: mappedUser.id, isActive: mappedUser.isActive, avatarURL: mappedUser.avatarURL }
+            });
+            return mappedUser;
+          });
+          
+          console.log('🔍 UserService: Usuarios mapeados finales:', mappedUsers);
           
           return {
             users: mappedUsers,
@@ -38,7 +49,7 @@ export class UserService {
         
         // Fallback para otras estructuras
         const users = response.users || response.data?.users || response.data || [];
-        const mappedUsers = Array.isArray(users) ? users.map(this.mapUserFromBackend) : [];
+        const mappedUsers = Array.isArray(users) ? users.map((user: any) => this.mapUserFromBackend(user)) : [];
         
         return {
           users: mappedUsers,
@@ -262,7 +273,15 @@ export class UserService {
 
   // Mapear usuario del formato del backend al formato del frontend
   private mapUserFromBackend(backendUser: any): User {
-    return {
+    console.log('🔍 mapUserFromBackend - Usuario original:', {
+      id: backendUser.id,
+      name: backendUser.name,
+      is_active: backendUser.is_active,
+      avatar_url: backendUser.avatar_url,
+      logo_url: backendUser.businesses?.[0]?.logo_url
+    });
+
+    const mappedUser = {
       id: backendUser.id,
       name: backendUser.name,
       email: backendUser.email,
@@ -303,5 +322,15 @@ export class UserService {
       updatedAt: backendUser.updated_at,
       lastLoginAt: backendUser.last_login_at
     };
+
+    console.log('🔍 mapUserFromBackend - Usuario mapeado:', {
+      id: mappedUser.id,
+      name: mappedUser.name,
+      isActive: mappedUser.isActive,
+      avatarURL: mappedUser.avatarURL,
+      logoURL: mappedUser.businesses?.[0]?.logoURL
+    });
+
+    return mappedUser;
   }
 } 

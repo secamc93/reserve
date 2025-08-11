@@ -1,7 +1,7 @@
 // Infrastructure - Auth Repository Implementation (Secondary Adapter)
 import { AuthRepository } from '../../domain/ports/AuthRepository';
 import { LoginCredentials, LoginResponse, ChangePasswordData } from '../../domain/entities/Auth';
-import { UserRolesPermissions } from '../../domain/entities/User';
+import { User, Business, UserRolesPermissions, ApiRolesPermissionsResponse } from '../../domain/entities/User';
 import { HttpClient } from '../primary/HttpClient';
 
 export class AuthRepositoryImpl implements AuthRepository {
@@ -9,6 +9,55 @@ export class AuthRepositoryImpl implements AuthRepository {
 
   constructor(baseURL: string) {
     this.httpClient = new HttpClient(baseURL);
+  }
+
+  private mapBusinessFromBackend(b: any): Business {
+    return {
+      id: b.id,
+      name: b.name,
+      code: b.code,
+      businessTypeId: b.business_type_id,
+      timezone: b.timezone,
+      address: b.address,
+      description: b.description,
+      logoURL: b.logo_url,
+      primaryColor: b.primary_color,
+      secondaryColor: b.secondary_color,
+      customDomain: b.custom_domain,
+      isActive: b.is_active,
+      enableDelivery: b.enable_delivery,
+      enablePickup: b.enable_pickup,
+      enableReservations: b.enable_reservations,
+      businessTypeName: b.business_type?.name || b.business_type_name,
+      businessTypeCode: b.business_type?.code || b.business_type_code,
+    };
+  }
+
+  private mapUserFromBackend(u: any): User {
+    return {
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      phone: u.phone,
+      avatarURL: u.avatar_url,
+      isActive: u.is_active,
+      roles: u.roles ? u.roles.map((r: any) => ({
+        id: r.id,
+        name: r.name,
+        code: r.code,
+        description: r.description,
+        level: r.level,
+        isSystem: r.is_system,
+        scopeId: r.scope_id,
+        scopeName: r.scope_name,
+        scopeCode: r.scope_code,
+      })) : [],
+      businesses: u.businesses ? u.businesses.map((b: any) => this.mapBusinessFromBackend(b)) : [],
+      createdAt: u.created_at || '',
+      updatedAt: u.updated_at || '',
+      lastLoginAt: u.last_login_at,
+      deletedAt: u.deleted_at,
+    };
   }
 
   async login(credentials: LoginCredentials): Promise<LoginResponse> {
@@ -21,19 +70,25 @@ export class AuthRepositoryImpl implements AuthRepository {
       console.log('🔐 AuthRepositoryImpl: Respuesta del servidor:', response);
 
       if (response.success && response.data) {
-        // Guardar token en localStorage
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('authToken', response.data.token);
-          localStorage.setItem('userInfo', JSON.stringify(response.data.user));
+        const mappedUser = this.mapUserFromBackend(response.data.user);
+        // Mezclar businesses del nivel superior (si vienen)
+        if (Array.isArray(response.data.businesses)) {
+          mappedUser.businesses = response.data.businesses.map((b: any) => this.mapBusinessFromBackend(b));
         }
 
-        console.log('🔐 AuthRepositoryImpl: Login exitoso, token guardado');
+        // Guardar token y usuario mapeado en localStorage
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('authToken', response.data.token);
+          localStorage.setItem('userInfo', JSON.stringify(mappedUser));
+        }
+
+        console.log('🔐 AuthRepositoryImpl: Login exitoso, token y usuario guardados');
 
         return {
           success: true,
-          data: response.data,
-          user: response.data.user,
-          token: response.data.token
+          data: { ...response.data, user: mappedUser },
+          user: mappedUser,
+          token: response.data.token,
         };
       } else {
         console.error('🔐 AuthRepositoryImpl: Respuesta inválida del servidor');
@@ -45,7 +100,7 @@ export class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
-  async getUserRolesPermissions(): Promise<UserRolesPermissions> {
+  async getUserRolesPermissions(): Promise<ApiRolesPermissionsResponse> {
     try {
       console.log('🔐 AuthRepositoryImpl: Obteniendo roles y permisos');
 
@@ -54,11 +109,7 @@ export class AuthRepositoryImpl implements AuthRepository {
       console.log('🔐 AuthRepositoryImpl: Respuesta de roles y permisos:', response);
 
       if (response.success && response.data) {
-        return {
-          isSuper: response.data.is_super,
-          roles: response.data.roles || [],
-          permissions: response.data.permissions || []
-        };
+        return response as ApiRolesPermissionsResponse;
       } else {
         console.error('🔐 AuthRepositoryImpl: Respuesta inválida de roles y permisos');
         throw new Error('Respuesta inválida de roles y permisos');
