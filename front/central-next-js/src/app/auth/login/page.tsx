@@ -1,5 +1,1 @@
-import Login from '../../../presentation/components/Login';
-
-export default function LoginPage() {
-  return <Login />;
-} 
+export { default } from '@/features/auth/ui/pages/LoginPage';
