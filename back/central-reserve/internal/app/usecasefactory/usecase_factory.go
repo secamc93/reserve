@@ -41,7 +41,7 @@ func NewUseCaseFactory(
 	env env.IConfig,
 ) *UseCaseFactory {
 	return &UseCaseFactory{
-		Auth:         usecaseauth.NewAuthUseCase(repoFactory.AuthRepository, jwtService, logger),
+		Auth:         usecaseauth.NewAuthUseCase(repoFactory.AuthRepository, jwtService, logger, env),
 		Client:       usecaseclient.NewClientUseCase(repoFactory.ClientRepository),
 		Table:        usecasetables.NewTableUseCase(repoFactory.TableRepository),
 		Reserve:      usecasereserve.NewReserveUseCase(repoFactory.ReservationRepository, emailService, logger),

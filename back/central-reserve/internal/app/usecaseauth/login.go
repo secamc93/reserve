@@ -5,6 +5,7 @@ import (
 	"central_reserve/internal/domain/entities"
 	"context"
 	"fmt"
+	"strings"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -86,6 +87,15 @@ func (uc *AuthUseCase) Login(ctx context.Context, request dtos.LoginRequest) (*d
 	if err != nil {
 		uc.log.Error().Err(err).Uint("user_id", userAuth.ID).Msg("Error al obtener businesses del usuario")
 		// No retornamos error aquí porque el login puede continuar sin businesses
+	}
+
+	// Completar URL de avatar si es relativa
+	avatarURL := userAuth.AvatarURL
+	if avatarURL != "" && !strings.HasPrefix(avatarURL, "http") {
+		base := strings.TrimRight(uc.env.Get("URL_BASE_DOMAIN_S3"), "/")
+		if base != "" {
+			avatarURL = fmt.Sprintf("%s/%s", base, strings.TrimLeft(avatarURL, "/"))
+		}
 	}
 
 	// Log detallado de businesses
@@ -228,8 +238,8 @@ func (uc *AuthUseCase) Login(ctx context.Context, request dtos.LoginRequest) (*d
 					ID:          business.BusinessTypeID,
 					Name:        business.BusinessTypeName,
 					Code:        business.BusinessTypeCode,
-					Description: "", // No tenemos descripción en BusinessInfo
-					Icon:        "", // No tenemos icono en BusinessInfo
+					Description: "",
+					Icon:        "",
 				},
 				Timezone:           business.Timezone,
 				Address:            business.Address,
@@ -262,7 +272,7 @@ func (uc *AuthUseCase) Login(ctx context.Context, request dtos.LoginRequest) (*d
 			Name:        userAuth.Name,
 			Email:       userAuth.Email,
 			Phone:       userAuth.Phone,
-			AvatarURL:   userAuth.AvatarURL,
+			AvatarURL:   avatarURL,
 			IsActive:    userAuth.IsActive,
 			LastLoginAt: userAuth.LastLoginAt, // Mantiene el valor original (nil para primer login)
 		},
