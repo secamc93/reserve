@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { User, UserRolesPermissions, ApiRolesPermissionsResponse } from '@/features/users/domain/User';
+import { User, ApiRolesPermissionsResponse } from '@/features/users/domain/User';
 import { AuthService } from '@/features/auth/application/AuthService';
 import { config } from '@/shared/config/env';
 
@@ -107,15 +107,15 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       applyBusinessTheme(userInfo);
 
       // 4. Obtener permisos del usuario (SIEMPRE cargar desde API para módulos de admin)
+      let userPermissions: string[] = [];
+
       try {
         console.log('🔍 AppContext: Intentando cargar permisos desde API...');
         const rolesPermissions: ApiRolesPermissionsResponse | null = await authService.getUserRolesPermissions();
         console.log('🔍 AppContext: Respuesta de getUserRolesPermissions:', rolesPermissions);
-        
+
         if (rolesPermissions && rolesPermissions.data) {
           // Procesar la estructura correcta del backend: resources.actions
-          let userPermissions: string[] = [];
-          
           if (rolesPermissions.data.resources && Array.isArray(rolesPermissions.data.resources)) {
             // Extraer todos los códigos de permisos de resources.actions
             rolesPermissions.data.resources.forEach((resource: any) => {
@@ -128,7 +128,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
               }
             });
           }
-          
+
           // También agregar permisos directos si existen
           if (rolesPermissions.data.permissions && Array.isArray(rolesPermissions.data.permissions)) {
             rolesPermissions.data.permissions.forEach((permission: any) => {
@@ -137,12 +137,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
               }
             });
           }
-          
-          // Eliminar duplicados
-          userPermissions = [...new Set(userPermissions)];
-          
-          setPermissions(userPermissions);
-          console.log('✅ AppContext: Permisos cargados desde API:', userPermissions);
 
           // Sincronizar roles en el user del contexto para uso en UI (perfil, etc.)
           if (rolesPermissions.data.roles && Array.isArray(rolesPermissions.data.roles) && rolesPermissions.data.roles.length > 0) {
@@ -165,25 +159,24 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
               return updatedUser;
             });
           }
+
+          console.log('✅ AppContext: Permisos cargados desde API:', userPermissions);
         } else {
           // Fallback: usar roles del usuario como permisos básicos
-          const basicPermissions = userInfo.roles.map((role: any) => `role:${role.code}`);
-          setPermissions(basicPermissions);
-          console.log('⚠️ AppContext: Usando permisos básicos de roles:', basicPermissions);
+          userPermissions = userInfo.roles.map((role: any) => `role:${role.code}`);
+          console.log('⚠️ AppContext: Usando permisos básicos de roles:', userPermissions);
         }
       } catch (error) {
         console.warn('⚠️ AppContext: No se pudieron cargar permisos específicos, usando roles como fallback');
         console.error('🔍 AppContext: Error completo:', error);
         // Fallback: usar roles del usuario como permisos básicos
-        const basicPermissions = userInfo.roles.map((role: any) => `role:${role.code}`);
-        setPermissions(basicPermissions);
-        console.log('✅ AppContext: Permisos derivados de roles del usuario:', basicPermissions);
+        userPermissions = userInfo.roles.map((role: any) => `role:${role.code}`);
+        console.log('✅ AppContext: Permisos derivados de roles del usuario:', userPermissions);
       }
 
       // 5. Generar permisos adicionales basándose en roles para asegurar que se muestren todos los módulos
+      let additionalPermissions: string[] = [];
       if (userInfo.roles && userInfo.roles.length > 0) {
-        const additionalPermissions: string[] = [];
-        
         // Si es super admin, dar acceso a todo
         if (userInfo.roles.some((role: any) => role.scopeCode === 'platform' || role.code === 'super_admin')) {
           additionalPermissions.push(
@@ -192,7 +185,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             'manage_users', 'manage_businesses', 'manage_tables', 'manage_rooms'
           );
         }
-        
+
         // Si tiene roles de administración, dar acceso a módulos básicos
         if (userInfo.roles.some((role: any) => role.code.includes('admin') || role.code.includes('manager'))) {
           additionalPermissions.push(
@@ -200,24 +193,24 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             'businesses:manage', 'tables:manage', 'rooms:manage'
           );
         }
-        
-        // Agregar permisos adicionales a los existentes
-        if (additionalPermissions.length > 0) {
-          setPermissions(prev => [...new Set([...prev, ...additionalPermissions])]);
-          console.log('✅ AppContext: Permisos adicionales agregados:', additionalPermissions);
-        }
+      }
+
+      const finalPermissions = [...new Set([...userPermissions, ...additionalPermissions])];
+      setPermissions(finalPermissions);
+      if (additionalPermissions.length > 0) {
+        console.log('✅ AppContext: Permisos adicionales agregados:', additionalPermissions);
       }
 
       setIsInitialized(true);
       console.log('✅ AppContext: Aplicación inicializada exitosamente');
-      console.log(`📊 AppContext: Usuario: ${userInfo.name}, Permisos: ${permissions.length}`);
+      console.log(`📊 AppContext: Usuario: ${userInfo.name}, Permisos: ${finalPermissions.length}`);
 
     } catch (error) {
       console.error('❌ AppContext: Error inicializando aplicación:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [authService, applyBusinessTheme, isInitialized, permissions.length]);
+  }, [authService, applyBusinessTheme, isInitialized]);
 
   // Función para actualizar datos del usuario
   const updateUser = useCallback((userData: Partial<User>) => {
