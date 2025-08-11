@@ -30,6 +30,7 @@ func ToCreateUserDTO(req request.CreateUserRequest) dtos.CreateUserDTO {
 		Email:       req.Email,
 		Phone:       req.Phone,
 		AvatarURL:   req.AvatarURL,
+		AvatarFile:  req.AvatarFile,
 		IsActive:    req.IsActive,
 		RoleIDs:     req.RoleIDs,
 		BusinessIDs: req.BusinessIDs,

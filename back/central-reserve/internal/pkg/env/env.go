@@ -132,7 +132,7 @@ type Config struct {
 	FromEmail       string `env:"FROM_EMAIL"`
 	SMTPUseSTARTTLS string `env:"SMTP_USE_STARTTLS"`
 	SMTPUseTLS      string `env:"SMTP_USE_TLS"`
-	UrlBaseDomain   string `env:"URL_BASE_DOMAIN,required"`
+	UrlBaseDomainS3 string `env:"URL_BASE_DOMAIN_S3,required"`
 }
 
 func splitTag(tag string) []string {

@@ -11,12 +11,19 @@ import (
 
 // CreateUserHandler maneja la solicitud de crear un usuario
 // @Summary Crear usuario
-// @Description Crea un nuevo usuario con roles y businesses opcionales
+// @Description Crea un nuevo usuario con roles y businesses opcionales. Soporta carga de imagen (avatarFile).
 // @Tags Users
-// @Accept json
+// @Accept multipart/form-data
 // @Produce json
 // @Security BearerAuth
-// @Param user body request.CreateUserRequest true "Datos del usuario"
+// @Param name formData string true "Nombre"
+// @Param email formData string true "Email"
+// @Param phone formData string false "Teléfono (10 dígitos)"
+// @Param is_active formData boolean false "¿Activo?"
+// @Param role_ids formData []int false "IDs de roles" collectionFormat(multi)
+// @Param business_ids formData []int false "IDs de negocios" collectionFormat(multi)
+// @Param avatar_url formData string false "URL de avatar (opcional si se usa avatarFile)"
+// @Param avatarFile formData file false "Imagen de avatar"
 // @Success 201 {object} response.UserMessageResponse "Usuario creado exitosamente"
 // @Failure 400 {object} response.UserErrorResponse "Datos inválidos"
 // @Failure 401 {object} response.UserErrorResponse "Token de acceso requerido"
@@ -25,7 +32,7 @@ import (
 // @Router /users [post]
 func (h *UserHandler) CreateUserHandler(c *gin.Context) {
 	var req request.CreateUserRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := c.ShouldBind(&req); err != nil {
 		h.logger.Error().Err(err).Msg("Error al validar datos de entrada")
 		c.JSON(http.StatusBadRequest, response.UserErrorResponse{
 			Error: "Datos de entrada inválidos: " + err.Error(),
@@ -34,6 +41,11 @@ func (h *UserHandler) CreateUserHandler(c *gin.Context) {
 	}
 
 	h.logger.Info().Str("email", req.Email).Msg("Iniciando solicitud para crear usuario")
+
+	// Log simple para confirmar recepción de archivo
+	if req.AvatarFile != nil {
+		h.logger.Info().Str("email", req.Email).Str("filename", req.AvatarFile.Filename).Int64("size", req.AvatarFile.Size).Msg("Archivo de avatar recibido en creación")
+	}
 
 	userDTO := mapper.ToCreateUserDTO(req)
 	email, password, message, err := h.usecase.CreateUser(c.Request.Context(), userDTO)

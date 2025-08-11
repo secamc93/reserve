@@ -3008,9 +3008,9 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Crea un nuevo usuario con roles y businesses opcionales",
+                "description": "Crea un nuevo usuario con roles y businesses opcionales. Soporta carga de imagen (avatarFile).",
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
@@ -3021,13 +3021,62 @@ const docTemplate = `{
                 "summary": "Crear usuario",
                 "parameters": [
                     {
-                        "description": "Datos del usuario",
-                        "name": "user",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/request.CreateUserRequest"
-                        }
+                        "type": "string",
+                        "description": "Nombre",
+                        "name": "name",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Email",
+                        "name": "email",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Teléfono (10 dígitos)",
+                        "name": "phone",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "¿Activo?",
+                        "name": "is_active",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "IDs de roles",
+                        "name": "role_ids",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "IDs de negocios",
+                        "name": "business_ids",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "URL de avatar (opcional si se usa avatarFile)",
+                        "name": "avatar_url",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Imagen de avatar",
+                        "name": "avatarFile",
+                        "in": "formData"
                     }
                 ],
                 "responses": {
@@ -3131,9 +3180,9 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Actualiza un usuario existente en el sistema",
+                "description": "Actualiza un usuario existente en el sistema. Soporta carga de imagen (avatarFile).",
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
@@ -3152,13 +3201,66 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Datos del usuario",
-                        "name": "user",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/request.UpdateUserRequest"
-                        }
+                        "type": "string",
+                        "description": "Nombre",
+                        "name": "name",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Email",
+                        "name": "email",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Nueva contraseña",
+                        "name": "password",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Teléfono (10 dígitos)",
+                        "name": "phone",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "¿Activo?",
+                        "name": "is_active",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "IDs de roles",
+                        "name": "role_ids",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "IDs de negocios",
+                        "name": "business_ids",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "URL de avatar (opcional si se usa avatarFile)",
+                        "name": "avatar_url",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Imagen de avatar",
+                        "name": "avatarFile",
+                        "in": "formData"
                     }
                 ],
                 "responses": {
@@ -3653,45 +3755,6 @@ const docTemplate = `{
                 }
             }
         },
-        "request.CreateUserRequest": {
-            "type": "object",
-            "required": [
-                "email",
-                "name"
-            ],
-            "properties": {
-                "avatar_url": {
-                    "type": "string"
-                },
-                "business_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "email": {
-                    "type": "string"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 2
-                },
-                "phone": {
-                    "type": "string"
-                },
-                "role_ids": {
-                    "description": "Opcional",
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                }
-            }
-        },
         "request.GenerateAPIKeyRequest": {
             "type": "object",
             "required": [
@@ -3734,7 +3797,6 @@ const docTemplate = `{
         "request.Reservation": {
             "type": "object",
             "required": [
-                "business_id",
                 "email",
                 "end_at",
                 "name",
@@ -3939,49 +4001,6 @@ const docTemplate = `{
                 },
                 "number": {
                     "type": "integer"
-                }
-            }
-        },
-        "request.UpdateUserRequest": {
-            "type": "object",
-            "required": [
-                "email",
-                "name"
-            ],
-            "properties": {
-                "avatar_url": {
-                    "type": "string"
-                },
-                "business_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "email": {
-                    "type": "string"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 2
-                },
-                "password": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 6
-                },
-                "phone": {
-                    "type": "string"
-                },
-                "role_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
                 }
             }
         },
@@ -4635,15 +4654,7 @@ const docTemplate = `{
                 "is_super": {
                     "type": "boolean"
                 },
-                "permissions": {
-                    "description": "Mantener para compatibilidad",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/response.PermissionInfo"
-                    }
-                },
                 "resources": {
-                    "description": "Nuevo: permisos agrupados por recurso",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/response.ResourcePermissions"

@@ -67,14 +67,14 @@ func (uc *UserUseCase) GetUsers(ctx context.Context, filters dtos.UserFilters) (
 					uc.log.Error().Err(err).Str("avatar_path", avatarURL).Msg("Error al verificar existencia de imagen en S3")
 					// No fallar si hay error al verificar, continuar con URL por defecto
 				} else if exists {
-					// Generar URL completa usando la variable de entorno
-					urlBaseDomain := uc.getURLBaseDomain()
-					if urlBaseDomain != "" {
-						// Construir URL completa: URL_BASE_DOMAIN + /api/v1/images/ + avatar_path
-						avatarURL = fmt.Sprintf("%s/api/v1/images/%s", urlBaseDomain, avatarURL)
-						uc.log.Debug().Str("avatar_path", user.AvatarURL).Str("full_url", avatarURL).Msg("URL de avatar generada")
+					// Generar URL completa usando el dominio de media
+					mediaBaseURL := uc.getMediaBaseURL()
+					if mediaBaseURL != "" {
+						// Construir URL completa: MEDIA_BASE_URL + / + avatar_path
+						avatarURL = fmt.Sprintf("%s/%s", mediaBaseURL, strings.TrimLeft(avatarURL, "/"))
+						uc.log.Debug().Str("avatar_path", user.AvatarURL).Str("full_url", avatarURL).Msg("URL de avatar generada (media)")
 					} else {
-						uc.log.Warn().Str("avatar_path", avatarURL).Msg("URL_BASE_DOMAIN no configurada, usando path relativo")
+						uc.log.Warn().Str("avatar_path", avatarURL).Msg("URL_BASE_DOMAIN_S3 no configurada, usando path relativo")
 					}
 				} else {
 					uc.log.Warn().Str("avatar_path", avatarURL).Msg("Imagen de avatar no encontrada en S3")

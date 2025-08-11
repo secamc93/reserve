@@ -33,14 +33,14 @@ func (uc *UserUseCase) GetUserByID(ctx context.Context, id uint) (*dtos.UserDTO,
 				uc.log.Error().Err(err).Str("avatar_path", avatarURL).Msg("Error al verificar existencia de imagen en S3")
 				// No fallar si hay error al verificar, continuar con URL por defecto
 			} else if exists {
-				// Generar URL completa usando la variable de entorno
-				urlBaseDomain := uc.getURLBaseDomain()
-				if urlBaseDomain != "" {
-					// Construir URL completa: URL_BASE_DOMAIN + /api/v1/images/ + avatar_path
-					avatarURL = fmt.Sprintf("%s/api/v1/images/%s", urlBaseDomain, avatarURL)
-					uc.log.Info().Str("avatar_path", user.AvatarURL).Str("full_url", avatarURL).Msg("URL de avatar generada")
+				// Generar URL completa usando el dominio de media
+				mediaBaseURL := uc.getMediaBaseURL()
+				if mediaBaseURL != "" {
+					// Construir URL completa: MEDIA_BASE_URL + / + avatar_path
+					avatarURL = fmt.Sprintf("%s/%s", mediaBaseURL, strings.TrimLeft(avatarURL, "/"))
+					uc.log.Info().Str("avatar_path", user.AvatarURL).Str("full_url", avatarURL).Msg("URL de avatar generada (media)")
 				} else {
-					uc.log.Warn().Str("avatar_path", avatarURL).Msg("URL_BASE_DOMAIN no configurada, usando path relativo")
+					uc.log.Warn().Str("avatar_path", avatarURL).Msg("URL_BASE_DOMAIN_S3 no configurada, usando path relativo")
 				}
 			} else {
 				uc.log.Warn().Str("avatar_path", avatarURL).Msg("Imagen de avatar no encontrada en S3")
@@ -121,13 +121,10 @@ func (uc *UserUseCase) GetUserByID(ctx context.Context, id uint) (*dtos.UserDTO,
 	return &userDTO, nil
 }
 
-// getURLBaseDomain obtiene la URL base del dominio desde la configuración
-func (uc *UserUseCase) getURLBaseDomain() string {
-	// Obtener la URL base del dominio desde la configuración
-	urlBaseDomain := uc.env.Get("URL_BASE_DOMAIN")
-	if urlBaseDomain == "" {
-		uc.log.Warn().Msg("URL_BASE_DOMAIN no configurada en variables de entorno")
-		return ""
-	}
-	return urlBaseDomain
+// getMediaBaseURL obtiene la URL base del dominio de media desde la configuración, con fallback al dominio público
+func (uc *UserUseCase) getMediaBaseURL() string {
+	// Prioriza variable definida en env.go: URL_BASE_DOMAIN_S3
+	mediaBase := uc.env.Get("URL_BASE_DOMAIN_S3")
+
+	return strings.TrimRight(mediaBase, "/")
 }

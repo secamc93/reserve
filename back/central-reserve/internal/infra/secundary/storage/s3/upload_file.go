@@ -21,7 +21,6 @@ func (s *S3Uploader) UploadFile(ctx context.Context, file io.ReadSeeker, filenam
 		Bucket:               aws.String(s.bucket),
 		Key:                  aws.String(filename),
 		Body:                 file,
-		ACL:                  types.ObjectCannedACLPublicRead,
 		ContentDisposition:   aws.String("inline"),
 		ServerSideEncryption: types.ServerSideEncryptionAes256,
 		StorageClass:         types.StorageClassIntelligentTiering,

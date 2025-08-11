@@ -264,33 +264,6 @@ definitions:
     - resource
     - scope_id
     type: object
-  request.CreateUserRequest:
-    properties:
-      avatar_url:
-        type: string
-      business_ids:
-        items:
-          type: integer
-        type: array
-      email:
-        type: string
-      is_active:
-        type: boolean
-      name:
-        maxLength: 100
-        minLength: 2
-        type: string
-      phone:
-        type: string
-      role_ids:
-        description: Opcional
-        items:
-          type: integer
-        type: array
-    required:
-    - email
-    - name
-    type: object
   request.GenerateAPIKeyRequest:
     properties:
       business_id:
@@ -337,7 +310,6 @@ definitions:
       start_at:
         type: string
     required:
-    - business_id
     - email
     - end_at
     - name
@@ -463,36 +435,6 @@ definitions:
         type: integer
       number:
         type: integer
-    type: object
-  request.UpdateUserRequest:
-    properties:
-      avatar_url:
-        type: string
-      business_ids:
-        items:
-          type: integer
-        type: array
-      email:
-        type: string
-      is_active:
-        type: boolean
-      name:
-        maxLength: 100
-        minLength: 2
-        type: string
-      password:
-        maxLength: 100
-        minLength: 6
-        type: string
-      phone:
-        type: string
-      role_ids:
-        items:
-          type: integer
-        type: array
-    required:
-    - email
-    - name
     type: object
   response.BusinessErrorResponse:
     properties:
@@ -926,13 +868,7 @@ definitions:
     properties:
       is_super:
         type: boolean
-      permissions:
-        description: Mantener para compatibilidad
-        items:
-          $ref: '#/definitions/response.PermissionInfo'
-        type: array
       resources:
-        description: 'Nuevo: permisos agrupados por recurso'
         items:
           $ref: '#/definitions/response.ResourcePermissions'
         type: array
@@ -2932,15 +2868,50 @@ paths:
       - Users
     post:
       consumes:
-      - application/json
-      description: Crea un nuevo usuario con roles y businesses opcionales
+      - multipart/form-data
+      description: Crea un nuevo usuario con roles y businesses opcionales. Soporta
+        carga de imagen (avatarFile).
       parameters:
-      - description: Datos del usuario
-        in: body
-        name: user
+      - description: Nombre
+        in: formData
+        name: name
         required: true
-        schema:
-          $ref: '#/definitions/request.CreateUserRequest'
+        type: string
+      - description: Email
+        in: formData
+        name: email
+        required: true
+        type: string
+      - description: Teléfono (10 dígitos)
+        in: formData
+        name: phone
+        type: string
+      - description: ¿Activo?
+        in: formData
+        name: is_active
+        type: boolean
+      - collectionFormat: multi
+        description: IDs de roles
+        in: formData
+        items:
+          type: integer
+        name: role_ids
+        type: array
+      - collectionFormat: multi
+        description: IDs de negocios
+        in: formData
+        items:
+          type: integer
+        name: business_ids
+        type: array
+      - description: URL de avatar (opcional si se usa avatarFile)
+        in: formData
+        name: avatar_url
+        type: string
+      - description: Imagen de avatar
+        in: formData
+        name: avatarFile
+        type: file
       produces:
       - application/json
       responses:
@@ -3050,8 +3021,9 @@ paths:
       - Users
     put:
       consumes:
-      - application/json
-      description: Actualiza un usuario existente en el sistema
+      - multipart/form-data
+      description: Actualiza un usuario existente en el sistema. Soporta carga de
+        imagen (avatarFile).
       parameters:
       - description: ID del usuario
         in: path
@@ -3059,12 +3031,48 @@ paths:
         name: id
         required: true
         type: integer
-      - description: Datos del usuario
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/request.UpdateUserRequest'
+      - description: Nombre
+        in: formData
+        name: name
+        type: string
+      - description: Email
+        in: formData
+        name: email
+        type: string
+      - description: Nueva contraseña
+        in: formData
+        name: password
+        type: string
+      - description: Teléfono (10 dígitos)
+        in: formData
+        name: phone
+        type: string
+      - description: ¿Activo?
+        in: formData
+        name: is_active
+        type: boolean
+      - collectionFormat: multi
+        description: IDs de roles
+        in: formData
+        items:
+          type: integer
+        name: role_ids
+        type: array
+      - collectionFormat: multi
+        description: IDs de negocios
+        in: formData
+        items:
+          type: integer
+        name: business_ids
+        type: array
+      - description: URL de avatar (opcional si se usa avatarFile)
+        in: formData
+        name: avatar_url
+        type: string
+      - description: Imagen de avatar
+        in: formData
+        name: avatarFile
+        type: file
       produces:
       - application/json
       responses:

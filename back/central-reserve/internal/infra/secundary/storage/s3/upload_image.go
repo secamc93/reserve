@@ -55,7 +55,6 @@ func (s *S3Uploader) UploadImage(ctx context.Context, file *multipart.FileHeader
 		Key:                  aws.String(filename),
 		Body:                 src,
 		ContentType:          aws.String(contentType),
-		ACL:                  types.ObjectCannedACLPublicRead,
 		ContentDisposition:   aws.String("inline"),
 		ServerSideEncryption: types.ServerSideEncryptionAes256,
 		StorageClass:         types.StorageClassStandard,             // Mejor para acceso frecuente
