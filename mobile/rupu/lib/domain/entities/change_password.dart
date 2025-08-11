@@ -1,7 +1,7 @@
 /// Entidad de dominio que representa al cambio de contraseña.
-class CambiarContrasena {
+class ChangePassword {
   final String message;
   final bool success;
 
-  CambiarContrasena({required this.message, required this.success});
+  ChangePassword({required this.message, required this.success});
 }

@@ -1,32 +1,28 @@
+// presentation/views/cambiar_contrasena/cambiar_contrasena_controller.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:dio/dio.dart';
-import 'package:rupu/domain/infrastructure/datasources/cambiar_contrasena_datasource_impl.dart';
-import 'package:rupu/domain/infrastructure/repositories/cambiar_contrasena_repository_impl.dart';
-import 'package:rupu/domain/repositories/cambiar_contrasena_repository.dart';
+import 'package:rupu/domain/infrastructure/datasources/change_password_datasource_impl.dart';
+import 'package:rupu/domain/infrastructure/repositories/change_password_repository_impl.dart';
+import 'package:rupu/domain/repositories/change_password_repository.dart';
 
 /// Controlador para la vista de cambio de contraseña.
-class CambiarContrasenaController extends GetxController {
-  final CambiarContrasenaRepository repository;
+class ChangePasswordController extends GetxController {
+  final ChangePasswordRepository repository;
 
-  CambiarContrasenaController()
-    : repository = CambiarContrasenaRepositoryImpl(
-        CambiarContrasenaDatasourceImpl(),
-      );
+  ChangePasswordController()
+    : repository = ChangePasswordRepositoryImpl(ChangePasswordDatasourceImpl());
 
-  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-  final TextEditingController currentPasswordController =
-      TextEditingController();
-  final TextEditingController newPasswordController = TextEditingController();
-  final TextEditingController repeatPasswordController =
-      TextEditingController();
+  final formKey = GlobalKey<FormState>();
+  final currentPasswordController = TextEditingController();
+  final newPasswordController = TextEditingController();
+  final repeatPasswordController = TextEditingController();
 
-  final RxBool isLoading = false.obs;
+  final isLoading = false.obs;
   final RxnString errorMessage = RxnString();
   final RxnString successMessage = RxnString();
 
   /// Ejecuta la lógica de cambio de contraseña.
-  /// Retorna true si fue exitoso y false en caso de error.
   Future<bool> submit() async {
     if (!formKey.currentState!.validate()) return false;
     if (newPasswordController.text != repeatPasswordController.text) {
@@ -40,14 +36,13 @@ class CambiarContrasenaController extends GetxController {
     successMessage.value = null;
 
     try {
-      final response = await repository.cambiarContrasena(
+      final response = await repository.changePassword(
         currentPassword: currentPasswordController.text.trim(),
         newPassword: newPasswordController.text.trim(),
       );
       successMessage.value = response.message;
       return true;
     } on DioException catch (e) {
-      // Extraer mensaje de error del JSON: campo 'error' o 'details'
       final data = e.response?.data;
       String msg;
       if (data is Map<String, dynamic>) {
@@ -56,16 +51,22 @@ class CambiarContrasenaController extends GetxController {
             data['details']?.toString() ??
             'Error desconocido';
       } else {
-        msg = e.message ?? "";
+        msg = e.message ?? '';
       }
       errorMessage.value = msg;
       return false;
     } catch (e) {
-      errorMessage.value = 'Error inesperado: ${e.toString()}';
+      errorMessage.value = 'Error inesperado: $e';
       return false;
     } finally {
       isLoading.value = false;
     }
+  }
+
+  void clearFields() {
+    currentPasswordController.clear();
+    newPasswordController.clear();
+    repeatPasswordController.clear();
   }
 
   @override

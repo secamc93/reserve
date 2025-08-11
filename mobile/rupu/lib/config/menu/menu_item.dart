@@ -15,16 +15,22 @@ class MenuItem {
 }
 
 const appMenuItems = <MenuItem>[
+  // MenuItem(
+  //   tittle: 'Perfil',
+  //   subTittle: '',
+  //   link: '/home/0/perfil',
+  //   icon: Icons.person,
+  // ),
+  // MenuItem(
+  //   tittle: 'Cambiar contraseña',
+  //   subTittle: 'Cambiar contraseña',
+  //   link: '/home/0/cambiar_contrasena',
+  //   icon: Icons.key_outlined,
+  // ),
   MenuItem(
-    tittle: 'Perfil',
+    tittle: 'Reservas',
     subTittle: '',
-    link: '/home/0/perfil',
-    icon: Icons.person,
-  ),
-  MenuItem(
-    tittle: 'Cambiar contraseña',
-    subTittle: 'Cambiar contraseña',
-    link: '/home/0/cambiar_contrasena',
-    icon: Icons.key_outlined,
+    link: '/home/0/reserve',
+    icon: Icons.calendar_month_outlined,
   ),
 ];

@@ -40,6 +40,11 @@ dependencies:
   dio: ^5.8.0+1
   flutter_secure_storage: ^9.2.4
   intl: ^0.20.2
+  syncfusion_flutter_calendar: ^30.2.4
+  animate_do: ^4.2.0
+  flutter_localizations:
+    sdk: flutter
+  syncfusion_localizations: ^30.2.4
 
 dev_dependencies:
   flutter_test:

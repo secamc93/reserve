@@ -1,16 +1,13 @@
 /// Modelo de datos para mapear JSON de una respuesta genérica.
-class CambiarContrasenaResponseModel {
+class ChangePasswordResponseModel {
   final String message;
   final bool success;
 
-  CambiarContrasenaResponseModel({
-    required this.message,
-    required this.success,
-  });
+  ChangePasswordResponseModel({required this.message, required this.success});
 
   /// Crea una instancia de [ResponseModel] a partir de un mapa JSON.
-  factory CambiarContrasenaResponseModel.fromJson(Map<String, dynamic> json) {
-    return CambiarContrasenaResponseModel(
+  factory ChangePasswordResponseModel.fromJson(Map<String, dynamic> json) {
+    return ChangePasswordResponseModel(
       message: json['message'] as String,
       success: json['success'] as bool,
     );

@@ -1,3 +1,4 @@
+import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 
 import '../../views/views.dart';
@@ -16,7 +17,9 @@ class HomeScreen extends StatelessWidget {
     ];
 
     return Scaffold(
-      body: IndexedStack(index: pageIndex, children: viewRoutes),
+      body: FadeIn(
+        child: IndexedStack(index: pageIndex, children: viewRoutes),
+      ),
     );
   }
 }

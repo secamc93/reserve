@@ -1,23 +1,20 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:rupu/config/dio/authenticated_dio.dart';
-import 'package:rupu/domain/datasource/cambiar_contrasena_datasource.dart';
-import 'package:rupu/domain/infrastructure/models/cambiar_contrasena_response_model.dart';
+import 'package:rupu/domain/datasource/change_password_datasource.dart';
+import 'package:rupu/domain/infrastructure/models/change_password_response_model.dart';
 
 /// DataSource para cambiar contraseña usando un Dio autenticado.
-class CambiarContrasenaDatasourceImpl extends CambiarContrasenasDatasource {
+class ChangePasswordDatasourceImpl extends CambiarContrasenasDatasource {
   final Dio _dio;
 
-  CambiarContrasenaDatasourceImpl({String? baseUrl})
+  ChangePasswordDatasourceImpl({String? baseUrl})
     : _dio = AuthenticatedDio(
         baseUrl: baseUrl ?? 'https://www.xn--rup-joa.com/api/v1/auth',
       ).dio;
 
   @override
-  Future cambiarContrasena({
-    String? currentPassword,
-    String? newPassword,
-  }) async {
+  Future changePassword({String? currentPassword, String? newPassword}) async {
     debugPrint(
       'Petición change-password: current=$currentPassword, new=$newPassword',
     );
@@ -30,7 +27,7 @@ class CambiarContrasenaDatasourceImpl extends CambiarContrasenasDatasource {
         },
       );
 
-      return CambiarContrasenaResponseModel.fromJson(
+      return ChangePasswordResponseModel.fromJson(
         response.data as Map<String, dynamic>,
       );
     } on DioException catch (e) {

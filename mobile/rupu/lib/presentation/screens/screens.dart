@@ -1,3 +1,5 @@
+export 'package:rupu/presentation/screens/reserve/reserve_screen.dart';
+
 export 'package:rupu/presentation/screens/perfil/perfil_screen.dart';
 
 export 'package:rupu/presentation/screens/home/home_screen.dart';

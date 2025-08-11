@@ -1,3 +1,4 @@
+import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rupu/config/routers/app_bindings.dart';
@@ -33,7 +34,29 @@ final appRouter = GoRouter(
           builder: (context, state) {
             final pageIndex = int.parse(state.pathParameters['page']!);
             HomeBinding.register();
-            return HomeView(pageIndex: pageIndex);
+            return FadeInLeft(
+              curve: Curves.fastLinearToSlowEaseIn,
+              delay: const Duration(milliseconds: 100),
+              child: HomeView(pageIndex: pageIndex),
+            );
+          },
+        ),
+        GoRoute(
+          path: '/home/:page/reserve',
+          name: ReserveScreen.name,
+          builder: (context, state) {
+            ReserveBinding.register();
+            final page = int.tryParse(state.pathParameters['page'] ?? '0') ?? 0;
+            return ReserveScreen(pageIndex: page);
+          },
+        ),
+        GoRoute(
+          path: '/home/:page/calendar',
+          name: CalendarViewReserve.name,
+          builder: (context, state) {
+            // Si necesitas bindings, llámalos aquí (CalendarBinding.register();)
+            ReserveBinding.register();
+            return CalendarViewReserve(); // tu vista
           },
         ),
         GoRoute(
@@ -44,6 +67,7 @@ final appRouter = GoRouter(
             return CambiarContrasenaScreen();
           },
         ),
+
         GoRoute(
           path: '/home/:page/perfil',
           name: PerfilScreen.name,
@@ -51,7 +75,11 @@ final appRouter = GoRouter(
             final pageIndex = int.parse(state.pathParameters['page']!);
 
             PerfilBinding.register();
-            return PerfilView(pageIndex: pageIndex);
+            return FadeInLeft(
+              curve: Curves.fastEaseInToSlowEaseOut,
+              delay: const Duration(milliseconds: 200),
+              child: PerfilView(pageIndex: pageIndex),
+            );
           },
         ),
       ],
