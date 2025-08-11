@@ -5,6 +5,7 @@ import (
 	"central_reserve/internal/domain/entities"
 	"context"
 	"fmt"
+	"strings"
 )
 
 // CreateBusiness crea un nuevo negocio
@@ -37,6 +38,18 @@ func (uc *BusinessUseCase) CreateBusiness(ctx context.Context, request dtos.Busi
 		}
 	}
 
+	// Subir logo si viene archivo
+	logoURL := request.LogoURL
+	if request.LogoFile != nil {
+		uc.log.Info().Str("filename", request.LogoFile.Filename).Msg("Subiendo logo de negocio a S3")
+		path, err := uc.s3.UploadImage(ctx, request.LogoFile, "businessLogo")
+		if err != nil {
+			uc.log.Error().Err(err).Msg("Error al subir logo de negocio a S3")
+			return nil, fmt.Errorf("error al subir logo: %w", err)
+		}
+		logoURL = path // Guardar solo path relativo
+	}
+
 	// Crear entidad
 	business := entities.Business{
 		Name:               request.Name,
@@ -45,7 +58,7 @@ func (uc *BusinessUseCase) CreateBusiness(ctx context.Context, request dtos.Busi
 		Timezone:           request.Timezone,
 		Address:            request.Address,
 		Description:        request.Description,
-		LogoURL:            request.LogoURL,
+		LogoURL:            logoURL,
 		PrimaryColor:       request.PrimaryColor,
 		SecondaryColor:     request.SecondaryColor,
 		CustomDomain:       request.CustomDomain,
@@ -69,6 +82,15 @@ func (uc *BusinessUseCase) CreateBusiness(ctx context.Context, request dtos.Busi
 		return nil, fmt.Errorf("error al obtener negocio creado: %w", err)
 	}
 
+	// Completar URL de logo si es path relativo
+	fullLogoURL := created.LogoURL
+	if fullLogoURL != "" && !strings.HasPrefix(fullLogoURL, "http") {
+		base := strings.TrimRight(uc.env.Get("URL_BASE_DOMAIN_S3"), "/")
+		if base != "" {
+			fullLogoURL = fmt.Sprintf("%s/%s", base, strings.TrimLeft(fullLogoURL, "/"))
+		}
+	}
+
 	response := &dtos.BusinessResponse{
 		ID:   created.ID,
 		Name: created.Name,
@@ -79,7 +101,7 @@ func (uc *BusinessUseCase) CreateBusiness(ctx context.Context, request dtos.Busi
 		Timezone:           created.Timezone,
 		Address:            created.Address,
 		Description:        created.Description,
-		LogoURL:            created.LogoURL,
+		LogoURL:            fullLogoURL,
 		PrimaryColor:       created.PrimaryColor,
 		SecondaryColor:     created.SecondaryColor,
 		CustomDomain:       created.CustomDomain,

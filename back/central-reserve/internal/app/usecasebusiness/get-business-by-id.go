@@ -4,6 +4,7 @@ import (
 	"central_reserve/internal/domain/dtos"
 	"context"
 	"fmt"
+	"strings"
 )
 
 // GetBusinessByID obtiene un negocio por ID
@@ -21,6 +22,15 @@ func (uc *BusinessUseCase) GetBusinessByID(ctx context.Context, id uint) (*dtos.
 		return nil, fmt.Errorf("negocio no encontrado")
 	}
 
+	// Completar URL del logo si es relativo
+	fullLogoURL := business.LogoURL
+	if fullLogoURL != "" && !strings.HasPrefix(fullLogoURL, "http") {
+		base := strings.TrimRight(uc.env.Get("URL_BASE_DOMAIN_S3"), "/")
+		if base != "" {
+			fullLogoURL = fmt.Sprintf("%s/%s", base, strings.TrimLeft(fullLogoURL, "/"))
+		}
+	}
+
 	response := &dtos.BusinessResponse{
 		ID:   business.ID,
 		Name: business.Name,
@@ -31,7 +41,7 @@ func (uc *BusinessUseCase) GetBusinessByID(ctx context.Context, id uint) (*dtos.
 		Timezone:           business.Timezone,
 		Address:            business.Address,
 		Description:        business.Description,
-		LogoURL:            business.LogoURL,
+		LogoURL:            fullLogoURL,
 		PrimaryColor:       business.PrimaryColor,
 		SecondaryColor:     business.SecondaryColor,
 		CustomDomain:       business.CustomDomain,

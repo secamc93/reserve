@@ -4,6 +4,7 @@ import (
 	"central_reserve/internal/domain/dtos"
 	"context"
 	"fmt"
+	"strings"
 )
 
 // GetBusinesses obtiene todos los negocios
@@ -19,6 +20,14 @@ func (uc *BusinessUseCase) GetBusinesses(ctx context.Context) ([]dtos.BusinessRe
 	// Convertir entidades a DTOs
 	response := make([]dtos.BusinessResponse, len(businesses))
 	for i, business := range businesses {
+		fullLogoURL := business.LogoURL
+		if fullLogoURL != "" && !strings.HasPrefix(fullLogoURL, "http") {
+			base := strings.TrimRight(uc.env.Get("URL_BASE_DOMAIN_S3"), "/")
+			if base != "" {
+				fullLogoURL = fmt.Sprintf("%s/%s", base, strings.TrimLeft(fullLogoURL, "/"))
+			}
+		}
+
 		response[i] = dtos.BusinessResponse{
 			ID:   business.ID,
 			Name: business.Name,
@@ -29,7 +38,7 @@ func (uc *BusinessUseCase) GetBusinesses(ctx context.Context) ([]dtos.BusinessRe
 			Timezone:           business.Timezone,
 			Address:            business.Address,
 			Description:        business.Description,
-			LogoURL:            business.LogoURL,
+			LogoURL:            fullLogoURL,
 			PrimaryColor:       business.PrimaryColor,
 			SecondaryColor:     business.SecondaryColor,
 			CustomDomain:       business.CustomDomain,

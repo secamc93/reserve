@@ -45,7 +45,7 @@ func NewUseCaseFactory(
 		Client:       usecaseclient.NewClientUseCase(repoFactory.ClientRepository),
 		Table:        usecasetables.NewTableUseCase(repoFactory.TableRepository),
 		Reserve:      usecasereserve.NewReserveUseCase(repoFactory.ReservationRepository, emailService, logger),
-		Business:     usecasebusiness.NewBusinessUseCase(repoFactory.BusinessRepository, logger),
+		Business:     usecasebusiness.NewBusinessUseCase(repoFactory.BusinessRepository, logger, s3Service, env),
 		BusinessType: usecasebusinesstype.NewBusinessTypeUseCase(repoFactory.BusinessTypeRepository, logger),
 		Permission:   usecasepermission.NewPermissionUseCase(repoFactory.PermissionRepository, logger),
 		Role:         usecaserole.NewRoleUseCase(repoFactory.RoleRepository, logger),

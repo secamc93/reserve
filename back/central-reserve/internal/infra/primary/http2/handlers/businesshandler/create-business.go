@@ -11,12 +11,26 @@ import (
 
 // CreateBusinessHandler maneja la solicitud de crear un nuevo negocio
 // @Summary Crear negocio
-// @Description Crea un nuevo negocio con los datos proporcionados
+// @Description Crea un nuevo negocio con los datos proporcionados. Soporta carga de logo (logoFile).
 // @Tags Business
-// @Accept json
+// @Accept multipart/form-data
 // @Produce json
 // @Security BearerAuth
-// @Param business body request.BusinessRequest true "Datos del negocio"
+// @Param name formData string true "Nombre"
+// @Param code formData string true "Código"
+// @Param business_type_id formData int true "Tipo de negocio ID"
+// @Param timezone formData string false "Zona horaria"
+// @Param address formData string false "Dirección"
+// @Param description formData string false "Descripción"
+// @Param logo_url formData string false "URL del logo (opcional si se usa logoFile)"
+// @Param logoFile formData file false "Logo del negocio"
+// @Param primary_color formData string false "Color primario"
+// @Param secondary_color formData string false "Color secundario"
+// @Param custom_domain formData string false "Dominio personalizado"
+// @Param is_active formData boolean false "¿Activo?"
+// @Param enable_delivery formData boolean false "Habilitar domicilios"
+// @Param enable_pickup formData boolean false "Habilitar recoger"
+// @Param enable_reservations formData boolean false "Habilitar reservas"
 // @Success 201 {object} response.BusinessSuccessResponse "Negocio creado exitosamente"
 // @Failure 400 {object} response.BusinessErrorResponse "Datos inválidos"
 // @Failure 401 {object} response.BusinessErrorResponse "Token de acceso requerido"
@@ -26,7 +40,7 @@ import (
 func (h *BusinessHandler) CreateBusinessHandler(c *gin.Context) {
 	// Obtener datos del request
 	var req request.BusinessRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := c.ShouldBind(&req); err != nil {
 		h.logger.Error().Err(err).Msg("Error al validar datos del request")
 		c.JSON(http.StatusBadRequest, response.BusinessErrorResponse{
 			Success: false,

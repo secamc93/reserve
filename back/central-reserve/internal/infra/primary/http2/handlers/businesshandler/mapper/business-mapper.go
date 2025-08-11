@@ -16,6 +16,7 @@ func ToBusinessRequest(req request.BusinessRequest) dtos.BusinessRequest {
 		Address:            req.Address,
 		Description:        req.Description,
 		LogoURL:            req.LogoURL,
+		LogoFile:           req.LogoFile,
 		PrimaryColor:       req.PrimaryColor,
 		SecondaryColor:     req.SecondaryColor,
 		CustomDomain:       req.CustomDomain,

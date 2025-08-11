@@ -1,6 +1,9 @@
 package dtos
 
-import "time"
+import (
+	"mime/multipart"
+	"time"
+)
 
 // BusinessTypeRequest representa la solicitud para crear/actualizar un tipo de negocio
 type BusinessTypeRequest struct {
@@ -34,6 +37,7 @@ type BusinessRequest struct {
 
 	// Configuración de marca blanca
 	LogoURL        string
+	LogoFile       *multipart.FileHeader // Archivo de imagen para subir a S3
 	PrimaryColor   string
 	SecondaryColor string
 	CustomDomain   string
@@ -43,6 +47,26 @@ type BusinessRequest struct {
 	EnableDelivery     bool
 	EnablePickup       bool
 	EnableReservations bool
+}
+
+// UpdateBusinessRequest representa actualización parcial de negocio
+// Todos los campos son opcionales; los nil no modifican
+type UpdateBusinessRequest struct {
+	Name               *string
+	Code               *string
+	BusinessTypeID     *uint
+	Timezone           *string
+	Address            *string
+	Description        *string
+	LogoURL            *string
+	LogoFile           *multipart.FileHeader
+	PrimaryColor       *string
+	SecondaryColor     *string
+	CustomDomain       *string
+	IsActive           *bool
+	EnableDelivery     *bool
+	EnablePickup       *bool
+	EnableReservations *bool
 }
 
 // BusinessResponse representa la respuesta de un negocio

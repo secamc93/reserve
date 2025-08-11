@@ -658,9 +658,9 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Crea un nuevo negocio con los datos proporcionados",
+                "description": "Crea un nuevo negocio con los datos proporcionados. Soporta carga de logo (logoFile).",
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
@@ -671,13 +671,97 @@ const docTemplate = `{
                 "summary": "Crear negocio",
                 "parameters": [
                     {
-                        "description": "Datos del negocio",
-                        "name": "business",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/request.BusinessRequest"
-                        }
+                        "type": "string",
+                        "description": "Nombre",
+                        "name": "name",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Código",
+                        "name": "code",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Tipo de negocio ID",
+                        "name": "business_type_id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Zona horaria",
+                        "name": "timezone",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Dirección",
+                        "name": "address",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Descripción",
+                        "name": "description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "URL del logo (opcional si se usa logoFile)",
+                        "name": "logo_url",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Logo del negocio",
+                        "name": "logoFile",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Color primario",
+                        "name": "primary_color",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Color secundario",
+                        "name": "secondary_color",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Dominio personalizado",
+                        "name": "custom_domain",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "¿Activo?",
+                        "name": "is_active",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Habilitar domicilios",
+                        "name": "enable_delivery",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Habilitar recoger",
+                        "name": "enable_pickup",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Habilitar reservas",
+                        "name": "enable_reservations",
+                        "in": "formData"
                     }
                 ],
                 "responses": {
@@ -780,9 +864,9 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Actualiza un negocio existente con los datos proporcionados",
+                "description": "Actualiza un negocio existente con los datos proporcionados. Soporta carga de logo (logoFile).",
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
@@ -800,13 +884,94 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Datos del negocio",
-                        "name": "business",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/request.BusinessRequest"
-                        }
+                        "type": "string",
+                        "description": "Nombre",
+                        "name": "name",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Código",
+                        "name": "code",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Tipo de negocio ID",
+                        "name": "business_type_id",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Zona horaria",
+                        "name": "timezone",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Dirección",
+                        "name": "address",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Descripción",
+                        "name": "description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "URL del logo (opcional si se usa logoFile)",
+                        "name": "logo_url",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Logo del negocio",
+                        "name": "logoFile",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Color primario",
+                        "name": "primary_color",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Color secundario",
+                        "name": "secondary_color",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Dominio personalizado",
+                        "name": "custom_domain",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "¿Activo?",
+                        "name": "is_active",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Habilitar domicilios",
+                        "name": "enable_delivery",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Habilitar recoger",
+                        "name": "enable_pickup",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Habilitar reservas",
+                        "name": "enable_reservations",
+                        "in": "formData"
                     }
                 ],
                 "responses": {
@@ -3583,60 +3748,6 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "scope_name": {
-                    "type": "string"
-                }
-            }
-        },
-        "request.BusinessRequest": {
-            "type": "object",
-            "required": [
-                "business_type_id",
-                "code",
-                "name"
-            ],
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "business_type_id": {
-                    "type": "integer"
-                },
-                "code": {
-                    "type": "string"
-                },
-                "custom_domain": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "enable_delivery": {
-                    "description": "Configuración de funcionalidades",
-                    "type": "boolean"
-                },
-                "enable_pickup": {
-                    "type": "boolean"
-                },
-                "enable_reservations": {
-                    "type": "boolean"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "logo_url": {
-                    "description": "Configuración de marca blanca",
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "primary_color": {
-                    "type": "string"
-                },
-                "secondary_color": {
-                    "type": "string"
-                },
-                "timezone": {
                     "type": "string"
                 }
             }

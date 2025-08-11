@@ -106,6 +106,15 @@ func (uc *AuthUseCase) Login(ctx context.Context, request dtos.LoginRequest) (*d
 
 	if len(businesses) > 0 {
 		for i, business := range businesses {
+			// Completar URL del logo del business si es relativa
+			businessLogoURL := business.LogoURL
+			if businessLogoURL != "" && !strings.HasPrefix(businessLogoURL, "http") {
+				base := strings.TrimRight(uc.env.Get("URL_BASE_DOMAIN_S3"), "/")
+				if base != "" {
+					businessLogoURL = fmt.Sprintf("%s/%s", base, strings.TrimLeft(businessLogoURL, "/"))
+				}
+			}
+
 			uc.log.Info().
 				Uint("user_id", userAuth.ID).
 				Int("business_index", i).
@@ -229,6 +238,15 @@ func (uc *AuthUseCase) Login(ctx context.Context, request dtos.LoginRequest) (*d
 		// Convertir todos los businesses a DTOs
 		businessesList = make([]dtos.BusinessInfo, len(businesses))
 		for i, business := range businesses {
+			// Completar URL del logo del business si es relativa
+			businessLogoURL := business.LogoURL
+			if businessLogoURL != "" && !strings.HasPrefix(businessLogoURL, "http") {
+				base := strings.TrimRight(uc.env.Get("URL_BASE_DOMAIN_S3"), "/")
+				if base != "" {
+					businessLogoURL = fmt.Sprintf("%s/%s", base, strings.TrimLeft(businessLogoURL, "/"))
+				}
+			}
+
 			businessesList[i] = dtos.BusinessInfo{
 				ID:             business.ID,
 				Name:           business.Name,
@@ -244,7 +262,7 @@ func (uc *AuthUseCase) Login(ctx context.Context, request dtos.LoginRequest) (*d
 				Timezone:           business.Timezone,
 				Address:            business.Address,
 				Description:        business.Description,
-				LogoURL:            business.LogoURL,
+				LogoURL:            businessLogoURL,
 				PrimaryColor:       business.PrimaryColor,
 				SecondaryColor:     business.SecondaryColor,
 				CustomDomain:       business.CustomDomain,

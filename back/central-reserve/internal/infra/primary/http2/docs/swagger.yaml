@@ -146,43 +146,6 @@ definitions:
       scope_name:
         type: string
     type: object
-  request.BusinessRequest:
-    properties:
-      address:
-        type: string
-      business_type_id:
-        type: integer
-      code:
-        type: string
-      custom_domain:
-        type: string
-      description:
-        type: string
-      enable_delivery:
-        description: Configuración de funcionalidades
-        type: boolean
-      enable_pickup:
-        type: boolean
-      enable_reservations:
-        type: boolean
-      is_active:
-        type: boolean
-      logo_url:
-        description: Configuración de marca blanca
-        type: string
-      name:
-        type: string
-      primary_color:
-        type: string
-      secondary_color:
-        type: string
-      timezone:
-        type: string
-    required:
-    - business_type_id
-    - code
-    - name
-    type: object
   request.BusinessTypeRequest:
     properties:
       code:
@@ -1311,15 +1274,73 @@ paths:
       - Business
     post:
       consumes:
-      - application/json
-      description: Crea un nuevo negocio con los datos proporcionados
+      - multipart/form-data
+      description: Crea un nuevo negocio con los datos proporcionados. Soporta carga
+        de logo (logoFile).
       parameters:
-      - description: Datos del negocio
-        in: body
-        name: business
+      - description: Nombre
+        in: formData
+        name: name
         required: true
-        schema:
-          $ref: '#/definitions/request.BusinessRequest'
+        type: string
+      - description: Código
+        in: formData
+        name: code
+        required: true
+        type: string
+      - description: Tipo de negocio ID
+        in: formData
+        name: business_type_id
+        required: true
+        type: integer
+      - description: Zona horaria
+        in: formData
+        name: timezone
+        type: string
+      - description: Dirección
+        in: formData
+        name: address
+        type: string
+      - description: Descripción
+        in: formData
+        name: description
+        type: string
+      - description: URL del logo (opcional si se usa logoFile)
+        in: formData
+        name: logo_url
+        type: string
+      - description: Logo del negocio
+        in: formData
+        name: logoFile
+        type: file
+      - description: Color primario
+        in: formData
+        name: primary_color
+        type: string
+      - description: Color secundario
+        in: formData
+        name: secondary_color
+        type: string
+      - description: Dominio personalizado
+        in: formData
+        name: custom_domain
+        type: string
+      - description: ¿Activo?
+        in: formData
+        name: is_active
+        type: boolean
+      - description: Habilitar domicilios
+        in: formData
+        name: enable_delivery
+        type: boolean
+      - description: Habilitar recoger
+        in: formData
+        name: enable_pickup
+        type: boolean
+      - description: Habilitar reservas
+        in: formData
+        name: enable_reservations
+        type: boolean
       produces:
       - application/json
       responses:
@@ -1427,20 +1448,75 @@ paths:
       - Business
     put:
       consumes:
-      - application/json
-      description: Actualiza un negocio existente con los datos proporcionados
+      - multipart/form-data
+      description: Actualiza un negocio existente con los datos proporcionados. Soporta
+        carga de logo (logoFile).
       parameters:
       - description: ID del negocio
         in: path
         name: id
         required: true
         type: integer
-      - description: Datos del negocio
-        in: body
-        name: business
-        required: true
-        schema:
-          $ref: '#/definitions/request.BusinessRequest'
+      - description: Nombre
+        in: formData
+        name: name
+        type: string
+      - description: Código
+        in: formData
+        name: code
+        type: string
+      - description: Tipo de negocio ID
+        in: formData
+        name: business_type_id
+        type: integer
+      - description: Zona horaria
+        in: formData
+        name: timezone
+        type: string
+      - description: Dirección
+        in: formData
+        name: address
+        type: string
+      - description: Descripción
+        in: formData
+        name: description
+        type: string
+      - description: URL del logo (opcional si se usa logoFile)
+        in: formData
+        name: logo_url
+        type: string
+      - description: Logo del negocio
+        in: formData
+        name: logoFile
+        type: file
+      - description: Color primario
+        in: formData
+        name: primary_color
+        type: string
+      - description: Color secundario
+        in: formData
+        name: secondary_color
+        type: string
+      - description: Dominio personalizado
+        in: formData
+        name: custom_domain
+        type: string
+      - description: ¿Activo?
+        in: formData
+        name: is_active
+        type: boolean
+      - description: Habilitar domicilios
+        in: formData
+        name: enable_delivery
+        type: boolean
+      - description: Habilitar recoger
+        in: formData
+        name: enable_pickup
+        type: boolean
+      - description: Habilitar reservas
+        in: formData
+        name: enable_reservations
+        type: boolean
       produces:
       - application/json
       responses:

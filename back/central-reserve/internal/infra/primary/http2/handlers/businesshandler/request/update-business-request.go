@@ -2,16 +2,15 @@ package request
 
 import "mime/multipart"
 
-// BusinessRequest representa la solicitud para crear/actualizar un negocio
-type BusinessRequest struct {
-	Name           string `form:"name" binding:"required"`
-	Code           string `form:"code" binding:"required"`
-	BusinessTypeID uint   `form:"business_type_id" binding:"required"`
+// UpdateBusinessRequest representa la solicitud para actualizar un negocio (todos los campos opcionales)
+type UpdateBusinessRequest struct {
+	Name           string `form:"name"`
+	Code           string `form:"code"`
+	BusinessTypeID uint   `form:"business_type_id"`
 	Timezone       string `form:"timezone"`
 	Address        string `form:"address"`
 	Description    string `form:"description"`
 
-	// Configuración de marca blanca
 	LogoURL        string                `form:"logo_url"`
 	LogoFile       *multipart.FileHeader `form:"logoFile"`
 	PrimaryColor   string                `form:"primary_color"`
@@ -19,7 +18,6 @@ type BusinessRequest struct {
 	CustomDomain   string                `form:"custom_domain"`
 	IsActive       bool                  `form:"is_active"`
 
-	// Configuración de funcionalidades
 	EnableDelivery     bool `form:"enable_delivery"`
 	EnablePickup       bool `form:"enable_pickup"`
 	EnableReservations bool `form:"enable_reservations"`
