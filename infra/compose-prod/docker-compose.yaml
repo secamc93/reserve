@@ -88,6 +88,12 @@ services:
       FROM_EMAIL:          "${FROM_EMAIL:-}"
       SMTP_USE_STARTTLS:   "${SMTP_USE_STARTTLS}"
       SMTP_USE_TLS:        "${SMTP_USE_TLS}"
+      # S3 y media
+      S3_BUCKET:           "${S3_BUCKET}"
+      S3_REGION:           "${S3_REGION}"
+      S3_KEY:              "${S3_KEY}"
+      S3_SECRET:           "${S3_SECRET}"
+      URL_BASE_DOMAIN_S3:  "${URL_BASE_DOMAIN_S3}"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3050/health"]
