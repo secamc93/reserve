@@ -5,9 +5,12 @@ import (
 	"strconv"
 
 	"central_reserve/internal/infra/primary/http2/handlers/businesshandler/mapper"
+	response "central_reserve/internal/infra/primary/http2/handlers/businesshandler/response"
 
 	"github.com/gin-gonic/gin"
 )
+
+var _ response.GetBusinessByIDResponse
 
 // GetBusinessByID godoc
 // @Summary Obtener negocio por ID
@@ -17,7 +20,7 @@ import (
 // @Produce json
 // @Security     BearerAuth
 // @Param id path int true "ID del negocio"
-// @Success      201          {object}  map[string]interface{} "Negocio obtenido exitosamente"
+// @Success      200          {object}  response.GetBusinessByIDResponse "Negocio obtenido exitosamente"
 // @Failure      400          {object}  map[string]interface{} "Solicitud inválida"
 // @Failure      401          {object}  map[string]interface{} "Token de acceso requerido"
 // @Failure      500          {object}  map[string]interface{} "Error interno del servidor"
@@ -44,6 +47,6 @@ func (h *BusinessHandler) GetBusinessByIDHandler(c *gin.Context) {
 	}
 
 	// Construir respuesta exitosa
-	response := mapper.BuildGetBusinessResponseFromDTO(business, "Negocio obtenido exitosamente")
+	response := mapper.BuildGetBusinessByIDResponseFromDTO(business, "Negocio obtenido exitosamente")
 	c.JSON(http.StatusOK, response)
 }

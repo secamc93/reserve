@@ -85,6 +85,38 @@ func BusinessDTOToResponse(businessDTO dtos.BusinessResponse) response.BusinessR
 	}
 }
 
+// BusinessDTOToDetailResponse convierte un DTO BusinessResponse a response.BusinessDetailResponse
+func BusinessDTOToDetailResponse(businessDTO dtos.BusinessResponse) response.BusinessDetailResponse {
+	return response.BusinessDetailResponse{
+		ID:   businessDTO.ID,
+		Name: businessDTO.Name,
+		Code: businessDTO.Code,
+		BusinessType: response.BusinessTypeDetailResponse{
+			ID:          businessDTO.BusinessType.ID,
+			Name:        businessDTO.BusinessType.Name,
+			Code:        businessDTO.BusinessType.Code,
+			Description: businessDTO.BusinessType.Description,
+			Icon:        businessDTO.BusinessType.Icon,
+			IsActive:    businessDTO.BusinessType.IsActive,
+			CreatedAt:   businessDTO.BusinessType.CreatedAt,
+			UpdatedAt:   businessDTO.BusinessType.UpdatedAt,
+		},
+		Timezone:           businessDTO.Timezone,
+		Address:            businessDTO.Address,
+		Description:        businessDTO.Description,
+		LogoURL:            businessDTO.LogoURL,
+		PrimaryColor:       businessDTO.PrimaryColor,
+		SecondaryColor:     businessDTO.SecondaryColor,
+		CustomDomain:       businessDTO.CustomDomain,
+		IsActive:           businessDTO.IsActive,
+		EnableDelivery:     businessDTO.EnableDelivery,
+		EnablePickup:       businessDTO.EnablePickup,
+		EnableReservations: businessDTO.EnableReservations,
+		CreatedAt:          businessDTO.CreatedAt,
+		UpdatedAt:          businessDTO.UpdatedAt,
+	}
+}
+
 // BusinessesToResponse convierte un slice de entidades Business a slice de BusinessResponse
 func BusinessesToResponse(businesses []entities.Business) []response.BusinessResponse {
 	responses := make([]response.BusinessResponse, len(businesses))
@@ -180,6 +212,15 @@ func BuildGetBusinessResponseFromDTO(businessDTO *dtos.BusinessResponse, message
 		Success: true,
 		Message: message,
 		Data:    BusinessDTOToResponse(*businessDTO),
+	}
+}
+
+// BuildGetBusinessByIDResponseFromDTO construye la respuesta completa para obtener un negocio con toda su información desde un DTO
+func BuildGetBusinessByIDResponseFromDTO(businessDTO *dtos.BusinessResponse, message string) response.GetBusinessByIDResponse {
+	return response.GetBusinessByIDResponse{
+		Success: true,
+		Message: message,
+		Data:    BusinessDTOToDetailResponse(*businessDTO),
 	}
 }
 
