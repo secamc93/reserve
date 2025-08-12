@@ -36,7 +36,6 @@ type BusinessRequest struct {
 	Description    string
 
 	// Configuración de marca blanca
-	LogoURL        string
 	LogoFile       *multipart.FileHeader // Archivo de imagen para subir a S3
 	PrimaryColor   string
 	SecondaryColor string
@@ -58,7 +57,6 @@ type UpdateBusinessRequest struct {
 	Timezone           *string
 	Address            *string
 	Description        *string
-	LogoURL            *string
 	LogoFile           *multipart.FileHeader
 	PrimaryColor       *string
 	SecondaryColor     *string

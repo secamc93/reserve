@@ -1168,10 +1168,10 @@ paths:
         in: formData
         name: description
         type: string
-      - description: URL del logo
+      - description: Logo del negocio
         in: formData
         name: logo_url
-        type: string
+        type: file
       - description: Color primario
         in: formData
         name: primary_color
@@ -1335,10 +1335,10 @@ paths:
         in: formData
         name: description
         type: string
-      - description: URL del logo
+      - description: Logo del negocio
         in: formData
         name: logo_url
-        type: string
+        type: file
       - description: Color primario
         in: formData
         name: primary_color

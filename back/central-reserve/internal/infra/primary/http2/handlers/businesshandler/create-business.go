@@ -22,7 +22,7 @@ import (
 // @Param timezone formData string false "Zona horaria"
 // @Param address formData string false "Dirección"
 // @Param description formData string false "Descripción"
-// @Param logo_url formData string false "URL del logo"
+// @Param logo_url formData file false "Logo del negocio"
 // @Param primary_color formData string false "Color primario"
 // @Param secondary_color formData string false "Color secundario"
 // @Param custom_domain formData string false "Dominio personalizado"

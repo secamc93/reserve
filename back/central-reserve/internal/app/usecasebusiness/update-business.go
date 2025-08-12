@@ -119,8 +119,6 @@ func (uc *BusinessUseCase) UpdateBusiness(ctx context.Context, id uint, request 
 			}
 		}
 		logoURL = path
-	} else if request.LogoURL != nil {
-		logoURL = *request.LogoURL
 	}
 
 	// Actualizar entidad

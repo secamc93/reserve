@@ -730,8 +730,8 @@ const docTemplate = `{
                         "in": "formData"
                     },
                     {
-                        "type": "string",
-                        "description": "URL del logo",
+                        "type": "file",
+                        "description": "Logo del negocio",
                         "name": "logo_url",
                         "in": "formData"
                     },
@@ -924,8 +924,8 @@ const docTemplate = `{
                         "in": "formData"
                     },
                     {
-                        "type": "string",
-                        "description": "URL del logo",
+                        "type": "file",
+                        "description": "Logo del negocio",
                         "name": "logo_url",
                         "in": "formData"
                     },
