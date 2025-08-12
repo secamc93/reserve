@@ -325,7 +325,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Obtiene la lista completa de tipos de negocio disponibles",
+                "description": "Obtiene una lista de todos los tipos de negocio del sistema",
                 "consumes": [
                     "application/json"
                 ],
@@ -333,26 +333,36 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "BusinessType"
+                    "business-types"
                 ],
-                "summary": "Obtener todos los tipos de negocio",
+                "summary": "Obtener lista de tipos de negocio",
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "Tipos de negocio obtenidos exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessTypeListSuccessResponse"
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Solicitud inválida",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "401": {
                         "description": "Token de acceso requerido",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessTypeErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessTypeErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -363,7 +373,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Crea un nuevo tipo de negocio con los datos proporcionados",
+                "description": "Crea un nuevo tipo de negocio en el sistema",
                 "consumes": [
                     "application/json"
                 ],
@@ -371,12 +381,12 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "BusinessType"
+                    "business-types"
                 ],
-                "summary": "Crear tipo de negocio",
+                "summary": "Crear un nuevo tipo de negocio",
                 "parameters": [
                     {
-                        "description": "Datos del tipo de negocio",
+                        "description": "Datos del tipo de negocio a crear",
                         "name": "businessType",
                         "in": "body",
                         "required": true,
@@ -389,31 +399,29 @@ const docTemplate = `{
                     "201": {
                         "description": "Tipo de negocio creado exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessTypeSuccessResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
-                        "description": "Datos inválidos",
+                        "description": "Solicitud inválida",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessTypeErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "401": {
                         "description": "Token de acceso requerido",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessTypeErrorResponse"
-                        }
-                    },
-                    "409": {
-                        "description": "Código ya existe",
-                        "schema": {
-                            "$ref": "#/definitions/response.BusinessTypeErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessTypeErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -434,7 +442,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "BusinessType"
+                    "business-types"
                 ],
                 "summary": "Obtener tipo de negocio por ID",
                 "parameters": [
@@ -447,34 +455,32 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "Tipo de negocio obtenido exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessTypeSuccessResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
-                        "description": "ID inválido",
+                        "description": "Solicitud inválida",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessTypeErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "401": {
                         "description": "Token de acceso requerido",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessTypeErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Tipo de negocio no encontrado",
-                        "schema": {
-                            "$ref": "#/definitions/response.BusinessTypeErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessTypeErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -485,7 +491,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Actualiza un tipo de negocio existente con los datos proporcionados",
+                "description": "Actualiza un tipo de negocio existente",
                 "consumes": [
                     "application/json"
                 ],
@@ -493,7 +499,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "BusinessType"
+                    "business-types"
                 ],
                 "summary": "Actualizar tipo de negocio",
                 "parameters": [
@@ -505,7 +511,7 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Datos del tipo de negocio",
+                        "description": "Datos del tipo de negocio a actualizar",
                         "name": "businessType",
                         "in": "body",
                         "required": true,
@@ -515,40 +521,32 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "Tipo de negocio actualizado exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessTypeSuccessResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
-                        "description": "Datos inválidos o ID inválido",
+                        "description": "Solicitud inválida",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessTypeErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "401": {
                         "description": "Token de acceso requerido",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessTypeErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Tipo de negocio no encontrado",
-                        "schema": {
-                            "$ref": "#/definitions/response.BusinessTypeErrorResponse"
-                        }
-                    },
-                    "409": {
-                        "description": "Código ya existe",
-                        "schema": {
-                            "$ref": "#/definitions/response.BusinessTypeErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessTypeErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -559,7 +557,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Elimina un tipo de negocio existente por su ID",
+                "description": "Elimina un tipo de negocio del sistema",
                 "consumes": [
                     "application/json"
                 ],
@@ -567,7 +565,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "BusinessType"
+                    "business-types"
                 ],
                 "summary": "Eliminar tipo de negocio",
                 "parameters": [
@@ -580,34 +578,32 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "Tipo de negocio eliminado exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessTypeErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
-                        "description": "ID inválido",
+                        "description": "Solicitud inválida",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessTypeErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "401": {
                         "description": "Token de acceso requerido",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessTypeErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Tipo de negocio no encontrado",
-                        "schema": {
-                            "$ref": "#/definitions/response.BusinessTypeErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessTypeErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -620,7 +616,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Obtiene la lista completa de negocios disponibles",
+                "description": "Obtiene una lista paginada de todos los negocios del sistema",
                 "consumes": [
                     "application/json"
                 ],
@@ -628,26 +624,50 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Business"
+                    "businesses"
                 ],
-                "summary": "Obtener todos los negocios",
+                "summary": "Obtener lista de negocios",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Número de página (por defecto 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Límite de elementos por página (por defecto 10)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "Negocios obtenidos exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessListSuccessResponse"
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Solicitud inválida",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "401": {
                         "description": "Token de acceso requerido",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -658,7 +678,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Crea un nuevo negocio con los datos proporcionados. Soporta carga de logo (logoFile).",
+                "description": "Crea un nuevo negocio en el sistema",
                 "consumes": [
                     "multipart/form-data"
                 ],
@@ -666,27 +686,27 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Business"
+                    "businesses"
                 ],
-                "summary": "Crear negocio",
+                "summary": "Crear un nuevo negocio",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Nombre",
+                        "description": "Nombre del negocio",
                         "name": "name",
                         "in": "formData",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "Código",
+                        "description": "Código del negocio",
                         "name": "code",
                         "in": "formData",
                         "required": true
                     },
                     {
                         "type": "integer",
-                        "description": "Tipo de negocio ID",
+                        "description": "ID del tipo de negocio",
                         "name": "business_type_id",
                         "in": "formData",
                         "required": true
@@ -711,14 +731,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "URL del logo (opcional si se usa logoFile)",
+                        "description": "URL del logo",
                         "name": "logo_url",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "file",
-                        "description": "Logo del negocio",
-                        "name": "logoFile",
                         "in": "formData"
                     },
                     {
@@ -741,19 +755,13 @@ const docTemplate = `{
                     },
                     {
                         "type": "boolean",
-                        "description": "¿Activo?",
-                        "name": "is_active",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "boolean",
-                        "description": "Habilitar domicilios",
+                        "description": "Habilitar delivery",
                         "name": "enable_delivery",
                         "in": "formData"
                     },
                     {
                         "type": "boolean",
-                        "description": "Habilitar recoger",
+                        "description": "Habilitar pickup",
                         "name": "enable_pickup",
                         "in": "formData"
                     },
@@ -768,31 +776,29 @@ const docTemplate = `{
                     "201": {
                         "description": "Negocio creado exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessSuccessResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
-                        "description": "Datos inválidos",
+                        "description": "Solicitud inválida",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "401": {
                         "description": "Token de acceso requerido",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessErrorResponse"
-                        }
-                    },
-                    "409": {
-                        "description": "Código o dominio ya existe",
-                        "schema": {
-                            "$ref": "#/definitions/response.BusinessErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -813,7 +819,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Business"
+                    "businesses"
                 ],
                 "summary": "Obtener negocio por ID",
                 "parameters": [
@@ -826,34 +832,32 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "Negocio obtenido exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessSuccessResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
-                        "description": "ID inválido",
+                        "description": "Solicitud inválida",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "401": {
                         "description": "Token de acceso requerido",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Negocio no encontrado",
-                        "schema": {
-                            "$ref": "#/definitions/response.BusinessErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -864,7 +868,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Actualiza un negocio existente con los datos proporcionados. Soporta carga de logo (logoFile).",
+                "description": "Actualiza un negocio existente",
                 "consumes": [
                     "multipart/form-data"
                 ],
@@ -872,7 +876,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Business"
+                    "businesses"
                 ],
                 "summary": "Actualizar negocio",
                 "parameters": [
@@ -885,19 +889,19 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Nombre",
+                        "description": "Nombre del negocio",
                         "name": "name",
                         "in": "formData"
                     },
                     {
                         "type": "string",
-                        "description": "Código",
+                        "description": "Código del negocio",
                         "name": "code",
                         "in": "formData"
                     },
                     {
                         "type": "integer",
-                        "description": "Tipo de negocio ID",
+                        "description": "ID del tipo de negocio",
                         "name": "business_type_id",
                         "in": "formData"
                     },
@@ -921,14 +925,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "URL del logo (opcional si se usa logoFile)",
+                        "description": "URL del logo",
                         "name": "logo_url",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "file",
-                        "description": "Logo del negocio",
-                        "name": "logoFile",
                         "in": "formData"
                     },
                     {
@@ -957,13 +955,13 @@ const docTemplate = `{
                     },
                     {
                         "type": "boolean",
-                        "description": "Habilitar domicilios",
+                        "description": "Habilitar delivery",
                         "name": "enable_delivery",
                         "in": "formData"
                     },
                     {
                         "type": "boolean",
-                        "description": "Habilitar recoger",
+                        "description": "Habilitar pickup",
                         "name": "enable_pickup",
                         "in": "formData"
                     },
@@ -975,40 +973,32 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "Negocio actualizado exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessSuccessResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
-                        "description": "Datos inválidos o ID inválido",
+                        "description": "Solicitud inválida",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "401": {
                         "description": "Token de acceso requerido",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Negocio no encontrado",
-                        "schema": {
-                            "$ref": "#/definitions/response.BusinessErrorResponse"
-                        }
-                    },
-                    "409": {
-                        "description": "Código o dominio ya existe",
-                        "schema": {
-                            "$ref": "#/definitions/response.BusinessErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -1019,7 +1009,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Elimina un negocio existente por su ID",
+                "description": "Elimina un negocio del sistema",
                 "consumes": [
                     "application/json"
                 ],
@@ -1027,7 +1017,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Business"
+                    "businesses"
                 ],
                 "summary": "Eliminar negocio",
                 "parameters": [
@@ -1040,34 +1030,32 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "Negocio eliminado exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
-                        "description": "ID inválido",
+                        "description": "Solicitud inválida",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "401": {
                         "description": "Token de acceso requerido",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Negocio no encontrado",
-                        "schema": {
-                            "$ref": "#/definitions/response.BusinessErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/response.BusinessErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -2896,7 +2884,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Este endpoint permite actualizar parcialmente los datos de una mesa. Solo se modifican los campos enviados.",
+                "description": "Este endpoint permite actualizar los datos de una mesa específica.",
                 "consumes": [
                     "application/json"
                 ],
@@ -2906,7 +2894,7 @@ const docTemplate = `{
                 "tags": [
                     "Mesas"
                 ],
-                "summary": "Actualiza una mesa existente",
+                "summary": "Actualiza una mesa",
                 "parameters": [
                     {
                         "type": "integer",
@@ -2916,7 +2904,7 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Datos de la mesa a actualizar",
+                        "description": "Datos a actualizar",
                         "name": "table",
                         "in": "body",
                         "required": true,
@@ -2954,13 +2942,6 @@ const docTemplate = `{
                             "additionalProperties": true
                         }
                     },
-                    "409": {
-                        "description": "Mesa con ese número ya existe",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
@@ -2976,7 +2957,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Este endpoint permite eliminar una mesa existente del sistema.",
+                "description": "Este endpoint permite eliminar una mesa específica por su ID.",
                 "consumes": [
                     "application/json"
                 ],
@@ -3606,64 +3587,6 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_infra_primary_http2_handlers_businesshandler_response.BusinessTypeResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "icon": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "internal_infra_primary_http2_handlers_businesstypehandler_response.BusinessTypeResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "icon": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
         "internal_infra_primary_http2_handlers_userhandler_response.BusinessInfo": {
             "type": "object",
             "properties": {
@@ -4115,140 +4038,6 @@ const docTemplate = `{
                 }
             }
         },
-        "response.BusinessErrorResponse": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "response.BusinessListResponse": {
-            "type": "object",
-            "properties": {
-                "businesses": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/response.BusinessResponse"
-                    }
-                },
-                "limit": {
-                    "type": "integer"
-                },
-                "page": {
-                    "type": "integer"
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "response.BusinessListSuccessResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/response.BusinessListResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "response.BusinessResponse": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "business_type": {
-                    "$ref": "#/definitions/internal_infra_primary_http2_handlers_businesshandler_response.BusinessTypeResponse"
-                },
-                "code": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "custom_domain": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "enable_delivery": {
-                    "description": "Configuración de funcionalidades",
-                    "type": "boolean"
-                },
-                "enable_pickup": {
-                    "type": "boolean"
-                },
-                "enable_reservations": {
-                    "type": "boolean"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "logo_url": {
-                    "description": "Configuración de marca blanca",
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "primary_color": {
-                    "type": "string"
-                },
-                "secondary_color": {
-                    "type": "string"
-                },
-                "timezone": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "response.BusinessSuccessResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/response.BusinessResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "response.BusinessTypeErrorResponse": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "response.BusinessTypeInfo": {
             "type": "object",
             "properties": {
@@ -4266,54 +4055,6 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
-                }
-            }
-        },
-        "response.BusinessTypeListResponse": {
-            "type": "object",
-            "properties": {
-                "business_types": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/internal_infra_primary_http2_handlers_businesstypehandler_response.BusinessTypeResponse"
-                    }
-                },
-                "limit": {
-                    "type": "integer"
-                },
-                "page": {
-                    "type": "integer"
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "response.BusinessTypeListSuccessResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/response.BusinessTypeListResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "response.BusinessTypeSuccessResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/internal_infra_primary_http2_handlers_businesstypehandler_response.BusinessTypeResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
                 }
             }
         },

@@ -1,21 +1,31 @@
-import { BusinessRepository } from '@/features/business/ports/BusinessRepository';
-import { BusinessListDTO } from '@/features/business/domain/Business';
+import { BusinessRepository } from '../../ports/BusinessRepository';
+import { Business, CreateBusinessRequest, UpdateBusinessRequest } from '../../domain/Business';
 import { BusinessService } from './BusinessService';
 
 export class BusinessRepositoryHttp implements BusinessRepository {
-  private service: BusinessService;
+  private businessService: BusinessService;
 
   constructor() {
-    this.service = new BusinessService();
+    this.businessService = new BusinessService();
   }
 
-  async getBusinesses(): Promise<BusinessListDTO> {
-    const result = await this.service.getBusinesses();
-    return {
-      businesses: result.businesses || [],
-      total: result.total || 0,
-      page: result.page || 1,
-      limit: result.limit || 10,
-    };
+  async getBusinesses(): Promise<Business[]> {
+    return this.businessService.getBusinesses();
+  }
+
+  async getBusinessById(id: number): Promise<Business> {
+    return this.businessService.getBusinessById(id);
+  }
+
+  async createBusiness(business: CreateBusinessRequest): Promise<Business> {
+    return this.businessService.createBusiness(business);
+  }
+
+  async updateBusiness(id: number, business: UpdateBusinessRequest): Promise<Business> {
+    return this.businessService.updateBusiness(id, business);
+  }
+
+  async deleteBusiness(id: number): Promise<void> {
+    return this.businessService.deleteBusiness(id);
   }
 }

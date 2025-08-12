@@ -1,48 +1,51 @@
 package businesshandler
 
 import (
-	"central_reserve/internal/infra/primary/http2/handlers/businesshandler/mapper"
-	"central_reserve/internal/infra/primary/http2/handlers/businesshandler/response"
 	"net/http"
+	"strconv"
+
+	"central_reserve/internal/infra/primary/http2/handlers/businesshandler/mapper"
 
 	"github.com/gin-gonic/gin"
 )
 
-// GetBusinessesHandler maneja la solicitud de obtener todos los negocios
-// @Summary Obtener todos los negocios
-// @Description Obtiene la lista completa de negocios disponibles
-// @Tags Business
+// GetBusinesses godoc
+// @Summary Obtener lista de negocios
+// @Description Obtiene una lista paginada de todos los negocios del sistema
+// @Tags businesses
 // @Accept json
 // @Produce json
-// @Security BearerAuth
-// @Success 200 {object} response.BusinessListSuccessResponse "Negocios obtenidos exitosamente"
-// @Failure 401 {object} response.BusinessErrorResponse "Token de acceso requerido"
-// @Failure 500 {object} response.BusinessErrorResponse "Error interno del servidor"
+// @Security     BearerAuth
+// @Param page query int false "Número de página (por defecto 1)"
+// @Param limit query int false "Límite de elementos por página (por defecto 10)"
+// @Success      201          {object}  map[string]interface{} "Negocios obtenidos exitosamente"
+// @Failure      400          {object}  map[string]interface{} "Solicitud inválida"
+// @Failure      401          {object}  map[string]interface{} "Token de acceso requerido"
+// @Failure      500          {object}  map[string]interface{} "Error interno del servidor"
 // @Router /businesses [get]
-func (h *BusinessHandler) GetBusinessesHandler(c *gin.Context) {
-	ctx := c.Request.Context()
+func (h *BusinessHandler) GetBusinesses(c *gin.Context) {
+	// Obtener parámetros de paginación
+	pageStr := c.DefaultQuery("page", "1")
+	limitStr := c.DefaultQuery("limit", "10")
+
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit < 1 || limit > 100 {
+		limit = 10
+	}
 
 	// Ejecutar caso de uso
-	businesses, err := h.usecase.GetBusinesses(ctx)
+	businesses, err := h.usecase.GetBusinesses(c.Request.Context())
 	if err != nil {
-		h.logger.Error().Err(err).Msg("Error al obtener negocios")
-		c.JSON(http.StatusInternalServerError, response.BusinessErrorResponse{
-			Success: false,
-			Error:   "internal_error",
-			Message: "Error interno del servidor",
-		})
+		c.JSON(http.StatusInternalServerError, mapper.BuildErrorResponse("internal_error", "Error interno del servidor"))
 		return
 	}
 
-	// Convertir respuesta de dominio a response
-	businessesResponse := mapper.ToBusinessListResponse(businesses)
-
-	h.logger.Info().Int("count", len(businesses)).Msg("Negocios obtenidos exitosamente")
-
-	// Retornar respuesta exitosa
-	c.JSON(http.StatusOK, response.BusinessListSuccessResponse{
-		Success: true,
-		Message: "Negocios obtenidos exitosamente",
-		Data:    businessesResponse,
-	})
+	// Construir respuesta exitosa
+	response := mapper.BuildGetBusinessesResponseFromDTOs(businesses, "Negocios obtenidos exitosamente")
+	c.JSON(http.StatusOK, response)
 }

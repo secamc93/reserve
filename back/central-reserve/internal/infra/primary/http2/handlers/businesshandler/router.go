@@ -14,7 +14,7 @@ func RegisterRoutes(router *gin.RouterGroup, handler IBusinessHandler, jwtServic
 	router.Use(middleware.AuthMiddleware(jwtService, logger))
 
 	// Rutas de Business
-	router.GET("/businesses", handler.GetBusinessesHandler)
+	router.GET("/businesses", handler.GetBusinesses)
 	router.GET("/businesses/:id", handler.GetBusinessByIDHandler)
 	router.POST("/businesses", handler.CreateBusinessHandler)
 	router.PUT("/businesses/:id", handler.UpdateBusinessHandler)

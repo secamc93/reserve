@@ -50,44 +50,6 @@ definitions:
       scope:
         type: string
     type: object
-  internal_infra_primary_http2_handlers_businesshandler_response.BusinessTypeResponse:
-    properties:
-      code:
-        type: string
-      created_at:
-        type: string
-      description:
-        type: string
-      icon:
-        type: string
-      id:
-        type: integer
-      is_active:
-        type: boolean
-      name:
-        type: string
-      updated_at:
-        type: string
-    type: object
-  internal_infra_primary_http2_handlers_businesstypehandler_response.BusinessTypeResponse:
-    properties:
-      code:
-        type: string
-      created_at:
-        type: string
-      description:
-        type: string
-      icon:
-        type: string
-      id:
-        type: integer
-      is_active:
-        type: boolean
-      name:
-        type: string
-      updated_at:
-        type: string
-    type: object
   internal_infra_primary_http2_handlers_userhandler_response.BusinessInfo:
     properties:
       address:
@@ -399,94 +361,6 @@ definitions:
       number:
         type: integer
     type: object
-  response.BusinessErrorResponse:
-    properties:
-      error:
-        type: string
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  response.BusinessListResponse:
-    properties:
-      businesses:
-        items:
-          $ref: '#/definitions/response.BusinessResponse'
-        type: array
-      limit:
-        type: integer
-      page:
-        type: integer
-      total:
-        type: integer
-    type: object
-  response.BusinessListSuccessResponse:
-    properties:
-      data:
-        $ref: '#/definitions/response.BusinessListResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  response.BusinessResponse:
-    properties:
-      address:
-        type: string
-      business_type:
-        $ref: '#/definitions/internal_infra_primary_http2_handlers_businesshandler_response.BusinessTypeResponse'
-      code:
-        type: string
-      created_at:
-        type: string
-      custom_domain:
-        type: string
-      description:
-        type: string
-      enable_delivery:
-        description: Configuración de funcionalidades
-        type: boolean
-      enable_pickup:
-        type: boolean
-      enable_reservations:
-        type: boolean
-      id:
-        type: integer
-      is_active:
-        type: boolean
-      logo_url:
-        description: Configuración de marca blanca
-        type: string
-      name:
-        type: string
-      primary_color:
-        type: string
-      secondary_color:
-        type: string
-      timezone:
-        type: string
-      updated_at:
-        type: string
-    type: object
-  response.BusinessSuccessResponse:
-    properties:
-      data:
-        $ref: '#/definitions/response.BusinessResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  response.BusinessTypeErrorResponse:
-    properties:
-      error:
-        type: string
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   response.BusinessTypeInfo:
     properties:
       code:
@@ -499,37 +373,6 @@ definitions:
         type: integer
       name:
         type: string
-    type: object
-  response.BusinessTypeListResponse:
-    properties:
-      business_types:
-        items:
-          $ref: '#/definitions/internal_infra_primary_http2_handlers_businesstypehandler_response.BusinessTypeResponse'
-        type: array
-      limit:
-        type: integer
-      page:
-        type: integer
-      total:
-        type: integer
-    type: object
-  response.BusinessTypeListSuccessResponse:
-    properties:
-      data:
-        $ref: '#/definitions/response.BusinessTypeListResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  response.BusinessTypeSuccessResponse:
-    properties:
-      data:
-        $ref: '#/definitions/internal_infra_primary_http2_handlers_businesstypehandler_response.BusinessTypeResponse'
-      message:
-        type: string
-      success:
-        type: boolean
     type: object
   response.ChangePasswordResponse:
     properties:
@@ -1062,33 +905,41 @@ paths:
     get:
       consumes:
       - application/json
-      description: Obtiene la lista completa de tipos de negocio disponibles
+      description: Obtiene una lista de todos los tipos de negocio del sistema
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: Tipos de negocio obtenidos exitosamente
           schema:
-            $ref: '#/definitions/response.BusinessTypeListSuccessResponse'
+            additionalProperties: true
+            type: object
+        "400":
+          description: Solicitud inválida
+          schema:
+            additionalProperties: true
+            type: object
         "401":
           description: Token de acceso requerido
           schema:
-            $ref: '#/definitions/response.BusinessTypeErrorResponse'
+            additionalProperties: true
+            type: object
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/response.BusinessTypeErrorResponse'
+            additionalProperties: true
+            type: object
       security:
       - BearerAuth: []
-      summary: Obtener todos los tipos de negocio
+      summary: Obtener lista de tipos de negocio
       tags:
-      - BusinessType
+      - business-types
     post:
       consumes:
       - application/json
-      description: Crea un nuevo tipo de negocio con los datos proporcionados
+      description: Crea un nuevo tipo de negocio en el sistema
       parameters:
-      - description: Datos del tipo de negocio
+      - description: Datos del tipo de negocio a crear
         in: body
         name: businessType
         required: true
@@ -1100,33 +951,33 @@ paths:
         "201":
           description: Tipo de negocio creado exitosamente
           schema:
-            $ref: '#/definitions/response.BusinessTypeSuccessResponse'
+            additionalProperties: true
+            type: object
         "400":
-          description: Datos inválidos
+          description: Solicitud inválida
           schema:
-            $ref: '#/definitions/response.BusinessTypeErrorResponse'
+            additionalProperties: true
+            type: object
         "401":
           description: Token de acceso requerido
           schema:
-            $ref: '#/definitions/response.BusinessTypeErrorResponse'
-        "409":
-          description: Código ya existe
-          schema:
-            $ref: '#/definitions/response.BusinessTypeErrorResponse'
+            additionalProperties: true
+            type: object
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/response.BusinessTypeErrorResponse'
+            additionalProperties: true
+            type: object
       security:
       - BearerAuth: []
-      summary: Crear tipo de negocio
+      summary: Crear un nuevo tipo de negocio
       tags:
-      - BusinessType
+      - business-types
   /business-types/{id}:
     delete:
       consumes:
       - application/json
-      description: Elimina un tipo de negocio existente por su ID
+      description: Elimina un tipo de negocio del sistema
       parameters:
       - description: ID del tipo de negocio
         in: path
@@ -1136,31 +987,31 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: Tipo de negocio eliminado exitosamente
           schema:
-            $ref: '#/definitions/response.BusinessTypeErrorResponse'
+            additionalProperties: true
+            type: object
         "400":
-          description: ID inválido
+          description: Solicitud inválida
           schema:
-            $ref: '#/definitions/response.BusinessTypeErrorResponse'
+            additionalProperties: true
+            type: object
         "401":
           description: Token de acceso requerido
           schema:
-            $ref: '#/definitions/response.BusinessTypeErrorResponse'
-        "404":
-          description: Tipo de negocio no encontrado
-          schema:
-            $ref: '#/definitions/response.BusinessTypeErrorResponse'
+            additionalProperties: true
+            type: object
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/response.BusinessTypeErrorResponse'
+            additionalProperties: true
+            type: object
       security:
       - BearerAuth: []
       summary: Eliminar tipo de negocio
       tags:
-      - BusinessType
+      - business-types
     get:
       consumes:
       - application/json
@@ -1174,42 +1025,42 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: Tipo de negocio obtenido exitosamente
           schema:
-            $ref: '#/definitions/response.BusinessTypeSuccessResponse'
+            additionalProperties: true
+            type: object
         "400":
-          description: ID inválido
+          description: Solicitud inválida
           schema:
-            $ref: '#/definitions/response.BusinessTypeErrorResponse'
+            additionalProperties: true
+            type: object
         "401":
           description: Token de acceso requerido
           schema:
-            $ref: '#/definitions/response.BusinessTypeErrorResponse'
-        "404":
-          description: Tipo de negocio no encontrado
-          schema:
-            $ref: '#/definitions/response.BusinessTypeErrorResponse'
+            additionalProperties: true
+            type: object
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/response.BusinessTypeErrorResponse'
+            additionalProperties: true
+            type: object
       security:
       - BearerAuth: []
       summary: Obtener tipo de negocio por ID
       tags:
-      - BusinessType
+      - business-types
     put:
       consumes:
       - application/json
-      description: Actualiza un tipo de negocio existente con los datos proporcionados
+      description: Actualiza un tipo de negocio existente
       parameters:
       - description: ID del tipo de negocio
         in: path
         name: id
         required: true
         type: integer
-      - description: Datos del tipo de negocio
+      - description: Datos del tipo de negocio a actualizar
         in: body
         name: businessType
         required: true
@@ -1218,77 +1069,89 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: Tipo de negocio actualizado exitosamente
           schema:
-            $ref: '#/definitions/response.BusinessTypeSuccessResponse'
+            additionalProperties: true
+            type: object
         "400":
-          description: Datos inválidos o ID inválido
+          description: Solicitud inválida
           schema:
-            $ref: '#/definitions/response.BusinessTypeErrorResponse'
+            additionalProperties: true
+            type: object
         "401":
           description: Token de acceso requerido
           schema:
-            $ref: '#/definitions/response.BusinessTypeErrorResponse'
-        "404":
-          description: Tipo de negocio no encontrado
-          schema:
-            $ref: '#/definitions/response.BusinessTypeErrorResponse'
-        "409":
-          description: Código ya existe
-          schema:
-            $ref: '#/definitions/response.BusinessTypeErrorResponse'
+            additionalProperties: true
+            type: object
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/response.BusinessTypeErrorResponse'
+            additionalProperties: true
+            type: object
       security:
       - BearerAuth: []
       summary: Actualizar tipo de negocio
       tags:
-      - BusinessType
+      - business-types
   /businesses:
     get:
       consumes:
       - application/json
-      description: Obtiene la lista completa de negocios disponibles
+      description: Obtiene una lista paginada de todos los negocios del sistema
+      parameters:
+      - description: Número de página (por defecto 1)
+        in: query
+        name: page
+        type: integer
+      - description: Límite de elementos por página (por defecto 10)
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: Negocios obtenidos exitosamente
           schema:
-            $ref: '#/definitions/response.BusinessListSuccessResponse'
+            additionalProperties: true
+            type: object
+        "400":
+          description: Solicitud inválida
+          schema:
+            additionalProperties: true
+            type: object
         "401":
           description: Token de acceso requerido
           schema:
-            $ref: '#/definitions/response.BusinessErrorResponse'
+            additionalProperties: true
+            type: object
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/response.BusinessErrorResponse'
+            additionalProperties: true
+            type: object
       security:
       - BearerAuth: []
-      summary: Obtener todos los negocios
+      summary: Obtener lista de negocios
       tags:
-      - Business
+      - businesses
     post:
       consumes:
       - multipart/form-data
-      description: Crea un nuevo negocio con los datos proporcionados. Soporta carga
-        de logo (logoFile).
+      description: Crea un nuevo negocio en el sistema
       parameters:
-      - description: Nombre
+      - description: Nombre del negocio
         in: formData
         name: name
         required: true
         type: string
-      - description: Código
+      - description: Código del negocio
         in: formData
         name: code
         required: true
         type: string
-      - description: Tipo de negocio ID
+      - description: ID del tipo de negocio
         in: formData
         name: business_type_id
         required: true
@@ -1305,14 +1168,10 @@ paths:
         in: formData
         name: description
         type: string
-      - description: URL del logo (opcional si se usa logoFile)
+      - description: URL del logo
         in: formData
         name: logo_url
         type: string
-      - description: Logo del negocio
-        in: formData
-        name: logoFile
-        type: file
       - description: Color primario
         in: formData
         name: primary_color
@@ -1325,15 +1184,11 @@ paths:
         in: formData
         name: custom_domain
         type: string
-      - description: ¿Activo?
-        in: formData
-        name: is_active
-        type: boolean
-      - description: Habilitar domicilios
+      - description: Habilitar delivery
         in: formData
         name: enable_delivery
         type: boolean
-      - description: Habilitar recoger
+      - description: Habilitar pickup
         in: formData
         name: enable_pickup
         type: boolean
@@ -1347,33 +1202,33 @@ paths:
         "201":
           description: Negocio creado exitosamente
           schema:
-            $ref: '#/definitions/response.BusinessSuccessResponse'
+            additionalProperties: true
+            type: object
         "400":
-          description: Datos inválidos
+          description: Solicitud inválida
           schema:
-            $ref: '#/definitions/response.BusinessErrorResponse'
+            additionalProperties: true
+            type: object
         "401":
           description: Token de acceso requerido
           schema:
-            $ref: '#/definitions/response.BusinessErrorResponse'
-        "409":
-          description: Código o dominio ya existe
-          schema:
-            $ref: '#/definitions/response.BusinessErrorResponse'
+            additionalProperties: true
+            type: object
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/response.BusinessErrorResponse'
+            additionalProperties: true
+            type: object
       security:
       - BearerAuth: []
-      summary: Crear negocio
+      summary: Crear un nuevo negocio
       tags:
-      - Business
+      - businesses
   /businesses/{id}:
     delete:
       consumes:
       - application/json
-      description: Elimina un negocio existente por su ID
+      description: Elimina un negocio del sistema
       parameters:
       - description: ID del negocio
         in: path
@@ -1383,31 +1238,31 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: Negocio eliminado exitosamente
           schema:
-            $ref: '#/definitions/response.BusinessErrorResponse'
+            additionalProperties: true
+            type: object
         "400":
-          description: ID inválido
+          description: Solicitud inválida
           schema:
-            $ref: '#/definitions/response.BusinessErrorResponse'
+            additionalProperties: true
+            type: object
         "401":
           description: Token de acceso requerido
           schema:
-            $ref: '#/definitions/response.BusinessErrorResponse'
-        "404":
-          description: Negocio no encontrado
-          schema:
-            $ref: '#/definitions/response.BusinessErrorResponse'
+            additionalProperties: true
+            type: object
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/response.BusinessErrorResponse'
+            additionalProperties: true
+            type: object
       security:
       - BearerAuth: []
       summary: Eliminar negocio
       tags:
-      - Business
+      - businesses
     get:
       consumes:
       - application/json
@@ -1421,51 +1276,50 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: Negocio obtenido exitosamente
           schema:
-            $ref: '#/definitions/response.BusinessSuccessResponse'
+            additionalProperties: true
+            type: object
         "400":
-          description: ID inválido
+          description: Solicitud inválida
           schema:
-            $ref: '#/definitions/response.BusinessErrorResponse'
+            additionalProperties: true
+            type: object
         "401":
           description: Token de acceso requerido
           schema:
-            $ref: '#/definitions/response.BusinessErrorResponse'
-        "404":
-          description: Negocio no encontrado
-          schema:
-            $ref: '#/definitions/response.BusinessErrorResponse'
+            additionalProperties: true
+            type: object
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/response.BusinessErrorResponse'
+            additionalProperties: true
+            type: object
       security:
       - BearerAuth: []
       summary: Obtener negocio por ID
       tags:
-      - Business
+      - businesses
     put:
       consumes:
       - multipart/form-data
-      description: Actualiza un negocio existente con los datos proporcionados. Soporta
-        carga de logo (logoFile).
+      description: Actualiza un negocio existente
       parameters:
       - description: ID del negocio
         in: path
         name: id
         required: true
         type: integer
-      - description: Nombre
+      - description: Nombre del negocio
         in: formData
         name: name
         type: string
-      - description: Código
+      - description: Código del negocio
         in: formData
         name: code
         type: string
-      - description: Tipo de negocio ID
+      - description: ID del tipo de negocio
         in: formData
         name: business_type_id
         type: integer
@@ -1481,14 +1335,10 @@ paths:
         in: formData
         name: description
         type: string
-      - description: URL del logo (opcional si se usa logoFile)
+      - description: URL del logo
         in: formData
         name: logo_url
         type: string
-      - description: Logo del negocio
-        in: formData
-        name: logoFile
-        type: file
       - description: Color primario
         in: formData
         name: primary_color
@@ -1505,11 +1355,11 @@ paths:
         in: formData
         name: is_active
         type: boolean
-      - description: Habilitar domicilios
+      - description: Habilitar delivery
         in: formData
         name: enable_delivery
         type: boolean
-      - description: Habilitar recoger
+      - description: Habilitar pickup
         in: formData
         name: enable_pickup
         type: boolean
@@ -1520,35 +1370,31 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: Negocio actualizado exitosamente
           schema:
-            $ref: '#/definitions/response.BusinessSuccessResponse'
+            additionalProperties: true
+            type: object
         "400":
-          description: Datos inválidos o ID inválido
+          description: Solicitud inválida
           schema:
-            $ref: '#/definitions/response.BusinessErrorResponse'
+            additionalProperties: true
+            type: object
         "401":
           description: Token de acceso requerido
           schema:
-            $ref: '#/definitions/response.BusinessErrorResponse'
-        "404":
-          description: Negocio no encontrado
-          schema:
-            $ref: '#/definitions/response.BusinessErrorResponse'
-        "409":
-          description: Código o dominio ya existe
-          schema:
-            $ref: '#/definitions/response.BusinessErrorResponse'
+            additionalProperties: true
+            type: object
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/response.BusinessErrorResponse'
+            additionalProperties: true
+            type: object
       security:
       - BearerAuth: []
       summary: Actualizar negocio
       tags:
-      - Business
+      - businesses
   /clients:
     get:
       consumes:
@@ -2710,7 +2556,7 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Este endpoint permite eliminar una mesa existente del sistema.
+      description: Este endpoint permite eliminar una mesa específica por su ID.
       parameters:
       - description: ID de la mesa
         in: path
@@ -2797,15 +2643,14 @@ paths:
     put:
       consumes:
       - application/json
-      description: Este endpoint permite actualizar parcialmente los datos de una
-        mesa. Solo se modifican los campos enviados.
+      description: Este endpoint permite actualizar los datos de una mesa específica.
       parameters:
       - description: ID de la mesa
         in: path
         name: id
         required: true
         type: integer
-      - description: Datos de la mesa a actualizar
+      - description: Datos a actualizar
         in: body
         name: table
         required: true
@@ -2834,11 +2679,6 @@ paths:
           schema:
             additionalProperties: true
             type: object
-        "409":
-          description: Mesa con ese número ya existe
-          schema:
-            additionalProperties: true
-            type: object
         "500":
           description: Error interno del servidor
           schema:
@@ -2846,7 +2686,7 @@ paths:
             type: object
       security:
       - BearerAuth: []
-      summary: Actualiza una mesa existente
+      summary: Actualiza una mesa
       tags:
       - Mesas
   /users:

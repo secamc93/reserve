@@ -15,11 +15,11 @@ import (
 // @Produce      json
 // @Security     BearerAuth
 // @Param        id  path      int  true  "ID de la mesa"
-// @Success      200 {object}  response.DeleteTableResponse "Mesa eliminada exitosamente"
-// @Failure      400 {object}  response.ErrorResponse "Solicitud inválida"
-// @Failure      401 {object}  response.ErrorResponse "Token de acceso requerido"
-// @Failure      404 {object}  response.ErrorResponse "Mesa no encontrada"
-// @Failure      500 {object}  response.ErrorResponse "Error interno del servidor"
+// @Success      200          {object}  map[string]interface{} "Mesa eliminada exitosamente"
+// @Failure      400          {object}  map[string]interface{} "Solicitud inválida"
+// @Failure      401          {object}  map[string]interface{} "Token de acceso requerido"
+// @Failure      404          {object}  map[string]interface{} "Mesa no encontrada"
+// @Failure      500          {object}  map[string]interface{} "Error interno del servidor"
 // @Router       /tables/{id} [delete]
 func (h *TableHandler) DeleteTableHandler(c *gin.Context) {
 	ctx := c.Request.Context()

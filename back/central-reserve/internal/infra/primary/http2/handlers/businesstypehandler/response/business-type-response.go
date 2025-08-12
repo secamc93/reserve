@@ -2,7 +2,7 @@ package response
 
 import "time"
 
-// BusinessTypeResponse representa la respuesta de un tipo de negocio
+// BusinessTypeResponse representa un tipo de negocio en la respuesta API
 type BusinessTypeResponse struct {
 	ID          uint      `json:"id"`
 	Name        string    `json:"name"`
@@ -14,30 +14,42 @@ type BusinessTypeResponse struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
-// BusinessTypeListResponse representa la respuesta de lista de tipos de negocio
-type BusinessTypeListResponse struct {
-	BusinessTypes []BusinessTypeResponse `json:"business_types"`
-	Total         int64                  `json:"total"`
-	Page          int                    `json:"page"`
-	Limit         int                    `json:"limit"`
+// GetBusinessTypesResponse representa la respuesta para obtener múltiples tipos de negocio
+type GetBusinessTypesResponse struct {
+	Success bool                   `json:"success"`
+	Message string                 `json:"message"`
+	Data    []BusinessTypeResponse `json:"data"`
 }
 
-// BusinessTypeSuccessResponse representa la respuesta exitosa de un tipo de negocio
-type BusinessTypeSuccessResponse struct {
+// GetBusinessTypeResponse representa la respuesta para obtener un tipo de negocio
+type GetBusinessTypeResponse struct {
 	Success bool                 `json:"success"`
 	Message string               `json:"message"`
 	Data    BusinessTypeResponse `json:"data"`
 }
 
-// BusinessTypeListSuccessResponse representa la respuesta exitosa de lista de tipos de negocio
-type BusinessTypeListSuccessResponse struct {
-	Success bool                     `json:"success"`
-	Message string                   `json:"message"`
-	Data    BusinessTypeListResponse `json:"data"`
+// CreateBusinessTypeResponse representa la respuesta para crear un tipo de negocio
+type CreateBusinessTypeResponse struct {
+	Success bool                 `json:"success"`
+	Message string               `json:"message"`
+	Data    BusinessTypeResponse `json:"data"`
 }
 
-// BusinessTypeErrorResponse representa la respuesta de error
-type BusinessTypeErrorResponse struct {
+// UpdateBusinessTypeResponse representa la respuesta para actualizar un tipo de negocio
+type UpdateBusinessTypeResponse struct {
+	Success bool                 `json:"success"`
+	Message string               `json:"message"`
+	Data    BusinessTypeResponse `json:"data"`
+}
+
+// DeleteBusinessTypeResponse representa la respuesta para eliminar un tipo de negocio
+type DeleteBusinessTypeResponse struct {
+	Success bool   `json:"success"`
+	Message string `json:"message"`
+}
+
+// ErrorResponse representa una respuesta de error
+type ErrorResponse struct {
 	Success bool   `json:"success"`
 	Error   string `json:"error"`
 	Message string `json:"message"`
