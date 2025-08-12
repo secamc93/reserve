@@ -40,7 +40,7 @@ const ModalBase: React.FC<ModalBaseProps> = ({
   };
 
   return (
-    <div className="modal-overlay" onClick={handleOverlayClick}>
+    <div className="modal-base-overlay" onClick={handleOverlayClick}>
       <div className={`modal-container-base ${className}`} onClick={handleContainerClick}>
         <div className="modal-header">
           <h2>{title}</h2>

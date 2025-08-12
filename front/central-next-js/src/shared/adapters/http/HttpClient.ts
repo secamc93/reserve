@@ -6,6 +6,44 @@ export class HttpClient {
     this.baseURL = baseURL;
   }
 
+  // Clase personalizada para errores de API
+  private createApiError(message: string, status?: number): Error {
+    const error = new Error(message);
+    error.name = 'ApiError';
+    (error as any).status = status;
+    return error;
+  }
+
+  /**
+   * Convierte keys de un objeto (profundidad arbitraria) de camelCase a snake_case.
+   * - No transforma instancias de Date, File, Blob, FormData
+   * - Maneja Arrays y objetos anidados
+   */
+  private toSnakeCase(data: any): any {
+    const isPlainObject = (val: any) => Object.prototype.toString.call(val) === '[object Object]';
+
+    if (data === null || data === undefined) return data;
+    if (data instanceof Date || data instanceof File || data instanceof Blob || data instanceof FormData) return data;
+
+    if (Array.isArray(data)) {
+      return data.map((item) => this.toSnakeCase(item));
+    }
+
+    if (isPlainObject(data)) {
+      const result: Record<string, any> = {};
+      Object.keys(data).forEach((key) => {
+        const snakeKey = key
+          .replace(/([A-Z])/g, '_$1')
+          .replace(/-/g, '_')
+          .toLowerCase();
+        result[snakeKey] = this.toSnakeCase(data[key]);
+      });
+      return result;
+    }
+
+    return data;
+  }
+
   /**
    * Returns default headers for every request including the Authorization header
    * if an authToken exists in localStorage.
@@ -140,23 +178,23 @@ export class HttpClient {
       console.log('🌐 POST: Iniciando request POST');
       console.log('🌐 POST: Endpoint:', endpoint);
       console.log('🌐 POST: Data type:', data instanceof FormData ? 'FormData' : 'JSON');
-      console.log('🌐 POST: Data:', data);
+      console.log('🌐 POST: Data (original):', data);
 
       // Determinar headers y body según el tipo de datos
       let headers: Record<string, string> = {};
       let body: string | FormData;
 
       if (data instanceof FormData) {
-        // Para FormData, no establecer Content-Type (el navegador lo hace automáticamente)
         headers = {
           ...(this.getDefaultHeaders()),
         };
-        delete headers['Content-Type']; // Eliminar Content-Type para FormData
+        delete headers['Content-Type'];
         body = data;
       } else {
-        // Para JSON, usar headers normales
         headers = this.getDefaultHeaders();
-        body = JSON.stringify(data);
+        const snake = this.toSnakeCase(data);
+        console.log('🌐 POST: Data (snake_case):', snake);
+        body = JSON.stringify(snake);
       }
 
       console.log('🌐 POST: Headers finales:', headers);
@@ -174,9 +212,9 @@ export class HttpClient {
       console.log('🌐 POST: Headers:', response.headers);
 
       if (!response.ok) {
-        console.log('🌐 POST: Response no OK, procesando error');
-
+        console.log('🌐 POST: Response not ok, status:', response.status);
         let errorMessage = `HTTP error! status: ${response.status}`;
+        
         try {
           const errorData = await response.json();
           console.log('🌐 POST: Error data:', errorData);
@@ -184,7 +222,9 @@ export class HttpClient {
         } catch (parseError) {
           console.warn('🌐 POST: No se pudo parsear error response:', parseError);
         }
-        throw new Error(errorMessage);
+        
+        // Usar error personalizado para errores de API (no loguea stack trace)
+        throw this.createApiError(errorMessage, response.status);
       }
 
       console.log('🌐 POST: Parseando respuesta JSON');
@@ -193,7 +233,10 @@ export class HttpClient {
 
       return result;
     } catch (error) {
-      console.error('🌐 POST: Error completo:', error);
+      // Solo loguear errores de red/conexión, no errores de API
+      if (error instanceof Error && error.name !== 'ApiError') {
+        console.error('🌐 POST: Error de conexión:', error);
+      }
 
       if (error instanceof TypeError && error.message.includes('fetch')) {
         throw new Error('No se pudo conectar con el servidor. Verifique que la API esté ejecutándose en http://localhost:3050');
@@ -208,23 +251,23 @@ export class HttpClient {
       console.log('🌐 PUT: Iniciando request PUT');
       console.log('🌐 PUT: Endpoint:', endpoint);
       console.log('🌐 PUT: Data type:', data instanceof FormData ? 'FormData' : 'JSON');
-      console.log('🌐 PUT: Data:', data);
+      console.log('🌐 PUT: Data (original):', data);
 
       // Determinar headers y body según el tipo de datos
       let headers: Record<string, string> = {};
       let body: string | FormData;
 
       if (data instanceof FormData) {
-        // Para FormData, no establecer Content-Type (el navegador lo hace automáticamente)
         headers = {
           ...(this.getDefaultHeaders()),
         };
-        delete headers['Content-Type']; // Eliminar Content-Type para FormData
+        delete headers['Content-Type'];
         body = data;
       } else {
-        // Para JSON, usar headers normales
         headers = this.getDefaultHeaders();
-        body = JSON.stringify(data);
+        const snake = this.toSnakeCase(data);
+        console.log('🌐 PUT: Data (snake_case):', snake);
+        body = JSON.stringify(snake);
       }
 
       console.log('🌐 PUT: Headers finales:', headers);
@@ -241,9 +284,9 @@ export class HttpClient {
       console.log('🌐 PUT: StatusText:', response.statusText);
 
       if (!response.ok) {
-        console.log('🌐 PUT: Response no OK, procesando error');
-
+        console.log('🌐 PUT: Response not ok, status:', response.status);
         let errorMessage = `HTTP error! status: ${response.status}`;
+        
         try {
           const errorData = await response.json();
           console.log('🌐 PUT: Error data:', errorData);
@@ -251,7 +294,8 @@ export class HttpClient {
         } catch (parseError) {
           console.warn('🌐 PUT: No se pudo parsear error response:', parseError);
         }
-        throw new Error(errorMessage);
+        
+        throw this.createApiError(errorMessage, response.status);
       }
 
       console.log('🌐 PUT: Parseando respuesta JSON');
@@ -260,7 +304,10 @@ export class HttpClient {
 
       return result;
     } catch (error) {
-      console.error('🌐 PUT: Error completo:', error);
+      // Solo loguear errores de red/conexión, no errores de API
+      if (error instanceof Error && error.name !== 'ApiError') {
+        console.error('🌐 PUT: Error de conexión:', error);
+      }
 
       if (error instanceof TypeError && error.message.includes('fetch')) {
         throw new Error('No se pudo conectar con el servidor. Verifique que la API esté ejecutándose en http://localhost:3050');
@@ -274,13 +321,16 @@ export class HttpClient {
     try {
       console.log('🌐 PATCH: Iniciando request PATCH');
       console.log('🌐 PATCH: Endpoint:', endpoint);
-      console.log('🌐 PATCH: Data:', data);
+      console.log('🌐 PATCH: Data (original):', data);
       console.log('🌐 PATCH: URL completa:', `${this.baseURL}${endpoint}`);
+
+      const snake = this.toSnakeCase(data);
+      console.log('🌐 PATCH: Data (snake_case):', snake);
 
       const response = await fetch(`${this.baseURL}${endpoint}`, {
         method: 'PATCH',
         headers: this.getDefaultHeaders(),
-        body: JSON.stringify(data),
+        body: JSON.stringify(snake),
       });
 
       console.log('🌐 PATCH: Response recibida');
@@ -289,8 +339,8 @@ export class HttpClient {
       console.log('🌐 PATCH: Headers:', response.headers);
 
       if (!response.ok) {
-        console.log('🌐 PATCH: Response no OK, procesando error');
-
+        console.log('🌐 PATCH: Response not ok, status:', response.status);
+        
         let errorMessage = `HTTP error! status: ${response.status}`;
         try {
           const errorData = await response.json();
@@ -299,7 +349,8 @@ export class HttpClient {
         } catch (parseError) {
           console.warn('🌐 PATCH: No se pudo parsear error response:', parseError);
         }
-        throw new Error(errorMessage);
+        
+        throw this.createApiError(errorMessage, response.status);
       }
 
       console.log('🌐 PATCH: Parseando respuesta JSON');
@@ -308,18 +359,15 @@ export class HttpClient {
 
       return result;
     } catch (error) {
-      console.error('🌐 PATCH: ERROR CAPTURADO');
-      console.error('🌐 PATCH: Error name:', error instanceof Error ? error.name : 'Unknown');
-      console.error('🌐 PATCH: Error message:', error instanceof Error ? error.message : error);
-      console.error('🌐 PATCH: Error stack:', error instanceof Error ? error.stack : 'No stack');
-      console.error('🌐 PATCH: Error completo:', error);
-
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        console.error('🌐 PATCH: Es un error de TypeError con fetch');
-        throw new Error('No se pudo conectar con el servidor');
+      // Solo loguear errores de red/conexión, no errores de API
+      if (error instanceof Error && error.name !== 'ApiError') {
+        console.error('🌐 PATCH: Error de conexión:', error);
       }
 
-      console.error('🌐 PATCH: Relanzando error original');
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('No se pudo conectar con el servidor. Verifique que la API esté ejecutándose en http://localhost:3050');
+      }
+
       throw error;
     }
   }

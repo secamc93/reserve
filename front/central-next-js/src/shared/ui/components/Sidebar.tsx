@@ -17,7 +17,7 @@ const Sidebar: React.FC = () => {
     // Memoizar permisos para evitar recálculos en cada render
     const permissions = useMemo(() => {
         const isSuper = isSuperAdmin();
-        
+
         // Verificar permisos específicos
         const hasUsersManage = hasPermission('users:manage');
         const hasUsersCreate = hasPermission('users:create');
@@ -27,11 +27,12 @@ const Sidebar: React.FC = () => {
         const hasBusinessesManage = hasPermission('businesses:manage');
         const hasTablesManage = hasPermission('tables:manage');
         const hasRoomsManage = hasPermission('rooms:manage');
-        
-        // Verificar permisos basados en roles (fallback)
-        const hasRoleSuperAdmin = hasPermission('role:super_admin');
-        const hasRoleAdmin = hasPermission('role:admin');
-        const hasRoleManager = hasPermission('role:manager');
+
+        // Verificar roles reales del usuario (no como permisos)
+        const roleCodes = (user?.roles || []).map(r => (r as any).code || (r as any).name || '').map((c: string) => c.toLowerCase());
+        const hasRoleSuperAdmin = roleCodes.includes('super_admin') || roleCodes.includes('platform');
+        const hasRoleAdmin = roleCodes.includes('admin');
+        const hasRoleManager = roleCodes.includes('manager');
 
         return {
             isSuper,
@@ -47,7 +48,7 @@ const Sidebar: React.FC = () => {
             hasRoleAdmin,
             hasRoleManager
         };
-    }, [isSuperAdmin, hasPermission]);
+    }, [isSuperAdmin, hasPermission, user]);
 
     // Memoizar menú para evitar recreaciones
     const menuItems = useMemo(() => {

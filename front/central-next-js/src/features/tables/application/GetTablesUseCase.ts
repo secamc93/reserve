@@ -9,7 +9,7 @@ export class GetTablesUseCase {
       return await this.repository.getTables();
     } catch (error) {
       console.error('GetTablesUseCase: Error:', error);
-      return [];
+      throw new Error('No se pudieron obtener las mesas');
     }
   }
 }

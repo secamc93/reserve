@@ -1,6 +1,7 @@
 package tablehandler
 
 import (
+	"central_reserve/internal/infra/primary/http2/handlers/tablehandler/mapper"
 	"net/http"
 	"strconv"
 
@@ -8,17 +9,17 @@ import (
 )
 
 // @Summary      Elimina una mesa
-// @Description  Este endpoint permite eliminar una mesa existente del sistema.
+// @Description  Este endpoint permite eliminar una mesa específica por su ID.
 // @Tags         Mesas
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
 // @Param        id  path      int  true  "ID de la mesa"
-// @Success      200 {object}  map[string]interface{} "Mesa eliminada exitosamente"
-// @Failure      400 {object}  map[string]interface{} "Solicitud inválida"
-// @Failure      401 {object}  map[string]interface{} "Token de acceso requerido"
-// @Failure      404 {object}  map[string]interface{} "Mesa no encontrada"
-// @Failure      500 {object}  map[string]interface{} "Error interno del servidor"
+// @Success      200 {object}  response.DeleteTableResponse "Mesa eliminada exitosamente"
+// @Failure      400 {object}  response.ErrorResponse "Solicitud inválida"
+// @Failure      401 {object}  response.ErrorResponse "Token de acceso requerido"
+// @Failure      404 {object}  response.ErrorResponse "Mesa no encontrada"
+// @Failure      500 {object}  response.ErrorResponse "Error interno del servidor"
 // @Router       /tables/{id} [delete]
 func (h *TableHandler) DeleteTableHandler(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -28,11 +29,8 @@ func (h *TableHandler) DeleteTableHandler(c *gin.Context) {
 	tableID, err := strconv.ParseUint(idParam, 10, 32)
 	if err != nil {
 		h.logger.Error().Err(err).Msg("ID de mesa inválido")
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"error":   "invalid_id",
-			"message": "El ID de la mesa no es válido",
-		})
+		errorResponse := mapper.BuildErrorResponse("invalid_id", "El ID de la mesa no es válido")
+		c.JSON(http.StatusBadRequest, errorResponse)
 		return
 	}
 
@@ -40,28 +38,19 @@ func (h *TableHandler) DeleteTableHandler(c *gin.Context) {
 	response, err := h.usecase.DeleteTable(ctx, uint(tableID))
 	if err != nil {
 		h.logger.Error().Err(err).Msg("error interno al eliminar mesa")
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"success": false,
-			"error":   "internal_error",
-			"message": "No se pudo eliminar la mesa",
-		})
+		errorResponse := mapper.BuildErrorResponse("internal_error", "No se pudo eliminar la mesa")
+		c.JSON(http.StatusInternalServerError, errorResponse)
 		return
 	}
 
 	// 3. Verificar si la mesa existía ───────────────────────
 	if response == "" {
-		c.JSON(http.StatusNotFound, gin.H{
-			"success": false,
-			"error":   "not_found",
-			"message": "Mesa no encontrada",
-		})
+		errorResponse := mapper.BuildErrorResponse("not_found", "Mesa no encontrada")
+		c.JSON(http.StatusNotFound, errorResponse)
 		return
 	}
 
 	// 4. Salida ──────────────────────────────────────────────
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "Mesa eliminada exitosamente",
-		"data":    response,
-	})
+	responseDTO := mapper.BuildDeleteTableResponse("Mesa eliminada exitosamente")
+	c.JSON(http.StatusOK, responseDTO)
 }

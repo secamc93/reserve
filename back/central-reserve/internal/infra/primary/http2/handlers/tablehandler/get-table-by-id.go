@@ -1,6 +1,7 @@
 package tablehandler
 
 import (
+	"central_reserve/internal/infra/primary/http2/handlers/tablehandler/mapper"
 	"net/http"
 	"strconv"
 
@@ -14,11 +15,11 @@ import (
 // @Produce      json
 // @Security     BearerAuth
 // @Param        id  path      int  true  "ID de la mesa"
-// @Success      200 {object}  map[string]interface{} "Mesa obtenida exitosamente"
-// @Failure      400 {object}  map[string]interface{} "Solicitud inválida"
-// @Failure      401 {object}  map[string]interface{} "Token de acceso requerido"
-// @Failure      404 {object}  map[string]interface{} "Mesa no encontrada"
-// @Failure      500 {object}  map[string]interface{} "Error interno del servidor"
+// @Success      200 {object}  response.GetTableResponse "Mesa obtenida exitosamente"
+// @Failure      400 {object}  response.ErrorResponse "Solicitud inválida"
+// @Failure      401 {object}  response.ErrorResponse "Token de acceso requerido"
+// @Failure      404 {object}  response.ErrorResponse "Mesa no encontrada"
+// @Failure      500 {object}  response.ErrorResponse "Error interno del servidor"
 // @Router       /tables/{id} [get]
 func (h *TableHandler) GetTableByIDHandler(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -28,11 +29,8 @@ func (h *TableHandler) GetTableByIDHandler(c *gin.Context) {
 	tableID, err := strconv.ParseUint(idParam, 10, 32)
 	if err != nil {
 		h.logger.Error().Err(err).Msg("ID de mesa inválido")
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"error":   "invalid_id",
-			"message": "El ID de la mesa no es válido",
-		})
+		errorResponse := mapper.BuildErrorResponse("invalid_id", "El ID de la mesa no es válido")
+		c.JSON(http.StatusBadRequest, errorResponse)
 		return
 	}
 
@@ -41,27 +39,18 @@ func (h *TableHandler) GetTableByIDHandler(c *gin.Context) {
 	if err != nil {
 		// Si es error de "record not found", retornar 404
 		if err.Error() == "record not found" {
-			c.JSON(http.StatusNotFound, gin.H{
-				"success": false,
-				"error":   "not_found",
-				"message": "Mesa no encontrada",
-			})
+			errorResponse := mapper.BuildErrorResponse("not_found", "Mesa no encontrada")
+			c.JSON(http.StatusNotFound, errorResponse)
 			return
 		}
 
 		h.logger.Error().Err(err).Msg("error interno al obtener mesa por ID")
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"success": false,
-			"error":   "internal_error",
-			"message": "No se pudo obtener la mesa",
-		})
+		errorResponse := mapper.BuildErrorResponse("internal_error", "No se pudo obtener la mesa")
+		c.JSON(http.StatusInternalServerError, errorResponse)
 		return
 	}
 
 	// 3. Salida ──────────────────────────────────────────────
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "Mesa obtenida exitosamente",
-		"data":    table,
-	})
+	response := mapper.BuildGetTablePtrResponse(table, "Mesa obtenida exitosamente")
+	c.JSON(http.StatusOK, response)
 }

@@ -5,25 +5,23 @@ import (
 	"central_reserve/internal/infra/primary/http2/handlers/tablehandler/request"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
-// @Summary      Actualiza una mesa existente
-// @Description  Este endpoint permite actualizar parcialmente los datos de una mesa. Solo se modifican los campos enviados.
+// @Summary      Actualiza una mesa
+// @Description  Este endpoint permite actualizar los datos de una mesa específica.
 // @Tags         Mesas
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        id     path      int                      true  "ID de la mesa"
-// @Param        table  body      request.UpdateTable     true  "Datos de la mesa a actualizar"
-// @Success      200    {object}  map[string]interface{}   "Mesa actualizada exitosamente"
-// @Failure      400    {object}  map[string]interface{}   "Solicitud inválida"
-// @Failure      401    {object}  map[string]interface{}   "Token de acceso requerido"
-// @Failure      404    {object}  map[string]interface{}   "Mesa no encontrada"
-// @Failure      409    {object}  map[string]interface{}   "Mesa con ese número ya existe"
-// @Failure      500    {object}  map[string]interface{}   "Error interno del servidor"
+// @Param        id     path      int                true  "ID de la mesa"
+// @Param        table  body      request.UpdateTable true  "Datos a actualizar"
+// @Success      200    {object}  response.UpdateTableResponse "Mesa actualizada exitosamente"
+// @Failure      400    {object}  response.ErrorResponse "Solicitud inválida"
+// @Failure      401    {object}  response.ErrorResponse "Token de acceso requerido"
+// @Failure      404    {object}  response.ErrorResponse "Mesa no encontrada"
+// @Failure      500    {object}  response.ErrorResponse "Error interno del servidor"
 // @Router       /tables/{id} [put]
 func (h *TableHandler) UpdateTableHandler(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -33,11 +31,8 @@ func (h *TableHandler) UpdateTableHandler(c *gin.Context) {
 	tableID, err := strconv.ParseUint(idParam, 10, 32)
 	if err != nil {
 		h.logger.Error().Err(err).Msg("ID de mesa inválido")
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"error":   "invalid_id",
-			"message": "El ID de la mesa no es válido",
-		})
+		errorResponse := mapper.BuildErrorResponse("invalid_id", "El ID de la mesa no es válido")
+		c.JSON(http.StatusBadRequest, errorResponse)
 		return
 	}
 
@@ -45,54 +40,31 @@ func (h *TableHandler) UpdateTableHandler(c *gin.Context) {
 	var req request.UpdateTable
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Error().Err(err).Msg("error al bindear JSON de actualización de mesa")
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"error":   "invalid_request",
-			"message": "Los datos de la mesa no son válidos",
-		})
+		errorResponse := mapper.BuildErrorResponse("invalid_request", "Los datos de actualización no son válidos")
+		c.JSON(http.StatusBadRequest, errorResponse)
 		return
 	}
 
 	// 3. DTO → Dominio ───────────────────────────────────────
-	table := mapper.UpdateTableToDomain(req)
+	updateData := mapper.UpdateTableToDomain(req)
 
 	// 4. Caso de uso ─────────────────────────────────────────
-	response, err := h.usecase.UpdateTable(ctx, uint(tableID), table)
+	response, err := h.usecase.UpdateTable(ctx, uint(tableID), updateData)
 	if err != nil {
-		// Manejar error de mesa duplicada
-		if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
-			h.logger.Warn().Err(err).Msg("mesa con ese número ya existe para este restaurante")
-			c.JSON(http.StatusConflict, gin.H{
-				"success": false,
-				"error":   "table_number_exists",
-				"message": "Ya existe una mesa con este número para el restaurante",
-			})
-			return
-		}
-
 		h.logger.Error().Err(err).Msg("error interno al actualizar mesa")
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"success": false,
-			"error":   "internal_error",
-			"message": "No se pudo actualizar la mesa",
-		})
+		errorResponse := mapper.BuildErrorResponse("internal_error", "No se pudo actualizar la mesa")
+		c.JSON(http.StatusInternalServerError, errorResponse)
 		return
 	}
 
 	// 5. Verificar si la mesa existía ───────────────────────
 	if response == "" {
-		c.JSON(http.StatusNotFound, gin.H{
-			"success": false,
-			"error":   "not_found",
-			"message": "Mesa no encontrada",
-		})
+		errorResponse := mapper.BuildErrorResponse("not_found", "Mesa no encontrada")
+		c.JSON(http.StatusNotFound, errorResponse)
 		return
 	}
 
 	// 6. Salida ──────────────────────────────────────────────
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "Mesa actualizada exitosamente",
-		"data":    response,
-	})
+	responseDTO := mapper.BuildUpdateTableStringResponse("Mesa actualizada exitosamente")
+	c.JSON(http.StatusOK, responseDTO)
 }

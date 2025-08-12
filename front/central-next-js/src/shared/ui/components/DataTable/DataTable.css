@@ -1,0 +1,48 @@
+/* DataTable.css - Tabla base reutilizable */
+
+.datatable-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  border: 1px solid #f3f4f6;
+}
+
+.datatable-scroll { overflow-x: auto; }
+
+.datatable-table { width: 100%; border-collapse: collapse; }
+
+.datatable-th {
+  text-align: left;
+  padding: 14px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: white;
+}
+
+.datatable-th-gradient {
+  background: linear-gradient(135deg, var(--primary-color, #3b82f6) 0%, var(--secondary-color, #8b5cf6) 100%);
+}
+
+.datatable-tr { transition: background 0.2s ease; }
+.datatable-tr:hover { background: #f9fafb; }
+
+.datatable-td { padding: 14px 12px; border-bottom: 1px solid #f3f4f6; color: var(--foreground); }
+
+.datatable-actions { display: flex; gap: 8px; }
+
+.datatable-action-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 8px; border: none; cursor: pointer;
+  color: #111827; background: #f3f4f6; transition: all .2s ease;
+}
+
+.datatable-action-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+
+.datatable-loading, .datatable-empty { text-align: center; padding: 32px; color: #6b7280; }
+
+.datatable-spinner {
+  width: 36px; height: 36px; border: 3px solid #e5e7eb; border-top: 3px solid var(--primary-color, #3b82f6);
+  border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 8px;
+}
+
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } 
