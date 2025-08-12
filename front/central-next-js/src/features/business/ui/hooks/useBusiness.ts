@@ -45,7 +45,7 @@ export const useBusiness = () => {
     }
   }, []);
 
-  const createBusiness = useCallback(async (businessData: CreateBusinessRequest): Promise<Business> => {
+  const createBusiness = useCallback(async (businessData: CreateBusinessRequest | FormData): Promise<Business> => {
     setLoading(true);
     setError(null);
     try {
@@ -60,7 +60,7 @@ export const useBusiness = () => {
     }
   }, []);
 
-  const updateBusiness = useCallback(async (id: number, businessData: UpdateBusinessRequest): Promise<Business> => {
+  const updateBusiness = useCallback(async (id: number, businessData: UpdateBusinessRequest | FormData): Promise<Business> => {
     setLoading(true);
     setError(null);
     try {

@@ -13,6 +13,7 @@ export default function BusinessPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedBusiness, setSelectedBusiness] = useState<any>(null);
+  const [loadingEdit, setLoadingEdit] = useState(false);
 
   const {
     businesses,
@@ -23,16 +24,26 @@ export default function BusinessPage() {
     updateBusiness,
     deleteBusiness,
     clearError,
-    clearSelectedBusiness
+    clearSelectedBusiness,
+    getBusinessById
   } = useBusiness();
 
   const openCreateModal = () => {
     setShowCreateModal(true);
   };
 
-  const openEditModal = (business: any) => {
-    setSelectedBusiness(business);
-    setShowEditModal(true);
+  const openEditModal = async (business: any) => {
+    try {
+      setLoadingEdit(true);
+      // Obtener los datos completos y actualizados del negocio
+      const fullBusiness = await getBusinessById(business.id);
+      setSelectedBusiness(fullBusiness);
+      setShowEditModal(true);
+    } catch (error: any) {
+      alert(`Error al cargar los datos del negocio: ${error.message}`);
+    } finally {
+      setLoadingEdit(false);
+    }
   };
 
   const openDeleteModal = (business: any) => {
@@ -143,8 +154,8 @@ export default function BusinessPage() {
                 <div key={business.id} className="business-card">
                   <div className="business-card-header">
                     <div className="business-logo">
-                      {business.logoURL ? (
-                        <img src={business.logoURL} alt={business.name} />
+                      {business.logo_url ? (
+                        <img src={business.logo_url} alt={business.name} />
                       ) : (
                         <div className="business-logo-placeholder">
                           {business.name.charAt(0).toUpperCase()}
@@ -157,8 +168,8 @@ export default function BusinessPage() {
                       <p className="business-address">{business.address}</p>
                     </div>
                     <div className="business-status">
-                      <span className={`status-badge ${business.isActive ? 'active' : 'inactive'}`}>
-                        {business.isActive ? 'Activo' : 'Inactivo'}
+                      <span className={`status-badge ${business.is_active ? 'active' : 'inactive'}`}>
+                        {business.is_active ? 'Activo' : 'Inactivo'}
                       </span>
                     </div>
                   </div>
@@ -166,15 +177,15 @@ export default function BusinessPage() {
                   <div className="business-card-body">
                     <p className="business-description">{business.description}</p>
                     
-                    <div className="business-features">
-                      {business.enableReservations && (
-                        <span className="feature-badge">📅 Reservas</span>
+                    <div className="business-contact">
+                      {business.phone && (
+                        <span className="contact-info">📞 {business.phone}</span>
                       )}
-                      {business.enableDelivery && (
-                        <span className="feature-badge">🚚 Delivery</span>
+                      {business.email && (
+                        <span className="contact-info">✉️ {business.email}</span>
                       )}
-                      {business.enablePickup && (
-                        <span className="feature-badge">📦 Recogida</span>
+                      {business.website && (
+                        <span className="contact-info">🌐 {business.website}</span>
                       )}
                     </div>
                   </div>
@@ -183,8 +194,9 @@ export default function BusinessPage() {
                     <button
                       onClick={() => openEditModal(business)}
                       className="btn btn-secondary btn-sm"
+                      disabled={loadingEdit}
                     >
-                      ✏️ Editar
+                      {loadingEdit ? '⏳ Cargando...' : '✏️ Editar'}
                     </button>
                     <button
                       onClick={() => openDeleteModal(business)}
@@ -215,6 +227,7 @@ export default function BusinessPage() {
           business={selectedBusiness}
           mode="edit"
           businessTypes={businessTypes}
+          loadingBusiness={loadingEdit}
         />
       </div>
     </Layout>

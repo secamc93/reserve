@@ -4,7 +4,7 @@ import { Business, UpdateBusinessRequest } from '../domain/Business';
 export class UpdateBusinessUseCase {
   constructor(private businessRepository: BusinessRepository) {}
 
-  async execute(id: number, businessData: UpdateBusinessRequest): Promise<Business> {
+  async execute(id: number, businessData: UpdateBusinessRequest | FormData): Promise<Business> {
     try {
       // Validaciones básicas
       if (!id || id <= 0) {

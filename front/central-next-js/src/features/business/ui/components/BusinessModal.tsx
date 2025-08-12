@@ -13,6 +13,7 @@ interface BusinessModalProps {
   business?: Business | null;
   mode: 'create' | 'edit';
   businessTypes: BusinessType[];
+  loadingBusiness?: boolean;
 }
 
 const BusinessModal: React.FC<BusinessModalProps> = ({ 
@@ -21,24 +22,30 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
   onSubmit, 
   business, 
   mode, 
-  businessTypes 
+  businessTypes, 
+  loadingBusiness 
 }) => {
   const [formData, setFormData] = useState<CreateBusinessRequest | UpdateBusinessRequest>({
     name: '',
     code: '',
-    businessTypeId: 1,
-    timezone: 'Europe/Madrid',
-    address: '',
     description: '',
-    logoURL: '',
-    primaryColor: '#3b82f6',
-    secondaryColor: '#8b5cf6',
-    customDomain: '',
-    enableDelivery: false,
-    enablePickup: false,
-    enableReservations: true
+    address: '',
+    phone: '',
+    email: '',
+    website: '',
+    logo_url: '',
+    timezone: 'Europe/Madrid',
+    primary_color: '#3b82f6',
+    secondary_color: '#8b5cf6',
+    custom_domain: '',
+    business_type_id: 1,
+    enable_delivery: false,
+    enable_pickup: false,
+    enable_reservations: true
   });
 
+  const [selectedLogoFile, setSelectedLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [apiError, setApiError] = useState<string | null>(null);
@@ -48,18 +55,31 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
       setFormData({
         name: business.name,
         code: business.code,
-        businessTypeId: business.businessTypeId,
-        timezone: business.timezone,
-        address: business.address,
         description: business.description,
-        logoURL: business.logoURL,
-        primaryColor: business.primaryColor,
-        secondaryColor: business.secondaryColor,
-        customDomain: business.customDomain,
-        enableDelivery: business.enableDelivery,
-        enablePickup: business.enablePickup,
-        enableReservations: business.enableReservations
+        address: business.address,
+        phone: business.phone,
+        email: business.email,
+        website: business.website,
+        logo_url: business.logo_url,
+        timezone: business.timezone,
+        primary_color: business.primary_color,
+        secondary_color: business.secondary_color,
+        custom_domain: business.custom_domain,
+        business_type_id: business.business_type_id,
+        is_active: business.is_active,
+        enable_delivery: business.enable_delivery,
+        enable_pickup: business.enable_pickup,
+        enable_reservations: business.enable_reservations
       });
+      
+      // Si ya tiene logo, mostrar preview
+      if (business.logo_url) {
+        setLogoPreview(business.logo_url);
+      }
+    } else {
+      // Resetear al crear nuevo negocio
+      setSelectedLogoFile(null);
+      setLogoPreview(null);
     }
   }, [business, mode]);
 
@@ -74,12 +94,12 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
       newErrors.code = 'El código del negocio es requerido';
     }
 
-    if (!formData.businessTypeId) {
-      newErrors.businessTypeId = 'El tipo de negocio es requerido';
-    }
-
     if (!formData.address?.trim()) {
       newErrors.address = 'La dirección es requerida';
+    }
+
+    if (!formData.business_type_id) {
+      newErrors.business_type_id = 'El tipo de negocio es requerido';
     }
 
     setErrors(newErrors);
@@ -97,6 +117,38 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
     }
   };
 
+  const handleLogoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validar que sea una imagen
+      if (!file.type.startsWith('image/')) {
+        alert('Por favor selecciona un archivo de imagen válido (JPG, PNG, GIF, etc.)');
+        return;
+      }
+      
+      // Validar tamaño (máximo 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('La imagen debe ser menor a 5MB');
+        return;
+      }
+
+      setSelectedLogoFile(file);
+      
+      // Crear preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setLogoPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeLogoFile = () => {
+    setSelectedLogoFile(null);
+    setLogoPreview(null);
+    setFormData(prev => ({ ...prev, logo_url: '' }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
@@ -104,7 +156,36 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
     setLoading(true);
     setApiError(null);
     try {
-      await onSubmit(formData);
+      // Siempre usar FormData para mantener consistencia con el backend
+      const formDataToSend = new FormData();
+      
+      // Campos requeridos siempre se envían
+      formDataToSend.append('name', formData.name || '');
+      formDataToSend.append('code', formData.code || '');
+      formDataToSend.append('business_type_id', formData.business_type_id?.toString() || '');
+      
+      // Solo enviar campos opcionales si tienen valor
+      if (formData.description?.trim()) formDataToSend.append('description', formData.description);
+      if (formData.address?.trim()) formDataToSend.append('address', formData.address);
+      if (formData.phone?.trim()) formDataToSend.append('phone', formData.phone);
+      if (formData.email?.trim()) formDataToSend.append('email', formData.email);
+      if (formData.website?.trim()) formDataToSend.append('website', formData.website);
+      if (formData.timezone?.trim()) formDataToSend.append('timezone', formData.timezone);
+      if (formData.primary_color?.trim()) formDataToSend.append('primary_color', formData.primary_color);
+      if (formData.secondary_color?.trim()) formDataToSend.append('secondary_color', formData.secondary_color);
+      if (formData.custom_domain?.trim()) formDataToSend.append('custom_domain', formData.custom_domain);
+      
+      // Campos booleanos siempre se envían con valor por defecto
+      formDataToSend.append('enable_delivery', formData.enable_delivery?.toString() || 'false');
+      formDataToSend.append('enable_pickup', formData.enable_pickup?.toString() || 'false');
+      formDataToSend.append('enable_reservations', formData.enable_reservations?.toString() || 'false');
+      
+      // Solo agregar logo_file si hay un archivo seleccionado
+      if (selectedLogoFile) {
+        formDataToSend.append('logo_file', selectedLogoFile);
+      }
+      
+      await onSubmit(formDataToSend as any);
       onClose();
     } catch (error: any) {
       const msg = error?.message || error?.response?.data?.message || 'Ocurrió un error al guardar el negocio';
@@ -116,6 +197,27 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
   };
 
   if (!isOpen) return null;
+
+  // Si está en modo edición y se está cargando el negocio, mostrar loading
+  if (mode === 'edit' && loadingBusiness) {
+    return (
+      <ModalBase
+        isOpen={isOpen}
+        onClose={onClose}
+        title="✏️ Editar Negocio"
+        actions={
+          <button type="button" className="btn-cancel" onClick={onClose}>
+            Cancelar
+          </button>
+        }
+      >
+        <div className="loading-state text-center py-12">
+          <div className="loading-spinner mb-4">⏳</div>
+          <p className="text-gray-600">Cargando datos del negocio...</p>
+        </div>
+      </ModalBase>
+    );
+  }
 
   return (
     <ModalBase
@@ -161,25 +263,26 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
           </div>
 
           <div className="form-group">
-            <label htmlFor="code">Código *</label>
+            <label htmlFor="code">Código del Negocio *</label>
             <input
               type="text"
               id="code"
               value={formData.code || ''}
               onChange={(e) => handleInputChange('code', e.target.value)}
               className={errors.code ? 'error' : ''}
+              placeholder="Código único del negocio"
               required
             />
             {errors.code && <p className="error-text">{errors.code}</p>}
           </div>
 
           <div className="form-group">
-            <label htmlFor="businessTypeId">Tipo de Negocio *</label>
+            <label htmlFor="business_type_id">Tipo de Negocio *</label>
             <select
-              id="businessTypeId"
-              value={formData.businessTypeId || ''}
-              onChange={(e) => handleInputChange('businessTypeId', parseInt(e.target.value))}
-              className={errors.businessTypeId ? 'error' : ''}
+              id="business_type_id"
+              value={formData.business_type_id || ''}
+              onChange={(e) => handleInputChange('business_type_id', parseInt(e.target.value))}
+              className={errors.business_type_id ? 'error' : ''}
               required
             >
               <option value="">Seleccionar tipo</option>
@@ -189,7 +292,7 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
                 </option>
               ))}
             </select>
-            {errors.businessTypeId && <p className="error-text">{errors.businessTypeId}</p>}
+            {errors.business_type_id && <p className="error-text">{errors.business_type_id}</p>}
           </div>
 
           <div className="form-group">
@@ -203,6 +306,7 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
               <option value="America/New_York">America/New_York</option>
               <option value="America/Los_Angeles">America/Los_Angeles</option>
               <option value="Asia/Tokyo">Asia/Tokyo</option>
+              <option value="America/Bogota">America/Bogota</option>
             </select>
           </div>
 
@@ -229,45 +333,107 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
             />
           </div>
 
-          {/* Configuración de marca */}
+          {/* Información de contacto */}
           <div className="form-group">
-            <label htmlFor="primaryColor">Color Primario</label>
+            <label htmlFor="phone">Teléfono</label>
             <input
-              type="color"
-              id="primaryColor"
-              value={formData.primaryColor || '#3b82f6'}
-              onChange={(e) => handleInputChange('primaryColor', e.target.value)}
+              type="tel"
+              id="phone"
+              value={formData.phone || ''}
+              onChange={(e) => handleInputChange('phone', e.target.value)}
+              placeholder="+57 300 123 4567"
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="secondaryColor">Color Secundario</label>
+            <label htmlFor="email">Email</label>
             <input
-              type="color"
-              id="secondaryColor"
-              value={formData.secondaryColor || '#8b5cf6'}
-              onChange={(e) => handleInputChange('secondaryColor', e.target.value)}
+              type="email"
+              id="email"
+              value={formData.email || ''}
+              onChange={(e) => handleInputChange('email', e.target.value)}
+              placeholder="contacto@negocio.com"
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="logoURL">URL del Logo</label>
+            <label htmlFor="website">Sitio Web</label>
             <input
               type="url"
-              id="logoURL"
-              value={formData.logoURL || ''}
-              onChange={(e) => handleInputChange('logoURL', e.target.value)}
-              placeholder="https://ejemplo.com/logo.png"
+              id="website"
+              value={formData.website || ''}
+              onChange={(e) => handleInputChange('website', e.target.value)}
+              placeholder="https://www.negocio.com"
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="customDomain">Dominio Personalizado</label>
+            <label htmlFor="logo_file">Logo del Negocio</label>
+            <div className="logo-upload-container">
+              {logoPreview ? (
+                <div className="logo-preview">
+                  <img src={logoPreview} alt="Preview del logo" />
+                  <button 
+                    type="button" 
+                    className="remove-logo-btn"
+                    onClick={removeLogoFile}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <div className="logo-upload-area">
+                  <input
+                    type="file"
+                    id="logo_file"
+                    accept="image/*"
+                    onChange={handleLogoFileChange}
+                    className="logo-file-input"
+                  />
+                  <label htmlFor="logo_file" className="logo-upload-label">
+                    <div className="upload-icon">📷</div>
+                    <span>Haz clic para seleccionar una imagen</span>
+                    <small>JPG, PNG, GIF - Máximo 5MB</small>
+                  </label>
+                </div>
+              )}
+            </div>
+            {selectedLogoFile && (
+              <p className="file-info">
+                Archivo seleccionado: {selectedLogoFile.name} 
+                ({(selectedLogoFile.size / 1024 / 1024).toFixed(2)} MB)
+              </p>
+            )}
+          </div>
+
+          {/* Configuración de marca */}
+          <div className="form-group">
+            <label htmlFor="primary_color">Color Primario</label>
+            <input
+              type="color"
+              id="primary_color"
+              value={formData.primary_color || '#3b82f6'}
+              onChange={(e) => handleInputChange('primary_color', e.target.value)}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="secondary_color">Color Secundario</label>
+            <input
+              type="color"
+              id="secondary_color"
+              value={formData.secondary_color || '#8b5cf6'}
+              onChange={(e) => handleInputChange('secondary_color', e.target.value)}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="custom_domain">Dominio Personalizado</label>
             <input
               type="text"
-              id="customDomain"
-              value={formData.customDomain || ''}
-              onChange={(e) => handleInputChange('customDomain', e.target.value)}
+              id="custom_domain"
+              value={formData.custom_domain || ''}
+              onChange={(e) => handleInputChange('custom_domain', e.target.value)}
               placeholder="mi-negocio.com"
             />
           </div>
@@ -277,8 +443,8 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
             <label className="checkbox-label">
               <input
                 type="checkbox"
-                checked={formData.enableReservations || false}
-                onChange={(e) => handleInputChange('enableReservations', e.target.checked)}
+                checked={formData.enable_reservations || false}
+                onChange={(e) => handleInputChange('enable_reservations', e.target.checked)}
               />
               Habilitar Reservas
             </label>
@@ -288,8 +454,8 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
             <label className="checkbox-label">
               <input
                 type="checkbox"
-                checked={formData.enableDelivery || false}
-                onChange={(e) => handleInputChange('enableDelivery', e.target.checked)}
+                checked={formData.enable_delivery || false}
+                onChange={(e) => handleInputChange('enable_delivery', e.target.checked)}
               />
               Habilitar Delivery
             </label>
@@ -299,8 +465,8 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
             <label className="checkbox-label">
               <input
                 type="checkbox"
-                checked={formData.enablePickup || false}
-                onChange={(e) => handleInputChange('enablePickup', e.target.checked)}
+                checked={formData.enable_pickup || false}
+                onChange={(e) => handleInputChange('enable_pickup', e.target.checked)}
               />
               Habilitar Recogida
             </label>

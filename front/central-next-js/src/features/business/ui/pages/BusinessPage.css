@@ -120,6 +120,10 @@
   font-size: 0.875rem;
   color: #6b7280;
   font-family: monospace;
+  background-color: #f3f4f6;
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  display: inline-block;
 }
 
 .business-address {
@@ -253,6 +257,25 @@
 .empty-state-description {
   color: #6b7280;
   margin-bottom: 1.5rem;
+}
+
+.business-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.contact-info {
+  font-size: 0.875rem;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.contact-info:before {
+  font-size: 1rem;
 }
 
 /* Responsive */

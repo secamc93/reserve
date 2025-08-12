@@ -9,26 +9,26 @@ export class BusinessTypeService {
   }
 
   async getBusinessTypes(): Promise<BusinessType[]> {
-    const response = await this.httpClient.get('/business-types');
+    const response = await this.httpClient.get('/api/v1/business-types');
     return response.data;
   }
 
   async getBusinessTypeById(id: number): Promise<BusinessType> {
-    const response = await this.httpClient.get(`/business-types/${id}`);
+    const response = await this.httpClient.get(`/api/v1/business-types/${id}`);
     return response.data;
   }
 
   async createBusinessType(businessType: CreateBusinessTypeRequest): Promise<BusinessType> {
-    const response = await this.httpClient.post('/business-types', businessType);
+    const response = await this.httpClient.post('/api/v1/business-types', businessType);
     return response.data;
   }
 
   async updateBusinessType(id: number, businessType: UpdateBusinessTypeRequest): Promise<BusinessType> {
-    const response = await this.httpClient.put(`/business-types/${id}`, businessType);
+    const response = await this.httpClient.put(`/api/v1/business-types/${id}`, businessType);
     return response.data;
   }
 
   async deleteBusinessType(id: number): Promise<void> {
-    await this.httpClient.delete(`/business-types/${id}`);
+    await this.httpClient.delete(`/api/v1/business-types/${id}`);
   }
 } 

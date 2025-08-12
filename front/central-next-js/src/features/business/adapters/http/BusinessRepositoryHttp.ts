@@ -17,11 +17,11 @@ export class BusinessRepositoryHttp implements BusinessRepository {
     return this.businessService.getBusinessById(id);
   }
 
-  async createBusiness(business: CreateBusinessRequest): Promise<Business> {
+  async createBusiness(business: CreateBusinessRequest | FormData): Promise<Business> {
     return this.businessService.createBusiness(business);
   }
 
-  async updateBusiness(id: number, business: UpdateBusinessRequest): Promise<Business> {
+  async updateBusiness(id: number, business: UpdateBusinessRequest | FormData): Promise<Business> {
     return this.businessService.updateBusiness(id, business);
   }
 

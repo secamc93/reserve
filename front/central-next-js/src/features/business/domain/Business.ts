@@ -3,20 +3,24 @@ export interface Business {
   id: number;
   name: string;
   code: string;
-  businessTypeId: number;
-  timezone: string;
-  address: string;
   description: string;
-  logoURL: string;
-  primaryColor: string;
-  secondaryColor: string;
-  customDomain: string;
-  isActive: boolean;
-  enableDelivery: boolean;
-  enablePickup: boolean;
-  enableReservations: boolean;
-  createdAt: string;
-  updatedAt: string;
+  address: string;
+  phone: string;
+  email: string;
+  website: string;
+  logo_url: string;
+  timezone: string;
+  primary_color: string;
+  secondary_color: string;
+  custom_domain: string;
+  is_active: boolean;
+  business_type_id: number;
+  business_type: string;
+  enable_delivery: boolean;
+  enable_pickup: boolean;
+  enable_reservations: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface BusinessType {
@@ -33,34 +37,42 @@ export interface BusinessType {
 export interface CreateBusinessRequest {
   name: string;
   code: string;
-  businessTypeId: number;
-  timezone: string;
-  address: string;
   description: string;
-  logoURL?: string;
-  primaryColor?: string;
-  secondaryColor?: string;
-  customDomain?: string;
-  enableDelivery?: boolean;
-  enablePickup?: boolean;
-  enableReservations?: boolean;
+  address: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  logo_url?: string;
+  logo_file?: File;
+  timezone?: string;
+  primary_color?: string;
+  secondary_color?: string;
+  custom_domain?: string;
+  business_type_id: number;
+  enable_delivery?: boolean;
+  enable_pickup?: boolean;
+  enable_reservations?: boolean;
 }
 
 export interface UpdateBusinessRequest {
   name?: string;
   code?: string;
-  businessTypeId?: number;
-  timezone?: string;
-  address?: string;
   description?: string;
-  logoURL?: string;
-  primaryColor?: string;
-  secondaryColor?: string;
-  customDomain?: string;
-  isActive?: boolean;
-  enableDelivery?: boolean;
-  enablePickup?: boolean;
-  enableReservations?: boolean;
+  address?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  logo_url?: string;
+  logo_file?: File;
+  timezone?: string;
+  primary_color?: string;
+  secondary_color?: string;
+  custom_domain?: string;
+  business_type_id?: number;
+  is_active?: boolean;
+  enable_delivery?: boolean;
+  enable_pickup?: boolean;
+  enable_reservations?: boolean;
 }
 
 export interface CreateBusinessTypeRequest {

@@ -46,16 +46,22 @@ func (h *BusinessHandler) UpdateBusinessHandler(c *gin.Context) {
 		return
 	}
 
-	var updateRequest request.BusinessRequest
+	var updateRequest request.UpdateBusinessRequest
 
-	// Validar y parsear el request
+	// Validar y parsear el request (ShouldBind maneja tanto JSON como FormData)
 	if err := c.ShouldBind(&updateRequest); err != nil {
+		h.logger.Error().Err(err).Str("content_type", c.GetHeader("Content-Type")).Msg("Error al parsear request de actualización")
+
+		// Log adicional para debugging
+		body, _ := c.GetRawData()
+		h.logger.Error().Str("body", string(body)).Msg("Contenido del request")
+
 		c.JSON(http.StatusBadRequest, mapper.BuildErrorResponse("invalid_request", "Datos de entrada inválidos"))
 		return
 	}
 
 	// Ejecutar caso de uso
-	businessRequest := mapper.RequestToUpdateDTO(updateRequest)
+	businessRequest := mapper.UpdateRequestToUpdateDTO(updateRequest)
 	business, err := h.usecase.UpdateBusiness(c.Request.Context(), uint(id), businessRequest)
 	if err != nil {
 		if err.Error() == "negocio no encontrado" {

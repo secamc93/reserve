@@ -47,6 +47,26 @@ func RequestToUpdateDTO(req request.BusinessRequest) dtos.UpdateBusinessRequest 
 	}
 }
 
+// UpdateRequestToUpdateDTO convierte request.UpdateBusinessRequest a dtos.UpdateBusinessRequest
+func UpdateRequestToUpdateDTO(req request.UpdateBusinessRequest) dtos.UpdateBusinessRequest {
+	return dtos.UpdateBusinessRequest{
+		Name:               &req.Name,
+		Code:               &req.Code,
+		BusinessTypeID:     &req.BusinessTypeID,
+		Timezone:           &req.Timezone,
+		Address:            &req.Address,
+		Description:        &req.Description,
+		LogoFile:           req.LogoFile,
+		PrimaryColor:       &req.PrimaryColor,
+		SecondaryColor:     &req.SecondaryColor,
+		CustomDomain:       &req.CustomDomain,
+		IsActive:           &req.IsActive,
+		EnableDelivery:     &req.EnableDelivery,
+		EnablePickup:       &req.EnablePickup,
+		EnableReservations: &req.EnableReservations,
+	}
+}
+
 // BusinessToResponse convierte una entidad Business del dominio a BusinessResponse
 func BusinessToResponse(business entities.Business) response.BusinessResponse {
 	return response.BusinessResponse{

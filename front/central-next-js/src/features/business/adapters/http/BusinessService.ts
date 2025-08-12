@@ -9,26 +9,26 @@ export class BusinessService {
   }
 
   async getBusinesses(): Promise<Business[]> {
-    const response = await this.httpClient.get('/businesses');
+    const response = await this.httpClient.get('/api/v1/businesses');
     return response.data;
   }
 
   async getBusinessById(id: number): Promise<Business> {
-    const response = await this.httpClient.get(`/businesses/${id}`);
+    const response = await this.httpClient.get(`/api/v1/businesses/${id}`);
     return response.data;
   }
 
-  async createBusiness(business: CreateBusinessRequest): Promise<Business> {
-    const response = await this.httpClient.post('/businesses', business);
+  async createBusiness(business: CreateBusinessRequest | FormData): Promise<Business> {
+    const response = await this.httpClient.post('/api/v1/businesses', business);
     return response.data;
   }
 
-  async updateBusiness(id: number, business: UpdateBusinessRequest): Promise<Business> {
-    const response = await this.httpClient.put(`/businesses/${id}`, business);
+  async updateBusiness(id: number, business: UpdateBusinessRequest | FormData): Promise<Business> {
+    const response = await this.httpClient.put(`/api/v1/businesses/${id}`, business);
     return response.data;
   }
 
   async deleteBusiness(id: number): Promise<void> {
-    await this.httpClient.delete(`/businesses/${id}`);
+    await this.httpClient.delete(`/api/v1/businesses/${id}`);
   }
 }
