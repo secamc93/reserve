@@ -211,7 +211,6 @@ export default function TablesPage() {
           onClose={closeModals}
           onConfirm={handleDeleteTable}
           table={tableToDelete}
-          loading={loading}
         />
       </div>
     </Layout>
