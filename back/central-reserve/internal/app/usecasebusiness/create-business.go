@@ -39,7 +39,7 @@ func (uc *BusinessUseCase) CreateBusiness(ctx context.Context, request dtos.Busi
 	}
 
 	// Subir logo si viene archivo
-	logoURL := request.LogoURL
+	logoURL := ""
 	if request.LogoFile != nil {
 		uc.log.Info().Str("filename", request.LogoFile.Filename).Msg("Subiendo logo de negocio a S3")
 		path, err := uc.s3.UploadImage(ctx, request.LogoFile, "businessLogo")

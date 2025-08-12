@@ -12,8 +12,7 @@ type BusinessRequest struct {
 	Description    string `form:"description"`
 
 	// Configuración de marca blanca
-	LogoURL        string                `form:"logo_url"`
-	LogoFile       *multipart.FileHeader `form:"logoFile"`
+	LogoFile       *multipart.FileHeader `form:"logo_url"`
 	PrimaryColor   string                `form:"primary_color"`
 	SecondaryColor string                `form:"secondary_color"`
 	CustomDomain   string                `form:"custom_domain"`
