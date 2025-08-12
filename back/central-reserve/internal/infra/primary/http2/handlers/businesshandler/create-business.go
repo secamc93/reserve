@@ -1,8 +1,11 @@
 package businesshandler
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 
+	domainerrors "central_reserve/internal/domain/errors"
 	"central_reserve/internal/infra/primary/http2/handlers/businesshandler/mapper"
 	"central_reserve/internal/infra/primary/http2/handlers/businesshandler/request"
 
@@ -39,7 +42,7 @@ func (h *BusinessHandler) CreateBusinessHandler(c *gin.Context) {
 
 	// Validar y parsear el request
 	if err := c.ShouldBind(&createRequest); err != nil {
-		c.JSON(http.StatusBadRequest, mapper.BuildErrorResponse("invalid_request", "Datos de entrada inválidos"))
+		c.JSON(http.StatusBadRequest, mapper.BuildErrorResponse("invalid_request", fmt.Sprintf("Datos de entrada inválidos: %s", err.Error())))
 		return
 	}
 
@@ -53,9 +56,18 @@ func (h *BusinessHandler) CreateBusinessHandler(c *gin.Context) {
 	businessRequest := mapper.RequestToDTO(createRequest)
 	business, err := h.usecase.CreateBusiness(c.Request.Context(), businessRequest)
 	if err != nil {
-		h.logger.Error().Err(err).Msg("Error al crear negocio")
-		c.JSON(http.StatusInternalServerError, mapper.BuildErrorResponse("internal_error", "Error interno del servidor"))
-		return
+		switch {
+		case errors.Is(err, domainerrors.ErrBusinessCodeAlreadyExists):
+			c.JSON(http.StatusConflict, mapper.BuildErrorResponse("code_already_exists", "El código del negocio ya está en uso"))
+			return
+		case errors.Is(err, domainerrors.ErrBusinessDomainAlreadyExists):
+			c.JSON(http.StatusConflict, mapper.BuildErrorResponse("domain_already_exists", "El dominio personalizado ya está en uso"))
+			return
+		default:
+			h.logger.Error().Err(err).Msg("Error al crear negocio")
+			c.JSON(http.StatusInternalServerError, mapper.BuildErrorResponse("internal_error", "Error interno del servidor"))
+			return
+		}
 	}
 
 	// Construir respuesta exitosa usando el DTO retornado
