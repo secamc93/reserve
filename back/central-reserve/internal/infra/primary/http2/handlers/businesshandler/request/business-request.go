@@ -12,11 +12,14 @@ type BusinessRequest struct {
 	Description    string `form:"description"`
 
 	// Configuración de marca blanca
-	LogoFile       *multipart.FileHeader `form:"logo_url"`
-	PrimaryColor   string                `form:"primary_color"`
-	SecondaryColor string                `form:"secondary_color"`
-	CustomDomain   string                `form:"custom_domain"`
-	IsActive       bool                  `form:"is_active"`
+	LogoFile        *multipart.FileHeader `form:"logo_file"`
+	PrimaryColor    string                `form:"primary_color"`
+	SecondaryColor  string                `form:"secondary_color"`
+	TertiaryColor   string                `form:"tertiary_color"`
+	QuaternaryColor string                `form:"quaternary_color"`
+	NavbarImageFile *multipart.FileHeader `form:"navbar_image_file"`
+	CustomDomain    string                `form:"custom_domain"`
+	IsActive        bool                  `form:"is_active"`
 
 	// Configuración de funcionalidades
 	EnableDelivery     bool `form:"enable_delivery"`

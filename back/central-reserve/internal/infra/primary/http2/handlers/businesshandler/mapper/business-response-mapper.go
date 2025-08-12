@@ -19,6 +19,9 @@ func RequestToDTO(req request.BusinessRequest) dtos.BusinessRequest {
 		LogoFile:           req.LogoFile,
 		PrimaryColor:       req.PrimaryColor,
 		SecondaryColor:     req.SecondaryColor,
+		TertiaryColor:      req.TertiaryColor,
+		QuaternaryColor:    req.QuaternaryColor,
+		NavbarImageFile:    req.NavbarImageFile,
 		CustomDomain:       req.CustomDomain,
 		IsActive:           req.IsActive,
 		EnableDelivery:     req.EnableDelivery,
@@ -39,6 +42,9 @@ func RequestToUpdateDTO(req request.BusinessRequest) dtos.UpdateBusinessRequest 
 		LogoFile:           req.LogoFile,
 		PrimaryColor:       &req.PrimaryColor,
 		SecondaryColor:     &req.SecondaryColor,
+		TertiaryColor:      &req.TertiaryColor,
+		QuaternaryColor:    &req.QuaternaryColor,
+		NavbarImageFile:    req.NavbarImageFile,
 		CustomDomain:       &req.CustomDomain,
 		IsActive:           &req.IsActive,
 		EnableDelivery:     &req.EnableDelivery,
@@ -59,6 +65,9 @@ func UpdateRequestToUpdateDTO(req request.UpdateBusinessRequest) dtos.UpdateBusi
 		LogoFile:           req.LogoFile,
 		PrimaryColor:       &req.PrimaryColor,
 		SecondaryColor:     &req.SecondaryColor,
+		TertiaryColor:      &req.TertiaryColor,
+		QuaternaryColor:    &req.QuaternaryColor,
+		NavbarImageFile:    req.NavbarImageFile,
 		CustomDomain:       &req.CustomDomain,
 		IsActive:           &req.IsActive,
 		EnableDelivery:     &req.EnableDelivery,
@@ -70,38 +79,48 @@ func UpdateRequestToUpdateDTO(req request.UpdateBusinessRequest) dtos.UpdateBusi
 // BusinessToResponse convierte una entidad Business del dominio a BusinessResponse
 func BusinessToResponse(business entities.Business) response.BusinessResponse {
 	return response.BusinessResponse{
-		ID:             business.ID,
-		Name:           business.Name,
-		Description:    business.Description,
-		Address:        business.Address,
-		Phone:          "", // Campo no disponible en la entidad
-		Email:          "", // Campo no disponible en la entidad
-		Website:        "", // Campo no disponible en la entidad
-		LogoURL:        business.LogoURL,
-		IsActive:       business.DeletedAt == nil,
-		BusinessTypeID: business.BusinessTypeID,
-		BusinessType:   "", // Se llenará desde el handler
-		CreatedAt:      business.CreatedAt,
-		UpdatedAt:      business.UpdatedAt,
+		ID:              business.ID,
+		Name:            business.Name,
+		Description:     business.Description,
+		Address:         business.Address,
+		Phone:           "", // Campo no disponible en la entidad
+		Email:           "", // Campo no disponible en la entidad
+		Website:         "", // Campo no disponible en la entidad
+		LogoURL:         business.LogoURL,
+		PrimaryColor:    business.PrimaryColor,
+		SecondaryColor:  business.SecondaryColor,
+		TertiaryColor:   business.TertiaryColor,
+		QuaternaryColor: business.QuaternaryColor,
+		NavbarImageURL:  business.NavbarImageURL,
+		IsActive:        business.DeletedAt == nil,
+		BusinessTypeID:  business.BusinessTypeID,
+		BusinessType:    "", // Se llenará desde el handler
+		CreatedAt:       business.CreatedAt,
+		UpdatedAt:       business.UpdatedAt,
 	}
 }
 
 // BusinessDTOToResponse convierte un DTO BusinessResponse a response.BusinessResponse
 func BusinessDTOToResponse(businessDTO dtos.BusinessResponse) response.BusinessResponse {
 	return response.BusinessResponse{
-		ID:             businessDTO.ID,
-		Name:           businessDTO.Name,
-		Description:    businessDTO.Description,
-		Address:        businessDTO.Address,
-		Phone:          "", // Campo no disponible en el DTO
-		Email:          "", // Campo no disponible en el DTO
-		Website:        "", // Campo no disponible en el DTO
-		LogoURL:        businessDTO.LogoURL,
-		IsActive:       businessDTO.IsActive,
-		BusinessTypeID: businessDTO.BusinessType.ID,
-		BusinessType:   "", // Se llenará desde el handler
-		CreatedAt:      businessDTO.CreatedAt,
-		UpdatedAt:      businessDTO.UpdatedAt,
+		ID:              businessDTO.ID,
+		Name:            businessDTO.Name,
+		Description:     businessDTO.Description,
+		Address:         businessDTO.Address,
+		Phone:           "", // Campo no disponible en el DTO
+		Email:           "", // Campo no disponible en el DTO
+		Website:         "", // Campo no disponible en el DTO
+		LogoURL:         businessDTO.LogoURL,
+		PrimaryColor:    businessDTO.PrimaryColor,
+		SecondaryColor:  businessDTO.SecondaryColor,
+		TertiaryColor:   businessDTO.TertiaryColor,
+		QuaternaryColor: businessDTO.QuaternaryColor,
+		NavbarImageURL:  businessDTO.NavbarImageURL,
+		IsActive:        businessDTO.IsActive,
+		BusinessTypeID:  businessDTO.BusinessType.ID,
+		BusinessType:    "", // Se llenará desde el handler
+		CreatedAt:       businessDTO.CreatedAt,
+		UpdatedAt:       businessDTO.UpdatedAt,
 	}
 }
 
@@ -127,6 +146,9 @@ func BusinessDTOToDetailResponse(businessDTO dtos.BusinessResponse) response.Bus
 		LogoURL:            businessDTO.LogoURL,
 		PrimaryColor:       businessDTO.PrimaryColor,
 		SecondaryColor:     businessDTO.SecondaryColor,
+		TertiaryColor:      businessDTO.TertiaryColor,
+		QuaternaryColor:    businessDTO.QuaternaryColor,
+		NavbarImageURL:     businessDTO.NavbarImageURL,
 		CustomDomain:       businessDTO.CustomDomain,
 		IsActive:           businessDTO.IsActive,
 		EnableDelivery:     businessDTO.EnableDelivery,

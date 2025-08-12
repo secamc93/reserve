@@ -11,11 +11,14 @@ type UpdateBusinessRequest struct {
 	Address        string `form:"address" json:"address"`
 	Description    string `form:"description" json:"description"`
 
-	LogoFile       *multipart.FileHeader `form:"logo_file" json:"-"`
-	PrimaryColor   string                `form:"primary_color" json:"primary_color"`
-	SecondaryColor string                `form:"secondary_color" json:"secondary_color"`
-	CustomDomain   string                `form:"custom_domain" json:"custom_domain"`
-	IsActive       bool                  `form:"is_active" json:"is_active"`
+	LogoFile        *multipart.FileHeader `form:"logo_file" json:"-"`
+	PrimaryColor    string                `form:"primary_color" json:"primary_color"`
+	SecondaryColor  string                `form:"secondary_color" json:"secondary_color"`
+	TertiaryColor   string                `form:"tertiary_color" json:"tertiary_color"`
+	QuaternaryColor string                `form:"quaternary_color" json:"quaternary_color"`
+	NavbarImageFile *multipart.FileHeader `form:"navbar_image_file" json:"-"`
+	CustomDomain    string                `form:"custom_domain" json:"custom_domain"`
+	IsActive        bool                  `form:"is_active" json:"is_active"`
 
 	EnableDelivery     bool `form:"enable_delivery" json:"enable_delivery"`
 	EnablePickup       bool `form:"enable_pickup" json:"enable_pickup"`

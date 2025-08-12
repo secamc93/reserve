@@ -27,6 +27,9 @@ html { color-scheme: light; }
   /* Colores de tema dinámicos (se actualizan tras login) */
   --primary-color: #3b82f6;   /* azul por defecto */
   --secondary-color: #8b5cf6; /* púrpura por defecto */
+  --tertiary-color: #10b981;  /* verde por defecto */
+  --quaternary-color: #fbbf24; /* amarillo por defecto */
+  --navbar-image: none;
 }
 
 @theme inline {

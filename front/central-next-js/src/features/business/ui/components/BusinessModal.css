@@ -1,4 +1,4 @@
-@import url('@/features/users/ui/components/CreateUserModal.css');
+@import url("@/features/users/ui/components/CreateUserModal.css");
 
 /* Estilos específicos para BusinessModal */
 .modal-form {
@@ -44,6 +44,16 @@ input[type="color"] {
   cursor: pointer;
 }
 
+.palette-options {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.palette-option {
+  border-radius: 0.25rem;
+}
+
 /* Textarea */
 textarea {
   width: 100%;
@@ -82,18 +92,20 @@ select:focus {
   .form-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .form-group-full {
     grid-column: span 1;
   }
-} 
+}
 
 /* Estilos para el campo de logo */
-.logo-upload-container {
+.logo-upload-container,
+.navbar-upload-container {
   width: 100%;
 }
 
-.logo-preview {
+.logo-preview,
+.navbar-preview {
   position: relative;
   display: inline-block;
   border-radius: 8px;
@@ -101,14 +113,16 @@ select:focus {
   border: 2px solid #e5e7eb;
 }
 
-.logo-preview img {
+.logo-preview img,
+.navbar-preview img {
   width: 120px;
   height: 120px;
   object-fit: cover;
   display: block;
 }
 
-.remove-logo-btn {
+.remove-logo-btn,
+.remove-navbar-btn {
   position: absolute;
   top: 8px;
   right: 8px;
@@ -126,17 +140,20 @@ select:focus {
   transition: all 0.2s ease;
 }
 
-.remove-logo-btn:hover {
+.remove-logo-btn:hover,
+.remove-navbar-btn:hover {
   background: rgba(239, 68, 68, 1);
   transform: scale(1.1);
 }
 
-.logo-upload-area {
+.logo-upload-area,
+.navbar-upload-area {
   position: relative;
   width: 100%;
 }
 
-.logo-file-input {
+.logo-file-input,
+.navbar-file-input {
   position: absolute;
   opacity: 0;
   width: 100%;
@@ -144,7 +161,8 @@ select:focus {
   cursor: pointer;
 }
 
-.logo-upload-label {
+.logo-upload-label,
+.navbar-upload-label {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -158,7 +176,8 @@ select:focus {
   min-height: 120px;
 }
 
-.logo-upload-label:hover {
+.logo-upload-label:hover,
+.navbar-upload-label:hover {
   border-color: #3b82f6;
   background-color: #eff6ff;
 }
@@ -185,7 +204,7 @@ select:focus {
   font-size: 0.875rem;
   color: #6b7280;
   font-style: italic;
-} 
+}
 
 /* Estilos para el estado de loading */
 .loading-state {
@@ -206,4 +225,4 @@ select:focus {
   to {
     transform: rotate(360deg);
   }
-} 
+}

@@ -12,6 +12,9 @@ export interface Business {
   timezone: string;
   primary_color: string;
   secondary_color: string;
+  tertiary_color: string;
+  quaternary_color: string;
+  navbar_image_url: string;
   custom_domain: string;
   is_active: boolean;
   business_type_id: number;
@@ -47,6 +50,9 @@ export interface CreateBusinessRequest {
   timezone?: string;
   primary_color?: string;
   secondary_color?: string;
+  tertiary_color?: string;
+  quaternary_color?: string;
+  navbar_image_file?: File;
   custom_domain?: string;
   business_type_id: number;
   enable_delivery?: boolean;
@@ -67,6 +73,9 @@ export interface UpdateBusinessRequest {
   timezone?: string;
   primary_color?: string;
   secondary_color?: string;
+  tertiary_color?: string;
+  quaternary_color?: string;
+  navbar_image_file?: File;
   custom_domain?: string;
   business_type_id?: number;
   is_active?: boolean;

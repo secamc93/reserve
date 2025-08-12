@@ -52,6 +52,15 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       if (business.secondaryColor) {
         root.style.setProperty('--secondary-color', business.secondaryColor);
       }
+      if (business.tertiaryColor) {
+        root.style.setProperty('--tertiary-color', business.tertiaryColor);
+      }
+      if (business.quaternaryColor) {
+        root.style.setProperty('--quaternary-color', business.quaternaryColor);
+      }
+      if (business.navbarImageURL) {
+        root.style.setProperty('--navbar-image', `url(${business.navbarImageURL})`);
+      }
     }
   }, []);
 
@@ -63,14 +72,29 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     const root = document.documentElement;
     const currentPrimary = getComputedStyle(root).getPropertyValue('--primary-color').trim();
     const currentSecondary = getComputedStyle(root).getPropertyValue('--secondary-color').trim();
+    const currentTertiary = getComputedStyle(root).getPropertyValue('--tertiary-color').trim();
+    const currentQuaternary = getComputedStyle(root).getPropertyValue('--quaternary-color').trim();
+    const currentNavbarImage = getComputedStyle(root).getPropertyValue('--navbar-image').trim();
     const targetPrimary = business.primaryColor || '';
     const targetSecondary = business.secondaryColor || '';
+    const targetTertiary = business.tertiaryColor || '';
+    const targetQuaternary = business.quaternaryColor || '';
+    const targetNavbarImage = business.navbarImageURL ? `url(${business.navbarImageURL})` : '';
     // Si no coincide con el negocio, reestablecer
     if (targetPrimary && currentPrimary !== targetPrimary) {
       root.style.setProperty('--primary-color', targetPrimary);
     }
     if (targetSecondary && currentSecondary !== targetSecondary) {
       root.style.setProperty('--secondary-color', targetSecondary);
+    }
+    if (targetTertiary && currentTertiary !== targetTertiary) {
+      root.style.setProperty('--tertiary-color', targetTertiary);
+    }
+    if (targetQuaternary && currentQuaternary !== targetQuaternary) {
+      root.style.setProperty('--quaternary-color', targetQuaternary);
+    }
+    if (targetNavbarImage && currentNavbarImage !== targetNavbarImage) {
+      root.style.setProperty('--navbar-image', targetNavbarImage);
     }
   }, []);
 

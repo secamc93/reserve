@@ -27,6 +27,13 @@ func (uc *BusinessUseCase) GetBusinesses(ctx context.Context) ([]dtos.BusinessRe
 				fullLogoURL = fmt.Sprintf("%s/%s", base, strings.TrimLeft(fullLogoURL, "/"))
 			}
 		}
+		fullNavbarImageURL := business.NavbarImageURL
+		if fullNavbarImageURL != "" && !strings.HasPrefix(fullNavbarImageURL, "http") {
+			base := strings.TrimRight(uc.env.Get("URL_BASE_DOMAIN_S3"), "/")
+			if base != "" {
+				fullNavbarImageURL = fmt.Sprintf("%s/%s", base, strings.TrimLeft(fullNavbarImageURL, "/"))
+			}
+		}
 
 		response[i] = dtos.BusinessResponse{
 			ID:   business.ID,
@@ -41,6 +48,9 @@ func (uc *BusinessUseCase) GetBusinesses(ctx context.Context) ([]dtos.BusinessRe
 			LogoURL:            fullLogoURL,
 			PrimaryColor:       business.PrimaryColor,
 			SecondaryColor:     business.SecondaryColor,
+			TertiaryColor:      business.TertiaryColor,
+			QuaternaryColor:    business.QuaternaryColor,
+			NavbarImageURL:     fullNavbarImageURL,
 			CustomDomain:       business.CustomDomain,
 			IsActive:           business.IsActive,
 			EnableDelivery:     business.EnableDelivery,
