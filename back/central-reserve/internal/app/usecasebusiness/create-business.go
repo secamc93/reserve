@@ -3,6 +3,7 @@ package usecasebusiness
 import (
 	"central_reserve/internal/domain/dtos"
 	"central_reserve/internal/domain/entities"
+	domainerrors "central_reserve/internal/domain/errors"
 	"context"
 	"fmt"
 	"strings"
@@ -21,7 +22,7 @@ func (uc *BusinessUseCase) CreateBusiness(ctx context.Context, request dtos.Busi
 
 	if existing != nil {
 		uc.log.Warn().Str("code", request.Code).Msg("Código de negocio ya existe")
-		return nil, fmt.Errorf("el código '%s' ya existe", request.Code)
+		return nil, domainerrors.ErrBusinessCodeAlreadyExists
 	}
 
 	// Validar que el dominio personalizado no exista si se proporciona
@@ -34,7 +35,7 @@ func (uc *BusinessUseCase) CreateBusiness(ctx context.Context, request dtos.Busi
 
 		if domainExists != nil {
 			uc.log.Warn().Str("domain", request.CustomDomain).Msg("Dominio personalizado ya existe")
-			return nil, fmt.Errorf("el dominio '%s' ya existe", request.CustomDomain)
+			return nil, domainerrors.ErrBusinessDomainAlreadyExists
 		}
 	}
 
