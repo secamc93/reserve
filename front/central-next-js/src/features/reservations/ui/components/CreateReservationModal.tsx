@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { CreateReservationData } from '@/features/reservations/domain/Reservation';
+import ModalBase from '@/shared/ui/components/ModalBase/ModalBase';
+import ErrorMessage from '@/shared/ui/components/ErrorMessage/ErrorMessage';
 import './CreateReservationModal.css';
 
 interface CreateReservationModalProps {
@@ -32,6 +34,7 @@ const CreateReservationModal: React.FC<CreateReservationModalProps> = ({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [apiError, setApiError] = useState<string | null>(null);
 
   useEffect(() => {
     if (initialDate) {
@@ -114,25 +117,29 @@ const CreateReservationModal: React.FC<CreateReservationModalProps> = ({
       return;
     }
 
+    setApiError(null);
     try {
-      const result = await onSubmit(formData);
-      if (result.success) {
-        onClose();
-        // Reset form
-        setFormData({
-          cliente_nombre: '',
-          cliente_email: '',
-          cliente_telefono: '',
-          cliente_dni: '',
-          start_at: '',
-          end_at: '',
-          number_of_guests: 1,
-          mesa_id: 1,
-          restaurante_id: 1
-        });
-        setErrors({});
-      }
-    } catch (error) {
+      await onSubmit(formData);
+      onClose();
+      // Reset form
+      setFormData({
+        cliente_nombre: '',
+        cliente_email: '',
+        cliente_telefono: '',
+        cliente_dni: '',
+        start_at: '',
+        end_at: '',
+        number_of_guests: 1,
+        mesa_id: 1,
+        restaurante_id: 1,
+      });
+      setErrors({});
+    } catch (error: any) {
+      const msg =
+        error?.response?.data?.message ||
+        error?.message ||
+        'Ocurrió un error al crear la reserva';
+      setApiError(msg);
       console.error('Error al crear reserva:', error);
     }
   };
@@ -140,15 +147,42 @@ const CreateReservationModal: React.FC<CreateReservationModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-container">
-        <div className="modal-header">
-          <h2>📅 Crear Nueva Reserva</h2>
-          <button className="close-btn" onClick={onClose}>✕</button>
-        </div>
+    <ModalBase
+      isOpen={isOpen}
+      onClose={onClose}
+      title="📅 Crear Nueva Reserva"
+      actions={
+        <>
+          <button
+            type="button"
+            className="btn-cancel"
+            onClick={onClose}
+            disabled={loading}
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            form="reservation-form"
+            className="btn-submit"
+            disabled={loading}
+          >
+            {loading ? 'Creando...' : 'Crear Reserva'}
+          </button>
+        </>
+      }
+    >
+      {apiError && (
+        <ErrorMessage
+          message={apiError}
+          dismissible
+          onDismiss={() => setApiError(null)}
+          className="mb-4"
+        />
+      )}
 
-        <form onSubmit={handleSubmit} className="modal-form">
-          <div className="form-section">
+      <form id="reservation-form" onSubmit={handleSubmit} className="modal-form">
+        <div className="form-section">
             <h3>👤 Información del Cliente</h3>
             
             <div className="form-group">
@@ -270,27 +304,8 @@ const CreateReservationModal: React.FC<CreateReservationModalProps> = ({
               </div>
             </div>
           </div>
-
-          <div className="modal-actions">
-            <button
-              type="button"
-              className="btn-cancel"
-              onClick={onClose}
-              disabled={loading}
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="btn-submit"
-              disabled={loading}
-            >
-              {loading ? 'Creando...' : 'Crear Reserva'}
-            </button>
-          </div>
         </form>
-      </div>
-    </div>
+      </ModalBase>
   );
 };
 

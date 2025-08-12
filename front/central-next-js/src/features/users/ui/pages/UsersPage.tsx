@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import CreateUserModal from '../components/CreateUserModal';
-import EditUserModal from '../components/EditUserModal';
+import React, { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
+const CreateUserModal = lazy(() => import('../components/CreateUserModal'));
+const EditUserModal = lazy(() => import('../components/EditUserModal'));
 import LoadingSpinner from '@/shared/ui/components/LoadingSpinner';
+import DataTable, { DataTableColumn, DataTableRowAction } from '@/shared/ui/components/DataTable/DataTable';
+import ErrorMessage from '@/shared/ui/components/ErrorMessage/ErrorMessage';
 import { CreateUserDTO, UpdateUserDTO, UserFilters, User } from '@/features/users/domain/User';
 import { useUsers } from '../hooks/useUsers';
 import { useAppContext } from '@/shared/contexts/AppContext';
@@ -40,31 +42,19 @@ export default function UsersPage() {
 
   // Memoizar handlers para evitar re-creaciones
   const handleFilterChange = useCallback((field: keyof UserFilters, value: any) => {
-    const newFilters = { ...filters, [field]: value, page: 1 };
-    setFilters(newFilters);
-    // Solo cargar si ya están inicializados los datos
-    if (isInitialized) {
-      loadUsers(newFilters);
-    }
-  }, [filters, loadUsers, isInitialized]);
+    setFilters(prev => ({ ...prev, [field]: value, page: 1 }));
+  }, []);
 
   const handlePageChange = useCallback((newPage: number) => {
-    const newFilters = { ...filters, page: newPage };
-    setFilters(newFilters);
-    if (isInitialized) {
-      loadUsers(newFilters);
-    }
-  }, [filters, loadUsers, isInitialized]);
+    setFilters(prev => ({ ...prev, page: newPage }));
+  }, []);
 
   const handleDeleteUser = useCallback(async (id: number, name: string) => {
-    console.log('🗑️ Deleting user:', { id, name });
-
     if (window.confirm(`¿Eliminar usuario "${name}" (ID: ${id})?`)) {
       try {
         await deleteUser(id);
         alert(`✅ Usuario "${name}" eliminado exitosamente!`);
       } catch (error: any) {
-        console.error('❌ Error deleting:', error);
         alert(`❌ Error eliminando usuario: ${error.message}`);
       }
     }
@@ -105,54 +95,172 @@ export default function UsersPage() {
     if (isInitialized) {
       loadUsers(filters);
     }
-  }, [isInitialized, filters.page, filters.pageSize]); // Solo recargar cuando cambien page o pageSize
+  }, [isInitialized, filters, loadUsers]);
 
-  // Debug: Ver qué datos están llegando
-  useEffect(() => {
-    console.log('🔍 UsersPage Debug - Usuarios cargados:', users);
-    if (users.length > 0) {
-      console.log('🔍 UsersPage Debug - Primer usuario:', {
-        id: users[0].id,
-        name: users[0].name,
-        isActive: users[0].isActive,
-        avatarURL: users[0].avatarURL,
-        businesses: users[0].businesses?.map(b => ({ id: b.id, name: b.name, logoURL: b.logoURL }))
-      });
-    }
-  }, [users]);
-
-  // Debug específico para avatares
-  useEffect(() => {
-    users.forEach(user => {
-      if (user.avatarURL) {
-        console.log('🔍 Avatar Debug - Usuario:', user.name, 'Avatar URL:', user.avatarURL);
-      } else {
-        console.log('⚠️ Avatar Debug - Usuario:', user.name, 'NO tiene avatarURL');
-      }
-    });
-  }, [users]);
-
-  // Memoizar componentes para evitar re-renderizados
+  // Memoizar componentes para evitar re-renderizados y cargarlos bajo demanda
   const createUserModal = useMemo(() => (
-    <CreateUserModal
-      isOpen={showCreateModal}
-      onClose={() => setShowCreateModal(false)}
-      onSubmit={handleCreateUser}
-      roles={roles}
-      businesses={businesses}
-    />
+    showCreateModal ? (
+      <Suspense fallback={null}>
+        <CreateUserModal
+          isOpen
+          onClose={() => setShowCreateModal(false)}
+          onSubmit={handleCreateUser}
+          roles={roles}
+          businesses={businesses}
+        />
+      </Suspense>
+    ) : null
   ), [showCreateModal, handleCreateUser, roles, businesses]);
 
   const editUserModal = useMemo(() => (
-    <EditUserModal
-      isOpen={showEditModal}
-      onClose={handleCloseEditModal}
-      onSubmit={handleEditUser}
-      user={selectedUser}
-      roles={roles}
-      businesses={businesses}
-    />
+    showEditModal ? (
+      <Suspense fallback={null}>
+        <EditUserModal
+          isOpen
+          onClose={handleCloseEditModal}
+          onSubmit={handleEditUser}
+          user={selectedUser}
+          roles={roles}
+          businesses={businesses}
+        />
+      </Suspense>
+    ) : null
   ), [showEditModal, handleCloseEditModal, handleEditUser, selectedUser, roles, businesses]);
+
+  const columns: Array<DataTableColumn<User>> = useMemo(() => [
+    { key: 'id', header: 'ID' },
+    {
+      key: 'avatar',
+      header: 'Avatar',
+      render: (user) => (
+        <div className="user-avatar-cell">
+          {user.avatarURL && user.avatarURL.trim() !== '' ? (
+            <img
+              src={user.avatarURL}
+              alt={user.name}
+              className="user-avatar-cell-img"
+              style={{ width: 50, height: 50, borderRadius: '50%', objectFit: 'cover' }}
+            />
+          ) : (
+            <span className="user-avatar-cell-placeholder">
+              {user.name.charAt(0).toUpperCase()}
+            </span>
+          )}
+        </div>
+      )
+    },
+    {
+      key: 'name',
+      header: 'Usuario',
+      render: (user) => (
+        <div className="user-info">
+          <div className="user-details">
+            <span className="user-name">{user.name}</span>
+            <small className="user-dates">
+              Creado: {new Date(user.createdAt).toLocaleDateString('es-ES')}
+            </small>
+          </div>
+        </div>
+      )
+    },
+    { key: 'email', header: 'Email' },
+    {
+      key: 'phone',
+      header: 'Teléfono',
+      render: (u) => u.phone || '-'
+    },
+    {
+      key: 'roles',
+      header: 'Roles',
+      render: (u) => (
+        <div className="tags-container">
+          {u.roles.map((role) => (
+            <span key={role.id} className="tag role-tag" title={role.description}>
+              {role.name}
+            </span>
+          ))}
+        </div>
+      )
+    },
+    {
+      key: 'businesses',
+      header: 'Negocios',
+      render: (u) => (
+        <div className="tags-container">
+          {u.businesses.map((b) => (
+            <div key={b.id} className="business-info">
+              <div className="business-logo-cell">
+                {b.logoURL && b.logoURL.trim() !== '' ? (
+                  <img
+                    src={`https://media.xn--rup-joa.com/${b.logoURL}`}
+                    alt={b.name}
+                    className="business-logo-cell-img"
+                  />
+                ) : (
+                  <span className="business-logo-cell-placeholder">
+                    {b.name.charAt(0).toUpperCase()}
+                  </span>
+                )}
+              </div>
+              <span className="business-name">{b.name}</span>
+            </div>
+          ))}
+        </div>
+      )
+    },
+    {
+      key: 'isActive',
+      header: 'Estado',
+      render: (u) => (
+        <span className={`status-badge ${u.isActive ? 'active' : 'inactive'}`}>
+          {u.isActive ? 'Activo' : 'Inactivo'}
+        </span>
+      )
+    },
+    {
+      key: 'lastLoginAt',
+      header: 'Último Login',
+      render: (u) =>
+        u.lastLoginAt ? (
+          <span className="last-login">
+            {new Date(u.lastLoginAt).toLocaleDateString('es-ES', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </span>
+        ) : (
+          <span className="no-login">Nunca</span>
+        )
+    }
+  ], []);
+
+  const actions: Array<DataTableRowAction<User>> = useMemo(() => [
+    {
+      label: 'Editar',
+      title: 'Editar usuario',
+      onClick: handleOpenEditModal,
+      className: 'text-blue-600',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+      )
+    },
+    {
+      label: 'Eliminar',
+      title: 'Eliminar usuario',
+      onClick: (u) => handleDeleteUser(u.id, u.name),
+      className: 'text-red-600',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+      )
+    }
+  ], [handleOpenEditModal, handleDeleteUser]);
 
   // Mostrar loading optimizado
   if (!isInitialized) {
@@ -187,13 +295,14 @@ export default function UsersPage() {
     return (
       <Layout>
         <div className="users-page">
-          <div className="error-container">
-            <h2>❌ Error</h2>
-            <p>{error}</p>
-            <button onClick={() => loadUsers(filters)} className="btn btn-primary">
-              Reintentar
-            </button>
-          </div>
+          <ErrorMessage
+            message={error}
+            title="Error al cargar usuarios"
+            variant="error"
+            dismissible
+            onDismiss={() => loadUsers(filters)}
+            className="mb-4"
+          />
         </div>
       </Layout>
     );
@@ -253,129 +362,13 @@ export default function UsersPage() {
         </div>
 
         {/* Users Table */}
-        <div className="table-container">
-          <table className="users-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Avatar</th>
-                <th>Usuario</th>    
-                <th>Email</th>
-                <th>Teléfono</th>
-                <th>Roles</th>
-                <th>Negocios</th>
-                <th>Estado</th>
-                <th>Último Login</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                                <tr key={user.id}>
-                  <td>{user.id}</td>
-                  <td>
-                    <div className="user-avatar-cell">
-                      {user.avatarURL && user.avatarURL.trim() !== '' ? (
-                        <img 
-                          src={user.avatarURL} 
-                          alt={user.name}
-                          className="user-avatar-cell-img"
-                          style={{ width: 50, height: 50, borderRadius: '50%', display: 'block', objectFit: 'cover' }}
-                        />
-                      ) : (
-                        <span className="user-avatar-cell-placeholder">
-                          {user.name.charAt(0).toUpperCase()}
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td>
-                    <div className="user-info">
-                      <div className="user-details">
-                        <span className="user-name">{user.name}</span>
-                        <small className="user-dates">
-                          Creado: {new Date(user.createdAt).toLocaleDateString('es-ES')}
-                        </small>
-                      </div>
-                    </div>
-                  </td>
-                  <td>{user.email}</td>
-                  <td>{user.phone || '-'}</td>
-                  <td>
-                    <div className="tags-container">
-                      {user.roles.map((role) => (
-                        <span key={role.id} className="tag role-tag" title={role.description}>
-                          {role.name}
-                        </span>
-                      ))}
-                    </div>
-                  </td>
-                  <td>
-                    <div className="tags-container">
-                      {user.businesses.map((business) => (
-                        <div key={business.id} className="business-info">
-                          <div className="business-logo-cell">
-                            {business.logoURL && business.logoURL.trim() !== '' ? (
-                              <img 
-                                src={`https://media.xn--rup-joa.com/${business.logoURL}`} 
-                                alt={business.name}
-                                className="business-logo-cell-img"
-                              />
-                            ) : (
-                              <span className="business-logo-cell-placeholder">
-                                {business.name.charAt(0).toUpperCase()}
-                              </span>
-                            )}
-                          </div>
-                          <span className="business-name">{business.name}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </td>
-                  <td>
-                    <span className={`status-badge ${user.isActive ? 'active' : 'inactive'}`}>
-                      {user.isActive ? 'Activo' : 'Inactivo'}
-                    </span>
-                  </td>
-                  <td>
-                    {user.lastLoginAt ? (
-                      <span className="last-login">
-                        {new Date(user.lastLoginAt).toLocaleDateString('es-ES', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </span>
-                    ) : (
-                      <span className="no-login">Nunca</span>
-                    )}
-                  </td>
-                  <td>
-                    <div className="actions">
-                      <button
-                        className="btn btn-small btn-secondary"
-                        onClick={() => handleOpenEditModal(user)}
-                        title="Editar"
-                      >
-                        ✏️
-                      </button>
-                      <button
-                        className="btn btn-small btn-danger"
-                        onClick={() => handleDeleteUser(user.id, user.name)}
-                        title="Eliminar"
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {users.length === 0 && !loading && (
+        <DataTable<User>
+          data={users}
+          columns={columns}
+          rowKey={(u) => u.id}
+          loading={loading}
+          actions={actions}
+          emptyState={
             <div className="empty-state">
               <p>No se encontraron usuarios</p>
               <button
@@ -385,8 +378,8 @@ export default function UsersPage() {
                 Crear primer usuario
               </button>
             </div>
-          )}
-        </div>
+          }
+        />
 
         {/* Pagination */}
         {pagination.totalPages > 1 && (

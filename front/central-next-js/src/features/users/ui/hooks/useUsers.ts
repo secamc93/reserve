@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo, useRef } from 'react';
 import { UserRepositoryHttp } from '@/features/users/adapters/http/UserRepositoryHttp';
 import { GetUsersUseCase } from '@/features/users/application/GetUsersUseCase';
 import { CreateUserUseCase } from '@/features/users/application/CreateUserUseCase';
-import { User, CreateUserDTO, UserFilters, UserListDTO, Role, Business } from '@/features/users/domain/User';
+import { User, CreateUserDTO, UserFilters, Role, Business } from '@/features/users/domain/User';
 
 export const useUsers = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -15,6 +15,9 @@ export const useUsers = () => {
     totalPages: 1
   });
 
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [businesses, setBusinesses] = useState<Business[]>([]);
+
   // Ref para evitar múltiples cargas simultáneas
   const loadingRef = useRef(false);
 
@@ -23,30 +26,6 @@ export const useUsers = () => {
   const getUsersUseCase = useMemo(() => new GetUsersUseCase(userRepository), [userRepository]);
   const createUserUseCase = useMemo(() => new CreateUserUseCase(userRepository), [userRepository]);
 
-  // Extraer roles y businesses únicos de los usuarios cargados
-  const roles = useMemo(() => {
-    const uniqueRoles = new Map<number, Role>();
-    users.forEach(user => {
-      user.roles?.forEach(role => {
-        if (!uniqueRoles.has(role.id)) {
-          uniqueRoles.set(role.id, role);
-        }
-      });
-    });
-    return Array.from(uniqueRoles.values());
-  }, [users]);
-
-  const businesses = useMemo(() => {
-    const uniqueBusinesses = new Map<number, Business>();
-    users.forEach(user => {
-      user.businesses?.forEach(business => {
-        if (!uniqueBusinesses.has(business.id)) {
-          uniqueBusinesses.set(business.id, business);
-        }
-      });
-    });
-    return Array.from(uniqueBusinesses.values());
-  }, [users]);
 
   const loadUsers = useCallback(async (filters: UserFilters = {}) => {
     if (loadingRef.current) return;
@@ -56,14 +35,28 @@ export const useUsers = () => {
     loadingRef.current = true;
     
     try {
-      console.log('🔍 useUsers: Loading users with filters:', filters);
       const result = await getUsersUseCase.execute(filters);
-      console.log('🔍 useUsers: Users loaded successfully:', result);
-      
-      // Los usuarios ya vienen mapeados correctamente del UserService
-      // No necesitamos mapear de nuevo
-      setUsers(result.users || []);
-      
+
+      const loadedUsers = result.users || [];
+      setUsers(loadedUsers);
+
+      const uniqueRoles = new Map<number, Role>();
+      const uniqueBusinesses = new Map<number, Business>();
+      loadedUsers.forEach(user => {
+        user.roles?.forEach(role => {
+          if (!uniqueRoles.has(role.id)) {
+            uniqueRoles.set(role.id, role);
+          }
+        });
+        user.businesses?.forEach(business => {
+          if (!uniqueBusinesses.has(business.id)) {
+            uniqueBusinesses.set(business.id, business);
+          }
+        });
+      });
+      setRoles(Array.from(uniqueRoles.values()));
+      setBusinesses(Array.from(uniqueBusinesses.values()));
+
       setPagination({
         page: result.page || 1,
         pageSize: result.pageSize || 10,
@@ -72,9 +65,10 @@ export const useUsers = () => {
       });
       setError(null);
     } catch (err: any) {
-      console.error('🔍 useUsers: Error loading users:', err);
       setError(err.message || 'Error loading users');
       setUsers([]);
+      setRoles([]);
+      setBusinesses([]);
       setPagination({
         page: 1,
         pageSize: 10,
@@ -133,7 +127,6 @@ export const useUsers = () => {
         setUsers(prevUsers => [newUser, ...prevUsers]);
         setPagination(prev => ({ ...prev, total: prev.total + 1 }));
 
-        console.log('🚀 User added with ID:', result.userId);
       }
 
       return result;
@@ -172,14 +165,12 @@ export const useUsers = () => {
   const deleteUser = useCallback(async (id: number) => {
     if (loadingRef.current) return;
     
-    console.log('🗑️ useUsers: Starting user deletion ID:', id);
     setLoading(true);
     setError(null);
     loadingRef.current = true;
 
     try {
       const result = await userRepository.deleteUser(id);
-      console.log('✅ useUsers: User deleted:', result);
 
       // Reload user list with current filters
       const currentFilters: UserFilters = {
@@ -191,7 +182,6 @@ export const useUsers = () => {
 
       return result;
     } catch (err: any) {
-      console.error('❌ useUsers: Error deleting user:', err);
       setError(err.message);
       throw err;
     } finally {
