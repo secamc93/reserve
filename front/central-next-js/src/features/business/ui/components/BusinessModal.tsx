@@ -23,6 +23,21 @@ interface BusinessModalProps {
   loadingBusiness?: boolean;
 }
 
+const presetPalettes: string[][] = [
+  ["#1f2937", "#3b82f6", "#10b981", "#fbbf24"],
+  ["#0f172a", "#be185d", "#06b6d4", "#f59e0b"],
+  ["#2e1065", "#9333ea", "#3b82f6", "#fde047"],
+  ["#1e3a8a", "#9333ea", "#14b8a6", "#f97316"],
+  ["#164e63", "#3b82f6", "#84cc16", "#fbbf24"],
+  ["#4b5563", "#6366f1", "#10b981", "#f59e0b"],
+  ["#111827", "#4f46e5", "#14b8a6", "#eab308"],
+  ["#422006", "#f97316", "#fbbf24", "#84cc16"],
+  ["#312e81", "#8b5cf6", "#f472b6", "#fb923c"],
+  ["#3f3f46", "#2563eb", "#0891b2", "#65a30d"],
+  ["#031633", "#0d6efd", "#6f42c1", "#d63384"],
+  ["#003049", "#d62828", "#f77f00", "#fcbf49"],
+];
+
 const BusinessModal: React.FC<BusinessModalProps> = ({
   isOpen,
   onClose,
@@ -66,20 +81,13 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
   const [apiError, setApiError] = useState<string | null>(null);
 
   const colorPalettes = useMemo(
-    () => [
-      {
-        primary: "#1f2937",
-        secondary: "#3b82f6",
-        tertiary: "#10b981",
-        quaternary: "#fbbf24",
-      },
-      {
-        primary: "#0f172a",
-        secondary: "#be185d",
-        tertiary: "#06b6d4",
-        quaternary: "#f59e0b",
-      },
-    ],
+    () =>
+      presetPalettes.map((p) => ({
+        primary: p[0],
+        secondary: p[1],
+        tertiary: p[2],
+        quaternary: p[3],
+      })),
     [],
   );
 
@@ -538,22 +546,20 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
                 key={idx}
                 type="button"
                 className="palette-option"
-                style={{
-                  background: p.primary,
-                  marginRight: "4px",
-                  width: "24px",
-                  height: "24px",
-                  border: "none",
-                  cursor: "pointer",
-                }}
-                title={`Palette ${idx + 1}`}
+                title={`Paleta ${idx + 1}`}
                 onClick={() => {
                   handleInputChange("primary_color", p.primary);
                   handleInputChange("secondary_color", p.secondary);
                   handleInputChange("tertiary_color", p.tertiary);
                   handleInputChange("quaternary_color", p.quaternary);
                 }}
-              />
+              >
+                {[p.primary, p.secondary, p.tertiary, p.quaternary].map(
+                  (c, i) => (
+                    <span key={i} style={{ background: c }} />
+                  ),
+                )}
+              </button>
             ))}
           </div>
 

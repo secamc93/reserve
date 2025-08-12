@@ -45,13 +45,28 @@ input[type="color"] {
 }
 
 .palette-options {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
   gap: 0.5rem;
   margin-bottom: 0.5rem;
+  max-height: 150px;
+  overflow-y: auto;
 }
 
 .palette-option {
+  display: flex;
+  width: 64px;
+  height: 24px;
+  padding: 0;
+  border: none;
   border-radius: 0.25rem;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.palette-option span {
+  flex: 1;
+  height: 100%;
 }
 
 /* Textarea */
