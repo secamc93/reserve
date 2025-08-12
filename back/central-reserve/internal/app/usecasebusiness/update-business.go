@@ -58,6 +58,9 @@ func (uc *BusinessUseCase) UpdateBusiness(ctx context.Context, id uint, request 
 	logoURL := existing.LogoURL
 	primaryColor := existing.PrimaryColor
 	secondaryColor := existing.SecondaryColor
+	tertiaryColor := existing.TertiaryColor
+	quaternaryColor := existing.QuaternaryColor
+	navbarImageURL := existing.NavbarImageURL
 	customDomain := existing.CustomDomain
 	isActive := existing.IsActive
 	enableDelivery := existing.EnableDelivery
@@ -88,6 +91,26 @@ func (uc *BusinessUseCase) UpdateBusiness(ctx context.Context, id uint, request 
 	}
 	if request.SecondaryColor != nil {
 		secondaryColor = *request.SecondaryColor
+	}
+	if request.TertiaryColor != nil {
+		tertiaryColor = *request.TertiaryColor
+	}
+	if request.QuaternaryColor != nil {
+		quaternaryColor = *request.QuaternaryColor
+	}
+	if request.NavbarImageFile != nil {
+		uc.log.Info().Uint("business_id", id).Str("filename", request.NavbarImageFile.Filename).Msg("Subiendo nueva imagen de navbar a S3")
+		path, err := uc.s3.UploadImage(ctx, request.NavbarImageFile, "navbar")
+		if err != nil {
+			uc.log.Error().Err(err).Uint("business_id", id).Msg("Error al subir imagen de navbar a S3")
+			return nil, fmt.Errorf("error al subir imagen de navbar: %w", err)
+		}
+		if existing.NavbarImageURL != "" && existing.NavbarImageURL != path && !strings.HasPrefix(existing.NavbarImageURL, "http") {
+			if err := uc.s3.DeleteImage(ctx, existing.NavbarImageURL); err != nil {
+				uc.log.Warn().Err(err).Str("old_navbar_image", existing.NavbarImageURL).Msg("No se pudo eliminar imagen de navbar anterior (no crítico)")
+			}
+		}
+		navbarImageURL = path
 	}
 	if request.CustomDomain != nil {
 		customDomain = *request.CustomDomain
@@ -132,6 +155,9 @@ func (uc *BusinessUseCase) UpdateBusiness(ctx context.Context, id uint, request 
 		LogoURL:            logoURL,
 		PrimaryColor:       primaryColor,
 		SecondaryColor:     secondaryColor,
+		TertiaryColor:      tertiaryColor,
+		QuaternaryColor:    quaternaryColor,
+		NavbarImageURL:     navbarImageURL,
 		CustomDomain:       customDomain,
 		IsActive:           isActive,
 		EnableDelivery:     enableDelivery,
@@ -161,6 +187,14 @@ func (uc *BusinessUseCase) UpdateBusiness(ctx context.Context, id uint, request 
 			fullLogoURL = fmt.Sprintf("%s/%s", base, strings.TrimLeft(fullLogoURL, "/"))
 		}
 	}
+	// Completar URL de imagen de navbar si es path relativo
+	fullNavbarImageURL := updated.NavbarImageURL
+	if fullNavbarImageURL != "" && !strings.HasPrefix(fullNavbarImageURL, "http") {
+		base := strings.TrimRight(uc.env.Get("URL_BASE_DOMAIN_S3"), "/")
+		if base != "" {
+			fullNavbarImageURL = fmt.Sprintf("%s/%s", base, strings.TrimLeft(fullNavbarImageURL, "/"))
+		}
+	}
 
 	response := &dtos.BusinessResponse{
 		ID:   updated.ID,
@@ -175,6 +209,9 @@ func (uc *BusinessUseCase) UpdateBusiness(ctx context.Context, id uint, request 
 		LogoURL:            fullLogoURL,
 		PrimaryColor:       updated.PrimaryColor,
 		SecondaryColor:     updated.SecondaryColor,
+		TertiaryColor:      updated.TertiaryColor,
+		QuaternaryColor:    updated.QuaternaryColor,
+		NavbarImageURL:     fullNavbarImageURL,
 		CustomDomain:       updated.CustomDomain,
 		IsActive:           updated.IsActive,
 		EnableDelivery:     updated.EnableDelivery,

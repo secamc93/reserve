@@ -129,6 +129,13 @@ func (uc *UserUseCase) GetUsers(ctx context.Context, filters dtos.UserFilters) (
 			// Convertir businesses a DTOs
 			userDTOs[i].Businesses = make([]dtos.BusinessDTO, len(businesses))
 			for j, business := range businesses {
+				navbarURL := business.NavbarImageURL
+				if navbarURL != "" && !strings.HasPrefix(navbarURL, "http") {
+					base := strings.TrimRight(uc.getMediaBaseURL(), "/")
+					if base != "" {
+						navbarURL = fmt.Sprintf("%s/%s", base, strings.TrimLeft(navbarURL, "/"))
+					}
+				}
 				userDTOs[i].Businesses[j] = dtos.BusinessDTO{
 					ID:                 business.ID,
 					Name:               business.Name,
@@ -140,6 +147,9 @@ func (uc *UserUseCase) GetUsers(ctx context.Context, filters dtos.UserFilters) (
 					LogoURL:            business.LogoURL,
 					PrimaryColor:       business.PrimaryColor,
 					SecondaryColor:     business.SecondaryColor,
+					TertiaryColor:      business.TertiaryColor,
+					QuaternaryColor:    business.QuaternaryColor,
+					NavbarImageURL:     navbarURL,
 					CustomDomain:       business.CustomDomain,
 					IsActive:           business.IsActive,
 					EnableDelivery:     business.EnableDelivery,

@@ -73,6 +73,9 @@ type BusinessDTO struct {
 	LogoURL            string
 	PrimaryColor       string
 	SecondaryColor     string
+	TertiaryColor      string
+	QuaternaryColor    string
+	NavbarImageURL     string
 	CustomDomain       string
 	IsActive           bool
 	EnableDelivery     bool

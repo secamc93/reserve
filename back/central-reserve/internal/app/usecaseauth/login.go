@@ -114,6 +114,14 @@ func (uc *AuthUseCase) Login(ctx context.Context, request dtos.LoginRequest) (*d
 					businessLogoURL = fmt.Sprintf("%s/%s", base, strings.TrimLeft(businessLogoURL, "/"))
 				}
 			}
+			// Completar URL de imagen de navbar si es relativa
+			businessNavbarURL := business.NavbarImageURL
+			if businessNavbarURL != "" && !strings.HasPrefix(businessNavbarURL, "http") {
+				base := strings.TrimRight(uc.env.Get("URL_BASE_DOMAIN_S3"), "/")
+				if base != "" {
+					businessNavbarURL = fmt.Sprintf("%s/%s", base, strings.TrimLeft(businessNavbarURL, "/"))
+				}
+			}
 
 			uc.log.Info().
 				Uint("user_id", userAuth.ID).
@@ -246,6 +254,14 @@ func (uc *AuthUseCase) Login(ctx context.Context, request dtos.LoginRequest) (*d
 					businessLogoURL = fmt.Sprintf("%s/%s", base, strings.TrimLeft(businessLogoURL, "/"))
 				}
 			}
+			// Completar URL de imagen de navbar si es relativa
+			businessNavbarURL := business.NavbarImageURL
+			if businessNavbarURL != "" && !strings.HasPrefix(businessNavbarURL, "http") {
+				base := strings.TrimRight(uc.env.Get("URL_BASE_DOMAIN_S3"), "/")
+				if base != "" {
+					businessNavbarURL = fmt.Sprintf("%s/%s", base, strings.TrimLeft(businessNavbarURL, "/"))
+				}
+			}
 
 			businessesList[i] = dtos.BusinessInfo{
 				ID:             business.ID,
@@ -265,6 +281,9 @@ func (uc *AuthUseCase) Login(ctx context.Context, request dtos.LoginRequest) (*d
 				LogoURL:            businessLogoURL,
 				PrimaryColor:       business.PrimaryColor,
 				SecondaryColor:     business.SecondaryColor,
+				TertiaryColor:      business.TertiaryColor,
+				QuaternaryColor:    business.QuaternaryColor,
+				NavbarImageURL:     businessNavbarURL,
 				CustomDomain:       business.CustomDomain,
 				IsActive:           business.IsActive,
 				EnableDelivery:     business.EnableDelivery,

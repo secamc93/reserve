@@ -26,11 +26,14 @@ type Business struct {
 	Description    string
 
 	// Configuración de marca blanca
-	LogoURL        string
-	PrimaryColor   string
-	SecondaryColor string
-	CustomDomain   string
-	IsActive       bool
+	LogoURL         string
+	PrimaryColor    string
+	SecondaryColor  string
+	TertiaryColor   string
+	QuaternaryColor string
+	NavbarImageURL  string
+	CustomDomain    string
+	IsActive        bool
 
 	// Configuración de funcionalidades
 	EnableDelivery     bool

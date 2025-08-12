@@ -37,6 +37,9 @@ export interface Business {
   logoURL?: string;
   primaryColor?: string;
   secondaryColor?: string;
+  tertiaryColor?: string;
+  quaternaryColor?: string;
+  navbarImageURL?: string;
   customDomain?: string;
   isActive: boolean;
   enableDelivery: boolean;

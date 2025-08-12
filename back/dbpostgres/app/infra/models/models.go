@@ -55,11 +55,14 @@ type Business struct {
 	Description    string `gorm:"size:500"`
 
 	// Configuración de marca blanca
-	LogoURL        string `gorm:"size:255"`
-	PrimaryColor   string `gorm:"size:7;default:'#1f2937'"` // Hex color
-	SecondaryColor string `gorm:"size:7;default:'#3b82f6'"` // Hex color
-	CustomDomain   string `gorm:"size:100;unique"`          // dominio personalizado
-	IsActive       bool   `gorm:"default:true"`
+	LogoURL         string `gorm:"size:255"`
+	PrimaryColor    string `gorm:"size:7;default:'#1f2937'"` // Hex color
+	SecondaryColor  string `gorm:"size:7;default:'#3b82f6'"` // Hex color
+	TertiaryColor   string `gorm:"size:7;default:'#10b981'"` // Hex color adicional
+	QuaternaryColor string `gorm:"size:7;default:'#fbbf24'"` // Hex color adicional
+	NavbarImageURL  string `gorm:"size:255"`                 // Imagen de fondo para la barra de navegación
+	CustomDomain    string `gorm:"size:100;unique"`          // dominio personalizado
+	IsActive        bool   `gorm:"default:true"`
 
 	// Configuración de funcionalidades
 	EnableDelivery     bool `gorm:"default:false"`

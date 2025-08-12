@@ -93,6 +93,9 @@ type BusinessInfo struct {
 	LogoURL            string           `json:"logo_url"`
 	PrimaryColor       string           `json:"primary_color"`
 	SecondaryColor     string           `json:"secondary_color"`
+	TertiaryColor      string           `json:"tertiary_color"`
+	QuaternaryColor    string           `json:"quaternary_color"`
+	NavbarImageURL     string           `json:"navbar_image_url"`
 	CustomDomain       string           `json:"custom_domain"`
 	IsActive           bool             `json:"is_active"`
 	EnableDelivery     bool             `json:"enable_delivery"`

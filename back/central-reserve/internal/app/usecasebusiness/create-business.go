@@ -51,6 +51,18 @@ func (uc *BusinessUseCase) CreateBusiness(ctx context.Context, request dtos.Busi
 		logoURL = path // Guardar solo path relativo
 	}
 
+	// Subir imagen de navbar si viene archivo
+	navbarImageURL := ""
+	if request.NavbarImageFile != nil {
+		uc.log.Info().Str("filename", request.NavbarImageFile.Filename).Msg("Subiendo imagen de navbar a S3")
+		path, err := uc.s3.UploadImage(ctx, request.NavbarImageFile, "navbar")
+		if err != nil {
+			uc.log.Error().Err(err).Msg("Error al subir imagen de navbar a S3")
+			return nil, fmt.Errorf("error al subir imagen de navbar: %w", err)
+		}
+		navbarImageURL = path
+	}
+
 	// Crear entidad
 	business := entities.Business{
 		Name:               request.Name,
@@ -62,6 +74,9 @@ func (uc *BusinessUseCase) CreateBusiness(ctx context.Context, request dtos.Busi
 		LogoURL:            logoURL,
 		PrimaryColor:       request.PrimaryColor,
 		SecondaryColor:     request.SecondaryColor,
+		TertiaryColor:      request.TertiaryColor,
+		QuaternaryColor:    request.QuaternaryColor,
+		NavbarImageURL:     navbarImageURL,
 		CustomDomain:       request.CustomDomain,
 		IsActive:           request.IsActive,
 		EnableDelivery:     request.EnableDelivery,
@@ -91,6 +106,14 @@ func (uc *BusinessUseCase) CreateBusiness(ctx context.Context, request dtos.Busi
 			fullLogoURL = fmt.Sprintf("%s/%s", base, strings.TrimLeft(fullLogoURL, "/"))
 		}
 	}
+	// Completar URL de imagen de navbar si es path relativo
+	fullNavbarImageURL := created.NavbarImageURL
+	if fullNavbarImageURL != "" && !strings.HasPrefix(fullNavbarImageURL, "http") {
+		base := strings.TrimRight(uc.env.Get("URL_BASE_DOMAIN_S3"), "/")
+		if base != "" {
+			fullNavbarImageURL = fmt.Sprintf("%s/%s", base, strings.TrimLeft(fullNavbarImageURL, "/"))
+		}
+	}
 
 	response := &dtos.BusinessResponse{
 		ID:   created.ID,
@@ -105,6 +128,9 @@ func (uc *BusinessUseCase) CreateBusiness(ctx context.Context, request dtos.Busi
 		LogoURL:            fullLogoURL,
 		PrimaryColor:       created.PrimaryColor,
 		SecondaryColor:     created.SecondaryColor,
+		TertiaryColor:      created.TertiaryColor,
+		QuaternaryColor:    created.QuaternaryColor,
+		NavbarImageURL:     fullNavbarImageURL,
 		CustomDomain:       created.CustomDomain,
 		IsActive:           created.IsActive,
 		EnableDelivery:     created.EnableDelivery,

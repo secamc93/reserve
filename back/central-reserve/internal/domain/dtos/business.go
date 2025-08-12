@@ -36,11 +36,14 @@ type BusinessRequest struct {
 	Description    string
 
 	// Configuración de marca blanca
-	LogoFile       *multipart.FileHeader // Archivo de imagen para subir a S3
-	PrimaryColor   string
-	SecondaryColor string
-	CustomDomain   string
-	IsActive       bool
+	LogoFile        *multipart.FileHeader // Archivo de imagen para subir a S3
+	PrimaryColor    string
+	SecondaryColor  string
+	TertiaryColor   string
+	QuaternaryColor string
+	NavbarImageFile *multipart.FileHeader // Imagen de navbar para subir a S3
+	CustomDomain    string
+	IsActive        bool
 
 	// Configuración de funcionalidades
 	EnableDelivery     bool
@@ -60,6 +63,9 @@ type UpdateBusinessRequest struct {
 	LogoFile           *multipart.FileHeader
 	PrimaryColor       *string
 	SecondaryColor     *string
+	TertiaryColor      *string
+	QuaternaryColor    *string
+	NavbarImageFile    *multipart.FileHeader
 	CustomDomain       *string
 	IsActive           *bool
 	EnableDelivery     *bool
@@ -78,11 +84,14 @@ type BusinessResponse struct {
 	Description  string
 
 	// Configuración de marca blanca
-	LogoURL        string
-	PrimaryColor   string
-	SecondaryColor string
-	CustomDomain   string
-	IsActive       bool
+	LogoURL         string
+	PrimaryColor    string
+	SecondaryColor  string
+	TertiaryColor   string
+	QuaternaryColor string
+	NavbarImageURL  string
+	CustomDomain    string
+	IsActive        bool
 
 	// Configuración de funcionalidades
 	EnableDelivery     bool

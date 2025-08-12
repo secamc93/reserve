@@ -1,11 +1,11 @@
 /* Sidebar.css */
 .sidebar {
     width: 80px;
-    /* En lugar de 70px */
     /* Ancho colapsado por defecto */
     height: 100vh;
-    background: #1a1a1a;
-    /* Fondo más oscuro para mejor contraste */
+    background: var(--primary-color, #1a1a1a);
+    background-image: var(--navbar-image);
+    background-size: cover;
     color: white;
     display: flex;
     flex-direction: column;
@@ -21,8 +21,7 @@
 .sidebar:hover {
     width: 350px;
     /* Ancho expandido en hover - aumentado para UserInfo */
-    background: #0f0f0f;
-    /* Aún más oscuro en hover para mejor contraste */
+    background: var(--secondary-color, #0f0f0f);
 }
 
 .sidebar-header {
