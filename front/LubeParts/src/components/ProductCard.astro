@@ -34,7 +34,13 @@ const { id, name, price, image, description, viscosity } = Astro.props;
             <!-- Botón Agregar al carrito -->
             <button
                 class="ml-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-semibold text-sm flex items-center gap-2 hover:scale-105 hover:shadow-xl transform"
-                onclick={`this.innerHTML = '<svg class=\\"w-5 h-5 animate-spin\\" fill=\\"none\\" stroke=\\"currentColor\\" stroke-width=\\"2\\" viewBox=\\"0 0 24 24\\"><path stroke-linecap=\\"round\\" stroke-linejoin=\\"round\\" d=\\"M5 13l4 4L19 7\\"></path></svg> Agregado!'; this.classList.add('bg-green-600'); setTimeout(() => { this.innerHTML = '<svg class=\\"w-5 h-5\\" fill=\\"none\\" stroke=\\"currentColor\\" stroke-width=\\"2\\" viewBox=\\"0 0 24 24\\"><path stroke-linecap=\\"round\\" stroke-linejoin=\\"round\\" d=\\"M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 9m13-9l2 9m-5-9V6a2 2 0 10-4 0v7\\"></path></svg> Agregar'; this.classList.remove('bg-green-600'); }, 1000); window.dispatchEvent(new CustomEvent('add-to-cart', { detail: { id: \"${id}\", name: \"${name}\", price: ${price}, image: \"${image}\", viscosity: \"${viscosity}\" } }))`}
+                type="button"
+                data-id={id}
+                data-name={name}
+                data-price={price}
+                data-image={image}
+                data-viscosity={viscosity}
+                onclick="window.dispatchEvent(new CustomEvent('add-to-cart', { detail: { id: this.dataset.id, name: this.dataset.name, price: parseFloat(this.dataset.price), image: this.dataset.image, viscosity: this.dataset.viscosity } }))"
             >
                 <svg
                     class="w-5 h-5"

@@ -342,50 +342,53 @@ import BaseLayout from "../layouts/BaseLayout.astro";
             panel.classList.remove("flex");
         }
 
-        waClose?.addEventListener("click", (e) => {
-            e.preventDefault();
-            closePanel();
-        });
+        if (waClose) {
+            waClose.addEventListener("click", (e) => {
+                e.preventDefault();
+                closePanel();
+            });
+        }
 
-        form?.addEventListener("submit", (e) => {
-            e.preventDefault();
-            const nameEl = document.getElementById(
-                "contact-name",
-            ) as HTMLInputElement | null;
-            const emailEl = document.getElementById(
-                "contact-email",
-            ) as HTMLInputElement | null;
-            const phoneEl = document.getElementById(
-                "contact-phone",
-            ) as HTMLInputElement | null;
-            const subjectEl = document.getElementById(
-                "contact-subject",
-            ) as HTMLSelectElement | null;
-            const messageEl = document.getElementById(
-                "contact-message",
-            ) as HTMLTextAreaElement | null;
+        if (form) {
+            form.addEventListener("submit", (e) => {
+                e.preventDefault();
+                const nameEl = document.getElementById(
+                    "contact-name",
+                ) as HTMLInputElement | null;
+                const emailEl = document.getElementById(
+                    "contact-email",
+                ) as HTMLInputElement | null;
+                const phoneEl = document.getElementById(
+                    "contact-phone",
+                ) as HTMLInputElement | null;
+                const subjectEl = document.getElementById(
+                    "contact-subject",
+                ) as HTMLSelectElement | null;
+                const messageEl = document.getElementById(
+                    "contact-message",
+                ) as HTMLTextAreaElement | null;
 
-            const name = (nameEl?.value || "").trim();
-            const email = (emailEl?.value || "").trim();
-            const phone = (phoneEl?.value || "").trim();
-            const subject = (subjectEl?.value || "").trim();
-            const message = (messageEl?.value || "").trim();
+                const name = nameEl && 'value' in nameEl ? String(nameEl.value).trim() : "";
+                const email = emailEl && 'value' in emailEl ? String(emailEl.value).trim() : "";
+                const phone = phoneEl && 'value' in phoneEl ? String(phoneEl.value).trim() : "";
+                const subject = subjectEl && 'value' in subjectEl ? String(subjectEl.value).trim() : "";
+                const message = messageEl && 'value' in messageEl ? String(messageEl.value).trim() : "";
 
-            const subjectTextMap: Record<string, string> = {
-                "consulta-producto": "Consulta sobre productos",
-                asesoramiento: "Asesoramiento técnico",
-                cotizacion: "Cotización",
-                soporte: "Soporte técnico",
-                otro: "Otro",
-            };
-            const subjectLabel =
-                subjectTextMap[subject] || subject || "Consulta";
+                const subjectTextMap: Record<string, string> = {
+                    "consulta-producto": "Consulta sobre productos",
+                    "asesoramiento": "Asesoramiento técnico",
+                    "cotizacion": "Cotización",
+                    "soporte": "Soporte técnico",
+                    "otro": "Otro",
+                };
+                const subjectLabel = subjectTextMap[subject] || subject || "Consulta";
 
-            const text = `Hola, soy ${name} (${email}${phone ? ", tel: " + phone : ""}).\nAsunto: ${subjectLabel}.\nMensaje: ${message}`;
-            const url = `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(text)}`;
-            if (waLink) waLink.setAttribute("href", url);
-            openPanel();
-        });
+                const text = `Hola, soy ${name} (${email}${phone ? ", tel: " + phone : ""}).\nAsunto: ${subjectLabel}.\nMensaje: ${message}`;
+                const url = `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(text)}`;
+                if (waLink) waLink.setAttribute("href", url);
+                openPanel();
+            });
+        }
     </script>
 
     <!-- FAQ -->

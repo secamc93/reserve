@@ -88,13 +88,13 @@ const featuredProducts = [
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4">
                   <a
-                    href="/productos"
+                    href="/productos/"
                     class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-2xl hover:shadow-blue-500/25"
                   >
                     🛢️ Ver Productos
                   </a>
                   <a
-                    href="/nosotros"
+                    href="/nosotros/"
                     class="bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 border-2 border-white/30 hover:border-white/50"
                   >
                     👥 Conócenos
@@ -206,7 +206,7 @@ const featuredProducts = [
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="2"
-                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 009.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
               ></path>
             </svg>
           </div>
@@ -251,7 +251,7 @@ const featuredProducts = [
 
       <div class="text-center">
         <a
-          href="/productos"
+          href="/productos/"
           class="inline-flex items-center bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-xl"
         >
           Ver Todos los Productos
@@ -566,18 +566,10 @@ const featuredProducts = [
 
 <script>
   const whatsappPhone = "573165356255";
-  const miniForm = document.getElementById(
-    "mini-contact-form",
-  ) as HTMLFormElement | null;
-  const miniPanel = document.getElementById(
-    "mini-wa-panel",
-  ) as HTMLDivElement | null;
-  const miniWaLink = document.getElementById(
-    "mini-wa-link",
-  ) as HTMLAnchorElement | null;
-  const miniWaClose = document.getElementById(
-    "mini-wa-close",
-  ) as HTMLButtonElement | null;
+  const miniForm = document.getElementById("mini-contact-form");
+  const miniPanel = document.getElementById("mini-wa-panel");
+  const miniWaLink = document.getElementById("mini-wa-link");
+  const miniWaClose = document.getElementById("mini-wa-close");
 
   function miniOpenPanel() {
     if (!miniPanel) return;
@@ -589,28 +581,26 @@ const featuredProducts = [
     miniPanel.classList.add("hidden");
     miniPanel.classList.remove("flex");
   }
-  miniWaClose?.addEventListener("click", (e) => {
-    e.preventDefault();
-    miniClosePanel();
-  });
+  if (miniWaClose) {
+    miniWaClose.addEventListener("click", (e) => {
+      e.preventDefault();
+      miniClosePanel();
+    });
+  }
 
-  miniForm?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const nameEl = document.getElementById(
-      "mini-name",
-    ) as HTMLInputElement | null;
-    const emailEl = document.getElementById(
-      "mini-email",
-    ) as HTMLInputElement | null;
-    const messageEl = document.getElementById(
-      "mini-message",
-    ) as HTMLTextAreaElement | null;
-    const name = (nameEl?.value || "").trim();
-    const email = (emailEl?.value || "").trim();
-    const message = (messageEl?.value || "").trim();
-    const text = `Hola, soy ${name} (${email}).\nMensaje: ${message}`;
-    const url = `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(text)}`;
-    if (miniWaLink) miniWaLink.setAttribute("href", url);
-    miniOpenPanel();
-  });
+  if (miniForm) {
+    miniForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const nameEl = document.querySelector('#mini-name');
+      const emailEl = document.querySelector('#mini-email');
+      const messageEl = document.querySelector('#mini-message');
+      const name = nameEl && 'value' in nameEl ? String(nameEl.value).trim() : "";
+      const email = emailEl && 'value' in emailEl ? String(emailEl.value).trim() : "";
+      const message = messageEl && 'value' in messageEl ? String(messageEl.value).trim() : "";
+      const text = `Hola, soy ${name} (${email}).\nMensaje: ${message}`;
+      const url = `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(text)}`;
+      if (miniWaLink) miniWaLink.setAttribute("href", url);
+      miniOpenPanel();
+    });
+  }
 </script>

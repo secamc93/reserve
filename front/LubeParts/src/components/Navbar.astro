@@ -50,7 +50,7 @@
       </a>
 
       <a
-        href="/nosotros"
+        href="/nosotros/"
         class="relative px-6 py-3 text-gray-700 hover:text-blue-600 transition-all duration-300 group font-semibold rounded-xl hover:bg-white/60 hover:shadow-lg"
         id="nav-nosotros"
       >
@@ -66,7 +66,7 @@
       </a>
 
       <a
-        href="/productos"
+        href="/productos/"
         class="relative px-6 py-3 text-gray-700 hover:text-blue-600 transition-all duration-300 group font-semibold rounded-xl hover:bg-white/60 hover:shadow-lg"
         id="nav-productos"
       >
@@ -82,7 +82,7 @@
       </a>
 
       <a
-        href="/contacto"
+        href="/contacto/"
         class="relative px-6 py-3 text-gray-700 hover:text-blue-600 transition-all duration-300 group font-semibold rounded-xl hover:bg-white/60 hover:shadow-lg"
         id="nav-contacto"
       >
@@ -149,7 +149,7 @@
         </a>
 
         <a
-          href="/nosotros"
+          href="/nosotros/"
           class="flex items-center px-6 py-4 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-100/50 hover:text-blue-600 rounded-2xl transition-all duration-300 font-semibold group"
         >
           <span
@@ -164,7 +164,7 @@
         </a>
 
         <a
-          href="/productos"
+          href="/productos/"
           class="flex items-center px-6 py-4 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-100/50 hover:text-blue-600 rounded-2xl transition-all duration-300 font-semibold group"
         >
           <span
@@ -179,7 +179,7 @@
         </a>
 
         <a
-          href="/contacto"
+          href="/contacto/"
           class="flex items-center px-6 py-4 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-100/50 hover:text-blue-600 rounded-2xl transition-all duration-300 font-semibold group"
         >
           <span
@@ -201,43 +201,48 @@
   // Función para alternar menú móvil
   function toggleMobileMenu() {
     const menu = document.getElementById("mobile-menu");
-    const button = document.querySelector(
-      'button[onclick="toggleMobileMenu()"] svg',
+    const buttonSvg = document.querySelector(
+      'button[onclick="toggleMobileMenu()"] svg'
     );
+
+    if (!menu || !buttonSvg) return;
 
     if (menu.classList.contains("hidden")) {
       menu.classList.remove("hidden");
       menu.classList.add("animate-slideDown");
       // Cambiar icono a X
-      button.innerHTML =
+      buttonSvg.innerHTML =
         '<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>';
     } else {
       menu.classList.add("hidden");
       menu.classList.remove("animate-slideDown");
       // Cambiar icono a hamburguesa
-      button.innerHTML =
+      buttonSvg.innerHTML =
         '<path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>';
     }
   }
 
+  // Exponer globalmente para onclick inline en producción
+  // @ts-ignore
+  window.toggleMobileMenu = toggleMobileMenu;
+
   // Indicador de página activa
   document.addEventListener("DOMContentLoaded", function () {
     const currentPath = window.location.pathname;
-    const navLinks = {
-      "/": "nav-inicio",
-      "/nosotros": "nav-nosotros",
-      "/productos": "nav-productos",
-      "/contacto": "nav-contacto",
-    };
+    const normalizedPath = currentPath.endsWith('/') ? currentPath : `${currentPath}/`;
 
-    const activeLink = navLinks[currentPath];
-    if (activeLink) {
-      const element = document.getElementById(activeLink);
+    let activeLinkId = null;
+    if (normalizedPath === "/") activeLinkId = "nav-inicio";
+    else if (normalizedPath === "/nosotros/") activeLinkId = "nav-nosotros";
+    else if (normalizedPath === "/productos/") activeLinkId = "nav-productos";
+    else if (normalizedPath === "/contacto/") activeLinkId = "nav-contacto";
+
+    if (activeLinkId) {
+      const element = document.getElementById(activeLinkId);
       if (element) {
         element.classList.add("text-blue-600", "bg-white/80", "shadow-lg");
-        element
-          .querySelector("div:last-child")
-          .classList.add("w-3/4", "left-1/4");
+        const underline = element.querySelector("div:last-child");
+        if (underline) underline.classList.add("w-3/4", "left-1/4");
       }
     }
   });
@@ -246,12 +251,17 @@
   document.addEventListener("click", function (event) {
     const menu = document.getElementById("mobile-menu");
     const button = document.querySelector(
-      'button[onclick="toggleMobileMenu()"]',
+      'button[onclick="toggleMobileMenu()"]'
     );
 
+    const target = event.target;
+    if (!(target instanceof Node)) return;
+
     if (
-      !menu.contains(event.target) &&
-      !button.contains(event.target) &&
+      menu &&
+      button &&
+      !menu.contains(target) &&
+      !button.contains(target) &&
       !menu.classList.contains("hidden")
     ) {
       toggleMobileMenu();

@@ -3,113 +3,7 @@
 ---
 
 <div
-    x-data="{
-    isOpen: false,
-    showCheckoutModal: false,
-    showWhatsAppModal: false,
-    cartItems: [],
-    showAdded: false,
-    addedName: '',
-    whatsappPhone: '573165356255',
-
-    init() {
-        try {
-            this.cartItems = JSON.parse(localStorage.getItem('lubricantes_cart') || '[]');
-        } catch (e) {
-            this.cartItems = [];
-        }
-        
-        window.addEventListener('add-to-cart', (e) => {
-            this.addItem(e.detail);
-        });
-    },
-
-    toggleCart() {
-        this.isOpen = !this.isOpen;
-    },
-
-    saveCart() {
-        try {
-            localStorage.setItem('lubricantes_cart', JSON.stringify(this.cartItems));
-        } catch (e) {
-            console.error('Error saving cart:', e);
-        }
-    },
-
-    addItem(product) {
-        const existing = this.cartItems.find(item => item.id === product.id);
-        if (existing) {
-            existing.quantity += 1;
-        } else {
-            this.cartItems.push({...product, quantity: 1});
-        }
-        this.saveCart();
-        this.showAddedAnimation(product.name);
-    },
-
-    removeItem(id) {
-        this.cartItems = this.cartItems.filter(item => item.id !== id);
-        this.saveCart();
-    },
-
-    increaseQuantity(id) {
-        const item = this.cartItems.find(item => item.id === id);
-        if (item) {
-            item.quantity += 1;
-            this.saveCart();
-        }
-    },
-
-    decreaseQuantity(id) {
-        const item = this.cartItems.find(item => item.id === id);
-        if (item && item.quantity > 1) {
-            item.quantity -= 1;
-            this.saveCart();
-        } else if (item) {
-            this.removeItem(id);
-        }
-    },
-
-    cartTotal() {
-        return this.cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    },
-
-    showAddedAnimation(name) {
-        this.addedName = name;
-        this.showAdded = true;
-        setTimeout(() => {
-            this.showAdded = false;
-        }, 1500);
-    },
-
-    processOrder() {
-        this.cartItems = [];
-        this.saveCart();
-        this.showCheckoutModal = false;
-        this.showWhatsAppModal = false;
-        this.isOpen = false;
-    },
-
-    orderText() {
-        const lines = this.cartItems.map(item => `- ${item.name} x${item.quantity} ($${item.price.toFixed(2)} c/u) = $${(item.price * item.quantity).toFixed(2)}`);
-        const total = this.cartTotal().toFixed(2);
-        return `Hola, deseo confirmar mi pedido:\n${lines.join('\n')}\nTotal: $${total}`;
-    },
-
-    whatsappUrl() {
-        const text = this.orderText();
-        return `https://wa.me/${this.whatsappPhone}?text=${encodeURIComponent(text)}`;
-    },
-
-    openWhatsAppModal() {
-        this.showCheckoutModal = false;
-        this.showWhatsAppModal = true;
-    },
-
-    completeOrder() {
-        this.processOrder();
-    }
-}"
+    x-data="cartStore()"
     class="z-50"
 >
     <!-- Animación de producto agregado -->
@@ -136,7 +30,7 @@
                 stroke-linejoin="round"
                 d="M5 13l4 4L19 7"></path>
         </svg>
-        <span x-text="`¡${addedName} agregado al carrito!`"></span>
+        <span x-text="'¡' + addedName + ' agregado al carrito!' "></span>
     </div>
 
     <!-- Modal de resumen de compra -->
@@ -217,11 +111,11 @@
                             <div class="text-right">
                                 <span
                                     class="text-lg font-bold text-green-600"
-                                    x-text="`$${(item.price * item.quantity).toFixed(2)}`"
+                                    x-text="'$' + (item.price * item.quantity).toFixed(2)"
                                 ></span>
                                 <p
                                     class="text-sm text-gray-500"
-                                    x-text="`$${item.price.toFixed(2)} c/u`"
+                                    x-text="'$' + item.price.toFixed(2) + ' c/u'"
                                 >
                                 </p>
                             </div>
@@ -239,7 +133,7 @@
                             <span class="text-gray-600">Subtotal:</span>
                             <span
                                 class="font-semibold"
-                                x-text="`$${cartTotal().toFixed(2)}`"></span>
+                                x-text="'$' + cartTotal().toFixed(2)"></span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600">Envío:</span>
@@ -251,7 +145,7 @@
                             <span class="text-gray-600">Impuestos:</span>
                             <span
                                 class="font-semibold"
-                                x-text="`$${(cartTotal() * 0.16).toFixed(2)}`"
+                                x-text="'$' + (cartTotal() * 0.16).toFixed(2)"
                             ></span>
                         </div>
                         <hr class="my-2" />
@@ -259,7 +153,7 @@
                             <span class="font-bold text-gray-800">Total:</span>
                             <span
                                 class="font-bold text-green-600"
-                                x-text="`$${(cartTotal() * 1.16).toFixed(2)}`"
+                                x-text="'$' + (cartTotal() * 1.16).toFixed(2)"
                             ></span>
                         </div>
                     </div>
@@ -464,7 +358,7 @@
                     <div class="flex flex-col items-end ml-4">
                         <span
                             class="text-blue-600 font-bold text-lg"
-                            x-text="`$${(item.price * item.quantity).toFixed(2)}`"
+                            x-text="'$' + (item.price * item.quantity).toFixed(2)"
                         ></span>
                         <button
                             @click="removeItem(item.id)"
@@ -482,7 +376,7 @@
                 <span class="text-lg font-semibold text-gray-700">Total:</span>
                 <span
                     class="text-2xl font-bold text-blue-600"
-                    x-text="`$${cartTotal().toFixed(2)}`"></span>
+                    x-text="'$' + cartTotal().toFixed(2)"></span>
             </div>
             <button
                 @click="showCheckoutModal = true"
@@ -494,3 +388,144 @@
         </div>
     </div>
 </div>
+
+<script>
+  // @ts-nocheck
+  /**
+   * @typedef {{
+   *  id: string,
+   *  name: string,
+   *  price: number,
+   *  image: string,
+   *  viscosity: string,
+   *  quantity: number
+   * }} CartItem
+   */
+  
+  function cartStore() {
+    return {
+      /** @type {boolean} */
+      isOpen: false,
+      /** @type {boolean} */
+      showCheckoutModal: false,
+      /** @type {boolean} */
+      showWhatsAppModal: false,
+      /** @type {CartItem[]} */
+      cartItems: [],
+      /** @type {boolean} */
+      showAdded: false,
+      /** @type {string} */
+      addedName: '',
+      /** @type {string} */
+      whatsappPhone: '573165356255',
+
+      init() {
+        try {
+          this.cartItems = JSON.parse(localStorage.getItem('lubricantes_cart') || '[]');
+        } catch (e) {
+          this.cartItems = [];
+        }
+        window.addEventListener('add-to-cart', (e) => {
+          // @ts-ignore
+          this.addItem(e.detail);
+        });
+      },
+
+      toggleCart() {
+        this.isOpen = !this.isOpen;
+      },
+
+      saveCart() {
+        try {
+          localStorage.setItem('lubricantes_cart', JSON.stringify(this.cartItems));
+        } catch (e) {
+          console.error('Error saving cart:', e);
+        }
+      },
+
+      /** @param {{id: string, name: string, price: number, image: string, viscosity: string}} product */
+      addItem(product) {
+        const existing = this.cartItems.find((item) => item.id === product.id);
+        if (existing) {
+          existing.quantity += 1;
+        } else {
+          this.cartItems.push({ ...product, quantity: 1 });
+        }
+        this.saveCart();
+        this.showAddedAnimation(product.name);
+      },
+
+      /** @param {string} id */
+      removeItem(id) {
+        this.cartItems = this.cartItems.filter((item) => item.id !== id);
+        this.saveCart();
+      },
+
+      /** @param {string} id */
+      increaseQuantity(id) {
+        const item = this.cartItems.find((item) => item.id === id);
+        if (item) {
+          item.quantity += 1;
+          this.saveCart();
+        }
+      },
+
+      /** @param {string} id */
+      decreaseQuantity(id) {
+        const item = this.cartItems.find((item) => item.id === id);
+        if (item && item.quantity > 1) {
+          item.quantity -= 1;
+          this.saveCart();
+        } else if (item) {
+          this.removeItem(id);
+        }
+      },
+
+      /** @returns {number} */
+      cartTotal() {
+        return this.cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      },
+
+      /** @param {string} name */
+      showAddedAnimation(name) {
+        this.addedName = name;
+        this.showAdded = true;
+        setTimeout(() => {
+          this.showAdded = false;
+        }, 1500);
+      },
+
+      processOrder() {
+        this.cartItems = [];
+        this.saveCart();
+        this.showCheckoutModal = false;
+        this.showWhatsAppModal = false;
+        this.isOpen = false;
+      },
+
+      /** @returns {string} */
+      orderText() {
+        const lines = this.cartItems.map((item) =>
+          '- ' + item.name + ' x' + item.quantity + ' ($' + item.price.toFixed(2) + ' c/u) = $' + (item.price * item.quantity).toFixed(2)
+        );
+        const total = this.cartTotal().toFixed(2);
+        return 'Hola, deseo confirmar mi pedido:\n' + lines.join('\n') + '\nTotal: $' + total;
+      },
+
+      /** @returns {string} */
+      whatsappUrl() {
+        const text = this.orderText();
+        return `https://wa.me/${this.whatsappPhone}?text=${encodeURIComponent(text)}`;
+      },
+
+      openWhatsAppModal() {
+        this.showCheckoutModal = false;
+        this.showWhatsAppModal = true;
+      },
+
+      completeOrder() {
+        this.processOrder();
+      },
+    };
+  }
+</script>
