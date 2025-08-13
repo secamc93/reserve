@@ -11,3 +11,9 @@ class HumanFormats {
     return formattedNumber;
   }
 }
+
+String toRfc3339(DateTime dt) {
+  final utc = dt.toUtc();
+  // Nota: entre comillas simples para imprimir 'T' y 'Z' literales.
+  return DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(utc);
+}

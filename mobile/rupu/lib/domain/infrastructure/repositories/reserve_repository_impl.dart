@@ -10,4 +10,27 @@ class ReserveRepositoryImpl extends ReserveRepository {
   Future<List<Reserve>> obtenerReservas() {
     return datasource.obtenerReservas();
   }
+
+  @override
+  Future<Reserve> crearReserva({
+    required int businessId,
+    required String name,
+    required DateTime startAt,
+    required DateTime endAt,
+    required int numberOfGuests,
+    String? dni,
+    String? email,
+    String? phone,
+  }) {
+    return datasource.crearReserva(
+      businessId: businessId,
+      name: name,
+      startAt: startAt,
+      endAt: endAt,
+      numberOfGuests: numberOfGuests,
+      dni: dni,
+      email: email,
+      phone: phone,
+    );
+  }
 }

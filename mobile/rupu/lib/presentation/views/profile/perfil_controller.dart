@@ -21,6 +21,7 @@ class PerfilController extends GetxController {
   late final String businessLogoUrl;
   late final String businessDescription;
   late final String businessAddress;
+  late final int businessId;
 
   // Para placeholder de avatar (quedó en el controller)
   late final String randomIndex;
@@ -44,6 +45,7 @@ class PerfilController extends GetxController {
     businessLogoUrl = negocio.logoUrl;
     businessDescription = negocio.description;
     businessAddress = negocio.address;
+    businessId = negocio.id;
 
     randomIndex = Random().nextInt(100).toString();
   }

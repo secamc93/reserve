@@ -20,82 +20,88 @@ class ReserveView extends GetView<ReserveController> {
     ];
 
     return SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          PrimaryCard(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 4,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  childAspectRatio: .9,
-                ),
-                itemCount: quick.length,
-                itemBuilder: (_, i) {
-                  final label = quick[i].$1;
-                  final icon = quick[i].$2;
-                  return _QuickAction(
-                    title: label,
-                    icon: icon,
-                    onTap: () {
-                      if (label == 'Calendario') {
-                        context.pushNamed(
-                          'calendar',
-                          pathParameters: {'page': '$pageIndex'},
-                        );
-                      }
+      child: RefreshIndicator(
+        onRefresh: () => controller.cargarReservasOrdenadas(silent: true),
+        child: Obx(() {
+          // Siempre devolver un scrollable para que el pull-to-refresh funcione,
+          // incluso en vacío o error.
+          return ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(16),
+            children: [
+              PrimaryCard(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 12,
+                          childAspectRatio: .9,
+                        ),
+                    itemCount: quick.length,
+                    itemBuilder: (_, i) {
+                      final label = quick[i].$1;
+                      final icon = quick[i].$2;
+                      return _QuickAction(
+                        title: label,
+                        icon: icon,
+                        onTap: () {
+                          if (label == 'Calendario') {
+                            context.pushNamed(
+                              'calendar',
+                              pathParameters: {'page': '$pageIndex'},
+                            );
+                          }
+                        },
+                      );
                     },
-                  );
-                },
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          const SectionTitle('Próximas reservas'),
-          Obx(() {
-            if (controller.isLoading.value) {
-              return const Padding(
-                padding: EdgeInsets.all(16),
-                child: Center(child: CircularProgressIndicator()),
-              );
-            }
-            if (controller.errorMessage.value != null) {
-              return Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(
-                  controller.errorMessage.value!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-              );
-            }
-            if (controller.reservas.isEmpty) {
-              return const Padding(
-                padding: EdgeInsets.all(16),
-                child: Text('No hay reservas por ahora'),
-              );
-            }
-
-            return Column(
-              children: controller.reservas.map((r) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: BookingListCard(
-                    client: controller.cliente(r),
-                    subtitle: 'Servicio: Reserva',
-                    time: controller.fecha(r),
-                    status: controller.estado(r),
-                    onTap: () {},
                   ),
-                );
-              }).toList(),
-            );
-          }),
-        ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              const SectionTitle('Próximas reservas'),
+
+              // Estados
+              if (controller.isLoading.value) ...[
+                const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              ] else if (controller.errorMessage.value != null) ...[
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    controller.errorMessage.value!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                ),
+              ] else if (controller.reservas.isEmpty) ...[
+                const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text('No hay reservas por ahora'),
+                ),
+              ] else ...[
+                for (final r in controller.reservas)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: BookingListCard(
+                      client: controller.cliente(r),
+                      subtitle: 'Servicio: Reserva',
+                      time: controller.fecha(r),
+                      status: controller.estado(r),
+                      onTap: () {},
+                    ),
+                  ),
+              ],
+            ],
+          );
+        }),
       ),
     );
   }

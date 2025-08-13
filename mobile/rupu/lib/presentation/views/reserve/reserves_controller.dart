@@ -1,4 +1,5 @@
 // presentation/views/reserve/reserve_controller.dart
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:rupu/domain/entities/reserve.dart';
@@ -14,6 +15,7 @@ class ReserveController extends GetxController {
   final isLoading = false.obs;
   final errorMessage = RxnString();
   final reservas = <Reserve>[].obs;
+  final isSaving = false.obs;
 
   @override
   void onReady() {
@@ -21,7 +23,43 @@ class ReserveController extends GetxController {
     cargarReservasOrdenadas();
   }
 
-  Future<void> cargarReservasOrdenadas() async {
+  Future<bool> crearReserva({
+    required int businessId,
+    required String name,
+    required DateTime startAt,
+    required DateTime endAt,
+    required int numberOfGuests,
+    String? dni,
+    String? email,
+    String? phone,
+  }) async {
+    debugPrint('CTRL -> dni="$dni" email="$email" phone="$phone"');
+    try {
+      final created = await repository.crearReserva(
+        businessId: businessId,
+        name: name,
+        startAt: startAt,
+        endAt: endAt,
+        numberOfGuests: numberOfGuests,
+        dni: dni, // <--- NO los cambies a null aquí
+        email: email,
+        phone: phone,
+      );
+      reservas.add(created);
+      reservas.sort(
+        (a, b) => (a.startAt ?? DateTime(9999)).compareTo(
+          b.startAt ?? DateTime(9999),
+        ),
+      );
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> cargarReservasOrdenadas({bool silent = false}) async {
+    if (!silent) isLoading.value = true;
+
     isLoading.value = true;
     errorMessage.value = null;
     try {
@@ -93,6 +131,8 @@ class ReserveController extends GetxController {
     } catch (e) {
       errorMessage.value = 'No se pudieron cargar las reservas';
     } finally {
+      if (!silent) isLoading.value = false;
+
       isLoading.value = false;
     }
   }
