@@ -185,6 +185,9 @@ const Sidebar: React.FC = () => {
         <div className="sidebar">
             {/* Header con información del usuario */}
             <div className="sidebar-header">
+                <div className="sidebar-logo">
+                    <img src="/rupu-icon.png" alt="Rupü" width={36} height={36} className="logo-icon" />
+                </div>
                 <div className="user-info">
                     <div
                         className="user-avatar clickable-avatar"

@@ -22,7 +22,6 @@ const Login: React.FC = () => {
       ...prev,
       [name]: value
     }));
-    // Limpiar error cuando el usuario empiece a escribir
     if (error) setError('');
   };
 
@@ -31,18 +30,11 @@ const Login: React.FC = () => {
     setError('');
 
     try {
-      console.log('🔐 Login: Iniciando proceso de autenticación');
-      
       const result = await login(formData.email, formData.password);
-      
-      console.log('🔐 Login: Autenticación exitosa:', result);
-      
       if (result && result.success) {
-        // Redirigir al calendario por defecto
         router.push('/calendar');
       }
     } catch (error) {
-      console.error('🔐 Login: Error en autenticación:', error);
       setError(error instanceof Error ? error.message : 'Error al iniciar sesión');
     }
   };
@@ -56,7 +48,7 @@ const Login: React.FC = () => {
       <div className="login-card">
         <div className="login-header">
           <div className="login-logo">
-            <h1>⚡ Rupü</h1>
+            <img src="/rupu-icon.png" alt="Rupü" />
           </div>
         </div>
 
@@ -112,27 +104,15 @@ const Login: React.FC = () => {
 
           <button
             type="submit"
-            className={`login-button ${loading ? 'loading' : ''}`}
+            className="login-button"
             disabled={loading}
           >
-            {loading ? (
-              <>
-                <span className="loading-spinner"></span>
-                Iniciando sesión...
-              </>
-            ) : (
-              <>
-                <span className="button-icon">🚀</span>
-                Iniciar Sesión
-              </>
-            )}
+            {loading ? 'Ingresando...' : 'Ingresar'}
           </button>
         </form>
 
         <div className="login-footer">
-          <p className="help-text">
-            ¿Necesitas ayuda? Contacta al administrador del sistema
-          </p>
+          <p className="help-text">Ingresa tus credenciales para continuar</p>
         </div>
       </div>
     </div>

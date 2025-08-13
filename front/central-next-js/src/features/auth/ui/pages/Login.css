@@ -50,6 +50,12 @@
   gap: 12px;
 }
 
+.login-logo img {
+  height: 128px;
+  width: auto;
+  display: inline-block;
+}
+
 .login-form {
   display: flex;
   flex-direction: column;
