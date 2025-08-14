@@ -38,7 +38,7 @@ class PerfilBinding {
 class ReserveBinding {
   static void register() {
     if (!Get.isRegistered<ReserveController>()) {
-      Get.lazyPut(() => ReserveController());
+      Get.put(ReserveController());
     }
   }
 }

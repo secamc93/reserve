@@ -202,7 +202,7 @@ class _CreateReserveViewState extends State<CreateReserveView> {
     }
 
     // Refresca la lista al volver
-    await reserveCtrl.cargarReservasOrdenadas(silent: true);
+    reserveCtrl.reservasHoy();
 
     if (mounted) Navigator.of(context).pop();
     _showSnack('Reserva creada');

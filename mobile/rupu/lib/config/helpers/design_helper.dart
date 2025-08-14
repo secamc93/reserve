@@ -54,51 +54,64 @@ class PrimaryCard extends StatelessWidget {
   }
 }
 
+enum StatusTone { info, success, warning, danger }
+
 class StatusBadge extends StatelessWidget {
   const StatusBadge(this.text, {super.key, this.tone = StatusTone.info});
+
   final String text;
   final StatusTone tone;
+
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    Color bg;
-    Color fg;
-    switch (tone) {
-      case StatusTone.success:
-        bg = cs.secondaryContainer;
-        fg = cs.onSecondaryContainer;
-        break;
-      case StatusTone.warning:
-        bg = Colors.amber.shade100;
-        fg = Colors.brown.shade800;
-        break;
-      case StatusTone.danger:
-        bg = Colors.red.shade100;
-        fg = Colors.red.shade800;
-        break;
-      default:
-        bg = cs.primaryContainer;
-        fg = cs.onPrimaryContainer;
-        break;
-    }
+    final palette = _paletteFor(tone);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: bg,
+        color: palette.bg, // 🎨 color fijo (no del tema)
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
         text,
-        style: Theme.of(context).textTheme.labelMedium!.copyWith(
-          color: fg,
-          fontWeight: FontWeight.w600,
-        ),
+        // Usamos la tipografía del tema (para coherencia), pero el color es fijo
+        style:
+            Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: palette.fg,
+              fontWeight: FontWeight.w600,
+            ) ??
+            TextStyle(
+              color: palette.fg,
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+            ),
       ),
     );
   }
+
+  _BadgeColors _paletteFor(StatusTone t) {
+    switch (t) {
+      case StatusTone.success:
+        // Verde suave
+        return const _BadgeColors(bg: Color(0xFFE6F4EA), fg: Color(0xFF0F5132));
+      case StatusTone.warning:
+        // Ámbar suave
+        return const _BadgeColors(bg: Color(0xFFFFF4E5), fg: Color(0xFF7A4F01));
+      case StatusTone.danger:
+        // Rojo suave
+        return const _BadgeColors(bg: Color(0xFFFFE5E5), fg: Color(0xFF842029));
+      case StatusTone.info:
+        // Azul suave
+        return const _BadgeColors(bg: Color(0xFFE7F1FF), fg: Color(0xFF084298));
+    }
+  }
 }
 
-enum StatusTone { info, success, warning, danger }
+class _BadgeColors {
+  const _BadgeColors({required this.bg, required this.fg});
+  final Color bg;
+  final Color fg;
+}
 
 class ProgressBar extends StatelessWidget {
   const ProgressBar({super.key, required this.value});

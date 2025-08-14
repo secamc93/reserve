@@ -484,8 +484,14 @@ class AppointmentTimelineCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tone = status == 'Confirmada'
+        ? StatusTone.info
+        : status == 'Pendiente'
+        ? StatusTone.warning
+        : status == 'Cancelada'
+        ? StatusTone.danger
+        : status == 'Completada'
         ? StatusTone.success
-        : (status == 'Pendiente' ? StatusTone.warning : StatusTone.info);
+        : StatusTone.info;
     return PrimaryCard(
       child: Padding(
         padding: const EdgeInsets.all(16),

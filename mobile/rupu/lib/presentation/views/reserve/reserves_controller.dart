@@ -14,15 +14,20 @@ class ReserveController extends GetxController {
 
   final isLoading = false.obs;
   final errorMessage = RxnString();
-  final reservas = <Reserve>[].obs;
+
+  /// 👇 Dos listas separadas según la vista
+  final reservasHoy = <Reserve>[].obs; // Home
+  final reservasTodas = <Reserve>[].obs; // Calendario
+
   final isSaving = false.obs;
 
   @override
   void onReady() {
     super.onReady();
-    cargarReservasOrdenadas();
+    cargarReservasHoy(); // Home por defecto
   }
 
+  // ================= Crear =================
   Future<bool> crearReserva({
     required int businessId,
     required String name,
@@ -33,7 +38,7 @@ class ReserveController extends GetxController {
     String? email,
     String? phone,
   }) async {
-    debugPrint('CTRL -> dni="$dni" email="$email" phone="$phone"');
+    debugPrint('CTRL crearReserva -> dni="$dni" email="$email" phone="$phone"');
     try {
       final created = await repository.crearReserva(
         businessId: businessId,
@@ -41,98 +46,118 @@ class ReserveController extends GetxController {
         startAt: startAt,
         endAt: endAt,
         numberOfGuests: numberOfGuests,
-        dni: dni, // <--- NO los cambies a null aquí
+        dni: dni,
         email: email,
         phone: phone,
       );
-      reservas.add(created);
-      reservas.sort((a, b) => (a.startAt).compareTo(b.startAt));
+
+      // 1) Calendario: siempre contiene todas
+      reservasTodas.add(created);
+      _sortTodas();
+
+      // 2) Home: solo si es HOY
+      final now = DateTime.now();
+      if (_isSameDay(startAt, now)) {
+        reservasHoy.add(created);
+        _sortHoy();
+      }
+
       return true;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('CTRL crearReserva error: $e');
       return false;
     }
   }
 
-  Future<void> cargarReservasOrdenadas({bool silent = false}) async {
+  // ================= Home (solo HOY) =================
+  Future<void> cargarReservasHoy({bool silent = false}) async {
     if (!silent) isLoading.value = true;
-
-    isLoading.value = true;
     errorMessage.value = null;
     try {
-      List<Reserve> items = await repository.obtenerReservas();
+      final items = await repository.obtenerReservas();
 
-      DateTime? parse(dynamic v) => _parseDate(v);
       final now = DateTime.now();
-      final startToday = DateTime(now.year, now.month, now.day);
+      final soloHoy = <Reserve>[];
 
-      int group(DateTime? dt) {
-        if (dt == null) return 4; // sin fecha -> al final
-        final d = DateTime(dt.year, dt.month, dt.day);
-        final isToday = d == startToday;
-        if (isToday) {
-          return dt.isBefore(now) ? 1 : 0; // 0: hoy futuras, 1: hoy pasadas
+      for (final r in items) {
+        final dt = _parseDate(r.startAt);
+        if (dt != null && _isSameDay(dt, now)) {
+          soloHoy.add(r);
         }
-        if (d.isAfter(startToday)) return 2; // 2: futuras (no hoy)
-        return 3; // 3: pasadas (no hoy)
       }
 
-      int safeId(Reserve r) {
-        // para desempate estable si tu ID es numérico, ajusta según tu modelo
-        return int.tryParse(r.reservaId.toString()) ?? 0;
-      }
+      // ordenar para Home:
+      reservasHoy.assignAll(_sortedHoyFrom(soloHoy, now));
 
-      items.sort((a, b) {
-        final da = parse(a.startAt);
-        final db = parse(b.startAt);
-
-        final ga = group(da);
-        final gb = group(db);
-        final gcmp = ga.compareTo(gb);
-        if (gcmp != 0) return gcmp;
-
-        // Dentro de cada grupo:
-        switch (ga) {
-          case 0: // hoy futuras -> ascendente (más cercana primero)
-            final c0 = da!.compareTo(db!);
-            if (c0 != 0) return c0;
-            break;
-          case 1: // hoy pasadas -> descendente (más reciente primero)
-            final c1 = db!.compareTo(da!);
-            if (c1 != 0) return c1;
-            break;
-          case 2: // futuras (no hoy) -> ascendente (más próxima primero)
-            final c2 = da!.compareTo(db!);
-            if (c2 != 0) return c2;
-            break;
-          case 3: // pasadas (no hoy) -> descendente (más reciente primero)
-            final c3 = db!.compareTo(da!);
-            if (c3 != 0) return c3;
-            break;
-          default: // 4: sin fecha -> mantener orden relativo
-            break;
-        }
-
-        // Desempates (opcional): por fecha de creación y luego por ID
-        final ca = parse(a.reservaCreada);
-        final cb = parse(b.reservaCreada);
-        if (ca != null && cb != null) {
-          final c = ca.compareTo(cb);
-          if (c != 0) return c;
-        }
-
-        return safeId(a).compareTo(safeId(b));
-      });
-
-      reservas.assignAll(items);
+      // opcional: cachear todas si quieres (no obligatorio)
+      // reservasTodas.assignAll(_sortedTodasFrom(items));
     } catch (e) {
-      errorMessage.value = 'No se pudieron cargar las reservas';
+      errorMessage.value = 'No se pudieron cargar las reservas de hoy';
     } finally {
       if (!silent) isLoading.value = false;
-
-      isLoading.value = false;
     }
   }
 
+  // ================= Calendario (TODAS) =================
+  Future<void> cargarReservasTodas({bool silent = false}) async {
+    if (!silent) isLoading.value = true;
+    errorMessage.value = null;
+    try {
+      final items = await repository.obtenerReservas();
+      reservasTodas.assignAll(_sortedTodasFrom(items));
+    } catch (e) {
+      errorMessage.value = 'No se pudieron cargar todas las reservas';
+    } finally {
+      if (!silent) isLoading.value = false;
+    }
+  }
+
+  // ================= Helpers de ordenamiento =================
+  List<Reserve> _sortedHoyFrom(List<Reserve> list, DateTime now) {
+    final futuras = <Reserve>[];
+    final pasadas = <Reserve>[];
+
+    for (final r in list) {
+      final dt = _parseDate(r.startAt)!;
+      if (dt.isAfter(now)) {
+        futuras.add(r);
+      } else {
+        pasadas.add(r);
+      }
+    }
+    futuras.sort(
+      (a, b) => _parseDate(a.startAt)!.compareTo(_parseDate(b.startAt)!),
+    ); // asc
+    pasadas.sort(
+      (a, b) => _parseDate(b.startAt)!.compareTo(_parseDate(a.startAt)!),
+    ); // desc
+    return [...futuras, ...pasadas];
+  }
+
+  void _sortHoy() {
+    final now = DateTime.now();
+    reservasHoy.assignAll(_sortedHoyFrom(reservasHoy.toList(), now));
+  }
+
+  List<Reserve> _sortedTodasFrom(List<Reserve> list) {
+    final copy = [...list];
+    copy.sort((a, b) {
+      final da = _parseDate(a.startAt) ?? DateTime(9999);
+      final db = _parseDate(b.startAt) ?? DateTime(9999);
+      final c = da.compareTo(db);
+      if (c != 0) return c;
+      final ea = _parseDate(a.endAt) ?? da;
+      final eb = _parseDate(b.endAt) ?? db;
+      return ea.compareTo(eb);
+    });
+    return copy;
+  }
+
+  void _sortTodas() {
+    reservasTodas.assignAll(_sortedTodasFrom(reservasTodas.toList()));
+  }
+
+  // ================= Utils =================
   DateTime? _parseDate(dynamic raw) {
     if (raw == null) return null;
     if (raw is DateTime) return raw.toLocal();
@@ -140,7 +165,10 @@ class ReserveController extends GetxController {
     return null;
   }
 
-  // ---- Expuesto para la vista ----
+  bool _isSameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+
+  // ---- Expuesto para la vista (Home) ----
   String cliente(Reserve r) => r.clienteNombre;
 
   String estado(Reserve r) {
@@ -148,23 +176,16 @@ class ReserveController extends GetxController {
     if (s.contains('confirm')) return 'Confirmada';
     if (s.contains('pend')) return 'Pendiente';
     if (s.contains('pag')) return 'Pagada';
+    if (s.contains('Cancel')) return 'Cancelada';
+    if (s.contains('Completa')) return 'Completada';
+
     return r.estadoNombre.isNotEmpty == true ? r.estadoNombre : 'Pendiente';
   }
 
-  String fecha(Reserve r) {
+  String fechaHome(Reserve r) {
     final dt = _parseDate(r.startAt);
     if (dt == null) return '-';
-
-    final now = DateTime.now();
-    final sameDay =
-        dt.year == now.year && dt.month == now.month && dt.day == now.day;
-
     final h = DateFormat('HH:mm').format(dt); // 24h
-    // final h = DateFormat('h:mm a').format(dt);     // 12h AM/PM (opcional)
-
-    if (sameDay) return 'Hoy • $h';
-
-    final d = DateFormat('dd/MM/yyyy').format(dt);
-    return '$d • $h';
+    return 'Hoy • $h';
   }
 }

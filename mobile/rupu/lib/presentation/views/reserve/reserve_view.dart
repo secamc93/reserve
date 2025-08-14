@@ -21,7 +21,7 @@ class ReserveView extends GetView<ReserveController> {
 
     return SafeArea(
       child: RefreshIndicator(
-        onRefresh: () => controller.cargarReservasOrdenadas(silent: true),
+        onRefresh: () => controller.cargarReservasHoy(silent: true),
         child: Obx(() {
           // Siempre devolver un scrollable para que el pull-to-refresh funcione,
           // incluso en vacío o error.
@@ -86,19 +86,19 @@ class ReserveView extends GetView<ReserveController> {
                     ),
                   ),
                 ),
-              ] else if (controller.reservas.isEmpty) ...[
+              ] else if (controller.reservasHoy.isEmpty) ...[
                 const Padding(
                   padding: EdgeInsets.all(16),
                   child: Text('No hay reservas por ahora'),
                 ),
               ] else ...[
-                for (final r in controller.reservas)
+                for (final r in controller.reservasHoy)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: BookingListCard(
                       client: controller.cliente(r),
                       subtitle: 'Servicio: Reserva',
-                      time: controller.fecha(r),
+                      time: controller.fechaHome(r),
                       status: controller.estado(r),
                       onTap: () {},
                     ),
@@ -167,7 +167,13 @@ class BookingListCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final tone = status == 'Confirmada'
         ? StatusTone.success
-        : (status == 'Pendiente' ? StatusTone.warning : StatusTone.info);
+        : (status == 'Pendiente'
+              ? StatusTone.warning
+              : status == 'Cancelada'
+              ? StatusTone.danger
+              : status == 'Completada'
+              ? StatusTone.info
+              : StatusTone.info);
     return PrimaryCard(
       onTap: onTap,
       child: Padding(

@@ -3,6 +3,8 @@ import 'package:rupu/domain/entities/reserve.dart';
 abstract class ReserveRepository {
   Future<List<Reserve>> obtenerReservas();
 
+  Future<List<Reserve>> obtenerReserva({required int id});
+
   Future<Reserve> crearReserva({
     required int businessId,
     required String name,

@@ -84,4 +84,22 @@ class ReservasDatasourceImpl extends ReserveDatasource {
       rethrow;
     }
   }
+
+  @override
+  Future<List<Reserve>> obtenerReserva({required int id}) async {
+    try {
+      final response = await _dio.get('/reserves', queryParameters: {"id": id});
+
+      final model = ReservasResponseModel.fromJson(
+        response.data as Map<String, dynamic>,
+      );
+
+      return model.data.map(ReservesMapper.reservaFromModel).toList();
+    } on DioException catch (e) {
+      debugPrint(
+        'Error obtener roles y permisos [${e.response?.statusCode}]: ${e.response?.data ?? e.message}',
+      );
+      rethrow;
+    }
+  }
 }

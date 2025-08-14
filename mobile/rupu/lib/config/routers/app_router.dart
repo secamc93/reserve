@@ -1,6 +1,5 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rupu/config/routers/app_bindings.dart';
 import 'package:rupu/presentation/widgets/shared/custom_bottom_navigation.dart';
@@ -55,7 +54,6 @@ final appRouter = GoRouter(
           path: '/home/:page/calendar',
           name: CalendarViewReserve.name,
           builder: (context, state) {
-            // Si necesitas bindings, llámalos aquí (CalendarBinding.register();)
             ReserveBinding.register();
             return CalendarViewReserve(); // tu vista
           },
@@ -64,10 +62,8 @@ final appRouter = GoRouter(
           path: '/home/:page/reserve/new',
           name: 'reserve_new',
           builder: (context, state) {
-            // Asegura el binding del controller si no está
-            if (!Get.isRegistered<ReserveController>()) {
-              Get.put(ReserveController());
-            }
+            ReserveBinding.register();
+
             return const CreateReserveView();
           },
         ),

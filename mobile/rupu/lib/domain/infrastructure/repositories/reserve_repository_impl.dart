@@ -33,4 +33,9 @@ class ReserveRepositoryImpl extends ReserveRepository {
       phone: phone,
     );
   }
+
+  @override
+  Future<List<Reserve>> obtenerReserva({required int id}) {
+    return datasource.obtenerReserva(id: id);
+  }
 }
