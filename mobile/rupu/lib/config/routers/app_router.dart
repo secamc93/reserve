@@ -1,6 +1,7 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:get/get.dart';
 import 'package:rupu/config/routers/app_bindings.dart';
 import 'package:rupu/presentation/widgets/shared/custom_bottom_navigation.dart';
 import '../../presentation/screens/screens.dart';
@@ -65,6 +66,17 @@ final appRouter = GoRouter(
             ReserveBinding.register();
 
             return const CreateReserveView();
+          },
+        ),
+        GoRoute(
+          path: '/home/:page/reserve/:id',
+          name: 'reserve_detail',
+          builder: (context, state) {
+            ReserveDetailBinding.register();
+            final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+            final ctrl = Get.find<ReserveDetailController>();
+            ctrl.cargarReserva(id);
+            return const ReserveDetailView();
           },
         ),
         GoRoute(

@@ -12,6 +12,10 @@ export 'package:rupu/presentation/views/reserve/reserves_controller.dart';
 
 export 'package:rupu/presentation/views/reserve/reserve_view.dart';
 
+export 'package:rupu/presentation/views/reserve/reserve_detail_controller.dart';
+
+export 'package:rupu/presentation/views/reserve/reserve_detail_view.dart';
+
 export 'package:rupu/presentation/views/profile/perfil_view.dart';
 
 export 'package:rupu/presentation/views/home/home_view.dart';
