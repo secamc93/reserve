@@ -63,8 +63,9 @@ final appRouter = GoRouter(
           path: '/home/:page/reserve/new',
           name: 'reserve_new',
           builder: (context, state) {
-            ReserveBinding.register();
+            PerfilBinding.register();
 
+            ReserveBinding.register();
             return const CreateReserveView();
           },
         ),

@@ -170,10 +170,8 @@ class _CreateReserveViewState extends State<CreateReserveView> {
       return;
     }
 
-    final perfil = Get.isRegistered<PerfilController>()
-        ? Get.find<PerfilController>()
-        : null;
-    final businessId = perfil?.businessId ?? 0;
+    final perfil = Get.find<PerfilController>();
+    final businessId = perfil.businessId;
     if (businessId <= 0) {
       _showSnack('No hay negocio seleccionado.');
       return;
