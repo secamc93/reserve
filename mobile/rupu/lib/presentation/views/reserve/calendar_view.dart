@@ -59,10 +59,6 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
         ? Get.find<ReserveController>()
         : Get.put(ReserveController());
 
-    if (reserve.reservasTodas.isEmpty) {
-      reserve.cargarReservasTodas(silent: true);
-    }
-
     return SafeArea(
       child: Obx(() {
         final appts = toAppointments(reserve.reservasTodas);
@@ -170,6 +166,34 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
 
   // ───────────────── Calendario base ─────────────────
   Widget _calendar(List<Appointment> appts) {
+    (context, details) {
+      final appt = details.appointments.first as Appointment;
+
+      // Mantén tu color de evento como fondo (amarillo)…
+      final bg = appt.color;
+      // …o usa un fondo más suave si prefieres (descomenta):
+      // final bg = appt.color.withOpacity(0.18);
+
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: appt.color.withValues(alpha: .35)),
+        ),
+        child: Text(
+          appt.subject,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: Colors.black, // <-- TEXTO EN NEGRO
+            fontWeight: FontWeight.w600,
+            fontSize: 12,
+          ),
+        ),
+      );
+    };
+
     return LayoutBuilder(
       builder: (context, c) {
         // Medidas seguras según orientación/constraints
@@ -232,30 +256,30 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
           appointmentBuilder: (ctx, details) {
             final appt = details.appointments.first as Appointment;
             final isMonth = _view == CalendarView.month;
-
             final startHM = DateFormat('HH:mm', 'es').format(appt.startTime);
             final endHM = DateFormat('HH:mm', 'es').format(appt.endTime);
+            final bg = appt.color;
 
-            final bg = (appt.color == Colors.transparent || appt.color == null)
-                ? ApptPalette.infoBg
-                : appt.color;
-            final fg = fixedFgForBg(bg); // 👈 texto/elementos con paleta
-
+            // Bounds reales del slot (clave para evitar overflow)
             final r = details.bounds;
             final w = r.width;
             final h = r.height;
+
+            // Radio seguro según altura real del slot
             final safeRadius = (h / 2 - 1).clamp(4.0, 10.0);
-            final tiny = w < 86;
-            final compact = w < 120;
+            final tiny = w < 86; // muy angosto
+            final compact = w < 120; // teléfono normal
 
             if (isMonth) {
+              // MONTH: chip de hora (o punto si no hay espacio) + nombre en 1 línea
               return SizedBox(
                 width: w,
-                height: h,
+                height: h, // ← nos ajustamos al alto exacto del slot
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(safeRadius),
                   child: Container(
                     color: bg,
+                    // sin padding vertical para no exceder el alto
                     padding: const EdgeInsets.symmetric(horizontal: 4),
                     alignment: Alignment.centerLeft,
                     child: Row(
@@ -270,9 +294,7 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
                               maxHeight: 50,
                             ),
                             decoration: BoxDecoration(
-                              color: fg.withOpacity(
-                                .12,
-                              ), // 👈 overlay relativo al fg
+                              color: Colors.black.withValues(alpha: .08),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: FittedBox(
@@ -282,8 +304,8 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
                                   Text(
                                     appt.isAllDay ? 'día' : startHM,
                                     maxLines: 1,
-                                    style: TextStyle(
-                                      color: fg, // 👈 texto con fg fijo
+                                    style: const TextStyle(
+                                      color: Colors.black,
                                       fontWeight: FontWeight.w700,
                                       fontSize: 10,
                                     ),
@@ -291,8 +313,8 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
                                   Text(
                                     appt.isAllDay ? 'día' : endHM,
                                     maxLines: 1,
-                                    style: TextStyle(
-                                      color: fg,
+                                    style: const TextStyle(
+                                      color: Colors.black,
                                       fontWeight: FontWeight.w700,
                                       fontSize: 10,
                                     ),
@@ -305,8 +327,8 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
                           Container(
                             width: 6,
                             height: 6,
-                            decoration: BoxDecoration(
-                              color: fg, // 👈 puntito con fg
+                            decoration: const BoxDecoration(
+                              color: Colors.black,
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -318,7 +340,7 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
                             softWrap: false,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              color: fg, // 👈 texto con fg
+                              color: Colors.black,
                               fontWeight: FontWeight.w600,
                               fontSize: compact ? 10.5 : 11.5,
                             ),
@@ -330,15 +352,20 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
                 ),
               );
             } else {
+              // DAY/WEEK/WORKWEEK/SCHEDULE (Agenda)
+              // Si el slot es bajo, colapsa a 1 línea para evitar overflow
               final collapse = h < 28;
+
               return SizedBox(
                 width: w,
-                height: h,
+                height: h, // ← altura exacta del item de agenda/tiempo
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(safeRadius),
                   child: Container(
                     color: bg,
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                    ), // sin padding vertical
                     alignment: Alignment.centerLeft,
                     child: collapse
                         ? Text(
@@ -347,8 +374,8 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
                                 : '$startHM–$endHM  ${appt.subject}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: fg, // 👈
+                            style: const TextStyle(
+                              color: Colors.black,
                               fontWeight: FontWeight.w600,
                               fontSize: 11,
                             ),
@@ -364,8 +391,8 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
                                     : '$startHM–$endHM',
                                 maxLines: 1,
                                 overflow: TextOverflow.fade,
-                                style: TextStyle(
-                                  color: fg, // 👈
+                                style: const TextStyle(
+                                  color: Colors.black,
                                   fontWeight: FontWeight.w700,
                                   fontSize: 11,
                                 ),
@@ -374,8 +401,8 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
                                 appt.subject,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: fg, // 👈
+                                style: const TextStyle(
+                                  color: Colors.black,
                                   fontWeight: FontWeight.w600,
                                   fontSize: 12,
                                 ),
@@ -852,20 +879,5 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
 class _ReserveCalendarDataSource extends CalendarDataSource {
   _ReserveCalendarDataSource(List<Appointment> appts) {
     appointments = appts;
-  }
-
-  @override
-  Color getColor(int index) {
-    final Appointment appt = appointments![index] as Appointment;
-    final Color bg =
-        (appt.color == null || appt.color == Colors.transparent)
-            ? ApptPalette.infoBg
-            : appt.color!;
-
-    // The month-view indicator is a small dot that easily fades when using the
-    // pastel background colors of the appointments.  Instead, map the bg to a
-    // stronger foreground color so the indicator matches the appointment
-    // builder's palette.
-    return fixedFgForBg(bg);
   }
 }
