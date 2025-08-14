@@ -45,7 +45,7 @@ type IReservationRepository interface {
 	GetReserves(ctx context.Context, statusID *uint, clientID *uint, tableID *uint, startDate *time.Time, endDate *time.Time) ([]dtos.ReserveDetailDTO, error)
 	GetReserveByID(ctx context.Context, id uint) (*dtos.ReserveDetailDTO, error)
 	CancelReservation(ctx context.Context, id uint, reason string) (string, error)
-	UpdateReservation(ctx context.Context, id uint, tableID *uint, startAt *time.Time, endAt *time.Time, numberOfGuests *int) (string, error)
+	UpdateReservation(ctx context.Context, params dtos.UpdateReservationDTO) (string, error)
 	CreateReservationStatusHistory(ctx context.Context, history entities.ReservationStatusHistory) error
 	GetClientByEmailAndBusiness(ctx context.Context, email string, businessID uint) (*entities.Client, error)
 	CreateClient(ctx context.Context, client entities.Client) (string, error)

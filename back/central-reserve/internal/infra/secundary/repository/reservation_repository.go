@@ -39,8 +39,7 @@ func (r *Repository) GetLatestReservationByClient(ctx context.Context, clientID 
 func (r *Repository) GetReserves(ctx context.Context, statusID *uint, clientID *uint, tableID *uint, startDate *time.Time, endDate *time.Time) ([]dtos.ReserveDetailDTO, error) {
 	var gormReservations []models.Reservation
 
-	// Primero, intentar obtener reservas sin Preload para ver si hay datos básicos
-	query := r.database.Conn(ctx)
+	query := r.database.Conn(ctx).Preload("Status").Preload("Client").Preload("Table").Preload("Business").Preload("CreatedBy")
 
 	// Aplicar filtros
 	if statusID != nil {
@@ -59,44 +58,13 @@ func (r *Repository) GetReserves(ctx context.Context, statusID *uint, clientID *
 		query = query.Where("end_at <= ?", *endDate)
 	}
 
-	// Log para debugging
-	r.logger.Info().Msg("Ejecutando consulta de reservas sin Preload")
-
 	if err := query.Find(&gormReservations).Error; err != nil {
 		r.logger.Error().Err(err).Msg("Error al obtener reservas")
 		return []dtos.ReserveDetailDTO{}, nil
 	}
 
-	r.logger.Info().Int("count", len(gormReservations)).Msg("Reservas encontradas sin Preload")
-
-	// Si no hay reservas, retornar vacío
 	if len(gormReservations) == 0 {
 		r.logger.Info().Msg("No se encontraron reservas en la base de datos")
-		return []dtos.ReserveDetailDTO{}, nil
-	}
-
-	// Ahora intentar con Preload para obtener las relaciones
-	queryWithPreload := r.database.Conn(ctx).Preload("Status").Preload("Client").Preload("Table").Preload("Business").Preload("CreatedBy")
-
-	// Aplicar los mismos filtros
-	if statusID != nil {
-		queryWithPreload = queryWithPreload.Where("status_id = ?", *statusID)
-	}
-	if clientID != nil {
-		queryWithPreload = queryWithPreload.Where("client_id = ?", *clientID)
-	}
-	if tableID != nil {
-		queryWithPreload = queryWithPreload.Where("table_id = ?", *tableID)
-	}
-	if startDate != nil {
-		queryWithPreload = queryWithPreload.Where("start_at >= ?", *startDate)
-	}
-	if endDate != nil {
-		queryWithPreload = queryWithPreload.Where("end_at <= ?", *endDate)
-	}
-
-	if err := queryWithPreload.Find(&gormReservations).Error; err != nil {
-		r.logger.Error().Err(err).Msg("Error al obtener reservas con Preload")
 		return []dtos.ReserveDetailDTO{}, nil
 	}
 
@@ -110,7 +78,6 @@ func (r *Repository) GetReserves(ctx context.Context, statusID *uint, clientID *
 			NumberOfGuests:     reservation.NumberOfGuests,
 			ReservaCreada:      reservation.CreatedAt,
 			ReservaActualizada: reservation.UpdatedAt,
-			StatusHistory:      []entities.ReservationStatusHistory{},
 		}
 
 		// Manejar relaciones de forma segura
@@ -147,37 +114,6 @@ func (r *Repository) GetReserves(ctx context.Context, statusID *uint, clientID *
 		}
 
 		results = append(results, dto)
-	}
-
-	// Obtener el historial de estados para cada reserva
-	if len(results) > 0 {
-		reservationIDs := make([]uint, len(results))
-		for i, result := range results {
-			reservationIDs[i] = result.ReservaID
-		}
-
-		var historyResults []models.ReservationStatusHistory
-		if err := r.database.Conn(ctx).
-			Preload("Status").Preload("ChangedBy").
-			Where("reservation_id IN ?", reservationIDs).
-			Order("created_at ASC").
-			Find(&historyResults).Error; err != nil {
-			r.logger.Error().Err(err).Msg("Error al obtener historial de estados")
-		} else {
-			// Agrupar historial por reservation_id
-			historyMap := make(map[uint][]entities.ReservationStatusHistory)
-			for _, history := range historyResults {
-				entityHistory := mapper.ReservationStatusHistoryToEntity(history)
-				historyMap[history.ReservationID] = append(historyMap[history.ReservationID], entityHistory)
-			}
-
-			// Asignar historial a cada reserva
-			for i := range results {
-				if history, exists := historyMap[results[i].ReservaID]; exists {
-					results[i].StatusHistory = history
-				}
-			}
-		}
 	}
 
 	r.logger.Info().Int("total_results", len(results)).Msg("Reservas mapeadas exitosamente")
@@ -235,23 +171,6 @@ func (r *Repository) GetReserveByID(ctx context.Context, id uint) (*dtos.Reserve
 		UsuarioID:          &gormReservation.CreatedBy.ID,
 		UsuarioNombre:      &gormReservation.CreatedBy.Name,
 		UsuarioEmail:       &gormReservation.CreatedBy.Email,
-		StatusHistory:      []entities.ReservationStatusHistory{},
-	}
-
-	// Obtener el historial de estados
-	var historyResults []models.ReservationStatusHistory
-	if err := r.database.Conn(ctx).
-		Preload("Status").Preload("ChangedBy").
-		Where("reservation_id = ?", id).
-		Order("created_at ASC").
-		Find(&historyResults).Error; err != nil {
-		r.logger.Error().Uint("id", id).Err(err).Msg("Error al obtener historial de estados")
-	} else {
-		// Mapear historial a entities
-		for _, history := range historyResults {
-			entityHistory := mapper.ReservationStatusHistoryToEntity(history)
-			result.StatusHistory = append(result.StatusHistory, entityHistory)
-		}
 	}
 
 	return &result, nil
@@ -287,32 +206,45 @@ func (r *Repository) CancelReservation(ctx context.Context, id uint, reason stri
 }
 
 // UpdateReservation actualiza una reserva
-func (r *Repository) UpdateReservation(ctx context.Context, id uint, tableID *uint, startAt *time.Time, endAt *time.Time, numberOfGuests *int) (string, error) {
+func (r *Repository) UpdateReservation(ctx context.Context, params dtos.UpdateReservationDTO) (string, error) {
 	updates := make(map[string]interface{})
 
-	if tableID != nil {
-		updates["table_id"] = *tableID
+	if params.TableID != nil {
+		updates["table_id"] = *params.TableID
 	}
-	if startAt != nil {
-		updates["start_at"] = *startAt
+	if params.StartAt != nil {
+		updates["start_at"] = *params.StartAt
 	}
-	if endAt != nil {
-		updates["end_at"] = *endAt
+	if params.EndAt != nil {
+		updates["end_at"] = *params.EndAt
 	}
-	if numberOfGuests != nil {
-		updates["number_of_guests"] = *numberOfGuests
+	if params.NumberOfGuests != nil {
+		updates["number_of_guests"] = *params.NumberOfGuests
+	}
+	if params.StatusID != nil {
+		updates["status_id"] = *params.StatusID
 	}
 
 	if len(updates) == 0 {
 		return "No hay campos para actualizar", nil
 	}
 
-	if err := r.database.Conn(ctx).Model(&models.Reservation{}).Where("id = ?", id).Updates(updates).Error; err != nil {
-		r.logger.Error().Uint("id", id).Err(err).Msg("Error al actualizar reserva")
+	if err := r.database.Conn(ctx).Model(&models.Reservation{}).Where("id = ?", params.ID).Updates(updates).Error; err != nil {
+		r.logger.Error().Uint("id", params.ID).Err(err).Msg("Error al actualizar reserva")
 		return "", err
 	}
 
-	return fmt.Sprintf("Reserva actualizada con ID: %d", id), nil
+	if params.StatusID != nil {
+		history := models.ReservationStatusHistory{
+			ReservationID: params.ID,
+			StatusID:      *params.StatusID,
+		}
+		if err := r.database.Conn(ctx).Create(&history).Error; err != nil {
+			r.logger.Error().Uint("id", params.ID).Err(err).Msg("Error al crear historial de estado")
+		}
+	}
+
+	return fmt.Sprintf("Reserva actualizada con ID: %d", params.ID), nil
 }
 
 // CreateReservationStatusHistory crea un registro en el historial de estados

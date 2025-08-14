@@ -1,12 +1,12 @@
 package usecasereserve
 
 import (
+	"central_reserve/internal/domain/dtos"
 	"context"
-	"time"
 )
 
-func (u *ReserveUseCase) UpdateReservation(ctx context.Context, id uint, tableID *uint, startAt *time.Time, endAt *time.Time, numberOfGuests *int) (string, error) {
-	response, err := u.repository.UpdateReservation(ctx, id, tableID, startAt, endAt, numberOfGuests)
+func (u *ReserveUseCase) UpdateReservation(ctx context.Context, params dtos.UpdateReservationDTO) (string, error) {
+	response, err := u.repository.UpdateReservation(ctx, params)
 	if err != nil {
 		return "", err
 	}
