@@ -15,7 +15,7 @@ import (
 // @Produce      json
 // @Security     BearerAuth
 // @Param        id   path    int  true  "ID de la reserva"
-// @Success      200  {object}  map[string]interface{} "Reserva obtenida exitosamente"
+// @Success      200  {object}  response.ReserveSuccessResponse "Reserva obtenida exitosamente"
 // @Failure      400  {object}  map[string]interface{} "ID inválido"
 // @Failure      401  {object}  map[string]interface{} "Token de acceso requerido"
 // @Failure      404  {object}  map[string]interface{} "Reserva no encontrada"

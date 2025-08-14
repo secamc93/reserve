@@ -26,6 +26,7 @@ func MapToReserveDetail(dto dtos.ReserveDetailDTO) response.ReserveDetail {
 		NumberOfGuests:     dto.NumberOfGuests,
 		ReservaCreada:      dto.ReservaCreada,
 		ReservaActualizada: dto.ReservaActualizada,
+		EstadoID:           dto.EstadoID,
 		EstadoCodigo:       dto.EstadoCodigo,
 		EstadoNombre:       dto.EstadoNombre,
 		ClienteID:          dto.ClienteID,

@@ -1830,8 +1830,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Lista de reservas obtenida exitosamente",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/response.ReserveListSuccessResponse"
                         }
                     },
                     "400": {
@@ -1889,8 +1888,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Reserva creada exitosamente",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/response.ReserveSuccessResponse"
                         }
                     },
                     "400": {
@@ -1948,8 +1946,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Reserva obtenida exitosamente",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/response.ReserveSuccessResponse"
                         }
                     },
                     "400": {
@@ -4518,6 +4515,55 @@ const docTemplate = `{
                         "$ref": "#/definitions/internal_infra_primary_http2_handlers_authhandler_response.RoleInfo"
                     }
                 }
+            }
+        },
+        "internal_infra_primary_http2_handlers_reservehandler_response.ReserveDetail": {
+            "type": "object",
+            "properties": {
+                "reserva_id": {"type": "integer"},
+                "start_at": {"type": "string"},
+                "end_at": {"type": "string"},
+                "number_of_guests": {"type": "integer"},
+                "reserva_creada": {"type": "string"},
+                "reserva_actualizada": {"type": "string"},
+                "estado_id": {"type": "integer"},
+                "estado_codigo": {"type": "string"},
+                "estado_nombre": {"type": "string"},
+                "cliente_id": {"type": "integer"},
+                "cliente_nombre": {"type": "string"},
+                "cliente_email": {"type": "string"},
+                "cliente_telefono": {"type": "string"},
+                "cliente_dni": {"type": "string"},
+                "mesa_id": {"type": "integer"},
+                "mesa_numero": {"type": "integer"},
+                "mesa_capacidad": {"type": "integer"},
+                "negocio_id": {"type": "integer"},
+                "negocio_nombre": {"type": "string"},
+                "negocio_codigo": {"type": "string"},
+                "negocio_direccion": {"type": "string"},
+                "usuario_id": {"type": "integer"},
+                "usuario_nombre": {"type": "string"},
+                "usuario_email": {"type": "string"}
+            }
+        },
+        "response.ReserveSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/internal_infra_primary_http2_handlers_reservehandler_response.ReserveDetail"
+                },
+                "success": {"type": "boolean"}
+            }
+        },
+        "response.ReserveListSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {"$ref": "#/definitions/internal_infra_primary_http2_handlers_reservehandler_response.ReserveDetail"}
+                },
+                "success": {"type": "boolean"},
+                "total": {"type": "integer"}
             }
         },
         "response.UserRolesPermissionsSuccessResponse": {

@@ -15,6 +15,7 @@ type ReserveDetailDTO struct {
 	ReservaActualizada time.Time
 
 	// Estado
+	EstadoID     uint
 	EstadoCodigo string
 	EstadoNombre string
 

@@ -78,6 +78,7 @@ func (r *Repository) GetReserves(ctx context.Context, statusID *uint, clientID *
 			NumberOfGuests:     reservation.NumberOfGuests,
 			ReservaCreada:      reservation.CreatedAt,
 			ReservaActualizada: reservation.UpdatedAt,
+			EstadoID:           reservation.StatusID,
 		}
 
 		// Manejar relaciones de forma segura
@@ -154,6 +155,7 @@ func (r *Repository) GetReserveByID(ctx context.Context, id uint) (*dtos.Reserve
 		NumberOfGuests:     gormReservation.NumberOfGuests,
 		ReservaCreada:      gormReservation.CreatedAt,
 		ReservaActualizada: gormReservation.UpdatedAt,
+		EstadoID:           gormReservation.StatusID,
 		EstadoCodigo:       gormReservation.Status.Code,
 		EstadoNombre:       gormReservation.Status.Name,
 		ClienteID:          gormReservation.Client.ID,
