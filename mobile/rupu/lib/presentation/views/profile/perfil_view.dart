@@ -156,6 +156,7 @@ class _ThemeTogglePill extends StatelessWidget {
 
             return SwitchListTile.adaptive(
               contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+
               title: Text(
                 isDark ? 'Modo Oscuro' : 'Modo Claro',
                 style: TextStyle(color: textColor, fontWeight: FontWeight.w600),
@@ -166,7 +167,15 @@ class _ThemeTogglePill extends StatelessWidget {
                 isDark ? Icons.nights_stay : Icons.wb_sunny,
                 color: textColor,
               ),
-              // Mejora de usabilidad en móviles
+
+              // 🎨 Colores (usar secondary como acento)
+              activeColor: cs.secondary, // Android: thumb / iOS: track
+              activeTrackColor: cs.secondaryContainer.withValues(
+                alpha: 0.6,
+              ), // Android: track
+              inactiveThumbColor: cs.outline,
+              inactiveTrackColor: cs.surfaceContainerHighest,
+
               visualDensity: VisualDensity.compact,
             );
           }),

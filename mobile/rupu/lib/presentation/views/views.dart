@@ -1,3 +1,5 @@
+export 'package:rupu/presentation/views/reserve/create_reserve_view.dart';
+
 export 'package:rupu/presentation/views/reserve/calendar_view.dart';
 
 export 'package:rupu/presentation/views/profile/perfil_controller.dart';

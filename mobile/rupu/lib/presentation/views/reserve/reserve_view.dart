@@ -55,6 +55,11 @@ class ReserveView extends GetView<ReserveController> {
                               'calendar',
                               pathParameters: {'page': '$pageIndex'},
                             );
+                          } else if (label == 'Nueva reserva') {
+                            context.pushNamed(
+                              'reserve_new',
+                              pathParameters: {'page': '$pageIndex'},
+                            );
                           }
                         },
                       );

@@ -74,6 +74,22 @@ class AppTheme {
         //   fontWeight: FontWeight.w700,
         // ),
       ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return secondaryColor; // thumb activo
+          }
+          return null; // usa por defecto
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return secondaryColor.withValues(alpha: .35); // track activo
+          }
+          return null;
+        }),
+        // Opcional M3:
+        // trackOutlineColor: MaterialStateProperty.all(Colors.transparent),
+      ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: secondaryColor.withValues(alpha: 0.95),
