@@ -54,7 +54,7 @@ class AppTheme {
     );
 
     final scheme = baseScheme.copyWith(
-      secondaryContainer: secondaryColor.withOpacity(0.95),
+      secondaryContainer: secondaryColor.withValues(alpha: .95),
       onSecondaryContainer: Colors.white,
     );
 
@@ -63,7 +63,7 @@ class AppTheme {
       colorScheme: scheme,
       useMaterial3: true,
       appBarTheme: AppBarTheme(
-        backgroundColor: primaryColor.withOpacity(0.5),
+        backgroundColor: primaryColor.withValues(alpha: 0.5),
         foregroundColor: Colors.white,
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
@@ -76,7 +76,7 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: secondaryColor.withOpacity(0.95),
+          backgroundColor: secondaryColor.withValues(alpha: 0.95),
           foregroundColor: Colors.white,
         ),
       ),

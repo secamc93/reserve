@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:rupu/config/helpers/calendar_helper.dart';
 import 'package:rupu/presentation/views/profile/perfil_controller.dart';
+import 'package:rupu/presentation/views/reserve/data_time_tile.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
-import 'package:rupu/domain/entities/reserve.dart';
 import 'package:rupu/presentation/views/reserve/reserves_controller.dart';
 
 class CalendarViewReserve extends StatefulWidget {
@@ -37,11 +38,18 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
   void initState() {
     super.initState();
     calCtrl.view = _view;
+    applyOrientationPolicy();
   }
 
   @override
   void dispose() {
     calCtrl.dispose();
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
     super.dispose();
   }
 
@@ -53,7 +61,7 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
 
     return SafeArea(
       child: Obx(() {
-        final appts = _toAppointments(reserve.reservas);
+        final appts = toAppointments(reserve.reservas);
         final merged = [...appts, ..._localEvents];
 
         return Stack(
@@ -105,16 +113,18 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
             onSelected: (v) => setState(() {
               _view = v;
               calCtrl.view = v;
+              // aplica/levanta el bloqueo según la vista elegida
+              applyOrientationPolicy();
             }),
             itemBuilder: (_) => _views
-                .map((v) => PopupMenuItem(value: v, child: Text(_labelFor(v))))
+                .map((v) => PopupMenuItem(value: v, child: Text(labelFor(v))))
                 .toList(),
             child: Row(
               children: [
-                Icon(_viewIcon(_view), color: cs.onSurfaceVariant),
+                Icon(viewIcon(_view), color: cs.onSurfaceVariant),
                 const SizedBox(width: 6),
                 Text(
-                  _labelFor(_view),
+                  labelFor(_view),
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     color: cs.onSurface,
@@ -137,7 +147,7 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
             tooltip: 'Anterior',
             onPressed: () {
               final d = calCtrl.displayDate ?? DateTime.now();
-              calCtrl.displayDate = _stepBack(d, _view);
+              calCtrl.displayDate = stepBack(d, _view);
             },
             icon: const Icon(Icons.chevron_left),
           ),
@@ -145,7 +155,7 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
             tooltip: 'Siguiente',
             onPressed: () {
               final d = calCtrl.displayDate ?? DateTime.now();
-              calCtrl.displayDate = _stepForward(d, _view);
+              calCtrl.displayDate = stepForward(d, _view);
             },
             icon: const Icon(Icons.chevron_right),
           ),
@@ -156,41 +166,276 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
 
   // ───────────────── Calendario base ─────────────────
   Widget _calendar(List<Appointment> appts) {
-    final monthSettings = (_view == CalendarView.month)
-        ? const MonthViewSettings(
-            appointmentDisplayMode: MonthAppointmentDisplayMode.appointment,
-            showAgenda: true,
-          )
-        : const MonthViewSettings();
+    (context, details) {
+      final appt = details.appointments.first as Appointment;
 
-    return SfCalendar(
-      controller: calCtrl,
-      view: _view,
-      dataSource: _ReserveCalendarDataSource(appts),
-      firstDayOfWeek: DateTime.monday,
-      headerHeight: 48,
-      headerStyle: const CalendarHeaderStyle(
-        textAlign: TextAlign.center,
-        textStyle: TextStyle(fontWeight: FontWeight.w800),
-      ),
-      viewHeaderStyle: const ViewHeaderStyle(
-        dayTextStyle: TextStyle(fontWeight: FontWeight.w700),
-      ),
-      // 24 horas visibles en vistas de tiempo
-      timeSlotViewSettings: const TimeSlotViewSettings(
-        startHour: 0,
-        endHour: 24,
-        timeIntervalHeight: 52,
-        nonWorkingDays: <int>[DateTime.sunday],
-      ),
-      monthViewSettings: monthSettings,
-      showDatePickerButton: false,
-      allowViewNavigation: true,
+      // Mantén tu color de evento como fondo (amarillo)…
+      final bg = appt.color;
+      // …o usa un fondo más suave si prefieres (descomenta):
+      // final bg = appt.color.withOpacity(0.18);
 
-      // Taps: abrir detalles o formulario de creación
-      onTap: _handleTap,
-      onLongPress: _handleLongPress,
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: appt.color.withValues(alpha: .35)),
+        ),
+        child: Text(
+          appt.subject,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: Colors.black, // <-- TEXTO EN NEGRO
+            fontWeight: FontWeight.w600,
+            fontSize: 12,
+          ),
+        ),
+      );
+    };
+
+    return LayoutBuilder(
+      builder: (context, c) {
+        // Medidas seguras según orientación/constraints
+        final size = MediaQuery.of(context).size;
+        final orientation = MediaQuery.of(context).orientation;
+        final maxH = c.maxHeight > 0 ? c.maxHeight : size.height;
+        final isTimeView =
+            _view == CalendarView.day ||
+            _view == CalendarView.week ||
+            _view == CalendarView.workWeek;
+
+        // Altura de slots en vistas de tiempo (evita 0/negativos)
+        final slotHeight = (maxH / 12).clamp(40.0, 80.0).toDouble();
+
+        // Altura del panel de agenda en vista Month (cuando showAgenda = true)
+        final agendaHeight = (maxH * 0.28).clamp(120.0, 260.0).toDouble();
+
+        final monthSettings = (_view == CalendarView.month)
+            ? MonthViewSettings(
+                appointmentDisplayMode: MonthAppointmentDisplayMode.indicator,
+                showAgenda: true,
+                numberOfWeeksInView: 6,
+                agendaViewHeight: agendaHeight,
+                agendaStyle: AgendaStyle(
+                  appointmentTextStyle: TextStyle(color: Colors.black),
+                  // dayTextStyle: TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
+                  // dateTextStyle: TextStyle(color: Colors.black87),
+                ),
+              )
+            : const MonthViewSettings();
+
+        return SfCalendar(
+          // Clave dependiente de vista y orientación -> resetea layout seguro
+          key: ValueKey('$_view-${orientation.name}'),
+          controller: calCtrl,
+          view: _view,
+          dataSource: _ReserveCalendarDataSource(appts),
+          firstDayOfWeek: DateTime.monday,
+          headerHeight: 48,
+
+          headerStyle: const CalendarHeaderStyle(
+            textAlign: TextAlign.center,
+            textStyle: TextStyle(fontWeight: FontWeight.w800),
+          ),
+          viewHeaderStyle: const ViewHeaderStyle(
+            dayTextStyle: TextStyle(fontWeight: FontWeight.w700),
+          ),
+
+          // 24 horas visibles en vistas de tiempo (con altura segura)
+          timeSlotViewSettings: TimeSlotViewSettings(
+            startHour: 0,
+            endHour: 24,
+            timeIntervalHeight: isTimeView ? slotHeight : 52,
+            nonWorkingDays: const <int>[DateTime.sunday],
+          ),
+
+          monthViewSettings: monthSettings,
+          showDatePickerButton: false,
+          allowViewNavigation: true,
+          appointmentBuilder: (ctx, details) {
+            final appt = details.appointments.first as Appointment;
+            final isMonth = _view == CalendarView.month;
+            final startHM = DateFormat('HH:mm', 'es').format(appt.startTime);
+            final endHM = DateFormat('HH:mm', 'es').format(appt.endTime);
+            final bg = appt.color;
+
+            // Bounds reales del slot (clave para evitar overflow)
+            final r = details.bounds;
+            final w = r.width;
+            final h = r.height;
+
+            // Radio seguro según altura real del slot
+            final safeRadius = (h / 2 - 1).clamp(4.0, 10.0);
+            final tiny = w < 86; // muy angosto
+            final compact = w < 120; // teléfono normal
+
+            if (isMonth) {
+              // MONTH: chip de hora (o punto si no hay espacio) + nombre en 1 línea
+              return SizedBox(
+                width: w,
+                height: h, // ← nos ajustamos al alto exacto del slot
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(safeRadius),
+                  child: Container(
+                    color: bg,
+                    // sin padding vertical para no exceder el alto
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    alignment: Alignment.centerLeft,
+                    child: Row(
+                      children: [
+                        if (!tiny)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            constraints: const BoxConstraints(
+                              minWidth: 28,
+                              maxWidth: 55,
+                              minHeight: 25,
+                              maxHeight: 50,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: .08),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Column(
+                                children: [
+                                  Text(
+                                    appt.isAllDay ? 'día' : startHM,
+                                    maxLines: 1,
+                                    style: const TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                  Text(
+                                    appt.isAllDay ? 'día' : endHM,
+                                    maxLines: 1,
+                                    style: const TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        else
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: const BoxDecoration(
+                              color: Colors.black,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        SizedBox(width: tiny ? 4 : 6),
+                        Flexible(
+                          child: Text(
+                            appt.subject,
+                            maxLines: 1,
+                            softWrap: false,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.w600,
+                              fontSize: compact ? 10.5 : 11.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            } else {
+              // DAY/WEEK/WORKWEEK/SCHEDULE (Agenda)
+              // Si el slot es bajo, colapsa a 1 línea para evitar overflow
+              final collapse = h < 28;
+
+              return SizedBox(
+                width: w,
+                height: h, // ← altura exacta del item de agenda/tiempo
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(safeRadius),
+                  child: Container(
+                    color: bg,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                    ), // sin padding vertical
+                    alignment: Alignment.centerLeft,
+                    child: collapse
+                        ? Text(
+                            appt.isAllDay
+                                ? 'Todo el día · ${appt.subject}'
+                                : '$startHM–$endHM  ${appt.subject}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 11,
+                            ),
+                          )
+                        : Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                appt.isAllDay
+                                    ? 'Todo el día'
+                                    : '$startHM–$endHM',
+                                maxLines: 1,
+                                overflow: TextOverflow.fade,
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 11,
+                                ),
+                              ),
+                              Text(
+                                appt.subject,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
+                ),
+              );
+            }
+          },
+
+          // Taps
+          onTap: _handleTap,
+          onLongPress: _handleLongPress,
+        );
+      },
     );
+  }
+
+  void applyOrientationPolicy() {
+    if (_view == CalendarView.month) {
+      // Bloquea rotación: solo vertical (portrait up)
+      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    } else {
+      // Restaura rotación libre para otras vistas del calendario
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+    }
   }
 
   // ─────────────── Creación con restricción (solo hoy→futuro) ───────────────
@@ -215,11 +460,11 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
         _showSnack('No puedes crear eventos en fechas pasadas.');
         return;
       }
-      final initial =
-          (_view == CalendarView.month || _view == CalendarView.schedule)
-          ? DateTime(base.year, base.month, base.day, 9, 0)
-          : base;
-      _openAddEventSheet(initialDate: initial);
+      // final initial =
+      //     (_view == CalendarView.month || _view == CalendarView.schedule)
+      //     ? DateTime(base.year, base.month, base.day, 9, 0)
+      //     : base;
+      // _openAddEventSheet(initialDate: initial);
     }
   }
 
@@ -255,8 +500,6 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
 
   // ─────────────── Sheet de "Nuevo evento" con todos los campos ───────────────
   Future<void> _openAddEventSheet({required DateTime initialDate}) async {
-    final cs = Theme.of(context).colorScheme;
-
     // Controllers para los campos solicitados
     final nameCtrl = TextEditingController();
     final dniCtrl = TextEditingController();
@@ -299,11 +542,14 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
                   locale: const Locale('es'),
                 );
                 if (date == null) return;
+
+                if (!context.mounted) return;
                 final time = await showTimePicker(
                   context: ctx,
                   initialTime: TimeOfDay.fromDateTime(start),
                   helpText: 'Hora de inicio',
                 );
+
                 if (time == null) return;
                 final tmp = DateTime(
                   date.year,
@@ -318,8 +564,9 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
                 }
                 setLocal(() {
                   start = tmp;
-                  if (!end.isAfter(start))
+                  if (!end.isAfter(start)) {
                     end = start.add(const Duration(hours: 1));
+                  }
                 });
               }
 
@@ -336,6 +583,8 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
                   locale: const Locale('es'),
                 );
                 if (date == null) return;
+                if (!context.mounted) return;
+
                 final time = await showTimePicker(
                   context: ctx,
                   initialTime: TimeOfDay.fromDateTime(end),
@@ -438,19 +687,23 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
                     Row(
                       children: [
                         Expanded(
-                          child: _DateTimeTile(
+                          child: DateTimeTile(
                             label: 'Inicio',
-                            value:
-                                '${DateFormat('EEE d MMM, HH:mm', 'es').format(start)}',
+                            value: DateFormat(
+                              'EEE d MMM, HH:mm',
+                              'es',
+                            ).format(start),
                             onTap: pickStart,
                           ),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
-                          child: _DateTimeTile(
+                          child: DateTimeTile(
                             label: 'Fin',
-                            value:
-                                '${DateFormat('EEE d MMM, HH:mm', 'es').format(end)}',
+                            value: DateFormat(
+                              'EEE d MMM, HH:mm',
+                              'es',
+                            ).format(end),
                             onTap: pickEnd,
                           ),
                         ),
@@ -518,7 +771,7 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
                               );
                               return;
                             }
-                            if (email.isNotEmpty && !_isValidEmail(email)) {
+                            if (email.isNotEmpty && !isValidEmail(email)) {
                               _showSnack('Email inválido.');
                               return;
                             }
@@ -539,16 +792,16 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
                               startAt: start,
                               endAt: end,
                               numberOfGuests: guests,
-                              dni: dni, // ✅ pasa el string crudo
-                              email: email, // ✅
-                              phone: phone, // ✅
+                              dni: dni,
+                              email: email,
+                              phone: phone,
                             );
 
                             if (!ok) {
                               _showSnack('No se pudo crear la reserva.');
                               return;
                             }
-
+                            if (!context.mounted) return;
                             if (mounted) Navigator.of(ctx).pop();
                             _showSnack('Evento creado');
                           },
@@ -600,6 +853,15 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
                   onPressed: () => Navigator.of(context).pop(),
                   child: const Text('Cerrar'),
                 ),
+                const Spacer(),
+                // 🟢 Botón de acción (al lado de Cerrar)
+                FilledButton.icon(
+                  onPressed: () {
+                    // Cierra este sheet y abre el de creación usando la hora del evento
+                  },
+                  icon: const Icon(Icons.edit),
+                  label: const Text('Accion'),
+                ),
               ],
             ),
           ],
@@ -611,193 +873,11 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
   void _showSnack(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
-
-  // ───────────────── Utils ─────────────────
-  String _labelFor(CalendarView v) {
-    switch (v) {
-      case CalendarView.month:
-        return 'Mes';
-      case CalendarView.week:
-        return 'Semana';
-      case CalendarView.workWeek:
-        return 'Semana laboral';
-      case CalendarView.day:
-        return 'Día';
-      case CalendarView.schedule:
-        return 'Agenda';
-      default:
-        return v.toString();
-    }
-  }
-
-  IconData _viewIcon(CalendarView v) {
-    switch (v) {
-      case CalendarView.month:
-        return Icons.calendar_view_month;
-      case CalendarView.week:
-      case CalendarView.workWeek:
-        return Icons.view_week;
-      case CalendarView.day:
-        return Icons.view_day;
-      case CalendarView.schedule:
-        return Icons.view_agenda;
-      default:
-        return Icons.calendar_today;
-    }
-  }
-
-  DateTime _stepBack(DateTime d, CalendarView v) {
-    switch (v) {
-      case CalendarView.day:
-        return d.subtract(const Duration(days: 1));
-      case CalendarView.week:
-      case CalendarView.workWeek:
-        return d.subtract(const Duration(days: 7));
-      case CalendarView.month:
-      case CalendarView.schedule:
-      default:
-        return DateTime(d.year, d.month - 1, d.day);
-    }
-  }
-
-  DateTime _stepForward(DateTime d, CalendarView v) {
-    switch (v) {
-      case CalendarView.day:
-        return d.add(const Duration(days: 1));
-      case CalendarView.week:
-      case CalendarView.workWeek:
-        return d.add(const Duration(days: 7));
-      case CalendarView.month:
-      case CalendarView.schedule:
-      default:
-        return DateTime(d.year, d.month + 1, d.day);
-    }
-  }
-
-  List<Appointment> _toAppointments(List<Reserve> reservas) {
-    final list = [...reservas];
-    list.sort((a, b) {
-      final da = _parseDate(a.startAt) ?? DateTime(9999);
-      final db = _parseDate(b.startAt) ?? DateTime(9999);
-      final c = da.compareTo(db);
-      if (c != 0) return c;
-      final ea = _parseDate(a.endAt) ?? da;
-      final eb = _parseDate(b.endAt) ?? db;
-      return ea.compareTo(eb);
-    });
-
-    return list.map((r) {
-      final start = _parseDate(r.startAt) ?? DateTime.now();
-      final end = _parseDate(r.endAt) ?? start.add(const Duration(hours: 1));
-      final subject = _subjectFor(r);
-      final notes = _notesFor(r);
-      final color = _colorFor(r);
-      return Appointment(
-        startTime: start,
-        endTime: end,
-        subject: subject,
-        notes: notes,
-        color: color,
-      );
-    }).toList();
-  }
-
-  DateTime? _parseDate(dynamic raw) {
-    if (raw == null) return null;
-    if (raw is DateTime) return raw.toLocal();
-    if (raw is String) return DateTime.tryParse(raw)?.toLocal();
-    return null;
-  }
-
-  String _subjectFor(Reserve r) {
-    final cliente = (r.clienteNombre).trim();
-    final estado = (r.estadoNombre).trim();
-    if (cliente.isEmpty && estado.isEmpty) return 'Reserva';
-    if (cliente.isNotEmpty && estado.isNotEmpty) return '$cliente • $estado';
-    return cliente.isNotEmpty ? cliente : estado;
-  }
-
-  String _notesFor(Reserve r) {
-    final negocio = r.negocioNombre.trim();
-    final mesa = r.mesaNumero?.toString().trim();
-    final tel = r.clienteTelefono.toString().trim();
-    final parts = <String>[
-      if (negocio.isNotEmpty == true) 'Negocio: $negocio',
-      if (mesa?.isNotEmpty == true) 'Mesa: $mesa',
-      if (tel.isNotEmpty == true) 'Tel: $tel',
-    ];
-    return parts.isEmpty ? '' : parts.join(' • ');
-  }
-
-  Color _colorFor(Reserve r) {
-    final s = (r.estadoNombre).toLowerCase();
-    if (s.contains('confirm')) return Colors.teal;
-    if (s.contains('pend')) return Colors.amber;
-    if (s.contains('pag')) return Colors.blue;
-    return Colors.grey;
-  }
-
-  bool _isValidEmail(String email) {
-    // Validador simple/robusto suficiente para UI
-    final re = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
-    return re.hasMatch(email);
-  }
 }
 
 // DataSource simple
 class _ReserveCalendarDataSource extends CalendarDataSource {
   _ReserveCalendarDataSource(List<Appointment> appts) {
     appointments = appts;
-  }
-}
-
-// Tile reutilizable para seleccionar fecha/hora
-class _DateTimeTile extends StatelessWidget {
-  const _DateTimeTile({
-    required this.label,
-    required this.value,
-    required this.onTap,
-  });
-
-  final String label;
-  final String value;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: cs.outlineVariant),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: Theme.of(context).textTheme.labelMedium!.copyWith(
-                color: cs.onSurfaceVariant,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(
-                context,
-              ).textTheme.titleSmall!.copyWith(fontWeight: FontWeight.w700),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

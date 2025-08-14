@@ -46,11 +46,7 @@ class ReserveController extends GetxController {
         phone: phone,
       );
       reservas.add(created);
-      reservas.sort(
-        (a, b) => (a.startAt ?? DateTime(9999)).compareTo(
-          b.startAt ?? DateTime(9999),
-        ),
-      );
+      reservas.sort((a, b) => (a.startAt).compareTo(b.startAt));
       return true;
     } catch (_) {
       return false;
