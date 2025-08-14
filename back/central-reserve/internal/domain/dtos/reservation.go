@@ -1,7 +1,6 @@
 package dtos
 
 import (
-	"central_reserve/internal/domain/entities"
 	"time"
 )
 
@@ -41,9 +40,6 @@ type ReserveDetailDTO struct {
 	UsuarioID     *uint
 	UsuarioNombre *string
 	UsuarioEmail  *string
-
-	// Historial de Estados
-	StatusHistory []entities.ReservationStatusHistory `gorm:"-"`
 }
 
 // DBReservationStatusHistory representa el modelo de base de datos para crear historial
@@ -51,4 +47,14 @@ type DBReservationStatusHistory struct {
 	ReservationID   uint
 	StatusID        uint
 	ChangedByUserID *uint
+}
+
+// UpdateReservationDTO encapsula los campos opcionales para actualizar una reserva
+type UpdateReservationDTO struct {
+	ID             uint
+	TableID        *uint
+	StartAt        *time.Time
+	EndAt          *time.Time
+	NumberOfGuests *int
+	StatusID       *uint
 }

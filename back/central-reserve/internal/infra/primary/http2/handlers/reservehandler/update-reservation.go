@@ -1,6 +1,7 @@
 package reservehandler
 
 import (
+	"central_reserve/internal/domain/dtos"
 	"central_reserve/internal/infra/primary/http2/handlers/reservehandler/request"
 	"net/http"
 	"strconv"
@@ -51,7 +52,16 @@ func (h *ReserveHandler) UpdateReservationHandler(c *gin.Context) {
 	}
 
 	// 3. Caso de uso ─────────────────────────────────────────
-	response, err := h.usecase.UpdateReservation(ctx, uint(reservationID), updateReq.TableID, updateReq.StartAt, updateReq.EndAt, updateReq.NumberOfGuests)
+	params := dtos.UpdateReservationDTO{
+		ID:             uint(reservationID),
+		TableID:        updateReq.TableID,
+		StartAt:        updateReq.StartAt,
+		EndAt:          updateReq.EndAt,
+		NumberOfGuests: updateReq.NumberOfGuests,
+		StatusID:       updateReq.StatusID,
+	}
+
+	response, err := h.usecase.UpdateReservation(ctx, params)
 	if err != nil {
 		h.logger.Error().Err(err).Msg("error interno al actualizar reserva")
 		c.JSON(http.StatusInternalServerError, gin.H{

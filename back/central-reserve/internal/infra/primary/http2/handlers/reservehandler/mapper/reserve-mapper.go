@@ -48,34 +48,7 @@ func MapToReserveDetail(dto dtos.ReserveDetailDTO) response.ReserveDetail {
 		UsuarioID:        dto.UsuarioID,
 		UsuarioNombre:    dto.UsuarioNombre,
 		UsuarioEmail:     dto.UsuarioEmail,
-		StatusHistory:    MapStatusHistoryList(dto.StatusHistory),
 	}
-}
-
-// MapStatusHistory convierte un entities.ReservationStatusHistory a response.StatusHistoryResponse
-func MapStatusHistory(history entities.ReservationStatusHistory) response.StatusHistoryResponse {
-	return response.StatusHistoryResponse{
-		ID:              history.ID,
-		StatusID:        history.StatusID,
-		StatusCode:      history.StatusCode,
-		StatusName:      history.StatusName,
-		ChangedAt:       history.CreatedAt,
-		ChangedByUserID: history.ChangedByUserID,
-		ChangedByUser:   history.ChangedByUser,
-	}
-}
-
-// MapStatusHistoryList convierte un slice de entities.ReservationStatusHistory a slice de response.StatusHistoryResponse
-func MapStatusHistoryList(historyList []entities.ReservationStatusHistory) []response.StatusHistoryResponse {
-	if historyList == nil {
-		return nil
-	}
-
-	responseList := make([]response.StatusHistoryResponse, len(historyList))
-	for i, history := range historyList {
-		responseList[i] = MapStatusHistory(history)
-	}
-	return responseList
 }
 
 // MapToReserveDetailList convierte un slice de dtos.ReserveDetailDTO a slice de response.ReserveDetail
