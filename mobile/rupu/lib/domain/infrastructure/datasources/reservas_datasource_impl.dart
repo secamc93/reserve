@@ -86,18 +86,26 @@ class ReservasDatasourceImpl extends ReserveDatasource {
   }
 
   @override
-  Future<List<Reserve>> obtenerReserva({required int id}) async {
+  Future<Reserve> obtenerReserva({required int id}) async {
     try {
-      final response = await _dio.get('/reserves', queryParameters: {"id": id});
+      final response = await _dio.get('/reserves/$id');
 
-      final model = ReservasResponseModel.fromJson(
-        response.data as Map<String, dynamic>,
-      );
+      final data = response.data;
+      Map<String, dynamic>? json;
+      if (data is Map<String, dynamic> && data['data'] is Map<String, dynamic>) {
+        json = data['data'] as Map<String, dynamic>;
+      } else if (data is Map<String, dynamic>) {
+        json = data;
+      }
+      if (json == null) {
+        throw Exception('Formato de respuesta inesperado en GET /reserves/$id');
+      }
 
-      return model.data.map(ReservesMapper.reservaFromModel).toList();
+      final model = ReservaModel.fromJson(json);
+      return ReservesMapper.reservaFromModel(model);
     } on DioException catch (e) {
       debugPrint(
-        'Error obtener roles y permisos [${e.response?.statusCode}]: ${e.response?.data ?? e.message}',
+        'Error obtener reserva [$id] [${e.response?.statusCode}]: ${e.response?.data ?? e.message}',
       );
       rethrow;
     }

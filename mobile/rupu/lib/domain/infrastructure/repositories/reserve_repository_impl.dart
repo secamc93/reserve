@@ -7,11 +7,6 @@ class ReserveRepositoryImpl extends ReserveRepository {
   ReserveRepositoryImpl(this.datasource);
 
   @override
-  Future<List<Reserve>> obtenerReservas() {
-    return datasource.obtenerReservas();
-  }
-
-  @override
   Future<Reserve> crearReserva({
     required int businessId,
     required String name,
@@ -35,7 +30,12 @@ class ReserveRepositoryImpl extends ReserveRepository {
   }
 
   @override
-  Future<List<Reserve>> obtenerReserva({required int id}) {
+  Future<List<Reserve>> obtenerReservas() {
+    return datasource.obtenerReservas();
+  }
+
+  @override
+  Future<Reserve> obtenerReserva({required int id}) {
     return datasource.obtenerReserva(id: id);
   }
 }

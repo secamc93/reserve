@@ -100,7 +100,15 @@ class ReserveView extends GetView<ReserveController> {
                       subtitle: 'Servicio: Reserva',
                       time: controller.fechaHome(r),
                       status: controller.estado(r),
-                      onTap: () {},
+                      onTap: () {
+                        context.pushNamed(
+                          'reserve_detail',
+                          pathParameters: {
+                            'page': '$pageIndex',
+                            'id': '${r.reservaId}',
+                          },
+                        );
+                      },
                     ),
                   ),
               ],
