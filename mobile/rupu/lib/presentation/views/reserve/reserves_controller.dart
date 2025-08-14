@@ -176,8 +176,8 @@ class ReserveController extends GetxController {
     if (s.contains('confirm')) return 'Confirmada';
     if (s.contains('pend')) return 'Pendiente';
     if (s.contains('pag')) return 'Pagada';
-    if (s.contains('Cancel')) return 'Cancelada';
-    if (s.contains('Completa')) return 'Completada';
+    if (s.contains('Cancelada')) return 'Cancelada';
+    if (s.contains('Completada')) return 'Completada';
 
     return r.estadoNombre.isNotEmpty == true ? r.estadoNombre : 'Pendiente';
   }

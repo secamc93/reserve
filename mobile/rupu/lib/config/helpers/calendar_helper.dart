@@ -19,28 +19,6 @@ String labelFor(CalendarView v) {
   }
 }
 
-class ApptPalette {
-  // Info (azul suave)
-  static const infoBg = Color(0xFFE7F1FF);
-  static const infoFg = Color(0xFF084298);
-
-  // Success (verde suave)
-  static const successBg = Color(0xFFE6F4EA);
-  static const successFg = Color(0xFF0F5132);
-
-  // Warning (ámbar suave)
-  static const warningBg = Color(0xFFFFF4E5);
-  static const warningFg = Color(0xFF7A4F01);
-
-  // Danger (rojo suave) - por si lo usas
-  static const dangerBg = Color(0xFFFFE5E5);
-  static const dangerFg = Color(0xFF842029);
-
-  // Neutro
-  static const neutralBg = Color(0xFFEDEDED);
-  static const neutralFg = Color(0xFF222222);
-}
-
 IconData viewIcon(CalendarView v) {
   switch (v) {
     case CalendarView.month:
@@ -98,19 +76,11 @@ List<Appointment> toAppointments(List<Reserve> reservas) {
   });
 
   return list.map((r) {
-    Color colorForEstado(String estado) {
-      final s = estado.toLowerCase();
-      if (s.contains('confirm')) return ApptPalette.successBg;
-      if (s.contains('pend')) return ApptPalette.warningBg;
-      if (s.contains('pag')) return ApptPalette.infoBg;
-      return ApptPalette.neutralBg;
-    }
-
     final start = _parseDate(r.startAt) ?? DateTime.now();
     final end = _parseDate(r.endAt) ?? start.add(const Duration(hours: 1));
     final subject = _subjectFor(r);
     final notes = _notesFor(r);
-    final color = colorForEstado(r.estadoNombre);
+    final color = _colorFor(r);
     return Appointment(
       startTime: start,
       endTime: end,
@@ -119,15 +89,6 @@ List<Appointment> toAppointments(List<Reserve> reservas) {
       color: color,
     );
   }).toList();
-}
-
-Color fixedFgForBg(Color bg) {
-  if (bg.value == ApptPalette.successBg.value) return ApptPalette.successFg;
-  if (bg.value == ApptPalette.warningBg.value) return ApptPalette.warningFg;
-  if (bg.value == ApptPalette.infoBg.value) return ApptPalette.infoFg;
-  if (bg.value == ApptPalette.dangerBg.value) return ApptPalette.dangerFg;
-  // fallback por contraste:
-  return (bg.computeLuminance() < 0.6) ? Colors.white : ApptPalette.neutralFg;
 }
 
 DateTime? _parseDate(dynamic raw) {
@@ -159,9 +120,12 @@ String _notesFor(Reserve r) {
 
 Color _colorFor(Reserve r) {
   final s = (r.estadoNombre).toLowerCase();
-  if (s.contains('confirm')) return Colors.teal;
+  if (s.contains('confirm')) return Colors.green;
   if (s.contains('pend')) return Colors.amber;
-  if (s.contains('pag')) return Colors.blue;
+  if (s.contains('pag')) return Colors.grey;
+  if (s.contains('completada')) return Colors.blue;
+  if (s.contains('cancelada')) return Colors.red;
+
   return Colors.grey;
 }
 
