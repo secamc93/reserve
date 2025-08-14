@@ -14,6 +14,7 @@ type IReserveHandler interface {
 	GetReserveByIDHandler(c *gin.Context)
 	CancelReservationHandler(c *gin.Context)
 	UpdateReservationHandler(c *gin.Context)
+	GetReservationStatusesHandler(c *gin.Context)
 }
 
 type ReserveHandler struct {

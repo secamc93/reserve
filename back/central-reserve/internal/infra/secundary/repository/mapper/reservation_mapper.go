@@ -3,6 +3,7 @@ package mapper
 import (
 	"central_reserve/internal/domain/entities"
 	"dbpostgres/app/infra/models"
+	"time"
 )
 
 // ReservationToEntity convierte models.Reservation a entities.Reservation
@@ -71,6 +72,32 @@ func ReservationStatusHistorySliceToEntitySlice(histories []models.ReservationSt
 	result := make([]entities.ReservationStatusHistory, len(histories))
 	for i, history := range histories {
 		result[i] = ReservationStatusHistoryToEntity(history)
+	}
+	return result
+}
+
+// ReservationStatusToEntity convierte models.ReservationStatus a entities.ReservationStatus
+func ReservationStatusToEntity(status models.ReservationStatus) entities.ReservationStatus {
+	var deletedAt *time.Time
+	if status.DeletedAt.Valid {
+		t := status.DeletedAt.Time
+		deletedAt = &t
+	}
+	return entities.ReservationStatus{
+		ID:        status.ID,
+		Code:      status.Code,
+		Name:      status.Name,
+		CreatedAt: status.CreatedAt,
+		UpdatedAt: status.UpdatedAt,
+		DeletedAt: deletedAt,
+	}
+}
+
+// ReservationStatusSliceToEntitySlice convierte []models.ReservationStatus a []entities.ReservationStatus
+func ReservationStatusSliceToEntitySlice(statuses []models.ReservationStatus) []entities.ReservationStatus {
+	result := make([]entities.ReservationStatus, len(statuses))
+	for i, status := range statuses {
+		result[i] = ReservationStatusToEntity(status)
 	}
 	return result
 }

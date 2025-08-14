@@ -49,6 +49,7 @@ type IReservationRepository interface {
 	CreateReservationStatusHistory(ctx context.Context, history entities.ReservationStatusHistory) error
 	GetClientByEmailAndBusiness(ctx context.Context, email string, businessID uint) (*entities.Client, error)
 	CreateClient(ctx context.Context, client entities.Client) (string, error)
+	GetReservationStatuses(ctx context.Context) ([]entities.ReservationStatus, error)
 }
 
 // IAuthRepository define las operaciones de autenticación

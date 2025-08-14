@@ -207,6 +207,16 @@ func (r *Repository) CancelReservation(ctx context.Context, id uint, reason stri
 	return fmt.Sprintf("Reserva cancelada con ID: %d", id), nil
 }
 
+// GetReservationStatuses obtiene todos los estados de reserva
+func (r *Repository) GetReservationStatuses(ctx context.Context) ([]entities.ReservationStatus, error) {
+	var gormStatuses []models.ReservationStatus
+	if err := r.database.Conn(ctx).Find(&gormStatuses).Error; err != nil {
+		r.logger.Error().Err(err).Msg("Error al obtener estados de reserva")
+		return nil, err
+	}
+	return mapper.ReservationStatusSliceToEntitySlice(gormStatuses), nil
+}
+
 // UpdateReservation actualiza una reserva
 func (r *Repository) UpdateReservation(ctx context.Context, params dtos.UpdateReservationDTO) (string, error) {
 	updates := make(map[string]interface{})

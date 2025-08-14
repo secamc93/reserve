@@ -64,3 +64,24 @@ func MapToReserveDetailList(dtoList []dtos.ReserveDetailDTO) []response.ReserveD
 	}
 	return responseList
 }
+
+// MapToReservationStatus convierte un dtos.ReservationStatusDTO a response.ReservationStatus
+func MapToReservationStatus(dto dtos.ReservationStatusDTO) response.ReservationStatus {
+	return response.ReservationStatus{
+		ID:   dto.ID,
+		Code: dto.Code,
+		Name: dto.Name,
+	}
+}
+
+// MapToReservationStatusList convierte un slice de dtos.ReservationStatusDTO a slice de response.ReservationStatus
+func MapToReservationStatusList(dtoList []dtos.ReservationStatusDTO) []response.ReservationStatus {
+	if dtoList == nil {
+		return nil
+	}
+	responseList := make([]response.ReservationStatus, len(dtoList))
+	for i, dto := range dtoList {
+		responseList[i] = MapToReservationStatus(dto)
+	}
+	return responseList
+}
