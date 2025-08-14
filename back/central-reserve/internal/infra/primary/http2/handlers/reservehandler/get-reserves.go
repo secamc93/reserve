@@ -20,7 +20,7 @@ import (
 // @Param        table_id    query    int     false  "ID de la mesa"
 // @Param        start_date  query    string  false  "Fecha de inicio (formato RFC3339: 2024-01-01T00:00:00Z)"
 // @Param        end_date    query    string  false  "Fecha de fin (formato RFC3339: 2024-12-31T23:59:59Z)"
-// @Success      200  {object}  map[string]interface{} "Lista de reservas obtenida exitosamente"
+// @Success      200  {object}  response.ReserveListSuccessResponse "Lista de reservas obtenida exitosamente"
 // @Failure      400  {object}  map[string]interface{} "Parámetros inválidos"
 // @Failure      401  {object}  map[string]interface{} "Token de acceso requerido"
 // @Failure      500  {object}  map[string]interface{} "Error interno del servidor"

@@ -14,6 +14,7 @@ type ReserveDetail struct {
 	ReservaActualizada time.Time `json:"reserva_actualizada"`
 
 	// Estado
+	EstadoID     uint   `json:"estado_id"`
 	EstadoCodigo string `json:"estado_codigo"`
 	EstadoNombre string `json:"estado_nombre"`
 
@@ -39,4 +40,17 @@ type ReserveDetail struct {
 	UsuarioID     *uint   `json:"usuario_id"`
 	UsuarioNombre *string `json:"usuario_nombre"`
 	UsuarioEmail  *string `json:"usuario_email"`
+}
+
+// ReserveSuccessResponse representa una respuesta exitosa con una reserva
+type ReserveSuccessResponse struct {
+	Success bool          `json:"success"`
+	Data    ReserveDetail `json:"data"`
+}
+
+// ReserveListSuccessResponse representa una respuesta exitosa con una lista de reservas
+type ReserveListSuccessResponse struct {
+	Success bool            `json:"success"`
+	Data    []ReserveDetail `json:"data"`
+	Total   int             `json:"total"`
 }
