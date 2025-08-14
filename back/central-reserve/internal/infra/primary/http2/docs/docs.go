@@ -832,11 +832,10 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "201": {
+                    "200": {
                         "description": "Negocio obtenido exitosamente",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/response.GetBusinessByIDResponse"
                         }
                     },
                     "400": {
@@ -1903,6 +1902,38 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/reserves/status": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene todos los estados de reserva disponibles",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reservas"
+                ],
+                "summary": "Lista los estados de reserva",
+                "responses": {
+                    "200": {
+                        "description": "Estados de reserva obtenidos correctamente",
+                        "schema": {
+                            "$ref": "#/definitions/response.ReservationStatusListSuccessResponse"
                         }
                     },
                     "500": {
@@ -3550,10 +3581,19 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "navbar_image_url": {
+                    "type": "string"
+                },
                 "primary_color": {
                     "type": "string"
                 },
+                "quaternary_color": {
+                    "type": "string"
+                },
                 "secondary_color": {
+                    "type": "string"
+                },
+                "tertiary_color": {
                     "type": "string"
                 },
                 "timezone": {
@@ -3629,10 +3669,19 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "navbar_image_url": {
+                    "type": "string"
+                },
                 "primary_color": {
                     "type": "string"
                 },
+                "quaternary_color": {
+                    "type": "string"
+                },
                 "secondary_color": {
+                    "type": "string"
+                },
+                "tertiary_color": {
                     "type": "string"
                 },
                 "timezone": {
@@ -3981,6 +4030,9 @@ const docTemplate = `{
                 "start_at": {
                     "type": "string"
                 },
+                "status_id": {
+                    "type": "integer"
+                },
                 "table_id": {
                     "type": "integer"
                 }
@@ -4032,6 +4084,100 @@ const docTemplate = `{
                 },
                 "number": {
                     "type": "integer"
+                }
+            }
+        },
+        "response.BusinessDetailResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "business_type": {
+                    "$ref": "#/definitions/response.BusinessTypeDetailResponse"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "custom_domain": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "enable_delivery": {
+                    "type": "boolean"
+                },
+                "enable_pickup": {
+                    "type": "boolean"
+                },
+                "enable_reservations": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "logo_url": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "navbar_image_url": {
+                    "type": "string"
+                },
+                "primary_color": {
+                    "type": "string"
+                },
+                "quaternary_color": {
+                    "type": "string"
+                },
+                "secondary_color": {
+                    "type": "string"
+                },
+                "tertiary_color": {
+                    "type": "string"
+                },
+                "timezone": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.BusinessTypeDetailResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },
@@ -4114,6 +4260,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/response.GenerateAPIKeyResponse"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "response.GetBusinessByIDResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.BusinessDetailResponse"
+                },
+                "message": {
+                    "type": "string"
                 },
                 "success": {
                     "type": "boolean"
@@ -4290,6 +4450,145 @@ const docTemplate = `{
                 "success": {
                     "type": "boolean",
                     "example": true
+                }
+            }
+        },
+        "response.ReservationStatus": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.ReservationStatusListSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.ReservationStatus"
+                    }
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "response.ReserveDetail": {
+            "type": "object",
+            "properties": {
+                "cliente_dni": {
+                    "type": "string"
+                },
+                "cliente_email": {
+                    "type": "string"
+                },
+                "cliente_id": {
+                    "description": "Cliente",
+                    "type": "integer"
+                },
+                "cliente_nombre": {
+                    "type": "string"
+                },
+                "cliente_telefono": {
+                    "type": "string"
+                },
+                "end_at": {
+                    "type": "string"
+                },
+                "estado_codigo": {
+                    "type": "string"
+                },
+                "estado_id": {
+                    "description": "Estado",
+                    "type": "integer"
+                },
+                "estado_nombre": {
+                    "type": "string"
+                },
+                "mesa_capacidad": {
+                    "type": "integer"
+                },
+                "mesa_id": {
+                    "description": "Mesa",
+                    "type": "integer"
+                },
+                "mesa_numero": {
+                    "type": "integer"
+                },
+                "negocio_codigo": {
+                    "type": "string"
+                },
+                "negocio_direccion": {
+                    "type": "string"
+                },
+                "negocio_id": {
+                    "description": "Negocio (cambiado de Restaurante)",
+                    "type": "integer"
+                },
+                "negocio_nombre": {
+                    "type": "string"
+                },
+                "number_of_guests": {
+                    "type": "integer"
+                },
+                "reserva_actualizada": {
+                    "type": "string"
+                },
+                "reserva_creada": {
+                    "type": "string"
+                },
+                "reserva_id": {
+                    "description": "Reserva",
+                    "type": "integer"
+                },
+                "start_at": {
+                    "type": "string"
+                },
+                "usuario_email": {
+                    "type": "string"
+                },
+                "usuario_id": {
+                    "description": "Usuario",
+                    "type": "integer"
+                },
+                "usuario_nombre": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.ReserveListSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.ReserveDetail"
+                    }
+                },
+                "success": {
+                    "type": "boolean"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.ReserveSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.ReserveDetail"
+                },
+                "success": {
+                    "type": "boolean"
                 }
             }
         },
@@ -4515,55 +4814,6 @@ const docTemplate = `{
                         "$ref": "#/definitions/internal_infra_primary_http2_handlers_authhandler_response.RoleInfo"
                     }
                 }
-            }
-        },
-        "internal_infra_primary_http2_handlers_reservehandler_response.ReserveDetail": {
-            "type": "object",
-            "properties": {
-                "reserva_id": {"type": "integer"},
-                "start_at": {"type": "string"},
-                "end_at": {"type": "string"},
-                "number_of_guests": {"type": "integer"},
-                "reserva_creada": {"type": "string"},
-                "reserva_actualizada": {"type": "string"},
-                "estado_id": {"type": "integer"},
-                "estado_codigo": {"type": "string"},
-                "estado_nombre": {"type": "string"},
-                "cliente_id": {"type": "integer"},
-                "cliente_nombre": {"type": "string"},
-                "cliente_email": {"type": "string"},
-                "cliente_telefono": {"type": "string"},
-                "cliente_dni": {"type": "string"},
-                "mesa_id": {"type": "integer"},
-                "mesa_numero": {"type": "integer"},
-                "mesa_capacidad": {"type": "integer"},
-                "negocio_id": {"type": "integer"},
-                "negocio_nombre": {"type": "string"},
-                "negocio_codigo": {"type": "string"},
-                "negocio_direccion": {"type": "string"},
-                "usuario_id": {"type": "integer"},
-                "usuario_nombre": {"type": "string"},
-                "usuario_email": {"type": "string"}
-            }
-        },
-        "response.ReserveSuccessResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/internal_infra_primary_http2_handlers_reservehandler_response.ReserveDetail"
-                },
-                "success": {"type": "boolean"}
-            }
-        },
-        "response.ReserveListSuccessResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {"$ref": "#/definitions/internal_infra_primary_http2_handlers_reservehandler_response.ReserveDetail"}
-                },
-                "success": {"type": "boolean"},
-                "total": {"type": "integer"}
             }
         },
         "response.UserRolesPermissionsSuccessResponse": {
