@@ -170,34 +170,6 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
 
   // ───────────────── Calendario base ─────────────────
   Widget _calendar(List<Appointment> appts) {
-    (context, details) {
-      final appt = details.appointments.first as Appointment;
-
-      // Mantén tu color de evento como fondo (amarillo)…
-      final bg = appt.color;
-      // …o usa un fondo más suave si prefieres (descomenta):
-      // final bg = appt.color.withOpacity(0.18);
-
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: appt.color.withValues(alpha: .35)),
-        ),
-        child: Text(
-          appt.subject,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            color: Colors.black, // <-- TEXTO EN NEGRO
-            fontWeight: FontWeight.w600,
-            fontSize: 12,
-          ),
-        ),
-      );
-    };
-
     return LayoutBuilder(
       builder: (context, c) {
         // Medidas seguras según orientación/constraints
@@ -885,16 +857,15 @@ class _ReserveCalendarDataSource extends CalendarDataSource {
   @override
   Color getColor(int index) {
     final Appointment appt = appointments![index] as Appointment;
-    final Color? color = appt.color;
+    final Color bg =
+        (appt.color == null || appt.color == Colors.transparent)
+            ? ApptPalette.infoBg
+            : appt.color!;
 
-    // When the appointment color is not defined, the indicator falls back
-    // to the default calendar color (usually blue).  This overrides the
-    // behavior so that the month view indicator uses the same palette as
-    // the custom appointment builder.
-    if (color == null || color == Colors.transparent) {
-      return ApptPalette.infoBg;
-    }
-
-    return color;
+    // The month-view indicator is a small dot that easily fades when using the
+    // pastel background colors of the appointments.  Instead, map the bg to a
+    // stronger foreground color so the indicator matches the appointment
+    // builder's palette.
+    return fixedFgForBg(bg);
   }
 }
