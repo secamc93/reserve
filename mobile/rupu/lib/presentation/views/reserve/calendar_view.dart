@@ -881,4 +881,20 @@ class _ReserveCalendarDataSource extends CalendarDataSource {
   _ReserveCalendarDataSource(List<Appointment> appts) {
     appointments = appts;
   }
+
+  @override
+  Color getColor(int index) {
+    final Appointment appt = appointments![index] as Appointment;
+    final Color? color = appt.color;
+
+    // When the appointment color is not defined, the indicator falls back
+    // to the default calendar color (usually blue).  This overrides the
+    // behavior so that the month view indicator uses the same palette as
+    // the custom appointment builder.
+    if (color == null || color == Colors.transparent) {
+      return ApptPalette.infoBg;
+    }
+
+    return color;
+  }
 }
