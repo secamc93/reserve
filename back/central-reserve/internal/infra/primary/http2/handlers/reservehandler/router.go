@@ -15,6 +15,7 @@ func RegisterRoutes(v1Group *gin.RouterGroup, handler IReserveHandler, jwtServic
 
 	reserves.GET("", auth.JWT(), handler.GetReservesHandler)
 	reserves.GET("/:id", auth.JWT(), handler.GetReserveByIDHandler)
+	reserves.GET("/status", auth.JWT(), handler.GetReservationStatusesHandler)
 	reserves.PUT("/:id", auth.JWT(), handler.UpdateReservationHandler)
 	reserves.PATCH("/:id/cancel", auth.JWT(), handler.CancelReservationHandler)
 

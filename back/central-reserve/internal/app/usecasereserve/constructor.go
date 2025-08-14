@@ -16,6 +16,7 @@ type IUseCaseReserve interface {
 	GetReserveByID(ctx context.Context, id uint) (*dtos.ReserveDetailDTO, error)
 	CancelReservation(ctx context.Context, id uint, reason string) (string, error)
 	UpdateReservation(ctx context.Context, params dtos.UpdateReservationDTO) (string, error)
+	GetReservationStatuses(ctx context.Context) ([]dtos.ReservationStatusDTO, error)
 }
 
 type ReserveUseCase struct {
