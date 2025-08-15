@@ -15,6 +15,8 @@ export 'package:rupu/presentation/views/reserve/reserve_view.dart';
 export 'package:rupu/presentation/views/reserve/reserve_detail_controller.dart';
 
 export 'package:rupu/presentation/views/reserve/reserve_detail_view.dart';
+export 'package:rupu/presentation/views/reserve/reserve_update_controller.dart';
+export 'package:rupu/presentation/views/reserve/update_reserve_view.dart';
 
 export 'package:rupu/presentation/views/profile/perfil_view.dart';
 

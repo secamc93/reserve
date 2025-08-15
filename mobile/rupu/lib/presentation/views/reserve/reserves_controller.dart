@@ -157,6 +157,33 @@ class ReserveController extends GetxController {
     reservasTodas.assignAll(_sortedTodasFrom(reservasTodas.toList()));
   }
 
+  // ================= Actualizar en memoria =================
+  void actualizarLocal(Reserve updated) {
+    final idxTodas =
+        reservasTodas.indexWhere((r) => r.reservaId == updated.reservaId);
+    if (idxTodas != -1) {
+      reservasTodas[idxTodas] = updated;
+      _sortTodas();
+    }
+
+    final idxHoy =
+        reservasHoy.indexWhere((r) => r.reservaId == updated.reservaId);
+    final start = _parseDate(updated.startAt);
+    final now = DateTime.now();
+    final sameDay = start != null && _isSameDay(start, now);
+
+    if (sameDay) {
+      if (idxHoy != -1) {
+        reservasHoy[idxHoy] = updated;
+      } else {
+        reservasHoy.add(updated);
+      }
+      _sortHoy();
+    } else {
+      if (idxHoy != -1) reservasHoy.removeAt(idxHoy);
+    }
+  }
+
   // ================= Utils =================
   DateTime? _parseDate(dynamic raw) {
     if (raw == null) return null;

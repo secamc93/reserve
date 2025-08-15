@@ -82,6 +82,7 @@ List<Appointment> toAppointments(List<Reserve> reservas) {
     final notes = _notesFor(r);
     final color = _colorFor(r);
     return Appointment(
+      id: r.reservaId,
       startTime: start,
       endTime: end,
       subject: subject,

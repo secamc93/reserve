@@ -1,13 +1,16 @@
 // presentation/views/reserve/reserve_detail_view.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:rupu/config/helpers/design_helper.dart';
 import 'package:rupu/presentation/views/profile/perfil_controller.dart';
 import 'reserve_detail_controller.dart';
+import 'update_reserve_view.dart';
 
 class ReserveDetailView extends GetView<ReserveDetailController> {
-  const ReserveDetailView({super.key});
+  const ReserveDetailView({super.key, required this.pageIndex});
+  final int pageIndex;
 
   @override
   Widget build(BuildContext context) {
@@ -288,9 +291,15 @@ class ReserveDetailView extends GetView<ReserveDetailController> {
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () {},
+                    onPressed: () => context.pushNamed(
+                      UpdateReserveView.name,
+                      pathParameters: {
+                        'page': '${pageIndex}',
+                        'id': '${r.reservaId}',
+                      },
+                    ),
                     icon: const Icon(Icons.event_repeat),
-                    label: const Text('Reagendar'),
+                    label: const Text('Reasignar'),
                   ),
                 ),
                 const SizedBox(width: 12),
