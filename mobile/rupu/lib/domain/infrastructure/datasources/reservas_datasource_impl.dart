@@ -153,8 +153,38 @@ class ReservasDatasourceImpl extends ReserveDatasource {
   }
 
   @override
-  Future<Reserve> cancelarReserva({required int id}) {
-    // TODO: implement cancelarReserva
-    throw UnimplementedError();
+  Future<Reserve> cancelarReserva({required int id, String? reason}) async {
+    try {
+      final payload = <String, dynamic>{};
+      if ((reason ?? '').trim().isNotEmpty) {
+        payload['reason'] = reason!.trim();
+      }
+
+      final resp = await _dio.patch(
+        '/reserves/$id/cancel',
+        data: payload.isEmpty ? null : payload,
+      );
+
+      final data = resp.data;
+      Map<String, dynamic>? json;
+      if (data is Map<String, dynamic> &&
+          data['data'] is Map<String, dynamic>) {
+        json = data['data'] as Map<String, dynamic>;
+      } else if (data is Map<String, dynamic>) {
+        json = data;
+      }
+      if (json == null) {
+        throw Exception(
+            'Formato de respuesta inesperado en PATCH /reserves/$id/cancel');
+      }
+
+      final model = ReservaModel.fromJson(json);
+      return ReservesMapper.reservaFromModel(model);
+    } on DioException catch (e) {
+      debugPrint(
+        'Error cancelar reserva [$id] [${e.response?.statusCode}]: ${e.response?.data ?? e.message}',
+      );
+      rethrow;
+    }
   }
 }

@@ -69,6 +69,21 @@ class ReserveController extends GetxController {
     }
   }
 
+  // ================= Cancelar =================
+  Future<bool> cancelarReserva({required int id, String? reason}) async {
+    try {
+      isSaving.value = true;
+      final cancelled = await repository.cancelarReserva(id: id, reason: reason);
+      actualizarLocal(cancelled);
+      return true;
+    } catch (e) {
+      debugPrint('CTRL cancelarReserva error: $e');
+      return false;
+    } finally {
+      isSaving.value = false;
+    }
+  }
+
   // ================= Home (solo HOY) =================
   Future<void> cargarReservasHoy({bool silent = false}) async {
     if (!silent) isLoading.value = true;
