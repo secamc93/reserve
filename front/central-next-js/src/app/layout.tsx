@@ -9,9 +9,9 @@ export const metadata: Metadata = {
   title: 'Rupü - Sistema de Reservas',
   description: 'Sistema de gestión de reservas y administración de negocios',
   icons: {
-    icon: '/rupu-icon.png',
-    shortcut: '/rupu-icon.png',
-    apple: '/rupu-icon.png',
+    icon: '/app/rupu-icon.png',
+    shortcut: '/app/rupu-icon.png',
+    apple: '/app/rupu-icon.png',
   },
 };
 

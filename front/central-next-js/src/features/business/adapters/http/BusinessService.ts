@@ -1,11 +1,12 @@
 import { HttpClient } from '@/shared/adapters/http/HttpClient';
 import { Business, CreateBusinessRequest, UpdateBusinessRequest } from '../../domain/Business';
+import { config } from '@/shared/config/env';
 
 export class BusinessService {
   private httpClient: HttpClient;
 
   constructor() {
-    this.httpClient = new HttpClient(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3050');
+    this.httpClient = new HttpClient(config.API_BASE_URL);
   }
 
   async getBusinesses(): Promise<Business[]> {

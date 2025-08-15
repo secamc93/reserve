@@ -17,10 +17,10 @@ export class ReservationUseCase {
           end_at: new Date(reservation.end_at),
           reserva_creada: new Date(reservation.reserva_creada),
           reserva_actualizada: new Date(reservation.reserva_actualizada),
-          status_history: reservation.status_history.map(history => ({
+          status_history: reservation.status_history?.map(history => ({
             ...history,
             changed_at: new Date(history.changed_at)
-          }))
+          })) || []
         }));
 
         return {
@@ -72,10 +72,10 @@ export class ReservationUseCase {
           end_at: new Date(result.data.end_at),
           reserva_creada: new Date(result.data.reserva_creada),
           reserva_actualizada: new Date(result.data.reserva_actualizada),
-          status_history: result.data.status_history.map(history => ({
+          status_history: result.data.status_history?.map(history => ({
             ...history,
             changed_at: new Date(history.changed_at)
-          }))
+          })) || []
         };
 
         return {
@@ -115,10 +115,10 @@ export class ReservationUseCase {
           end_at: new Date(result.data.end_at),
           reserva_creada: new Date(result.data.reserva_creada),
           reserva_actualizada: new Date(result.data.reserva_actualizada),
-          status_history: result.data.status_history.map(history => ({
+          status_history: result.data.status_history?.map(history => ({
             ...history,
             changed_at: new Date(history.changed_at)
-          }))
+          })) || []
         };
 
         return {
@@ -152,10 +152,10 @@ export class ReservationUseCase {
           end_at: new Date(result.data.end_at),
           reserva_creada: new Date(result.data.reserva_creada),
           reserva_actualizada: new Date(result.data.reserva_actualizada),
-          status_history: result.data.status_history.map(history => ({
+          status_history: result.data.status_history?.map(history => ({
             ...history,
             changed_at: new Date(history.changed_at)
-          }))
+          })) || []
         };
 
         return {

@@ -34,13 +34,23 @@ if ! aws sts get-caller-identity > /dev/null 2>&1; then
   exit 1
 fi
 
+echo -e "${YELLOW}🔧 Setting production environment variables...${NC}"
+export NEXT_PUBLIC_API_BASE_URL="https://www.xn--rup-joa.com/api"
+export NEXT_PUBLIC_APP_NAME="Rupü"
+export NEXT_PUBLIC_APP_VERSION="1.0.0"
+export NODE_ENV="production"
+
 echo -e "${YELLOW}⏬ Pulling existing image for cache (if available)...${NC}"
 docker pull ${ECR_REPO}:${TAG} || true
 
-echo -e "${YELLOW}🔨 Building image for ARM64...${NC}"
+echo -e "${YELLOW}🔨 Building image for ARM64 with production config...${NC}"
 docker buildx build \
   --platform linux/arm64 \
   --cache-from ${ECR_REPO}:${TAG} \
+  --build-arg NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL} \
+  --build-arg NEXT_PUBLIC_APP_NAME=${NEXT_PUBLIC_APP_NAME} \
+  --build-arg NEXT_PUBLIC_APP_VERSION=${NEXT_PUBLIC_APP_VERSION} \
+  --build-arg NODE_ENV=${NODE_ENV} \
   -f ${DOCKERFILE_PATH} \
   -t ${IMAGE_NAME}:${TAG} \
   --load \
@@ -56,3 +66,4 @@ echo -e "${YELLOW}⬆️ Pushing image to ECR...${NC}"
 docker push ${ECR_REPO}:${TAG}
 
 echo -e "${GREEN}✅ Image pushed to ${ECR_REPO}:${TAG}${NC}"
+echo -e "${GREEN}🌐 Frontend will be accessible at: https://www.xn--rup-joa.com/app${NC}"

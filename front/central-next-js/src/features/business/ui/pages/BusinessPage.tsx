@@ -38,7 +38,7 @@ export default function BusinessPage() {
       // Obtener los datos completos y actualizados del negocio
       const fullBusiness = await getBusinessById(business.id);
       setSelectedBusiness(fullBusiness);
-      setShowEditModal(true);
+    setShowEditModal(true);
     } catch (error: any) {
       alert(`Error al cargar los datos del negocio: ${error.message}`);
     } finally {

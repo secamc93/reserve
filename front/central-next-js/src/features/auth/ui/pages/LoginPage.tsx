@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../hooks/useAuth';
 import './Login.css';
 
-const Login: React.FC = () => {
+const Login = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -16,7 +16,7 @@ const Login: React.FC = () => {
   const { login, loading } = useAuth();
   const router = useRouter();
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: any) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -25,14 +25,14 @@ const Login: React.FC = () => {
     if (error) setError('');
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
     setError('');
 
     try {
       const result = await login(formData.email, formData.password);
       if (result && result.success) {
-        router.push('/calendar');
+        router.push('/app/calendar');
       }
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Error al iniciar sesión');
@@ -48,7 +48,7 @@ const Login: React.FC = () => {
       <div className="login-card">
         <div className="login-header">
           <div className="login-logo">
-            <img src="/rupu-icon.png" alt="Rupü" />
+            <img src="/app/rupu-icon.png" alt="Rupü" />
           </div>
         </div>
 

@@ -10,6 +10,9 @@ export const config = {
   // Configuración de entorno
   isDevelopment: process.env.NODE_ENV === 'development',
   isProduction: process.env.NODE_ENV === 'production',
+  
+  // URL base de la aplicación
+  APP_BASE_PATH: process.env.NEXT_PUBLIC_APP_BASE_PATH || '/app',
 };
 
 // Función para validar configuración
@@ -17,6 +20,7 @@ export const validateConfig = () => {
   console.log('🔧 Configuración cargada:', {
     API_BASE_URL: config.API_BASE_URL,
     APP_NAME: config.APP_NAME,
+    APP_BASE_PATH: config.APP_BASE_PATH,
     MODE: process.env.NODE_ENV,
     isDevelopment: config.isDevelopment,
     isProduction: config.isProduction

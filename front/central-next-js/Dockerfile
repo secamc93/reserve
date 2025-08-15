@@ -17,7 +17,18 @@ RUN npm run build
 # Production image
 FROM --platform=linux/arm64 node:18-alpine AS runner
 WORKDIR /app
-ENV NODE_ENV=production
+
+# Build arguments for environment variables
+ARG NEXT_PUBLIC_API_BASE_URL
+ARG NEXT_PUBLIC_APP_NAME
+ARG NEXT_PUBLIC_APP_VERSION
+ARG NODE_ENV
+
+# Set environment variables
+ENV NODE_ENV=${NODE_ENV:-production}
+ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-https://www.xn--rup-joa.com/api}
+ENV NEXT_PUBLIC_APP_NAME=${NEXT_PUBLIC_APP_NAME:-Rupü}
+ENV NEXT_PUBLIC_APP_VERSION=${NEXT_PUBLIC_APP_VERSION:-1.0.0}
 
 # Copy built assets and production dependencies
 COPY --from=builder /app/package*.json ./

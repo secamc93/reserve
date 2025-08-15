@@ -16,7 +16,7 @@ export const useBusinesses = () => {
     setError(null);
     try {
       const result = await useCase.execute();
-      setBusinesses(result.businesses);
+      setBusinesses(result); // result es directamente Business[]
     } catch (err: any) {
       setError(err.message);
     } finally {
