@@ -31,7 +31,7 @@ class _UpdateReserveViewState extends State<UpdateReserveView> {
   Widget build(BuildContext context) {
     return GetX<ReserveUpdateController>(builder: (ctrl) {
       if (ctrl.isLoading.value || ctrl.reserva.value == null) {
-        return const Scaffold(
+        return Scaffold(
           appBar: AppBar(title: Text('Actualizar reserva')),
           body: Center(child: CircularProgressIndicator()),
         );
