@@ -40,6 +40,11 @@ class ReserveRepositoryImpl extends ReserveRepository {
   }
 
   @override
+  Future<Reserve> cancelarReserva({required int id}) {
+    return datasource.cancelarReserva(id: id);
+  }
+
+  @override
   Future<Reserve> actualizarReserva({
     required int id,
     required DateTime startAt,

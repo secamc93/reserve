@@ -111,7 +111,6 @@ class _CreateReserveViewState extends State<CreateReserveView> {
     if (date == null) return;
 
     if (!context.mounted) return;
-
     final time = await showTimePicker(
       context: ctx,
       initialTime: TimeOfDay.fromDateTime(_end),
@@ -170,6 +169,19 @@ class _CreateReserveViewState extends State<CreateReserveView> {
       return;
     }
 
+    // 1) BottomSheet de confirmación
+    final df = DateFormat('EEE d MMM, HH:mm', 'es');
+    final confirmed = await _confirmSheet(
+      name: name,
+      guests: guests,
+      timeRange: '${df.format(_start)} – ${df.format(_end)}',
+      email: email.isEmpty ? null : email,
+      phone: phone.isEmpty ? null : phone,
+      dni: dni.isEmpty ? null : dni,
+    );
+    if (!confirmed) return; // usuario decidió seguir editando
+
+    // 2) Guardar
     final perfil = Get.find<PerfilController>();
     final businessId = perfil.businessId;
     if (businessId <= 0) {
@@ -199,11 +211,20 @@ class _CreateReserveViewState extends State<CreateReserveView> {
       return;
     }
 
-    // Refresca la lista al volver
-    reserveCtrl.reservasHoy();
+    // 3) Refrescar (hoy y todas)
+    try {
+      await reserveCtrl.cargarReservasHoy(silent: true);
+    } catch (_) {}
+    try {
+      await reserveCtrl.cargarReservasTodas(silent: true);
+    } catch (_) {} // o tu método de “todas”
 
-    if (mounted) Navigator.of(context).pop();
-    _showSnack('Reserva creada');
+    // 4) BottomSheet de éxito
+    final goBack = await _successSheet(
+      title: '¡Reserva creada!',
+      message: 'Se creó la reserva de $name para $guests persona(s).',
+    );
+    if (goBack && mounted) Navigator.of(context).pop();
   }
 
   bool _isValidEmail(String email) {
@@ -215,6 +236,180 @@ class _CreateReserveViewState extends State<CreateReserveView> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
+  // ───────────────────── Bottom Sheets ─────────────────────
+
+  Future<bool> _confirmSheet({
+    required String name,
+    required int guests,
+    required String timeRange,
+    String? email,
+    String? phone,
+    String? dni,
+  }) async {
+    final cs = Theme.of(context).colorScheme;
+    return await showModalBottomSheet<bool>(
+          context: context,
+          useSafeArea: true,
+          isScrollControlled: true,
+          showDragHandle: true,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          ),
+          builder: (ctx) {
+            return Padding(
+              padding: EdgeInsets.fromLTRB(
+                16,
+                8,
+                16,
+                MediaQuery.of(ctx).viewInsets.bottom + 16,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Encabezado premium
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 18,
+                        backgroundColor: cs.primaryContainer,
+                        child: Icon(
+                          Icons.event_available,
+                          color: cs.onPrimaryContainer,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        'Confirmar reserva',
+                        style: Theme.of(ctx).textTheme.titleMedium!.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  _ConfirmRow(
+                    icon: Icons.person_outline,
+                    label: 'Cliente',
+                    value: name,
+                  ),
+                  const SizedBox(height: 6),
+                  _ConfirmRow(
+                    icon: Icons.schedule,
+                    label: 'Horario',
+                    value: timeRange,
+                  ),
+                  const SizedBox(height: 6),
+                  _ConfirmRow(
+                    icon: Icons.group_outlined,
+                    label: 'Personas',
+                    value: '$guests',
+                  ),
+                  if ((email ?? '').isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    _ConfirmRow(
+                      icon: Icons.email_outlined,
+                      label: 'Email',
+                      value: email!,
+                    ),
+                  ],
+                  if ((phone ?? '').isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    _ConfirmRow(
+                      icon: Icons.phone_outlined,
+                      label: 'Teléfono',
+                      value: phone!,
+                    ),
+                  ],
+                  if ((dni ?? '').isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    _ConfirmRow(
+                      icon: Icons.badge_outlined,
+                      label: 'Documento',
+                      value: dni!,
+                    ),
+                  ],
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.of(ctx).pop(false),
+                          child: const Text('Cancelar'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: () => Navigator.of(ctx).pop(true),
+                          icon: const Icon(Icons.check),
+                          label: const Text('Confirmar'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        ) ??
+        false;
+  }
+
+  Future<bool> _successSheet({
+    required String title,
+    required String message,
+  }) async {
+    return await showModalBottomSheet<bool>(
+          context: context,
+          useSafeArea: true,
+          showDragHandle: true,
+          isScrollControlled: false,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          ),
+          builder: (ctx) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 18,
+                        backgroundColor: Colors.green.shade100,
+                        child: const Icon(
+                          Icons.check_rounded,
+                          color: Colors.green,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        title,
+                        style: Theme.of(ctx).textTheme.titleMedium!.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Align(alignment: Alignment.centerLeft, child: Text(message)),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: () => Navigator.of(ctx).pop(true),
+                      child: const Text('Listo'),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ) ??
+        true;
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -222,7 +417,6 @@ class _CreateReserveViewState extends State<CreateReserveView> {
 
     return SafeArea(
       child: Scaffold(
-        // Sin AppBar para no chocar con tu layout global
         body: ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
           children: [
@@ -244,7 +438,6 @@ class _CreateReserveViewState extends State<CreateReserveView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Icon(Icons.add_circle_outline, color: cs.primary, size: 28),
                   const SizedBox(height: 8),
                   Text(
                     'Nueva reserva',
@@ -264,7 +457,7 @@ class _CreateReserveViewState extends State<CreateReserveView> {
             ),
             const SizedBox(height: 16),
 
-            // Tarjeta principal (glass-lite)
+            // Tarjeta principal (premium)
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -487,6 +680,43 @@ class _DateTile extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ConfirmRow extends StatelessWidget {
+  const _ConfirmRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: cs.onSurfaceVariant),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: tt.labelMedium!.copyWith(color: cs.onSurfaceVariant),
+        ),
+        // const Spacer(),
+        SizedBox(width: 60),
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.end,
+            overflow: TextOverflow.ellipsis,
+            style: tt.bodyMedium!.copyWith(fontWeight: FontWeight.w700),
+          ),
+        ),
+      ],
     );
   }
 }

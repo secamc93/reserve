@@ -12,6 +12,8 @@ abstract class ReserveRepository {
     int? tableId,
   });
 
+  Future<Reserve> cancelarReserva({required int id});
+
   Future<Reserve> crearReserva({
     required int businessId,
     required String name,

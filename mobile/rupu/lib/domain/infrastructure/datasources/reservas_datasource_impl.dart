@@ -151,4 +151,10 @@ class ReservasDatasourceImpl extends ReserveDatasource {
       rethrow;
     }
   }
+
+  @override
+  Future<Reserve> cancelarReserva({required int id}) {
+    // TODO: implement cancelarReserva
+    throw UnimplementedError();
+  }
 }
