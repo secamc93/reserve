@@ -56,7 +56,8 @@ final appRouter = GoRouter(
           name: CalendarViewReserve.name,
           builder: (context, state) {
             ReserveBinding.register();
-            return CalendarViewReserve(); // tu vista
+            final page = int.parse(state.pathParameters['page']!);
+            return CalendarViewReserve(pageIndex: page); // tu vista
           },
         ),
         GoRoute(
@@ -76,10 +77,23 @@ final appRouter = GoRouter(
             PerfilBinding.register();
 
             ReserveDetailBinding.register();
+            final page = int.parse(state.pathParameters['page']!);
             final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
             final ctrl = Get.find<ReserveDetailController>();
             ctrl.cargarReserva(id);
-            return const ReserveDetailView();
+            return ReserveDetailView(pageIndex: page);
+          },
+        ),
+        GoRoute(
+          path: '/home/:page/reserve/:id/update',
+          name: UpdateReserveView.name,
+          builder: (context, state) {
+            PerfilBinding.register();
+            ReserveUpdateBinding.register();
+            final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+            final ctrl = Get.find<ReserveUpdateController>();
+            ctrl.cargarReserva(id);
+            return const UpdateReserveView();
           },
         ),
         GoRoute(

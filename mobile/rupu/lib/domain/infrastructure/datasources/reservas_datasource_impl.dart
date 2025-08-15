@@ -111,10 +111,44 @@ class ReservasDatasourceImpl extends ReserveDatasource {
       rethrow;
     }
   }
-  
+
   @override
-  Future<Reserve> actualizarReserva({required int id}) {
-    // TODO: implement actualizarReserva
-    throw UnimplementedError();
+  Future<Reserve> actualizarReserva({
+    required int id,
+    required DateTime startAt,
+    required DateTime endAt,
+    required int numberOfGuests,
+    int? tableId,
+  }) async {
+    try {
+      final Map<String, dynamic> payload = {
+        'start_at': toRfc3339(startAt),
+        'end_at': toRfc3339(endAt),
+        'number_of_guests': numberOfGuests,
+        if (tableId != null) 'table_id': tableId,
+      };
+
+      final resp = await _dio.put('/reserves/$id', data: payload);
+
+      final data = resp.data;
+      Map<String, dynamic>? json;
+      if (data is Map<String, dynamic> &&
+          data['data'] is Map<String, dynamic>) {
+        json = data['data'] as Map<String, dynamic>;
+      } else if (data is Map<String, dynamic>) {
+        json = data;
+      }
+      if (json == null) {
+        throw Exception('Formato de respuesta inesperado en PUT /reserves/$id');
+      }
+
+      final model = ReservaModel.fromJson(json);
+      return ReservesMapper.reservaFromModel(model);
+    } on DioException catch (e) {
+      debugPrint(
+        'Error actualizar reserva [$id] [${e.response?.statusCode}]: ${e.response?.data ?? e.message}',
+      );
+      rethrow;
+    }
   }
 }

@@ -40,7 +40,19 @@ class ReserveRepositoryImpl extends ReserveRepository {
   }
 
   @override
-  Future<Reserve> actualizarReserva({required int id}) {
-    return datasource.actualizarReserva(id: id);
+  Future<Reserve> actualizarReserva({
+    required int id,
+    required DateTime startAt,
+    required DateTime endAt,
+    required int numberOfGuests,
+    int? tableId,
+  }) {
+    return datasource.actualizarReserva(
+      id: id,
+      startAt: startAt,
+      endAt: endAt,
+      numberOfGuests: numberOfGuests,
+      tableId: tableId,
+    );
   }
 }

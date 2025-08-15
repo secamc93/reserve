@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:rupu/config/helpers/calendar_helper.dart';
 import 'package:rupu/presentation/views/profile/perfil_controller.dart';
@@ -9,10 +10,12 @@ import 'package:rupu/presentation/views/reserve/data_time_tile.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 import 'package:rupu/presentation/views/reserve/reserves_controller.dart';
+import 'package:rupu/presentation/views/reserve/update_reserve_view.dart';
 
 class CalendarViewReserve extends StatefulWidget {
-  const CalendarViewReserve({super.key});
+  const CalendarViewReserve({super.key, required this.pageIndex});
   static const name = 'calendar';
+  final int pageIndex;
 
   @override
   State<CalendarViewReserve> createState() => _CalendarViewReserveState();
@@ -868,10 +871,17 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
                 // 🟢 Botón de acción (al lado de Cerrar)
                 FilledButton.icon(
                   onPressed: () {
-                    // Cierra este sheet y abre el de creación usando la hora del evento
+                    Navigator.of(context).pop();
+                    context.pushNamed(
+                      UpdateReserveView.name,
+                      pathParameters: {
+                        'page': '${widget.pageIndex}',
+                        'id': '${appt.id}',
+                      },
+                    );
                   },
                   icon: const Icon(Icons.edit),
-                  label: const Text('Accion'),
+                  label: const Text('Editar'),
                 ),
               ],
             ),

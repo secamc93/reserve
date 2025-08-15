@@ -4,7 +4,13 @@ abstract class ReserveRepository {
   Future<List<Reserve>> obtenerReservas();
 
   Future<Reserve> obtenerReserva({required int id});
-  Future<Reserve> actualizarReserva({required int id});
+  Future<Reserve> actualizarReserva({
+    required int id,
+    required DateTime startAt,
+    required DateTime endAt,
+    required int numberOfGuests,
+    int? tableId,
+  });
 
   Future<Reserve> crearReserva({
     required int businessId,

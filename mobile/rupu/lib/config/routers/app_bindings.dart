@@ -50,3 +50,11 @@ class ReserveDetailBinding {
     }
   }
 }
+
+class ReserveUpdateBinding {
+  static void register() {
+    if (!Get.isRegistered<ReserveUpdateController>()) {
+      Get.put(ReserveUpdateController());
+    }
+  }
+}
