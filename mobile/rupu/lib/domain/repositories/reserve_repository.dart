@@ -4,6 +4,7 @@ abstract class ReserveRepository {
   Future<List<Reserve>> obtenerReservas();
 
   Future<Reserve> obtenerReserva({required int id});
+  Future<Reserve> actualizarReserva({required int id});
 
   Future<Reserve> crearReserva({
     required int businessId,

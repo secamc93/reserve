@@ -92,7 +92,8 @@ class ReservasDatasourceImpl extends ReserveDatasource {
 
       final data = response.data;
       Map<String, dynamic>? json;
-      if (data is Map<String, dynamic> && data['data'] is Map<String, dynamic>) {
+      if (data is Map<String, dynamic> &&
+          data['data'] is Map<String, dynamic>) {
         json = data['data'] as Map<String, dynamic>;
       } else if (data is Map<String, dynamic>) {
         json = data;
@@ -109,5 +110,11 @@ class ReservasDatasourceImpl extends ReserveDatasource {
       );
       rethrow;
     }
+  }
+  
+  @override
+  Future<Reserve> actualizarReserva({required int id}) {
+    // TODO: implement actualizarReserva
+    throw UnimplementedError();
   }
 }

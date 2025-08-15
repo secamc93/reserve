@@ -1,24 +1,67 @@
 import 'package:flutter/material.dart';
 
 class SectionTitle extends StatelessWidget {
-  const SectionTitle(this.text, {super.key, this.trailing});
+  const SectionTitle(
+    this.text, {
+    super.key,
+    this.trailing,
+    this.padding = const EdgeInsets.symmetric(horizontal: 4),
+  });
+
   final String text;
   final Widget? trailing;
+  final EdgeInsets padding;
+
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final title = Text(
+      text,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: tt.titleMedium!.copyWith(
+        fontWeight: FontWeight.w800,
+        color: cs.onSurface,
+      ),
+    );
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          Text(
-            text,
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium!.copyWith(fontWeight: FontWeight.w700),
-          ),
-          const Spacer(),
-          if (trailing != null) trailing!,
-        ],
+      padding: padding,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // ¿El padre me dio ancho finito?
+          final hasWidth =
+              constraints.hasBoundedWidth && constraints.maxWidth.isFinite;
+
+          if (!hasWidth) {
+            // ⚠️ Unbounded: NO usar width: infinity ni Expanded/Flexible.
+            // Damos un ancho máximo razonable usando el ancho de pantalla.
+            final screenW = MediaQuery.sizeOf(context).width;
+            return ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: screenW - 32),
+              child: Row(
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Expanded(child: title),
+                  if (trailing != null) ...[
+                    const SizedBox(width: 8),
+                    trailing!,
+                  ],
+                ],
+              ),
+            );
+          }
+
+          // ✅ Bounded: layout normal
+          return Row(
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              Expanded(child: title),
+              if (trailing != null) ...[const SizedBox(width: 8), trailing!],
+            ],
+          );
+        },
       ),
     );
   }

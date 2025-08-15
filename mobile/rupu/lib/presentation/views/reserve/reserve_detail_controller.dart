@@ -7,7 +7,7 @@ import 'package:rupu/domain/repositories/reserve_repository.dart';
 class ReserveDetailController extends GetxController {
   final ReserveRepository repository;
   ReserveDetailController()
-      : repository = ReserveRepositoryImpl(ReservasDatasourceImpl());
+    : repository = ReserveRepositoryImpl(ReservasDatasourceImpl());
 
   final isLoading = false.obs;
   final reserva = Rxn<Reserve>();

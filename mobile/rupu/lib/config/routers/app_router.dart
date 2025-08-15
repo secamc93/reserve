@@ -73,6 +73,8 @@ final appRouter = GoRouter(
           path: '/home/:page/reserve/:id',
           name: 'reserve_detail',
           builder: (context, state) {
+            PerfilBinding.register();
+
             ReserveDetailBinding.register();
             final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
             final ctrl = Get.find<ReserveDetailController>();
