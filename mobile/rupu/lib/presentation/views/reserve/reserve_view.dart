@@ -13,6 +13,99 @@ class ReserveView extends GetView<ReserveController> {
   Widget build(BuildContext context) {
     Get.put(ReserveController());
 
+    Future<void> _cancel(int id) async {
+      final reasonCtrl = TextEditingController();
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) {
+          return AlertDialog(
+            title: const Text('Cancelar reserva'),
+            content: TextField(
+              controller: reasonCtrl,
+              decoration:
+                  const InputDecoration(labelText: 'Motivo (opcional)'),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: const Text('Volver'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: const Text('Cancelar'),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (confirmed != true) return;
+
+      final ok = await controller.cancelarReserva(
+        id: id,
+        reason: reasonCtrl.text.trim().isEmpty ? null : reasonCtrl.text.trim(),
+      );
+
+      if (!ok) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se pudo cancelar la reserva.')),
+        );
+        return;
+      }
+
+      await showModalBottomSheet(
+        context: context,
+        useSafeArea: true,
+        showDragHandle: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        builder: (ctx) {
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 18,
+                      backgroundColor:
+                          Theme.of(ctx).colorScheme.primaryContainer,
+                      child: Icon(
+                        Icons.check,
+                        color: Theme.of(ctx).colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Reserva cancelada',
+                      style: Theme.of(ctx)
+                          .textTheme
+                          .titleMedium!
+                          .copyWith(fontWeight: FontWeight.w800),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'La reserva se canceló correctamente.',
+                  style: Theme.of(ctx).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 20),
+                FilledButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('Entendido'),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+
+      await controller.cargarReservasHoy(silent: true);
+    }
+
     return SafeArea(
       child: RefreshIndicator(
         onRefresh: () => controller.cargarReservasHoy(silent: true),
@@ -98,6 +191,7 @@ class ReserveView extends GetView<ReserveController> {
                           'id': '${r.reservaId}',
                         },
                       ),
+                      onCancel: () => _cancel(r.reservaId),
                     ),
                   ),
               ],
@@ -302,6 +396,7 @@ class _BookingListCardPremium extends StatelessWidget {
     required this.time,
     required this.status,
     this.onTap,
+    this.onCancel,
   });
 
   final String client;
@@ -309,6 +404,7 @@ class _BookingListCardPremium extends StatelessWidget {
   final String time;
   final String status;
   final VoidCallback? onTap;
+  final VoidCallback? onCancel;
 
   @override
   Widget build(BuildContext context) {
@@ -402,10 +498,22 @@ class _BookingListCardPremium extends StatelessWidget {
             ),
 
             const SizedBox(width: 8),
-            Icon(
-              Icons.chevron_right_rounded,
-              size: 22,
-              color: cs.onSurfaceVariant,
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (onCancel != null)
+                  IconButton(
+                    icon: const Icon(Icons.cancel_outlined),
+                    color: cs.error,
+                    tooltip: 'Cancelar',
+                    onPressed: onCancel,
+                  ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 22,
+                  color: cs.onSurfaceVariant,
+                ),
+              ],
             ),
           ],
         ),
