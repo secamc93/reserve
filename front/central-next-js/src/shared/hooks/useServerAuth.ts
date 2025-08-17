@@ -87,6 +87,9 @@ export const useServerAuth = () => {
         
         console.log('🔍 [useServerAuth] Ahora debería cargar permisos automáticamente...');
 
+        // Cargar permisos inmediatamente después del login exitoso
+        await loadUserRolesPermissions();
+
         return result;
       } else {
         console.log('❌ [useServerAuth] Login falló:', result.message);
@@ -107,7 +110,7 @@ export const useServerAuth = () => {
       }));
       throw error;
     }
-  }, [state.loading]);
+  }, [state.loading, loadUserRolesPermissions]);
 
   // Logout usando Server Action
   const logout = useCallback(async () => {
@@ -313,7 +316,9 @@ export const useServerAuth = () => {
       console.log('🔄 [useServerAuth] Ya se está verificando autenticación, saltando...');
       return;
     }
-    
+
+    authCheckRef.current = true;
+
     try {
       console.log('🔍 [useServerAuth] Llamando a checkAuth...');
       const authResult = await checkAuth();
