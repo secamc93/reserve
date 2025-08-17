@@ -49,7 +49,7 @@ export const useServerAuth = () => {
     isAuthenticated: false,
     user: null,
     permissions: null,
-    loading: false,
+    loading: true,
     error: null
   });
 
@@ -142,6 +142,9 @@ export const useServerAuth = () => {
   const checkAuth = useCallback(async () => {
     console.log('🔍 [useServerAuth] Verificando autenticación...');
     try {
+      // Marcar como cargando antes de iniciar la verificación
+      setState(prev => ({ ...prev, loading: true }));
+
       const result = await checkAuthAction();
       console.log('✅ [useServerAuth] Verificación completada:', result);
       
