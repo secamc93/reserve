@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { loginAction, logoutAction, checkAuthAction, getUserRolesPermissionsAction, changePasswordAction } from '@/services/auth/infrastructure/actions/auth.actions';
+import { loginAction, logoutAction, checkAuthAction, getUserRolesPermissionsAction, changePasswordAction } from '@/services/auth/infrastructure/actions';
+import { mapFormDataToLoginCredentials } from '@/services/auth/infrastructure/actions/mappers';
 import { useDebugAuth } from './useDebugAuth';
 
 export interface UserRolesPermissions {
@@ -189,14 +190,15 @@ export const useServerAuth = () => {
     setState(prev => ({ ...prev, loading: true, error: null }));
     
     try {
-      const result = await loginAction(formData);
+      const loginRequest = mapFormDataToLoginCredentials(formData);
+      const result = await loginAction(loginRequest);
       console.log('🔐 [useServerAuth] Resultado del login:', result);
       
       if (result.success) {
         setState(prev => ({
           ...prev,
           isAuthenticated: true,
-          user: result.user,
+          user: result.data?.user,
           loading: false,
           error: null
         }));

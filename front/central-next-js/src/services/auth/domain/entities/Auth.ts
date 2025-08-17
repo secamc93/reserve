@@ -4,18 +4,7 @@ export interface LoginCredentials {
   password: string;
 }
 
-import type { User, UserRolesPermissions } from '@/services/users/domain/entities/User';
-
-export interface LoginResponse {
-  success: boolean;
-  data: {
-    token: string;
-    user: User;
-    require_password_change?: boolean;
-  };
-  user?: User;
-  token?: string;
-}
+import type { User, UserRolesPermissions } from '@/services/users/domain/entities/User'; 
 
 export interface ChangePasswordData {
   current_password: string;
