@@ -10,6 +10,7 @@ import (
 // IAuthHandler define la interfaz del handler de autenticación
 type IAuthHandler interface {
 	LoginHandler(c *gin.Context)
+	VerifyHandler(c *gin.Context)
 	GetUserRolesPermissionsHandler(c *gin.Context)
 	ChangePasswordHandler(c *gin.Context)
 	GenerateAPIKeyHandler(c *gin.Context)

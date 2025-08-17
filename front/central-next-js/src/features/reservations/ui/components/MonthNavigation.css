@@ -1,0 +1,98 @@
+.month-nav {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.nav-left button {
+    background: #f8f9fa;
+    border: none;
+    color: #495057;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.nav-left button:hover {
+    background: #e9ecef;
+    transform: translateY(-1px);
+}
+
+.nav-left h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+    min-width: 140px;
+    text-align: center;
+}
+
+.nav-right {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.btn-today {
+    background: var(--secondary-color);
+    border: none;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-today:hover {
+    background: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+.view-selector {
+    display: flex;
+    background: #e9ecef;
+    border-radius: 8px;
+    padding: 4px;
+}
+
+.view-selector button {
+    background: transparent;
+    border: none;
+    color: #495057;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    opacity: 0.7;
+}
+
+.view-selector button.active {
+    background: var(--primary-color);
+    color: white;
+    opacity: 1;
+}
+
+.view-selector button:hover:not(.active) {
+    opacity: 1;
+    background: #dee2e6;
+} 

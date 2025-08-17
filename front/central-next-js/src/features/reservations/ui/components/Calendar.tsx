@@ -5,6 +5,8 @@ import { useReservations } from '../hooks/useReservations';
 import { Reservation } from '@/features/reservations/domain/Reservation';
 import CreateReservationModal from './CreateReservationModal';
 import './Calendar.css';
+import MonthNavigation from './MonthNavigation';
+import CalendarHeader from './CalendarHeader';
 
 const Calendar: React.FC = () => {
     const [currentDate, setCurrentDate] = useState(new Date());
@@ -229,63 +231,21 @@ const Calendar: React.FC = () => {
 
     return (
         <div className="calendario-page">
-            {/* Header del calendario */}
-            <header className="header2">
-                <div className="header2-content">
-                    <div className="header2-left">
-                        <h1>📅 Calendario de Reservas</h1>
-                        <p>Gestiona las reservas de forma visual por fechas</p>
-                    </div>
-                    <div className="header2-actions">
-                        <button className="btn2-today" onClick={goToToday}>
-                            Hoy
-                        </button>
-                        <div className="view2-selector">
-                            <button
-                                className={`btn2-view ${viewType === 'month' ? 'active' : ''}`}
-                                onClick={() => setViewType('month')}
-                            >
-                                Mes
-                            </button>
-                            <button
-                                className={`btn2-view ${viewType === 'week' ? 'active' : ''}`}
-                                onClick={() => setViewType('week')}
-                            >
-                                Semana
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <CalendarHeader
+                total={reservations.length}
+                pending={reservations.filter(r => r.estado_codigo === 'pendiente').length}
+                confirmed={reservations.filter(r => r.estado_codigo === 'confirmado').length}
+            />
 
-            {/* Controles de navegación */}
             <div className="calendario-controls">
-                <div className="nav-controls">
-                    <button className="btn-nav" onClick={goToPreviousMonth}>‹</button>
-                    <h2 className="current-month">
-                        {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-                    </h2>
-                    <button className="btn-nav" onClick={goToNextMonth}>›</button>
-                </div>
-
-                <div className="calendar-stats">
-                    <div className="stat-item">
-                        <span className="stat-number">{reservations.length}</span>
-                        <span className="stat-label">Total</span>
-                    </div>
-                    <div className="stat-item">
-                        <span className="stat-number">
-                            {reservations.filter(r => r.estado_codigo === 'pendiente').length}
-                        </span>
-                        <span className="stat-label">Pendientes</span>
-                    </div>
-                    <div className="stat-item">
-                        <span className="stat-number">
-                            {reservations.filter(r => r.estado_codigo === 'confirmado').length}
-                        </span>
-                        <span className="stat-label">Confirmadas</span>
-                    </div>
-                </div>
+                <MonthNavigation
+                    monthLabel={`${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`}
+                    onPrev={goToPreviousMonth}
+                    onNext={goToNextMonth}
+                    onToday={goToToday}
+                    viewType={viewType as any}
+                    onChangeView={(view) => setViewType(view)}
+                />
             </div>
 
             {/* Calendario Grid */}
@@ -337,7 +297,7 @@ const Calendar: React.FC = () => {
                                         {dayData.isCurrentMonth && (
                                             <button
                                                 className="add-reserva-btn"
-                                                onClick={(e) => {
+                                                onClick={(e: React.MouseEvent) => {
                                                     e.stopPropagation();
                                                     handleCreateReservation(dayData.date);
                                                 }}

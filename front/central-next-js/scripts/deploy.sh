@@ -35,7 +35,8 @@ if ! aws sts get-caller-identity > /dev/null 2>&1; then
 fi
 
 echo -e "${YELLOW}🔧 Setting production environment variables...${NC}"
-export NEXT_PUBLIC_API_BASE_URL="https://www.xn--rup-joa.com/api"
+# Para desarrollo local con Docker Compose, usar la red interna
+export NEXT_PUBLIC_API_BASE_URL="http://central_reserve:3050"
 export NEXT_PUBLIC_APP_NAME="Rupü"
 export NEXT_PUBLIC_APP_VERSION="1.0.0"
 export NODE_ENV="production"
@@ -67,3 +68,4 @@ docker push ${ECR_REPO}:${TAG}
 
 echo -e "${GREEN}✅ Image pushed to ${ECR_REPO}:${TAG}${NC}"
 echo -e "${GREEN}🌐 Frontend will be accessible at: https://www.xn--rup-joa.com/app${NC}"
+echo -e "${YELLOW}📝 Note: For local Docker Compose, frontend uses internal network URL: http://central_reserve:3050${NC}"

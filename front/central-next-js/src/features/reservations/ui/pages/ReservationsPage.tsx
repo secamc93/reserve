@@ -2,15 +2,17 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/features/auth/ui/hooks/useAuth';
+import { useServerAuth } from '@/shared/hooks/useServerAuth';
 import Layout from '@/shared/ui/components/Layout';
 
 export default function ReservasPage() {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading } = useServerAuth();
   const router = useRouter();
 
   useEffect(() => {
+    // Solo redirigir si ya terminó de cargar Y no está autenticado
     if (!loading && !isAuthenticated) {
+      console.log('❌ [ReservationsPage] Usuario no autenticado, redirigiendo a login');
       router.push('/auth/login');
     }
   }, [isAuthenticated, loading, router]);

@@ -1,9 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { User, ApiRolesPermissionsResponse } from '@/features/users/domain/User';
-import { AuthService } from '@/features/auth/application/AuthService';
-import { config } from '@/shared/config/env';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { User } from '@/features/users/domain/User';
+import { useServerAuth } from '@/shared/hooks/useServerAuth';
 
 interface AppContextType {
   // Estado global esencial
@@ -35,9 +34,21 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [permissions, setPermissions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
+  
+  // Flag para evitar múltiples inicializaciones
+  const initializationRef = useRef(false);
 
-  // Memoizar servicio para evitar recreaciones
-  const authService = useMemo(() => new AuthService(config.API_BASE_URL), []);
+  // Usar el nuevo hook de Server Actions
+  const {
+    isAuthenticated,
+    user: authUser,
+    permissions: authPermissions,
+    loading: authLoading,
+    error: authError,
+    initializeAuth,
+    hasPermission: serverHasPermission,
+    isSuperAdmin: serverIsSuperAdmin
+  } = useServerAuth();
 
   // Función para aplicar tema del negocio
   const applyBusinessTheme = useCallback((user: User | null) => {
@@ -100,203 +111,196 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
   // Función para inicializar la aplicación (se ejecuta UNA SOLA VEZ)
   const initializeApp = useCallback(async () => {
-    if (isInitialized) {
+    if (initializationRef.current) {
       console.log('🔄 AppContext: Ya está inicializado, saltando...');
       return;
     }
 
+    // Protección adicional contra re-inicialización
+    if (isLoading) {
+      console.log('🔄 AppContext: Ya está cargando, saltando...');
+      return;
+    }
+
     console.log('🚀 AppContext: Inicializando aplicación...');
+    console.log('🔍 AppContext: Estado actual:', {
+      isAuthenticated,
+      authUser: !!authUser,
+      authPermissions: !!authPermissions,
+      authLoading,
+      authError
+    });
+    
     setIsLoading(true);
 
     try {
-      // 1. Verificar autenticación
-      const isAuthenticated = authService.isAuthenticated();
-      if (!isAuthenticated) {
-        console.log('❌ AppContext: Usuario no autenticado');
-        setIsLoading(false);
-        return;
+      // 1. Inicializar autenticación usando Server Actions
+      console.log('🔍 AppContext: Llamando a initializeAuth...');
+      await initializeAuth();
+      console.log('✅ AppContext: initializeAuth completado');
+      
+      // 2. Usar información del usuario del hook de autenticación
+      if (authUser) {
+        console.log('✅ AppContext: Usuario autenticado encontrado');
+        setUser(authUser);
+        applyBusinessTheme(authUser);
       }
 
-      // 2. Obtener información del usuario desde localStorage
-      const userInfo = authService.getUserInfo();
-      if (!userInfo) {
-        console.log('❌ AppContext: No se pudo obtener información del usuario');
-        setIsLoading(false);
-        return;
-      }
+      // 3. Procesar permisos del hook de autenticación
+      if (authPermissions) {
+        console.log('🔍 AppContext: Procesando permisos...');
+        let userPermissions: string[] = [];
 
-      setUser(userInfo);
-
-      // 3. Aplicar tema del negocio
-      applyBusinessTheme(userInfo);
-
-      // 4. Obtener permisos del usuario (SIEMPRE cargar desde API para módulos de admin)
-      let userPermissions: string[] = [];
-
-      try {
-        console.log('🔍 AppContext: Intentando cargar permisos desde API...');
-        const rolesPermissions: ApiRolesPermissionsResponse | null = await authService.getUserRolesPermissions();
-        console.log('🔍 AppContext: Respuesta de getUserRolesPermissions:', rolesPermissions);
-
-        if (rolesPermissions && rolesPermissions.data) {
-          // Procesar la estructura correcta del backend: resources.actions
-          if (rolesPermissions.data.resources && Array.isArray(rolesPermissions.data.resources)) {
-            // Extraer todos los códigos de permisos de resources.actions
-            rolesPermissions.data.resources.forEach((resource: any) => {
-              if (resource.actions && Array.isArray(resource.actions)) {
-                resource.actions.forEach((action: any) => {
-                  if (action.code) {
-                    userPermissions.push(action.code);
-                  }
-                });
-              }
-            });
-          }
-
-          // También agregar permisos directos si existen
-          if (rolesPermissions.data.permissions && Array.isArray(rolesPermissions.data.permissions)) {
-            rolesPermissions.data.permissions.forEach((permission: any) => {
-              if (permission.code) {
-                userPermissions.push(permission.code);
-              }
-            });
-          }
-
-          // Sincronizar roles en el user del contexto para uso en UI (perfil, etc.)
-          if (rolesPermissions.data.roles && Array.isArray(rolesPermissions.data.roles) && rolesPermissions.data.roles.length > 0) {
-            setUser(prev => {
-              if (!prev) return prev;
-              const mappedRoles = rolesPermissions.data.roles.map((r: any) => ({
-                id: r.id,
-                name: r.name,
-                code: r.code,
-                description: r.description || '',
-                level: r.level ?? 1,
-                isSystem: Boolean(r.is_system) || false,
-                scopeId: r.scope_id ?? 0,
-                scopeName: r.scope_name || '',
-                scopeCode: r.scope_code || (r.scope || ''),
-              }));
-              const updatedUser = { ...prev, roles: mappedRoles } as any;
-              // Reaplicar tema inmediatamente tras la actualización del usuario
-              try { applyBusinessTheme(updatedUser); } catch {}
-              return updatedUser;
-            });
-          }
-
-          console.log('✅ AppContext: Permisos cargados desde API:', userPermissions);
-        } else {
-          // Fallback: usar roles del usuario como permisos básicos
-          userPermissions = userInfo.roles.map((role: any) => `role:${role.code}`);
-          console.log('⚠️ AppContext: Usando permisos básicos de roles:', userPermissions);
-        }
-      } catch (error) {
-        console.warn('⚠️ AppContext: No se pudieron cargar permisos específicos, usando roles como fallback');
-        console.error('🔍 AppContext: Error completo:', error);
-        // Fallback: usar roles del usuario como permisos básicos
-        userPermissions = userInfo.roles.map((role: any) => `role:${role.code}`);
-        console.log('✅ AppContext: Permisos derivados de roles del usuario:', userPermissions);
-      }
-
-      // 5. Generar permisos adicionales basándose en roles para asegurar que se muestren todos los módulos
-      let additionalPermissions: string[] = [];
-      if (userInfo.roles && userInfo.roles.length > 0) {
-        // Si es super admin, dar acceso a todo
-        if (userInfo.roles.some((role: any) => role.scopeCode === 'platform' || role.code === 'super_admin')) {
-          additionalPermissions.push(
-            'users:manage', 'users:create', 'users:update', 'users:delete',
-            'businesses:manage', 'tables:manage', 'rooms:manage',
-            'manage_users', 'manage_businesses', 'manage_tables', 'manage_rooms'
-          );
+        // Procesar la estructura correcta del backend: resources.actions
+        if (authPermissions.resources && Array.isArray(authPermissions.resources)) {
+          authPermissions.resources.forEach((resource: any) => {
+            if (resource.actions && Array.isArray(resource.actions)) {
+              resource.actions.forEach((action: any) => {
+                if (action.code) {
+                  userPermissions.push(action.code);
+                }
+              });
+            }
+          });
         }
 
-        // Si tiene roles de administración, dar acceso a módulos básicos
-        if (userInfo.roles.some((role: any) => role.code.includes('admin') || role.code.includes('manager'))) {
-          additionalPermissions.push(
-            'users:manage', 'users:create', 'users:update',
-            'businesses:manage', 'tables:manage', 'rooms:manage'
-          );
+        // También agregar permisos directos si existen
+        if (authPermissions.permissions && Array.isArray(authPermissions.permissions)) {
+          authPermissions.permissions.forEach((permission: any) => {
+            if (permission.code) {
+              userPermissions.push(permission.code);
+            }
+          });
         }
-      }
 
-      const finalPermissions = [...new Set([...userPermissions, ...additionalPermissions])];
-      setPermissions(finalPermissions);
-      if (additionalPermissions.length > 0) {
-        console.log('✅ AppContext: Permisos adicionales agregados:', additionalPermissions);
+        setPermissions(userPermissions);
+        console.log('✅ AppContext: Permisos cargados desde Server Actions:', userPermissions);
       }
 
       setIsInitialized(true);
-      console.log('✅ AppContext: Aplicación inicializada exitosamente');
-      console.log(`📊 AppContext: Usuario: ${userInfo.name}, Permisos: ${finalPermissions.length}`);
+      initializationRef.current = true; // Marcar como inicializado
+      console.log('✅ AppContext: Aplicación inicializada correctamente');
 
     } catch (error) {
-      console.error('❌ AppContext: Error inicializando aplicación:', error);
+      console.error('❌ AppContext: Error durante la inicialización:', error);
+      if (authError) {
+        console.error('❌ AppContext: Error de autenticación:', authError);
+      }
     } finally {
       setIsLoading(false);
     }
-  }, [authService, applyBusinessTheme, isInitialized]);
+  }, [isLoading, initializeAuth, applyBusinessTheme, isAuthenticated, authUser, authPermissions, authLoading, authError]);
 
-  // Función para actualizar datos del usuario
+  // Inicializar aplicación cuando el hook de autenticación esté listo
+  useEffect(() => {
+    // Solo inicializar UNA SOLA VEZ cuando no esté inicializado
+    if (!initializationRef.current && !authLoading && !authError) {
+      console.log('🔍 AppContext: Condiciones cumplidas, iniciando...');
+      initializeApp();
+    } else {
+      console.log('🔍 AppContext: Saltando inicialización:', {
+        isInitialized: initializationRef.current,
+        authLoading,
+        authError: !!authError
+      });
+    }
+  }, [initializationRef.current, authLoading, authError, initializeApp]);
+
+  // Sincronizar loading del hook de autenticación (SIMPLIFICADO)
+  useEffect(() => {
+    if (authLoading && !isLoading) {
+      setIsLoading(true);
+    } else if (!authLoading && isLoading && !initializationRef.current) {
+      setIsLoading(false);
+    }
+  }, [authLoading, isLoading, initializationRef.current]);
+
+  // Sincronizar estado del hook de autenticación (UNA SOLA VEZ)
+  useEffect(() => {
+    console.log('🔄 [AppContext] useEffect - Sincronizando usuario:', {
+      authUser: !!authUser,
+      user: !!user,
+      shouldUpdate: authUser && !user
+    });
+    
+    if (authUser && !user) {
+      console.log('✅ [AppContext] Actualizando usuario del contexto');
+      setUser(authUser);
+      applyBusinessTheme(authUser);
+    }
+  }, [authUser, user, applyBusinessTheme]);
+
+  // Sincronizar permisos del hook de autenticación (UNA SOLA VEZ)
+  useEffect(() => {
+    console.log('🔄 [AppContext] useEffect - Sincronizando permisos:', {
+      authPermissions: !!authPermissions,
+      permissions: permissions.length,
+      shouldUpdate: authPermissions && permissions.length === 0
+    });
+    
+    if (authPermissions && permissions.length === 0) {
+      console.log('🔍 [AppContext] Procesando permisos del hook de autenticación...');
+      let userPermissions: string[] = [];
+
+      // Procesar la estructura correcta del backend: resources.actions
+      if (authPermissions.resources && Array.isArray(authPermissions.resources)) {
+        console.log('📊 [AppContext] Procesando resources.actions...');
+        authPermissions.resources.forEach((resource: any) => {
+          if (resource.actions && Array.isArray(resource.actions)) {
+            resource.actions.forEach((action: any) => {
+              if (action.code) {
+                userPermissions.push(action.code);
+              }
+            });
+          }
+        });
+      }
+
+      // También agregar permisos directos si existen
+      if (authPermissions.permissions && Array.isArray(authPermissions.permissions)) {
+        console.log('📊 [AppContext] Procesando permissions directos...');
+        authPermissions.permissions.forEach((permission: any) => {
+          if (permission.code) {
+            userPermissions.push(permission.code);
+          }
+        });
+      }
+
+      console.log('✅ [AppContext] Permisos procesados:', userPermissions);
+      setPermissions(userPermissions);
+    }
+  }, [authPermissions, permissions]);
+
+  // Función para actualizar usuario
   const updateUser = useCallback((userData: Partial<User>) => {
     setUser(prev => {
-      if (!prev) return null;
+      if (!prev) return prev;
       const updatedUser = { ...prev, ...userData };
-      
-      // Aplicar tema si cambió el negocio
-      if (userData.businesses) {
-        applyBusinessTheme(updatedUser);
-      }
-      
+      applyBusinessTheme(updatedUser);
       return updatedUser;
     });
   }, [applyBusinessTheme]);
 
-  // Función para limpiar el contexto
+  // Función para limpiar aplicación
   const clearApp = useCallback(() => {
     setUser(null);
     setPermissions([]);
     setIsInitialized(false);
     setIsLoading(false);
-    
-    // Limpiar tema
-    if (typeof document !== 'undefined') {
-      const root = document.documentElement;
-      root.style.removeProperty('--primary-color');
-      root.style.removeProperty('--secondary-color');
-    }
+    initializationRef.current = false; // Resetear el flag
   }, []);
 
-  // Función para verificar permisos
-  const hasPermission = useCallback((permission: string) => {
-    if (!user || !permissions.length) return false;
-    
-    // Super admin tiene todos los permisos
-    if (isSuperAdmin()) return true;
-    
-    // Verificar permiso específico
-    return permissions.includes(permission);
-  }, [user, permissions]);
+  // Función para verificar permisos (usar Server Actions)
+  const hasPermission = useCallback((permission: string): boolean => {
+    return serverHasPermission(permission);
+  }, [serverHasPermission]);
 
-  // Función para verificar si es super admin
-  const isSuperAdmin = useCallback(() => {
-    if (!user || !user.roles) return false;
-    return user.roles.some(role => role.scopeCode === 'platform');
-  }, [user]);
+  // Función para verificar si es super admin (usar Server Actions)
+  const isSuperAdmin = useCallback((): boolean => {
+    return serverIsSuperAdmin();
+  }, [serverIsSuperAdmin]);
 
-  // Inicializar aplicación al montar el componente
-  useEffect(() => {
-    initializeApp();
-  }, [initializeApp]);
-
-  // Aplicar tema cada vez que cambia el usuario
-  useEffect(() => {
-    applyBusinessTheme(user);
-    // Reasegurar colores en el siguiente frame
-    const id = requestAnimationFrame(() => ensureThemeApplied(user));
-    return () => cancelAnimationFrame(id);
-  }, [user, applyBusinessTheme, ensureThemeApplied]);
-
-  // Memoizar el valor del contexto para evitar re-renderizados
+  // Memoizar contexto para evitar re-renderizados innecesarios
   const contextValue = useMemo(() => ({
     user,
     permissions,
@@ -306,7 +310,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     updateUser,
     clearApp,
     hasPermission,
-    isSuperAdmin,
+    isSuperAdmin
   }), [
     user,
     permissions,
@@ -316,7 +320,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     updateUser,
     clearApp,
     hasPermission,
-    isSuperAdmin,
+    isSuperAdmin
   ]);
 
   return (

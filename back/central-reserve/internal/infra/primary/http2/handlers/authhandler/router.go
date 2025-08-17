@@ -19,6 +19,7 @@ func RegisterRoutes(v1Group *gin.RouterGroup, handler IAuthHandler, jwtService p
 		protected := authGroup.Group("/")
 		protected.Use(middleware.AuthMiddleware(jwtService, logger))
 		{
+			protected.GET("/verify", handler.VerifyHandler)
 			protected.GET("/roles-permissions", handler.GetUserRolesPermissionsHandler)
 			protected.POST("/change-password", handler.ChangePasswordHandler)
 			protected.POST("/generate-api-key", handler.GenerateAPIKeyHandler)

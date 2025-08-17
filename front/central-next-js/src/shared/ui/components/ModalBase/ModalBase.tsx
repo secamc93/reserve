@@ -7,7 +7,7 @@ interface ModalBaseProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   actions?: React.ReactNode;
   className?: string;
 }

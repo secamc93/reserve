@@ -384,7 +384,7 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
               type="text"
               id="name"
               value={formData.name || ""}
-              onChange={(e) => handleInputChange("name", e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange("name", e.target.value)}
               className={errors.name ? "error" : ""}
               required
             />
@@ -397,7 +397,7 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
               type="text"
               id="code"
               value={formData.code || ""}
-              onChange={(e) => handleInputChange("code", e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange("code", e.target.value)}
               className={errors.code ? "error" : ""}
               placeholder="Código único del negocio"
               required
@@ -410,7 +410,7 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
             <select
               id="business_type_id"
               value={formData.business_type_id || ""}
-              onChange={(e) =>
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                 handleInputChange("business_type_id", parseInt(e.target.value))
               }
               className={errors.business_type_id ? "error" : ""}
@@ -433,7 +433,7 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
             <select
               id="timezone"
               value={formData.timezone || ""}
-              onChange={(e) => handleInputChange("timezone", e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleInputChange("timezone", e.target.value)}
             >
               <option value="Europe/Madrid">Europe/Madrid</option>
               <option value="America/New_York">America/New_York</option>
@@ -449,7 +449,7 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
               type="text"
               id="address"
               value={formData.address || ""}
-              onChange={(e) => handleInputChange("address", e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange("address", e.target.value)}
               className={errors.address ? "error" : ""}
               required
             />
@@ -461,7 +461,7 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
             <textarea
               id="description"
               value={formData.description || ""}
-              onChange={(e) => handleInputChange("description", e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleInputChange("description", e.target.value)}
               rows={3}
             />
           </div>
@@ -473,7 +473,7 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
               type="tel"
               id="phone"
               value={formData.phone || ""}
-              onChange={(e) => handleInputChange("phone", e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange("phone", e.target.value)}
               placeholder="+57 300 123 4567"
             />
           </div>
@@ -484,7 +484,7 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
               type="email"
               id="email"
               value={formData.email || ""}
-              onChange={(e) => handleInputChange("email", e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange("email", e.target.value)}
               placeholder="contacto@negocio.com"
             />
           </div>
@@ -495,7 +495,7 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
               type="url"
               id="website"
               value={formData.website || ""}
-              onChange={(e) => handleInputChange("website", e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange("website", e.target.value)}
               placeholder="https://www.negocio.com"
             />
           </div>
@@ -569,7 +569,7 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
               type="color"
               id="primary_color"
               value={formData.primary_color || "#3b82f6"}
-              onChange={(e) =>
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 handleInputChange("primary_color", e.target.value)
               }
             />
@@ -581,7 +581,7 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
               type="color"
               id="secondary_color"
               value={formData.secondary_color || "#8b5cf6"}
-              onChange={(e) =>
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 handleInputChange("secondary_color", e.target.value)
               }
             />
@@ -593,7 +593,7 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
               type="color"
               id="tertiary_color"
               value={formData.tertiary_color || "#10b981"}
-              onChange={(e) =>
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 handleInputChange("tertiary_color", e.target.value)
               }
             />
@@ -605,7 +605,7 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
               type="color"
               id="quaternary_color"
               value={formData.quaternary_color || "#fbbf24"}
-              onChange={(e) =>
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 handleInputChange("quaternary_color", e.target.value)
               }
             />
@@ -659,7 +659,7 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
               type="text"
               id="custom_domain"
               value={formData.custom_domain || ""}
-              onChange={(e) =>
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 handleInputChange("custom_domain", e.target.value)
               }
               placeholder="mi-negocio.com"
@@ -672,7 +672,7 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
               <input
                 type="checkbox"
                 checked={formData.enable_reservations || false}
-                onChange={(e) =>
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   handleInputChange("enable_reservations", e.target.checked)
                 }
               />
@@ -685,7 +685,7 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
               <input
                 type="checkbox"
                 checked={formData.enable_delivery || false}
-                onChange={(e) =>
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   handleInputChange("enable_delivery", e.target.checked)
                 }
               />
@@ -698,7 +698,7 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
               <input
                 type="checkbox"
                 checked={formData.enable_pickup || false}
-                onChange={(e) =>
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   handleInputChange("enable_pickup", e.target.checked)
                 }
               />
