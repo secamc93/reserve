@@ -1,1 +1,1 @@
-export { default } from '@/features/clients/ui/pages/ClientsPage';
+export { default } from '@/services/clients/ui/pages/ClientsPage';

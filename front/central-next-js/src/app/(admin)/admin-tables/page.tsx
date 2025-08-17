@@ -1,1 +1,1 @@
-export { default } from '@/features/tables/ui/pages/TablesPage';
+export { default } from '@/services/tables/ui/pages/TablesPage';

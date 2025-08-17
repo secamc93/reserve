@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { loginAction, logoutAction, checkAuthAction, getUserRolesPermissionsAction, changePasswordAction } from '@/server/actions/auth';
+import { loginAction, logoutAction, checkAuthAction, getUserRolesPermissionsAction, changePasswordAction } from '@/services/auth/infrastructure/actions/auth.actions';
 import { useDebugAuth } from './useDebugAuth';
 
 export interface UserRolesPermissions {
@@ -112,9 +112,20 @@ export const useServerAuth = () => {
     }
 
     console.log('🔍 [useServerAuth] Iniciando loadUserRolesPermissions...');
+    console.log('🔍 [useServerAuth] Estado actual:', {
+      isAuthenticated: state.isAuthenticated,
+      permissionsCheckRef: permissionsCheckRef.current,
+      loading: state.loading,
+      hasUser: !!state.user
+    });
     
     if (!state.isAuthenticated) {
       console.log('🔍 [useServerAuth] Usuario no autenticado, saltando carga de permisos');
+      return null;
+    }
+
+    if (!state.user) {
+      console.log('🔍 [useServerAuth] No hay usuario en el estado, saltando carga de permisos');
       return null;
     }
 
@@ -122,11 +133,24 @@ export const useServerAuth = () => {
     setState(prev => ({ ...prev, loading: true }));
     
     try {
+      console.log('🔍 [useServerAuth] Llamando a getUserRolesPermissionsAction...');
       const result = await getUserRolesPermissionsAction();
       console.log('🔍 [useServerAuth] Resultado recibido:', result);
       
       if (result.success && result.data) {
         console.log('✅ [useServerAuth] Permisos cargados exitosamente');
+        console.log('📊 [useServerAuth] Estructura de permisos:', {
+          hasResources: !!(result.data.resources && result.data.resources.length > 0),
+          hasPermissions: !!(result.data.permissions && result.data.permissions.length > 0),
+          hasRoles: !!(result.data.roles && result.data.roles.length > 0),
+          resourcesCount: result.data.resources?.length || 0,
+          permissionsCount: result.data.permissions?.length || 0,
+          rolesCount: result.data.roles?.length || 0
+        });
+        
+        // Agregar logging detallado de los datos recibidos
+        console.log('🔍 [useServerAuth] Datos completos recibidos:', JSON.stringify(result.data, null, 2));
+        
         setState(prev => ({
           ...prev,
           permissions: result.data as UserRolesPermissions,
@@ -155,7 +179,7 @@ export const useServerAuth = () => {
     } finally {
       permissionsCheckRef.current = false;
     }
-  }, [state.isAuthenticated]);
+  }, [state.isAuthenticated, state.user]);
 
   // Login usando Server Action
   const login = useCallback(async (formData: FormData) => {
@@ -178,11 +202,20 @@ export const useServerAuth = () => {
         }));
 
         console.log('✅ [useServerAuth] Login exitoso, estado actualizado');
+        console.log('🔍 [useServerAuth] Esperando que las cookies estén disponibles...');
+        
+        // Esperar un poco más para asegurar que las cookies estén disponibles
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        console.log('🔍 [useServerAuth] Intentando cargar permisos...');
         
         // Cargar permisos después del login exitoso
-        setTimeout(() => {
-          loadUserRolesPermissions();
-        }, 100);
+        try {
+          const permissionsResult = await loadUserRolesPermissions();
+          console.log('✅ [useServerAuth] Permisos cargados después del login:', permissionsResult);
+        } catch (permissionsError) {
+          console.error('❌ [useServerAuth] Error cargando permisos después del login:', permissionsError);
+        }
 
         return result;
       } else {
@@ -266,6 +299,22 @@ export const useServerAuth = () => {
     setState(prev => ({ ...prev, error: null }));
   }, []);
 
+  // Forzar recarga de permisos (útil para debugging)
+  const forceReloadPermissions = useCallback(async () => {
+    console.log('🔄 [useServerAuth] Forzando recarga de permisos...');
+    permissionsCheckRef.current = false;
+    initializedRef.current = false;
+    
+    try {
+      const result = await loadUserRolesPermissions();
+      console.log('✅ [useServerAuth] Permisos recargados forzadamente:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ [useServerAuth] Error en recarga forzada de permisos:', error);
+      return null;
+    }
+  }, [loadUserRolesPermissions]);
+
   // Verificar si tiene un permiso específico
   const hasPermission = useCallback((permissionCode: string): boolean => {
     if (!state.permissions) return false;
@@ -308,10 +357,29 @@ export const useServerAuth = () => {
     initializedRef.current = true;
     
     try {
+      console.log('🔍 [useServerAuth] Llamando a checkAuth...');
       const authResult = await checkAuth();
+      console.log('✅ [useServerAuth] checkAuth completado:', authResult);
       
-      if (authResult.isAuthenticated) {
-        await loadUserRolesPermissions();
+      if (authResult.isAuthenticated && authResult.user) {
+        console.log('🔍 [useServerAuth] Usuario autenticado, cargando permisos...');
+        console.log('👤 [useServerAuth] Usuario completo:', authResult.user.email);
+        console.log('🏢 [useServerAuth] Información del negocio disponible:', {
+          hasBusinesses: !!(authResult.user.businesses && authResult.user.businesses.length > 0),
+          businessCount: authResult.user.businesses?.length || 0,
+          hasPrimaryColor: !!authResult.user.businesses?.[0]?.primary_color,
+          hasNavbarImage: !!authResult.user.businesses?.[0]?.navbar_image_url
+        });
+        
+        try {
+          // Cargar permisos después de verificar autenticación
+          const permissionsResult = await loadUserRolesPermissions();
+          console.log('✅ [useServerAuth] Permisos cargados en initializeAuth:', permissionsResult);
+        } catch (error) {
+          console.error('❌ [useServerAuth] Error cargando permisos en initializeAuth:', error);
+        }
+      } else {
+        console.log('🔍 [useServerAuth] Usuario no autenticado o sin datos, saltando carga de permisos');
       }
     } catch (error) {
       console.error('❌ [useServerAuth] Error en initializeAuth:', error);
@@ -330,7 +398,22 @@ export const useServerAuth = () => {
   useEffect(() => {
     console.log('🚀 [useServerAuth] Hook montado, ejecutando initializeAuth...');
     initializeAuth();
-  }, []); // Sin dependencias para que solo se ejecute una vez
+  }, []); // Remover dependencias para evitar recreación
+
+  // Cargar permisos automáticamente cuando el usuario cambie
+  useEffect(() => {
+    console.log('🔄 [useServerAuth] useEffect - Usuario cambió:', {
+      isAuthenticated: state.isAuthenticated,
+      hasUser: !!state.user,
+      hasPermissions: !!state.permissions,
+      permissionsCount: state.permissions ? 'presente' : 'ausente'
+    });
+    
+    if (state.isAuthenticated && state.user && !state.permissions) {
+      console.log('🔄 [useServerAuth] Usuario autenticado sin permisos, cargando...');
+      loadUserRolesPermissions();
+    }
+  }, [state.isAuthenticated, state.user, state.permissions]);
 
   return {
     ...memoizedState,
@@ -343,6 +426,7 @@ export const useServerAuth = () => {
     initializeAuth,
     hasPermission,
     hasRole,
-    isSuperAdmin
+    isSuperAdmin,
+    forceReloadPermissions
   };
 }; 

@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAppContext } from '@/shared/contexts/AppContext';
 import { useModuleNavigation } from '@/shared/hooks/useModuleNavigation';
-import UserProfileModal from '@/features/users/ui/components/UserProfileModal';
+import UserProfileModal from '@/services/users/ui/components/UserProfileModal';
 import './Sidebar.css';
 
 // Interfaces para tipado

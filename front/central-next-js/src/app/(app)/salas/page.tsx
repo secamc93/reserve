@@ -1,1 +1,1 @@
-export { default } from '@/features/rooms/ui/pages/RoomsPage';
+export { default } from '@/services/rooms/ui/pages/RoomsPage';

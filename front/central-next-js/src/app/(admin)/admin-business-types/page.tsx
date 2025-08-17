@@ -1,1 +1,1 @@
-export { default } from '@/features/business/ui/pages/BusinessTypePage'; 
+export { default } from '@/services/business/ui/pages/BusinessTypePage'; 

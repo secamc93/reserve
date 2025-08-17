@@ -1,1 +1,1 @@
-export { default } from '@/features/reservations/ui/pages/CalendarPage';
+export { default } from '@/services/reservations/ui/pages/CalendarPage';

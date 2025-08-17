@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { User } from '@/features/users/domain/User';
+import { User } from '@/services/users/domain/entities/User';
 import { useServerAuth } from '@/shared/hooks/useServerAuth';
 
 interface AppContextType {
@@ -54,23 +54,23 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const applyBusinessTheme = useCallback((user: User | null) => {
     if (!user || !user.businesses || user.businesses.length === 0) return;
     
-    const business = user.businesses[0];
+    const business = user.businesses[0] as any; // Usar any temporalmente para evitar errores de tipo
     if (typeof document !== 'undefined') {
       const root = document.documentElement;
-      if (business.primaryColor) {
-        root.style.setProperty('--primary-color', business.primaryColor);
+      if (business.primary_color) {
+        root.style.setProperty('--primary-color', business.primary_color);
       }
-      if (business.secondaryColor) {
-        root.style.setProperty('--secondary-color', business.secondaryColor);
+      if (business.secondary_color) {
+        root.style.setProperty('--secondary-color', business.secondary_color);
       }
-      if (business.tertiaryColor) {
-        root.style.setProperty('--tertiary-color', business.tertiaryColor);
+      if (business.tertiary_color) {
+        root.style.setProperty('--tertiary-color', business.tertiary_color);
       }
-      if (business.quaternaryColor) {
-        root.style.setProperty('--quaternary-color', business.quaternaryColor);
+      if (business.quaternary_color) {
+        root.style.setProperty('--quaternary-color', business.quaternary_color);
       }
-      if (business.navbarImageURL) {
-        root.style.setProperty('--navbar-image', `url(${business.navbarImageURL})`);
+      if (business.navbar_image_url) {
+        root.style.setProperty('--navbar-image', `url(${business.navbar_image_url})`);
       }
     }
   }, []);
@@ -79,18 +79,18 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const ensureThemeApplied = useCallback((user: User | null) => {
     if (typeof document === 'undefined') return;
     if (!user || !user.businesses || user.businesses.length === 0) return;
-    const business = user.businesses[0];
+    const business = user.businesses[0] as any; // Usar any temporalmente para evitar errores de tipo
     const root = document.documentElement;
     const currentPrimary = getComputedStyle(root).getPropertyValue('--primary-color').trim();
     const currentSecondary = getComputedStyle(root).getPropertyValue('--secondary-color').trim();
     const currentTertiary = getComputedStyle(root).getPropertyValue('--tertiary-color').trim();
     const currentQuaternary = getComputedStyle(root).getPropertyValue('--quaternary-color').trim();
     const currentNavbarImage = getComputedStyle(root).getPropertyValue('--navbar-image').trim();
-    const targetPrimary = business.primaryColor || '';
-    const targetSecondary = business.secondaryColor || '';
-    const targetTertiary = business.tertiaryColor || '';
-    const targetQuaternary = business.quaternaryColor || '';
-    const targetNavbarImage = business.navbarImageURL ? `url(${business.navbarImageURL})` : '';
+    const targetPrimary = business.primary_color || '';
+    const targetSecondary = business.secondary_color || '';
+    const targetTertiary = business.tertiary_color || '';
+    const targetQuaternary = business.quaternary_color || '';
+    const targetNavbarImage = business.navbar_image_url ? `url(${business.navbar_image_url})` : '';
     // Si no coincide con el negocio, reestablecer
     if (targetPrimary && currentPrimary !== targetPrimary) {
       root.style.setProperty('--primary-color', targetPrimary);
@@ -238,18 +238,31 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       shouldUpdate: authPermissions && permissions.length === 0
     });
     
-    if (authPermissions && permissions.length === 0) {
-      console.log('🔍 [AppContext] Procesando permisos del hook de autenticación...');
+    if (authPermissions) {
+      console.log('✅ [AppContext] Actualizando permisos del contexto');
+      console.log('📊 [AppContext] Estructura de authPermissions:', {
+        hasResources: !!(authPermissions.resources && authPermissions.resources.length > 0),
+        hasPermissions: !!(authPermissions.permissions && authPermissions.permissions.length > 0),
+        hasRoles: !!(authPermissions.roles && authPermissions.roles.length > 0),
+        resourcesCount: authPermissions.resources?.length || 0,
+        permissionsCount: authPermissions.permissions?.length || 0,
+        rolesCount: authPermissions.roles?.length || 0
+      });
+      
+      // Agregar logging detallado de authPermissions
+      console.log('🔍 [AppContext] authPermissions completo:', JSON.stringify(authPermissions, null, 2));
+      
       let userPermissions: string[] = [];
 
       // Procesar la estructura correcta del backend: resources.actions
       if (authPermissions.resources && Array.isArray(authPermissions.resources)) {
-        console.log('📊 [AppContext] Procesando resources.actions...');
+        console.log('🔍 [AppContext] Procesando resources.actions...');
         authPermissions.resources.forEach((resource: any) => {
           if (resource.actions && Array.isArray(resource.actions)) {
             resource.actions.forEach((action: any) => {
               if (action.code) {
                 userPermissions.push(action.code);
+                console.log('✅ [AppContext] Permiso agregado:', action.code);
               }
             });
           }
@@ -258,18 +271,21 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
       // También agregar permisos directos si existen
       if (authPermissions.permissions && Array.isArray(authPermissions.permissions)) {
-        console.log('📊 [AppContext] Procesando permissions directos...');
+        console.log('🔍 [AppContext] Procesando permissions directos...');
         authPermissions.permissions.forEach((permission: any) => {
           if (permission.code) {
             userPermissions.push(permission.code);
+            console.log('✅ [AppContext] Permiso directo agregado:', permission.code);
           }
         });
       }
 
-      console.log('✅ [AppContext] Permisos procesados:', userPermissions);
       setPermissions(userPermissions);
+      console.log('✅ [AppContext] Permisos sincronizados desde Server Actions:', userPermissions);
+    } else {
+      console.log('❌ [AppContext] No hay authPermissions disponibles');
     }
-  }, [authPermissions, permissions]);
+  }, [authPermissions]);
 
   // Función para actualizar usuario
   const updateUser = useCallback((userData: Partial<User>) => {
