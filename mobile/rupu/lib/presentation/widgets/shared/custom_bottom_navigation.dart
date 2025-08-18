@@ -38,18 +38,11 @@ class CustomBottomNavigation extends StatelessWidget {
             height: 72,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(28),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  const Color(0xFF0F0F10).withValues(alpha: .92),
-                  const Color(0xFF1A1B1E).withValues(alpha: .92),
-                ],
-              ),
-              border: Border.all(color: Colors.white.withValues(alpha: .06)),
+              color: cs.surface.withValues(alpha: .90),
+              border: Border.all(color: cs.outline.withValues(alpha: .06)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: .25),
+                  color: cs.shadow.withValues(alpha: .25),
                   blurRadius: 24,
                   offset: const Offset(0, 10),
                 ),
@@ -64,8 +57,8 @@ class CustomBottomNavigation extends StatelessWidget {
                 return _NavButton(
                   item: it,
                   selected: selected,
-                  activeColor: Colors.white,
-                  inactiveColor: Colors.white.withValues(alpha: .55),
+                  activeColor: cs.primary,
+                  inactiveColor: cs.onSurfaceVariant,
                   accentColor: cs.primary,
                   onTap: () => _onItemTapped(context, i),
                 );
@@ -108,8 +101,8 @@ class _NavButton extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
-      splashColor: Colors.white.withValues(alpha: .06),
-      highlightColor: Colors.white.withValues(alpha: .04),
+      splashColor: accentColor.withValues(alpha: .06),
+      highlightColor: accentColor.withValues(alpha: .04),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         child: Column(

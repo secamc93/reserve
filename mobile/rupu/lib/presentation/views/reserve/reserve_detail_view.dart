@@ -434,7 +434,7 @@ class ReserveDetailView extends GetView<ReserveDetailController> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: FilledButton.icon(
-                    onPressed: () {},
+                    onPressed: isCancelled ? null : () {},
                     icon: const Icon(Icons.how_to_reg),
                     label: const Text('Check-in'),
                   ),
