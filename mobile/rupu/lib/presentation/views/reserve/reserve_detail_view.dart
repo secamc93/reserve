@@ -126,6 +126,9 @@ class ReserveDetailView extends GetView<ReserveDetailController> {
             ? name.characters.first.toUpperCase()
             : '•';
 
+        // Determinamos si la reserva está cancelada
+        final isCancelled = r.estadoNombre.toLowerCase().contains('cancel');
+
         return ListView(
           key: const PageStorageKey('reserve-detail'),
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
@@ -415,13 +418,15 @@ class ReserveDetailView extends GetView<ReserveDetailController> {
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () => context.pushNamed(
-                      UpdateReserveView.name,
-                      pathParameters: {
-                        'page': '$pageIndex',
-                        'id': '${r.reservaId}',
-                      },
-                    ),
+                    onPressed: isCancelled
+                        ? null
+                        : () => context.pushNamed(
+                              UpdateReserveView.name,
+                              pathParameters: {
+                                'page': '$pageIndex',
+                                'id': '${r.reservaId}',
+                              },
+                            ),
                     icon: const Icon(Icons.event_repeat),
                     label: const Text('Reasignar'),
                   ),

@@ -329,7 +329,12 @@ class ReserveView extends GetView<ReserveController> {
                           },
                         );
                       },
-                      onCancel: () => confirmCancel(context, r),
+                      // Si la reserva está cancelada ocultamos la opción de cancelación
+                      onCancel: r.estadoNombre
+                              .toLowerCase()
+                              .contains('cancel')
+                          ? null
+                          : () => confirmCancel(context, r),
                     ),
                   ),
               ],
