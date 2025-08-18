@@ -1013,6 +1013,7 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
   }
 
   void _showAppointmentSheet(Appointment appt) {
+    final isCancelled = appt.subject.toLowerCase().contains('cancel');
     showModalBottomSheet(
       context: context,
       showDragHandle: true,
@@ -1055,23 +1056,27 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
                       context,
                     ).colorScheme.error.withValues(alpha: .08),
                   ),
-                  onPressed: () async {
-                    Navigator.of(context).pop(); // cierra el detalle
-                    await _cancelFromCalendar(appt.id as int);
-                  },
+                  onPressed: isCancelled
+                      ? null
+                      : () async {
+                          Navigator.of(context).pop(); // cierra el detalle
+                          await _cancelFromCalendar(appt.id as int);
+                        },
                 ),
                 const SizedBox(width: 8),
                 FilledButton.icon(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    context.pushNamed(
-                      UpdateReserveView.name,
-                      pathParameters: {
-                        'page': '${widget.pageIndex}',
-                        'id': '${appt.id}',
-                      },
-                    );
-                  },
+                  onPressed: isCancelled
+                      ? null
+                      : () {
+                          Navigator.of(context).pop();
+                          context.pushNamed(
+                            UpdateReserveView.name,
+                            pathParameters: {
+                              'page': '${widget.pageIndex}',
+                              'id': '${appt.id}',
+                            },
+                          );
+                        },
                   icon: const Icon(Icons.edit),
                   label: const Text('Editar'),
                 ),
