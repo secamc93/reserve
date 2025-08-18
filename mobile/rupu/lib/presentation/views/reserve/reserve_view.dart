@@ -4,6 +4,10 @@ import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rupu/config/helpers/design_helper.dart';
 import 'package:rupu/presentation/views/views.dart';
+import 'dart:ui' show ImageFilter;
+import 'package:rupu/config/helpers/design_helper.dart' as design;
+
+import 'package:rupu/presentation/widgets/premium_reserve_card.dart';
 
 class ReserveView extends GetView<ReserveController> {
   const ReserveView({super.key, required this.pageIndex});
@@ -13,97 +17,228 @@ class ReserveView extends GetView<ReserveController> {
   Widget build(BuildContext context) {
     Get.put(ReserveController());
 
-    Future<void> _cancel(int id) async {
-      final reasonCtrl = TextEditingController();
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (ctx) {
-          return AlertDialog(
-            title: const Text('Cancelar reserva'),
-            content: TextField(
-              controller: reasonCtrl,
-              decoration:
-                  const InputDecoration(labelText: 'Motivo (opcional)'),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(false),
-                child: const Text('Volver'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.of(ctx).pop(true),
-                child: const Text('Cancelar'),
-              ),
-            ],
-          );
-        },
-      );
-
-      if (confirmed != true) return;
-
-      final ok = await controller.cancelarReserva(
-        id: id,
-        reason: reasonCtrl.text.trim().isEmpty ? null : reasonCtrl.text.trim(),
-      );
-
-      if (!ok) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No se pudo cancelar la reserva.')),
-        );
-        return;
-      }
+    Future<void> showResultSheet(
+      BuildContext context, {
+      required IconData icon,
+      required Color color,
+      required String title,
+      required String message,
+      String buttonText = 'Listo',
+    }) async {
+      final cs = Theme.of(context).colorScheme;
+      final tt = Theme.of(context).textTheme;
 
       await showModalBottomSheet(
         context: context,
-        useSafeArea: true,
         showDragHandle: true,
+        isScrollControlled: false,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         builder: (ctx) {
           return Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 18,
-                      backgroundColor:
-                          Theme.of(ctx).colorScheme.primaryContainer,
-                      child: Icon(
-                        Icons.check,
-                        color: Theme.of(ctx).colorScheme.onPrimaryContainer,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      'Reserva cancelada',
-                      style: Theme.of(ctx)
-                          .textTheme
-                          .titleMedium!
-                          .copyWith(fontWeight: FontWeight.w800),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
+                Icon(icon, color: color, size: 28),
+                const SizedBox(height: 8),
                 Text(
-                  'La reserva se canceló correctamente.',
-                  style: Theme.of(ctx).textTheme.bodyMedium,
+                  title,
+                  style: tt.titleLarge!.copyWith(fontWeight: FontWeight.w800),
+                  textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 20),
-                FilledButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  child: const Text('Entendido'),
+                const SizedBox(height: 6),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: tt.bodyMedium!.copyWith(color: cs.onSurfaceVariant),
+                ),
+                const SizedBox(height: 14),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    child: Text(buttonText),
+                  ),
                 ),
               ],
             ),
           );
         },
       );
+    }
 
-      await controller.cargarReservasHoy(silent: true);
+    Future<void> confirmCancel(BuildContext context, dynamic reserva) async {
+      final cs = Theme.of(context).colorScheme;
+      final tt = Theme.of(context).textTheme;
+
+      // Obtiene el id pase lo que pase (Reserve o id directo)
+      int extractId(dynamic r) {
+        try {
+          if (r is int) return r;
+          final any = r?.reservaId ?? r?.id ?? r;
+          return int.tryParse('$any') ?? 0;
+        } catch (_) {
+          return 0;
+        }
+      }
+
+      bool working = false;
+
+      await showModalBottomSheet(
+        context: context,
+        showDragHandle: true,
+        isScrollControlled: false,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (ctx) {
+          return StatefulBuilder(
+            builder: (ctx, setLocal) {
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.block, color: cs.error),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Cancelar reserva',
+                      style: tt.titleLarge!.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '¿Estás seguro de cancelar esta reserva?',
+                      textAlign: TextAlign.center,
+                      style: tt.bodyMedium!.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: working
+                                ? null
+                                : () => Navigator.of(ctx).pop(),
+                            child: const Text('No, volver'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: FilledButton(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: cs.error,
+                              foregroundColor: Colors.white,
+                            ),
+                            onPressed: working
+                                ? null
+                                : () async {
+                                    final id = extractId(reserva);
+                                    if (id <= 0) {
+                                      // resultado: error de id
+                                      if (ctx.mounted) Navigator.of(ctx).pop();
+                                      await showResultSheet(
+                                        context,
+                                        icon: Icons.error_outline,
+                                        color: cs.error,
+                                        title: 'No se pudo cancelar',
+                                        message:
+                                            'No se encontró el identificador de la reserva.',
+                                      );
+                                      return;
+                                    }
+
+                                    setLocal(() => working = true);
+                                    final ctrl = Get.find<ReserveController>();
+                                    final ok = await ctrl.cancelarReserva(
+                                      id: id,
+                                    );
+                                    setLocal(() => working = false);
+
+                                    if (ctx.mounted) Navigator.of(ctx).pop();
+
+                                    if (ok) {
+                                      // Refresca “hoy” y “todas”
+                                      // Usa los que tengas disponibles:
+                                      // await ctrl.reservasHoy();
+                                      // await ctrl.reservasTodos();
+                                      await ctrl.cargarReservasHoy(
+                                        silent: true,
+                                      );
+                                      await ctrl.cargarReservasTodas(
+                                        silent: true,
+                                      );
+                                      if (!context.mounted) return;
+
+                                      await showResultSheet(
+                                        context,
+                                        icon: Icons.check_circle_outline,
+                                        color: Colors.green,
+                                        title: 'Reserva cancelada',
+                                        message:
+                                            'La reserva ha sido cancelada correctamente.',
+                                      );
+                                    } else {
+                                      if (!context.mounted) return;
+
+                                      await showResultSheet(
+                                        context,
+                                        icon: Icons.error_outline,
+                                        color: cs.error,
+                                        title: 'No se pudo cancelar',
+                                        message:
+                                            'Intenta nuevamente en unos segundos.',
+                                      );
+                                    }
+                                  },
+                            child: working
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation(
+                                        Colors.white,
+                                      ),
+                                    ),
+                                  )
+                                : const Text('Cancelar'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      );
+    }
+
+    design.StatusTone toneForStatus(String status) {
+      final s = status.toLowerCase();
+
+      // Ajusta las palabras clave a tus estados reales si difieren
+      if (s.contains('confirm') || s.contains('complet')) {
+        return design.StatusTone.success; // Confirmada / Completada
+      }
+      if (s.contains('pend')) {
+        return design.StatusTone.warning; // Pendiente
+      }
+      if (s.contains('cancel')) {
+        return design.StatusTone.danger; // Cancelada
+      }
+      if (s.contains('completada')) {
+        return design.StatusTone.info; // Pagada
+      }
+      return design.StatusTone.info; // fallback
     }
 
     return SafeArea(
@@ -175,23 +310,26 @@ class ReserveView extends GetView<ReserveController> {
                   ),
                 ),
               ] else ...[
-                // ───────────────── Lista premium ─────────────────
                 for (final r in controller.reservasHoy)
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: _BookingListCardPremium(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: PremiumReserveCard(
                       client: controller.cliente(r),
                       subtitle: 'Servicio: Reserva',
                       time: controller.fechaHome(r),
                       status: controller.estado(r),
-                      onTap: () => context.pushNamed(
-                        'reserve_detail',
-                        pathParameters: {
-                          'page': '$pageIndex',
-                          'id': '${r.reservaId}',
-                        },
-                      ),
-                      onCancel: () => _cancel(r.reservaId),
+                      tone: toneForStatus(controller.estado(r)),
+                      logoUrl: Get.find<PerfilController>().businessLogoUrl,
+                      onTap: () {
+                        context.pushNamed(
+                          'reserve_detail',
+                          pathParameters: {
+                            'page': '$pageIndex',
+                            'id': '${r.reservaId}',
+                          },
+                        );
+                      },
+                      onCancel: () => confirmCancel(context, r),
                     ),
                   ),
               ],
@@ -315,7 +453,7 @@ class _QuickActionsStrip extends StatelessWidget {
     ];
 
     return SizedBox(
-      height: 104,
+      height: 100,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: items.length,
@@ -341,44 +479,72 @@ class _QuickCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Ink(
-        width: 145, // ancho fijo para evitar cálculos y overflows
-        height: 100,
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: cs.outlineVariant),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Row(
-            children: [
-              Container(
-                width: 34,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: cs.primary.withValues(alpha: .12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                alignment: Alignment.center,
-                child: Icon(icon, color: cs.primary),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  label,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: tt.labelLarge!.copyWith(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
-                  ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(18),
+            child: Ink(
+              width: 120, // ancho cómodo para 2 líneas de texto
+              height: 120,
+              decoration: BoxDecoration(
+                color: cs.surfaceContainerHighest.withValues(alpha: .35),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: cs.outlineVariant.withValues(alpha: .5),
                 ),
               ),
-            ],
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Icono en píldora circular
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: [
+                            cs.primary.withValues(alpha: .14),
+                            cs.secondary.withValues(alpha: .12),
+                          ],
+                        ),
+                        // aro sutil
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: .06),
+                            blurRadius: 12,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(icon, color: cs.primary),
+                    ),
+                    const SizedBox(height: 10),
+                    // Texto centrado (2 líneas máx)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Text(
+                        label,
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: tt.labelLarge!.copyWith(
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: .2,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -386,187 +552,42 @@ class _QuickCard extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// CARD PREMIUM DE RESERVA (avatar inicial + badge + layout robusto)
-// ─────────────────────────────────────────────────────────────
-class _BookingListCardPremium extends StatelessWidget {
-  const _BookingListCardPremium({
-    required this.client,
-    required this.subtitle,
-    required this.time,
-    required this.status,
-    this.onTap,
-    this.onCancel,
-  });
-
-  final String client;
-  final String subtitle;
-  final String time;
-  final String status;
-  final VoidCallback? onTap;
-  final VoidCallback? onCancel;
+class SoftStatusPill extends StatelessWidget {
+  const SoftStatusPill({super.key, required this.text, required this.tone});
+  final String text;
+  final StatusTone tone;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
 
-    final tone = status == 'Completada'
-        ? StatusTone.success
-        : (status == 'Pendiente'
-              ? StatusTone.warning
-              : status == 'Cancelada'
-              ? StatusTone.danger
-              : status == 'Confirmada'
-              ? StatusTone.info
-              : StatusTone.info);
-
-    return PrimaryCard(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            _InitialAvatar(
-              name: client,
-              size: 56,
-              start: cs.primary.withValues(alpha: .14),
-              end: cs.secondary.withValues(alpha: .14),
-            ),
-            const SizedBox(width: 12),
-
-            // Contenido flexible
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // fila superior: nombre + badge
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          client,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: tt.titleMedium!.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        fit: FlexFit.loose,
-                        child: Align(
-                          alignment: Alignment.centerRight,
-                          child: StatusBadge(status, tone: tone),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: tt.bodySmall!.copyWith(color: cs.onSurfaceVariant),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.schedule,
-                        size: 16,
-                        color: cs.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 6),
-                      Flexible(
-                        child: Text(
-                          time,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: tt.bodyMedium,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(width: 8),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (onCancel != null)
-                  IconButton(
-                    icon: const Icon(Icons.cancel_outlined),
-                    color: cs.error,
-                    tooltip: 'Cancelar',
-                    onPressed: onCancel,
-                  ),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  size: 22,
-                  color: cs.onSurfaceVariant,
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Avatar con inicial (sin imágenes), con gradiente sutil
-class _InitialAvatar extends StatelessWidget {
-  const _InitialAvatar({
-    required this.name,
-    this.size = 56,
-    this.start = const Color(0xFFE6F0FF),
-    this.end = const Color(0xFFDCEBFF),
-  });
-
-  final String name;
-  final double size;
-  final Color start;
-  final Color end;
-
-  String _initialOf(String s) {
-    final t = s.trim();
-    if (t.isEmpty) return '?';
-    // Si el nombre tiene espacios, intenta usar la primera letra del primer token
-    final first = t.split(RegExp(r'\s+')).first;
-    return first.isNotEmpty ? first.characters.first.toUpperCase() : '?';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final initial = _initialOf(name);
-    final tt = Theme.of(context).textTheme;
+    Color fg;
+    switch (tone) {
+      case StatusTone.success:
+        fg = Colors.green;
+        break;
+      case StatusTone.warning:
+        fg = const Color(0xFF9E6B00);
+        break; // ámbar oscuro
+      case StatusTone.danger:
+        fg = cs.error;
+        break;
+      case StatusTone.info:
+        fg = cs.primary;
+        break;
+    }
 
     return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [start, end],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: ShapeDecoration(
+        color: fg.withValues(alpha: .12),
+        shape: StadiumBorder(
+          side: BorderSide(color: fg.withValues(alpha: .22)),
         ),
-        borderRadius: BorderRadius.circular(12),
       ),
-      alignment: Alignment.center,
       child: Text(
-        initial,
-        style: tt.titleLarge!.copyWith(
-          fontWeight: FontWeight.w900,
-          letterSpacing: .2,
-        ),
+        text,
+        style: TextStyle(color: fg, fontWeight: FontWeight.w800, fontSize: 12),
       ),
     );
   }

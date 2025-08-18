@@ -276,6 +276,7 @@ class _UpdateReserveViewState extends State<UpdateReserveView> {
                                   message:
                                       'Los cambios se guardaron correctamente.',
                                 );
+                                if (!context.mounted) return;
 
                                 if (mounted) Navigator.of(context).pop();
                               } else {
@@ -312,13 +313,16 @@ class _UpdateReserveViewState extends State<UpdateReserveView> {
       lastDate: DateTime(2100),
       locale: const Locale('es'),
     );
+
+    if (!mounted) return;
     if (date == null) return;
 
     final time = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.fromDateTime(_start!),
+      initialTime: TimeOfDay.fromDateTime(_start!.toLocal()),
       helpText: 'Hora de inicio',
     );
+
     if (time == null) return;
 
     setState(() {
@@ -343,11 +347,13 @@ class _UpdateReserveViewState extends State<UpdateReserveView> {
       lastDate: DateTime(2100),
       locale: const Locale('es'),
     );
+
+    if (!mounted) return;
     if (date == null) return;
 
     final time = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.fromDateTime(_end!),
+      initialTime: TimeOfDay.fromDateTime(_end!.toLocal()),
       helpText: 'Hora de fin',
     );
     if (time == null) return;

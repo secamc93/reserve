@@ -7,10 +7,76 @@ import 'package:rupu/config/helpers/design_helper.dart';
 import 'package:rupu/presentation/views/profile/perfil_controller.dart';
 import 'reserve_detail_controller.dart';
 import 'update_reserve_view.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class ReserveDetailView extends GetView<ReserveDetailController> {
   const ReserveDetailView({super.key, required this.pageIndex});
   final int pageIndex;
+
+  // ─── Acciones de contacto ───
+  String _onlyDigits(String s) => s.replaceAll(RegExp(r'\D+'), '');
+
+  Future<void> _launchPhone(BuildContext context, String phone) async {
+    final p = _onlyDigits(phone);
+    if (p.isEmpty) {
+      _toast(context, 'No hay un número válido');
+      return;
+    }
+    final uri = Uri(scheme: 'tel', path: p);
+    final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!context.mounted) return;
+
+    if (!ok) _toast(context, 'No se pudo abrir el marcador');
+  }
+
+  Future<void> _launchEmail(BuildContext context, String email) async {
+    final e = email.trim();
+    if (e.isEmpty) {
+      _toast(context, 'No hay un email válido');
+      return;
+    }
+    final uri = Uri(
+      scheme: 'mailto',
+      path: e,
+      queryParameters: {
+        // Opcionales:
+        'subject': 'Reserva',
+        // 'body': 'Hola, sobre tu reserva...'
+      },
+    );
+    final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!context.mounted) return;
+
+    if (!ok) _toast(context, 'No se pudo abrir el correo');
+  }
+
+  Future<void> _launchWhatsApp(
+    BuildContext context,
+    String phone, {
+    String? message,
+  }) async {
+    final p = _onlyDigits(phone);
+    if (p.isEmpty) {
+      _toast(context, 'No hay un teléfono para WhatsApp');
+      return;
+    }
+    // wa.me funciona en iOS/Android y abre WhatsApp si está disponible.
+    final base = 'https://wa.me/$p';
+    final uri = Uri.parse(
+      message == null || message.isEmpty
+          ? base
+          : '$base?text=${Uri.encodeComponent(message)}',
+    );
+    final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!context.mounted) return;
+
+    if (!ok) _toast(context, 'No se pudo abrir WhatsApp');
+  }
+
+  void _toast(BuildContext context, String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -192,21 +258,79 @@ class ReserveDetailView extends GetView<ReserveDetailController> {
                         value: r.clienteDni.toString(),
                       ),
                     const SizedBox(height: 14),
+                    const SizedBox(height: 14),
                     Row(
                       children: [
+                        // Llamar
                         Expanded(
                           child: OutlinedButton.icon(
-                            onPressed: () {},
+                            onPressed:
+                                r.clienteTelefono.toString().trim().isEmpty
+                                ? null
+                                : () => _launchPhone(
+                                    context,
+                                    r.clienteTelefono.toString(),
+                                  ),
                             icon: const Icon(Icons.call),
                             label: const Text('Llamar'),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 12,
+                                horizontal: 8,
+                              ),
+                              visualDensity: VisualDensity.compact,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 10),
+
+                        // Email
                         Expanded(
                           child: FilledButton.icon(
-                            onPressed: () {},
+                            onPressed: (r.clienteEmail).trim().isEmpty
+                                ? null
+                                : () => _launchEmail(context, r.clienteEmail),
                             icon: const Icon(Icons.email),
                             label: const Text('Email'),
+                            style: FilledButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 12,
+                                horizontal: 8,
+                              ),
+                              visualDensity: VisualDensity.compact,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+
+                        // WhatsApp (verde + chat icon)
+                        Expanded(
+                          child: FilledButton.icon(
+                            onPressed:
+                                r.clienteTelefono.toString().trim().isEmpty
+                                ? null
+                                : () => _launchWhatsApp(
+                                    context,
+                                    r.clienteTelefono.toString(),
+                                    message:
+                                        'Hola ${r.clienteNombre.trim().isEmpty ? "👋" : r.clienteNombre.trim()}, '
+                                        'te contacto sobre tu reserva (#${r.reservaId}).',
+                                  ),
+                            icon: const FaIcon(
+                              FontAwesomeIcons.whatsapp,
+                            ), // si quieres el logo real, ver nota abajo
+                            label: const Text('WhatsApp'),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: const Color(
+                                0xFF25D366,
+                              ), // verde WhatsApp
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 12,
+                                horizontal: 2,
+                              ),
+                              visualDensity: VisualDensity.compact,
+                            ),
                           ),
                         ),
                       ],
@@ -294,7 +418,7 @@ class ReserveDetailView extends GetView<ReserveDetailController> {
                     onPressed: () => context.pushNamed(
                       UpdateReserveView.name,
                       pathParameters: {
-                        'page': '${pageIndex}',
+                        'page': '$pageIndex',
                         'id': '${r.reservaId}',
                       },
                     ),

@@ -45,6 +45,8 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   syncfusion_localizations: ^30.2.4
+  url_launcher: ^6.3.2
+  font_awesome_flutter: ^10.9.0
 
 dev_dependencies:
   flutter_test:

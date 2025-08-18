@@ -73,7 +73,7 @@ class _CreateReserveViewState extends State<CreateReserveView> {
     if (!context.mounted) return;
     final time = await showTimePicker(
       context: ctx,
-      initialTime: TimeOfDay.fromDateTime(_start),
+      initialTime: TimeOfDay.fromDateTime(_start.toUtc()),
       helpText: 'Hora de inicio',
     );
     if (time == null) return;
@@ -113,7 +113,7 @@ class _CreateReserveViewState extends State<CreateReserveView> {
     if (!context.mounted) return;
     final time = await showTimePicker(
       context: ctx,
-      initialTime: TimeOfDay.fromDateTime(_end),
+      initialTime: TimeOfDay.fromDateTime(_end.toUtc()),
       helpText: 'Hora de fin',
     );
     if (time == null) return;

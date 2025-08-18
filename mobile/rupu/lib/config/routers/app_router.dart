@@ -34,6 +34,8 @@ final appRouter = GoRouter(
           name: HomeScreen.name,
           builder: (context, state) {
             final pageIndex = int.parse(state.pathParameters['page']!);
+            PerfilBinding.register();
+
             HomeBinding.register();
             return FadeInLeft(
               curve: Curves.fastLinearToSlowEaseIn,
