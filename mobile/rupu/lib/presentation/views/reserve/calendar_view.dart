@@ -1188,12 +1188,48 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
         final cs = Theme.of(ctx).colorScheme;
         final tt = Theme.of(ctx).textTheme;
 
+        // estilo común para los botones “píldora”
+        final pill = FilledButton.styleFrom(
+          shape: const StadiumBorder(),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+          textStyle: const TextStyle(fontWeight: FontWeight.w800),
+        );
+
         return Padding(
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // ─── Row de cierre con “X” ───
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Detalle',
+                      style: tt.titleMedium!.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () => Navigator.of(ctx).pop(),
+                    borderRadius: BorderRadius.circular(16),
+                    child: Ink(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: cs.surfaceContainerHighest.withOpacity(.5),
+                        border: Border.all(color: cs.outlineVariant),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.close_rounded, size: 18),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+
               // ——— Header: avatar + nombre + pill estado
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -1213,7 +1249,9 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
                   SoftStatusPill(text: normalizeStatus(estado), tone: tone),
                 ],
               ),
+
               const SizedBox(height: 12),
+
               // ——— Fecha y hora (chips)
               Wrap(
                 spacing: 8,
@@ -1228,12 +1266,11 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
                     ),
                 ],
               ),
-              const SizedBox(height: 10),
-              // ——— Info negocio / contacto
+
               if ((meta.negocio ?? '').isNotEmpty ||
                   (meta.tel ?? '').isNotEmpty)
                 Padding(
-                  padding: const EdgeInsets.only(top: 2),
+                  padding: const EdgeInsets.only(top: 10),
                   child: Text(
                     [
                       if ((meta.negocio ?? '').isNotEmpty)
@@ -1246,62 +1283,83 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
                     ),
                   ),
                 ),
-              const SizedBox(height: 16),
+
+              const SizedBox(height: 14),
               const Divider(height: 1),
               const SizedBox(height: 12),
-              // ——— Acciones (prioridad: Check-in > Cancelar > Editar > Cerrar)
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                alignment: WrapAlignment.end,
+
+              // ——— Acciones (Editar + Cancelar en horizontal) + CTA Check-in
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Cerrar
-                  OutlinedButton(
-                    onPressed: () => Navigator.of(ctx).pop(),
-                    child: const Text('Cerrar'),
+                  // Fila: Editar | Cancelar
+                  Row(
+                    children: [
+                      // Editar (tonal neutro del esquema)
+                      Expanded(
+                        child: FilledButton.tonal(
+                          style: pill.copyWith(
+                            backgroundColor: WidgetStatePropertyAll(
+                              cs.surfaceContainerHighest,
+                            ),
+                            foregroundColor: WidgetStatePropertyAll(
+                              cs.onSurface,
+                            ),
+                          ),
+                          onPressed: isCancelled
+                              ? null
+                              : () {
+                                  Navigator.of(ctx).pop();
+                                  context.pushNamed(
+                                    UpdateReserveView.name,
+                                    pathParameters: {
+                                      'page': '${widget.pageIndex}',
+                                      'id': '${appt.id}',
+                                    },
+                                  );
+                                },
+                          child: const Text('Editar'),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      // Cancelar (destructivo tonal del esquema)
+                      Expanded(
+                        child: FilledButton.tonal(
+                          style: pill.copyWith(
+                            backgroundColor: WidgetStatePropertyAll(
+                              cs.errorContainer,
+                            ),
+                            foregroundColor: WidgetStatePropertyAll(
+                              cs.onErrorContainer,
+                            ),
+                          ),
+                          onPressed: isCancelled
+                              ? null
+                              : () async {
+                                  Navigator.of(ctx).pop();
+                                  await _cancelFromCalendar(appt.id as int);
+                                },
+                          child: const Text('Cancelar'),
+                        ),
+                      ),
+                    ],
                   ),
-                  // Check-in (primaria)
-                  FilledButton.icon(
-                    onPressed: isCancelled
-                        ? null
-                        : () async {
-                            Navigator.of(ctx).pop(); // cierra primero
-                            await _checkInFromCalendar(appt.id as int);
-                          },
-                    icon: const Icon(Icons.how_to_reg_outlined),
-                    label: const Text('Check-in'),
-                  ),
-                  // Cancelar (destructive tonal)
-                  FilledButton.tonalIcon(
-                    icon: const Icon(Icons.cancel_outlined),
-                    label: const Text('Cancelar'),
-                    style: FilledButton.styleFrom(
-                      foregroundColor: cs.error,
-                      backgroundColor: cs.error.withOpacity(.10),
+
+                  const SizedBox(height: 12),
+
+                  // CTA principal a ancho completo
+                  FilledButton(
+                    style: pill.copyWith(
+                      backgroundColor: WidgetStatePropertyAll(cs.primary),
+                      foregroundColor: WidgetStatePropertyAll(cs.onPrimary),
                     ),
                     onPressed: isCancelled
                         ? null
                         : () async {
-                            Navigator.of(ctx).pop(); // cierra primero
-                            await _cancelFromCalendar(appt.id as int);
-                          },
-                  ),
-                  // Editar (suave, secundario)
-                  FilledButton.tonalIcon(
-                    onPressed: isCancelled
-                        ? null
-                        : () {
                             Navigator.of(ctx).pop();
-                            context.pushNamed(
-                              UpdateReserveView.name,
-                              pathParameters: {
-                                'page': '${widget.pageIndex}',
-                                'id': '${appt.id}',
-                              },
-                            );
+                            await _checkInFromCalendar(appt.id as int);
                           },
-                    icon: const Icon(Icons.edit_outlined),
-                    label: const Text('Editar'),
+                    child: const Text('Check-in'),
                   ),
                 ],
               ),

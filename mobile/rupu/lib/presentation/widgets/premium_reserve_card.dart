@@ -81,9 +81,9 @@ class PremiumReserveCard extends StatelessWidget {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            Colors.black.withValues(alpha: .15),
-                            Colors.black.withValues(alpha: .45),
-                            Colors.black.withValues(alpha: .70),
+                            Colors.black.withValues(alpha: .50),
+                            Colors.black.withValues(alpha: .65),
+                            Colors.black.withValues(alpha: .80),
                           ],
                         ),
                       ),
