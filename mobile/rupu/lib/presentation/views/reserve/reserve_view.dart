@@ -451,7 +451,7 @@ class _QuickActionsStrip extends StatelessWidget {
     final items = [
       ('Nueva', Icons.add_circle_outline, onNew),
       ('Calendario', Icons.event_outlined, onCalendar),
-      ('Check-in', Icons.how_to_reg_outlined, onCheckIn),
+      // ('Check-in', Icons.how_to_reg_outlined, onCheckIn),
       ('Clientes', Icons.person_outline, onClients),
     ];
 

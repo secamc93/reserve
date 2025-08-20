@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:rupu/config/helpers/design_helper.dart';
+import 'package:rupu/domain/entities/reserve.dart';
 import 'package:rupu/presentation/views/profile/perfil_controller.dart';
 import 'reserve_detail_controller.dart';
 import 'update_reserve_view.dart';
@@ -169,8 +170,9 @@ class ReserveDetailView extends GetView<ReserveDetailController> {
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed:
-                              working ? null : () => Navigator.of(ctx).pop(),
+                          onPressed: working
+                              ? null
+                              : () => Navigator.of(ctx).pop(),
                           child: const Text('No, volver'),
                         ),
                       ),
@@ -183,8 +185,8 @@ class ReserveDetailView extends GetView<ReserveDetailController> {
                                   setLocal(() => working = true);
                                   final reserveCtrl =
                                       Get.isRegistered<ReserveController>()
-                                          ? Get.find<ReserveController>()
-                                          : Get.put(ReserveController());
+                                      ? Get.find<ReserveController>()
+                                      : Get.put(ReserveController());
                                   final ok = await reserveCtrl.checkInReserva(
                                     id: r.reservaId,
                                   );
@@ -206,8 +208,7 @@ class ReserveDetailView extends GetView<ReserveDetailController> {
                                       icon: Icons.check_circle_outline,
                                       color: Colors.green,
                                       title: 'Check-in realizado',
-                                      message:
-                                          'La reserva ha sido confirmada.',
+                                      message: 'La reserva ha sido confirmada.',
                                     );
                                   } else {
                                     if (!context.mounted) return;
@@ -599,8 +600,9 @@ class ReserveDetailView extends GetView<ReserveDetailController> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: FilledButton.icon(
-                    onPressed:
-                        isCancelled ? null : () => _confirmCheckIn(context, r),
+                    onPressed: isCancelled
+                        ? null
+                        : () => _confirmCheckIn(context, r),
                     icon: const Icon(Icons.how_to_reg),
                     label: const Text('Check-in'),
                   ),
