@@ -7,6 +7,8 @@ import 'package:flutter/services.dart';
 import 'package:rupu/presentation/views/reserve/data_time_tile.dart';
 import 'reserve_update_controller.dart';
 import '../reserve/reserves_controller.dart';
+import 'reserve_status_controller.dart';
+import 'package:rupu/domain/entities/reserve_status.dart';
 
 class UpdateReserveView extends StatefulWidget {
   const UpdateReserveView({super.key});
@@ -19,6 +21,10 @@ class UpdateReserveView extends StatefulWidget {
 class _UpdateReserveViewState extends State<UpdateReserveView> {
   final _formKey = GlobalKey<FormState>();
   final _guestsCtrl = TextEditingController();
+  final _statusCtrl = TextEditingController();
+
+  ReserveStatus? _selectedStatus;
+  late final ReserveStatusController _statusController;
 
   DateTime? _start;
   DateTime? _end;
@@ -26,8 +32,15 @@ class _UpdateReserveViewState extends State<UpdateReserveView> {
   bool _saving = false;
 
   @override
+  void initState() {
+    super.initState();
+    _statusController = Get.put(ReserveStatusController());
+  }
+
+  @override
   void dispose() {
     _guestsCtrl.dispose();
+    _statusCtrl.dispose();
     super.dispose();
   }
 
@@ -80,6 +93,17 @@ class _UpdateReserveViewState extends State<UpdateReserveView> {
           _start = r.startAt.toLocal();
           _end = r.endAt.toLocal();
           _guestsCtrl.text = r.numberOfGuests.toString();
+          final latest = r.statusHistory.isNotEmpty
+              ? r.statusHistory.last
+              : null;
+          if (latest != null) {
+            _selectedStatus = ReserveStatus(
+              id: latest.statusId,
+              code: latest.statusCode,
+              name: latest.statusName,
+            );
+            _statusCtrl.text = _selectedStatus!.name;
+          }
           _init = true;
         }
 
@@ -202,6 +226,23 @@ class _UpdateReserveViewState extends State<UpdateReserveView> {
                       ),
                       const SizedBox(height: 12),
                       TextFormField(
+                        controller: _statusCtrl,
+                        readOnly: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Estado',
+                          prefixIcon: Icon(Icons.flag_outlined),
+                          suffixIcon: Icon(Icons.arrow_drop_down),
+                        ),
+                        onTap: _pickStatus,
+                        validator: (_) {
+                          if (_selectedStatus == null) {
+                            return 'Seleccione un estado';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
                         enabled: false,
                         decoration: const InputDecoration(
                           labelText: 'Mesa (próximamente)',
@@ -255,6 +296,8 @@ class _UpdateReserveViewState extends State<UpdateReserveView> {
                                 startAt: _start!,
                                 endAt: _end!,
                                 numberOfGuests: guests,
+                                statusId: _selectedStatus?.id ??
+                                    r.statusHistory.last.statusId,
                               );
                               setState(() => _saving = false);
                               if (!mounted) return;
@@ -303,6 +346,33 @@ class _UpdateReserveViewState extends State<UpdateReserveView> {
         );
       },
     );
+  }
+
+  Future<void> _pickStatus() async {
+    if (_statusController.estados.isEmpty) {
+      await _statusController.cargarEstados();
+    }
+    final selected = await showModalBottomSheet<ReserveStatus>(
+      context: context,
+      builder: (_) {
+        return ListView(
+          children: _statusController.estados
+              .map(
+                (e) => ListTile(
+                  title: Text(e.name),
+                  onTap: () => Navigator.of(context).pop(e),
+                ),
+              )
+              .toList(),
+        );
+      },
+    );
+    if (selected != null) {
+      setState(() {
+        _selectedStatus = selected;
+        _statusCtrl.text = selected.name;
+      });
+    }
   }
 
   Future<void> _pickStart() async {

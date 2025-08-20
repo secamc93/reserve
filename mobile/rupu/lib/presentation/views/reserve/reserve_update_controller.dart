@@ -28,6 +28,7 @@ class ReserveUpdateController extends GetxController {
     required DateTime startAt,
     required DateTime endAt,
     required int numberOfGuests,
+    required int statusId,
     int? tableId,
   }) async {
     try {
@@ -36,6 +37,7 @@ class ReserveUpdateController extends GetxController {
         startAt: startAt,
         endAt: endAt,
         numberOfGuests: numberOfGuests,
+        statusId: statusId,
         tableId: tableId,
       );
       reserva.value = updated;

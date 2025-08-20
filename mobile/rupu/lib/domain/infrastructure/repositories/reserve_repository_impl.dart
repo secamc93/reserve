@@ -50,6 +50,7 @@ class ReserveRepositoryImpl extends ReserveRepository {
     required DateTime startAt,
     required DateTime endAt,
     required int numberOfGuests,
+    required int statusId,
     int? tableId,
   }) {
     return datasource.actualizarReserva(
@@ -57,6 +58,7 @@ class ReserveRepositoryImpl extends ReserveRepository {
       startAt: startAt,
       endAt: endAt,
       numberOfGuests: numberOfGuests,
+      statusId: statusId,
       tableId: tableId,
     );
   }

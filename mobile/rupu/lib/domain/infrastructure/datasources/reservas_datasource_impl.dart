@@ -118,6 +118,7 @@ class ReservasDatasourceImpl extends ReserveDatasource {
     required DateTime startAt,
     required DateTime endAt,
     required int numberOfGuests,
+    required int statusId,
     int? tableId,
   }) async {
     try {
@@ -125,6 +126,7 @@ class ReservasDatasourceImpl extends ReserveDatasource {
         'start_at': toRfc3339(startAt),
         'end_at': toRfc3339(endAt),
         'number_of_guests': numberOfGuests,
+        'status_id': statusId,
         if (tableId != null) 'table_id': tableId,
       };
 

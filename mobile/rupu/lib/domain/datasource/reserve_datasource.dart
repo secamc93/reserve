@@ -9,6 +9,7 @@ abstract class ReserveDatasource {
     required DateTime startAt,
     required DateTime endAt,
     required int numberOfGuests,
+    required int statusId,
     int? tableId,
   });
 
