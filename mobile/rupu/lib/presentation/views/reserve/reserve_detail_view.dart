@@ -9,6 +9,7 @@ import 'reserve_detail_controller.dart';
 import 'update_reserve_view.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'reserves_controller.dart';
 
 class ReserveDetailView extends GetView<ReserveDetailController> {
   const ReserveDetailView({super.key, required this.pageIndex});
@@ -76,6 +77,162 @@ class ReserveDetailView extends GetView<ReserveDetailController> {
 
   void _toast(BuildContext context, String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
+  Future<void> _showResultSheet(
+    BuildContext context, {
+    required IconData icon,
+    required Color color,
+    required String title,
+    required String message,
+    String buttonText = 'Listo',
+  }) async {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    await showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: false,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: color, size: 28),
+              const SizedBox(height: 8),
+              Text(
+                title,
+                style: tt.titleLarge!.copyWith(fontWeight: FontWeight.w800),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: tt.bodyMedium!.copyWith(color: cs.onSurfaceVariant),
+              ),
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: Text(buttonText),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _confirmCheckIn(BuildContext context, Reserve r) async {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    bool working = false;
+
+    await showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: false,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setLocal) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.how_to_reg, color: cs.primary),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Confirmar check-in',
+                    style: tt.titleLarge!.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '¿Deseas marcar esta reserva como confirmada?',
+                    textAlign: TextAlign.center,
+                    style: tt.bodyMedium!.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed:
+                              working ? null : () => Navigator.of(ctx).pop(),
+                          child: const Text('No, volver'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: working
+                              ? null
+                              : () async {
+                                  setLocal(() => working = true);
+                                  final reserveCtrl =
+                                      Get.isRegistered<ReserveController>()
+                                          ? Get.find<ReserveController>()
+                                          : Get.put(ReserveController());
+                                  final ok = await reserveCtrl.checkInReserva(
+                                    id: r.reservaId,
+                                  );
+                                  setLocal(() => working = false);
+
+                                  if (ctx.mounted) Navigator.of(ctx).pop();
+
+                                  if (!context.mounted) return;
+                                  if (ok) {
+                                    await _showResultSheet(
+                                      context,
+                                      icon: Icons.check_circle_outline,
+                                      color: Colors.green,
+                                      title: 'Check-in realizado',
+                                      message:
+                                          'La reserva ha sido confirmada.',
+                                    );
+                                  } else {
+                                    await _showResultSheet(
+                                      context,
+                                      icon: Icons.error_outline,
+                                      color: cs.error,
+                                      title: 'No se pudo confirmar',
+                                      message:
+                                          'Intenta nuevamente en unos segundos.',
+                                    );
+                                  }
+                                },
+                          child: working
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text('Confirmar'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -434,7 +591,8 @@ class ReserveDetailView extends GetView<ReserveDetailController> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: FilledButton.icon(
-                    onPressed: isCancelled ? null : () {},
+                    onPressed:
+                        isCancelled ? null : () => _confirmCheckIn(context, r),
                     icon: const Icon(Icons.how_to_reg),
                     label: const Text('Check-in'),
                   ),

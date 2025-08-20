@@ -181,6 +181,153 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
     await reserveCtrl.cargarReservasTodas(silent: true);
   }
 
+  Future<void> _checkInFromCalendar(int id) async {
+    final reserveCtrl = Get.isRegistered<ReserveController>()
+        ? Get.find<ReserveController>()
+        : Get.put(ReserveController());
+
+    final confirm = await showModalBottomSheet<bool>(
+      context: context,
+      useSafeArea: true,
+      showDragHandle: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (ctx) {
+        final cs = Theme.of(ctx).colorScheme;
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          cs.primary.withValues(alpha: .12),
+                          cs.primaryContainer.withValues(alpha: .10),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(Icons.how_to_reg, color: cs.primary),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Confirmar check-in',
+                    style: Theme.of(ctx).textTheme.titleMedium!.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '¿Deseas marcar esta reserva como confirmada?',
+                style: Theme.of(ctx)
+                    .textTheme
+                    .bodyMedium!
+                    .copyWith(color: cs.onSurfaceVariant),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  OutlinedButton(
+                    onPressed: () => Navigator.of(ctx).pop(false),
+                    child: const Text('Volver'),
+                  ),
+                  const Spacer(),
+                  FilledButton.tonal(
+                    style: FilledButton.styleFrom(
+                      foregroundColor: cs.primary,
+                      backgroundColor: cs.primary.withValues(alpha: .08),
+                    ),
+                    onPressed: () => Navigator.of(ctx).pop(true),
+                    child: const Text('Confirmar'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (confirm != true) return;
+
+    final ok = await reserveCtrl.checkInReserva(id: id);
+
+    if (!ok) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo confirmar la reserva.')),
+      );
+      return;
+    }
+    if (!mounted) return;
+    await showCheckInSheet(context);
+
+    await reserveCtrl.cargarReservasHoy(silent: true);
+    await reserveCtrl.cargarReservasTodas(silent: true);
+  }
+
+  Future<void> showCheckInSheet(BuildContext context) async {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final tt = theme.textTheme;
+    if (!context.mounted) return;
+    await showModalBottomSheet(
+      context: context,
+      useSafeArea: true,
+      showDragHandle: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (sheetCtx) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: cs.primaryContainer,
+                    child: Icon(Icons.check_rounded, color: cs.onPrimaryContainer),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Check-in realizado',
+                    style: tt.titleMedium!.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'La reserva se confirmó correctamente.',
+                  style: tt.bodyMedium,
+                ),
+              ),
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: () => Navigator.of(sheetCtx).pop(),
+                child: const Text('Listo'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> showCancelledSheet(BuildContext context) async {
     // Capturamos Theme y ColorScheme ANTES de cualquier await
     final theme = Theme.of(context);
@@ -1040,13 +1187,25 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
               Text(appt.notes!),
             ],
             const SizedBox(height: 12),
-            Row(
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              alignment: WrapAlignment.end,
               children: [
                 OutlinedButton(
                   onPressed: () => Navigator.of(context).pop(),
                   child: const Text('Cerrar'),
                 ),
-                const Spacer(),
+                FilledButton.tonalIcon(
+                  icon: const Icon(Icons.how_to_reg_outlined),
+                  label: const Text('Check-in'),
+                  onPressed: isCancelled
+                      ? null
+                      : () async {
+                          Navigator.of(context).pop();
+                          await _checkInFromCalendar(appt.id as int);
+                        },
+                ),
                 FilledButton.tonalIcon(
                   icon: const Icon(Icons.cancel_outlined),
                   label: const Text('Cancelar'),
@@ -1063,7 +1222,6 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
                           await _cancelFromCalendar(appt.id as int);
                         },
                 ),
-                const SizedBox(width: 8),
                 FilledButton.icon(
                   onPressed: isCancelled
                       ? null

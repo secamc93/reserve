@@ -84,6 +84,41 @@ class ReserveController extends GetxController {
     }
   }
 
+  // ================= Check-in =================
+  Future<bool> checkInReserva({required int id}) async {
+    try {
+      isSaving.value = true;
+
+      Reserve? r;
+      try {
+        r = reservasHoy.firstWhere((e) => e.reservaId == id);
+      } catch (_) {}
+      if (r == null) {
+        try {
+          r = reservasTodas.firstWhere((e) => e.reservaId == id);
+        } catch (_) {}
+      }
+      r ??= await repository.obtenerReserva(id: id);
+
+      final updated = await repository.actualizarReserva(
+        id: id,
+        startAt: r.startAt,
+        endAt: r.endAt,
+        numberOfGuests: r.numberOfGuests,
+        statusId: 2,
+        tableId: r.mesaId,
+      );
+
+      actualizarLocal(updated);
+      return true;
+    } catch (e) {
+      debugPrint('CTRL checkInReserva error: $e');
+      return false;
+    } finally {
+      isSaving.value = false;
+    }
+  }
+
   // ================= Home (solo HOY) =================
   Future<void> cargarReservasHoy({bool silent = false}) async {
     if (!silent) isLoading.value = true;
