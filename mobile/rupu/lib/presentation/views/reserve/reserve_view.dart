@@ -226,8 +226,8 @@ class ReserveView extends GetView<ReserveController> {
       final s = status.toLowerCase();
 
       // Ajusta las palabras clave a tus estados reales si difieren
-      if (s.contains('confirm') || s.contains('complet')) {
-        return design.StatusTone.success; // Confirmada / Completada
+      if (s.contains('confirm')) {
+        return design.StatusTone.info; // Confirmada
       }
       if (s.contains('pend')) {
         return design.StatusTone.warning; // Pendiente
@@ -236,7 +236,7 @@ class ReserveView extends GetView<ReserveController> {
         return design.StatusTone.danger; // Cancelada
       }
       if (s.contains('completada')) {
-        return design.StatusTone.info; // Pagada
+        return design.StatusTone.success; // Pagada
       }
       return design.StatusTone.info; // fallback
     }
@@ -330,9 +330,7 @@ class ReserveView extends GetView<ReserveController> {
                         );
                       },
                       // Si la reserva está cancelada ocultamos la opción de cancelación
-                      onCancel: r.estadoNombre
-                              .toLowerCase()
-                              .contains('cancel')
+                      onCancel: r.estadoNombre.toLowerCase().contains('cancel')
                           ? null
                           : () => confirmCancel(context, r),
                     ),

@@ -421,12 +421,12 @@ class ReserveDetailView extends GetView<ReserveDetailController> {
                     onPressed: isCancelled
                         ? null
                         : () => context.pushNamed(
-                              UpdateReserveView.name,
-                              pathParameters: {
-                                'page': '$pageIndex',
-                                'id': '${r.reservaId}',
-                              },
-                            ),
+                            UpdateReserveView.name,
+                            pathParameters: {
+                              'page': '$pageIndex',
+                              'id': '${r.reservaId}',
+                            },
+                          ),
                     icon: const Icon(Icons.event_repeat),
                     label: const Text('Reasignar'),
                   ),
@@ -770,18 +770,18 @@ String _normalizeStatus(String raw) {
   final s = raw.toLowerCase();
   if (s.contains('confirm')) return 'Confirmada';
   if (s.contains('pend')) return 'Pendiente';
-  if (s.contains('pag')) return 'Pagada';
+  if (s.contains('complet')) return 'Completada';
   if (s.contains('cancel')) return 'Cancelada';
   return raw.isEmpty ? 'Pendiente' : raw;
 }
 
 (Color, Color) _statusColors(String status) {
   final s = status.toLowerCase();
-  if (s.contains('confirm')) {
+  if (s.contains('complet')) {
     return (const Color(0xFFE6F4EA), const Color(0xFF0F5132));
   } else if (s.contains('pend')) {
     return (const Color(0xFFFFF4E5), const Color(0xFF7A4F01));
-  } else if (s.contains('pag')) {
+  } else if (s.contains('confirm')) {
     return (const Color(0xFFE7F1FF), const Color(0xFF084298));
   } else if (s.contains('cancel')) {
     return (const Color(0xFFFFE5E5), const Color(0xFF842029));
