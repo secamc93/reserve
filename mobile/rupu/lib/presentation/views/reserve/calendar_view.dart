@@ -221,18 +221,17 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
                   Text(
                     'Confirmar check-in',
                     style: Theme.of(ctx).textTheme.titleMedium!.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
               Text(
                 '¿Deseas marcar esta reserva como confirmada?',
-                style: Theme.of(ctx)
-                    .textTheme
-                    .bodyMedium!
-                    .copyWith(color: cs.onSurfaceVariant),
+                style: Theme.of(
+                  ctx,
+                ).textTheme.bodyMedium!.copyWith(color: cs.onSurfaceVariant),
               ),
               const SizedBox(height: 16),
               Row(
@@ -299,12 +298,17 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
                   CircleAvatar(
                     radius: 18,
                     backgroundColor: cs.primaryContainer,
-                    child: Icon(Icons.check_rounded, color: cs.onPrimaryContainer),
+                    child: Icon(
+                      Icons.check_rounded,
+                      color: cs.onPrimaryContainer,
+                    ),
                   ),
                   const SizedBox(width: 10),
                   Text(
                     'Check-in realizado',
-                    style: tt.titleMedium!.copyWith(fontWeight: FontWeight.w800),
+                    style: tt.titleMedium!.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ],
               ),
@@ -1160,89 +1164,151 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
   }
 
   void _showAppointmentSheet(Appointment appt) {
-    final isCancelled = appt.subject.toLowerCase().contains('cancel');
+    // subject viene como: "Cliente • Estado" (según tu mapper)
+    final (cliente, estado) = parseSubject(appt.subject);
+    final isCancelled = estado.toLowerCase().contains('cancel');
+    final tone = toneFor(estado);
+
+    // notas: "Negocio: X • Mesa: Y • Tel: Z"  (según tu mapper)
+    final meta = parseNotes(appt.notes ?? '');
+
+    final locale = 'es';
+    final day = DateFormat('EEE d MMM', locale).format(appt.startTime);
+    final startHM = DateFormat('HH:mm', locale).format(appt.startTime);
+    final endHM = DateFormat('HH:mm', locale).format(appt.endTime);
+
     showModalBottomSheet(
       context: context,
+      useSafeArea: true,
       showDragHandle: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.fromLTRB(16, 6, 16, 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              appt.subject,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              '${DateFormat('EEE d MMM, HH:mm', 'es').format(appt.startTime)} - '
-              '${DateFormat('HH:mm', 'es').format(appt.endTime)}',
-            ),
-            if ((appt.notes ?? '').isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text(appt.notes!),
-            ],
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              alignment: WrapAlignment.end,
-              children: [
-                OutlinedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cerrar'),
-                ),
-                FilledButton.tonalIcon(
-                  icon: const Icon(Icons.how_to_reg_outlined),
-                  label: const Text('Check-in'),
-                  onPressed: isCancelled
-                      ? null
-                      : () async {
-                          Navigator.of(context).pop();
-                          await _checkInFromCalendar(appt.id as int);
-                        },
-                ),
-                FilledButton.tonalIcon(
-                  icon: const Icon(Icons.cancel_outlined),
-                  label: const Text('Cancelar'),
-                  style: FilledButton.styleFrom(
-                    foregroundColor: Theme.of(context).colorScheme.error,
-                    backgroundColor: Theme.of(
-                      context,
-                    ).colorScheme.error.withValues(alpha: .08),
+      builder: (ctx) {
+        final cs = Theme.of(ctx).colorScheme;
+        final tt = Theme.of(ctx).textTheme;
+
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ——— Header: avatar + nombre + pill estado
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  InitialAvatar(initial: safeInitial(cliente), size: 44),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      '$cliente • ${estado.isEmpty ? "Pendiente" : estado}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: tt.titleMedium!.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
                   ),
-                  onPressed: isCancelled
-                      ? null
-                      : () async {
-                          Navigator.of(context).pop(); // cierra el detalle
-                          await _cancelFromCalendar(appt.id as int);
-                        },
+                  SoftStatusPill(text: normalizeStatus(estado), tone: tone),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // ——— Fecha y hora (chips)
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  IconChip(icon: Icons.event_outlined, label: day),
+                  IconChip(icon: Icons.schedule, label: '$startHM – $endHM'),
+                  if (meta.mesa != null && meta.mesa!.isNotEmpty)
+                    IconChip(
+                      icon: Icons.table_bar_outlined,
+                      label: 'Mesa ${meta.mesa}',
+                    ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              // ——— Info negocio / contacto
+              if ((meta.negocio ?? '').isNotEmpty ||
+                  (meta.tel ?? '').isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    [
+                      if ((meta.negocio ?? '').isNotEmpty)
+                        'Negocio: ${meta.negocio}',
+                      if ((meta.tel ?? '').isNotEmpty) 'Tel: ${meta.tel}',
+                    ].join('   •   '),
+                    style: tt.bodyMedium!.copyWith(
+                      color: cs.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
-                FilledButton.icon(
-                  onPressed: isCancelled
-                      ? null
-                      : () {
-                          Navigator.of(context).pop();
-                          context.pushNamed(
-                            UpdateReserveView.name,
-                            pathParameters: {
-                              'page': '${widget.pageIndex}',
-                              'id': '${appt.id}',
-                            },
-                          );
-                        },
-                  icon: const Icon(Icons.edit),
-                  label: const Text('Editar'),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
+              const SizedBox(height: 16),
+              const Divider(height: 1),
+              const SizedBox(height: 12),
+              // ——— Acciones (prioridad: Check-in > Cancelar > Editar > Cerrar)
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                alignment: WrapAlignment.end,
+                children: [
+                  // Cerrar
+                  OutlinedButton(
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    child: const Text('Cerrar'),
+                  ),
+                  // Check-in (primaria)
+                  FilledButton.icon(
+                    onPressed: isCancelled
+                        ? null
+                        : () async {
+                            Navigator.of(ctx).pop(); // cierra primero
+                            await _checkInFromCalendar(appt.id as int);
+                          },
+                    icon: const Icon(Icons.how_to_reg_outlined),
+                    label: const Text('Check-in'),
+                  ),
+                  // Cancelar (destructive tonal)
+                  FilledButton.tonalIcon(
+                    icon: const Icon(Icons.cancel_outlined),
+                    label: const Text('Cancelar'),
+                    style: FilledButton.styleFrom(
+                      foregroundColor: cs.error,
+                      backgroundColor: cs.error.withOpacity(.10),
+                    ),
+                    onPressed: isCancelled
+                        ? null
+                        : () async {
+                            Navigator.of(ctx).pop(); // cierra primero
+                            await _cancelFromCalendar(appt.id as int);
+                          },
+                  ),
+                  // Editar (suave, secundario)
+                  FilledButton.tonalIcon(
+                    onPressed: isCancelled
+                        ? null
+                        : () {
+                            Navigator.of(ctx).pop();
+                            context.pushNamed(
+                              UpdateReserveView.name,
+                              pathParameters: {
+                                'page': '${widget.pageIndex}',
+                                'id': '${appt.id}',
+                              },
+                            );
+                          },
+                    icon: const Icon(Icons.edit_outlined),
+                    label: const Text('Editar'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
