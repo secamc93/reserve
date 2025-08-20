@@ -192,8 +192,15 @@ class ReserveDetailView extends GetView<ReserveDetailController> {
 
                                   if (ctx.mounted) Navigator.of(ctx).pop();
 
-                                  if (!context.mounted) return;
                                   if (ok) {
+                                    await reserveCtrl.cargarReservasHoy(
+                                      silent: true,
+                                    );
+                                    await reserveCtrl.cargarReservasTodas(
+                                      silent: true,
+                                    );
+                                    await controller.cargarReserva(r.reservaId);
+                                    if (!context.mounted) return;
                                     await _showResultSheet(
                                       context,
                                       icon: Icons.check_circle_outline,
@@ -203,6 +210,7 @@ class ReserveDetailView extends GetView<ReserveDetailController> {
                                           'La reserva ha sido confirmada.',
                                     );
                                   } else {
+                                    if (!context.mounted) return;
                                     await _showResultSheet(
                                       context,
                                       icon: Icons.error_outline,
