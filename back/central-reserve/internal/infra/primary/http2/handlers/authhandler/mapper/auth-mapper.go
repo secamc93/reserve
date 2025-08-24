@@ -65,8 +65,7 @@ func ToUserRolesPermissionsResponse(domainResponse *dtos.UserRolesPermissionsRes
 		return response.UserRolesPermissionsResponse{}
 	}
 
-	permissions := toPermissionInfoSlice(domainResponse.Permissions)
-	resources := groupPermissionsByResource(permissions)
+	resources := groupPermissionsByResource(domainResponse.Permissions)
 
 	return response.UserRolesPermissionsResponse{
 		IsSuper:   domainResponse.IsSuper,
@@ -86,57 +85,32 @@ func toRoleInfoSlice(domainRoles []dtos.RoleInfo) []response.RoleInfo {
 		roles[i] = response.RoleInfo{
 			ID:          role.ID,
 			Name:        role.Name,
-			Code:        role.Code,
 			Description: role.Description,
-			Level:       role.Level,
-			Scope:       role.Scope,
 		}
 	}
 	return roles
 }
 
-// toPermissionInfoSlice convierte un slice de dtos.PermissionInfo a response.PermissionInfo
-func toPermissionInfoSlice(domainPermissions []dtos.PermissionInfo) []response.PermissionInfo {
-	if domainPermissions == nil {
-		return nil
-	}
-
-	permissions := make([]response.PermissionInfo, len(domainPermissions))
-	for i, permission := range domainPermissions {
-		permissions[i] = response.PermissionInfo{
-			ID:          permission.ID,
-			Name:        permission.Name,
-			Code:        permission.Code,
-			Description: permission.Description,
-			Resource:    permission.Resource,
-			Action:      permission.Action,
-			Scope:       permission.Scope, // Este campo ya está correcto en el DTO
-		}
-	}
-	return permissions
-}
-
 // groupPermissionsByResource agrupa los permisos por recurso
-func groupPermissionsByResource(permissions []response.PermissionInfo) []response.ResourcePermissions {
+func groupPermissionsByResource(permissions []dtos.PermissionInfo) []response.ResourcePermissions {
 	if permissions == nil {
 		return nil
 	}
 
 	// Mapa para agrupar permisos por recurso
-	resourceMap := make(map[string][]response.PermissionInfo)
+	resourceMap := make(map[string][]string)
 
 	// Agrupar permisos por recurso
 	for _, permission := range permissions {
-		resourceMap[permission.Resource] = append(resourceMap[permission.Resource], permission)
+		resourceMap[permission.Resource] = append(resourceMap[permission.Resource], permission.Action)
 	}
 
 	// Convertir el mapa a slice de ResourcePermissions
 	var resources []response.ResourcePermissions
 	for resource, actions := range resourceMap {
 		resources = append(resources, response.ResourcePermissions{
-			Resource:     resource,
-			ResourceName: resource, // Usar el nombre original del recurso
-			Actions:      actions,
+			Resource: resource,
+			Actions:  actions,
 		})
 	}
 

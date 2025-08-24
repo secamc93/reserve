@@ -21,7 +21,6 @@ type User struct {
 type Role struct {
 	ID          uint
 	Name        string
-	Code        string
 	Description string
 	Level       int
 	IsSystem    bool
@@ -36,17 +35,9 @@ type Role struct {
 // Permission representa un permiso del sistema
 type Permission struct {
 	ID          uint
-	Name        string
-	Code        string
 	Description string
 	Resource    string
 	Action      string
-	ScopeID     uint
-	ScopeName   string // Nombre del scope para mostrar
-	ScopeCode   string // Código del scope para mostrar
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	DeletedAt   *time.Time
 }
 
 // UserRole representa la relación many-to-many entre usuarios y roles

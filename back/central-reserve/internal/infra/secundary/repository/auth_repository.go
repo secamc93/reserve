@@ -49,7 +49,6 @@ func (r *Repository) GetUserRoles(ctx context.Context, userID uint) ([]entities.
 		roles = append(roles, entities.Role{
 			ID:          role.ID,
 			Name:        role.Name,
-			Code:        role.Code,
 			Description: role.Description,
 			Level:       role.Level,
 			IsSystem:    role.IsSystem,
@@ -69,6 +68,8 @@ func (r *Repository) GetRolePermissions(ctx context.Context, roleID uint) ([]ent
 	err := r.database.Conn(ctx).
 		Model(&models.Role{}).
 		Preload("Permissions.Scope").
+		Preload("Permissions.Resource").
+		Preload("Permissions.Action").
 		Where("id = ?", roleID).
 		First(&role).Error
 
@@ -80,14 +81,9 @@ func (r *Repository) GetRolePermissions(ctx context.Context, roleID uint) ([]ent
 	for _, permission := range role.Permissions {
 		permissions = append(permissions, entities.Permission{
 			ID:          permission.ID,
-			Name:        permission.Name,
-			Code:        permission.Code,
-			Description: permission.Description,
-			Resource:    permission.Resource,
-			Action:      permission.Action,
-			ScopeID:     permission.ScopeID,
-			CreatedAt:   permission.CreatedAt,
-			UpdatedAt:   permission.UpdatedAt,
+			Description: permission.Resource.Description,
+			Resource:    permission.Resource.Name,
+			Action:      permission.Action.Name,
 		})
 	}
 

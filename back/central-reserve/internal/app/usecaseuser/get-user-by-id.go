@@ -76,7 +76,6 @@ func (uc *UserUseCase) GetUserByID(ctx context.Context, id uint) (*dtos.UserDTO,
 			userDTO.Roles[i] = dtos.RoleDTO{
 				ID:          role.ID,
 				Name:        role.Name,
-				Code:        role.Code,
 				Description: role.Description,
 				Level:       role.Level,
 				IsSystem:    role.IsSystem,

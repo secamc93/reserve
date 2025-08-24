@@ -43,17 +43,11 @@ definitions:
     type: object
   internal_infra_primary_http2_handlers_authhandler_response.RoleInfo:
     properties:
-      code:
-        type: string
       description:
         type: string
       id:
         type: integer
-      level:
-        type: integer
       name:
-        type: string
-      scope:
         type: string
     type: object
   internal_infra_primary_http2_handlers_userhandler_response.BusinessInfo:
@@ -541,23 +535,6 @@ definitions:
         example: Error al procesar la solicitud
         type: string
     type: object
-  response.PermissionInfo:
-    properties:
-      action:
-        type: string
-      code:
-        type: string
-      description:
-        type: string
-      id:
-        type: integer
-      name:
-        type: string
-      resource:
-        type: string
-      scope:
-        type: string
-    type: object
   response.PermissionListResponse:
     properties:
       data:
@@ -715,11 +692,9 @@ definitions:
     properties:
       actions:
         items:
-          $ref: '#/definitions/response.PermissionInfo'
+          type: string
         type: array
       resource:
-        type: string
-      resource_name:
         type: string
     type: object
   response.RoleErrorResponse:
@@ -1572,6 +1547,99 @@ paths:
       summary: Actualizar negocio
       tags:
       - businesses
+  /businesses/{id}/resources:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene todos los recursos permitidos y configurados para un negocio
+        específico, incluyendo su estado de activación
+      parameters:
+      - description: ID del negocio
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Recursos obtenidos exitosamente
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: ID de negocio inválido
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Obtener recursos del negocio
+      tags:
+      - Business Resources
+  /businesses/{id}/resources/{resource}:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene el estado de activación de un recurso específico para un
+        negocio
+      parameters:
+      - description: ID del negocio
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      - description: Nombre del recurso
+        example: '"users"'
+        in: path
+        name: resource
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Estado del recurso obtenido exitosamente
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Parámetros inválidos
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Recurso no encontrado
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Obtener estado de un recurso específico
+      tags:
+      - Business Resources
   /clients:
     get:
       consumes:

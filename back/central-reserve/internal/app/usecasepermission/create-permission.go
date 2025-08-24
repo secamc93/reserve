@@ -22,13 +22,6 @@ func (uc *PermissionUseCase) CreatePermission(ctx context.Context, permissionDTO
 		return "", err
 	}
 
-	// Verificar si ya existe un permiso con el mismo código
-	existingPermission, err := uc.repository.GetPermissionByCode(ctx, permissionDTO.Code)
-	if err == nil && existingPermission != nil {
-		uc.logger.Error().Str("code", permissionDTO.Code).Msg("Ya existe un permiso con este código")
-		return "", fmt.Errorf("ya existe un permiso con el código: %s", permissionDTO.Code)
-	}
-
 	// Convertir DTO a entidad
 	permission := dtosToPermissionEntity(permissionDTO)
 
@@ -66,11 +59,8 @@ func validateCreatePermission(permission dtos.CreatePermissionDTO) error {
 // dtosToPermissionEntity convierte un CreatePermissionDTO a entidad Permission
 func dtosToPermissionEntity(permissionDTO dtos.CreatePermissionDTO) entities.Permission {
 	return entities.Permission{
-		Name:        permissionDTO.Name,
-		Code:        permissionDTO.Code,
 		Description: permissionDTO.Description,
 		Resource:    permissionDTO.Resource,
 		Action:      permissionDTO.Action,
-		ScopeID:     permissionDTO.ScopeID,
 	}
 }

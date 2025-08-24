@@ -44,3 +44,10 @@ type Business struct {
 	UpdatedAt time.Time
 	DeletedAt *time.Time
 }
+
+// BusinessResourceConfigured representa la configuración de recursos para un negocio
+type BusinessResourceConfigured struct {
+	ResourceID   uint
+	ResourceName string
+	IsActive     bool
+}

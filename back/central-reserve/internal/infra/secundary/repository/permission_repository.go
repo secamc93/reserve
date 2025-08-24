@@ -2,7 +2,9 @@ package repository
 
 import (
 	"central_reserve/internal/domain/entities"
+	"central_reserve/internal/infra/secundary/repository/mapper"
 	"context"
+	"dbpostgres/app/infra/models"
 	"fmt"
 )
 
@@ -10,94 +12,87 @@ import (
 
 // GetPermissions obtiene todos los permisos
 func (r *Repository) GetPermissions(ctx context.Context) ([]entities.Permission, error) {
-	var permissions []entities.Permission
+	var permissions []models.Permission
 	if err := r.database.Conn(ctx).
-		Table("permission").
-		Select("permission.*, scope.name as scope_name, scope.code as scope_code").
-		Joins("LEFT JOIN scope ON permission.scope_id = scope.id").
+		Model(&models.Permission{}).
+		Preload("Scope").
+		Preload("Resource").
+		Preload("Action").
 		Find(&permissions).Error; err != nil {
 		r.logger.Error().Err(err).Msg("Error al obtener permisos")
 		return nil, err
 	}
-	return permissions, nil
+	return mapper.ToPermissionEntitySlice(permissions), nil
 }
 
 // GetPermissionByID obtiene un permiso por su ID
 func (r *Repository) GetPermissionByID(ctx context.Context, id uint) (*entities.Permission, error) {
-	var permission entities.Permission
+	var permission models.Permission
 	if err := r.database.Conn(ctx).
-		Table("permission").
-		Select("permission.*, scope.name as scope_name, scope.code as scope_code").
-		Joins("LEFT JOIN scope ON permission.scope_id = scope.id").
-		Where("permission.id = ?", id).
+		Model(&models.Permission{}).
+		Preload("Scope").
+		Preload("Resource").
+		Preload("Action").
+		Where("id = ?", id).
 		First(&permission).Error; err != nil {
 		r.logger.Error().Uint("id", id).Err(err).Msg("Error al obtener permiso por ID")
 		return nil, err
 	}
-	return &permission, nil
-}
 
-// GetPermissionByCode obtiene un permiso por su código
-func (r *Repository) GetPermissionByCode(ctx context.Context, code string) (*entities.Permission, error) {
-	var permission entities.Permission
-	if err := r.database.Conn(ctx).Table("permission").Where("code = ?", code).First(&permission).Error; err != nil {
-		r.logger.Error().Str("code", code).Err(err).Msg("Error al obtener permiso por código")
-		return nil, err
-	}
-	return &permission, nil
+	entity := mapper.ToPermissionEntity(permission)
+	return &entity, nil
 }
 
 // GetPermissionsByScopeID obtiene permisos por scope ID
 func (r *Repository) GetPermissionsByScopeID(ctx context.Context, scopeID uint) ([]entities.Permission, error) {
-	var permissions []entities.Permission
+	var permissions []models.Permission
 	if err := r.database.Conn(ctx).
-		Table("permission").
-		Select("permission.*, scope.name as scope_name, scope.code as scope_code").
-		Joins("LEFT JOIN scope ON permission.scope_id = scope.id").
-		Where("permission.scope_id = ?", scopeID).
+		Model(&models.Permission{}).
+		Preload("Scope").
+		Preload("Resource").
+		Preload("Action").
+		Where("scope_id = ?", scopeID).
 		Find(&permissions).Error; err != nil {
 		r.logger.Error().Uint("scope_id", scopeID).Err(err).Msg("Error al obtener permisos por scope ID")
 		return nil, err
 	}
-	return permissions, nil
+	return mapper.ToPermissionEntitySlice(permissions), nil
 }
 
 // GetPermissionsByResource obtiene permisos por recurso
 func (r *Repository) GetPermissionsByResource(ctx context.Context, resource string) ([]entities.Permission, error) {
-	var permissions []entities.Permission
+	var permissions []models.Permission
 	if err := r.database.Conn(ctx).
-		Table("permission").
-		Select("permission.*, scope.name as scope_name, scope.code as scope_code").
-		Joins("LEFT JOIN scope ON permission.scope_id = scope.id").
-		Where("permission.resource = ?", resource).
+		Model(&models.Permission{}).
+		Preload("Scope").
+		Preload("Resource").
+		Preload("Action").
+		Joins("JOIN resource ON permission.resource_id = resource.id").
+		Where("resource.name = ?", resource).
 		Find(&permissions).Error; err != nil {
 		r.logger.Error().Str("resource", resource).Err(err).Msg("Error al obtener permisos por recurso")
 		return nil, err
 	}
-	return permissions, nil
+	return mapper.ToPermissionEntitySlice(permissions), nil
 }
 
 // CreatePermission crea un nuevo permiso
 func (r *Repository) CreatePermission(ctx context.Context, permission entities.Permission) (string, error) {
-	if err := r.database.Conn(ctx).Table("permission").Create(&permission).Error; err != nil {
-		r.logger.Error().Err(err).Msg("Error al crear permiso")
-		return "", err
-	}
-	return fmt.Sprintf("Permiso creado con ID: %d", permission.ID), nil
+	// Este método requiere lógica adicional para mapear nombres de recurso/acción a IDs
+	// Por ahora, retornamos un error indicando que no está implementado
+	return "", fmt.Errorf("método CreatePermission no implementado - requiere mapeo de nombres a IDs")
 }
 
 // UpdatePermission actualiza un permiso existente
 func (r *Repository) UpdatePermission(ctx context.Context, id uint, permission entities.Permission) (string, error) {
-	if err := r.database.Conn(ctx).Table("permission").Where("id = ?", id).Updates(&permission).Error; err != nil {
-		r.logger.Error().Uint("id", id).Err(err).Msg("Error al actualizar permiso")
-		return "", err
-	}
-	return fmt.Sprintf("Permiso actualizado con ID: %d", id), nil
+	// Este método requiere lógica adicional para mapear nombres de recurso/acción a IDs
+	// Por ahora, retornamos un error indicando que no está implementado
+	return "", fmt.Errorf("método UpdatePermission no implementado - requiere mapeo de nombres a IDs")
 }
 
 // DeletePermission elimina un permiso
 func (r *Repository) DeletePermission(ctx context.Context, id uint) (string, error) {
-	if err := r.database.Conn(ctx).Table("permission").Where("id = ?", id).Delete(&entities.Permission{}).Error; err != nil {
+	if err := r.database.Conn(ctx).Delete(&models.Permission{}, id).Error; err != nil {
 		r.logger.Error().Uint("id", id).Err(err).Msg("Error al eliminar permiso")
 		return "", err
 	}

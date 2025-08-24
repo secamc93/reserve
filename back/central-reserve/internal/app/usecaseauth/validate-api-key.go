@@ -54,7 +54,7 @@ func (uc *AuthUseCase) ValidateAPIKey(ctx context.Context, request dtos.Validate
 	// Convertir roles a strings
 	var roleNames []string
 	for _, role := range userRoles {
-		roleNames = append(roleNames, role.Code)
+		roleNames = append(roleNames, role.Name)
 	}
 
 	// Actualizar último uso de la API Key

@@ -28,15 +28,6 @@ func (uc *PermissionUseCase) UpdatePermission(ctx context.Context, id uint, perm
 		return "", fmt.Errorf("permiso no encontrado: %w", err)
 	}
 
-	// Verificar si ya existe otro permiso con el mismo código (excluyendo el actual)
-	if permissionDTO.Code != existingPermission.Code {
-		permissionWithCode, err := uc.repository.GetPermissionByCode(ctx, permissionDTO.Code)
-		if err == nil && permissionWithCode != nil {
-			uc.logger.Error().Str("code", permissionDTO.Code).Msg("Ya existe otro permiso con este código")
-			return "", fmt.Errorf("ya existe otro permiso con el código: %s", permissionDTO.Code)
-		}
-	}
-
 	// Actualizar los campos del permiso existente
 	updatedPermission := updatePermissionFields(*existingPermission, permissionDTO)
 
@@ -75,14 +66,8 @@ func validateUpdatePermission(permission dtos.UpdatePermissionDTO) error {
 func updatePermissionFields(existing entities.Permission, updateDTO dtos.UpdatePermissionDTO) entities.Permission {
 	return entities.Permission{
 		ID:          existing.ID,
-		Name:        updateDTO.Name,
-		Code:        updateDTO.Code,
 		Description: updateDTO.Description,
 		Resource:    updateDTO.Resource,
 		Action:      updateDTO.Action,
-		ScopeID:     updateDTO.ScopeID,
-		CreatedAt:   existing.CreatedAt,
-		UpdatedAt:   existing.UpdatedAt,
-		DeletedAt:   existing.DeletedAt,
 	}
 }

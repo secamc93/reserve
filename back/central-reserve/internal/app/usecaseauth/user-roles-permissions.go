@@ -72,7 +72,7 @@ func (uc *AuthUseCase) GetUserRolesPermissions(ctx context.Context, userID uint,
 	// Verificar si es super admin (tiene rol super_admin)
 	isSuper := false
 	for _, role := range roles {
-		if role.Code == "super_admin" {
+		if role.Name == "Super Administrador" {
 			isSuper = true
 			break
 		}
@@ -94,7 +94,6 @@ func (uc *AuthUseCase) GetUserRolesPermissions(ctx context.Context, userID uint,
 		response.Roles[i] = dtos.RoleInfo{
 			ID:          role.ID,
 			Name:        role.Name,
-			Code:        role.Code,
 			Description: role.Description,
 			Level:       role.Level,
 			IsSystem:    role.IsSystem,
@@ -105,16 +104,13 @@ func (uc *AuthUseCase) GetUserRolesPermissions(ctx context.Context, userID uint,
 	// Mapear permisos (eliminar duplicados)
 	permissionMap := make(map[string]dtos.PermissionInfo)
 	for _, permission := range allPermissions {
-		key := permission.Code
+		key := permission.Resource + ":" + permission.Action
 		if _, exists := permissionMap[key]; !exists {
 			permissionMap[key] = dtos.PermissionInfo{
 				ID:          permission.ID,
-				Name:        permission.Name,
-				Code:        permission.Code,
 				Description: permission.Description,
 				Resource:    permission.Resource,
 				Action:      permission.Action,
-				Scope:       permission.ScopeName, // Usar ScopeName en lugar de Scope
 			}
 		}
 	}

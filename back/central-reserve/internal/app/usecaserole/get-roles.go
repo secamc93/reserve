@@ -31,7 +31,6 @@ func entityToRoleDTO(role entities.Role) dtos.RoleDTO {
 	return dtos.RoleDTO{
 		ID:          role.ID,
 		Name:        role.Name,
-		Code:        role.Code,
 		Description: role.Description,
 		Level:       role.Level,
 		IsSystem:    role.IsSystem,

@@ -98,13 +98,13 @@ type IBusinessRepository interface {
 	CreateBusiness(ctx context.Context, business entities.Business) (string, error)
 	UpdateBusiness(ctx context.Context, id uint, business entities.Business) (string, error)
 	DeleteBusiness(ctx context.Context, id uint) (string, error)
+	GetBusinesResourcesConfigured(ctx context.Context, businessID uint) ([]entities.BusinessResourceConfigured, error)
 }
 
 // IPermissionRepository define las operaciones para permisos
 type IPermissionRepository interface {
 	GetPermissions(ctx context.Context) ([]entities.Permission, error)
 	GetPermissionByID(ctx context.Context, id uint) (*entities.Permission, error)
-	GetPermissionByCode(ctx context.Context, code string) (*entities.Permission, error)
 	GetPermissionsByScopeID(ctx context.Context, scopeID uint) ([]entities.Permission, error)
 	GetPermissionsByResource(ctx context.Context, resource string) ([]entities.Permission, error)
 	CreatePermission(ctx context.Context, permission entities.Permission) (string, error)

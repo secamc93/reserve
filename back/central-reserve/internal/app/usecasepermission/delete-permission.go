@@ -25,7 +25,8 @@ func (uc *PermissionUseCase) DeletePermission(ctx context.Context, id uint) (str
 
 	uc.logger.Info().
 		Uint("id", id).
-		Str("name", existingPermission.Name).
+		Str("resource", existingPermission.Resource).
+		Str("action", existingPermission.Action).
 		Str("result", result).
 		Msg("Permiso eliminado exitosamente")
 	return result, nil

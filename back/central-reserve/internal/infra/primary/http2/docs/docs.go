@@ -1060,6 +1060,141 @@ const docTemplate = `{
                 }
             }
         },
+        "/businesses/{id}/resources": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene todos los recursos permitidos y configurados para un negocio específico, incluyendo su estado de activación",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Business Resources"
+                ],
+                "summary": "Obtener recursos del negocio",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "ID del negocio",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Recursos obtenidos exitosamente",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "ID de negocio inválido",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/businesses/{id}/resources/{resource}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene el estado de activación de un recurso específico para un negocio",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Business Resources"
+                ],
+                "summary": "Obtener estado de un recurso específico",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "ID del negocio",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "example": "\"users\"",
+                        "description": "Nombre del recurso",
+                        "name": "resource",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Estado del recurso obtenido exitosamente",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Parámetros inválidos",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Recurso no encontrado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/clients": {
             "get": {
                 "security": [
@@ -3604,22 +3739,13 @@ const docTemplate = `{
         "internal_infra_primary_http2_handlers_authhandler_response.RoleInfo": {
             "type": "object",
             "properties": {
-                "code": {
-                    "type": "string"
-                },
                 "description": {
                     "type": "string"
                 },
                 "id": {
                     "type": "integer"
                 },
-                "level": {
-                    "type": "integer"
-                },
                 "name": {
-                    "type": "string"
-                },
-                "scope": {
                     "type": "string"
                 }
             }
@@ -4342,32 +4468,6 @@ const docTemplate = `{
                 }
             }
         },
-        "response.PermissionInfo": {
-            "type": "object",
-            "properties": {
-                "action": {
-                    "type": "string"
-                },
-                "code": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "resource": {
-                    "type": "string"
-                },
-                "scope": {
-                    "type": "string"
-                }
-            }
-        },
         "response.PermissionListResponse": {
             "type": "object",
             "properties": {
@@ -4598,13 +4698,10 @@ const docTemplate = `{
                 "actions": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/response.PermissionInfo"
+                        "type": "string"
                     }
                 },
                 "resource": {
-                    "type": "string"
-                },
-                "resource_name": {
                     "type": "string"
                 }
             }

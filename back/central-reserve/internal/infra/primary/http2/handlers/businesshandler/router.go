@@ -19,4 +19,6 @@ func RegisterRoutes(router *gin.RouterGroup, handler IBusinessHandler, jwtServic
 	router.POST("/businesses", handler.CreateBusinessHandler)
 	router.PUT("/businesses/:id", handler.UpdateBusinessHandler)
 	router.DELETE("/businesses/:id", handler.DeleteBusinessHandler)
+	router.GET("/businesses/:id/resources", handler.GetBusinessResourcesHandler)
+	router.GET("/businesses/:id/resources/:resource", handler.GetBusinessResourceStatusHandler)
 }

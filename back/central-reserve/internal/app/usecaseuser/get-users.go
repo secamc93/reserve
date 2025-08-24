@@ -110,7 +110,6 @@ func (uc *UserUseCase) GetUsers(ctx context.Context, filters dtos.UserFilters) (
 				userDTOs[i].Roles[j] = dtos.RoleDTO{
 					ID:          role.ID,
 					Name:        role.Name,
-					Code:        role.Code,
 					Description: role.Description,
 					Level:       role.Level,
 					IsSystem:    role.IsSystem,

@@ -59,7 +59,6 @@ func ToUserResponse(dto dtos.UserDTO) response.UserResponse {
 		roles[i] = response.RoleInfo{
 			ID:          role.ID,
 			Name:        role.Name,
-			Code:        role.Code,
 			Description: role.Description,
 			Level:       role.Level,
 			IsSystem:    role.IsSystem,

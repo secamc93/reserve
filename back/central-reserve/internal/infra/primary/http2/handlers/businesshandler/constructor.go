@@ -14,6 +14,8 @@ type IBusinessHandler interface {
 	CreateBusinessHandler(c *gin.Context)
 	UpdateBusinessHandler(c *gin.Context)
 	DeleteBusinessHandler(c *gin.Context)
+	GetBusinessResourcesHandler(c *gin.Context)
+	GetBusinessResourceStatusHandler(c *gin.Context)
 }
 
 type BusinessHandler struct {

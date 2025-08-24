@@ -149,7 +149,6 @@ func (uc *AuthUseCase) Login(ctx context.Context, request dtos.LoginRequest) (*d
 			Int("role_index", i).
 			Uint("role_id", role.ID).
 			Str("role_name", role.Name).
-			Str("role_code", role.Code).
 			Msg("Rol encontrado")
 	}
 
@@ -171,7 +170,7 @@ func (uc *AuthUseCase) Login(ctx context.Context, request dtos.LoginRequest) (*d
 			Uint("user_id", userAuth.ID).
 			Int("role_index", i).
 			Uint("role_id", role.ID).
-			Str("role_code", role.Code).
+			Str("role_name", role.Name).
 			Str("role_scope_code", role.ScopeCode).
 			Str("role_scope_name", role.ScopeName).
 			Bool("is_super_admin", isSuper).
@@ -179,9 +178,9 @@ func (uc *AuthUseCase) Login(ctx context.Context, request dtos.LoginRequest) (*d
 	}
 
 	// Generar token JWT
-	roleCodes := make([]string, len(roles))
+	roleNames := make([]string, len(roles))
 	for i, role := range roles {
-		roleCodes[i] = role.Code
+		roleNames[i] = role.Name
 	}
 
 	// Usar el primer business para el token (si existe)
@@ -207,7 +206,7 @@ func (uc *AuthUseCase) Login(ctx context.Context, request dtos.LoginRequest) (*d
 		}
 	}
 
-	token, err := uc.jwtService.GenerateToken(userAuth.ID, userAuth.Email, roleCodes, businessID)
+	token, err := uc.jwtService.GenerateToken(userAuth.ID, userAuth.Email, roleNames, businessID)
 	if err != nil {
 		uc.log.Error().Err(err).Uint("user_id", userAuth.ID).Msg("Error al generar token JWT")
 		return nil, fmt.Errorf("error interno del servidor")
@@ -218,7 +217,7 @@ func (uc *AuthUseCase) Login(ctx context.Context, request dtos.LoginRequest) (*d
 		Uint("user_id", userAuth.ID).
 		Uint("token_business_id", businessID).
 		Str("user_email", userAuth.Email).
-		Strs("user_roles", roleCodes).
+		Strs("user_roles", roleNames).
 		Msg("Token JWT generado exitosamente")
 
 	// Verificar si es el primer login (LastLoginAt es nil)

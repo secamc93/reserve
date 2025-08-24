@@ -25,28 +25,19 @@ type UserInfo struct {
 type RoleInfo struct {
 	ID          uint   `json:"id"`
 	Name        string `json:"name"`
-	Code        string `json:"code"`
 	Description string `json:"description"`
-	Level       int    `json:"level"`
-	Scope       string `json:"scope"`
 }
 
 // PermissionInfo representa la información del permiso en la respuesta
-type PermissionInfo struct {
-	ID          uint   `json:"id"`
-	Name        string `json:"name"`
-	Code        string `json:"code"`
+type Action struct {
 	Description string `json:"description"`
-	Resource    string `json:"resource"`
 	Action      string `json:"action"`
-	Scope       string `json:"scope"`
 }
 
 // ResourcePermissions representa los permisos agrupados por recurso
 type ResourcePermissions struct {
-	Resource     string           `json:"resource"`
-	ResourceName string           `json:"resource_name"`
-	Actions      []PermissionInfo `json:"actions"`
+	Resource string   `json:"resource"`
+	Actions  []string `json:"actions"`
 }
 
 // UserRolesPermissionsResponse representa la respuesta de roles y permisos del usuario

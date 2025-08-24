@@ -117,3 +117,19 @@ type BusinessTypeListResponse struct {
 	Page          int
 	Limit         int
 }
+
+// BusinessResourceConfiguredResponse representa la respuesta de recursos configurados de un negocio
+type BusinessResourceConfiguredResponse struct {
+	ResourceID   uint
+	ResourceName string
+	IsActive     bool
+}
+
+// BusinessResourcesResponse representa la respuesta completa de recursos de un negocio
+type BusinessResourcesResponse struct {
+	BusinessID uint
+	Resources  []BusinessResourceConfiguredResponse
+	Total      int
+	Active     int
+	Inactive   int
+}

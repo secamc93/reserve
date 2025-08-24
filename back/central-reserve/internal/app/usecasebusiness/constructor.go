@@ -14,6 +14,8 @@ type IUseCaseBusiness interface {
 	CreateBusiness(ctx context.Context, request dtos.BusinessRequest) (*dtos.BusinessResponse, error)
 	UpdateBusiness(ctx context.Context, id uint, request dtos.UpdateBusinessRequest) (*dtos.BusinessResponse, error)
 	DeleteBusiness(ctx context.Context, id uint) error
+	GetBusinessResources(ctx context.Context, businessID uint) (*dtos.BusinessResourcesResponse, error)
+	GetBusinessResourceStatus(ctx context.Context, businessID uint, resourceName string) (*dtos.BusinessResourceConfiguredResponse, error)
 }
 
 type BusinessUseCase struct {

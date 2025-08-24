@@ -30,13 +30,8 @@ func (uc *PermissionUseCase) GetPermissions(ctx context.Context) ([]dtos.Permiss
 func entityToPermissionDTO(permission entities.Permission) dtos.PermissionDTO {
 	return dtos.PermissionDTO{
 		ID:          permission.ID,
-		Name:        permission.Name,
-		Code:        permission.Code,
 		Description: permission.Description,
 		Resource:    permission.Resource,
 		Action:      permission.Action,
-		ScopeID:     permission.ScopeID,
-		ScopeName:   permission.ScopeName,
-		ScopeCode:   permission.ScopeCode,
 	}
 }
