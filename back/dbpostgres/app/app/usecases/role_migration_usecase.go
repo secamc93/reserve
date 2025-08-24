@@ -54,33 +54,33 @@ func (uc *RoleMigrationUseCase) Execute() error {
 	// 2. Definir roles con IDs de scopes verificados
 	roles := []models.Role{
 		// Roles de plataforma
-		{Name: "Super Administrador", Code: "super_admin", Description: "Acceso completo a toda la plataforma", Level: 1, IsSystem: true, ScopeID: platformScope.ID},
-		{Name: "Administrador de Plataforma", Code: "platform_admin", Description: "Administrador de la plataforma", Level: 2, IsSystem: true, ScopeID: platformScope.ID},
-		{Name: "Operador de Plataforma", Code: "platform_operator", Description: "Operaciones básicas de plataforma", Level: 3, IsSystem: true, ScopeID: platformScope.ID},
+		{Name: "super_admin", Description: "Full access to entire platform", Level: 1, IsSystem: true, ScopeID: platformScope.ID},
+		{Name: "platform_admin", Description: "Platform administrator", Level: 2, IsSystem: true, ScopeID: platformScope.ID},
+		{Name: "platform_operator", Description: "Basic platform operations", Level: 3, IsSystem: true, ScopeID: platformScope.ID},
 
 		// Roles de negocio
-		{Name: "Dueño del Negocio", Code: "business_owner", Description: "Dueño del negocio", Level: 2, IsSystem: true, ScopeID: businessScope.ID},
-		{Name: "Gerente del Negocio", Code: "business_manager", Description: "Gerente del negocio", Level: 3, IsSystem: true, ScopeID: businessScope.ID},
-		{Name: "Personal del Negocio", Code: "business_staff", Description: "Personal general del negocio", Level: 4, IsSystem: true, ScopeID: businessScope.ID},
-		{Name: "Mesero", Code: "waiter", Description: "Mesero del negocio", Level: 5, IsSystem: true, ScopeID: businessScope.ID},
-		{Name: "Anfitrión", Code: "host", Description: "Anfitrión del negocio", Level: 5, IsSystem: true, ScopeID: businessScope.ID},
+		{Name: "business_owner", Description: "Business owner", Level: 2, IsSystem: true, ScopeID: businessScope.ID},
+		{Name: "business_manager", Description: "Business manager", Level: 3, IsSystem: true, ScopeID: businessScope.ID},
+		{Name: "business_staff", Description: "General business staff", Level: 4, IsSystem: true, ScopeID: businessScope.ID},
+		{Name: "waiter", Description: "Business waiter", Level: 5, IsSystem: true, ScopeID: businessScope.ID},
+		{Name: "host", Description: "Business host", Level: 5, IsSystem: true, ScopeID: businessScope.ID},
 	}
 
 	// 3. Verificar si todos los roles ya existen
 	uc.logger.Debug().Msg("Verificando si los roles ya existen...")
 	allExist := true
 	for _, role := range roles {
-		existingRole, err := uc.systemUseCase.GetRoleByCode(role.Code)
+		existingRole, err := uc.systemUseCase.GetRoleByName(role.Name)
 		if err != nil {
-			uc.logger.Error().Err(err).Str("role_code", role.Code).Msg("❌ Error al verificar rol existente")
+			uc.logger.Error().Err(err).Str("role_name", role.Name).Msg("❌ Error al verificar rol existente")
 			return err
 		}
 		if existingRole == nil {
-			uc.logger.Debug().Str("role_code", role.Code).Msg("Rol no existe, será creado")
+			uc.logger.Debug().Str("role_name", role.Name).Msg("Rol no existe, será creado")
 			allExist = false
 			break
 		} else {
-			uc.logger.Debug().Str("role_code", role.Code).Uint("role_id", existingRole.ID).Msg("Rol ya existe")
+			uc.logger.Debug().Str("role_name", role.Name).Uint("role_id", existingRole.ID).Msg("Rol ya existe")
 		}
 	}
 

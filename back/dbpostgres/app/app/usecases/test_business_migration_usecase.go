@@ -8,17 +8,19 @@ import (
 
 // TestBusinessMigrationUseCase maneja la migración e inicialización del negocio de prueba
 type TestBusinessMigrationUseCase struct {
-	systemUseCase *SystemUseCase
-	scopeUseCase  *ScopeUseCase
-	logger        log.ILogger
+	systemUseCase              *SystemUseCase
+	scopeUseCase               *ScopeUseCase
+	permissionMigrationUseCase *PermissionMigrationUseCase // AGREGAR: Caso de uso de migración de permisos
+	logger                     log.ILogger
 }
 
 // NewTestBusinessMigrationUseCase crea una nueva instancia del caso de uso de migración del negocio de prueba
-func NewTestBusinessMigrationUseCase(systemUseCase *SystemUseCase, scopeUseCase *ScopeUseCase, logger log.ILogger) *TestBusinessMigrationUseCase {
+func NewTestBusinessMigrationUseCase(systemUseCase *SystemUseCase, scopeUseCase *ScopeUseCase, permissionMigrationUseCase *PermissionMigrationUseCase, logger log.ILogger) *TestBusinessMigrationUseCase {
 	return &TestBusinessMigrationUseCase{
-		systemUseCase: systemUseCase,
-		scopeUseCase:  scopeUseCase,
-		logger:        logger,
+		systemUseCase:              systemUseCase,
+		scopeUseCase:               scopeUseCase,
+		permissionMigrationUseCase: permissionMigrationUseCase, // AGREGAR
+		logger:                     logger,
 	}
 }
 
@@ -82,5 +84,14 @@ func (uc *TestBusinessMigrationUseCase) Execute() error {
 	}
 
 	uc.logger.Info().Str("business_name", testBusiness.Name).Str("business_code", testBusiness.Code).Uint("business_id", testBusiness.ID).Msg("✅ Negocio de prueba creado correctamente")
+
+	// 4. Crear configuraciones de recursos para el negocio
+	uc.logger.Info().Uint("business_id", testBusiness.ID).Msg("Creando configuraciones de recursos para el negocio...")
+	if err := uc.permissionMigrationUseCase.CreateBusinessResourceConfigurations(testBusiness.ID, restaurantType.ID); err != nil {
+		uc.logger.Error().Err(err).Uint("business_id", testBusiness.ID).Msg("❌ Error al crear configuraciones de recursos")
+		return err
+	}
+
+	uc.logger.Info().Uint("business_id", testBusiness.ID).Msg("✅ Configuraciones de recursos creadas correctamente")
 	return nil
 }

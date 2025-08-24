@@ -20,7 +20,8 @@ type BusinessType struct {
 	IsActive    bool   `gorm:"default:true"`
 
 	// Relación con negocios
-	Businesses []Business
+	Businesses                     []Business
+	BusinessTypeResourcesPermitted []BusinessTypeResourcePermitted `gorm:"foreignKey:BusinessTypeID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
 
 // ───────────────────────────────────────────
@@ -47,12 +48,13 @@ type Scope struct {
 // ───────────────────────────────────────────
 type Business struct {
 	gorm.Model
-	Name           string `gorm:"size:120;not null"`
-	Code           string `gorm:"size:50;not null;unique"` // slug para URL personalizada
-	BusinessTypeID uint   `gorm:"not null;index"`
-	Timezone       string `gorm:"size:40;default:'America/Bogota'"`
-	Address        string `gorm:"size:255"`
-	Description    string `gorm:"size:500"`
+	Name             string `gorm:"size:120;not null"`
+	Code             string `gorm:"size:50;not null;unique"` // slug para URL personalizada
+	BusinessTypeID   uint   `gorm:"not null;index"`
+	ParentBusinessID *uint  `gorm:"index"` // ID del negocio padre (para jerarquía)
+	Timezone         string `gorm:"size:40;default:'America/Bogota'"`
+	Address          string `gorm:"size:255"`
+	Description      string `gorm:"size:500"`
 
 	// Configuración de marca blanca
 	LogoURL         string `gorm:"size:255"`
@@ -70,13 +72,65 @@ type Business struct {
 	EnableReservations bool `gorm:"default:true"`
 
 	// Relaciones
-	BusinessType BusinessType
-	Rooms        []Room
-	Tables       []Table
-	Reservations []Reservation
-	Staff        []BusinessStaff
-	Clients      []Client
-	Users        []User `gorm:"many2many:user_businesses;"` // Usuarios del negocio (muchos a muchos)
+	BusinessType                BusinessType
+	ParentBusiness              *Business  `gorm:"foreignKey:ParentBusinessID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"` // Negocio padre
+	ChildBusinesses             []Business `gorm:"foreignKey:ParentBusinessID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"` // Negocios hijos
+	Rooms                       []Room
+	Tables                      []Table
+	Reservations                []Reservation
+	Staff                       []BusinessStaff
+	Clients                     []Client
+	Users                       []User                          `gorm:"many2many:user_businesses;"` // Usuarios del negocio (muchos a muchos)
+	BusinessResourcesPermitted  []BusinessTypeResourcePermitted `gorm:"foreignKey:BusinessID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	BusinessResourcesConfigured []BusinessResourceConfigured    `gorm:"foreignKey:BusinessID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+}
+
+// ───────────────────────────────────────────
+//
+//	BUSINESS RESOURCES PERMITTED – recursos del negocio permitidos para un negocio
+//
+// ───────────────────────────────────────────
+type BusinessTypeResourcePermitted struct {
+	gorm.Model
+	BusinessID     *uint `gorm:"index"` // AGREGAR: Campo opcional para relacionar con Business (se asigna después)
+	BusinessTypeID uint  `gorm:"not null;index;uniqueIndex:idx_business_type_resource,priority:1"`
+	ResourceID     uint  `gorm:"not null;index;uniqueIndex:idx_business_type_resource,priority:2"`
+
+	// Relaciones
+	Business     *Business    `gorm:"foreignKey:BusinessID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"` // AGREGAR: Relación opcional
+	BusinessType BusinessType `gorm:"foreignKey:BusinessTypeID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Resource     Resource     `gorm:"foreignKey:ResourceID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+}
+
+// ───────────────────────────────────────────
+//
+//	BUSINESS RESOURCE CONFIGURED – recursos del negocio configurados para un negocio
+//
+// ───────────────────────────────────────────
+type BusinessResourceConfigured struct {
+	gorm.Model
+	BusinessID                      uint `gorm:"not null;index;uniqueIndex:idx_business_resource_config,priority:1"`
+	BusinessTypeResourcePermittedID uint `gorm:"not null;index;uniqueIndex:idx_business_resource_config,priority:2"`
+	BusinessTypeID                  uint `gorm:"not null;index"` // AGREGAR: Campo para relacionar con BusinessType
+
+	// Relaciones
+	BusinessTypeResourcePermitted BusinessTypeResourcePermitted `gorm:"foreignKey:BusinessTypeResourcePermittedID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Business                      Business                      `gorm:"foreignKey:BusinessID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	BusinessType                  BusinessType                  `gorm:"foreignKey:BusinessTypeID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"` // AGREGAR
+}
+
+// ───────────────────────────────────────────
+//
+//	RESOURCES – recursos del negocio
+//
+// ───────────────────────────────────────────
+type Resource struct {
+	gorm.Model
+	Name        string `gorm:"size:100;not null;unique"`
+	Description string `gorm:"size:500"`
+
+	// Relaciones
+	BusinessResourcesPermitted []BusinessTypeResourcePermitted `gorm:"foreignKey:ResourceID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
 
 // ───────────────────────────────────────────
@@ -111,7 +165,6 @@ type Room struct {
 type Role struct {
 	gorm.Model
 	Name        string `gorm:"size:50;not null;unique"`
-	Code        string `gorm:"size:30;not null;unique"` // Código interno
 	Description string `gorm:"size:255"`
 	Level       int    `gorm:"not null;default:1"` // Nivel jerárquico (1=super, 2=admin, 3=manager, 4=staff)
 	IsSystem    bool   `gorm:"default:false"`      // Si es rol del sistema (no se puede eliminar)
@@ -131,15 +184,14 @@ type Role struct {
 // ───────────────────────────────────────────
 type Permission struct {
 	gorm.Model
-	Name        string `gorm:"size:100;not null;unique"`
-	Code        string `gorm:"size:50;not null;unique"` // Código interno
-	Description string `gorm:"size:255"`
-	Resource    string `gorm:"size:50;not null"` // Recurso: 'businesses', 'users', 'reservations', etc.
-	Action      string `gorm:"size:20;not null"` // Acción: 'create', 'read', 'update', 'delete', 'manage'
-	ScopeID     uint   `gorm:"not null;index"`   // Referencia al scope
+	ResourceID uint `gorm:"not null;index"`
+	ActionID   uint `gorm:"not null;index"`
+	ScopeID    uint `gorm:"not null;index"`
 
-	Scope Scope  `gorm:"foreignKey:ScopeID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
-	Roles []Role `gorm:"many2many:role_permissions;"`
+	Scope    Scope    `gorm:"foreignKey:ScopeID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
+	Roles    []Role   `gorm:"many2many:role_permissions;"`
+	Resource Resource `gorm:"foreignKey:ResourceID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
+	Action   Action   `gorm:"foreignKey:ActionID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
 }
 
 // ───────────────────────────────────────────
@@ -274,18 +326,17 @@ type ReservationStatusHistory struct {
 
 // ───────────────────────────────────────────
 //
-//	CONSTANTES Y ENUMS
+//	ACTIONS – acciones que se pueden realizar en el sistema
 //
 // ───────────────────────────────────────────
+type Action struct {
+	gorm.Model
+	Name        string `gorm:"size:20;not null;unique"`
+	Description string `gorm:"size:255"`
 
-// Acciones del sistema (operaciones que se pueden realizar)
-const (
-	ACTION_CREATE = "create" // Crear nuevos registros
-	ACTION_READ   = "read"   // Leer/ver información
-	ACTION_UPDATE = "update" // Modificar registros existentes
-	ACTION_DELETE = "delete" // Eliminar registros
-	ACTION_MANAGE = "manage" // Control total (incluye todas las acciones)
-)
+	// Relaciones
+	Permissions []Permission `gorm:"foreignKey:ActionID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
+}
 
 // ───────────────────────────────────────────
 //

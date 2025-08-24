@@ -63,9 +63,9 @@ func (as *AuthService) AuthenticateUser(email, password string) (*UserContext, e
 	// Extraer roles y permisos
 	permissionSet := make(map[string]bool)
 	for _, role := range user.Roles {
-		userContext.Roles = append(userContext.Roles, role.Code)
+		userContext.Roles = append(userContext.Roles, role.Name)
 		for _, permission := range role.Permissions {
-			permissionKey := fmt.Sprintf("%s:%s", permission.Resource, permission.Action)
+			permissionKey := fmt.Sprintf("%s:%s", permission.Resource.Name, permission.Action.Name)
 			if !permissionSet[permissionKey] {
 				permissionSet[permissionKey] = true
 				userContext.Permissions = append(userContext.Permissions, permissionKey)

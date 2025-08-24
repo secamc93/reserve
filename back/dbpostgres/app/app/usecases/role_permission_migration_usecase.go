@@ -1,22 +1,91 @@
 package usecases
 
 import (
+	"dbpostgres/app/infra/models"
 	"dbpostgres/pkg/log"
 	"fmt"
+	"strings"
+
+	"gorm.io/gorm"
 )
 
 // RolePermissionMigrationUseCase maneja la migración e inicialización de asignación de permisos a roles
 type RolePermissionMigrationUseCase struct {
 	systemUseCase *SystemUseCase
+	db            *gorm.DB
 	logger        log.ILogger
 }
 
 // NewRolePermissionMigrationUseCase crea una nueva instancia del caso de uso de migración de asignación de permisos a roles
-func NewRolePermissionMigrationUseCase(systemUseCase *SystemUseCase, logger log.ILogger) *RolePermissionMigrationUseCase {
+func NewRolePermissionMigrationUseCase(systemUseCase *SystemUseCase, db *gorm.DB, logger log.ILogger) *RolePermissionMigrationUseCase {
 	return &RolePermissionMigrationUseCase{
 		systemUseCase: systemUseCase,
+		db:            db,
 		logger:        logger,
 	}
+}
+
+// getPermissionByLegacyCode obtiene un permiso usando el código antiguo (resource:action)
+func (uc *RolePermissionMigrationUseCase) getPermissionByLegacyCode(legacyCode string) (*models.Permission, error) {
+	// Parsear el código antiguo (ej: "businesses:manage" -> resource="businesses", action="manage")
+	parts := strings.Split(legacyCode, ":")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("código de permiso inválido: %s", legacyCode)
+	}
+
+	resourceName := parts[0]
+	actionCode := parts[1]
+
+	// Mapeo de códigos de acción en inglés a nombres en inglés (ahora son iguales)
+	actionNameMap := map[string]string{
+		"manage":    "Manage",
+		"read":      "Read",
+		"create":    "Create",
+		"update":    "Update",
+		"delete":    "Delete",
+		"approve":   "Approve",
+		"reject":    "Reject",
+		"assign":    "Assign",
+		"schedule":  "Schedule",
+		"report":    "Report",
+		"configure": "Configure",
+		"audit":     "Audit",
+		"migrate":   "Migrate",
+	}
+
+	actionName, exists := actionNameMap[actionCode]
+	if !exists {
+		return nil, fmt.Errorf("código de acción '%s' no reconocido", actionCode)
+	}
+
+	// Obtener el recurso por nombre
+	var resource models.Resource
+	if err := uc.db.Where("name = ?", resourceName).First(&resource).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("recurso '%s' no encontrado", resourceName)
+		}
+		return nil, err
+	}
+
+	// Obtener la acción por nombre
+	var action models.Action
+	if err := uc.db.Where("name = ?", actionName).First(&action).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("acción '%s' no encontrada", actionName)
+		}
+		return nil, err
+	}
+
+	// Buscar el permiso por ResourceID y ActionID
+	var permission models.Permission
+	if err := uc.db.Where("resource_id = ? AND action_id = ?", resource.ID, action.ID).First(&permission).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("permiso con recurso '%s' y acción '%s' no encontrado", resourceName, actionName)
+		}
+		return nil, err
+	}
+
+	return &permission, nil
 }
 
 // Execute ejecuta la migración de asignación de permisos a roles
@@ -28,9 +97,10 @@ func (uc *RolePermissionMigrationUseCase) Execute() error {
 	requiredRoles := []string{"super_admin", "platform_admin", "platform_operator", "business_owner", "business_manager", "business_staff", "waiter", "host"}
 
 	for _, roleCode := range requiredRoles {
-		role, err := uc.systemUseCase.GetRoleByCode(roleCode)
+		// Obtener el rol por su código
+		role, err := uc.systemUseCase.GetRoleByName(roleCode)
 		if err != nil {
-			uc.logger.Error().Err(err).Str("role_code", roleCode).Msg("❌ Error al verificar rol")
+			uc.logger.Error().Err(err).Str("role_code", roleCode).Msg("❌ Error al obtener rol")
 			return err
 		}
 		if role == nil {
@@ -47,11 +117,11 @@ func (uc *RolePermissionMigrationUseCase) Execute() error {
 		"scopes:manage", "scopes:read", "users:manage", "users:read", "roles:manage", "roles:read",
 		"permissions:manage", "reports:read", "reservations:manage", "reservations:read",
 		"tables:manage", "tables:read", "rooms:manage", "rooms:read", "clients:manage", "clients:read", "staff:manage", "staff:read",
-		"business:configure", "business_reports:read",
+		"businesses:update", "reports:read",
 	}
 
 	for _, permissionCode := range requiredPermissions {
-		permission, err := uc.systemUseCase.GetPermissionByCode(permissionCode)
+		permission, err := uc.getPermissionByLegacyCode(permissionCode)
 		if err != nil {
 			uc.logger.Error().Err(err).Str("permission_code", permissionCode).Msg("❌ Error al verificar permiso")
 			return err
@@ -80,7 +150,7 @@ func (uc *RolePermissionMigrationUseCase) Execute() error {
 		"rooms:manage", "rooms:read",
 		"clients:manage", "clients:read",
 		"staff:manage", "staff:read",
-		"business:configure", "business_reports:read",
+		"businesses:update", "reports:read",
 	}
 
 	if err := uc.systemUseCase.AssignPermissionsToRole("super_admin", superAdminPermissions); err != nil {
@@ -133,7 +203,7 @@ func (uc *RolePermissionMigrationUseCase) Execute() error {
 		"rooms:manage", "rooms:read",
 		"clients:manage", "clients:read",
 		"staff:manage", "staff:read",
-		"business:configure", "business_reports:read",
+		"businesses:update", "reports:read",
 	}
 
 	if err := uc.systemUseCase.AssignPermissionsToRole("business_owner", businessOwnerPermissions); err != nil {
@@ -151,7 +221,7 @@ func (uc *RolePermissionMigrationUseCase) Execute() error {
 		"rooms:manage", "rooms:read",
 		"reservations:manage", "reservations:read",
 		"clients:manage", "clients:read",
-		"business_reports:read",
+		"reports:read",
 	}
 
 	if err := uc.systemUseCase.AssignPermissionsToRole("business_manager", businessManagerPermissions); err != nil {

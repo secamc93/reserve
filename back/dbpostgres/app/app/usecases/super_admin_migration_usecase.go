@@ -28,18 +28,19 @@ func (uc *SuperAdminMigrationUseCase) Execute() error {
 	uc.logger.Info().Msg("Inicializando usuario administrador súper...")
 
 	// 1. Verificar que el rol requerido existe
-	uc.logger.Debug().Msg("Verificando dependencias: rol 'super_admin'")
+	uc.logger.Debug().Msg("Verificando dependencias: rol 'Super Administrador'")
 
-	superAdminRole, err := uc.systemUseCase.GetRoleByCode("super_admin")
+	// Obtener el rol de super administrador
+	superAdminRole, err := uc.systemUseCase.GetRoleByName("Super Administrador")
 	if err != nil {
-		uc.logger.Error().Err(err).Str("role_code", "super_admin").Msg("❌ Error al verificar rol 'super_admin'")
+		uc.logger.Error().Err(err).Msg("❌ Error al obtener rol de super administrador")
 		return err
 	}
 	if superAdminRole == nil {
-		uc.logger.Error().Str("role_code", "super_admin").Msg("❌ Rol 'super_admin' no encontrado. Asegúrate de ejecutar la migración de roles primero")
-		return fmt.Errorf("rol 'super_admin' no encontrado")
+		uc.logger.Error().Str("role_name", "Super Administrador").Msg("❌ Rol 'Super Administrador' no encontrado. Asegúrate de ejecutar la migración de roles primero")
+		return fmt.Errorf("rol 'Super Administrador' no encontrado")
 	}
-	uc.logger.Debug().Str("role_code", "super_admin").Uint("role_id", superAdminRole.ID).Msg("✅ Rol 'super_admin' encontrado")
+	uc.logger.Debug().Str("role_name", "Super Administrador").Uint("role_id", superAdminRole.ID).Msg("✅ Rol 'Super Administrador' encontrado")
 
 	// 2. Verificar si ya existe un usuario administrador
 	uc.logger.Debug().Msg("Verificando si ya existe un usuario administrador...")

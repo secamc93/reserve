@@ -4,6 +4,8 @@ import (
 	"dbpostgres/app/domain"
 	"dbpostgres/app/infra/models"
 	"dbpostgres/pkg/log"
+	"fmt"
+	"strings"
 )
 
 // SystemUseCase maneja la lógica de negocio para la inicialización del sistema
@@ -45,7 +47,7 @@ func (uc *SystemUseCase) InitializePermissions(permissions []models.Permission) 
 	// Verificar si todos los permisos ya existen
 	allExist := true
 	for _, permission := range permissions {
-		exists, err := uc.permissionRepo.ExistsByCode(permission.Code)
+		exists, err := uc.permissionRepo.ExistsByResourceActionScope(permission.ResourceID, permission.ActionID, permission.ScopeID)
 		if err != nil {
 			return err
 		}
@@ -61,7 +63,7 @@ func (uc *SystemUseCase) InitializePermissions(permissions []models.Permission) 
 	}
 
 	for _, permission := range permissions {
-		exists, err := uc.permissionRepo.ExistsByCode(permission.Code)
+		exists, err := uc.permissionRepo.ExistsByResourceActionScope(permission.ResourceID, permission.ActionID, permission.ScopeID)
 		if err != nil {
 			return err
 		}
@@ -84,7 +86,7 @@ func (uc *SystemUseCase) InitializeRoles(roles []models.Role) error {
 	// Verificar si todos los roles ya existen
 	allExist := true
 	for _, role := range roles {
-		exists, err := uc.roleRepo.ExistsByCode(role.Code)
+		exists, err := uc.roleRepo.ExistsByName(role.Name)
 		if err != nil {
 			return err
 		}
@@ -100,7 +102,7 @@ func (uc *SystemUseCase) InitializeRoles(roles []models.Role) error {
 	}
 
 	for _, role := range roles {
-		exists, err := uc.roleRepo.ExistsByCode(role.Code)
+		exists, err := uc.roleRepo.ExistsByName(role.Name)
 		if err != nil {
 			return err
 		}
@@ -223,18 +225,54 @@ func (uc *SystemUseCase) AssignPermissionsToRole(roleCode string, permissionCode
 	uc.logger.Info().Str("role_code", roleCode).Msg("Asignando permisos a rol...")
 
 	// Obtener el rol
-	role, err := uc.roleRepo.GetByCode(roleCode)
+	role, err := uc.roleRepo.GetByName(roleCode)
 	if err != nil {
 		return err
 	}
 
-	// Obtener los IDs de los permisos
+	// Obtener los IDs de los permisos usando los códigos antiguos
 	var permissionIDs []uint
 	for _, permissionCode := range permissionCodes {
-		permission, err := uc.permissionRepo.GetByCode(permissionCode)
+		// Parsear el código antiguo (ej: "businesses:manage")
+		parts := strings.Split(permissionCode, ":")
+		if len(parts) != 2 {
+			uc.logger.Error().Str("permission_code", permissionCode).Msg("❌ Código de permiso inválido")
+			return fmt.Errorf("código de permiso inválido: %s", permissionCode)
+		}
+
+		resourceName := parts[0]
+		actionCode := parts[1]
+
+		// Mapeo de códigos de acción en inglés a nombres en inglés
+		actionNameMap := map[string]string{
+			"manage":    "Manage",
+			"read":      "Read",
+			"create":    "Create",
+			"update":    "Update",
+			"delete":    "Delete",
+			"approve":   "Approve",
+			"reject":    "Reject",
+			"assign":    "Assign",
+			"schedule":  "Schedule",
+			"report":    "Report",
+			"configure": "Configure",
+			"audit":     "Audit",
+			"migrate":   "Migrate",
+		}
+
+		actionName, exists := actionNameMap[actionCode]
+		if !exists {
+			uc.logger.Error().Str("action_code", actionCode).Msg("❌ Código de acción no reconocido")
+			return fmt.Errorf("código de acción '%s' no reconocido", actionCode)
+		}
+
+		// Buscar el permiso por ResourceID y ActionID
+		permission, err := uc.permissionRepo.GetPermissionByResourceAndAction(resourceName, actionName)
 		if err != nil {
+			uc.logger.Error().Err(err).Str("permission_code", permissionCode).Msg("❌ Error al obtener permiso")
 			return err
 		}
+
 		permissionIDs = append(permissionIDs, permission.ID)
 	}
 
@@ -260,7 +298,7 @@ func (uc *SystemUseCase) AssignRolesToUser(userEmail string, roleCodes []string)
 	// Obtener los IDs de los roles
 	var roleIDs []uint
 	for _, roleCode := range roleCodes {
-		role, err := uc.roleRepo.GetByCode(roleCode)
+		role, err := uc.roleRepo.GetByName(roleCode)
 		if err != nil {
 			return err
 		}
@@ -291,14 +329,9 @@ func (uc *SystemUseCase) ExistsUserByEmail(email string) (bool, error) {
 	return uc.userRepo.ExistsByEmail(email)
 }
 
-// GetRoleByCode obtiene un rol por su código
-func (uc *SystemUseCase) GetRoleByCode(code string) (*models.Role, error) {
-	return uc.roleRepo.GetByCode(code)
-}
-
-// GetPermissionByCode obtiene un permiso por su código
-func (uc *SystemUseCase) GetPermissionByCode(code string) (*models.Permission, error) {
-	return uc.permissionRepo.GetByCode(code)
+// GetRoleByName obtiene un rol por su nombre
+func (uc *SystemUseCase) GetRoleByName(name string) (*models.Role, error) {
+	return uc.roleRepo.GetByName(name)
 }
 
 // GetAllReservationStatuses obtiene todos los estados de reserva

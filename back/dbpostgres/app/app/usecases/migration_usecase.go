@@ -54,6 +54,10 @@ func (uc *MigrationUseCase) MigrateDB() error {
 		&models.ReservationStatusHistory{},
 		&models.Room{},
 		&models.APIKey{},
+		&models.Resource{},
+		&models.BusinessTypeResourcePermitted{},
+		&models.BusinessResourceConfigured{},
+		&models.Action{},
 	); err != nil {
 		return err
 	}
@@ -77,10 +81,10 @@ func (uc *MigrationUseCase) InitializeSystemData() error {
 	scopeMigration := NewScopeMigrationUseCase(uc.scopeUseCase, uc.logger)
 	businessTypeMigration := NewBusinessTypeMigrationUseCase(uc.scopeUseCase, uc.logger)
 	roleMigration := NewRoleMigrationUseCase(uc.systemUseCase, uc.scopeUseCase, uc.logger)
-	permissionMigration := NewPermissionMigrationUseCase(uc.systemUseCase, uc.scopeUseCase, uc.logger)
-	testBusinessMigration := NewTestBusinessMigrationUseCase(uc.systemUseCase, uc.scopeUseCase, uc.logger)
+	permissionMigration := NewPermissionMigrationUseCase(uc.systemUseCase, uc.scopeUseCase, uc.db, uc.systemUseCase.permissionRepo, uc.logger) // AGREGAR: uc.systemUseCase.permissionRepo
+	testBusinessMigration := NewTestBusinessMigrationUseCase(uc.systemUseCase, uc.scopeUseCase, permissionMigration, uc.logger)                // AGREGAR: permissionMigration
 	reservationStatusMigration := NewReservationStatusMigrationUseCase(uc.systemUseCase, uc.logger)
-	rolePermissionMigration := NewRolePermissionMigrationUseCase(uc.systemUseCase, uc.logger)
+	rolePermissionMigration := NewRolePermissionMigrationUseCase(uc.systemUseCase, uc.db, uc.logger) // AGREGAR: uc.db
 	superAdminMigration := NewSuperAdminMigrationUseCase(uc.systemUseCase, uc.logger, uc.config)
 
 	// 1. Inicializar scopes (INDEPENDIENTE)

@@ -10,17 +10,18 @@ import (
 // PermissionRepository define las operaciones para permisos
 type PermissionRepository interface {
 	Create(permission *models.Permission) error
-	GetByCode(code string) (*models.Permission, error)
-	GetAll() ([]models.Permission, error)
-	ExistsByCode(code string) (bool, error)
+	GetByResourceActionScope(resourceID uint, actionID uint, scopeID uint) (*models.Permission, error)   // Nuevo método
+	GetPermissionByResourceAndAction(resourceName string, actionName string) (*models.Permission, error) // Nuevo método para mapeo de códigos antiguos
+	GetAll() ([]models.Permission, error)                                                                // Mantenido para compatibilidad // Mantenido para compatibilidad
+	ExistsByResourceActionScope(resourceID uint, actionID uint, scopeID uint) (bool, error)
 }
 
 // RoleRepository define las operaciones para roles
 type RoleRepository interface {
 	Create(role *models.Role) error
-	GetByCode(code string) (*models.Role, error)
+	GetByName(name string) (*models.Role, error)
 	GetAll() ([]models.Role, error)
-	ExistsByCode(code string) (bool, error)
+	ExistsByName(name string) (bool, error)
 	AssignPermissions(roleID uint, permissionIDs []uint) error
 }
 
