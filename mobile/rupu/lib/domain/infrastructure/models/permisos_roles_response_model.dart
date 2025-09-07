@@ -7,9 +7,9 @@ class PermisosRolesResponseModel {
 
   factory PermisosRolesResponseModel.fromJson(Map<String, dynamic> json) {
     return PermisosRolesResponseModel(
-      success: json['success'] as bool,
+      success: json['success'] as bool? ?? false,
       data: AccessControlDataModel.fromJson(
-        json['data'] as Map<String, dynamic>,
+        (json['data'] as Map?)?.cast<String, dynamic>() ?? const {},
       ),
     );
   }
@@ -20,52 +20,49 @@ class PermisosRolesResponseModel {
 }
 
 /// Modelo de datos para el campo "data" de la respuesta de control de acceso.
+/// Estructura esperada:
+/// {
+///   "is_super": true,
+///   "roles": [ { "id": 1, "name": "...", "description": "..." } ],
+///   "resources": [ { "resource": "business_types", "actions": ["Read","Manage"] } ]
+/// }
 class AccessControlDataModel {
   final bool isSuper;
-  final List<PermissionModel> permissions;
   final List<ResourceModel> resources;
   final List<RoleModel> roles;
 
   AccessControlDataModel({
     required this.isSuper,
-    required this.permissions,
     required this.resources,
     required this.roles,
   });
 
   factory AccessControlDataModel.fromJson(Map<String, dynamic> json) {
-    final permissionsJson = json['permissions'];
     final resourcesJson = json['resources'];
     final rolesJson = json['roles'];
-
-    final permissions = <PermissionModel>[];
-    if (permissionsJson is List) {
-      permissions.addAll(
-        permissionsJson.whereType<Map<String, dynamic>>().map(
-          PermissionModel.fromJson,
-        ),
-      );
-    }
 
     final resources = <ResourceModel>[];
     if (resourcesJson is List) {
       resources.addAll(
-        resourcesJson.whereType<Map<String, dynamic>>().map(
-          ResourceModel.fromJson,
-        ),
+        resourcesJson
+            .whereType<Map>()
+            .map((e) => ResourceModel.fromJson(e.cast<String, dynamic>()))
+            .toList(),
       );
     }
 
     final roles = <RoleModel>[];
     if (rolesJson is List) {
       roles.addAll(
-        rolesJson.whereType<Map<String, dynamic>>().map(RoleModel.fromJson),
+        rolesJson
+            .whereType<Map>()
+            .map((e) => RoleModel.fromJson(e.cast<String, dynamic>()))
+            .toList(),
       );
     }
 
     return AccessControlDataModel(
       isSuper: json['is_super'] as bool? ?? false,
-      permissions: permissions,
       resources: resources,
       roles: roles,
     );
@@ -74,123 +71,60 @@ class AccessControlDataModel {
   Map<String, dynamic> toJson() {
     return {
       'is_super': isSuper,
-      'permissions': permissions.map((e) => e.toJson()).toList(),
       'resources': resources.map((e) => e.toJson()).toList(),
       'roles': roles.map((e) => e.toJson()).toList(),
     };
   }
 }
 
-class PermissionModel {
-  final String action;
-  final String code;
-  final String description;
-  final int id;
-  final String name;
-  final String resource;
-  final String scope;
-
-  PermissionModel({
-    required this.action,
-    required this.code,
-    required this.description,
-    required this.id,
-    required this.name,
-    required this.resource,
-    required this.scope,
-  });
-
-  factory PermissionModel.fromJson(Map<String, dynamic> json) {
-    return PermissionModel(
-      action: json['action'] as String,
-      code: json['code'] as String,
-      description: json['description'] as String,
-      id: json['id'] as int,
-      name: json['name'] as String,
-      resource: json['resource'] as String,
-      scope: json['scope'] as String,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'action': action,
-      'code': code,
-      'description': description,
-      'id': id,
-      'name': name,
-      'resource': resource,
-      'scope': scope,
-    };
-  }
-}
-
+/// Modelo para cada recurso:
+/// { "resource": "business_types", "actions": ["Read","Manage"] }
 class ResourceModel {
-  final List<PermissionModel> actions;
   final String resource;
-  final String resourceName;
+  final List<String> actions;
 
-  ResourceModel({
-    required this.actions,
-    required this.resource,
-    required this.resourceName,
-  });
+  ResourceModel({required this.resource, required this.actions});
 
   factory ResourceModel.fromJson(Map<String, dynamic> json) {
+    final actionsJson = json['actions'];
+    final actions = <String>[];
+
+    if (actionsJson is List) {
+      for (final item in actionsJson) {
+        // Asegura conversión robusta a String
+        actions.add(item?.toString() ?? '');
+      }
+    }
+
     return ResourceModel(
-      actions: (json['actions'] as List<dynamic>)
-          .map((e) => PermissionModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      resource: json['resource'] as String,
-      resourceName: json['resource_name'] as String,
+      resource: json['resource']?.toString() ?? '',
+      actions: actions,
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'actions': actions.map((e) => e.toJson()).toList(),
-      'resource': resource,
-      'resource_name': resourceName,
-    };
+    return {'resource': resource, 'actions': actions};
   }
 }
 
+/// Modelo para cada rol:
+/// { "id": 1, "name": "Super Administrador", "description": "..." }
 class RoleModel {
-  final String code;
-  final String description;
   final int id;
-  final int level;
   final String name;
-  final String scope;
+  final String description;
 
-  RoleModel({
-    required this.code,
-    required this.description,
-    required this.id,
-    required this.level,
-    required this.name,
-    required this.scope,
-  });
+  RoleModel({required this.id, required this.name, required this.description});
 
   factory RoleModel.fromJson(Map<String, dynamic> json) {
     return RoleModel(
-      code: json['code'] as String,
-      description: json['description'] as String,
-      id: json['id'] as int,
-      level: json['level'] as int,
-      name: json['name'] as String,
-      scope: json['scope'] as String,
+      id: (json['id'] as num?)?.toInt() ?? 0,
+      name: json['name']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'code': code,
-      'description': description,
-      'id': id,
-      'level': level,
-      'name': name,
-      'scope': scope,
-    };
+    return {'id': id, 'name': name, 'description': description};
   }
 }

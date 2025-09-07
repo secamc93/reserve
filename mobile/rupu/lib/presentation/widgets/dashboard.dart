@@ -292,16 +292,16 @@ class StaffStatusCard extends StatelessWidget {
               ),
             ),
             const Spacer(),
-            Row(
-              children: [
-                FilledButton.tonal(
-                  onPressed: () {},
-                  child: const Text('Asignar'),
-                ),
-                const SizedBox(width: 8),
-                OutlinedButton(onPressed: () {}, child: const Text('Agenda')),
-              ],
-            ),
+            // Row(
+            //   children: [
+            //     FilledButton.tonal(
+            //       onPressed: () {},
+            //       child: const Text('Asignar'),
+            //     ),
+            //     const SizedBox(width: 8),
+            //     OutlinedButton(onPressed: () {}, child: const Text('Agenda')),
+            //   ],
+            // ),
           ],
         ),
       ),

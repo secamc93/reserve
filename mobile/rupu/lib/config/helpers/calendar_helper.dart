@@ -137,15 +137,15 @@ bool isValidEmail(String email) {
 }
 
 // ——— Estado → tono
-enum _Tone { success, warning, danger, info }
+enum Tone { success, warning, danger, info }
 
-_Tone toneFor(String raw) {
+Tone toneFor(String raw) {
   final s = raw.toLowerCase();
-  if (s.contains('confirm')) return _Tone.info;
-  if (s.contains('pend')) return _Tone.warning;
-  if (s.contains('cancel')) return _Tone.danger;
-  if (s.contains('complet')) return _Tone.success;
-  return _Tone.info;
+  if (s.contains('confirm')) return Tone.info;
+  if (s.contains('pend')) return Tone.warning;
+  if (s.contains('cancel')) return Tone.danger;
+  if (s.contains('complet')) return Tone.success;
+  return Tone.info;
 }
 
 String normalizeStatus(String raw) {
@@ -171,14 +171,14 @@ String safeInitial(String name) {
 }
 
 // ——— Notes parser "Negocio: X • Mesa: Y • Tel: Z"
-class _Meta {
+class Meta {
   final String? negocio;
   final String? mesa;
   final String? tel;
-  const _Meta({this.negocio, this.mesa, this.tel});
+  const Meta({this.negocio, this.mesa, this.tel});
 }
 
-_Meta parseNotes(String notes) {
+Meta parseNotes(String notes) {
   String? negocio, mesa, tel;
   for (final raw in notes.split('•')) {
     final s = raw.trim();
@@ -190,119 +190,5 @@ _Meta parseNotes(String notes) {
       tel = s.substring(4).trim();
     }
   }
-  return _Meta(negocio: negocio, mesa: mesa, tel: tel);
-}
-
-// ——— Pill de estado suave
-class SoftStatusPill extends StatelessWidget {
-  const SoftStatusPill({required this.text, required this.tone});
-  final String text;
-  final _Tone tone;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
-    Color fg;
-    switch (tone) {
-      case _Tone.success:
-        fg = const Color(0xFF0F5132);
-        break;
-      case _Tone.warning:
-        fg = const Color(0xFF7A4F01);
-        break;
-      case _Tone.danger:
-        fg = cs.error;
-        break;
-      case _Tone.info:
-        fg = const Color(0xFF084298);
-        break;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: ShapeDecoration(
-        color: fg.withOpacity(.12),
-        shape: StadiumBorder(side: BorderSide(color: fg.withOpacity(.22))),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(fontWeight: FontWeight.w800, color: fg, fontSize: 12),
-      ),
-    );
-  }
-}
-
-// ——— Chip con icono (fecha/hora/mesa)
-class IconChip extends StatelessWidget {
-  const IconChip({required this.icon, required this.label});
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: cs.outlineVariant),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: cs.onSurfaceVariant),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: Theme.of(
-              context,
-            ).textTheme.labelMedium!.copyWith(fontWeight: FontWeight.w700),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ——— Avatar con inicial
-class InitialAvatar extends StatelessWidget {
-  const InitialAvatar({required this.initial, this.size = 48});
-  final String initial;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: LinearGradient(
-          colors: [cs.primary, cs.secondary],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        border: Border.all(color: Colors.white.withOpacity(.95), width: 3),
-        boxShadow: [
-          BoxShadow(
-            color: cs.primary.withOpacity(.20),
-            blurRadius: 10,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        initial,
-        style: Theme.of(context).textTheme.titleMedium!.copyWith(
-          color: Colors.white,
-          fontWeight: FontWeight.w900,
-          fontSize: 18,
-        ),
-      ),
-    );
-  }
+  return Meta(negocio: negocio, mesa: mesa, tel: tel);
 }

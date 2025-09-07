@@ -9,33 +9,13 @@ class PermisosRolesMapper {
   static RolesPermisos _fromDataModel(AccessControlDataModel m) =>
       RolesPermisos(
         isSuper: m.isSuper,
-        permissions: m.permissions.map(_permissionFromModel).toList(),
-        resources: m.resources.map(_resourceFromModel).toList(),
         roles: m.roles.map(_roleFromModel).toList(),
+        resources: m.resources.map(_resourceFromModel).toList(),
       );
 
-  static Permission _permissionFromModel(PermissionModel m) => Permission(
-    action: m.action,
-    code: m.code,
-    description: m.description,
-    id: m.id,
-    name: m.name,
-    resource: m.resource,
-    scope: m.scope,
-  );
+  static Role _roleFromModel(RoleModel m) =>
+      Role(id: m.id, name: m.name, description: m.description);
 
-  static Role _roleFromModel(RoleModel m) => Role(
-    code: m.code,
-    description: m.description,
-    id: m.id,
-    level: m.level,
-    name: m.name,
-    scope: m.scope,
-  );
-
-  static Resource _resourceFromModel(ResourceModel m) => Resource(
-    actions: m.actions.map(_permissionFromModel).toList(),
-    resource: m.resource,
-    resourceName: m.resourceName,
-  );
+  static Resource _resourceFromModel(ResourceModel m) =>
+      Resource(resource: m.resource, actions: m.actions);
 }

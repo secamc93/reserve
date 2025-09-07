@@ -1,3 +1,6 @@
+export 'package:rupu/presentation/widgets/shared/icon_chip.dart';
+export 'package:rupu/presentation/widgets/shared/initial_avatar.dart';
+export 'package:rupu/presentation/widgets/shared/soft_status_pill.dart';
 export 'package:rupu/presentation/widgets/shared/custom_bottom_navigation.dart';
 export 'package:rupu/presentation/widgets/side_menu.dart';
 export 'package:rupu/presentation/widgets/shared/custom_field.dart';

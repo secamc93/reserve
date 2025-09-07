@@ -7,10 +7,14 @@ import 'package:intl/intl.dart';
 import 'package:rupu/config/helpers/calendar_helper.dart';
 import 'package:rupu/presentation/views/profile/perfil_controller.dart';
 import 'package:rupu/presentation/views/reserve/data_time_tile.dart';
+import 'package:rupu/presentation/widgets/shared/icon_chip.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 import 'package:rupu/presentation/views/reserve/reserves_controller.dart';
 import 'package:rupu/presentation/views/reserve/update_reserve_view.dart';
+
+import '../../widgets/shared/initial_avatar.dart';
+import '../../widgets/shared/soft_status_pill.dart';
 
 class CalendarViewReserve extends StatefulWidget {
   const CalendarViewReserve({super.key, required this.pageIndex});
@@ -1219,7 +1223,7 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
                       width: 32,
                       height: 32,
                       decoration: BoxDecoration(
-                        color: cs.surfaceContainerHighest.withOpacity(.5),
+                        color: cs.surfaceContainerHighest.withValues(alpha: .5),
                         border: Border.all(color: cs.outlineVariant),
                         shape: BoxShape.circle,
                       ),

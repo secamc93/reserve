@@ -352,6 +352,7 @@ class _UpdateReserveViewState extends State<UpdateReserveView> {
     if (_statusController.estados.isEmpty) {
       await _statusController.cargarEstados();
     }
+    
     final selected = await showModalBottomSheet<ReserveStatus>(
       context: context,
       builder: (_) {

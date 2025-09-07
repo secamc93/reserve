@@ -24,12 +24,23 @@ class HomeController extends GetxController {
 
   bool get isSuper => rolesPermisos.value?.isSuper ?? false;
 
+  /// Verifica si existe el `action` permitido.
+  /// - Si [resource] es null, busca el `action` en cualquier recurso.
+  /// - Si [resource] no es null, busca primero el recurso y luego el `action`.
+  /// - Si el usuario es super, permite todo.
   bool hasPermission({required String action, String? resource}) {
     final rp = rolesPermisos.value;
     if (rp == null) return false;
-    return rp.permissions.any(
-      (p) => p.action == action && (resource == null || p.resource == resource),
-    );
+    if (rp.isSuper) return true;
+
+    if (resource == null) {
+      return rp.resources.any((r) => r.actions.contains(action));
+    }
+
+    final res = rp.resources.firstWhereOrNull((r) => r.resource == resource);
+    if (res == null) return false;
+
+    return res.actions.contains(action);
   }
 
   @override
@@ -65,7 +76,7 @@ class HomeController extends GetxController {
     final primary = businesses.first.primaryColor;
     final secondary = businesses.first.secondaryColor;
 
-    // Lo programamos post-frame para no hacerlo en medio de un build.
+    // Post-frame para no hacerlo en medio de un build.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       AppTheme.instance.updateColors(primary, secondary);
     });
