@@ -58,3 +58,11 @@ class ReserveUpdateBinding {
     }
   }
 }
+
+class ClientsBinding {
+  static void register() {
+    if (!Get.isRegistered<ClientsController>()) {
+      Get.put(ClientsController());
+    }
+  }
+}

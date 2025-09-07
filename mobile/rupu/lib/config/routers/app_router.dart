@@ -63,6 +63,15 @@ final appRouter = GoRouter(
           },
         ),
         GoRoute(
+          path: '/home/:page/clients',
+          name: ClientsView.name,
+          builder: (context, state) {
+            ClientsBinding.register();
+            final page = int.parse(state.pathParameters['page']!);
+            return ClientsView(pageIndex: page);
+          },
+        ),
+        GoRoute(
           path: '/home/:page/reserve/new',
           name: 'reserve_new',
           builder: (context, state) {

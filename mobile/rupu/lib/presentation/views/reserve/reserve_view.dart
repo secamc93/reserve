@@ -277,7 +277,10 @@ class ReserveView extends GetView<ReserveController> {
                   pathParameters: {'page': '$pageIndex'},
                 ),
                 onCheckIn: () {}, // TODO: tu flujo de check-in
-                onClients: () {}, // TODO: navegación a clientes
+                onClients: () => context.pushNamed(
+                  ClientsView.name,
+                  pathParameters: {'page': '$pageIndex'},
+                ),
               ),
               const SizedBox(height: 16),
 
