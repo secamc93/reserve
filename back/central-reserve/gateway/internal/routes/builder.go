@@ -69,6 +69,7 @@ func registerProxyGroup(r *gin.Engine, prefix string, target string, logger log.
 		}
 		c.Request.URL.Path = newPath
 		proxy.ServeHTTP(c.Writer, c.Request)
+		c.Abort()
 	}
 
 	group := r.Group(prefix)

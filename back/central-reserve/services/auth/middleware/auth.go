@@ -155,21 +155,27 @@ func AutoAuthMiddleware(jwtService domain.IJWTService, authUseCase usecaseauth.I
 		apiKey := extractAPIKey(c)
 
 		if authHeader != "" {
-			// Usar JWT middleware
-			authMiddleware := AuthMiddleware(jwtService, logger)
-			authMiddleware(c)
-		} else if apiKey != "" {
-			// Usar API Key middleware
-			apiKeyMiddleware := APIKeyMiddleware(authUseCase, logger)
-			apiKeyMiddleware(c)
-		} else {
-			logger.Error().Msg("No se encontró método de autenticación")
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"error": "Se requiere autenticación (JWT o API Key)",
-			})
-			c.Abort()
+			AuthMiddleware(jwtService, logger)(c)
+			if c.IsAborted() {
+				return
+			}
+			c.Next()
 			return
 		}
+		if apiKey != "" {
+			APIKeyMiddleware(authUseCase, logger)(c)
+			if c.IsAborted() {
+				return
+			}
+			c.Next()
+			return
+		}
+
+		logger.Error().Msg("No se encontró método de autenticación")
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Se requiere autenticación (JWT o API Key)",
+		})
+		c.Abort()
 	}
 }
 
