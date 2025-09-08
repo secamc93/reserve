@@ -1,14 +1,14 @@
 package mapper
 
 import (
-	"central_reserve/internal/domain/dtos"
-	"central_reserve/internal/infra/primary/http2/handlers/authhandler/request"
-	"central_reserve/internal/infra/primary/http2/handlers/authhandler/response"
+	"central_reserve/services/auth/internal/domain"
+	"central_reserve/services/auth/internal/infra/primary/controllers/authhandler/request"
+	"central_reserve/services/auth/internal/infra/primary/controllers/authhandler/response"
 )
 
 // ToGenerateAPIKeyRequest convierte el request HTTP a DTO de dominio
-func ToGenerateAPIKeyRequest(req request.GenerateAPIKeyRequest, requesterID uint) dtos.GenerateAPIKeyRequest {
-	return dtos.GenerateAPIKeyRequest{
+func ToGenerateAPIKeyRequest(req request.GenerateAPIKeyRequest, requesterID uint) domain.GenerateAPIKeyRequest {
+	return domain.GenerateAPIKeyRequest{
 		UserID:      req.UserID,
 		BusinessID:  req.BusinessID,
 		Name:        req.Name,
@@ -18,7 +18,7 @@ func ToGenerateAPIKeyRequest(req request.GenerateAPIKeyRequest, requesterID uint
 }
 
 // ToGenerateAPIKeyResponse convierte el DTO de dominio a response HTTP
-func ToGenerateAPIKeyResponse(dto *dtos.GenerateAPIKeyResponse) response.GenerateAPIKeyResponse {
+func ToGenerateAPIKeyResponse(dto *domain.GenerateAPIKeyResponse) response.GenerateAPIKeyResponse {
 	return response.GenerateAPIKeyResponse{
 		Success:     dto.Success,
 		Message:     dto.Message,

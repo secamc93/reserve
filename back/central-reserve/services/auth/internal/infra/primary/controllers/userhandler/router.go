@@ -1,15 +1,15 @@
 package userhandler
 
 import (
-	"central_reserve/internal/domain/ports"
-	"central_reserve/internal/infra/primary/http2/middleware"
-	"central_reserve/internal/pkg/log"
+	"central_reserve/services/auth/internal/domain"
+	"central_reserve/services/auth/middleware"
+	"central_reserve/shared/log"
 
 	"github.com/gin-gonic/gin"
 )
 
 // RegisterRoutes registra las rutas del handler de usuarios
-func RegisterRoutes(router *gin.RouterGroup, handler IUserHandler, jwtService ports.IJWTService, logger log.ILogger) {
+func RegisterRoutes(router *gin.RouterGroup, handler IUserHandler, jwtService domain.IJWTService, logger log.ILogger) {
 	// Grupo de rutas para usuarios (protegidas con JWT)
 	usersGroup := router.Group("/users")
 	usersGroup.Use(middleware.AuthMiddleware(jwtService, logger))

@@ -1,12 +1,12 @@
 package mapper
 
 import (
-	"central_reserve/internal/domain/dtos"
-	"central_reserve/internal/infra/primary/http2/handlers/authhandler/response"
+	"central_reserve/services/auth/internal/domain"
+	"central_reserve/services/auth/internal/infra/primary/controllers/authhandler/response"
 )
 
 // ToValidateAPIKeyResponse convierte el DTO del dominio a la respuesta HTTP
-func ToValidateAPIKeyResponse(dto *dtos.ValidateAPIKeyResponse) response.ValidateAPIKeyResponse {
+func ToValidateAPIKeyResponse(dto *domain.ValidateAPIKeyResponse) response.ValidateAPIKeyResponse {
 	return response.ValidateAPIKeyResponse{
 		Success:    dto.Success,
 		Message:    dto.Message,
@@ -19,7 +19,7 @@ func ToValidateAPIKeyResponse(dto *dtos.ValidateAPIKeyResponse) response.Validat
 }
 
 // ToValidateAPIKeySuccessResponse convierte el DTO del dominio a la respuesta exitosa HTTP
-func ToValidateAPIKeySuccessResponse(dto *dtos.ValidateAPIKeyResponse) response.ValidateAPIKeySuccessResponse {
+func ToValidateAPIKeySuccessResponse(dto *domain.ValidateAPIKeyResponse) response.ValidateAPIKeySuccessResponse {
 	return response.ValidateAPIKeySuccessResponse{
 		Success: true,
 		Data:    ToValidateAPIKeyResponse(dto),

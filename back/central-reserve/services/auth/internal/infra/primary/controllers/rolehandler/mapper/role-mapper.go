@@ -1,20 +1,20 @@
 package mapper
 
 import (
-	"central_reserve/internal/domain/dtos"
-	"central_reserve/internal/infra/primary/http2/handlers/rolehandler/request"
-	"central_reserve/internal/infra/primary/http2/handlers/rolehandler/response"
+	"central_reserve/services/auth/internal/domain"
+	"central_reserve/services/auth/internal/infra/primary/controllers/rolehandler/request"
+	"central_reserve/services/auth/internal/infra/primary/controllers/rolehandler/response"
 )
 
 // ToRoleFilters convierte GetRolesByLevelRequest a filtros del dominio
-func ToRoleFilters(req request.GetRolesByLevelRequest) dtos.RoleFilters {
-	return dtos.RoleFilters{
+func ToRoleFilters(req request.GetRolesByLevelRequest) domain.RoleFilters {
+	return domain.RoleFilters{
 		Level: req.Level,
 	}
 }
 
 // ToRoleResponse convierte RoleDTO a RoleResponse
-func ToRoleResponse(dto dtos.RoleDTO) response.RoleResponse {
+func ToRoleResponse(dto domain.RoleDTO) response.RoleResponse {
 	return response.RoleResponse{
 		ID:          dto.ID,
 		Name:        dto.Name,
@@ -29,7 +29,7 @@ func ToRoleResponse(dto dtos.RoleDTO) response.RoleResponse {
 }
 
 // ToRoleListResponse convierte un slice de RoleDTO a RoleListResponse
-func ToRoleListResponse(roles []dtos.RoleDTO) response.RoleListResponse {
+func ToRoleListResponse(roles []domain.RoleDTO) response.RoleListResponse {
 	roleResponses := make([]response.RoleResponse, len(roles))
 	for i, role := range roles {
 		roleResponses[i] = ToRoleResponse(role)

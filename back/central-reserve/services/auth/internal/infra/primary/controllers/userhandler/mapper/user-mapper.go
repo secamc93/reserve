@@ -1,14 +1,14 @@
 package mapper
 
 import (
-	"central_reserve/internal/domain/dtos"
-	"central_reserve/internal/infra/primary/http2/handlers/userhandler/request"
-	"central_reserve/internal/infra/primary/http2/handlers/userhandler/response"
+	"central_reserve/services/auth/internal/domain"
+	"central_reserve/services/auth/internal/infra/primary/controllers/userhandler/request"
+	"central_reserve/services/auth/internal/infra/primary/controllers/userhandler/response"
 )
 
 // ToUserFilters convierte GetUsersRequest a UserFilters del dominio
-func ToUserFilters(req request.GetUsersRequest) dtos.UserFilters {
-	return dtos.UserFilters{
+func ToUserFilters(req request.GetUsersRequest) domain.UserFilters {
+	return domain.UserFilters{
 		Page:       req.Page,
 		PageSize:   req.PageSize,
 		Name:       req.Name,
@@ -24,8 +24,8 @@ func ToUserFilters(req request.GetUsersRequest) dtos.UserFilters {
 }
 
 // ToCreateUserDTO convierte CreateUserRequest a CreateUserDTO del dominio
-func ToCreateUserDTO(req request.CreateUserRequest) dtos.CreateUserDTO {
-	return dtos.CreateUserDTO{
+func ToCreateUserDTO(req request.CreateUserRequest) domain.CreateUserDTO {
+	return domain.CreateUserDTO{
 		Name:        req.Name,
 		Email:       req.Email,
 		Phone:       req.Phone,
@@ -38,8 +38,8 @@ func ToCreateUserDTO(req request.CreateUserRequest) dtos.CreateUserDTO {
 }
 
 // ToUpdateUserDTO convierte UpdateUserRequest a UpdateUserDTO del dominio
-func ToUpdateUserDTO(req request.UpdateUserRequest) dtos.UpdateUserDTO {
-	return dtos.UpdateUserDTO{
+func ToUpdateUserDTO(req request.UpdateUserRequest) domain.UpdateUserDTO {
+	return domain.UpdateUserDTO{
 		Name:        req.Name,
 		Email:       req.Email,
 		Password:    req.Password,
@@ -53,7 +53,7 @@ func ToUpdateUserDTO(req request.UpdateUserRequest) dtos.UpdateUserDTO {
 }
 
 // ToUserResponse convierte UserDTO a UserResponse
-func ToUserResponse(dto dtos.UserDTO) response.UserResponse {
+func ToUserResponse(dto domain.UserDTO) response.UserResponse {
 	roles := make([]response.RoleInfo, len(dto.Roles))
 	for i, role := range dto.Roles {
 		roles[i] = response.RoleInfo{
@@ -110,7 +110,7 @@ func ToUserResponse(dto dtos.UserDTO) response.UserResponse {
 }
 
 // ToUserListResponse convierte un UserListDTO a UserListResponse
-func ToUserListResponse(userListDTO *dtos.UserListDTO) response.UserListResponse {
+func ToUserListResponse(userListDTO *domain.UserListDTO) response.UserListResponse {
 	userResponses := make([]response.UserResponse, len(userListDTO.Users))
 	for i, user := range userListDTO.Users {
 		userResponses[i] = ToUserResponse(user)

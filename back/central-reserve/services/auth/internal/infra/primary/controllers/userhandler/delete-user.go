@@ -1,8 +1,8 @@
 package userhandler
 
 import (
-	"central_reserve/internal/infra/primary/http2/handlers/userhandler/request"
-	"central_reserve/internal/infra/primary/http2/handlers/userhandler/response"
+	"central_reserve/services/auth/internal/infra/primary/controllers/userhandler/request"
+	"central_reserve/services/auth/internal/infra/primary/controllers/userhandler/response"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

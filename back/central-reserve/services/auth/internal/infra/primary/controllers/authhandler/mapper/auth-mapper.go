@@ -1,12 +1,12 @@
 package mapper
 
 import (
-	"central_reserve/internal/domain/dtos"
-	"central_reserve/internal/infra/primary/http2/handlers/authhandler/response"
+	"central_reserve/services/auth/internal/domain"
+	"central_reserve/services/auth/internal/infra/primary/controllers/authhandler/response"
 )
 
 // ToLoginResponse convierte el dominio LoginResponse a response.LoginResponse
-func ToLoginResponse(domainResponse *dtos.LoginResponse) *response.LoginResponse {
+func ToLoginResponse(domainResponse *domain.LoginResponse) *response.LoginResponse {
 	if domainResponse == nil {
 		return nil
 	}
@@ -60,7 +60,7 @@ func ToLoginResponse(domainResponse *dtos.LoginResponse) *response.LoginResponse
 }
 
 // ToUserRolesPermissionsResponse convierte el dominio UserRolesPermissionsResponse a response.UserRolesPermissionsResponse
-func ToUserRolesPermissionsResponse(domainResponse *dtos.UserRolesPermissionsResponse) response.UserRolesPermissionsResponse {
+func ToUserRolesPermissionsResponse(domainResponse *domain.UserRolesPermissionsResponse) response.UserRolesPermissionsResponse {
 	if domainResponse == nil {
 		return response.UserRolesPermissionsResponse{}
 	}
@@ -75,7 +75,7 @@ func ToUserRolesPermissionsResponse(domainResponse *dtos.UserRolesPermissionsRes
 }
 
 // toRoleInfoSlice convierte un slice de dtos.RoleInfo a response.RoleInfo
-func toRoleInfoSlice(domainRoles []dtos.RoleInfo) []response.RoleInfo {
+func toRoleInfoSlice(domainRoles []domain.RoleInfo) []response.RoleInfo {
 	if domainRoles == nil {
 		return nil
 	}
@@ -92,7 +92,7 @@ func toRoleInfoSlice(domainRoles []dtos.RoleInfo) []response.RoleInfo {
 }
 
 // groupPermissionsByResource agrupa los permisos por recurso
-func groupPermissionsByResource(permissions []dtos.PermissionInfo) []response.ResourcePermissions {
+func groupPermissionsByResource(permissions []domain.PermissionInfo) []response.ResourcePermissions {
 	if permissions == nil {
 		return nil
 	}

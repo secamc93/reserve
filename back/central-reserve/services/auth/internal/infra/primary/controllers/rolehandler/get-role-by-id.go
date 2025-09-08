@@ -1,9 +1,9 @@
 package rolehandler
 
 import (
-	"central_reserve/internal/infra/primary/http2/handlers/rolehandler/mapper"
-	"central_reserve/internal/infra/primary/http2/handlers/rolehandler/request"
-	"central_reserve/internal/infra/primary/http2/handlers/rolehandler/response"
+	"central_reserve/services/auth/internal/infra/primary/controllers/rolehandler/mapper"
+	"central_reserve/services/auth/internal/infra/primary/controllers/rolehandler/request"
+	"central_reserve/services/auth/internal/infra/primary/controllers/rolehandler/response"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

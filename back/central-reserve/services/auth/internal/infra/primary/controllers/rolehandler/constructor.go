@@ -1,8 +1,8 @@
 package rolehandler
 
 import (
-	"central_reserve/internal/app/usecaserole"
-	"central_reserve/internal/pkg/log"
+	"central_reserve/services/auth/internal/app/usecaserole"
+	"central_reserve/shared/log"
 
 	"github.com/gin-gonic/gin"
 )

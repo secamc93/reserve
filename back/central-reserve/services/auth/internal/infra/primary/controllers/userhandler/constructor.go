@@ -1,8 +1,8 @@
 package userhandler
 
 import (
-	"central_reserve/internal/app/usecaseuser"
-	"central_reserve/internal/pkg/log"
+	"central_reserve/services/auth/internal/app/usecaseuser"
+	"central_reserve/shared/log"
 
 	"github.com/gin-gonic/gin"
 )
