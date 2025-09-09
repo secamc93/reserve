@@ -1,14 +1,14 @@
 package usecasebusiness
 
 import (
-	"central_reserve/internal/domain/dtos"
+	"central_reserve/services/business/internal/domain"
 	"context"
 	"fmt"
 	"strings"
 )
 
 // GetBusinesses obtiene todos los negocios
-func (uc *BusinessUseCase) GetBusinesses(ctx context.Context) ([]dtos.BusinessResponse, error) {
+func (uc *BusinessUseCase) GetBusinesses(ctx context.Context) ([]domain.BusinessResponse, error) {
 	uc.log.Info().Msg("Obteniendo negocios")
 
 	businesses, err := uc.repository.GetBusinesses(ctx)
@@ -18,7 +18,7 @@ func (uc *BusinessUseCase) GetBusinesses(ctx context.Context) ([]dtos.BusinessRe
 	}
 
 	// Convertir entidades a DTOs
-	response := make([]dtos.BusinessResponse, len(businesses))
+	response := make([]domain.BusinessResponse, len(businesses))
 	for i, business := range businesses {
 		fullLogoURL := business.LogoURL
 		if fullLogoURL != "" && !strings.HasPrefix(fullLogoURL, "http") {
@@ -35,11 +35,11 @@ func (uc *BusinessUseCase) GetBusinesses(ctx context.Context) ([]dtos.BusinessRe
 			}
 		}
 
-		response[i] = dtos.BusinessResponse{
+		response[i] = domain.BusinessResponse{
 			ID:   business.ID,
 			Name: business.Name,
 			Code: business.Code,
-			BusinessType: dtos.BusinessTypeResponse{
+			BusinessType: domain.BusinessTypeResponse{
 				ID: business.BusinessTypeID, // Nota: necesitaríamos obtener el BusinessType completo
 			},
 			Timezone:           business.Timezone,

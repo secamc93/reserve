@@ -14,6 +14,7 @@ type IRoleHandler interface {
 	GetRolesByScopeHandler(c *gin.Context)
 	GetRolesByLevelHandler(c *gin.Context)
 	GetSystemRolesHandler(c *gin.Context)
+	RegisterRoutes(router *gin.RouterGroup, handler IRoleHandler, logger log.ILogger)
 }
 
 // RoleHandler maneja las solicitudes HTTP para roles

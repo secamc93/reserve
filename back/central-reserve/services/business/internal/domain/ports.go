@@ -1,6 +1,9 @@
 package domain
 
-import "context"
+import (
+	"context"
+	"mime/multipart"
+)
 
 // IBusinessTypeRepository define las operaciones para tipos de negocio
 type IBusinessTypeRepository interface {
@@ -22,4 +25,12 @@ type IBusinessRepository interface {
 	UpdateBusiness(ctx context.Context, id uint, business Business) (string, error)
 	DeleteBusiness(ctx context.Context, id uint) (string, error)
 	GetBusinesResourcesConfigured(ctx context.Context, businessID uint) ([]BusinessResourceConfigured, error)
+}
+
+// IS3Service define las operaciones de almacenamiento en S3
+type IS3Service interface {
+	UploadImage(ctx context.Context, file *multipart.FileHeader, folder string) (string, error) // Retorna path relativo
+	GetImageURL(filename string) string                                                         // Genera URL completa
+	DeleteImage(ctx context.Context, filename string) error
+	ImageExists(ctx context.Context, filename string) (bool, error)
 }

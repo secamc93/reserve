@@ -1,14 +1,14 @@
 package usecasebusiness
 
 import (
-	"central_reserve/internal/domain/dtos"
+	"central_reserve/services/business/internal/domain"
 	"context"
 	"fmt"
 	"strings"
 )
 
 // GetBusinessByID obtiene un negocio por ID
-func (uc *BusinessUseCase) GetBusinessByID(ctx context.Context, id uint) (*dtos.BusinessResponse, error) {
+func (uc *BusinessUseCase) GetBusinessByID(ctx context.Context, id uint) (*domain.BusinessResponse, error) {
 	uc.log.Info().Uint("id", id).Msg("Obteniendo negocio por ID")
 
 	business, err := uc.repository.GetBusinessByID(ctx, id)
@@ -39,11 +39,11 @@ func (uc *BusinessUseCase) GetBusinessByID(ctx context.Context, id uint) (*dtos.
 		}
 	}
 
-	response := &dtos.BusinessResponse{
+	response := &domain.BusinessResponse{
 		ID:   business.ID,
 		Name: business.Name,
 		Code: business.Code,
-		BusinessType: dtos.BusinessTypeResponse{
+		BusinessType: domain.BusinessTypeResponse{
 			ID: business.BusinessTypeID, // Nota: necesitaríamos obtener el BusinessType completo
 		},
 		Timezone:           business.Timezone,

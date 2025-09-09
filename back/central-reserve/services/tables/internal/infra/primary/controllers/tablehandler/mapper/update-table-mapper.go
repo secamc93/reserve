@@ -1,13 +1,13 @@
 package mapper
 
 import (
-	"central_reserve/internal/domain/entities"
-	"central_reserve/internal/infra/primary/http2/handlers/tablehandler/request"
+	"central_reserve/services/tables/internal/domain"
+	"central_reserve/services/tables/internal/infra/primary/controllers/tablehandler/request"
 )
 
 // UpdateTableToDomain convierte un request.UpdateTable a entities.Table
-func UpdateTableToDomain(u request.UpdateTable) entities.Table {
-	table := entities.Table{}
+func UpdateTableToDomain(u request.UpdateTable) domain.Table {
+	table := domain.Table{}
 
 	if u.BusinessID != nil {
 		table.BusinessID = *u.BusinessID

@@ -1,13 +1,13 @@
 package mapper
 
 import (
-	"central_reserve/internal/domain/entities"
-	"central_reserve/internal/infra/primary/http2/handlers/roomhandler/request"
+	"central_reserve/services/rooms/internal/domain"
+	"central_reserve/services/rooms/internal/infra/primary/controllers/roomhandler/request"
 )
 
 // RoomToDomain convierte un request.Room a entities.Room
-func RoomToDomain(r request.Room) entities.Room {
-	return entities.Room{
+func RoomToDomain(r request.Room) domain.Room {
+	return domain.Room{
 		BusinessID:  r.BusinessID,
 		Name:        r.Name,
 		Code:        r.Code,
@@ -20,8 +20,8 @@ func RoomToDomain(r request.Room) entities.Room {
 }
 
 // UpdateRoomToDomain convierte un request.UpdateRoom a entities.Room
-func UpdateRoomToDomain(r request.UpdateRoom) entities.Room {
-	return entities.Room{
+func UpdateRoomToDomain(r request.UpdateRoom) domain.Room {
+	return domain.Room{
 		BusinessID:  r.BusinessID,
 		Name:        r.Name,
 		Code:        r.Code,

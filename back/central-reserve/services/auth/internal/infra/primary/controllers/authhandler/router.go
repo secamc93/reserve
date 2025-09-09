@@ -1,28 +1,19 @@
 package authhandler
 
 import (
-	"central_reserve/services/auth/internal/domain"
 	"central_reserve/services/auth/middleware"
 	"central_reserve/shared/log"
 
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterRoutes(v1Group *gin.RouterGroup, handler IAuthHandler, jwtService domain.IJWTService, logger log.ILogger) {
-	// Crear el subgrupo /auth dentro de /api/v1
+func (h *AuthHandler) RegisterRoutes(v1Group *gin.RouterGroup, handler IAuthHandler, logger log.ILogger) {
 	authGroup := v1Group.Group("/auth")
 	{
-		// Rutas públicas
 		authGroup.POST("/login", handler.LoginHandler)
+		authGroup.GET("/verify", middleware.JWT(), handler.VerifyHandler)
+		authGroup.GET("/roles-permissions", middleware.JWT(), handler.GetUserRolesPermissionsHandler)
+		authGroup.POST("/change-password", middleware.JWT(), handler.ChangePasswordHandler)
 
-		// Rutas protegidas (requieren JWT)
-		protected := authGroup.Group("/")
-		protected.Use(middleware.AuthMiddleware(jwtService, logger))
-		{
-			protected.GET("/verify", handler.VerifyHandler)
-			protected.GET("/roles-permissions", handler.GetUserRolesPermissionsHandler)
-			protected.POST("/change-password", handler.ChangePasswordHandler)
-			// protected.POST("/generate-api-key", handler.GenerateAPIKeyHandler)
-		}
 	}
 }

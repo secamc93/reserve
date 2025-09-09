@@ -3,12 +3,61 @@ package middleware
 import (
 	"central_reserve/services/auth/internal/app/usecaseauth"
 	"central_reserve/services/auth/internal/domain"
+	"central_reserve/shared/env"
 	"central_reserve/shared/log"
 	"net/http"
 	"strings"
 
+	sharedjwt "central_reserve/shared/jwt"
+
 	"github.com/gin-gonic/gin"
 )
+
+// Adaptador: shared/jwt -> domain.IJWTService
+// Permite inicializar JWT en este paquete sin acoplar dominio
+type jwtAdapter struct {
+	impl sharedjwt.IJWTService
+}
+
+func (a jwtAdapter) GenerateToken(userID uint, email string, roles []string, businessID uint) (string, error) {
+	return a.impl.GenerateToken(userID, email, roles, businessID)
+}
+
+func (a jwtAdapter) ValidateToken(tokenString string) (*domain.JWTClaims, error) {
+	claims, err := a.impl.ValidateToken(tokenString)
+	if err != nil {
+		return nil, err
+	}
+	return &domain.JWTClaims{
+		UserID:     claims.UserID,
+		Email:      claims.Email,
+		Roles:      claims.Roles,
+		BusinessID: claims.BusinessID,
+	}, nil
+}
+
+func (a jwtAdapter) RefreshToken(tokenString string) (string, error) {
+	return a.impl.RefreshToken(tokenString)
+}
+
+// InitFromEnv inicializa el JWT y configura el middleware global
+func InitFromEnv(cfg env.IConfig, logger log.ILogger) {
+	if logger == nil {
+		logger = log.New()
+	}
+	if cfg == nil {
+		cfg = env.New(logger)
+	}
+	secret := cfg.Get("JWT_SECRET")
+	shared := sharedjwt.New(secret)
+	Configure(jwtAdapter{impl: shared}, nil, logger)
+}
+
+// GetJWTService retorna el servicio JWT configurado globalmente
+func GetJWTService() domain.IJWTService {
+	ensureInitialized()
+	return defaultJWTService
+}
 
 type AuthType string
 

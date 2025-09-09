@@ -1,12 +1,12 @@
 package usecaseclient
 
 import (
-	"central_reserve/internal/domain/entities"
+	"central_reserve/services/customer/internal/domain"
 	"context"
 )
 
 // GetClients obtiene todos los clientes
-func (u *ClientUseCase) GetClients(ctx context.Context) ([]entities.Client, error) {
+func (u *ClientUseCase) GetClients(ctx context.Context) ([]domain.Client, error) {
 	clients, err := u.repository.GetClients(ctx)
 	if err != nil {
 		return nil, err

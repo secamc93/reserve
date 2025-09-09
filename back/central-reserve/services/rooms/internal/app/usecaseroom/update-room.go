@@ -1,14 +1,14 @@
 package usecaseroom
 
 import (
-	"central_reserve/internal/domain/entities"
+	"central_reserve/services/rooms/internal/domain"
 	"context"
 	"fmt"
 	"strings"
 )
 
 // UpdateRoom actualiza una sala existente
-func (uc *RoomUseCase) UpdateRoom(ctx context.Context, id uint, room entities.Room) (string, error) {
+func (uc *RoomUseCase) UpdateRoom(ctx context.Context, id uint, room domain.Room) (string, error) {
 	if id == 0 {
 		return "", fmt.Errorf("el ID de la sala es requerido")
 	}

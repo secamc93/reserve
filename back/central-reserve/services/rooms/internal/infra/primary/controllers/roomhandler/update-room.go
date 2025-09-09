@@ -1,8 +1,8 @@
 package roomhandler
 
 import (
-	"central_reserve/internal/infra/primary/http2/handlers/roomhandler/mapper"
-	"central_reserve/internal/infra/primary/http2/handlers/roomhandler/request"
+	"central_reserve/services/rooms/internal/infra/primary/controllers/roomhandler/mapper"
+	"central_reserve/services/rooms/internal/infra/primary/controllers/roomhandler/request"
 	"net/http"
 	"strconv"
 	"strings"

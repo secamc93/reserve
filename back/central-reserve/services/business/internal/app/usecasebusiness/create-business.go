@@ -1,16 +1,14 @@
 package usecasebusiness
 
 import (
-	"central_reserve/internal/domain/dtos"
-	"central_reserve/internal/domain/entities"
-	domainerrors "central_reserve/internal/domain/errors"
+	"central_reserve/services/business/internal/domain"
 	"context"
 	"fmt"
 	"strings"
 )
 
 // CreateBusiness crea un nuevo negocio
-func (uc *BusinessUseCase) CreateBusiness(ctx context.Context, request dtos.BusinessRequest) (*dtos.BusinessResponse, error) {
+func (uc *BusinessUseCase) CreateBusiness(ctx context.Context, request domain.BusinessRequest) (*domain.BusinessResponse, error) {
 	uc.log.Info().Str("name", request.Name).Str("code", request.Code).Msg("Creando negocio")
 
 	// Validar que el código no exista
@@ -22,7 +20,7 @@ func (uc *BusinessUseCase) CreateBusiness(ctx context.Context, request dtos.Busi
 
 	if existing != nil {
 		uc.log.Warn().Str("code", request.Code).Msg("Código de negocio ya existe")
-		return nil, domainerrors.ErrBusinessCodeAlreadyExists
+		return nil, domain.ErrBusinessCodeAlreadyExists
 	}
 
 	// Validar que el dominio personalizado no exista si se proporciona
@@ -35,7 +33,7 @@ func (uc *BusinessUseCase) CreateBusiness(ctx context.Context, request dtos.Busi
 
 		if domainExists != nil {
 			uc.log.Warn().Str("domain", request.CustomDomain).Msg("Dominio personalizado ya existe")
-			return nil, domainerrors.ErrBusinessDomainAlreadyExists
+			return nil, domain.ErrBusinessDomainAlreadyExists
 		}
 	}
 
@@ -64,7 +62,7 @@ func (uc *BusinessUseCase) CreateBusiness(ctx context.Context, request dtos.Busi
 	}
 
 	// Crear entidad
-	business := entities.Business{
+	business := domain.Business{
 		Name:               request.Name,
 		Code:               request.Code,
 		BusinessTypeID:     request.BusinessTypeID,
@@ -115,11 +113,11 @@ func (uc *BusinessUseCase) CreateBusiness(ctx context.Context, request dtos.Busi
 		}
 	}
 
-	response := &dtos.BusinessResponse{
+	response := &domain.BusinessResponse{
 		ID:   created.ID,
 		Name: created.Name,
 		Code: created.Code,
-		BusinessType: dtos.BusinessTypeResponse{
+		BusinessType: domain.BusinessTypeResponse{
 			ID: created.BusinessTypeID, // Nota: necesitaríamos obtener el BusinessType completo
 		},
 		Timezone:           created.Timezone,

@@ -14,6 +14,7 @@ type IUserHandler interface {
 	CreateUserHandler(c *gin.Context)
 	UpdateUserHandler(c *gin.Context)
 	DeleteUserHandler(c *gin.Context)
+	RegisterRoutes(router *gin.RouterGroup, handler IUserHandler, logger log.ILogger)
 }
 
 // UserHandler maneja las solicitudes HTTP para usuarios

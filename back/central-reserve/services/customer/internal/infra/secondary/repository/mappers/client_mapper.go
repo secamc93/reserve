@@ -1,14 +1,14 @@
-package mapper
+package mappers
 
 import (
-	"central_reserve/internal/domain/entities"
+	"central_reserve/services/customer/internal/domain"
 	"dbpostgres/app/infra/models"
 
 	"gorm.io/gorm"
 )
 
 // CreateClientModel convierte entities.Client a models.Client
-func CreateClientModel(client entities.Client) models.Client {
+func CreateClientModel(client domain.Client) models.Client {
 	return models.Client{
 		Model: gorm.Model{
 			ID:        client.ID,
@@ -24,8 +24,8 @@ func CreateClientModel(client entities.Client) models.Client {
 }
 
 // ToClientEntity convierte models.Client a entities.Client
-func ToClientEntity(client models.Client) entities.Client {
-	return entities.Client{
+func ToClientEntity(client models.Client) domain.Client {
+	return domain.Client{
 		ID:         client.ID,
 		Name:       client.Name,
 		Email:      client.Email,
@@ -38,8 +38,8 @@ func ToClientEntity(client models.Client) entities.Client {
 }
 
 // ToClientEntitySlice convierte []models.Client a []entities.Client
-func ToClientEntitySlice(clients []models.Client) []entities.Client {
-	var entities []entities.Client
+func ToClientEntitySlice(clients []models.Client) []domain.Client {
+	var entities []domain.Client
 	for _, client := range clients {
 		entities = append(entities, ToClientEntity(client))
 	}

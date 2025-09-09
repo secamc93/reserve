@@ -1,13 +1,13 @@
 package usecasetables
 
 import (
-	"central_reserve/internal/domain/entities"
+	"central_reserve/services/tables/internal/domain"
 	"context"
 	"fmt"
 )
 
 // UpdateTable actualiza una mesa existente
-func (u *TableUseCase) UpdateTable(ctx context.Context, id uint, table entities.Table) (string, error) {
+func (u *TableUseCase) UpdateTable(ctx context.Context, id uint, table domain.Table) (string, error) {
 	// Verificar que la mesa existe
 	existingTable, err := u.repository.GetTableByID(ctx, id)
 	if err != nil {

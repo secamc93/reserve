@@ -1,8 +1,8 @@
 package clienthandler
 
 import (
-	"central_reserve/internal/infra/primary/http2/handlers/clienthandler/mapper"
-	"central_reserve/internal/infra/primary/http2/handlers/clienthandler/request"
+	"central_reserve/services/customer/internal/infra/primary/handlers/clienthandler/mapper"
+	"central_reserve/services/customer/internal/infra/primary/handlers/clienthandler/request"
 	"net/http"
 	"strconv"
 

@@ -1,13 +1,13 @@
 package usecasebusinesstype
 
 import (
-	"central_reserve/internal/domain/dtos"
+	"central_reserve/services/business/internal/domain"
 	"context"
 	"fmt"
 )
 
 // GetBusinessTypeByID obtiene un tipo de negocio por ID
-func (uc *BusinessTypeUseCase) GetBusinessTypeByID(ctx context.Context, id uint) (*dtos.BusinessTypeResponse, error) {
+func (uc *BusinessTypeUseCase) GetBusinessTypeByID(ctx context.Context, id uint) (*domain.BusinessTypeResponse, error) {
 	uc.log.Info().Uint("id", id).Msg("Obteniendo tipo de negocio por ID")
 
 	businessType, err := uc.repository.GetBusinessTypeByID(ctx, id)
@@ -21,7 +21,7 @@ func (uc *BusinessTypeUseCase) GetBusinessTypeByID(ctx context.Context, id uint)
 		return nil, fmt.Errorf("tipo de negocio no encontrado")
 	}
 
-	response := &dtos.BusinessTypeResponse{
+	response := &domain.BusinessTypeResponse{
 		ID:          businessType.ID,
 		Name:        businessType.Name,
 		Code:        businessType.Code,

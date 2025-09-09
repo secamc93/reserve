@@ -1,14 +1,13 @@
 package usecasebusinesstype
 
 import (
-	"central_reserve/internal/domain/dtos"
-	"central_reserve/internal/domain/entities"
+	"central_reserve/services/business/internal/domain"
 	"context"
 	"fmt"
 )
 
 // CreateBusinessType crea un nuevo tipo de negocio
-func (uc *BusinessTypeUseCase) CreateBusinessType(ctx context.Context, request dtos.BusinessTypeRequest) (*dtos.BusinessTypeResponse, error) {
+func (uc *BusinessTypeUseCase) CreateBusinessType(ctx context.Context, request domain.BusinessTypeRequest) (*domain.BusinessTypeResponse, error) {
 	uc.log.Info().Str("name", request.Name).Str("code", request.Code).Msg("Creando tipo de negocio")
 
 	// Validar que el código no exista
@@ -24,7 +23,7 @@ func (uc *BusinessTypeUseCase) CreateBusinessType(ctx context.Context, request d
 	}
 
 	// Crear entidad
-	businessType := entities.BusinessType{
+	businessType := domain.BusinessType{
 		Name:        request.Name,
 		Code:        request.Code,
 		Description: request.Description,
@@ -46,7 +45,7 @@ func (uc *BusinessTypeUseCase) CreateBusinessType(ctx context.Context, request d
 		return nil, fmt.Errorf("error al obtener tipo de negocio creado: %w", err)
 	}
 
-	response := &dtos.BusinessTypeResponse{
+	response := &domain.BusinessTypeResponse{
 		ID:          created.ID,
 		Name:        created.Name,
 		Code:        created.Code,

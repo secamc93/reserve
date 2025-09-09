@@ -26,7 +26,7 @@ type AuthUseCase struct {
 	env        env.IConfig
 }
 
-func NewAuthUseCase(repository domain.IAuthRepository, jwtService domain.IJWTService, log log.ILogger, env env.IConfig) IUseCaseAuth {
+func New(repository domain.IAuthRepository, jwtService domain.IJWTService, log log.ILogger, env env.IConfig) IUseCaseAuth {
 	return &AuthUseCase{
 		repository: repository,
 		jwtService: jwtService,

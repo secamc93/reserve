@@ -16,12 +16,12 @@ type IUseCaseRole interface {
 
 // RoleUseCase implementa los casos de uso para roles
 type RoleUseCase struct {
-	repository domain.IRoleRepository
+	repository domain.IAuthRepository
 	log        log.ILogger
 }
 
 // NewRoleUseCase crea una nueva instancia del caso de uso de roles
-func NewRoleUseCase(repository domain.IRoleRepository, log log.ILogger) IUseCaseRole {
+func New(repository domain.IAuthRepository, log log.ILogger) IUseCaseRole {
 	return &RoleUseCase{
 		repository: repository,
 		log:        log,

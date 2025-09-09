@@ -1,13 +1,13 @@
 package mapper
 
 import (
-	"central_reserve/internal/domain/entities"
-	"central_reserve/internal/infra/primary/http2/handlers/clienthandler/request"
+	"central_reserve/services/customer/internal/domain"
+	"central_reserve/services/customer/internal/infra/primary/handlers/clienthandler/request"
 )
 
 // UpdateClientToDomain convierte un request.UpdateClient a entities.Client
-func UpdateClientToDomain(u request.UpdateClient) entities.Client {
-	client := entities.Client{}
+func UpdateClientToDomain(u request.UpdateClient) domain.Client {
+	client := domain.Client{}
 
 	if u.BusinessID != nil {
 		client.BusinessID = *u.BusinessID

@@ -1,13 +1,13 @@
 package usecasebusinesstype
 
 import (
-	"central_reserve/internal/domain/dtos"
+	"central_reserve/services/business/internal/domain"
 	"context"
 	"fmt"
 )
 
 // GetBusinessTypes obtiene todos los tipos de negocio
-func (uc *BusinessTypeUseCase) GetBusinessTypes(ctx context.Context) ([]dtos.BusinessTypeResponse, error) {
+func (uc *BusinessTypeUseCase) GetBusinessTypes(ctx context.Context) ([]domain.BusinessTypeResponse, error) {
 	uc.log.Info().Msg("Obteniendo tipos de negocio")
 
 	businessTypes, err := uc.repository.GetBusinessTypes(ctx)
@@ -17,9 +17,9 @@ func (uc *BusinessTypeUseCase) GetBusinessTypes(ctx context.Context) ([]dtos.Bus
 	}
 
 	// Convertir entidades a DTOs
-	response := make([]dtos.BusinessTypeResponse, len(businessTypes))
+	response := make([]domain.BusinessTypeResponse, len(businessTypes))
 	for i, bt := range businessTypes {
-		response[i] = dtos.BusinessTypeResponse{
+		response[i] = domain.BusinessTypeResponse{
 			ID:          bt.ID,
 			Name:        bt.Name,
 			Code:        bt.Code,

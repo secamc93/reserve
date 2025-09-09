@@ -1,26 +1,25 @@
 package usecasebusinesstype
 
 import (
-	"central_reserve/internal/domain/dtos"
-	"central_reserve/internal/domain/ports"
-	"central_reserve/internal/pkg/log"
+	"central_reserve/services/business/internal/domain"
+	"central_reserve/shared/log"
 	"context"
 )
 
 type IUseCaseBusinessType interface {
-	GetBusinessTypes(ctx context.Context) ([]dtos.BusinessTypeResponse, error)
-	GetBusinessTypeByID(ctx context.Context, id uint) (*dtos.BusinessTypeResponse, error)
-	CreateBusinessType(ctx context.Context, request dtos.BusinessTypeRequest) (*dtos.BusinessTypeResponse, error)
-	UpdateBusinessType(ctx context.Context, id uint, request dtos.BusinessTypeRequest) (*dtos.BusinessTypeResponse, error)
+	GetBusinessTypes(ctx context.Context) ([]domain.BusinessTypeResponse, error)
+	GetBusinessTypeByID(ctx context.Context, id uint) (*domain.BusinessTypeResponse, error)
+	CreateBusinessType(ctx context.Context, request domain.BusinessTypeRequest) (*domain.BusinessTypeResponse, error)
+	UpdateBusinessType(ctx context.Context, id uint, request domain.BusinessTypeRequest) (*domain.BusinessTypeResponse, error)
 	DeleteBusinessType(ctx context.Context, id uint) error
 }
 
 type BusinessTypeUseCase struct {
-	repository ports.IBusinessTypeRepository
+	repository domain.IBusinessTypeRepository
 	log        log.ILogger
 }
 
-func NewBusinessTypeUseCase(repository ports.IBusinessTypeRepository, log log.ILogger) IUseCaseBusinessType {
+func NewBusinessTypeUseCase(repository domain.IBusinessTypeRepository, log log.ILogger) IUseCaseBusinessType {
 	return &BusinessTypeUseCase{
 		repository: repository,
 		log:        log,

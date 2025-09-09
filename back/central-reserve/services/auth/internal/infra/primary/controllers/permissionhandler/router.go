@@ -1,7 +1,6 @@
 package permissionhandler
 
 import (
-	"central_reserve/services/auth/internal/domain"
 	"central_reserve/services/auth/middleware"
 	"central_reserve/shared/log"
 
@@ -9,16 +8,15 @@ import (
 )
 
 // RegisterRoutes registra las rutas para el handler de permisos
-func RegisterRoutes(router *gin.RouterGroup, handler IPermissionHandler, jwtService domain.IJWTService, logger log.ILogger) {
+func (h *PermissionHandler) RegisterRoutes(router *gin.RouterGroup, handler IPermissionHandler, logger log.ILogger) {
 	permissionsGroup := router.Group("/permissions")
-	permissionsGroup.Use(middleware.AuthMiddleware(jwtService, logger))
-
-	// Rutas para permisos
-	permissionsGroup.GET("", handler.GetPermissionsHandler)
-	permissionsGroup.GET("/:id", handler.GetPermissionByIDHandler)
-	permissionsGroup.GET("/scope/:scope_id", handler.GetPermissionsByScopeHandler)
-	permissionsGroup.GET("/resource/:resource", handler.GetPermissionsByResourceHandler)
-	permissionsGroup.POST("", handler.CreatePermissionHandler)
-	permissionsGroup.PUT("/:id", handler.UpdatePermissionHandler)
-	permissionsGroup.DELETE("/:id", handler.DeletePermissionHandler)
+	{
+		permissionsGroup.GET("", middleware.JWT(), handler.GetPermissionsHandler)
+		permissionsGroup.GET("/:id", middleware.JWT(), handler.GetPermissionByIDHandler)
+		permissionsGroup.GET("/scope/:scope_id", middleware.JWT(), handler.GetPermissionsByScopeHandler)
+		permissionsGroup.GET("/resource/:resource", middleware.JWT(), handler.GetPermissionsByResourceHandler)
+		permissionsGroup.POST("", middleware.JWT(), handler.CreatePermissionHandler)
+		permissionsGroup.PUT("/:id", middleware.JWT(), handler.UpdatePermissionHandler)
+		permissionsGroup.DELETE("/:id", middleware.JWT(), handler.DeletePermissionHandler)
+	}
 }

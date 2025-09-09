@@ -16,6 +16,7 @@ type IPermissionHandler interface {
 	CreatePermissionHandler(c *gin.Context)
 	UpdatePermissionHandler(c *gin.Context)
 	DeletePermissionHandler(c *gin.Context)
+	RegisterRoutes(router *gin.RouterGroup, handler IPermissionHandler, logger log.ILogger)
 }
 
 type PermissionHandler struct {

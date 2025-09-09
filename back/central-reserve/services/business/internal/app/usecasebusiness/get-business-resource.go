@@ -1,13 +1,13 @@
 package usecasebusiness
 
 import (
-	"central_reserve/internal/domain/dtos"
+	"central_reserve/services/business/internal/domain"
 	"context"
 	"fmt"
 )
 
 // GetBusinessResources obtiene todos los recursos permitidos y configurados de un negocio
-func (uc *BusinessUseCase) GetBusinessResources(ctx context.Context, businessID uint) (*dtos.BusinessResourcesResponse, error) {
+func (uc *BusinessUseCase) GetBusinessResources(ctx context.Context, businessID uint) (*domain.BusinessResourcesResponse, error) {
 	uc.log.Info().Uint("business_id", businessID).Msg("Obteniendo recursos del negocio")
 
 	// Obtener recursos del negocio usando el nuevo método del repositorio
@@ -18,11 +18,11 @@ func (uc *BusinessUseCase) GetBusinessResources(ctx context.Context, businessID 
 	}
 
 	// Convertir entidades a DTOs
-	resourceDTOs := make([]dtos.BusinessResourceConfiguredResponse, len(resources))
+	resourceDTOs := make([]domain.BusinessResourceConfiguredResponse, len(resources))
 	var activeCount, inactiveCount int
 
 	for i, resource := range resources {
-		resourceDTOs[i] = dtos.BusinessResourceConfiguredResponse{
+		resourceDTOs[i] = domain.BusinessResourceConfiguredResponse{
 			ResourceID:   resource.ResourceID,
 			ResourceName: resource.ResourceName,
 			IsActive:     resource.IsActive,
@@ -36,7 +36,7 @@ func (uc *BusinessUseCase) GetBusinessResources(ctx context.Context, businessID 
 		}
 	}
 
-	response := &dtos.BusinessResourcesResponse{
+	response := &domain.BusinessResourcesResponse{
 		BusinessID: businessID,
 		Resources:  resourceDTOs,
 		Total:      len(resources),
@@ -55,7 +55,7 @@ func (uc *BusinessUseCase) GetBusinessResources(ctx context.Context, businessID 
 }
 
 // GetBusinessResourceStatus obtiene el estado de un recurso específico para un negocio
-func (uc *BusinessUseCase) GetBusinessResourceStatus(ctx context.Context, businessID uint, resourceName string) (*dtos.BusinessResourceConfiguredResponse, error) {
+func (uc *BusinessUseCase) GetBusinessResourceStatus(ctx context.Context, businessID uint, resourceName string) (*domain.BusinessResourceConfiguredResponse, error) {
 	uc.log.Info().
 		Uint("business_id", businessID).
 		Str("resource_name", resourceName).
@@ -74,7 +74,7 @@ func (uc *BusinessUseCase) GetBusinessResourceStatus(ctx context.Context, busine
 	// Buscar el recurso específico
 	for _, resource := range resources {
 		if resource.ResourceName == resourceName {
-			response := &dtos.BusinessResourceConfiguredResponse{
+			response := &domain.BusinessResourceConfiguredResponse{
 				ResourceID:   resource.ResourceID,
 				ResourceName: resource.ResourceName,
 				IsActive:     resource.IsActive,

@@ -1,8 +1,8 @@
 package tablehandler
 
 import (
-	"central_reserve/internal/app/usecasetables"
-	"central_reserve/internal/pkg/log"
+	"central_reserve/services/tables/internal/app/usecasetables"
+	"central_reserve/shared/log"
 
 	"github.com/gin-gonic/gin"
 )

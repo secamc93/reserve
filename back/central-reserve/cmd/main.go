@@ -11,7 +11,7 @@
 // @license.name  MIT
 // @license.url   https://opensource.org/licenses/MIT
 //
-// @host      localhost:8080
+// @host      localhost:3050
 // @BasePath  /api/v1
 //
 // @securityDefinitions.apikey BearerAuth
@@ -23,7 +23,7 @@ package main
 import (
 	"context"
 
-	"central_reserve/gateway/internal/server"
+	"central_reserve/cmd/internal/server"
 )
 
 func main() {

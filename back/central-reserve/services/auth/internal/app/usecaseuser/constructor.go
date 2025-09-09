@@ -18,14 +18,14 @@ type IUseCaseUser interface {
 
 // UserUseCase implementa los casos de uso para usuarios
 type UserUseCase struct {
-	repository domain.IUserRepository
+	repository domain.IAuthRepository
 	log        log.ILogger
 	s3         domain.IS3Service
 	env        env.IConfig
 }
 
 // NewUserUseCase crea una nueva instancia del caso de uso de usuarios
-func NewUserUseCase(repository domain.IUserRepository, log log.ILogger, s3 domain.IS3Service, env env.IConfig) IUseCaseUser {
+func New(repository domain.IAuthRepository, log log.ILogger, s3 domain.IS3Service, env env.IConfig) IUseCaseUser {
 	return &UserUseCase{
 		repository: repository,
 		log:        log,

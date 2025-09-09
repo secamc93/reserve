@@ -1,13 +1,13 @@
 package usecaseclient
 
 import (
-	"central_reserve/internal/domain/entities"
+	"central_reserve/services/customer/internal/domain"
 	"context"
 	"fmt"
 )
 
 // UpdateClient actualiza un cliente existente
-func (u *ClientUseCase) UpdateClient(ctx context.Context, id uint, client entities.Client) (string, error) {
+func (u *ClientUseCase) UpdateClient(ctx context.Context, id uint, client domain.Client) (string, error) {
 	// Verificar que el cliente existe
 	existingClient, err := u.repository.GetClientByID(ctx, id)
 	if err != nil {

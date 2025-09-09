@@ -1,24 +1,18 @@
 package clienthandler
 
 import (
-	"central_reserve/internal/domain/ports"
-	"central_reserve/internal/infra/primary/http2/middleware"
-	"central_reserve/internal/pkg/log"
+	"central_reserve/services/auth/middleware"
 
 	"github.com/gin-gonic/gin"
 )
 
-// RegisterRoutes registra las rutas del handler de clientes
-func RegisterRoutes(v1Group *gin.RouterGroup, handler IClientHandler, jwtService ports.IJWTService, logger log.ILogger) {
-	// Crear el subgrupo /clients dentro de /api/v1
+func RegisterRoutes(v1Group *gin.RouterGroup, handler IClientHandler) {
 	clients := v1Group.Group("/clients")
-	// Aplicar middleware de autenticación a todas las rutas de clientes
-	clients.Use(middleware.AuthMiddleware(jwtService, logger))
 	{
-		clients.GET("", handler.GetClientsHandler)
-		clients.GET("/:id", handler.GetClientByIDHandler)
-		clients.POST("", handler.CreateClientHandler)
-		clients.PUT("/:id", handler.UpdateClientHandler)
-		clients.DELETE("/:id", handler.DeleteClientHandler)
+		clients.GET("", middleware.JWT(), handler.GetClientsHandler)
+		clients.GET("/:id", middleware.JWT(), handler.GetClientByIDHandler)
+		clients.POST("", middleware.JWT(), handler.CreateClientHandler)
+		clients.PUT("/:id", middleware.JWT(), handler.UpdateClientHandler)
+		clients.DELETE("/:id", middleware.JWT(), handler.DeleteClientHandler)
 	}
 }

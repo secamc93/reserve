@@ -1,15 +1,14 @@
 package mapper
 
 import (
-	"central_reserve/internal/domain/dtos"
-	"central_reserve/internal/domain/entities"
-	"central_reserve/internal/infra/primary/http2/handlers/businesstypehandler/request"
-	"central_reserve/internal/infra/primary/http2/handlers/businesstypehandler/response"
+	"central_reserve/services/business/internal/domain"
+	"central_reserve/services/business/internal/infra/primary/controllers/businesstypehandler/request"
+	"central_reserve/services/business/internal/infra/primary/controllers/businesstypehandler/response"
 )
 
 // RequestToDTO convierte request.BusinessTypeRequest a dtos.BusinessTypeRequest
-func RequestToDTO(req request.BusinessTypeRequest) dtos.BusinessTypeRequest {
-	return dtos.BusinessTypeRequest{
+func RequestToDTO(req request.BusinessTypeRequest) domain.BusinessTypeRequest {
+	return domain.BusinessTypeRequest{
 		Name:        req.Name,
 		Code:        req.Code,
 		Description: req.Description,
@@ -19,7 +18,7 @@ func RequestToDTO(req request.BusinessTypeRequest) dtos.BusinessTypeRequest {
 }
 
 // BusinessTypeDTOToResponse convierte un DTO BusinessTypeResponse a response.BusinessTypeResponse
-func BusinessTypeDTOToResponse(businessTypeDTO dtos.BusinessTypeResponse) response.BusinessTypeResponse {
+func BusinessTypeDTOToResponse(businessTypeDTO domain.BusinessTypeResponse) response.BusinessTypeResponse {
 	return response.BusinessTypeResponse{
 		ID:          businessTypeDTO.ID,
 		Name:        businessTypeDTO.Name,
@@ -33,7 +32,7 @@ func BusinessTypeDTOToResponse(businessTypeDTO dtos.BusinessTypeResponse) respon
 }
 
 // BusinessTypeDTOsToResponse convierte un slice de DTOs BusinessTypeResponse a slice de response.BusinessTypeResponse
-func BusinessTypeDTOsToResponse(businessTypeDTOs []dtos.BusinessTypeResponse) []response.BusinessTypeResponse {
+func BusinessTypeDTOsToResponse(businessTypeDTOs []domain.BusinessTypeResponse) []response.BusinessTypeResponse {
 	responses := make([]response.BusinessTypeResponse, len(businessTypeDTOs))
 	for i, businessTypeDTO := range businessTypeDTOs {
 		responses[i] = BusinessTypeDTOToResponse(businessTypeDTO)
@@ -42,7 +41,7 @@ func BusinessTypeDTOsToResponse(businessTypeDTOs []dtos.BusinessTypeResponse) []
 }
 
 // BuildCreateBusinessTypeResponseFromDTO construye la respuesta completa para crear un tipo de negocio desde un DTO
-func BuildCreateBusinessTypeResponseFromDTO(businessTypeDTO *dtos.BusinessTypeResponse, message string) response.CreateBusinessTypeResponse {
+func BuildCreateBusinessTypeResponseFromDTO(businessTypeDTO *domain.BusinessTypeResponse, message string) response.CreateBusinessTypeResponse {
 	return response.CreateBusinessTypeResponse{
 		Success: true,
 		Message: message,
@@ -51,7 +50,7 @@ func BuildCreateBusinessTypeResponseFromDTO(businessTypeDTO *dtos.BusinessTypeRe
 }
 
 // BusinessTypeToResponse convierte una entidad BusinessType del dominio a BusinessTypeResponse
-func BusinessTypeToResponse(businessType entities.BusinessType) response.BusinessTypeResponse {
+func BusinessTypeToResponse(businessType domain.BusinessType) response.BusinessTypeResponse {
 	return response.BusinessTypeResponse{
 		ID:          businessType.ID,
 		Name:        businessType.Name,
@@ -65,7 +64,7 @@ func BusinessTypeToResponse(businessType entities.BusinessType) response.Busines
 }
 
 // BusinessTypesToResponse convierte un slice de entidades BusinessType a slice de BusinessTypeResponse
-func BusinessTypesToResponse(businessTypes []entities.BusinessType) []response.BusinessTypeResponse {
+func BusinessTypesToResponse(businessTypes []domain.BusinessType) []response.BusinessTypeResponse {
 	responses := make([]response.BusinessTypeResponse, len(businessTypes))
 	for i, businessType := range businessTypes {
 		responses[i] = BusinessTypeToResponse(businessType)
@@ -74,7 +73,7 @@ func BusinessTypesToResponse(businessTypes []entities.BusinessType) []response.B
 }
 
 // BuildGetBusinessTypesResponse construye la respuesta completa para obtener múltiples tipos de negocio
-func BuildGetBusinessTypesResponse(businessTypes []entities.BusinessType, message string) response.GetBusinessTypesResponse {
+func BuildGetBusinessTypesResponse(businessTypes []domain.BusinessType, message string) response.GetBusinessTypesResponse {
 	return response.GetBusinessTypesResponse{
 		Success: true,
 		Message: message,
@@ -83,7 +82,7 @@ func BuildGetBusinessTypesResponse(businessTypes []entities.BusinessType, messag
 }
 
 // BuildGetBusinessTypeResponse construye la respuesta completa para obtener un tipo de negocio
-func BuildGetBusinessTypeResponse(businessType entities.BusinessType, message string) response.GetBusinessTypeResponse {
+func BuildGetBusinessTypeResponse(businessType domain.BusinessType, message string) response.GetBusinessTypeResponse {
 	return response.GetBusinessTypeResponse{
 		Success: true,
 		Message: message,
@@ -92,7 +91,7 @@ func BuildGetBusinessTypeResponse(businessType entities.BusinessType, message st
 }
 
 // BuildUpdateBusinessTypeResponse construye la respuesta completa para actualizar un tipo de negocio
-func BuildUpdateBusinessTypeResponse(businessType entities.BusinessType, message string) response.UpdateBusinessTypeResponse {
+func BuildUpdateBusinessTypeResponse(businessType domain.BusinessType, message string) response.UpdateBusinessTypeResponse {
 	return response.UpdateBusinessTypeResponse{
 		Success: true,
 		Message: message,
@@ -118,7 +117,7 @@ func BuildErrorResponse(error string, message string) response.ErrorResponse {
 }
 
 // BuildGetBusinessTypesResponseFromDTOs construye la respuesta completa para obtener múltiples tipos de negocio desde DTOs
-func BuildGetBusinessTypesResponseFromDTOs(businessTypeDTOs []dtos.BusinessTypeResponse, message string) response.GetBusinessTypesResponse {
+func BuildGetBusinessTypesResponseFromDTOs(businessTypeDTOs []domain.BusinessTypeResponse, message string) response.GetBusinessTypesResponse {
 	return response.GetBusinessTypesResponse{
 		Success: true,
 		Message: message,
@@ -127,7 +126,7 @@ func BuildGetBusinessTypesResponseFromDTOs(businessTypeDTOs []dtos.BusinessTypeR
 }
 
 // BuildGetBusinessTypeResponseFromDTO construye la respuesta completa para obtener un tipo de negocio desde un DTO
-func BuildGetBusinessTypeResponseFromDTO(businessTypeDTO *dtos.BusinessTypeResponse, message string) response.GetBusinessTypeResponse {
+func BuildGetBusinessTypeResponseFromDTO(businessTypeDTO *domain.BusinessTypeResponse, message string) response.GetBusinessTypeResponse {
 	return response.GetBusinessTypeResponse{
 		Success: true,
 		Message: message,
@@ -136,7 +135,7 @@ func BuildGetBusinessTypeResponseFromDTO(businessTypeDTO *dtos.BusinessTypeRespo
 }
 
 // BuildUpdateBusinessTypeResponseFromDTO construye la respuesta completa para actualizar un tipo de negocio desde un DTO
-func BuildUpdateBusinessTypeResponseFromDTO(businessTypeDTO *dtos.BusinessTypeResponse, message string) response.UpdateBusinessTypeResponse {
+func BuildUpdateBusinessTypeResponseFromDTO(businessTypeDTO *domain.BusinessTypeResponse, message string) response.UpdateBusinessTypeResponse {
 	return response.UpdateBusinessTypeResponse{
 		Success: true,
 		Message: message,

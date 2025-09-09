@@ -1,10 +1,9 @@
 package businesstypehandler
 
 import (
+	"central_reserve/services/business/internal/infra/primary/controllers/businesstypehandler/mapper"
+	"central_reserve/services/business/internal/infra/primary/controllers/businesstypehandler/request"
 	"net/http"
-
-	"central_reserve/internal/infra/primary/http2/handlers/businesstypehandler/mapper"
-	"central_reserve/internal/infra/primary/http2/handlers/businesstypehandler/request"
 
 	"github.com/gin-gonic/gin"
 )

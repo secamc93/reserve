@@ -1,14 +1,14 @@
 package usecaseroom
 
 import (
-	"central_reserve/internal/domain/entities"
+	"central_reserve/services/rooms/internal/domain"
 	"context"
 	"fmt"
 	"strings"
 )
 
 // CreateRoom crea una nueva sala
-func (uc *RoomUseCase) CreateRoom(ctx context.Context, room entities.Room) (string, error) {
+func (uc *RoomUseCase) CreateRoom(ctx context.Context, room domain.Room) (string, error) {
 	// Validaciones básicas
 	if strings.TrimSpace(room.Name) == "" {
 		return "", fmt.Errorf("el nombre de la sala es requerido")

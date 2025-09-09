@@ -52,19 +52,6 @@ func LogStartupInfo(ctx context.Context, logger log.ILogger, e env.IConfig) {
 		logger.Info(ctx).Msg(" ")
 	}
 
-	// Proxies configurados (solo si hay URL)
-	proxy := func(name, url string) {
-		if url != "" {
-			logger.Info(ctx).Msgf(" 🔀 Proxy %s: %s", name, url)
-		}
-	}
-	proxy("AUTH", e.Get("AUTH_SERVICE_URL"))
-	proxy("RESERVE", e.Get("RESERVE_SERVICE_URL"))
-	proxy("BUSINESS", e.Get("BUSINESS_SERVICE_URL"))
-	proxy("CUSTOMER", e.Get("CUSTOMER_SERVICE_URL"))
-	proxy("ROOMS", e.Get("ROOMS_SERVICE_URL"))
-	proxy("TABLES", e.Get("TABLES_SERVICE_URL"))
-
 	// Espacio final
 	logger.Info(ctx).Msg(" ")
 }

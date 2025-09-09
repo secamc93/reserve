@@ -3,8 +3,6 @@ package repository
 import (
 	"central_reserve/services/auth/internal/domain"
 	"central_reserve/services/auth/internal/infra/secondary/repository/mappers"
-	"central_reserve/shared/db"
-	"central_reserve/shared/log"
 	"context"
 	"dbpostgres/app/infra/models"
 	"fmt"
@@ -13,18 +11,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
-
-type Repository struct {
-	database db.IDatabase
-	logger   log.ILogger
-}
-
-func New(db db.IDatabase, logger log.ILogger) domain.IAuthRepository {
-	return &Repository{
-		database: db,
-		logger:   logger,
-	}
-}
 
 func (r *Repository) GetUserByEmailForAuth(ctx context.Context, email string) (*domain.UserAuthInfo, error) {
 	var userAuth domain.UserAuthInfo
@@ -192,9 +178,9 @@ func (r *Repository) GetUserBusinesses(ctx context.Context, userID uint) ([]doma
 			ID:                 business.Model.ID,
 			Name:               business.Name,
 			Code:               business.Code,
-			BusinessTypeID:     business.Model.BusinessTypeID,
-			Timezone:           business.Model.Timezone,
-			Address:            business.Model.Address,
+			BusinessTypeID:     business.BusinessTypeID,
+			Timezone:           business.Timezone,
+			Address:            business.Address,
 			Description:        business.Description,
 			LogoURL:            business.LogoURL,
 			PrimaryColor:       business.PrimaryColor,
@@ -209,9 +195,9 @@ func (r *Repository) GetUserBusinesses(ctx context.Context, userID uint) ([]doma
 			EnableReservations: business.EnableReservations,
 		}
 
-		if business.BusinessType.Model.ID != 0 {
-			businessInfo.BusinessTypeName = business.BusinessType.Model.Name
-			businessInfo.BusinessTypeCode = business.BusinessType.Model.Code
+		if business.BusinessType.ID != 0 {
+			businessInfo.BusinessTypeName = business.BusinessType.Name
+			businessInfo.BusinessTypeCode = business.BusinessType.Code
 		}
 
 		businesses = append(businesses, businessInfo)

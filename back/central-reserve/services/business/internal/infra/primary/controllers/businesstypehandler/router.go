@@ -1,22 +1,20 @@
 package businesstypehandler
 
 import (
-	"central_reserve/internal/domain/ports"
-	"central_reserve/internal/infra/primary/http2/middleware"
-	"central_reserve/internal/pkg/log"
+	"central_reserve/services/auth/middleware"
+	"central_reserve/shared/log"
 
 	"github.com/gin-gonic/gin"
 )
 
 // RegisterRoutes registra las rutas del handler de BusinessType
-func RegisterRoutes(router *gin.RouterGroup, handler IBusinessTypeHandler, jwtService ports.IJWTService, logger log.ILogger) {
-	// Aplicar middleware de autenticación a todas las rutas
-	router.Use(middleware.AuthMiddleware(jwtService, logger))
+func RegisterRoutes(router *gin.RouterGroup, handler IBusinessTypeHandler, logger log.ILogger) {
+	businessTypes := router.Group("/business-types")
 
 	// Rutas de BusinessType
-	router.GET("/business-types", handler.GetBusinessTypesHandler)
-	router.GET("/business-types/:id", handler.GetBusinessTypeByIDHandler)
-	router.POST("/business-types", handler.CreateBusinessTypeHandler)
-	router.PUT("/business-types/:id", handler.UpdateBusinessTypeHandler)
-	router.DELETE("/business-types/:id", handler.DeleteBusinessTypeHandler)
+	businessTypes.GET("", middleware.JWT(), handler.GetBusinessTypesHandler)
+	businessTypes.GET("/:id", middleware.JWT(), handler.GetBusinessTypeByIDHandler)
+	businessTypes.POST("", middleware.JWT(), handler.CreateBusinessTypeHandler)
+	businessTypes.PUT("/:id", middleware.JWT(), handler.UpdateBusinessTypeHandler)
+	businessTypes.DELETE("/:id", middleware.JWT(), handler.DeleteBusinessTypeHandler)
 }

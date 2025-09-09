@@ -1,8 +1,8 @@
 package roomhandler
 
 import (
-	"central_reserve/internal/app/usecaseroom"
-	"central_reserve/internal/pkg/log"
+	"central_reserve/services/rooms/internal/app/usecaseroom"
+	"central_reserve/shared/log"
 
 	"github.com/gin-gonic/gin"
 )

@@ -1,15 +1,14 @@
 package usecasebusiness
 
 import (
-	"central_reserve/internal/domain/dtos"
-	"central_reserve/internal/domain/entities"
+	"central_reserve/services/business/internal/domain"
 	"context"
 	"fmt"
 	"strings"
 )
 
 // UpdateBusiness actualiza un negocio existente
-func (uc *BusinessUseCase) UpdateBusiness(ctx context.Context, id uint, request dtos.UpdateBusinessRequest) (*dtos.BusinessResponse, error) {
+func (uc *BusinessUseCase) UpdateBusiness(ctx context.Context, id uint, request domain.UpdateBusinessRequest) (*domain.BusinessResponse, error) {
 	uc.log.Info().Uint("id", id).Msg("Actualizando negocio")
 
 	// Verificar que existe
@@ -145,7 +144,7 @@ func (uc *BusinessUseCase) UpdateBusiness(ctx context.Context, id uint, request 
 	}
 
 	// Actualizar entidad
-	business := entities.Business{
+	business := domain.Business{
 		Name:               name,
 		Code:               code,
 		BusinessTypeID:     businessTypeID,
@@ -196,11 +195,11 @@ func (uc *BusinessUseCase) UpdateBusiness(ctx context.Context, id uint, request 
 		}
 	}
 
-	response := &dtos.BusinessResponse{
+	response := &domain.BusinessResponse{
 		ID:   updated.ID,
 		Name: updated.Name,
 		Code: updated.Code,
-		BusinessType: dtos.BusinessTypeResponse{
+		BusinessType: domain.BusinessTypeResponse{
 			ID: updated.BusinessTypeID,
 		},
 		Timezone:           updated.Timezone,

@@ -1,13 +1,13 @@
 package usecaseclient
 
 import (
-	"central_reserve/internal/domain/entities"
+	"central_reserve/services/customer/internal/domain"
 	"context"
 	"fmt"
 )
 
 // CreateClient crea un nuevo cliente
-func (u *ClientUseCase) CreateClient(ctx context.Context, client entities.Client) (string, error) {
+func (u *ClientUseCase) CreateClient(ctx context.Context, client domain.Client) (string, error) {
 	// Validar que el cliente tenga los campos requeridos
 	if client.Name == "" {
 		return "", fmt.Errorf("el nombre del cliente es requerido")

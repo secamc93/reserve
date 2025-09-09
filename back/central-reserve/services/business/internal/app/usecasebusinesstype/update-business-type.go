@@ -1,14 +1,13 @@
 package usecasebusinesstype
 
 import (
-	"central_reserve/internal/domain/dtos"
-	"central_reserve/internal/domain/entities"
+	"central_reserve/services/business/internal/domain"
 	"context"
 	"fmt"
 )
 
 // UpdateBusinessType actualiza un tipo de negocio existente
-func (uc *BusinessTypeUseCase) UpdateBusinessType(ctx context.Context, id uint, request dtos.BusinessTypeRequest) (*dtos.BusinessTypeResponse, error) {
+func (uc *BusinessTypeUseCase) UpdateBusinessType(ctx context.Context, id uint, request domain.BusinessTypeRequest) (*domain.BusinessTypeResponse, error) {
 	uc.log.Info().Uint("id", id).Str("name", request.Name).Msg("Actualizando tipo de negocio")
 
 	// Verificar que existe
@@ -38,7 +37,7 @@ func (uc *BusinessTypeUseCase) UpdateBusinessType(ctx context.Context, id uint, 
 	}
 
 	// Actualizar entidad
-	businessType := entities.BusinessType{
+	businessType := domain.BusinessType{
 		Name:        request.Name,
 		Code:        request.Code,
 		Description: request.Description,
@@ -60,7 +59,7 @@ func (uc *BusinessTypeUseCase) UpdateBusinessType(ctx context.Context, id uint, 
 		return nil, fmt.Errorf("error al obtener tipo de negocio actualizado: %w", err)
 	}
 
-	response := &dtos.BusinessTypeResponse{
+	response := &domain.BusinessTypeResponse{
 		ID:          updated.ID,
 		Name:        updated.Name,
 		Code:        updated.Code,

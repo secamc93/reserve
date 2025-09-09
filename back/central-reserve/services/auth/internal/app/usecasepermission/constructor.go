@@ -18,12 +18,12 @@ type IUseCasePermission interface {
 }
 
 type PermissionUseCase struct {
-	repository domain.IPermissionRepository
+	repository domain.IAuthRepository
 	logger     log.ILogger
 }
 
 // NewPermissionUseCase crea una nueva instancia del caso de uso de permisos
-func NewPermissionUseCase(repository domain.IPermissionRepository, logger log.ILogger) IUseCasePermission {
+func New(repository domain.IAuthRepository, logger log.ILogger) IUseCasePermission {
 	return &PermissionUseCase{
 		repository: repository,
 		logger:     logger,

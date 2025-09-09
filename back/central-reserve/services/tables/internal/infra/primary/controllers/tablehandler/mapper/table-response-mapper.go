@@ -1,12 +1,12 @@
 package mapper
 
 import (
-	"central_reserve/internal/domain/entities"
-	"central_reserve/internal/infra/primary/http2/handlers/tablehandler/response"
+	"central_reserve/services/tables/internal/domain"
+	"central_reserve/services/tables/internal/infra/primary/controllers/tablehandler/response"
 )
 
 // TableToResponse convierte una entidad Table del dominio a TableResponse
-func TableToResponse(table entities.Table) response.TableResponse {
+func TableToResponse(table domain.Table) response.TableResponse {
 	return response.TableResponse{
 		ID:         table.ID,
 		BusinessID: table.BusinessID,
@@ -19,7 +19,7 @@ func TableToResponse(table entities.Table) response.TableResponse {
 }
 
 // TablePtrToResponse convierte un puntero a entidad Table del dominio a TableResponse
-func TablePtrToResponse(table *entities.Table) response.TableResponse {
+func TablePtrToResponse(table *domain.Table) response.TableResponse {
 	if table == nil {
 		return response.TableResponse{}
 	}
@@ -27,7 +27,7 @@ func TablePtrToResponse(table *entities.Table) response.TableResponse {
 }
 
 // TablesToResponse convierte un slice de entidades Table a slice de TableResponse
-func TablesToResponse(tables []entities.Table) []response.TableResponse {
+func TablesToResponse(tables []domain.Table) []response.TableResponse {
 	responses := make([]response.TableResponse, len(tables))
 	for i, table := range tables {
 		responses[i] = TableToResponse(table)
@@ -36,7 +36,7 @@ func TablesToResponse(tables []entities.Table) []response.TableResponse {
 }
 
 // BuildGetTablesResponse construye la respuesta completa para obtener múltiples mesas
-func BuildGetTablesResponse(tables []entities.Table, message string) response.GetTablesResponse {
+func BuildGetTablesResponse(tables []domain.Table, message string) response.GetTablesResponse {
 	return response.GetTablesResponse{
 		Success: true,
 		Message: message,
@@ -45,7 +45,7 @@ func BuildGetTablesResponse(tables []entities.Table, message string) response.Ge
 }
 
 // BuildGetTableResponse construye la respuesta completa para obtener una mesa
-func BuildGetTableResponse(table entities.Table, message string) response.GetTableResponse {
+func BuildGetTableResponse(table domain.Table, message string) response.GetTableResponse {
 	return response.GetTableResponse{
 		Success: true,
 		Message: message,
@@ -54,7 +54,7 @@ func BuildGetTableResponse(table entities.Table, message string) response.GetTab
 }
 
 // BuildGetTablePtrResponse construye la respuesta completa para obtener una mesa desde un puntero
-func BuildGetTablePtrResponse(table *entities.Table, message string) response.GetTableResponse {
+func BuildGetTablePtrResponse(table *domain.Table, message string) response.GetTableResponse {
 	return response.GetTableResponse{
 		Success: true,
 		Message: message,
@@ -63,7 +63,7 @@ func BuildGetTablePtrResponse(table *entities.Table, message string) response.Ge
 }
 
 // BuildCreateTableResponse construye la respuesta completa para crear una mesa
-func BuildCreateTableResponse(table entities.Table, message string) response.CreateTableResponse {
+func BuildCreateTableResponse(table domain.Table, message string) response.CreateTableResponse {
 	return response.CreateTableResponse{
 		Success: true,
 		Message: message,
@@ -72,7 +72,7 @@ func BuildCreateTableResponse(table entities.Table, message string) response.Cre
 }
 
 // BuildCreateTablePtrResponse construye la respuesta completa para crear una mesa desde un puntero
-func BuildCreateTablePtrResponse(table *entities.Table, message string) response.CreateTableResponse {
+func BuildCreateTablePtrResponse(table *domain.Table, message string) response.CreateTableResponse {
 	return response.CreateTableResponse{
 		Success: true,
 		Message: message,
@@ -90,7 +90,7 @@ func BuildCreateTableStringResponse(message string) response.CreateTableResponse
 }
 
 // BuildUpdateTableResponse construye la respuesta completa para actualizar una mesa
-func BuildUpdateTableResponse(table entities.Table, message string) response.UpdateTableResponse {
+func BuildUpdateTableResponse(table domain.Table, message string) response.UpdateTableResponse {
 	return response.UpdateTableResponse{
 		Success: true,
 		Message: message,
@@ -99,7 +99,7 @@ func BuildUpdateTableResponse(table entities.Table, message string) response.Upd
 }
 
 // BuildUpdateTablePtrResponse construye la respuesta completa para actualizar una mesa desde un puntero
-func BuildUpdateTablePtrResponse(table *entities.Table, message string) response.UpdateTableResponse {
+func BuildUpdateTablePtrResponse(table *domain.Table, message string) response.UpdateTableResponse {
 	return response.UpdateTableResponse{
 		Success: true,
 		Message: message,

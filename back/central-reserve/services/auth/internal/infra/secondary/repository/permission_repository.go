@@ -8,8 +8,6 @@ import (
 	"fmt"
 )
 
-// PermissionRepository implementa ports.IPermissionRepository
-
 // GetPermissions obtiene todos los permisos
 func (r *Repository) GetPermissions(ctx context.Context) ([]domain.Permission, error) {
 	var permissions []models.Permission

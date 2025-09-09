@@ -164,14 +164,6 @@ type Config struct {
 	SMTPUseSTARTTLS string `env:"SMTP_USE_STARTTLS"`
 	SMTPUseTLS      string `env:"SMTP_USE_TLS"`
 	UrlBaseDomainS3 string `env:"URL_BASE_DOMAIN_S3,required"`
-
-	// Services URLs (opcional, usados por el gateway para proxy)
-	AuthServiceURL     string `env:"AUTH_SERVICE_URL"`
-	ReserveServiceURL  string `env:"RESERVE_SERVICE_URL"`
-	BusinessServiceURL string `env:"BUSINESS_SERVICE_URL"`
-	CustomerServiceURL string `env:"CUSTOMER_SERVICE_URL"`
-	RoomsServiceURL    string `env:"ROOMS_SERVICE_URL"`
-	TablesServiceURL   string `env:"TABLES_SERVICE_URL"`
 }
 
 func splitTag(tag string) []string {

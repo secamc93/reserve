@@ -2,6 +2,8 @@ package storage
 
 import (
 	"context"
+	"io"
+	"mime/multipart"
 
 	"central_reserve/shared/env"
 	"central_reserve/shared/log"
@@ -36,6 +38,11 @@ type IS3Service interface {
 	GetImageURL(filename string) string
 	DeleteImage(ctx context.Context, filename string) error
 	ImageExists(ctx context.Context, filename string) (bool, error)
+	UploadFile(ctx context.Context, file io.ReadSeeker, filename string) (string, error)
+	DownloadFile(ctx context.Context, filename string) (io.ReadSeeker, error)
+	FileExists(ctx context.Context, filename string) (bool, error)
+	GetFileURL(ctx context.Context, filename string) (string, error)
+	UploadImage(ctx context.Context, file *multipart.FileHeader, folder string) (string, error)
 }
 
 // New crea una nueva instancia de S3Uploader y retorna la interfaz IS3Service
@@ -44,11 +51,6 @@ func New(env env.IConfig, logger log.ILogger) IS3Service {
 	s3Secret := env.Get("S3_SECRET")
 	s3Region := env.Get("S3_REGION")
 	s3Bucket := env.Get("S3_BUCKET")
-
-	logger.Info(context.Background()).
-		Str("bucket", s3Bucket).
-		Str("region", s3Region).
-		Msg("🔧 Intentando conectar a S3...")
 
 	// Intentar conectar a S3
 	awsCfg, err := config.LoadDefaultConfig(context.Background(),
@@ -75,11 +77,6 @@ func New(env env.IConfig, logger log.ILogger) IS3Service {
 			Msg("❌ No se pudo conectar a S3 - verifica credenciales y permisos")
 		panic("Error conectando a S3: " + err.Error())
 	}
-
-	logger.Info(context.Background()).
-		Str("bucket", s3Bucket).
-		Str("region", s3Region).
-		Msg("✅ Conexión S3 exitosa")
 
 	return &S3Uploader{
 		client: s3Client,

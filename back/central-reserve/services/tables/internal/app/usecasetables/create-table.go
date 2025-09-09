@@ -1,13 +1,13 @@
 package usecasetables
 
 import (
-	"central_reserve/internal/domain/entities"
+	"central_reserve/services/tables/internal/domain"
 	"context"
 	"fmt"
 )
 
 // CreateTable crea una nueva mesa
-func (u *TableUseCase) CreateTable(ctx context.Context, table entities.Table) (string, error) {
+func (u *TableUseCase) CreateTable(ctx context.Context, table domain.Table) (string, error) {
 	// Validar que la mesa tenga los campos requeridos
 	if table.Number == 0 {
 		return "", fmt.Errorf("el número de mesa es requerido")
