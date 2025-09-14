@@ -2,12 +2,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
-import 'package:rupu/config/helpers/design_helper.dart';
 import 'package:rupu/presentation/views/views.dart';
-import 'dart:ui' show ImageFilter;
 import 'package:rupu/config/helpers/design_helper.dart' as design;
 
 import 'package:rupu/presentation/widgets/premium_reserve_card.dart';
+import '../widgets.dart';
 
 class ReserveView extends GetView<ReserveController> {
   const ReserveView({super.key, required this.pageIndex});
@@ -253,8 +252,8 @@ class ReserveView extends GetView<ReserveController> {
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
             children: [
               // ───────────────── Hero / Header ─────────────────
-              _PremiumHeader(
-                totalHoy: totalHoy,
+              ReserveHeader(
+                totalToday: totalHoy,
                 onNew: () => context.pushNamed(
                   'reserve_new',
                   pathParameters: {'page': '$pageIndex'},
@@ -267,7 +266,7 @@ class ReserveView extends GetView<ReserveController> {
               const SizedBox(height: 16),
 
               // ───────────────── Acciones rápidas (scroll horizontal) ─────────────────
-              _QuickActionsStrip(
+              QuickActionsStrip(
                 onNew: () => context.pushNamed(
                   'reserve_new',
                   pathParameters: {'page': '$pageIndex'},
@@ -302,7 +301,7 @@ class ReserveView extends GetView<ReserveController> {
                   ),
                 ),
               ] else if (controller.reservasHoy.isEmpty) ...[
-                _EmptyStateCard(
+                EmptyStateCard(
                   title: 'Sin reservas hoy',
                   message:
                       'Aún no tienes reservas para hoy. Crea la primera y aparecerá aquí.',
@@ -346,322 +345,6 @@ class ReserveView extends GetView<ReserveController> {
     );
   }
 }
-
-// ─────────────────────────────────────────────────────────────
-// HEADER PREMIUM (gradiente suave + CTA)
-// ─────────────────────────────────────────────────────────────
-class _PremiumHeader extends StatelessWidget {
-  const _PremiumHeader({
-    required this.totalHoy,
-    required this.onNew,
-    required this.onCalendar,
-  });
-
-  final int totalHoy;
-  final VoidCallback onNew;
-  final VoidCallback onCalendar;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            cs.primary.withValues(alpha: .10),
-            cs.secondary.withValues(alpha: .08),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: cs.outlineVariant),
-      ),
-      child: Row(
-        children: [
-          // Copy
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Agenda de hoy',
-                  style: tt.titleLarge!.copyWith(fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  totalHoy == 0
-                      ? 'No hay reservas registradas.'
-                      : '$totalHoy reserva${totalHoy == 1 ? '' : 's'} programada${totalHoy == 1 ? '' : 's'}.',
-                  style: tt.bodyMedium!.copyWith(
-                    color: cs.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: [
-                    FilledButton.icon(
-                      onPressed: onNew,
-                      icon: const Icon(Icons.add_circle_outline),
-                      label: const Text('Nueva reserva'),
-                    ),
-                    OutlinedButton.icon(
-                      onPressed: onCalendar,
-                      icon: const Icon(Icons.event_outlined),
-                      label: const Text(
-                        'Calendario',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-
-          // Ilustración simple (icono grande)
-        ],
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────
-// QUICK ACTIONS (horizontal, cards fijos, sin overflows)
-// ─────────────────────────────────────────────────────────────
-class _QuickActionsStrip extends StatelessWidget {
-  const _QuickActionsStrip({
-    required this.onNew,
-    required this.onCalendar,
-    required this.onCheckIn,
-    required this.onClients,
-  });
-
-  final VoidCallback onNew;
-  final VoidCallback onCalendar;
-  final VoidCallback onCheckIn;
-  final VoidCallback onClients;
-
-  @override
-  Widget build(BuildContext context) {
-    final items = [
-      ('Nueva', Icons.add_circle_outline, onNew),
-      ('Calendario', Icons.event_outlined, onCalendar),
-      // ('Check-in', Icons.how_to_reg_outlined, onCheckIn),
-      ('Clientes', Icons.person_outline, onClients),
-    ];
-
-    return SizedBox(
-      height: 100,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: items.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 2),
-        itemBuilder: (_, i) {
-          final (label, icon, handler) = items[i];
-          return _QuickCard(label: label, icon: icon, onTap: handler);
-        },
-      ),
-    );
-  }
-}
-
-class _QuickCard extends StatelessWidget {
-  const _QuickCard({required this.label, required this.icon, this.onTap});
-  final String label;
-  final IconData icon;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(18),
-            child: Ink(
-              width: 120, // ancho cómodo para 2 líneas de texto
-              height: 120,
-              decoration: BoxDecoration(
-                color: cs.surfaceContainerHighest.withValues(alpha: .35),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: cs.outlineVariant.withValues(alpha: .5),
-                ),
-              ),
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Icono en píldora circular
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          colors: [
-                            cs.primary.withValues(alpha: .14),
-                            cs.secondary.withValues(alpha: .12),
-                          ],
-                        ),
-                        // aro sutil
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: .06),
-                            blurRadius: 12,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
-                      ),
-                      alignment: Alignment.center,
-                      child: Icon(icon, color: cs.primary),
-                    ),
-                    const SizedBox(height: 10),
-                    // Texto centrado (2 líneas máx)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Text(
-                        label,
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: tt.labelLarge!.copyWith(
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: .2,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class SoftStatusPill extends StatelessWidget {
-  const SoftStatusPill({super.key, required this.text, required this.tone});
-  final String text;
-  final StatusTone tone;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
-    Color fg;
-    switch (tone) {
-      case StatusTone.success:
-        fg = Colors.green;
-        break;
-      case StatusTone.warning:
-        fg = const Color(0xFF9E6B00);
-        break; // ámbar oscuro
-      case StatusTone.danger:
-        fg = cs.error;
-        break;
-      case StatusTone.info:
-        fg = cs.primary;
-        break;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: ShapeDecoration(
-        color: fg.withValues(alpha: .12),
-        shape: StadiumBorder(
-          side: BorderSide(color: fg.withValues(alpha: .22)),
-        ),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(color: fg, fontWeight: FontWeight.w800, fontSize: 12),
-      ),
-    );
-  }
-}
-
 // ─────────────────────────────────────────────────────────────
 // Empty state amigable
 // ─────────────────────────────────────────────────────────────
-class _EmptyStateCard extends StatelessWidget {
-  const _EmptyStateCard({
-    required this.title,
-    required this.message,
-    required this.ctaText,
-    required this.onCta,
-  });
-
-  final String title;
-  final String message;
-  final String ctaText;
-  final VoidCallback onCta;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return PrimaryCard(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: cs.primary.withValues(alpha: .12),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              alignment: Alignment.center,
-              child: Icon(Icons.event_busy, color: cs.primary),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: tt.titleMedium!.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    message,
-                    style: tt.bodyMedium!.copyWith(color: cs.onSurfaceVariant),
-                  ),
-                  const SizedBox(height: 10),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: FilledButton(onPressed: onCta, child: Text(ctaText)),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

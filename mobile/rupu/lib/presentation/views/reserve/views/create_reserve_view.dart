@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import 'package:rupu/presentation/views/profile/perfil_controller.dart';
 import 'package:rupu/presentation/views/reserve/controllers/reserves_controller.dart';
+import '../widgets.dart';
 
 class CreateReserveView extends StatefulWidget {
   const CreateReserveView({super.key});
@@ -287,26 +288,26 @@ class _CreateReserveViewState extends State<CreateReserveView> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  _ConfirmRow(
+                  ConfirmRow(
                     icon: Icons.person_outline,
                     label: 'Cliente',
                     value: name,
                   ),
                   const SizedBox(height: 6),
-                  _ConfirmRow(
+                  ConfirmRow(
                     icon: Icons.schedule,
                     label: 'Horario',
                     value: timeRange,
                   ),
                   const SizedBox(height: 6),
-                  _ConfirmRow(
+                  ConfirmRow(
                     icon: Icons.group_outlined,
                     label: 'Personas',
                     value: '$guests',
                   ),
                   if ((email ?? '').isNotEmpty) ...[
                     const SizedBox(height: 6),
-                    _ConfirmRow(
+                    ConfirmRow(
                       icon: Icons.email_outlined,
                       label: 'Email',
                       value: email!,
@@ -314,7 +315,7 @@ class _CreateReserveViewState extends State<CreateReserveView> {
                   ],
                   if ((phone ?? '').isNotEmpty) ...[
                     const SizedBox(height: 6),
-                    _ConfirmRow(
+                    ConfirmRow(
                       icon: Icons.phone_outlined,
                       label: 'Teléfono',
                       value: phone!,
@@ -322,7 +323,7 @@ class _CreateReserveViewState extends State<CreateReserveView> {
                   ],
                   if ((dni ?? '').isNotEmpty) ...[
                     const SizedBox(height: 6),
-                    _ConfirmRow(
+                    ConfirmRow(
                       icon: Icons.badge_outlined,
                       label: 'Documento',
                       value: dni!,
@@ -550,7 +551,7 @@ class _CreateReserveViewState extends State<CreateReserveView> {
                     Row(
                       children: [
                         Expanded(
-                          child: _DateTile(
+                          child: DateTile(
                             label: 'Inicio',
                             value: DateFormat(
                               'EEE d MMM, HH:mm',
@@ -562,7 +563,7 @@ class _CreateReserveViewState extends State<CreateReserveView> {
                         ),
                         const SizedBox(width: 8),
                         Expanded(
-                          child: _DateTile(
+                          child: DateTile(
                             label: 'Fin',
                             value: DateFormat(
                               'EEE d MMM, HH:mm',
@@ -629,94 +630,3 @@ class _CreateReserveViewState extends State<CreateReserveView> {
   }
 }
 
-class _DateTile extends StatelessWidget {
-  const _DateTile({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.onTap,
-  });
-
-  final String label;
-  final String value;
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: cs.outlineVariant),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: cs.primary),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: tt.labelMedium!.copyWith(color: cs.onSurfaceVariant),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    value,
-                    style: tt.titleSmall!.copyWith(fontWeight: FontWeight.w700),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Icons.edit_calendar_outlined),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ConfirmRow extends StatelessWidget {
-  const _ConfirmRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: cs.onSurfaceVariant),
-        const SizedBox(width: 8),
-        Text(
-          label,
-          style: tt.labelMedium!.copyWith(color: cs.onSurfaceVariant),
-        ),
-        // const Spacer(),
-        SizedBox(width: 60),
-        Flexible(
-          child: Text(
-            value,
-            textAlign: TextAlign.end,
-            overflow: TextOverflow.ellipsis,
-            style: tt.bodyMedium!.copyWith(fontWeight: FontWeight.w700),
-          ),
-        ),
-      ],
-    );
-  }
-}

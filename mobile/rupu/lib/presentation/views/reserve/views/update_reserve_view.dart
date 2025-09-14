@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 
-import 'package:rupu/presentation/views/reserve/widgets/data_time_tile.dart';
+import '../widgets.dart';
 import '../controllers/reserve_update_controller.dart';
 import '../controllers/reserves_controller.dart';
 import '../controllers/reserve_status_controller.dart';

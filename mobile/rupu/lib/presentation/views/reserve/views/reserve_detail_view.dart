@@ -11,6 +11,9 @@ import 'update_reserve_view.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../controllers/reserves_controller.dart';
+import 'package:rupu/config/helpers/calendar_helper.dart';
+import 'package:rupu/presentation/widgets/widgets.dart';
+import '../widgets.dart';
 
 class ReserveDetailView extends GetView<ReserveDetailController> {
   const ReserveDetailView({super.key, required this.pageIndex});
@@ -299,10 +302,9 @@ class ReserveDetailView extends GetView<ReserveDetailController> {
           key: const PageStorageKey('reserve-detail'),
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
           children: [
-            _HeaderCard(
+            HeaderCard(
               name: name.isEmpty ? 'Cliente' : name,
               email: (r.clienteEmail).trim(),
-              statusText: r.estadoNombre,
               bannerUrl: businessLogoUrl,
               initial: initial,
             ),
@@ -333,13 +335,13 @@ class ReserveDetailView extends GetView<ReserveDetailController> {
                               const SizedBox(height: 6),
                               Row(
                                 children: [
-                                  _TimeChip(
+                                  TimeChip(
                                     icon: Icons.schedule,
                                     label:
                                         '${dfTime.format(start)} – ${dfTime.format(end)}',
                                   ),
                                   const SizedBox(width: 8),
-                                  _TimeChip(
+                                  TimeChip(
                                     icon: Icons.timelapse,
                                     label: durationLabel,
                                   ),
@@ -348,7 +350,10 @@ class ReserveDetailView extends GetView<ReserveDetailController> {
                             ],
                           ),
                         ),
-                        StatusPill(text: _normalizeStatus(r.estadoNombre)),
+                        SoftStatusPill(
+                          text: _normalizeStatus(r.estadoNombre),
+                          tone: _toneForStatus(r.estadoNombre),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -359,24 +364,24 @@ class ReserveDetailView extends GetView<ReserveDetailController> {
                       runSpacing: 10,
                       spacing: 16,
                       children: [
-                        _InfoTile(
+                        InfoTile(
                           icon: Icons.group_outlined,
                           label: 'Personas',
                           value: '${r.numberOfGuests}',
                         ),
                         if ((r.mesaNumero ?? '').toString().isNotEmpty)
-                          _InfoTile(
+                          InfoTile(
                             icon: Icons.table_bar_outlined,
                             label: 'Mesa',
                             value: '${r.mesaNumero}',
                           ),
                         if ((r.negocioNombre).trim().isNotEmpty)
-                          _InfoTile(
+                          InfoTile(
                             icon: Icons.store_mall_directory_outlined,
                             label: 'Negocio',
                             value: r.negocioNombre,
                           ),
-                        _InfoTile(
+                        InfoTile(
                           icon: Icons.confirmation_number_outlined,
                           label: 'Reserva',
                           value: '#${r.reservaId}',
@@ -406,22 +411,22 @@ class ReserveDetailView extends GetView<ReserveDetailController> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _SectionTitle('Contacto del cliente'),
+                    const SectionTitle('Contacto del cliente'),
                     const SizedBox(height: 10),
                     if (r.clienteTelefono.toString().trim().isNotEmpty)
-                      _ContactRow(
+                      ContactRow(
                         icon: Icons.phone_outlined,
                         label: 'Teléfono',
                         value: r.clienteTelefono.toString(),
                       ),
                     if ((r.clienteEmail).trim().isNotEmpty)
-                      _ContactRow(
+                      ContactRow(
                         icon: Icons.email_outlined,
                         label: 'Email',
                         value: r.clienteEmail,
                       ),
                     if ((r.clienteDni).toString().trim().isNotEmpty)
-                      _ContactRow(
+                      ContactRow(
                         icon: Icons.badge_outlined,
                         label: 'Documento',
                         value: r.clienteDni.toString(),
@@ -517,7 +522,7 @@ class ReserveDetailView extends GetView<ReserveDetailController> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _SectionTitle('Historial'),
+                      const SectionTitle('Historial'),
                       const SizedBox(height: 12),
                       Column(
                         children: List.generate(r.statusHistory.length, (i) {
@@ -616,309 +621,6 @@ class ReserveDetailView extends GetView<ReserveDetailController> {
   }
 }
 
-class _HeaderCard extends StatelessWidget {
-  const _HeaderCard({
-    required this.name,
-    required this.email,
-    required this.statusText,
-    required this.bannerUrl,
-    required this.initial,
-  });
-
-  final String name;
-  final String email;
-  final String statusText;
-  final String bannerUrl; // <- logo del negocio
-  final String initial; // <- inicial del cliente
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return SizedBox(
-      height: 150,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(18),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            // Banner: logo del negocio
-            if (bannerUrl.isNotEmpty)
-              Image.network(
-                bannerUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(color: cs.surface),
-              )
-            else
-              Container(color: cs.surface),
-
-            // Overlay muy sutil (sin blur agresivo)
-            DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    cs.surface.withValues(alpha: .75),
-                    cs.surface.withValues(alpha: .75),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-            ),
-
-            // Contenido
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Row(
-                children: [
-                  _InitialAvatar(initial: initial, size: 64),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center, // centrado
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: tt.titleLarge!.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        if (email.trim().isNotEmpty)
-                          Text(
-                            email,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: tt.bodyMedium!.copyWith(
-                              color: cs.onSurfaceVariant,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Avatar con la inicial (gradiente del tema, borde blanco y sombra sutil)
-class _InitialAvatar extends StatelessWidget {
-  const _InitialAvatar({required this.initial, this.size = 56});
-
-  final String initial;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final textStyle = Theme.of(context).textTheme.headlineSmall!.copyWith(
-      color: Colors.white,
-      fontWeight: FontWeight.w800,
-    );
-
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: LinearGradient(
-          colors: [cs.primary, cs.secondary],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: cs.primary.withValues(alpha: .22),
-            blurRadius: 10,
-            offset: const Offset(0, 6),
-          ),
-        ],
-        border: Border.all(
-          color: Colors.white.withValues(alpha: .95),
-          width: 3,
-        ),
-      ),
-      alignment: Alignment.center,
-      child: FittedBox(
-        fit: BoxFit.scaleDown,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6),
-          child: Text(initial, style: textStyle),
-        ),
-      ),
-    );
-  }
-}
-
-class _TimeChip extends StatelessWidget {
-  const _TimeChip({required this.icon, required this.label});
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: cs.outlineVariant),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: cs.onSurfaceVariant),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: Theme.of(
-              context,
-            ).textTheme.labelMedium!.copyWith(fontWeight: FontWeight.w700),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InfoTile extends StatelessWidget {
-  const _InfoTile({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: 120),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: cs.primary),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: tt.labelSmall!.copyWith(
-                    color: cs.onSurfaceVariant,
-                    height: 1,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: tt.titleSmall!.copyWith(fontWeight: FontWeight.w700),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle(this.text);
-  final String text;
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    return Text(
-      text,
-      style: tt.titleMedium!.copyWith(fontWeight: FontWeight.w800),
-    );
-  }
-}
-
-class _ContactRow extends StatelessWidget {
-  const _ContactRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        children: [
-          Icon(icon, color: cs.onSurfaceVariant),
-          const SizedBox(width: 10),
-          Text(
-            label,
-            style: tt.labelMedium!.copyWith(color: cs.onSurfaceVariant),
-          ),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              value,
-              textAlign: TextAlign.end,
-              style: tt.bodyMedium!.copyWith(fontWeight: FontWeight.w700),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Colores fijos por estado
-class StatusPill extends StatelessWidget {
-  const StatusPill({super.key, required this.text});
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final (bg, fg) = _statusColors(text);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: fg.withValues(alpha: .25)),
-      ),
-      child: Text(
-        text,
-        style: Theme.of(context).textTheme.labelMedium!.copyWith(
-          color: fg,
-          fontWeight: FontWeight.w700,
-          letterSpacing: .2,
-        ),
-      ),
-    );
-  }
-}
-
 // ───────────── Helpers ─────────────
 DateTime _asLocal(dynamic dt) {
   if (dt is DateTime) return dt.toLocal();
@@ -943,16 +645,12 @@ String _normalizeStatus(String raw) {
   return raw.isEmpty ? 'Pendiente' : raw;
 }
 
-(Color, Color) _statusColors(String status) {
-  final s = status.toLowerCase();
-  if (s.contains('complet')) {
-    return (const Color(0xFFE6F4EA), const Color(0xFF0F5132));
-  } else if (s.contains('pend')) {
-    return (const Color(0xFFFFF4E5), const Color(0xFF7A4F01));
-  } else if (s.contains('confirm')) {
-    return (const Color(0xFFE7F1FF), const Color(0xFF084298));
-  } else if (s.contains('cancel')) {
-    return (const Color(0xFFFFE5E5), const Color(0xFF842029));
-  }
-  return (const Color(0xFFEDEDED), const Color(0xFF222222));
+Tone _toneForStatus(String raw) {
+  final s = raw.toLowerCase();
+  if (s.contains('complet')) return Tone.success;
+  if (s.contains('pend')) return Tone.warning;
+  if (s.contains('cancel')) return Tone.danger;
+  if (s.contains('confirm')) return Tone.info;
+  return Tone.info;
 }
+
