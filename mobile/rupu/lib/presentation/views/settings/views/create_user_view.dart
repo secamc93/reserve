@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'create_user_controller.dart';
+import '../controllers/create_user_controller.dart';
 
 class CreateUserView extends GetView<CreateUserController> {
   static const name = 'create-user';
@@ -12,9 +12,7 @@ class CreateUserView extends GetView<CreateUserController> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Crear usuario')),
-      body: const Center(
-        child: Text('Vista de creación de usuario (dummy)'),
-      ),
+      body: const Center(child: Text('Vista de creación de usuario')),
     );
   }
 }

@@ -31,7 +31,7 @@ export 'package:rupu/presentation/views/login/login_controller.dart';
 
 export 'package:rupu/presentation/views/login/login_view.dart';
 
-export 'package:rupu/presentation/views/settings/settings_controller.dart';
-export 'package:rupu/presentation/views/settings/settings_view.dart';
-export 'package:rupu/presentation/views/settings/create_user_controller.dart';
-export 'package:rupu/presentation/views/settings/create_user_view.dart';
+export 'package:rupu/presentation/views/settings/controllers/settings_controller.dart';
+export 'package:rupu/presentation/views/settings/views/settings_view.dart';
+export 'package:rupu/presentation/views/settings/controllers/create_user_controller.dart';
+export 'package:rupu/presentation/views/settings/views/create_user_view.dart';
