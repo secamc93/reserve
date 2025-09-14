@@ -4,10 +4,10 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 
-import 'package:rupu/presentation/views/reserve/data_time_tile.dart';
-import 'reserve_update_controller.dart';
-import '../reserve/reserves_controller.dart';
-import 'reserve_status_controller.dart';
+import 'package:rupu/presentation/views/reserve/widgets/data_time_tile.dart';
+import '../controllers/reserve_update_controller.dart';
+import '../controllers/reserves_controller.dart';
+import '../controllers/reserve_status_controller.dart';
 import 'package:rupu/domain/entities/reserve_status.dart';
 
 class UpdateReserveView extends StatefulWidget {

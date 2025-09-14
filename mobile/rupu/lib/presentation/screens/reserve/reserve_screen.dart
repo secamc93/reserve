@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:rupu/presentation/views/reserve/reserve_view.dart';
+import 'package:rupu/presentation/views/reserve/views/reserve_view.dart';
 
 class ReserveScreen extends StatelessWidget {
   static const name = 'reserve';

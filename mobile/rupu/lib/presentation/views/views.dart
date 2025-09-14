@@ -1,6 +1,6 @@
-export 'package:rupu/presentation/views/reserve/create_reserve_view.dart';
+export 'package:rupu/presentation/views/reserve/views/create_reserve_view.dart';
 
-export 'package:rupu/presentation/views/reserve/calendar_view.dart';
+export 'package:rupu/presentation/views/reserve/views/calendar_view.dart';
 
 export 'package:rupu/presentation/views/profile/perfil_controller.dart';
 
@@ -8,15 +8,15 @@ export 'package:rupu/presentation/views/home/home_controller.dart';
 
 export 'package:rupu/presentation/views/change_password/cambiar_contrasena_controller.dart';
 
-export 'package:rupu/presentation/views/reserve/reserves_controller.dart';
+export 'package:rupu/presentation/views/reserve/controllers/reserves_controller.dart';
 
-export 'package:rupu/presentation/views/reserve/reserve_view.dart';
+export 'package:rupu/presentation/views/reserve/views/reserve_view.dart';
 
-export 'package:rupu/presentation/views/reserve/reserve_detail_controller.dart';
+export 'package:rupu/presentation/views/reserve/controllers/reserve_detail_controller.dart';
 
-export 'package:rupu/presentation/views/reserve/reserve_detail_view.dart';
-export 'package:rupu/presentation/views/reserve/reserve_update_controller.dart';
-export 'package:rupu/presentation/views/reserve/update_reserve_view.dart';
+export 'package:rupu/presentation/views/reserve/views/reserve_detail_view.dart';
+export 'package:rupu/presentation/views/reserve/controllers/reserve_update_controller.dart';
+export 'package:rupu/presentation/views/reserve/views/update_reserve_view.dart';
 
 export 'package:rupu/presentation/views/clients/clients_controller.dart';
 export 'package:rupu/presentation/views/clients/clients_view.dart';

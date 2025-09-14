@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 import 'package:rupu/presentation/views/profile/perfil_controller.dart';
-import 'package:rupu/presentation/views/reserve/reserves_controller.dart';
+import 'package:rupu/presentation/views/reserve/controllers/reserves_controller.dart';
 
 class CreateReserveView extends StatefulWidget {
   const CreateReserveView({super.key});

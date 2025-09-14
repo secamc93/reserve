@@ -4,7 +4,7 @@ import 'package:rupu/domain/entities/client.dart';
 import 'package:rupu/domain/repositories/client_repository.dart';
 import 'package:rupu/domain/infrastructure/repositories/client_repository_impl.dart';
 import 'package:rupu/domain/infrastructure/datasources/clients_datasource_impl.dart';
-import 'package:rupu/presentation/views/reserve/reserves_controller.dart';
+import 'package:rupu/presentation/views/reserve/controllers/reserves_controller.dart';
 
 class ClientsController extends GetxController {
   final ClientRepository repository;

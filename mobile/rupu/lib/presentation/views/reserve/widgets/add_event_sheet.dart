@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import '../../reserve/data_time_tile.dart'; // tu tile existente
+import 'data_time_tile.dart'; // tu tile existente
 import 'package:rupu/config/helpers/calendar_helper.dart'; // para isValidEmail si lo tienes allí
 
 typedef AddEventSubmit =

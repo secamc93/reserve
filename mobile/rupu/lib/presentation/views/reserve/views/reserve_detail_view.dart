@@ -6,11 +6,11 @@ import 'package:intl/intl.dart';
 import 'package:rupu/config/helpers/design_helper.dart';
 import 'package:rupu/domain/entities/reserve.dart';
 import 'package:rupu/presentation/views/profile/perfil_controller.dart';
-import 'reserve_detail_controller.dart';
+import '../controllers/reserve_detail_controller.dart';
 import 'update_reserve_view.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'reserves_controller.dart';
+import '../controllers/reserves_controller.dart';
 
 class ReserveDetailView extends GetView<ReserveDetailController> {
   const ReserveDetailView({super.key, required this.pageIndex});
