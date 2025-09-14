@@ -32,8 +32,8 @@ Future<String?> showCancelReasonSheet(BuildContext context) async {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        cs.error.withOpacity(.12),
-                        cs.errorContainer.withOpacity(.10),
+                        cs.error.withValues(alpha: .12),
+                        cs.errorContainer.withValues(alpha: .10),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(12),
@@ -76,7 +76,7 @@ Future<String?> showCancelReasonSheet(BuildContext context) async {
                 FilledButton.tonal(
                   style: FilledButton.styleFrom(
                     foregroundColor: cs.error,
-                    backgroundColor: cs.error.withOpacity(.08),
+                    backgroundColor: cs.error.withValues(alpha: .08),
                   ),
                   onPressed: () => Navigator.of(ctx).pop(reasonCtrl.text),
                   child: const Text('Confirmar cancelación'),
@@ -114,8 +114,8 @@ Future<bool?> showConfirmCheckInSheet(BuildContext context) {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        cs.primary.withOpacity(.12),
-                        cs.primaryContainer.withOpacity(.10),
+                        cs.primary.withValues(alpha: .12),
+                        cs.primaryContainer.withValues(alpha: .10),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(12),
@@ -149,7 +149,7 @@ Future<bool?> showConfirmCheckInSheet(BuildContext context) {
                 FilledButton.tonal(
                   style: FilledButton.styleFrom(
                     foregroundColor: cs.primary,
-                    backgroundColor: cs.primary.withOpacity(.08),
+                    backgroundColor: cs.primary.withValues(alpha: .08),
                   ),
                   onPressed: () => Navigator.of(ctx).pop(true),
                   child: const Text('Confirmar'),

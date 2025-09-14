@@ -67,7 +67,7 @@ Future<void> showAppointmentDetailSheet({
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: cs.surfaceContainerHighest.withOpacity(.5),
+                      color: cs.surfaceContainerHighest.withValues(alpha: .5),
                       border: Border.all(color: cs.outlineVariant),
                       shape: BoxShape.circle,
                     ),

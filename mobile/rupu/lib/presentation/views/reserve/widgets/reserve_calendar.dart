@@ -116,7 +116,7 @@ class ReserveCalendar extends StatelessWidget {
                         maxHeight: 50,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(.08),
+                        color: Colors.black.withValues(alpha: .08),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: FittedBox(

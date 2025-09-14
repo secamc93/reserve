@@ -16,6 +16,9 @@ class CustomBottomNavigation extends StatelessWidget {
       case 1:
         context.go('/home/0/perfil');
         break;
+      case 2:
+        context.go('/home/0/perfil');
+        break;
     }
   }
 
@@ -26,6 +29,7 @@ class CustomBottomNavigation extends StatelessWidget {
     final items = const <_NavItem>[
       _NavItem(icon: Icons.home_max, label: 'Inicio'),
       _NavItem(icon: Icons.person, label: 'Perfil'),
+      _NavItem(icon: Icons.settings_outlined, label: ' Ajustes'),
     ];
 
     return SafeArea(
