@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rupu/config/helpers/design_helper.dart';
 import 'package:rupu/presentation/views/views.dart';
 import 'package:rupu/config/helpers/design_helper.dart' as design;
 
@@ -345,6 +346,3 @@ class ReserveView extends GetView<ReserveController> {
     );
   }
 }
-// ─────────────────────────────────────────────────────────────
-// Empty state amigable
-// ─────────────────────────────────────────────────────────────
