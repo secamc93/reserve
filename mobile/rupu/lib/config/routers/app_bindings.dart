@@ -66,3 +66,19 @@ class ClientsBinding {
     }
   }
 }
+
+class SettingsBinding {
+  static void register() {
+    if (!Get.isRegistered<SettingsController>()) {
+      Get.put(SettingsController());
+    }
+  }
+}
+
+class CreateUserBinding {
+  static void register() {
+    if (!Get.isRegistered<CreateUserController>()) {
+      Get.put(CreateUserController());
+    }
+  }
+}

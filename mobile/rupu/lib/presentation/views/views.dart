@@ -30,3 +30,8 @@ export 'package:rupu/presentation/views/change_password/cambiar_contrasena_view.
 export 'package:rupu/presentation/views/login/login_controller.dart';
 
 export 'package:rupu/presentation/views/login/login_view.dart';
+
+export 'package:rupu/presentation/views/settings/settings_controller.dart';
+export 'package:rupu/presentation/views/settings/settings_view.dart';
+export 'package:rupu/presentation/views/settings/create_user_controller.dart';
+export 'package:rupu/presentation/views/settings/create_user_view.dart';

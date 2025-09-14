@@ -10,8 +10,8 @@ import '../../presentation/views/views.dart';
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 int _calculateIndex(String location) {
-  if (location.endsWith('/perfil')) return 1;
-  if (location.startsWith('/home/') && !location.contains('/')) return 0;
+  if (location.contains('/perfil')) return 1;
+  if (location.contains('/ajustes')) return 2;
   return 0;
 }
 
@@ -113,6 +113,34 @@ final appRouter = GoRouter(
           builder: (context, state) {
             CambiarContrasenaBinding.register();
             return CambiarContrasenaScreen();
+          },
+        ),
+
+        GoRoute(
+          path: '/home/:page/ajustes',
+          name: SettingsScreen.name,
+          builder: (context, state) {
+            final pageIndex = int.parse(state.pathParameters['page']!);
+            SettingsBinding.register();
+            return FadeInLeft(
+              curve: Curves.fastEaseInToSlowEaseOut,
+              delay: const Duration(milliseconds: 200),
+              child: SettingsView(pageIndex: pageIndex),
+            );
+          },
+        ),
+        GoRoute(
+          path: '/home/:page/ajustes/crear_usuario',
+          name: CreateUserView.name,
+          builder: (context, state) {
+            CreateUserBinding.register();
+            final home = Get.find<HomeController>();
+            if (!home.isSuper) {
+              return const Scaffold(
+                body: Center(child: Text('No autorizado')),
+              );
+            }
+            return const CreateUserView();
           },
         ),
 
