@@ -59,8 +59,9 @@ class _UsersViewState extends State<UsersView> {
                   Expanded(
                     child: TextField(
                       controller: controller.pageSizeCtrl,
-                      decoration:
-                          const InputDecoration(labelText: 'Tamaño de página'),
+                      decoration: const InputDecoration(
+                        labelText: 'Tamaño de página',
+                      ),
                       keyboardType: TextInputType.number,
                     ),
                   ),
@@ -85,7 +86,10 @@ class _UsersViewState extends State<UsersView> {
                 items: const [
                   DropdownMenuItem<bool?>(value: null, child: Text('Todos')),
                   DropdownMenuItem<bool?>(value: true, child: Text('Activo')),
-                  DropdownMenuItem<bool?>(value: false, child: Text('Inactivo')),
+                  DropdownMenuItem<bool?>(
+                    value: false,
+                    child: Text('Inactivo'),
+                  ),
                 ],
                 onChanged: (v) => controller.isActive.value = v,
               ),
@@ -102,8 +106,9 @@ class _UsersViewState extends State<UsersView> {
               TextField(
                 controller: controller.createdAtCtrl,
                 decoration: const InputDecoration(
-                    labelText: 'Creado en',
-                    hintText: 'YYYY-MM-DD o rango'),
+                  labelText: 'Creado en',
+                  hintText: 'YYYY-MM-DD o rango',
+                ),
               ),
               TextField(
                 controller: controller.sortByCtrl,

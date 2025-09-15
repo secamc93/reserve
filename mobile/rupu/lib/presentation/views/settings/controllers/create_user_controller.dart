@@ -9,7 +9,7 @@ import 'package:rupu/domain/repositories/users_repository.dart';
 class CreateUserController extends GetxController {
   final UsersRepository repository;
   CreateUserController()
-      : repository = UsersRepositoryImpl(UsersManagementDatasourceImpl());
+    : repository = UsersRepositoryImpl(UsersManagementDatasourceImpl());
 
   final formKey = GlobalKey<FormState>();
   final nameCtrl = TextEditingController();
@@ -51,13 +51,14 @@ class CreateUserController extends GetxController {
         isActive: isActive.value,
         roleIds: _parseIds(roleIdsCtrl.text),
         businessIds: _parseIds(businessIdsCtrl.text),
-        avatarUrl:
-            avatarUrlCtrl.text.trim().isEmpty ? null : avatarUrlCtrl.text.trim(),
+        avatarUrl: avatarUrlCtrl.text.trim().isEmpty
+            ? null
+            : avatarUrlCtrl.text.trim(),
         avatarPath: avatarFile.value?.path,
       );
       return true;
-    } catch (_) {
-      errorMessage.value = 'Error al crear usuario';
+    } catch (e) {
+      errorMessage.value = 'Error al crear usuario $e';
       return false;
     } finally {
       isSubmitting.value = false;

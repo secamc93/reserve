@@ -8,7 +8,7 @@ import 'package:rupu/domain/repositories/users_repository.dart';
 class UsersController extends GetxController {
   final UsersRepository repository;
   UsersController()
-      : repository = UsersRepositoryImpl(UsersManagementDatasourceImpl());
+    : repository = UsersRepositoryImpl(UsersManagementDatasourceImpl());
 
   final users = <UserListItem>[].obs;
   final isLoading = false.obs;
@@ -59,7 +59,8 @@ class UsersController extends GetxController {
         if (emailCtrl.text.isNotEmpty) 'email': emailCtrl.text,
         if (phoneCtrl.text.isNotEmpty) 'phone': phoneCtrl.text,
         if (isActive.value != null) 'is_active': isActive.value,
-        if (roleIdCtrl.text.isNotEmpty) 'role_id': int.tryParse(roleIdCtrl.text),
+        if (roleIdCtrl.text.isNotEmpty)
+          'role_id': int.tryParse(roleIdCtrl.text),
         if (businessIdCtrl.text.isNotEmpty)
           'business_id': int.tryParse(businessIdCtrl.text),
         if (createdAtCtrl.text.isNotEmpty) 'created_at': createdAtCtrl.text,
