@@ -1,5 +1,6 @@
 import '../../datasource/user_management_datasource.dart';
-import '../../entities/user_list_item.dart';
+import '../../entities/create_user_result.dart';
+import '../../entities/users_page.dart';
 import '../../repositories/users_repository.dart';
 import '../mappers/users_mapper.dart';
 
@@ -8,13 +9,13 @@ class UsersRepositoryImpl extends UsersRepository {
   UsersRepositoryImpl(this.datasource);
 
   @override
-  Future<List<UserListItem>> getUsers({Map<String, dynamic>? query}) async {
+  Future<UsersPage> getUsers({Map<String, dynamic>? query}) async {
     final res = await datasource.getUsers(query: query);
-    return res.data.map(UsersMapper.userModelToEntity).toList();
+    return UsersMapper.responseToEntity(res);
   }
 
   @override
-  Future<void> createUser({
+  Future<CreateUserResult> createUser({
     required String name,
     required String email,
     String? phone,
@@ -24,8 +25,8 @@ class UsersRepositoryImpl extends UsersRepository {
     String? avatarUrl,
     String? avatarPath,
     String? avatarFileName,
-  }) {
-    return datasource.createUser(
+  }) async {
+    final response = await datasource.createUser(
       name: name,
       email: email,
       phone: phone,
@@ -36,5 +37,6 @@ class UsersRepositoryImpl extends UsersRepository {
       avatarPath: avatarPath,
       avatarFileName: avatarFileName,
     );
+    return UsersMapper.createUserToEntity(response);
   }
 }

@@ -1,8 +1,9 @@
-import '../entities/user_list_item.dart';
+import '../entities/create_user_result.dart';
+import '../entities/users_page.dart';
 
 abstract class UsersRepository {
-  Future<List<UserListItem>> getUsers({Map<String, dynamic>? query});
-  Future<void> createUser({
+  Future<UsersPage> getUsers({Map<String, dynamic>? query});
+  Future<CreateUserResult> createUser({
     required String name,
     required String email,
     String? phone,

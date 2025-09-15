@@ -1,7 +1,10 @@
 // presentation/views/settings/create_user_view.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:go_router/go_router.dart';
 
+import 'package:rupu/domain/entities/create_user_result.dart';
 import '../controllers/create_user_controller.dart';
 
 class CreateUserView extends GetView<CreateUserController> {
@@ -112,9 +115,11 @@ class CreateUserView extends GetView<CreateUserController> {
                   onPressed: controller.isSubmitting.value
                       ? null
                       : () async {
-                          final ok = await controller.submit();
-                          if (ok && context.mounted) {
-                            Get.back();
+                          final result = await controller.submit();
+                          if (result != null && context.mounted) {
+                            await _showSuccessDialog(context, result);
+                            if (!context.mounted) return;
+                            GoRouter.of(context).pop(true);
                           }
                         },
                   child: controller.isSubmitting.value
@@ -137,4 +142,57 @@ class CreateUserView extends GetView<CreateUserController> {
       ),
     );
   }
+}
+
+Future<void> _showSuccessDialog(
+  BuildContext context,
+  CreateUserResult result,
+) async {
+  await showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (dialogCtx) {
+      return AlertDialog(
+        title: const Text('Usuario creado'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(result.message ?? 'El usuario se creó correctamente.'),
+            const SizedBox(height: 12),
+            SelectableText('Email: ${result.email}'),
+            const SizedBox(height: 8),
+            SelectableText(
+              result.password != null && result.password!.isNotEmpty
+                  ? 'Contraseña temporal: ${result.password}'
+                  : 'No se recibió una contraseña temporal.',
+            ),
+          ],
+        ),
+        actions: [
+          if (result.password != null && result.password!.isNotEmpty)
+            TextButton.icon(
+              onPressed: () async {
+                await Clipboard.setData(
+                  ClipboardData(text: result.password!),
+                );
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Contraseña copiada al portapapeles'),
+                    ),
+                  );
+                }
+              },
+              icon: const Icon(Icons.copy_all_outlined),
+              label: const Text('Copiar contraseña'),
+            ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(),
+            child: const Text('Continuar'),
+          ),
+        ],
+      );
+    },
+  );
 }

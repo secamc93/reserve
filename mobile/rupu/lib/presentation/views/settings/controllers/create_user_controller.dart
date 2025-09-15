@@ -2,6 +2,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:rupu/domain/entities/create_user_result.dart';
 import 'package:rupu/domain/infrastructure/datasources/users_management_datasource_impl.dart';
 import 'package:rupu/domain/infrastructure/repositories/users_repository_impl.dart';
 import 'package:rupu/domain/repositories/users_repository.dart';
@@ -65,19 +66,19 @@ class CreateUserController extends GetxController {
     }
   }
 
-  Future<bool> submit() async {
-    if (!formKey.currentState!.validate()) return false;
+  Future<CreateUserResult?> submit() async {
+    if (!formKey.currentState!.validate()) return null;
     if (avatarProcessing.value) {
       avatarError.value =
           'Por favor espera a que terminemos de procesar la imagen.';
-      return false;
+      return null;
     }
     isSubmitting.value = true;
     errorMessage.value = null;
     try {
       final avatarData = avatarFile.value;
       final avatarUrl = avatarUrlCtrl.text.trim();
-      await repository.createUser(
+      final result = await repository.createUser(
         name: nameCtrl.text.trim(),
         email: emailCtrl.text.trim(),
         phone: phoneCtrl.text.trim().isEmpty ? null : phoneCtrl.text.trim(),
@@ -88,10 +89,15 @@ class CreateUserController extends GetxController {
         avatarPath: avatarData?.path,
         avatarFileName: avatarData?.fileName,
       );
-      return true;
+      if (!result.success) {
+        errorMessage.value =
+            result.message ?? 'No se pudo crear el usuario, intenta nuevamente';
+        return null;
+      }
+      return result;
     } catch (_) {
       errorMessage.value = 'Error al crear usuario';
-      return false;
+      return null;
     } finally {
       isSubmitting.value = false;
     }

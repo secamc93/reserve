@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import '../../datasource/user_management_datasource.dart';
+import '../models/create_user_response_model.dart';
 import '../models/users_response_model.dart';
 
 class UsersManagementDatasourceImpl extends UserManagementDatasource {
@@ -12,7 +13,7 @@ class UsersManagementDatasourceImpl extends UserManagementDatasource {
   }
 
   @override
-  Future<void> createUser({
+  Future<CreateUserResponseModel> createUser({
     required String name,
     required String email,
     String? phone,
@@ -37,6 +38,9 @@ class UsersManagementDatasourceImpl extends UserManagementDatasource {
           filename: avatarFileName ?? avatarPath.split('/').last,
         ),
     });
-    await dio.post('/users', data: formData);
+    final response = await dio.post('/users', data: formData);
+    return CreateUserResponseModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
   }
 }
