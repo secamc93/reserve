@@ -9,3 +9,4 @@ export 'package:rupu/presentation/screens/cambiar_contrasena/cambiar_contrasena_
 export 'package:rupu/presentation/screens/login/login_screen.dart';
 
 export 'package:rupu/presentation/screens/settings/settings_screen.dart';
+export 'package:rupu/presentation/screens/users/users_screen.dart';

@@ -35,3 +35,5 @@ export 'package:rupu/presentation/views/settings/controllers/settings_controller
 export 'package:rupu/presentation/views/settings/views/settings_view.dart';
 export 'package:rupu/presentation/views/settings/controllers/create_user_controller.dart';
 export 'package:rupu/presentation/views/settings/views/create_user_view.dart';
+export 'package:rupu/presentation/views/users/users_controller.dart';
+export 'package:rupu/presentation/views/users/users_view.dart';
