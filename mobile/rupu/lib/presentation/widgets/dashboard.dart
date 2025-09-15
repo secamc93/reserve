@@ -14,6 +14,7 @@ class DashBoard extends StatelessWidget {
       ('Services & Staff', const Design3ServicesStaff()),
       ('Branches', const Design4BranchesManager()),
       ("Today's Schedule", const Design5TodaysSchedule()),
+      ('Usuarios', UsersScreen(pageIndex: pageIndex)),
     ];
 
     return DefaultTabController(

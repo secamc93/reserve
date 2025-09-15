@@ -72,6 +72,29 @@ final appRouter = GoRouter(
           },
         ),
         GoRoute(
+          path: '/home/:page/users',
+          name: UsersView.name,
+          builder: (context, state) {
+            UsersBinding.register();
+            final page = int.parse(state.pathParameters['page']!);
+            return UsersView(pageIndex: page);
+          },
+        ),
+        GoRoute(
+          path: '/home/:page/users/create',
+          name: CreateUserView.name,
+          builder: (context, state) {
+            CreateUserBinding.register();
+            final home = Get.find<HomeController>();
+            if (!home.isSuper) {
+              return const Scaffold(
+                body: Center(child: Text('No autorizado')),
+              );
+            }
+            return const CreateUserView();
+          },
+        ),
+        GoRoute(
           path: '/home/:page/reserve/new',
           name: 'reserve_new',
           builder: (context, state) {
@@ -129,21 +152,6 @@ final appRouter = GoRouter(
             );
           },
         ),
-        GoRoute(
-          path: '/home/:page/ajustes/crear_usuario',
-          name: CreateUserView.name,
-          builder: (context, state) {
-            CreateUserBinding.register();
-            final home = Get.find<HomeController>();
-            if (!home.isSuper) {
-              return const Scaffold(
-                body: Center(child: Text('No autorizado')),
-              );
-            }
-            return const CreateUserView();
-          },
-        ),
-
         GoRoute(
           path: '/home/:page/perfil',
           name: PerfilScreen.name,
