@@ -38,7 +38,15 @@ class UsersManagementDatasourceImpl extends UserManagementDatasource {
           filename: avatarFileName ?? avatarPath.split('/').last,
         ),
     });
-    final response = await dio.post('/users', data: formData);
+    final response = await dio.post(
+      '/users',
+      data: formData,
+      options: Options(
+        headers: const <String, dynamic>{
+          'Content-Type': 'multipart/form-data',
+        },
+      ),
+    );
     return CreateUserResponseModel.fromJson(
       response.data as Map<String, dynamic>,
     );
