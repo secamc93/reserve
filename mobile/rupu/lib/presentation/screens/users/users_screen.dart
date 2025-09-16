@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rupu/config/routers/app_bindings.dart';
 import '../../views/users/users_view.dart';
 
 class UsersScreen extends StatelessWidget {
@@ -8,6 +9,7 @@ class UsersScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    UsersBinding.register();
     return UsersView(pageIndex: pageIndex);
   }
 }
