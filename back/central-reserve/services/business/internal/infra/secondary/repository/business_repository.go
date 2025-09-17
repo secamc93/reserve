@@ -15,7 +15,7 @@ type Repository struct {
 	logger   log.ILogger
 }
 
-func NewBusinessRepository(database db.IDatabase, logger log.ILogger) domain.IBusinessRepository {
+func New(database db.IDatabase, logger log.ILogger) domain.IBusinessRepository {
 	return &Repository{
 		database: database,
 		logger:   logger,

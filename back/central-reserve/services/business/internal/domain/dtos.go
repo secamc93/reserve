@@ -133,3 +133,65 @@ type BusinessResourcesResponse struct {
 	Active     int
 	Inactive   int
 }
+
+// BusinessTypeResourcePermittedResponse representa la respuesta de un recurso permitido para un tipo de negocio
+type BusinessTypeResourcePermittedResponse struct {
+	ID           uint
+	ResourceID   uint
+	ResourceName string
+}
+
+// BusinessTypeResourcesResponse representa la respuesta completa de recursos permitidos para un tipo de negocio
+type BusinessTypeResourcesResponse struct {
+	BusinessTypeID uint
+	Resources      []BusinessTypeResourcePermittedResponse
+	Total          int
+	Active         int
+	Inactive       int
+}
+
+// BusinessTypeWithResourcesResponse representa un tipo de negocio con sus recursos asociados
+type BusinessTypeWithResourcesResponse struct {
+	ID        uint
+	Name      string
+	Resources []BusinessTypeResourcePermittedResponse
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+// BusinessTypesWithResourcesPaginatedResponse representa la respuesta paginada de tipos de negocio con recursos
+type BusinessTypesWithResourcesPaginatedResponse struct {
+	BusinessTypes []BusinessTypeWithResourcesResponse
+	Pagination    PaginationResponse
+}
+
+// PaginationResponse representa la información de paginación
+type PaginationResponse struct {
+	CurrentPage int
+	PerPage     int
+	Total       int64
+	LastPage    int
+	HasNext     bool
+	HasPrev     bool
+}
+
+// UpdateBusinessTypeResourcesRequest representa la solicitud para actualizar recursos permitidos de un tipo de negocio
+type UpdateBusinessTypeResourcesRequest struct {
+	ResourcesIDs []uint
+}
+
+// BusinessWithConfiguredResourcesResponse representa un business con sus recursos configurados
+type BusinessWithConfiguredResourcesResponse struct {
+	ID        uint
+	Name      string
+	Code      string
+	Resources []BusinessResourceConfiguredResponse
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+// BusinessesWithConfiguredResourcesPaginatedResponse representa la respuesta paginada de business con recursos configurados
+type BusinessesWithConfiguredResourcesPaginatedResponse struct {
+	Businesses []BusinessWithConfiguredResourcesResponse
+	Pagination PaginationResponse
+}

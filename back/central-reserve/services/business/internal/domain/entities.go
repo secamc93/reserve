@@ -50,3 +50,21 @@ type BusinessResourceConfigured struct {
 	ResourceName string
 	IsActive     bool
 }
+
+// BusinessTypeResourcePermitted representa un recurso permitido para un tipo de negocio
+type BusinessTypeResourcePermitted struct {
+	ID             uint
+	BusinessTypeID uint
+	ResourceID     uint
+	ResourceName   string
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+}
+
+// Resource representa un recurso del sistema
+type Resource struct {
+	ID        uint
+	Name      string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}

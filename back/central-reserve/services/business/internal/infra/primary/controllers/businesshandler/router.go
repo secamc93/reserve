@@ -2,13 +2,12 @@ package businesshandler
 
 import (
 	"central_reserve/services/auth/middleware"
-	"central_reserve/shared/log"
 
 	"github.com/gin-gonic/gin"
 )
 
 // RegisterRoutes registra las rutas del handler de Business
-func RegisterRoutes(router *gin.RouterGroup, handler IBusinessHandler, logger log.ILogger) {
+func (h *BusinessHandler) RegisterRoutes(router *gin.RouterGroup, handler IBusinessHandler) {
 	businesses := router.Group("/businesses")
 
 	// Rutas de Business
@@ -17,6 +16,5 @@ func RegisterRoutes(router *gin.RouterGroup, handler IBusinessHandler, logger lo
 	businesses.POST("", middleware.JWT(), handler.CreateBusinessHandler)
 	businesses.PUT("/:id", middleware.JWT(), handler.UpdateBusinessHandler)
 	businesses.DELETE("/:id", middleware.JWT(), handler.DeleteBusinessHandler)
-	businesses.GET("/:id/resources", middleware.JWT(), handler.GetBusinessResourcesHandler)
-	businesses.GET("/:id/resources/:resource", middleware.JWT(), handler.GetBusinessResourceStatusHandler)
+
 }

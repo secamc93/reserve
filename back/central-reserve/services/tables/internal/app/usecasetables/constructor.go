@@ -2,6 +2,7 @@ package usecasetables
 
 import (
 	"central_reserve/services/tables/internal/domain"
+	"central_reserve/shared/log"
 	"context"
 )
 
@@ -15,10 +16,12 @@ type IUseCaseTable interface {
 
 type TableUseCase struct {
 	repository domain.ITableRepository
+	log        log.ILogger
 }
 
-func NewTableUseCase(repository domain.ITableRepository) IUseCaseTable {
+func New(repository domain.ITableRepository, logger log.ILogger) IUseCaseTable {
 	return &TableUseCase{
 		repository: repository,
+		log:        logger,
 	}
 }

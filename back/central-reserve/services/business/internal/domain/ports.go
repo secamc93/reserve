@@ -5,17 +5,6 @@ import (
 	"mime/multipart"
 )
 
-// IBusinessTypeRepository define las operaciones para tipos de negocio
-type IBusinessTypeRepository interface {
-	GetBusinessTypes(ctx context.Context) ([]BusinessType, error)
-	GetBusinessTypeByID(ctx context.Context, id uint) (*BusinessType, error)
-	GetBusinessTypeByCode(ctx context.Context, code string) (*BusinessType, error)
-	CreateBusinessType(ctx context.Context, businessType BusinessType) (string, error)
-	UpdateBusinessType(ctx context.Context, id uint, businessType BusinessType) (string, error)
-	DeleteBusinessType(ctx context.Context, id uint) (string, error)
-}
-
-// IBusinessRepository define las operaciones para negocios
 type IBusinessRepository interface {
 	GetBusinesses(ctx context.Context) ([]Business, error)
 	GetBusinessByID(ctx context.Context, id uint) (*Business, error)
@@ -25,6 +14,22 @@ type IBusinessRepository interface {
 	UpdateBusiness(ctx context.Context, id uint, business Business) (string, error)
 	DeleteBusiness(ctx context.Context, id uint) (string, error)
 	GetBusinesResourcesConfigured(ctx context.Context, businessID uint) ([]BusinessResourceConfigured, error)
+	GetBusinessTypes(ctx context.Context) ([]BusinessType, error)
+	GetBusinessTypeByID(ctx context.Context, id uint) (*BusinessType, error)
+	GetBusinessTypeByCode(ctx context.Context, code string) (*BusinessType, error)
+	CreateBusinessType(ctx context.Context, businessType BusinessType) (string, error)
+	UpdateBusinessType(ctx context.Context, id uint, businessType BusinessType) (string, error)
+	DeleteBusinessType(ctx context.Context, id uint) (string, error)
+
+	// Métodos para BusinessTypeResourcePermitted
+	GetBusinessTypeResourcesPermitted(ctx context.Context, businessTypeID uint) ([]BusinessTypeResourcePermitted, error)
+	UpdateBusinessTypeResourcesPermitted(ctx context.Context, businessTypeID uint, resourcesIDs []uint) error
+	GetResourceByID(ctx context.Context, resourceID uint) (*Resource, error)
+	GetBusinessTypesWithResourcesPaginated(ctx context.Context, page, perPage int, businessTypeID *uint) ([]BusinessTypeWithResourcesResponse, int64, error)
+
+	// Métodos para BusinessResourceConfigured (recursos asignados a un business)
+	GetBusinessesWithConfiguredResourcesPaginated(ctx context.Context, page, perPage int, businessID *uint) ([]BusinessWithConfiguredResourcesResponse, int64, error)
+	UpdateBusinessConfiguredResources(ctx context.Context, businessID uint, resourcesIDs []uint) error
 }
 
 // IS3Service define las operaciones de almacenamiento en S3

@@ -81,6 +81,18 @@ definitions:
     - resource
     - scope_id
     type: object
+  request.CreateResourceRequest:
+    description: Solicitud para crear un nuevo recurso en el sistema
+    properties:
+      description:
+        example: Gestión de usuarios del sistema
+        type: string
+      name:
+        example: users
+        type: string
+    required:
+    - name
+    type: object
   request.LoginRequest:
     properties:
       email:
@@ -204,6 +216,18 @@ definitions:
         type: integer
       table_id:
         type: integer
+    type: object
+  request.UpdateResourceRequest:
+    description: Solicitud para actualizar un recurso existente
+    properties:
+      description:
+        example: Gestión de usuarios del sistema
+        type: string
+      name:
+        example: users
+        type: string
+    required:
+    - name
     type: object
   request.UpdateRoom:
     properties:
@@ -798,7 +822,7 @@ definitions:
       scope_name:
         type: string
     type: object
-host: localhost:8080
+host: localhost:3050
 info:
   contact:
     email: backend@example.com
@@ -919,6 +943,201 @@ paths:
       summary: Obtener roles y permisos del usuario
       tags:
       - Auth
+  /business-resources/{business_type_id}/resources:
+    put:
+      consumes:
+      - application/json
+      description: Actualiza la lista de recursos permitidos para un tipo de negocio
+        específico
+      parameters:
+      - description: ID del tipo de negocio
+        in: path
+        name: business_type_id
+        required: true
+        type: integer
+      - description: Lista de IDs de recursos
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            resources_ids:
+              items:
+                type: integer
+              type: array
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Tipo de negocio creado exitosamente
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Solicitud inválida
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Token de acceso requerido
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Actualizar recursos de un tipo de negocio
+      tags:
+      - Business Resources
+  /business-resources/businesses/{business_id}/configured-resources:
+    put:
+      consumes:
+      - application/json
+      description: Actualiza la lista de recursos configurados para un business específico
+        (solo recursos permitidos por su tipo)
+      parameters:
+      - description: ID del business
+        in: path
+        name: business_id
+        required: true
+        type: integer
+      - description: Lista de IDs de recursos
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            resources_ids:
+              items:
+                type: integer
+              type: array
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Recursos configurados actualizados exitosamente
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Parámetros inválidos o recursos no permitidos
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Business no encontrado
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Actualizar recursos configurados de un business
+      tags:
+      - Business Resources
+  /business-resources/businesses/configured-resources:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene todos los business con sus recursos configurados aplicando
+        paginación
+      parameters:
+      - default: 1
+        description: 'Número de página (por defecto: 1)'
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 'Elementos por página (por defecto: 10, máximo: 100)'
+        in: query
+        name: per_page
+        type: integer
+      - description: ID del business para filtrar
+        in: query
+        name: business_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Business con recursos configurados obtenidos exitosamente
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Parámetros inválidos
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Obtener business con recursos configurados
+      tags:
+      - Business Resources
+  /business-resources/resources:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene todos los tipos de negocio con sus recursos asociados aplicando
+        paginación
+      parameters:
+      - default: 1
+        description: 'Número de página (por defecto: 1)'
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 'Elementos por página (por defecto: 10, máximo: 100)'
+        in: query
+        name: per_page
+        type: integer
+      - description: ID del tipo de negocio para filtrar
+        in: query
+        name: business_type_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tipos de negocio con recursos obtenidos exitosamente
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Solicitud inválida
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Token de acceso requerido
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Obtener tipos de negocio con recursos
+      tags:
+      - Business Resources
   /business-rooms/{business_id}:
     get:
       consumes:
@@ -1451,99 +1670,6 @@ paths:
       summary: Actualizar negocio
       tags:
       - businesses
-  /businesses/{id}/resources:
-    get:
-      consumes:
-      - application/json
-      description: Obtiene todos los recursos permitidos y configurados para un negocio
-        específico, incluyendo su estado de activación
-      parameters:
-      - description: ID del negocio
-        in: path
-        minimum: 1
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Recursos obtenidos exitosamente
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: ID de negocio inválido
-          schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: No autorizado
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Error interno del servidor
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Obtener recursos del negocio
-      tags:
-      - Business Resources
-  /businesses/{id}/resources/{resource}:
-    get:
-      consumes:
-      - application/json
-      description: Obtiene el estado de activación de un recurso específico para un
-        negocio
-      parameters:
-      - description: ID del negocio
-        in: path
-        minimum: 1
-        name: id
-        required: true
-        type: integer
-      - description: Nombre del recurso
-        example: '"users"'
-        in: path
-        name: resource
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Estado del recurso obtenido exitosamente
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Parámetros inválidos
-          schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: No autorizado
-          schema:
-            additionalProperties: true
-            type: object
-        "404":
-          description: Recurso no encontrado
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Error interno del servidor
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Obtener estado de un recurso específico
-      tags:
-      - Business Resources
   /clients:
     get:
       consumes:
@@ -2269,6 +2395,265 @@ paths:
       summary: Lista los estados de reserva
       tags:
       - Reservas
+  /resources:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene una lista paginada de recursos del sistema con opciones
+        de filtrado y ordenamiento
+      parameters:
+      - default: 1
+        description: Número de página
+        in: query
+        minimum: 1
+        name: page
+        type: integer
+      - default: 10
+        description: Tamaño de página
+        in: query
+        maximum: 100
+        minimum: 1
+        name: page_size
+        type: integer
+      - description: Filtrar por nombre (búsqueda parcial)
+        in: query
+        name: name
+        type: string
+      - description: Filtrar por descripción (búsqueda parcial)
+        in: query
+        name: description
+        type: string
+      - description: Campo para ordenar
+        enum:
+        - name
+        - created_at
+        - updated_at
+        in: query
+        name: sort_by
+        type: string
+      - description: Orden
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de recursos obtenida exitosamente
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Parámetros de consulta inválidos
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Obtener recursos
+      tags:
+      - Resources
+    post:
+      consumes:
+      - application/json
+      description: Crea un nuevo recurso en el sistema con nombre y descripción únicos
+      parameters:
+      - description: Datos del recurso a crear
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateResourceRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Recurso creado exitosamente
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Datos de entrada inválidos
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Recurso ya existe
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Crear recurso
+      tags:
+      - Resources
+  /resources/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Elimina un recurso del sistema por su ID único (eliminación suave)
+      parameters:
+      - description: ID del recurso
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Recurso eliminado exitosamente
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: ID de recurso inválido
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Recurso no encontrado
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Eliminar recurso
+      tags:
+      - Resources
+    get:
+      consumes:
+      - application/json
+      description: Obtiene un recurso específico del sistema por su ID único
+      parameters:
+      - description: ID del recurso
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Recurso obtenido exitosamente
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: ID de recurso inválido
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Recurso no encontrado
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Obtener recurso por ID
+      tags:
+      - Resources
+    put:
+      consumes:
+      - application/json
+      description: Actualiza un recurso existente en el sistema
+      parameters:
+      - description: ID del recurso
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      - description: Datos del recurso a actualizar
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateResourceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Recurso actualizado exitosamente
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Datos de entrada inválidos
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Recurso no encontrado
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflicto con recurso existente
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Actualizar recurso
+      tags:
+      - Resources
   /roles:
     get:
       consumes:

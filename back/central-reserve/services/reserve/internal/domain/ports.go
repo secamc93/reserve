@@ -18,8 +18,6 @@ type IReservationRepository interface {
 	CreateClient(ctx context.Context, client Client) (string, error)
 	GetReservationStatuses(ctx context.Context) ([]ReservationStatus, error)
 }
-
 type IEmailService interface {
-	SendReservationConfirmation(ctx context.Context, email, name string, reservation Reservation) error
-	SendReservationCancellation(ctx context.Context, email, name string, reservation Reservation) error
+	SendHTML(ctx context.Context, to, subject, html string) error
 }

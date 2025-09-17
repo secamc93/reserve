@@ -135,3 +135,13 @@ type APIKeyInfo struct {
 	RateLimit   int
 	CreatedAt   time.Time
 }
+
+// Resource representa un recurso del sistema
+type Resource struct {
+	ID          uint
+	Name        string
+	Description string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	DeletedAt   *time.Time
+}

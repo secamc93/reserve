@@ -21,7 +21,7 @@ type RoomUseCase struct {
 	logger     log.ILogger
 }
 
-func NewRoomUseCase(repository domain.IRoomRepository, logger log.ILogger) IUseCaseRoom {
+func New(repository domain.IRoomRepository, logger log.ILogger) IUseCaseRoom {
 	return &RoomUseCase{
 		repository: repository,
 		logger:     logger,

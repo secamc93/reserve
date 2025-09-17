@@ -62,6 +62,14 @@ type IAuthRepository interface {
 	DeleteUser(ctx context.Context, id uint) (string, error)
 	AssignRolesToUser(ctx context.Context, userID uint, roleIDs []uint) error
 	AssignBusinessesToUser(ctx context.Context, userID uint, businessIDs []uint) error
+
+	// Métodos para Resource
+	GetResources(ctx context.Context, filters ResourceFilters) ([]Resource, int64, error)
+	GetResourceByID(ctx context.Context, id uint) (*Resource, error)
+	GetResourceByName(ctx context.Context, name string) (*Resource, error)
+	CreateResource(ctx context.Context, resource Resource) (uint, error)
+	UpdateResource(ctx context.Context, id uint, resource Resource) (string, error)
+	DeleteResource(ctx context.Context, id uint) (string, error)
 }
 
 // IS3Service define las operaciones de almacenamiento en S3

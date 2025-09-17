@@ -6,7 +6,7 @@ import (
 )
 
 type IUseCaseClient interface {
-	GetClients(ctx context.Context) ([]domain.Customer, error)
+	GetClients(ctx context.Context) ([]domain.Client, error)
 	GetClientByID(ctx context.Context, id uint) (*domain.Client, error)
 	CreateClient(ctx context.Context, client domain.Client) (string, error)
 	UpdateClient(ctx context.Context, id uint, client domain.Client) (string, error)
@@ -17,7 +17,7 @@ type ClientUseCase struct {
 	repository domain.IClientRepository
 }
 
-func NewClientUseCase(repository domain.IClientRepository) *ClientUseCase {
+func New(repository domain.IClientRepository) *ClientUseCase {
 	return &ClientUseCase{
 		repository: repository,
 	}

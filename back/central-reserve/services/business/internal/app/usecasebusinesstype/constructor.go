@@ -15,11 +15,11 @@ type IUseCaseBusinessType interface {
 }
 
 type BusinessTypeUseCase struct {
-	repository domain.IBusinessTypeRepository
+	repository domain.IBusinessRepository
 	log        log.ILogger
 }
 
-func NewBusinessTypeUseCase(repository domain.IBusinessTypeRepository, log log.ILogger) IUseCaseBusinessType {
+func New(repository domain.IBusinessRepository, log log.ILogger) IUseCaseBusinessType {
 	return &BusinessTypeUseCase{
 		repository: repository,
 		log:        log,

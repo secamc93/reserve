@@ -2,13 +2,12 @@ package businesstypehandler
 
 import (
 	"central_reserve/services/auth/middleware"
-	"central_reserve/shared/log"
 
 	"github.com/gin-gonic/gin"
 )
 
 // RegisterRoutes registra las rutas del handler de BusinessType
-func RegisterRoutes(router *gin.RouterGroup, handler IBusinessTypeHandler, logger log.ILogger) {
+func RegisterRoutes(router *gin.RouterGroup, handler IBusinessTypeHandler) {
 	businessTypes := router.Group("/business-types")
 
 	// Rutas de BusinessType

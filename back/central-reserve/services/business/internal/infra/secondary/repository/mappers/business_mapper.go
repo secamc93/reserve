@@ -67,3 +67,24 @@ func ToBusinessModel(entity domain.Business) models.Business {
 		EnableReservations: entity.EnableReservations,
 	}
 }
+
+func ToBusinessTypeResourcePermittedEntity(model models.BusinessTypeResourcePermitted) domain.BusinessTypeResourcePermitted {
+	return domain.BusinessTypeResourcePermitted{
+		ID:             model.Model.ID,
+		BusinessTypeID: model.BusinessTypeID,
+		ResourceID:     model.ResourceID,
+		ResourceName:   model.Resource.Name,
+	}
+}
+
+func ToBusinessTypeResourcePermittedEntitySlice(models []models.BusinessTypeResourcePermitted) []domain.BusinessTypeResourcePermitted {
+	if models == nil {
+		return nil
+	}
+
+	entities := make([]domain.BusinessTypeResourcePermitted, len(models))
+	for i, model := range models {
+		entities[i] = ToBusinessTypeResourcePermittedEntity(model)
+	}
+	return entities
+}

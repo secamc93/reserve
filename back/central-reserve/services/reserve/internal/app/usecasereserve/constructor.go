@@ -24,7 +24,7 @@ type ReserveUseCase struct {
 	log        log.ILogger
 }
 
-func NewReserveUseCase(repository domain.IReservationRepository, sender email.IEmailService, log log.ILogger) *ReserveUseCase {
+func New(repository domain.IReservationRepository, sender domain.IEmailService, log log.ILogger) *ReserveUseCase {
 	return &ReserveUseCase{
 		repository: repository,
 		sender:     sender,
