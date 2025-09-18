@@ -24,23 +24,46 @@ class HomeController extends GetxController {
 
   bool get isSuper => rolesPermisos.value?.isSuper ?? false;
 
-  /// Verifica si existe el `action` permitido.
-  /// - Si [resource] es null, busca el `action` en cualquier recurso.
-  /// - Si [resource] no es null, busca primero el recurso y luego el `action`.
-  /// - Si el usuario es super, permite todo.
+  /// Verifica si el usuario cuenta con el permiso indicado.
+  /// - Si [resource] es `null`, busca la acción en cualquier recurso activo.
+  /// - Si [resource] tiene valor, delega en [canAccessResource].
   bool hasPermission({required String action, String? resource}) {
+    if (resource == null) {
+      return _hasActionInAnyResource(action);
+    }
+    return canAccessResource(resource, actions: [action]);
+  }
+
+  /// Permite validar acceso a un recurso en particular considerando:
+  /// - Si el usuario es super administrador: acceso total.
+  /// - Que el recurso exista y esté activo (a menos que [requireActive] sea
+  ///   `false`).
+  /// - Que cuente con al menos una de las [actions] indicadas.
+  bool canAccessResource(
+    String resource, {
+    List<String> actions = const [],
+    bool requireActive = true,
+  }) {
     final rp = rolesPermisos.value;
     if (rp == null) return false;
     if (rp.isSuper) return true;
 
-    if (resource == null) {
-      return rp.resources.any((r) => r.actions.contains(action));
-    }
-
     final res = rp.resources.firstWhereOrNull((r) => r.resource == resource);
     if (res == null) return false;
+    if (requireActive && !res.isActive) return false;
 
-    return res.actions.contains(action);
+    if (actions.isEmpty) return true;
+    return actions.any(res.actions.contains);
+  }
+
+  bool _hasActionInAnyResource(String action) {
+    final rp = rolesPermisos.value;
+    if (rp == null) return false;
+    if (rp.isSuper) return true;
+
+    return rp.resources.any(
+      (resource) => resource.isActive && resource.actions.contains(action),
+    );
   }
 
   @override
