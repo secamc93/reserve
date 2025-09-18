@@ -83,6 +83,13 @@ type Business struct {
 	Users                       []User                          `gorm:"many2many:user_businesses;"` // Usuarios del negocio (muchos a muchos)
 	BusinessResourcesPermitted  []BusinessTypeResourcePermitted `gorm:"foreignKey:BusinessID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	BusinessResourcesConfigured []BusinessResourceConfigured    `gorm:"foreignKey:BusinessID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+
+	// Relaciones para propiedades horizontales
+	PropertyUnits []PropertyUnit  `gorm:"foreignKey:BusinessID"` // Unidades de propiedad (apartamentos/casas)
+	Residents     []Resident      `gorm:"foreignKey:BusinessID"` // Residentes de la propiedad
+	Committees    []Committee     `gorm:"foreignKey:BusinessID"` // Comités y consejos de la propiedad
+	PropertyStaff []PropertyStaff `gorm:"foreignKey:BusinessID"` // Empleados/staff de la propiedad
+	VotingGroups  []VotingGroup   `gorm:"foreignKey:BusinessID"` // Grupos de votaciones de la propiedad
 }
 
 // ───────────────────────────────────────────
@@ -336,6 +343,27 @@ type Action struct {
 
 	// Relaciones
 	Permissions []Permission `gorm:"foreignKey:ActionID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
+}
+
+// ───────────────────────────────────────────
+//
+//	STAFF TYPES – Tipos de empleados/staff (GENÉRICO PARA TODOS LOS DOMINIOS)
+//
+// ───────────────────────────────────────────
+type StaffType struct {
+	gorm.Model
+	Name            string `gorm:"size:50;not null;unique"` // Administrador, Chef, Mesero, Recepcionista, etc.
+	Code            string `gorm:"size:20;not null;unique"` // administrator, chef, waiter, receptionist, etc.
+	Description     string `gorm:"size:255"`
+	BusinessTypeID  *uint  `gorm:"index"`         // Tipo de negocio específico (opcional, null = aplica a todos)
+	IsRequired      bool   `gorm:"default:false"` // Si es obligatorio por ley/regulación
+	RequiresLicense bool   `gorm:"default:false"` // Si requiere licencia profesional
+	IsActive        bool   `gorm:"default:true"`
+
+	// Relaciones
+	BusinessType  *BusinessType   `gorm:"foreignKey:BusinessTypeID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+	PropertyStaff []PropertyStaff `gorm:"foreignKey:StaffTypeID"` // Para propiedades horizontales
+	// Futuro: RestaurantStaff, HotelStaff, etc.
 }
 
 // ───────────────────────────────────────────
