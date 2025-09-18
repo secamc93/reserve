@@ -18,7 +18,10 @@ class PermisosRolesDatasourceImpl extends PermisosRolesDatasource {
   @override
   Future<RolesPermisos> obtenerRolesPermisos() async {
     try {
-      final response = await _dio.get('/roles-permissions');
+      final response = await _dio.get(
+        '/roles-permissions',
+        queryParameters: {"business_id": 1},
+      );
 
       final model = PermisosRolesResponseModel.fromJson(
         response.data as Map<String, dynamic>,
