@@ -54,7 +54,14 @@ class HomeController extends GetxController {
     isLoading.value = true;
     errorMessage.value = null;
     try {
-      final rp = await repository.obtenerRolesPermisos();
+      final login = Get.find<LoginController>();
+      final businessId = login.selectedBusinessId;
+      if (businessId == null) {
+        errorMessage.value = 'Debes seleccionar un negocio para continuar.';
+        return;
+      }
+
+      final rp = await repository.obtenerRolesPermisos(businessId: businessId);
       rolesPermisos.value = rp;
     } on DioException catch (e) {
       errorMessage.value = (e.response?.statusCode == 401)
@@ -71,10 +78,12 @@ class HomeController extends GetxController {
   void _applyBusinessTheme() {
     final login = Get.find<LoginController>();
     final businesses = login.sessionModel.value?.data.businesses ?? [];
-    if (businesses.isEmpty) return;
+    final selected = login.selectedBusiness.value;
+    final business = selected ?? (businesses.isNotEmpty ? businesses.first : null);
+    if (business == null) return;
 
-    final primary = businesses.first.primaryColor;
-    final secondary = businesses.first.secondaryColor;
+    final primary = business.primaryColor;
+    final secondary = business.secondaryColor;
 
     // Post-frame para no hacerlo en medio de un build.
     WidgetsBinding.instance.addPostFrameCallback((_) {

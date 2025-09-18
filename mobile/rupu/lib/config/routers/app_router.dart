@@ -171,6 +171,15 @@ final appRouter = GoRouter(
 
     // --------------- Ruta de Login ---------------
     GoRoute(
+      path: '/business/select',
+      name: BusinessSelectorScreen.name,
+      builder: (context, state) {
+        BusinessSelectorBinding.register();
+        return const BusinessSelectorScreen();
+      },
+    ),
+
+    GoRoute(
       path: '/login/:page',
       name: LoginScreen.name,
       builder: (context, state) {

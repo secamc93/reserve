@@ -17,6 +17,7 @@ class LoginController extends GetxController {
   final isLoading = false.obs;
   final errorMessage = RxnString();
   final Rxn<LoginResponseModel> sessionModel = Rxn();
+  final Rxn<BusinessModel> selectedBusiness = Rxn();
 
   /// Ejecuta login y devuelve si fue exitoso.
   Future<bool> submit() async {
@@ -30,6 +31,7 @@ class LoginController extends GetxController {
       );
 
       sessionModel.value = session;
+      selectedBusiness.value = null;
 
       await TokenStorage().saveToken(session.data.token);
 
@@ -48,7 +50,15 @@ class LoginController extends GetxController {
   void clearFields() {
     emailController.clear();
     passwordController.clear();
+    sessionModel.value = null;
+    selectedBusiness.value = null;
   }
+
+  void selectBusiness(BusinessModel business) {
+    selectedBusiness.value = business;
+  }
+
+  int? get selectedBusinessId => selectedBusiness.value?.id;
 
   @override
   void onClose() {

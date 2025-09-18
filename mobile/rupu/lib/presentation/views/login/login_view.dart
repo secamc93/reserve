@@ -135,8 +135,7 @@ class LoginView extends GetView<LoginController> {
                                       if (!context.mounted) return;
                                       if (ok) {
                                         GoRouter.of(context).goNamed(
-                                          HomeScreen.name,
-                                          pathParameters: {'page': '0'},
+                                          BusinessSelectorScreen.name,
                                         );
                                       } else if (controller
                                               .errorMessage
