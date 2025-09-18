@@ -16,6 +16,10 @@ class BusinessSelectorView extends GetView<BusinessSelectorController> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Selecciona un negocio'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => controller.goBackToLogin(context),
+        ),
       ),
       body: businesses.isEmpty
           ? _EmptyBusinesses(
@@ -243,7 +247,7 @@ class _EmptyBusinesses extends StatelessWidget {
   });
 
   final Color messageColor;
-  final VoidCallback onGoBack;
+  final void Function(BuildContext context) onGoBack;
 
   @override
   Widget build(BuildContext context) {
@@ -272,7 +276,7 @@ class _EmptyBusinesses extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               FilledButton.tonalIcon(
-                onPressed: onGoBack,
+                onPressed: () => onGoBack(context),
                 icon: const Icon(Icons.arrow_back),
                 label: const Text('Volver'),
               ),

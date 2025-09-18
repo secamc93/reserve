@@ -86,9 +86,7 @@ class BusinessSelectorController extends GetxController {
     );
   }
 
-  void goBackToLogin() {
-    final context = Get.context;
-    if (context == null) return;
+  void goBackToLogin(BuildContext context) {
     GoRouter.of(context).goNamed(
       LoginScreen.name,
       pathParameters: {'page': '0'},
