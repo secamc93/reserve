@@ -18,7 +18,10 @@ class BusinessSelectorView extends GetView<BusinessSelectorController> {
         title: const Text('Selecciona un negocio'),
       ),
       body: businesses.isEmpty
-          ? _EmptyBusinesses(messageColor: cs.error)
+          ? _EmptyBusinesses(
+              messageColor: cs.error,
+              onGoBack: controller.goBackToLogin,
+            )
           : SafeArea(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -234,9 +237,13 @@ class _FallbackInitial extends StatelessWidget {
 }
 
 class _EmptyBusinesses extends StatelessWidget {
-  const _EmptyBusinesses({required this.messageColor});
+  const _EmptyBusinesses({
+    required this.messageColor,
+    required this.onGoBack,
+  });
 
   final Color messageColor;
+  final VoidCallback onGoBack;
 
   @override
   Widget build(BuildContext context) {
@@ -262,6 +269,12 @@ class _EmptyBusinesses extends StatelessWidget {
                 'Comunícate con un administrador para asignarte un negocio y vuelve a intentarlo.',
                 style: Theme.of(context).textTheme.bodyMedium,
                 textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              FilledButton.tonalIcon(
+                onPressed: onGoBack,
+                icon: const Icon(Icons.arrow_back),
+                label: const Text('Volver'),
               ),
             ],
           ),

@@ -86,6 +86,15 @@ class BusinessSelectorController extends GetxController {
     );
   }
 
+  void goBackToLogin() {
+    final context = Get.context;
+    if (context == null) return;
+    GoRouter.of(context).goNamed(
+      LoginScreen.name,
+      pathParameters: {'page': '0'},
+    );
+  }
+
   BusinessModel? _findBusinessById(int id) {
     for (final business in businesses) {
       if (business.id == id) return business;
