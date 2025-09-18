@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
-import 'package:rupu/config/theme/app_theme.dart';
 import 'package:rupu/domain/infrastructure/models/login_response_model.dart';
 import 'package:rupu/presentation/screens/home/home_screen.dart';
 import 'package:rupu/presentation/screens/login/login_screen.dart';
@@ -36,11 +35,21 @@ class BusinessSelectorController extends GetxController {
   @override
   void onReady() {
     super.onReady();
+    final context = Get.context;
+    if (context == null) return;
+
     if (!hasSession) {
-      final context = Get.context;
-      if (context != null) {
-        GoRouter.of(context).goNamed(LoginScreen.name, pathParameters: {'page': '0'});
-      }
+      GoRouter.of(context).goNamed(LoginScreen.name, pathParameters: {'page': '0'});
+      return;
+    }
+
+    if (businesses.length == 1) {
+      final business = businesses.first;
+      _loginController.selectBusiness(business);
+      GoRouter.of(context).goNamed(
+        HomeScreen.name,
+        pathParameters: {'page': '0'},
+      );
     }
   }
 
@@ -68,7 +77,6 @@ class BusinessSelectorController extends GetxController {
     }
 
     _loginController.selectBusiness(business);
-    AppTheme.instance.updateColors(business.primaryColor, business.secondaryColor);
 
     if (!context.mounted) return;
 

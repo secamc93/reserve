@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:get/get.dart';
+import 'package:rupu/config/theme/app_theme.dart';
 import 'package:rupu/config/constants/secure_storage/token_storage.dart';
 import 'package:rupu/domain/infrastructure/datasources/user_datasource_impl.dart';
 import 'package:rupu/domain/infrastructure/models/login_response_model.dart';
@@ -56,7 +57,14 @@ class LoginController extends GetxController {
 
   void selectBusiness(BusinessModel business) {
     selectedBusiness.value = business;
+    AppTheme.instance.updateColors(
+      business.primaryColor,
+      business.secondaryColor,
+    );
   }
+
+  List<BusinessModel> get businesses =>
+      sessionModel.value?.data.businesses ?? const <BusinessModel>[];
 
   int? get selectedBusinessId => selectedBusiness.value?.id;
 
