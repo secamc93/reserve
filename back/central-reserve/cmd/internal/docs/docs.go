@@ -1600,6 +1600,364 @@ const docTemplate = `{
                 }
             }
         },
+        "/horizontal-properties": {
+            "get": {
+                "description": "Obtiene una lista paginada de propiedades horizontales con filtros opcionales",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Propiedades Horizontales"
+                ],
+                "summary": "Listar propiedades horizontales",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filtro por nombre",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filtro por código",
+                        "name": "code",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filtro por estado activo",
+                        "name": "is_active",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Número de página",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Tamaño de página",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "name",
+                            "code",
+                            "created_at",
+                            "updated_at"
+                        ],
+                        "type": "string",
+                        "description": "Campo de ordenamiento",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "Dirección de ordenamiento",
+                        "name": "order_dir",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.HorizontalPropertyListSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Crea una nueva propiedad horizontal con la información proporcionada",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Propiedades Horizontales"
+                ],
+                "summary": "Crear una nueva propiedad horizontal",
+                "parameters": [
+                    {
+                        "description": "Datos de la propiedad horizontal",
+                        "name": "horizontal_property",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CreateHorizontalPropertyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/response.HorizontalPropertySuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/code/{code}": {
+            "get": {
+                "description": "Obtiene una propiedad horizontal específica por su código único",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Propiedades Horizontales"
+                ],
+                "summary": "Obtener propiedad horizontal por código",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Código de la propiedad horizontal",
+                        "name": "code",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.HorizontalPropertySuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/{id}": {
+            "get": {
+                "description": "Obtiene una propiedad horizontal específica por su ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Propiedades Horizontales"
+                ],
+                "summary": "Obtener propiedad horizontal por ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la propiedad horizontal",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.HorizontalPropertySuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Actualiza una propiedad horizontal existente",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Propiedades Horizontales"
+                ],
+                "summary": "Actualizar propiedad horizontal",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la propiedad horizontal",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos a actualizar",
+                        "name": "horizontal_property",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.UpdateHorizontalPropertyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.HorizontalPropertySuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Elimina una propiedad horizontal existente",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Propiedades Horizontales"
+                ],
+                "summary": "Eliminar propiedad horizontal",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la propiedad horizontal",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.HorizontalPropertyDeleteSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
         "/permissions": {
             "get": {
                 "security": [
@@ -4224,6 +4582,113 @@ const docTemplate = `{
                 }
             }
         },
+        "request.CreateHorizontalPropertyRequest": {
+            "type": "object",
+            "required": [
+                "address",
+                "business_type_id",
+                "code",
+                "name",
+                "timezone",
+                "total_units"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "Carrera 15 #45-67, Bogotá"
+                },
+                "business_type_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "code": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 2,
+                    "example": "los-pinos"
+                },
+                "custom_domain": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "example": "lospinos.example.com"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "example": "Conjunto residencial familiar con amplias zonas verdes"
+                },
+                "has_elevator": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "has_gym": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "has_parking": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "has_pool": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "has_social_area": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "logo_url": {
+                    "description": "Configuración de marca blanca",
+                    "type": "string",
+                    "example": "https://example.com/logo.png"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 120,
+                    "minLength": 3,
+                    "example": "Conjunto Residencial Los Pinos"
+                },
+                "navbar_image_url": {
+                    "type": "string",
+                    "example": "https://example.com/navbar.jpg"
+                },
+                "parent_business_id": {
+                    "type": "integer"
+                },
+                "primary_color": {
+                    "type": "string",
+                    "example": "#1f2937"
+                },
+                "quaternary_color": {
+                    "type": "string",
+                    "example": "#fbbf24"
+                },
+                "secondary_color": {
+                    "type": "string",
+                    "example": "#3b82f6"
+                },
+                "tertiary_color": {
+                    "type": "string",
+                    "example": "#10b981"
+                },
+                "timezone": {
+                    "type": "string",
+                    "example": "America/Bogota"
+                },
+                "total_floors": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 15
+                },
+                "total_units": {
+                    "description": "Configuración específica para propiedades horizontales",
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 120
+                }
+            }
+        },
         "request.CreatePermissionRequest": {
             "type": "object",
             "required": [
@@ -4397,6 +4862,105 @@ const docTemplate = `{
                 },
                 "phone": {
                     "type": "string"
+                }
+            }
+        },
+        "request.UpdateHorizontalPropertyRequest": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "Carrera 15 #45-67, Bogotá D.C."
+                },
+                "code": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 2,
+                    "example": "los-pinos-v2"
+                },
+                "custom_domain": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "example": "lospinos-new.example.com"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "example": "Conjunto residencial familiar con amplias zonas verdes y nuevas amenidades"
+                },
+                "has_elevator": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "has_gym": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "has_parking": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "has_pool": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "has_social_area": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "is_active": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "logo_url": {
+                    "description": "Configuración de marca blanca",
+                    "type": "string",
+                    "example": "https://example.com/new-logo.png"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 120,
+                    "minLength": 3,
+                    "example": "Conjunto Residencial Los Pinos Actualizado"
+                },
+                "navbar_image_url": {
+                    "type": "string",
+                    "example": "https://example.com/new-navbar.jpg"
+                },
+                "parent_business_id": {
+                    "type": "integer"
+                },
+                "primary_color": {
+                    "type": "string",
+                    "example": "#2d3748"
+                },
+                "quaternary_color": {
+                    "type": "string",
+                    "example": "#ed8936"
+                },
+                "secondary_color": {
+                    "type": "string",
+                    "example": "#4299e1"
+                },
+                "tertiary_color": {
+                    "type": "string",
+                    "example": "#38b2ac"
+                },
+                "timezone": {
+                    "type": "string",
+                    "example": "America/Bogota"
+                },
+                "total_floors": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 16
+                },
+                "total_units": {
+                    "description": "Configuración específica para propiedades horizontales",
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 125
                 }
             }
         },
@@ -4661,6 +5225,198 @@ const docTemplate = `{
                 }
             }
         },
+        "response.HorizontalPropertyDeleteSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Propiedad horizontal eliminada exitosamente"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "response.HorizontalPropertyListResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "example": "Carrera 15 #45-67, Bogotá"
+                },
+                "business_type_name": {
+                    "type": "string",
+                    "example": "Propiedad Horizontal"
+                },
+                "code": {
+                    "type": "string",
+                    "example": "los-pinos"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-01-15T10:30:00Z"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_active": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Conjunto Residencial Los Pinos"
+                },
+                "total_units": {
+                    "type": "integer",
+                    "example": 120
+                }
+            }
+        },
+        "response.HorizontalPropertyListSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.PaginatedHorizontalPropertyResponse"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Lista obtenida exitosamente"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "response.HorizontalPropertyResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "example": "Carrera 15 #45-67, Bogotá"
+                },
+                "business_type_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "business_type_name": {
+                    "type": "string",
+                    "example": "Propiedad Horizontal"
+                },
+                "code": {
+                    "type": "string",
+                    "example": "los-pinos"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-01-15T10:30:00Z"
+                },
+                "custom_domain": {
+                    "type": "string",
+                    "example": "lospinos.example.com"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Conjunto residencial familiar con amplias zonas verdes"
+                },
+                "has_elevator": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "has_gym": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "has_parking": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "has_pool": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "has_social_area": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_active": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "logo_url": {
+                    "description": "Configuración de marca blanca",
+                    "type": "string",
+                    "example": "https://example.com/logo.png"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Conjunto Residencial Los Pinos"
+                },
+                "navbar_image_url": {
+                    "type": "string",
+                    "example": "https://example.com/navbar.jpg"
+                },
+                "parent_business_id": {
+                    "type": "integer"
+                },
+                "primary_color": {
+                    "type": "string",
+                    "example": "#1f2937"
+                },
+                "quaternary_color": {
+                    "type": "string",
+                    "example": "#fbbf24"
+                },
+                "secondary_color": {
+                    "type": "string",
+                    "example": "#3b82f6"
+                },
+                "tertiary_color": {
+                    "type": "string",
+                    "example": "#10b981"
+                },
+                "timezone": {
+                    "type": "string",
+                    "example": "America/Bogota"
+                },
+                "total_floors": {
+                    "type": "integer",
+                    "example": 15
+                },
+                "total_units": {
+                    "description": "Configuración específica para propiedades horizontales",
+                    "type": "integer",
+                    "example": 120
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-01-15T10:30:00Z"
+                }
+            }
+        },
+        "response.HorizontalPropertySuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.HorizontalPropertyResponse"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada exitosamente"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
         "response.LoginBadRequestResponse": {
             "type": "object",
             "properties": {
@@ -4711,6 +5467,33 @@ const docTemplate = `{
                 },
                 "success": {
                     "type": "boolean"
+                }
+            }
+        },
+        "response.PaginatedHorizontalPropertyResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.HorizontalPropertyListResponse"
+                    }
+                },
+                "page": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "page_size": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 150
+                },
+                "total_pages": {
+                    "type": "integer",
+                    "example": 15
                 }
             }
         },
@@ -5273,64 +6056,19 @@ const docTemplate = `{
         "services_auth_internal_infra_primary_controllers_userhandler_response.BusinessInfo": {
             "type": "object",
             "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "business_type_code": {
-                    "type": "string"
-                },
                 "business_type_id": {
                     "type": "integer"
                 },
                 "business_type_name": {
                     "type": "string"
                 },
-                "code": {
-                    "type": "string"
-                },
-                "custom_domain": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "enable_delivery": {
-                    "type": "boolean"
-                },
-                "enable_pickup": {
-                    "type": "boolean"
-                },
-                "enable_reservations": {
-                    "type": "boolean"
-                },
                 "id": {
                     "type": "integer"
-                },
-                "is_active": {
-                    "type": "boolean"
                 },
                 "logo_url": {
                     "type": "string"
                 },
                 "name": {
-                    "type": "string"
-                },
-                "navbar_image_url": {
-                    "type": "string"
-                },
-                "primary_color": {
-                    "type": "string"
-                },
-                "quaternary_color": {
-                    "type": "string"
-                },
-                "secondary_color": {
-                    "type": "string"
-                },
-                "tertiary_color": {
-                    "type": "string"
-                },
-                "timezone": {
                     "type": "string"
                 }
             }
@@ -5338,9 +6076,6 @@ const docTemplate = `{
         "services_auth_internal_infra_primary_controllers_userhandler_response.RoleInfo": {
             "type": "object",
             "properties": {
-                "code": {
-                    "type": "string"
-                },
                 "description": {
                     "type": "string"
                 },
@@ -5356,14 +6091,8 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "scope_code": {
-                    "type": "string"
-                },
                 "scope_id": {
                     "type": "integer"
-                },
-                "scope_name": {
-                    "type": "string"
                 }
             }
         }

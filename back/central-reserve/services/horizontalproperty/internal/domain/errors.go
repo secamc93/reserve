@@ -1,0 +1,36 @@
+package domain
+
+import "errors"
+
+// ═══════════════════════════════════════════════════════════════════
+//
+//	HORIZONTAL PROPERTY DOMAIN ERRORS
+//
+// ═══════════════════════════════════════════════════════════════════
+
+var (
+	// Errores de validación
+	ErrHorizontalPropertyNameRequired    = errors.New("el nombre de la propiedad horizontal es requerido")
+	ErrHorizontalPropertyCodeRequired    = errors.New("el código de la propiedad horizontal es requerido")
+	ErrHorizontalPropertyCodeInvalid     = errors.New("el código de la propiedad horizontal debe ser alfanumérico")
+	ErrHorizontalPropertyAddressRequired = errors.New("la dirección de la propiedad horizontal es requerida")
+	ErrHorizontalPropertyUnitsRequired   = errors.New("el número de unidades es requerido y debe ser mayor a 0")
+
+	// Errores de negocio
+	ErrHorizontalPropertyNotFound     = errors.New("propiedad horizontal no encontrada")
+	ErrHorizontalPropertyCodeExists   = errors.New("ya existe una propiedad horizontal con este código")
+	ErrHorizontalPropertyHasUnits     = errors.New("no se puede eliminar una propiedad horizontal que tiene unidades registradas")
+	ErrHorizontalPropertyHasResidents = errors.New("no se puede eliminar una propiedad horizontal que tiene residentes registrados")
+
+	// Errores de tipo de negocio
+	ErrBusinessTypeNotFound              = errors.New("tipo de negocio no encontrado")
+	ErrBusinessTypeNotHorizontalProperty = errors.New("el tipo de negocio debe ser de propiedad horizontal")
+
+	// Errores de autorización
+	ErrUnauthorized            = errors.New("no autorizado")
+	ErrInsufficientPermissions = errors.New("permisos insuficientes")
+
+	// Errores de sistema
+	ErrInternalServer     = errors.New("error interno del servidor")
+	ErrDatabaseConnection = errors.New("error de conexión a la base de datos")
+)

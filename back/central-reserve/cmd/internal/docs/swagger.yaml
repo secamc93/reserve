@@ -54,6 +54,89 @@ definitions:
     - name
     - phone
     type: object
+  request.CreateHorizontalPropertyRequest:
+    properties:
+      address:
+        example: 'Carrera 15 #45-67, Bogotá'
+        maxLength: 255
+        type: string
+      business_type_id:
+        example: 1
+        type: integer
+      code:
+        example: los-pinos
+        maxLength: 50
+        minLength: 2
+        type: string
+      custom_domain:
+        example: lospinos.example.com
+        maxLength: 100
+        type: string
+      description:
+        example: Conjunto residencial familiar con amplias zonas verdes
+        maxLength: 500
+        type: string
+      has_elevator:
+        example: true
+        type: boolean
+      has_gym:
+        example: false
+        type: boolean
+      has_parking:
+        example: true
+        type: boolean
+      has_pool:
+        example: true
+        type: boolean
+      has_social_area:
+        example: true
+        type: boolean
+      logo_url:
+        description: Configuración de marca blanca
+        example: https://example.com/logo.png
+        type: string
+      name:
+        example: Conjunto Residencial Los Pinos
+        maxLength: 120
+        minLength: 3
+        type: string
+      navbar_image_url:
+        example: https://example.com/navbar.jpg
+        type: string
+      parent_business_id:
+        type: integer
+      primary_color:
+        example: '#1f2937'
+        type: string
+      quaternary_color:
+        example: '#fbbf24'
+        type: string
+      secondary_color:
+        example: '#3b82f6'
+        type: string
+      tertiary_color:
+        example: '#10b981'
+        type: string
+      timezone:
+        example: America/Bogota
+        type: string
+      total_floors:
+        example: 15
+        minimum: 1
+        type: integer
+      total_units:
+        description: Configuración específica para propiedades horizontales
+        example: 120
+        minimum: 1
+        type: integer
+    required:
+    - address
+    - business_type_id
+    - code
+    - name
+    - timezone
+    - total_units
+    type: object
   request.CreatePermissionRequest:
     properties:
       action:
@@ -176,6 +259,82 @@ definitions:
         type: string
       phone:
         type: string
+    type: object
+  request.UpdateHorizontalPropertyRequest:
+    properties:
+      address:
+        example: 'Carrera 15 #45-67, Bogotá D.C.'
+        maxLength: 255
+        type: string
+      code:
+        example: los-pinos-v2
+        maxLength: 50
+        minLength: 2
+        type: string
+      custom_domain:
+        example: lospinos-new.example.com
+        maxLength: 100
+        type: string
+      description:
+        example: Conjunto residencial familiar con amplias zonas verdes y nuevas amenidades
+        maxLength: 500
+        type: string
+      has_elevator:
+        example: true
+        type: boolean
+      has_gym:
+        example: true
+        type: boolean
+      has_parking:
+        example: true
+        type: boolean
+      has_pool:
+        example: true
+        type: boolean
+      has_social_area:
+        example: true
+        type: boolean
+      is_active:
+        example: true
+        type: boolean
+      logo_url:
+        description: Configuración de marca blanca
+        example: https://example.com/new-logo.png
+        type: string
+      name:
+        example: Conjunto Residencial Los Pinos Actualizado
+        maxLength: 120
+        minLength: 3
+        type: string
+      navbar_image_url:
+        example: https://example.com/new-navbar.jpg
+        type: string
+      parent_business_id:
+        type: integer
+      primary_color:
+        example: '#2d3748'
+        type: string
+      quaternary_color:
+        example: '#ed8936'
+        type: string
+      secondary_color:
+        example: '#4299e1'
+        type: string
+      tertiary_color:
+        example: '#38b2ac'
+        type: string
+      timezone:
+        example: America/Bogota
+        type: string
+      total_floors:
+        example: 16
+        minimum: 1
+        type: integer
+      total_units:
+        description: Configuración específica para propiedades horizontales
+        example: 125
+        minimum: 1
+        type: integer
     type: object
   request.UpdatePermissionRequest:
     properties:
@@ -353,6 +512,146 @@ definitions:
       success:
         type: boolean
     type: object
+  response.HorizontalPropertyDeleteSuccessResponse:
+    properties:
+      message:
+        example: Propiedad horizontal eliminada exitosamente
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  response.HorizontalPropertyListResponse:
+    properties:
+      address:
+        example: 'Carrera 15 #45-67, Bogotá'
+        type: string
+      business_type_name:
+        example: Propiedad Horizontal
+        type: string
+      code:
+        example: los-pinos
+        type: string
+      created_at:
+        example: "2024-01-15T10:30:00Z"
+        type: string
+      id:
+        example: 1
+        type: integer
+      is_active:
+        example: true
+        type: boolean
+      name:
+        example: Conjunto Residencial Los Pinos
+        type: string
+      total_units:
+        example: 120
+        type: integer
+    type: object
+  response.HorizontalPropertyListSuccessResponse:
+    properties:
+      data:
+        $ref: '#/definitions/response.PaginatedHorizontalPropertyResponse'
+      message:
+        example: Lista obtenida exitosamente
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  response.HorizontalPropertyResponse:
+    properties:
+      address:
+        example: 'Carrera 15 #45-67, Bogotá'
+        type: string
+      business_type_id:
+        example: 1
+        type: integer
+      business_type_name:
+        example: Propiedad Horizontal
+        type: string
+      code:
+        example: los-pinos
+        type: string
+      created_at:
+        example: "2024-01-15T10:30:00Z"
+        type: string
+      custom_domain:
+        example: lospinos.example.com
+        type: string
+      description:
+        example: Conjunto residencial familiar con amplias zonas verdes
+        type: string
+      has_elevator:
+        example: true
+        type: boolean
+      has_gym:
+        example: false
+        type: boolean
+      has_parking:
+        example: true
+        type: boolean
+      has_pool:
+        example: true
+        type: boolean
+      has_social_area:
+        example: true
+        type: boolean
+      id:
+        example: 1
+        type: integer
+      is_active:
+        example: true
+        type: boolean
+      logo_url:
+        description: Configuración de marca blanca
+        example: https://example.com/logo.png
+        type: string
+      name:
+        example: Conjunto Residencial Los Pinos
+        type: string
+      navbar_image_url:
+        example: https://example.com/navbar.jpg
+        type: string
+      parent_business_id:
+        type: integer
+      primary_color:
+        example: '#1f2937'
+        type: string
+      quaternary_color:
+        example: '#fbbf24'
+        type: string
+      secondary_color:
+        example: '#3b82f6'
+        type: string
+      tertiary_color:
+        example: '#10b981'
+        type: string
+      timezone:
+        example: America/Bogota
+        type: string
+      total_floors:
+        example: 15
+        type: integer
+      total_units:
+        description: Configuración específica para propiedades horizontales
+        example: 120
+        type: integer
+      updated_at:
+        example: "2024-01-15T10:30:00Z"
+        type: string
+    type: object
+  response.HorizontalPropertySuccessResponse:
+    properties:
+      data:
+        $ref: '#/definitions/response.HorizontalPropertyResponse'
+      message:
+        example: Operación realizada exitosamente
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
   response.LoginBadRequestResponse:
     properties:
       details:
@@ -386,6 +685,25 @@ definitions:
         $ref: '#/definitions/response.LoginResponse'
       success:
         type: boolean
+    type: object
+  response.PaginatedHorizontalPropertyResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/response.HorizontalPropertyListResponse'
+        type: array
+      page:
+        example: 1
+        type: integer
+      page_size:
+        example: 10
+        type: integer
+      total:
+        example: 150
+        type: integer
+      total_pages:
+        example: 15
+        type: integer
     type: object
   response.PermissionErrorResponse:
     properties:
@@ -763,51 +1081,19 @@ definitions:
     type: object
   services_auth_internal_infra_primary_controllers_userhandler_response.BusinessInfo:
     properties:
-      address:
-        type: string
-      business_type_code:
-        type: string
       business_type_id:
         type: integer
       business_type_name:
         type: string
-      code:
-        type: string
-      custom_domain:
-        type: string
-      description:
-        type: string
-      enable_delivery:
-        type: boolean
-      enable_pickup:
-        type: boolean
-      enable_reservations:
-        type: boolean
       id:
         type: integer
-      is_active:
-        type: boolean
       logo_url:
         type: string
       name:
         type: string
-      navbar_image_url:
-        type: string
-      primary_color:
-        type: string
-      quaternary_color:
-        type: string
-      secondary_color:
-        type: string
-      tertiary_color:
-        type: string
-      timezone:
-        type: string
     type: object
   services_auth_internal_infra_primary_controllers_userhandler_response.RoleInfo:
     properties:
-      code:
-        type: string
       description:
         type: string
       id:
@@ -818,12 +1104,8 @@ definitions:
         type: integer
       name:
         type: string
-      scope_code:
-        type: string
       scope_id:
         type: integer
-      scope_name:
-        type: string
     type: object
 host: localhost:3050
 info:
@@ -1889,6 +2171,246 @@ paths:
       summary: Actualiza un cliente existente
       tags:
       - Clientes
+  /horizontal-properties:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene una lista paginada de propiedades horizontales con filtros
+        opcionales
+      parameters:
+      - description: Filtro por nombre
+        in: query
+        name: name
+        type: string
+      - description: Filtro por código
+        in: query
+        name: code
+        type: string
+      - description: Filtro por estado activo
+        in: query
+        name: is_active
+        type: boolean
+      - default: 1
+        description: Número de página
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Tamaño de página
+        in: query
+        name: page_size
+        type: integer
+      - description: Campo de ordenamiento
+        enum:
+        - name
+        - code
+        - created_at
+        - updated_at
+        in: query
+        name: order_by
+        type: string
+      - description: Dirección de ordenamiento
+        enum:
+        - asc
+        - desc
+        in: query
+        name: order_dir
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.HorizontalPropertyListSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Listar propiedades horizontales
+      tags:
+      - Propiedades Horizontales
+    post:
+      consumes:
+      - application/json
+      description: Crea una nueva propiedad horizontal con la información proporcionada
+      parameters:
+      - description: Datos de la propiedad horizontal
+        in: body
+        name: horizontal_property
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateHorizontalPropertyRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.HorizontalPropertySuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Crear una nueva propiedad horizontal
+      tags:
+      - Propiedades Horizontales
+  /horizontal-properties/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Elimina una propiedad horizontal existente
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.HorizontalPropertyDeleteSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Eliminar propiedad horizontal
+      tags:
+      - Propiedades Horizontales
+    get:
+      consumes:
+      - application/json
+      description: Obtiene una propiedad horizontal específica por su ID
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.HorizontalPropertySuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Obtener propiedad horizontal por ID
+      tags:
+      - Propiedades Horizontales
+    put:
+      consumes:
+      - application/json
+      description: Actualiza una propiedad horizontal existente
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Datos a actualizar
+        in: body
+        name: horizontal_property
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateHorizontalPropertyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.HorizontalPropertySuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Actualizar propiedad horizontal
+      tags:
+      - Propiedades Horizontales
+  /horizontal-properties/code/{code}:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene una propiedad horizontal específica por su código único
+      parameters:
+      - description: Código de la propiedad horizontal
+        in: path
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.HorizontalPropertySuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Obtener propiedad horizontal por código
+      tags:
+      - Propiedades Horizontales
   /permissions:
     get:
       consumes:

@@ -7,6 +7,7 @@ import (
 	"central_reserve/services/auth/middleware"
 	"central_reserve/services/business"
 	"central_reserve/services/customer"
+	"central_reserve/services/horizontalproperty"
 	"central_reserve/services/reserve"
 	"central_reserve/services/rooms"
 	"central_reserve/services/tables"
@@ -38,6 +39,7 @@ func Init(ctx context.Context) error {
 	auth.New(database, environment, logger, s3, v1Group, jwtService)
 	customer.New(database, environment, logger, v1Group)
 	business.New(database, environment, logger, s3, v1Group)
+	horizontalproperty.New(database, logger, v1Group)
 	reserve.New(database, environment, logger, email, v1Group)
 	rooms.New(database, environment, logger, v1Group)
 	tables.New(database, environment, logger, v1Group)
