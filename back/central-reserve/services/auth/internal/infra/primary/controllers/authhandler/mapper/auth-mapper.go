@@ -97,20 +97,38 @@ func groupPermissionsByResource(permissions []domain.PermissionInfo) []response.
 		return nil
 	}
 
-	// Mapa para agrupar permisos por recurso
-	resourceMap := make(map[string][]string)
+	// Mapa para agrupar permisos por recurso con estado activo
+	resourceMap := make(map[string]struct {
+		actions []string
+		active  bool
+	})
 
-	// Agrupar permisos por recurso
+	// Agrupar permisos por recurso y determinar si está activo
 	for _, permission := range permissions {
-		resourceMap[permission.Resource] = append(resourceMap[permission.Resource], permission.Action)
+		if existing, exists := resourceMap[permission.Resource]; exists {
+			// Si ya existe el recurso, agregar acción y mantener activo si al menos uno está activo
+			existing.actions = append(existing.actions, permission.Action)
+			existing.active = existing.active || permission.Active
+			resourceMap[permission.Resource] = existing
+		} else {
+			// Nuevo recurso
+			resourceMap[permission.Resource] = struct {
+				actions []string
+				active  bool
+			}{
+				actions: []string{permission.Action},
+				active:  permission.Active,
+			}
+		}
 	}
 
 	// Convertir el mapa a slice de ResourcePermissions
 	var resources []response.ResourcePermissions
-	for resource, actions := range resourceMap {
+	for resource, data := range resourceMap {
 		resources = append(resources, response.ResourcePermissions{
 			Resource: resource,
-			Actions:  actions,
+			Actions:  data.actions,
+			Active:   data.active,
 		})
 	}
 

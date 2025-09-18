@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"time"
 
 	"central_reserve/services/business/internal/domain"
 	"dbpostgres/app/infra/models"
@@ -341,18 +342,41 @@ func (r *Repository) UpdateBusinessConfiguredResources(ctx context.Context, busi
 		return errors.New("error interno del servidor")
 	}
 
-	// Crear las nuevas configuraciones
+	// Crear/restaurar las nuevas configuraciones usando UPSERT
 	for _, permittedID := range validResourcesPermittedIDs {
-		newConfigured := models.BusinessResourceConfigured{
-			BusinessID:                      businessID,
-			BusinessTypeResourcePermittedID: permittedID,
-			BusinessTypeID:                  businessModel.BusinessTypeID,
-		}
+		// Verificar si existe un registro (incluso soft-deleted)
+		var existing models.BusinessResourceConfigured
+		err := tx.Unscoped().Where("business_id = ? AND business_type_resource_permitted_id = ?",
+			businessID, permittedID).First(&existing).Error
 
-		if err := tx.Create(&newConfigured).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			// No existe, crear nuevo
+			newConfigured := models.BusinessResourceConfigured{
+				BusinessID:                      businessID,
+				BusinessTypeResourcePermittedID: permittedID,
+				BusinessTypeID:                  businessModel.BusinessTypeID,
+			}
+
+			if err := tx.Create(&newConfigured).Error; err != nil {
+				tx.Rollback()
+				r.logger.Error().Err(err).Uint("business_id", businessID).Uint("permitted_id", permittedID).Msg("[business_resource_repository] Error al crear recurso configurado")
+				return errors.New("error interno del servidor")
+			}
+		} else if err != nil {
+			// Error inesperado
 			tx.Rollback()
-			r.logger.Error().Err(err).Uint("business_id", businessID).Uint("permitted_id", permittedID).Msg("[business_resource_repository] Error al crear recurso configurado")
+			r.logger.Error().Err(err).Uint("business_id", businessID).Uint("permitted_id", permittedID).Msg("[business_resource_repository] Error al verificar recurso existente")
 			return errors.New("error interno del servidor")
+		} else {
+			// Existe (posiblemente soft-deleted), restaurar
+			if err := tx.Unscoped().Model(&existing).Updates(map[string]interface{}{
+				"deleted_at": nil,
+				"updated_at": time.Now(),
+			}).Error; err != nil {
+				tx.Rollback()
+				r.logger.Error().Err(err).Uint("business_id", businessID).Uint("permitted_id", permittedID).Msg("[business_resource_repository] Error al restaurar recurso configurado")
+				return errors.New("error interno del servidor")
+			}
 		}
 	}
 
@@ -365,4 +389,39 @@ func (r *Repository) UpdateBusinessConfiguredResources(ctx context.Context, busi
 	r.logger.Info().Uint("business_id", businessID).Int("resources_count", len(validResourcesPermittedIDs)).Msg("[business_resource_repository] Recursos configurados del business actualizados exitosamente")
 
 	return nil
+}
+
+// GetBusinessConfiguredResourcesIDs obtiene los IDs de recursos configurados para un business específico
+func (r *Repository) GetBusinessConfiguredResourcesIDs(ctx context.Context, businessID uint) ([]uint, error) {
+	var resourcesIDs []uint
+
+	err := r.database.Conn(ctx).
+		Model(&models.BusinessResourceConfigured{}).
+		Where("business_id = ?", businessID).
+		Pluck("business_type_resource_permitted_id", &resourcesIDs).Error
+
+	if err != nil {
+		r.logger.Error().Err(err).Uint("business_id", businessID).Msg("[business_resource_repository] Error al obtener recursos configurados del business")
+		return nil, err
+	}
+
+	// Obtener los resource_ids desde BusinessTypeResourcePermitted
+	if len(resourcesIDs) == 0 {
+		return []uint{}, nil
+	}
+
+	var actualResourceIDs []uint
+	err = r.database.Conn(ctx).
+		Model(&models.BusinessTypeResourcePermitted{}).
+		Where("id IN ?", resourcesIDs).
+		Pluck("resource_id", &actualResourceIDs).Error
+
+	if err != nil {
+		r.logger.Error().Err(err).Uint("business_id", businessID).Msg("[business_resource_repository] Error al obtener resource_ids")
+		return nil, err
+	}
+
+	r.logger.Info().Uint("business_id", businessID).Int("resources_count", len(actualResourceIDs)).Msg("[business_resource_repository] Recursos configurados del business obtenidos exitosamente")
+
+	return actualResourceIDs, nil
 }

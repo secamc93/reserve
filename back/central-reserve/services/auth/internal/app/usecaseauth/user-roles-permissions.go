@@ -7,8 +7,8 @@ import (
 )
 
 // GetUserRolesPermissions maneja la lógica para obtener roles y permisos del usuario
-func (uc *AuthUseCase) GetUserRolesPermissions(ctx context.Context, userID uint, token string) (*domain.UserRolesPermissionsResponse, error) {
-	uc.log.Info().Uint("user_id", userID).Msg("Obteniendo roles y permisos del usuario")
+func (uc *AuthUseCase) GetUserRolesPermissions(ctx context.Context, userID uint, businessID uint, token string) (*domain.UserRolesPermissionsResponse, error) {
+	uc.log.Info().Uint("user_id", userID).Uint("business_id", businessID).Msg("Obteniendo roles y permisos del usuario")
 
 	// Validar token
 	if token == "" {
@@ -57,6 +57,19 @@ func (uc *AuthUseCase) GetUserRolesPermissions(ctx context.Context, userID uint,
 		return nil, fmt.Errorf("error interno del servidor")
 	}
 
+	// Obtener recursos configurados para el business
+	businessResourcesIDs, err := uc.repository.GetBusinessConfiguredResourcesIDs(ctx, businessID)
+	if err != nil {
+		uc.log.Error().Err(err).Uint("business_id", businessID).Msg("Error al obtener recursos configurados del business")
+		return nil, fmt.Errorf("error interno del servidor")
+	}
+
+	// Crear mapa de recursos activos para búsqueda rápida
+	activeResourcesMap := make(map[uint]bool)
+	for _, resourceID := range businessResourcesIDs {
+		activeResourcesMap[resourceID] = true
+	}
+
 	// Obtener permisos de todos los roles del usuario
 	var allPermissions []domain.Permission
 	for _, role := range roles {
@@ -100,16 +113,20 @@ func (uc *AuthUseCase) GetUserRolesPermissions(ctx context.Context, userID uint,
 		}
 	}
 
-	// Mapear permisos (eliminar duplicados)
+	// Mapear permisos (eliminar duplicados) y verificar si están activos para el business
 	permissionMap := make(map[string]domain.PermissionInfo)
 	for _, permission := range allPermissions {
 		key := permission.Resource + ":" + permission.Action
 		if _, exists := permissionMap[key]; !exists {
+			// Verificar si el recurso está configurado para el business
+			isActive := activeResourcesMap[permission.ResourceID]
+
 			permissionMap[key] = domain.PermissionInfo{
 				ID:          permission.ID,
 				Description: permission.Description,
 				Resource:    permission.Resource,
 				Action:      permission.Action,
+				Active:      isActive,
 			}
 		}
 	}

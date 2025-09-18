@@ -38,6 +38,7 @@ type Permission struct {
 	Description string
 	Resource    string
 	Action      string
+	ResourceID  uint
 }
 
 // UserRole representa la relación many-to-many entre usuarios y roles

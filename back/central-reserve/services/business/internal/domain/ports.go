@@ -29,6 +29,7 @@ type IBusinessRepository interface {
 
 	// Métodos para BusinessResourceConfigured (recursos asignados a un business)
 	GetBusinessesWithConfiguredResourcesPaginated(ctx context.Context, page, perPage int, businessID *uint) ([]BusinessWithConfiguredResourcesResponse, int64, error)
+	GetBusinessConfiguredResourcesIDs(ctx context.Context, businessID uint) ([]uint, error)
 	UpdateBusinessConfiguredResources(ctx context.Context, businessID uint, resourcesIDs []uint) error
 }
 

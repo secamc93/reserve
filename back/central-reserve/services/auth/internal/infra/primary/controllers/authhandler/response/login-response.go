@@ -38,6 +38,7 @@ type Action struct {
 type ResourcePermissions struct {
 	Resource string   `json:"resource"`
 	Actions  []string `json:"actions"`
+	Active   bool     `json:"active"` // Indica si el recurso está activo para el business
 }
 
 // UserRolesPermissionsResponse representa la respuesta de roles y permisos del usuario

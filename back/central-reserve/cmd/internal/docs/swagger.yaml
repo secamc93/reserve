@@ -552,6 +552,9 @@ definitions:
         items:
           type: string
         type: array
+      active:
+        description: Indica si el recurso está activo para el business
+        type: boolean
       resource:
         type: string
     type: object
@@ -918,7 +921,14 @@ paths:
     get:
       consumes:
       - application/json
-      description: Obtiene los roles y permisos del usuario autenticado
+      description: Obtiene los roles y permisos del usuario autenticado validados
+        contra recursos configurados del business
+      parameters:
+      - description: ID del business para validar recursos activos
+        in: query
+        name: business_id
+        required: true
+        type: integer
       produces:
       - application/json
       responses:
@@ -926,6 +936,10 @@ paths:
           description: Roles y permisos obtenidos exitosamente
           schema:
             $ref: '#/definitions/response.UserRolesPermissionsSuccessResponse'
+        "400":
+          description: Business ID requerido o inválido
+          schema:
+            $ref: '#/definitions/response.LoginErrorResponse'
         "401":
           description: Token de acceso requerido
           schema:
@@ -3272,6 +3286,10 @@ paths:
         in: query
         name: phone
         type: string
+      - description: 'Filtrar por IDs de usuarios separados por comas (ej: 1,2,3)'
+        in: query
+        name: user_ids
+        type: string
       - description: Filtrar por estado activo
         in: query
         name: is_active
@@ -3292,6 +3310,7 @@ paths:
       - default: created_at
         description: Campo para ordenar
         enum:
+        - id
         - name
         - email
         - phone
@@ -3357,20 +3376,14 @@ paths:
         in: formData
         name: is_active
         type: boolean
-      - collectionFormat: multi
-        description: IDs de roles
+      - description: 'IDs de roles separados por comas (ej: 1,2,3)'
         in: formData
-        items:
-          type: integer
         name: role_ids
-        type: array
-      - collectionFormat: multi
-        description: IDs de negocios
+        type: string
+      - description: 'IDs de negocios separados por comas (ej: 1,2,3)'
         in: formData
-        items:
-          type: integer
         name: business_ids
-        type: array
+        type: string
       - description: URL de avatar (opcional si se usa avatarFile)
         in: formData
         name: avatar_url
@@ -3518,20 +3531,14 @@ paths:
         in: formData
         name: is_active
         type: boolean
-      - collectionFormat: multi
-        description: IDs de roles
+      - description: 'IDs de roles separados por comas (ej: 1,2,3)'
         in: formData
-        items:
-          type: integer
         name: role_ids
-        type: array
-      - collectionFormat: multi
-        description: IDs de negocios
+        type: string
+      - description: 'IDs de negocios separados por comas (ej: 1,2,3)'
         in: formData
-        items:
-          type: integer
         name: business_ids
-        type: array
+        type: string
       - description: URL de avatar (opcional si se usa avatarFile)
         in: formData
         name: avatar_url

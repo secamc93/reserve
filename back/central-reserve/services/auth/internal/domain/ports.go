@@ -38,6 +38,7 @@ type IAuthRepository interface {
 	UpdateAPIKeyLastUsed(ctx context.Context, apiKeyID uint) error
 	GetAPIKeysByUser(ctx context.Context, userID uint) ([]APIKeyInfo, error)
 	RevokeAPIKey(ctx context.Context, apiKeyID uint) error
+	GetBusinessConfiguredResourcesIDs(ctx context.Context, businessID uint) ([]uint, error)
 	GetPermissions(ctx context.Context) ([]Permission, error)
 	GetPermissionByID(ctx context.Context, id uint) (*Permission, error)
 	GetPermissionsByScopeID(ctx context.Context, scopeID uint) ([]Permission, error)

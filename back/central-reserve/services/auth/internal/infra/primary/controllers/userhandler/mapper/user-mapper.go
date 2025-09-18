@@ -4,16 +4,33 @@ import (
 	"central_reserve/services/auth/internal/domain"
 	"central_reserve/services/auth/internal/infra/primary/controllers/userhandler/request"
 	"central_reserve/services/auth/internal/infra/primary/controllers/userhandler/response"
+	"strconv"
+	"strings"
 )
 
 // ToUserFilters convierte GetUsersRequest a UserFilters del dominio
 func ToUserFilters(req request.GetUsersRequest) domain.UserFilters {
+	// Parsear user_ids desde string separado por comas
+	var userIDs []uint
+	if req.UserIDs != "" {
+		userIDsStr := strings.Split(req.UserIDs, ",")
+		for _, idStr := range userIDsStr {
+			idStr = strings.TrimSpace(idStr)
+			if idStr != "" {
+				if id, err := strconv.ParseUint(idStr, 10, 32); err == nil {
+					userIDs = append(userIDs, uint(id))
+				}
+			}
+		}
+	}
+
 	return domain.UserFilters{
 		Page:       req.Page,
 		PageSize:   req.PageSize,
 		Name:       req.Name,
 		Email:      req.Email,
 		Phone:      req.Phone,
+		UserIDs:    userIDs,
 		IsActive:   req.IsActive,
 		RoleID:     req.RoleID,
 		BusinessID: req.BusinessID,
@@ -25,6 +42,34 @@ func ToUserFilters(req request.GetUsersRequest) domain.UserFilters {
 
 // ToCreateUserDTO convierte CreateUserRequest a CreateUserDTO del dominio
 func ToCreateUserDTO(req request.CreateUserRequest) domain.CreateUserDTO {
+	// Parsear role_ids desde string separado por comas
+	var roleIDs []uint
+	if req.RoleIDs != "" {
+		roleIDsStr := strings.Split(req.RoleIDs, ",")
+		for _, idStr := range roleIDsStr {
+			idStr = strings.TrimSpace(idStr)
+			if idStr != "" {
+				if id, err := strconv.ParseUint(idStr, 10, 32); err == nil {
+					roleIDs = append(roleIDs, uint(id))
+				}
+			}
+		}
+	}
+
+	// Parsear business_ids desde string separado por comas
+	var businessIDs []uint
+	if req.BusinessIDs != "" {
+		businessIDsStr := strings.Split(req.BusinessIDs, ",")
+		for _, idStr := range businessIDsStr {
+			idStr = strings.TrimSpace(idStr)
+			if idStr != "" {
+				if id, err := strconv.ParseUint(idStr, 10, 32); err == nil {
+					businessIDs = append(businessIDs, uint(id))
+				}
+			}
+		}
+	}
+
 	return domain.CreateUserDTO{
 		Name:        req.Name,
 		Email:       req.Email,
@@ -32,13 +77,41 @@ func ToCreateUserDTO(req request.CreateUserRequest) domain.CreateUserDTO {
 		AvatarURL:   req.AvatarURL,
 		AvatarFile:  req.AvatarFile,
 		IsActive:    req.IsActive,
-		RoleIDs:     req.RoleIDs,
-		BusinessIDs: req.BusinessIDs,
+		RoleIDs:     roleIDs,
+		BusinessIDs: businessIDs,
 	}
 }
 
 // ToUpdateUserDTO convierte UpdateUserRequest a UpdateUserDTO del dominio
 func ToUpdateUserDTO(req request.UpdateUserRequest) domain.UpdateUserDTO {
+	// Parsear role_ids desde string separado por comas
+	var roleIDs []uint
+	if req.RoleIDs != "" {
+		roleIDsStr := strings.Split(req.RoleIDs, ",")
+		for _, idStr := range roleIDsStr {
+			idStr = strings.TrimSpace(idStr)
+			if idStr != "" {
+				if id, err := strconv.ParseUint(idStr, 10, 32); err == nil {
+					roleIDs = append(roleIDs, uint(id))
+				}
+			}
+		}
+	}
+
+	// Parsear business_ids desde string separado por comas
+	var businessIDs []uint
+	if req.BusinessIDs != "" {
+		businessIDsStr := strings.Split(req.BusinessIDs, ",")
+		for _, idStr := range businessIDsStr {
+			idStr = strings.TrimSpace(idStr)
+			if idStr != "" {
+				if id, err := strconv.ParseUint(idStr, 10, 32); err == nil {
+					businessIDs = append(businessIDs, uint(id))
+				}
+			}
+		}
+	}
+
 	return domain.UpdateUserDTO{
 		Name:        req.Name,
 		Email:       req.Email,
@@ -47,8 +120,8 @@ func ToUpdateUserDTO(req request.UpdateUserRequest) domain.UpdateUserDTO {
 		AvatarURL:   req.AvatarURL,
 		AvatarFile:  req.AvatarFile,
 		IsActive:    req.IsActive,
-		RoleIDs:     req.RoleIDs,
-		BusinessIDs: req.BusinessIDs,
+		RoleIDs:     roleIDs,
+		BusinessIDs: businessIDs,
 	}
 }
 
@@ -63,34 +136,17 @@ func ToUserResponse(dto domain.UserDTO) response.UserResponse {
 			Level:       role.Level,
 			IsSystem:    role.IsSystem,
 			ScopeID:     role.ScopeID,
-			ScopeName:   role.ScopeName,
-			ScopeCode:   role.ScopeCode,
 		}
 	}
 
 	businesses := make([]response.BusinessInfo, len(dto.Businesses))
 	for i, business := range dto.Businesses {
 		businesses[i] = response.BusinessInfo{
-			ID:                 business.ID,
-			Name:               business.Name,
-			Code:               business.Code,
-			BusinessTypeID:     business.BusinessTypeID,
-			Timezone:           business.Timezone,
-			Address:            business.Address,
-			Description:        business.Description,
-			LogoURL:            business.LogoURL,
-			PrimaryColor:       business.PrimaryColor,
-			SecondaryColor:     business.SecondaryColor,
-			TertiaryColor:      business.TertiaryColor,
-			QuaternaryColor:    business.QuaternaryColor,
-			NavbarImageURL:     business.NavbarImageURL,
-			CustomDomain:       business.CustomDomain,
-			IsActive:           business.IsActive,
-			EnableDelivery:     business.EnableDelivery,
-			EnablePickup:       business.EnablePickup,
-			EnableReservations: business.EnableReservations,
-			BusinessTypeName:   business.BusinessTypeName,
-			BusinessTypeCode:   business.BusinessTypeCode,
+			ID:               business.ID,
+			Name:             business.Name,
+			LogoURL:          business.LogoURL,
+			BusinessTypeID:   business.BusinessTypeID,
+			BusinessTypeName: business.BusinessTypeName,
 		}
 	}
 

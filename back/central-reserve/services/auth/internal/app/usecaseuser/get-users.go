@@ -33,7 +33,7 @@ func (uc *UserUseCase) GetUsers(ctx context.Context, filters domain.UserFilters)
 	// Validar ordenamiento
 	if filters.SortBy != "" {
 		allowedSortFields := map[string]bool{
-			"name": true, "email": true, "phone": true, "is_active": true,
+			"id": true, "name": true, "email": true, "phone": true, "is_active": true,
 			"created_at": true, "updated_at": true,
 		}
 		if !allowedSortFields[filters.SortBy] {

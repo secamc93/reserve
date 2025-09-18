@@ -11,23 +11,25 @@ import (
 
 // Login maneja la lógica de autenticación del usuario (simplificado)
 func (uc *AuthUseCase) Login(ctx context.Context, request domain.LoginRequest) (*domain.LoginResponse, error) {
-	uc.log.Info().Str("email", request.Email).Msg("Iniciando proceso de login")
+	// Normalizar email a minúsculas
+	normalizedEmail := strings.ToLower(strings.TrimSpace(request.Email))
+	uc.log.Info().Str("email", normalizedEmail).Msg("Iniciando proceso de login")
 
 	// Validar que el email y contraseña no estén vacíos
-	if request.Email == "" || request.Password == "" {
+	if normalizedEmail == "" || request.Password == "" {
 		uc.log.Error().Msg("Email o contraseña vacíos")
 		return nil, fmt.Errorf("email y contraseña son requeridos")
 	}
 
-	// Obtener usuario por email
-	userAuth, err := uc.repository.GetUserByEmail(ctx, request.Email)
+	// Obtener usuario por email (normalizado)
+	userAuth, err := uc.repository.GetUserByEmail(ctx, normalizedEmail)
 	if err != nil {
 		uc.log.Error().Err(err).Str("email", request.Email).Msg("Error al obtener usuario por email")
 		return nil, fmt.Errorf("credenciales inválidas")
 	}
 
 	if userAuth == nil {
-		uc.log.Error().Str("email", request.Email).Msg("Usuario no encontrado")
+		uc.log.Error().Str("email", normalizedEmail).Msg("Usuario no encontrado")
 		return nil, fmt.Errorf("credenciales inválidas")
 	}
 

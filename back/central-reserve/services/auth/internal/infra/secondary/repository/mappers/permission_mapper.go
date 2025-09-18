@@ -12,6 +12,7 @@ func ToPermissionEntity(model models.Permission) domain.Permission {
 		Description: model.Action.Description,
 		Resource:    model.Resource.Name,
 		Action:      model.Action.Name,
+		ResourceID:  model.ResourceID,
 	}
 }
 

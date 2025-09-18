@@ -22,8 +22,8 @@ import (
 // @Param password formData string false "Nueva contraseña"
 // @Param phone formData string false "Teléfono (10 dígitos)"
 // @Param is_active formData boolean false "¿Activo?"
-// @Param role_ids formData []int false "IDs de roles" collectionFormat(multi)
-// @Param business_ids formData []int false "IDs de negocios" collectionFormat(multi)
+// @Param role_ids formData string false "IDs de roles separados por comas (ej: 1,2,3)"
+// @Param business_ids formData string false "IDs de negocios separados por comas (ej: 1,2,3)"
 // @Param avatar_url formData string false "URL de avatar (opcional si se usa avatarFile)"
 // @Param avatarFile formData file false "Imagen de avatar"
 // @Success 200 {object} response.UserSuccessResponse "Usuario actualizado exitosamente"

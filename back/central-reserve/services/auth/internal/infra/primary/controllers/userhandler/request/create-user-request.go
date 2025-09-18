@@ -10,6 +10,6 @@ type CreateUserRequest struct {
 	AvatarURL   string                `form:"avatar_url" binding:"omitempty,url"`
 	AvatarFile  *multipart.FileHeader `form:"avatarFile"`
 	IsActive    bool                  `form:"is_active"`
-	RoleIDs     []uint                `form:"role_ids" binding:"omitempty,dive,min=1"`
-	BusinessIDs []uint                `form:"business_ids" binding:"omitempty,dive,min=1"`
+	RoleIDs     string                `form:"role_ids" binding:"omitempty"`     // IDs separados por comas
+	BusinessIDs string                `form:"business_ids" binding:"omitempty"` // IDs separados por comas
 }

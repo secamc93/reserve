@@ -2,41 +2,23 @@ package response
 
 import "time"
 
-// RoleInfo representa información de un rol en la respuesta de usuario
+// RoleInfo representa información simplificada de un rol en la respuesta de usuario
 type RoleInfo struct {
 	ID          uint   `json:"id"`
 	Name        string `json:"name"`
-	Code        string `json:"code"`
 	Description string `json:"description"`
 	Level       int    `json:"level"`
 	IsSystem    bool   `json:"is_system"`
 	ScopeID     uint   `json:"scope_id"`
-	ScopeName   string `json:"scope_name"`
-	ScopeCode   string `json:"scope_code"`
 }
 
-// BusinessInfo representa información de un business en la respuesta de usuario
+// BusinessInfo representa información simplificada de un business en la respuesta de usuario
 type BusinessInfo struct {
-	ID                 uint   `json:"id"`
-	Name               string `json:"name"`
-	Code               string `json:"code"`
-	BusinessTypeID     uint   `json:"business_type_id"`
-	Timezone           string `json:"timezone"`
-	Address            string `json:"address"`
-	Description        string `json:"description"`
-	LogoURL            string `json:"logo_url"`
-	PrimaryColor       string `json:"primary_color"`
-	SecondaryColor     string `json:"secondary_color"`
-	TertiaryColor      string `json:"tertiary_color"`
-	QuaternaryColor    string `json:"quaternary_color"`
-	NavbarImageURL     string `json:"navbar_image_url"`
-	CustomDomain       string `json:"custom_domain"`
-	IsActive           bool   `json:"is_active"`
-	EnableDelivery     bool   `json:"enable_delivery"`
-	EnablePickup       bool   `json:"enable_pickup"`
-	EnableReservations bool   `json:"enable_reservations"`
-	BusinessTypeName   string `json:"business_type_name"`
-	BusinessTypeCode   string `json:"business_type_code"`
+	ID               uint   `json:"id"`
+	Name             string `json:"name"`
+	LogoURL          string `json:"logo_url"`
+	BusinessTypeID   uint   `json:"business_type_id"`
+	BusinessTypeName string `json:"business_type_name"`
 }
 
 // UserResponse representa la respuesta de un usuario

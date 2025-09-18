@@ -9,7 +9,7 @@ import (
 
 type IUseCaseAuth interface {
 	Login(ctx context.Context, request domain.LoginRequest) (*domain.LoginResponse, error)
-	GetUserRolesPermissions(ctx context.Context, userID uint, token string) (*domain.UserRolesPermissionsResponse, error)
+	GetUserRolesPermissions(ctx context.Context, userID uint, businessID uint, token string) (*domain.UserRolesPermissionsResponse, error)
 	ChangePassword(ctx context.Context, request domain.ChangePasswordRequest) (*domain.ChangePasswordResponse, error)
 	// GenerateAPIKey(ctx context.Context, request domain.GenerateAPIKeyRequest) (*domain.GenerateAPIKeyResponse, error)
 	// ValidateAPIKey(ctx context.Context, request domain.ValidateAPIKeyRequest) (*domain.ValidateAPIKeyResponse, error)

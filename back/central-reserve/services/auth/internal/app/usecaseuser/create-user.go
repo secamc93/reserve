@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
+	"strings"
 )
 
 // generateRandomPassword genera una contraseña segura de longitud n
@@ -51,12 +52,14 @@ func generateRandomPassword(n int) (string, error) {
 
 // CreateUser crea un nuevo usuario y retorna email y contraseña generada
 func (uc *UserUseCase) CreateUser(ctx context.Context, userDTO domain.CreateUserDTO) (string, string, string, error) {
-	uc.log.Info().Str("email", userDTO.Email).Msg("Iniciando caso de uso: crear usuario")
+	// Normalizar email a minúsculas
+	normalizedEmail := strings.ToLower(strings.TrimSpace(userDTO.Email))
+	uc.log.Info().Str("email", normalizedEmail).Msg("Iniciando caso de uso: crear usuario")
 
-	// Validar que el email no exista
-	existingUser, err := uc.repository.GetUserByEmail(ctx, userDTO.Email)
+	// Validar que el email no exista (buscar en minúsculas)
+	existingUser, err := uc.repository.GetUserByEmail(ctx, normalizedEmail)
 	if err == nil && existingUser != nil {
-		uc.log.Error().Str("email", userDTO.Email).Msg("Email ya existe")
+		uc.log.Error().Str("email", normalizedEmail).Msg("Email ya existe")
 		return "", "", "", fmt.Errorf("el email ya está registrado")
 	}
 
@@ -85,10 +88,10 @@ func (uc *UserUseCase) CreateUser(ctx context.Context, userDTO domain.CreateUser
 		uc.log.Info().Str("email", userDTO.Email).Str("avatar_path", avatarPath).Msg("Imagen de avatar subida exitosamente")
 	}
 
-	// Convertir DTO a entidad, usando la contraseña generada
+	// Convertir DTO a entidad, usando la contraseña generada y email normalizado
 	user := domain.UsersEntity{
 		Name:      userDTO.Name,
-		Email:     userDTO.Email,
+		Email:     normalizedEmail,   // Siempre en minúsculas
 		Password:  generatedPassword, // El repo la hashea
 		Phone:     userDTO.Phone,
 		AvatarURL: avatarURL, // URL relativa o completa según corresponda
@@ -128,5 +131,5 @@ func (uc *UserUseCase) CreateUser(ctx context.Context, userDTO domain.CreateUser
 
 	message := fmt.Sprintf("Usuario creado con ID: %d", userID)
 	uc.log.Info().Uint("user_id", userID).Msg("Usuario creado exitosamente")
-	return user.Email, generatedPassword, message, nil
+	return normalizedEmail, generatedPassword, message, nil
 }

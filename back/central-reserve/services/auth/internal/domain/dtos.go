@@ -101,6 +101,7 @@ type PermissionInfo struct {
 	Resource    string
 	Action      string
 	Scope       string
+	Active      bool // Indica si el recurso está activo para el business
 }
 
 type ChangePasswordRequest struct {
@@ -327,11 +328,12 @@ type UserFilters struct {
 	Name       string
 	Email      string
 	Phone      string
+	UserIDs    []uint // Lista de IDs de usuarios
 	IsActive   *bool
 	RoleID     *uint
 	BusinessID *uint
 	CreatedAt  string // formato: "2024-01-01" o "2024-01-01,2024-12-31"
-	SortBy     string // "name", "email", "created_at", etc.
+	SortBy     string // "id", "name", "email", "created_at", etc.
 	SortOrder  string // "asc" o "desc"
 }
 

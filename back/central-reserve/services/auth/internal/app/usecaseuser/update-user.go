@@ -18,11 +18,17 @@ func (uc *UserUseCase) UpdateUser(ctx context.Context, id uint, userDTO domain.U
 		return "", fmt.Errorf("usuario no encontrado")
 	}
 
+	// Normalizar email a minúsculas si se proporciona
+	normalizedEmail := userDTO.Email
+	if normalizedEmail != "" {
+		normalizedEmail = strings.ToLower(strings.TrimSpace(normalizedEmail))
+	}
+
 	// Verificar que el email no esté en uso por otro usuario
-	if userDTO.Email != existingUser.Email {
-		userWithEmail, err := uc.repository.GetUserByEmail(ctx, userDTO.Email)
+	if normalizedEmail != "" && normalizedEmail != strings.ToLower(existingUser.Email) {
+		userWithEmail, err := uc.repository.GetUserByEmail(ctx, normalizedEmail)
 		if err == nil && userWithEmail != nil && userWithEmail.ID != id {
-			uc.log.Error().Str("email", userDTO.Email).Msg("Email ya existe en otro usuario")
+			uc.log.Error().Str("email", normalizedEmail).Msg("Email ya existe en otro usuario")
 			return "", fmt.Errorf("el email ya está registrado por otro usuario")
 		}
 	}
@@ -72,7 +78,7 @@ func (uc *UserUseCase) UpdateUser(ctx context.Context, id uint, userDTO domain.U
 	// Convertir DTO a entidad
 	user := domain.UsersEntity{
 		Name:      userDTO.Name,
-		Email:     userDTO.Email,
+		Email:     normalizedEmail, // Usar email normalizado
 		Phone:     userDTO.Phone,
 		AvatarURL: avatarURL, // URL relativa o vacía según corresponda
 		IsActive:  userDTO.IsActive,

@@ -137,21 +137,51 @@ func (r *Repository) GetUsers(ctx context.Context, filters domain.UserFilters) (
 
 	query := r.database.Conn(ctx).Model(&models.User{})
 
+	// Filtros
 	if filters.Email != "" {
 		query = query.Where("email LIKE ?", "%"+filters.Email+"%")
 	}
 	if filters.Name != "" {
 		query = query.Where("name LIKE ?", "%"+filters.Name+"%")
 	}
+	if filters.Phone != "" {
+		query = query.Where("phone LIKE ?", "%"+filters.Phone+"%")
+	}
+	if len(filters.UserIDs) > 0 {
+		query = query.Where("id IN ?", filters.UserIDs)
+	}
 	if filters.IsActive != nil {
 		query = query.Where("is_active = ?", *filters.IsActive)
 	}
+	if filters.RoleID != nil {
+		query = query.Joins("JOIN user_role ON user.id = user_role.user_id").
+			Where("user_role.role_id = ?", *filters.RoleID)
+	}
+	if filters.BusinessID != nil {
+		query = query.Joins("JOIN user_business ON user.id = user_business.user_id").
+			Where("user_business.business_id = ?", *filters.BusinessID)
+	}
 
+	// Ordenamiento
+	if filters.SortBy != "" && filters.SortOrder != "" {
+		orderClause := filters.SortBy + " " + filters.SortOrder
+		query = query.Order(orderClause)
+	} else {
+		query = query.Order("created_at desc") // Por defecto
+	}
+
+	// Contar total
 	if err := query.Count(&total).Error; err != nil {
+		r.logger.Error().Err(err).Msg("Error al contar usuarios")
 		return nil, 0, err
 	}
 
+	// Paginación
+	offset := (filters.Page - 1) * filters.PageSize
+	query = query.Offset(offset).Limit(filters.PageSize)
+
 	if err := query.Find(&users).Error; err != nil {
+		r.logger.Error().Err(err).Msg("Error al obtener usuarios")
 		return nil, 0, err
 	}
 
@@ -235,7 +265,7 @@ func (r *Repository) UpdateUser(ctx context.Context, id uint, user domain.UsersE
 }
 
 func (r *Repository) DeleteUser(ctx context.Context, id uint) (string, error) {
-	if err := r.database.Conn(ctx).Model(&models.User{}).Where("id = ?", id).Delete(&domain.UsersEntity{}).Error; err != nil {
+	if err := r.database.Conn(ctx).Delete(&models.User{}, id).Error; err != nil {
 		r.logger.Error().Uint("id", id).Err(err).Msg("Error al eliminar usuario")
 		return "", err
 	}
@@ -401,4 +431,41 @@ func (r *Repository) RevokeAPIKey(ctx context.Context, apiKeyID uint) error {
 		return err
 	}
 	return nil
+}
+
+// GetBusinessConfiguredResourcesIDs obtiene los IDs de recursos configurados para un business específico
+func (r *Repository) GetBusinessConfiguredResourcesIDs(ctx context.Context, businessID uint) ([]uint, error) {
+	var resourcesIDs []uint
+
+	// Obtener business_type_resource_permitted_id configurados
+	err := r.database.Conn(ctx).
+		Table("business_resource_configured").
+		Where("business_id = ? AND deleted_at IS NULL", businessID).
+		Pluck("business_type_resource_permitted_id", &resourcesIDs).Error
+
+	if err != nil {
+		r.logger.Error().Err(err).Uint("business_id", businessID).Msg("Error al obtener recursos configurados del business")
+		return nil, err
+	}
+
+	// Si no hay recursos configurados, retornar slice vacío
+	if len(resourcesIDs) == 0 {
+		return []uint{}, nil
+	}
+
+	// Obtener los resource_ids desde business_type_resource_permitted
+	var actualResourceIDs []uint
+	err = r.database.Conn(ctx).
+		Table("business_type_resource_permitted").
+		Where("id IN ? AND deleted_at IS NULL", resourcesIDs).
+		Pluck("resource_id", &actualResourceIDs).Error
+
+	if err != nil {
+		r.logger.Error().Err(err).Uint("business_id", businessID).Msg("Error al obtener resource_ids")
+		return nil, err
+	}
+
+	r.logger.Info().Uint("business_id", businessID).Int("resources_count", len(actualResourceIDs)).Msg("Recursos configurados del business obtenidos exitosamente")
+
+	return actualResourceIDs, nil
 }

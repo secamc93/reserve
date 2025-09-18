@@ -151,7 +151,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Obtiene los roles y permisos del usuario autenticado",
+                "description": "Obtiene los roles y permisos del usuario autenticado validados contra recursos configurados del business",
                 "consumes": [
                     "application/json"
                 ],
@@ -162,11 +162,26 @@ const docTemplate = `{
                     "Auth"
                 ],
                 "summary": "Obtener roles y permisos del usuario",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del business para validar recursos activos",
+                        "name": "business_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Roles y permisos obtenidos exitosamente",
                         "schema": {
                             "$ref": "#/definitions/response.UserRolesPermissionsSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Business ID requerido o inválido",
+                        "schema": {
+                            "$ref": "#/definitions/response.LoginErrorResponse"
                         }
                     },
                     "401": {
@@ -3700,6 +3715,12 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "string",
+                        "description": "Filtrar por IDs de usuarios separados por comas (ej: 1,2,3)",
+                        "name": "user_ids",
+                        "in": "query"
+                    },
+                    {
                         "type": "boolean",
                         "description": "Filtrar por estado activo",
                         "name": "is_active",
@@ -3725,6 +3746,7 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
+                            "id",
                             "name",
                             "email",
                             "phone",
@@ -3822,22 +3844,14 @@ const docTemplate = `{
                         "in": "formData"
                     },
                     {
-                        "type": "array",
-                        "items": {
-                            "type": "integer"
-                        },
-                        "collectionFormat": "multi",
-                        "description": "IDs de roles",
+                        "type": "string",
+                        "description": "IDs de roles separados por comas (ej: 1,2,3)",
                         "name": "role_ids",
                         "in": "formData"
                     },
                     {
-                        "type": "array",
-                        "items": {
-                            "type": "integer"
-                        },
-                        "collectionFormat": "multi",
-                        "description": "IDs de negocios",
+                        "type": "string",
+                        "description": "IDs de negocios separados por comas (ej: 1,2,3)",
                         "name": "business_ids",
                         "in": "formData"
                     },
@@ -4006,22 +4020,14 @@ const docTemplate = `{
                         "in": "formData"
                     },
                     {
-                        "type": "array",
-                        "items": {
-                            "type": "integer"
-                        },
-                        "collectionFormat": "multi",
-                        "description": "IDs de roles",
+                        "type": "string",
+                        "description": "IDs de roles separados por comas (ej: 1,2,3)",
                         "name": "role_ids",
                         "in": "formData"
                     },
                     {
-                        "type": "array",
-                        "items": {
-                            "type": "integer"
-                        },
-                        "collectionFormat": "multi",
-                        "description": "IDs de negocios",
+                        "type": "string",
+                        "description": "IDs de negocios separados por comas (ej: 1,2,3)",
                         "name": "business_ids",
                         "in": "formData"
                     },
@@ -4949,6 +4955,10 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                },
+                "active": {
+                    "description": "Indica si el recurso está activo para el business",
+                    "type": "boolean"
                 },
                 "resource": {
                     "type": "string"
