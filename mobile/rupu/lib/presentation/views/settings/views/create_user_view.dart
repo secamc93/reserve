@@ -71,7 +71,6 @@ class CreateUserView extends GetView<CreateUserController> {
               final processing = controller.avatarProcessing.value;
               final file = controller.avatarFile.value;
               final hasUrl = controller.hasAvatarUrl.value;
-              final cs = Theme.of(context).colorScheme;
 
               return ListTile(
                 shape: RoundedRectangleBorder(
@@ -280,8 +279,8 @@ Future<void> _showAvatarSourceSheet(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        cs.primary.withOpacity(.14),
-                        cs.secondary.withOpacity(.12),
+                        cs.primary.withValues(alpha: .14),
+                        cs.secondary.withValues(alpha: .12),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(12),
