@@ -124,9 +124,39 @@ final appRouter = GoRouter(
           path: '/home/:page/users',
           name: UsersView.name,
           builder: (context, state) {
-            UsersBinding.register();
-            final page = int.parse(state.pathParameters['page']!);
-            return UsersView(pageIndex: page);
+            return _guardAccess(
+              resource: 'clients',
+              actions: const ['Read', 'Manage'],
+              requireActive: false,
+              builder: (_) {
+                UsersBinding.register();
+                final page = int.parse(state.pathParameters['page']!);
+                return UsersView(pageIndex: page);
+              },
+            );
+          },
+        ),
+        GoRoute(
+          path: '/home/:page/users/:id',
+          name: UserDetailView.name,
+          builder: (context, state) {
+            return _guardAccess(
+              resource: 'clients',
+              actions: const ['Read', 'Manage'],
+              requireActive: false,
+              builder: (_) {
+                UserDetailBinding.register();
+                final id = int.tryParse(state.pathParameters['id'] ?? '');
+                if (id == null) {
+                  return const Scaffold(
+                    body: Center(child: Text('Usuario no válido.')),
+                  );
+                }
+                final ctrl = Get.find<UserDetailController>();
+                ctrl.loadUser(id);
+                return UserDetailView(userId: id);
+              },
+            );
           },
         ),
         GoRoute(

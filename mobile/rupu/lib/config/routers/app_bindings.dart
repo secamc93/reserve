@@ -84,6 +84,14 @@ class UsersBinding {
   }
 }
 
+class UserDetailBinding {
+  static void register() {
+    if (!Get.isRegistered<UserDetailController>()) {
+      Get.put(UserDetailController());
+    }
+  }
+}
+
 class SettingsBinding {
   static void register() {
     if (!Get.isRegistered<SettingsController>()) {

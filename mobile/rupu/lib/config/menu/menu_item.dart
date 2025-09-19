@@ -58,4 +58,15 @@ const appMenuItems = <MenuItem>[
       actions: ['Read'],
     ),
   ),
+  MenuItem(
+    tittle: 'Usuarios',
+    subTittle: '',
+    link: '/home/0/users',
+    icon: Icons.people_alt_outlined,
+    access: MenuAccessRequirement(
+      resource: 'clients',
+      actions: ['Read', 'Manage'],
+      requireActive: false,
+    ),
+  ),
 ];

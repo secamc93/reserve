@@ -5,8 +5,22 @@ import 'package:rupu/domain/entities/user_list_item.dart';
 class UserListCard extends StatelessWidget {
   final UserListItem user;
   final String Function(DateTime?) formatDate;
+  final VoidCallback? onView;
+  final VoidCallback? onDelete;
+  final bool canView;
+  final bool canDelete;
+  final bool isProcessing;
 
-  const UserListCard({super.key, required this.user, required this.formatDate});
+  const UserListCard({
+    super.key,
+    required this.user,
+    required this.formatDate,
+    this.onView,
+    this.onDelete,
+    this.canView = false,
+    this.canDelete = false,
+    this.isProcessing = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -32,11 +46,14 @@ class UserListCard extends StatelessWidget {
 
     return Card(
       elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: canView && onView != null ? onView : null,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -127,6 +144,43 @@ class UserListCard extends StatelessWidget {
                 ],
               ),
             ],
+            if ((canView && onView != null) || (canDelete && onDelete != null))
+              const SizedBox(height: 16),
+            if ((canView && onView != null) || (canDelete && onDelete != null))
+              const Divider(height: 1),
+            if ((canView && onView != null) || (canDelete && onDelete != null))
+              const SizedBox(height: 12),
+            if ((canView && onView != null) || (canDelete && onDelete != null))
+              Wrap(
+                spacing: 12,
+                runSpacing: 8,
+                children: [
+                  if (canView && onView != null)
+                    FilledButton.tonalIcon(
+                      onPressed: isProcessing ? null : onView,
+                      icon: const Icon(Icons.visibility_outlined),
+                      label: const Text('Ver detalles'),
+                    ),
+                  if (canDelete && onDelete != null)
+                    isProcessing
+                        ? const SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: Center(
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : OutlinedButton.icon(
+                            onPressed: onDelete,
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: theme.colorScheme.error,
+                              side: BorderSide(color: theme.colorScheme.error),
+                            ),
+                            icon: const Icon(Icons.delete_outline),
+                            label: const Text('Eliminar'),
+                          ),
+                ],
+              ),
           ],
         ),
       ),
