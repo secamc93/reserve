@@ -30,8 +30,8 @@ class ReserveRepositoryImpl extends ReserveRepository {
   }
 
   @override
-  Future<List<Reserve>> obtenerReservas() {
-    return datasource.obtenerReservas();
+  Future<List<Reserve>> obtenerReservas({required int businessId}) {
+    return datasource.obtenerReservas(businessId: businessId);
   }
 
   @override

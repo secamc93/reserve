@@ -8,8 +8,9 @@ class ClientsDatasourceImpl extends ClientDatasource {
       : reservasDatasource = datasource ?? ReservasDatasourceImpl();
 
   @override
-  Future<List<Client>> obtenerClientesConReservaHoy() async {
-    final reservas = await reservasDatasource.obtenerReservas();
+  Future<List<Client>> obtenerClientesConReservaHoy({required int businessId}) async {
+    final reservas =
+        await reservasDatasource.obtenerReservas(businessId: businessId);
     final now = DateTime.now();
     final Map<int, Client> unicos = {};
     for (final r in reservas) {

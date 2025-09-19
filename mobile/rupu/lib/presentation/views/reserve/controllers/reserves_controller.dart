@@ -6,11 +6,14 @@ import 'package:rupu/domain/entities/reserve.dart';
 import 'package:rupu/domain/repositories/reserve_repository.dart';
 import 'package:rupu/domain/infrastructure/repositories/reserve_repository_impl.dart';
 import 'package:rupu/domain/infrastructure/datasources/reservas_datasource_impl.dart';
+import 'package:rupu/presentation/views/login/login_controller.dart';
 
 class ReserveController extends GetxController {
   final ReserveRepository repository;
   ReserveController()
     : repository = ReserveRepositoryImpl(ReservasDatasourceImpl());
+
+  final LoginController _loginController = Get.find<LoginController>();
 
   final isLoading = false.obs;
   final errorMessage = RxnString();
@@ -20,11 +23,29 @@ class ReserveController extends GetxController {
   final reservasTodas = <Reserve>[].obs; // Calendario
 
   final isSaving = false.obs;
+  Worker? _businessWorker;
+
+  @override
+  void onInit() {
+    super.onInit();
+    _businessWorker = ever(_loginController.selectedBusiness, (_) {
+      reservasHoy.clear();
+      reservasTodas.clear();
+      cargarReservasHoy();
+      cargarReservasTodas(silent: true);
+    });
+  }
 
   @override
   void onReady() {
     super.onReady();
     cargarReservasHoy(); // Home por defecto
+  }
+
+  @override
+  void onClose() {
+    _businessWorker?.dispose();
+    super.onClose();
   }
 
   // ================= Crear =================
@@ -120,11 +141,20 @@ class ReserveController extends GetxController {
   }
 
   // ================= Home (solo HOY) =================
-  Future<void> cargarReservasHoy({bool silent = false}) async {
+  Future<void> cargarReservasHoy({bool silent = false, int? businessId}) async {
+    final id = businessId ?? _loginController.selectedBusinessId;
+    if (id == null) {
+      reservasHoy.clear();
+      if (!silent) {
+        errorMessage.value = 'No hay negocio seleccionado.';
+      }
+      return;
+    }
+
     if (!silent) isLoading.value = true;
     errorMessage.value = null;
     try {
-      final items = await repository.obtenerReservas();
+      final items = await repository.obtenerReservas(businessId: id);
 
       final now = DateTime.now();
       final soloHoy = <Reserve>[];
@@ -149,11 +179,20 @@ class ReserveController extends GetxController {
   }
 
   // ================= Calendario (TODAS) =================
-  Future<void> cargarReservasTodas({bool silent = false}) async {
+  Future<void> cargarReservasTodas({bool silent = false, int? businessId}) async {
+    final id = businessId ?? _loginController.selectedBusinessId;
+    if (id == null) {
+      reservasTodas.clear();
+      if (!silent) {
+        errorMessage.value = 'No hay negocio seleccionado.';
+      }
+      return;
+    }
+
     if (!silent) isLoading.value = true;
     errorMessage.value = null;
     try {
-      final items = await repository.obtenerReservas();
+      final items = await repository.obtenerReservas(businessId: id);
       reservasTodas.assignAll(_sortedTodasFrom(items));
     } catch (e) {
       errorMessage.value = 'No se pudieron cargar todas las reservas';

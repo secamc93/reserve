@@ -18,11 +18,15 @@ class HomeController extends GetxController {
           repository ??
           PermisosRolesRespositoryImpl(PermisosRolesDatasourceImpl());
 
+  final LoginController _loginController = Get.find<LoginController>();
+
   final isLoading = false.obs;
   final errorMessage = RxnString();
   final Rxn<RolesPermisos> rolesPermisos = Rxn();
 
   bool get isSuper => rolesPermisos.value?.isSuper ?? false;
+
+  Worker? _businessWorker;
 
   /// Verifica si el usuario cuenta con el permiso indicado.
   /// - Si [resource] es `null`, busca la acción en cualquier recurso activo.
@@ -71,14 +75,17 @@ class HomeController extends GetxController {
     super.onInit();
     _applyBusinessTheme();
     loadRolesPermisos();
+    _businessWorker = ever(_loginController.selectedBusiness, (_) {
+      _applyBusinessTheme();
+      loadRolesPermisos();
+    });
   }
 
   Future<void> loadRolesPermisos() async {
     isLoading.value = true;
     errorMessage.value = null;
     try {
-      final login = Get.find<LoginController>();
-      final businessId = login.selectedBusinessId;
+      final businessId = _loginController.selectedBusinessId;
       if (businessId == null) {
         errorMessage.value = 'Debes seleccionar un negocio para continuar.';
         return;
@@ -99,9 +106,8 @@ class HomeController extends GetxController {
 
   /// Saca los colores de negocio desde la sesión y actualiza el tema.
   void _applyBusinessTheme() {
-    final login = Get.find<LoginController>();
-    final businesses = login.sessionModel.value?.data.businesses ?? [];
-    final selected = login.selectedBusiness.value;
+    final businesses = _loginController.sessionModel.value?.data.businesses ?? [];
+    final selected = _loginController.selectedBusiness.value;
     final business = selected ?? (businesses.isNotEmpty ? businesses.first : null);
     if (business == null) return;
 
@@ -112,5 +118,11 @@ class HomeController extends GetxController {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       AppTheme.instance.updateColors(primary, secondary);
     });
+  }
+
+  @override
+  void onClose() {
+    _businessWorker?.dispose();
+    super.onClose();
   }
 }
