@@ -38,12 +38,12 @@ class UsersController extends GetxController {
   final _dateFormat = DateFormat('dd/MM/yyyy HH:mm');
 
   bool get _hasManage =>
-      _homeController.canAccessResource('clients', actions: const ['Manage'], requireActive: false);
+      _homeController.canAccessResource('users', actions: const ['Manage'], requireActive: false);
 
   bool _hasAction(String action) {
     if (_hasManage) return true;
     return _homeController.canAccessResource(
-      'clients',
+      'users',
       actions: [action],
       requireActive: false,
     );

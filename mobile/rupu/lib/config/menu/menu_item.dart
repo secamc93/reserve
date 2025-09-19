@@ -64,7 +64,7 @@ const appMenuItems = <MenuItem>[
     link: '/home/0/users',
     icon: Icons.people_alt_outlined,
     access: MenuAccessRequirement(
-      resource: 'clients',
+      resource: 'users',
       actions: ['Read', 'Manage'],
       requireActive: false,
     ),

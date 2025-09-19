@@ -125,7 +125,7 @@ final appRouter = GoRouter(
           name: UsersView.name,
           builder: (context, state) {
             return _guardAccess(
-              resource: 'clients',
+              resource: 'users',
               actions: const ['Read', 'Manage'],
               requireActive: false,
               builder: (_) {
@@ -141,7 +141,7 @@ final appRouter = GoRouter(
           name: UserDetailView.name,
           builder: (context, state) {
             return _guardAccess(
-              resource: 'clients',
+              resource: 'users',
               actions: const ['Read', 'Manage'],
               requireActive: false,
               builder: (_) {
