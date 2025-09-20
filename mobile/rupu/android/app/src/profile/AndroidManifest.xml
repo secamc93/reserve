@@ -4,4 +4,11 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!--
+      Permite tráfico sin cifrar hacia 127.0.0.1/localhost, necesario para que
+      el depurador de Flutter se conecte al VM service y habilite los puntos de
+      interrupción mientras se ejecuta en modo profile.
+    -->
+    <application android:usesCleartextTraffic="true"/>
 </manifest>
