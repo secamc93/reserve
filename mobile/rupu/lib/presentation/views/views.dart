@@ -1,3 +1,6 @@
+export 'package:rupu/presentation/views/business_selector/business_selector_controller.dart';
+export 'package:rupu/presentation/views/business_selector/business_selector_view.dart';
+
 export 'package:rupu/presentation/views/reserve/views/create_reserve_view.dart';
 
 export 'package:rupu/presentation/views/reserve/views/calendar_view.dart';
@@ -37,3 +40,5 @@ export 'package:rupu/presentation/views/settings/controllers/create_user_control
 export 'package:rupu/presentation/views/settings/views/create_user_view.dart';
 export 'package:rupu/presentation/views/users/users_controller.dart';
 export 'package:rupu/presentation/views/users/users_view.dart';
+export 'package:rupu/presentation/views/users/user_detail_controller.dart';
+export 'package:rupu/presentation/views/users/user_detail_view.dart';

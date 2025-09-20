@@ -15,6 +15,43 @@ int _calculateIndex(String location) {
   return 0;
 }
 
+Widget _guardAccess({
+  required String resource,
+  List<String> actions = const [],
+  bool requireActive = true,
+  required Widget Function(HomeController home) builder,
+}) {
+  final home = Get.isRegistered<HomeController>()
+      ? Get.find<HomeController>()
+      : null;
+
+  if (home == null) {
+    return const Scaffold(
+      body: Center(child: Text('No autorizado')),
+    );
+  }
+
+  if (home.rolesPermisos.value == null) {
+    return const Scaffold(
+      body: Center(child: CircularProgressIndicator()),
+    );
+  }
+
+  final hasAccess = home.canAccessResource(
+    resource,
+    actions: actions,
+    requireActive: requireActive,
+  );
+
+  if (!hasAccess) {
+    return const Scaffold(
+      body: Center(child: Text('No autorizado')),
+    );
+  }
+
+  return builder(home);
+}
+
 final appRouter = GoRouter(
   initialLocation: '/login/0',
   routes: [
@@ -48,18 +85,30 @@ final appRouter = GoRouter(
           path: '/home/:page/reserve',
           name: ReserveScreen.name,
           builder: (context, state) {
-            ReserveBinding.register();
             final page = int.tryParse(state.pathParameters['page'] ?? '0') ?? 0;
-            return ReserveScreen(pageIndex: page);
+            return _guardAccess(
+              resource: 'reservations',
+              actions: const ['Read'],
+              builder: (_) {
+                ReserveBinding.register();
+                return ReserveScreen(pageIndex: page);
+              },
+            );
           },
         ),
         GoRoute(
           path: '/home/:page/calendar',
           name: CalendarViewReserve.name,
           builder: (context, state) {
-            ReserveBinding.register();
             final page = int.parse(state.pathParameters['page']!);
-            return CalendarViewReserve(pageIndex: page); // tu vista
+            return _guardAccess(
+              resource: 'reservations',
+              actions: const ['Read'],
+              builder: (_) {
+                ReserveBinding.register();
+                return CalendarViewReserve(pageIndex: page);
+              },
+            ); // tu vista
           },
         ),
         GoRoute(
@@ -75,9 +124,39 @@ final appRouter = GoRouter(
           path: '/home/:page/users',
           name: UsersView.name,
           builder: (context, state) {
-            UsersBinding.register();
-            final page = int.parse(state.pathParameters['page']!);
-            return UsersView(pageIndex: page);
+            return _guardAccess(
+              resource: 'users',
+              actions: const ['Read', 'Manage'],
+              requireActive: false,
+              builder: (_) {
+                UsersBinding.register();
+                final page = int.parse(state.pathParameters['page']!);
+                return UsersView(pageIndex: page);
+              },
+            );
+          },
+        ),
+        GoRoute(
+          path: '/home/:page/users/:id',
+          name: UserDetailView.name,
+          builder: (context, state) {
+            return _guardAccess(
+              resource: 'users',
+              actions: const ['Read', 'Manage'],
+              requireActive: false,
+              builder: (_) {
+                UserDetailBinding.register();
+                final id = int.tryParse(state.pathParameters['id'] ?? '');
+                if (id == null) {
+                  return const Scaffold(
+                    body: Center(child: Text('Usuario no válido.')),
+                  );
+                }
+                final ctrl = Get.find<UserDetailController>();
+                ctrl.loadUser(id);
+                return UserDetailView(userId: id);
+              },
+            );
           },
         ),
         GoRoute(
@@ -98,36 +177,52 @@ final appRouter = GoRouter(
           path: '/home/:page/reserve/new',
           name: 'reserve_new',
           builder: (context, state) {
-            PerfilBinding.register();
-
-            ReserveBinding.register();
-            return const CreateReserveView();
+            return _guardAccess(
+              resource: 'reservations',
+              actions: const ['Manage'],
+              builder: (_) {
+                PerfilBinding.register();
+                ReserveBinding.register();
+                return const CreateReserveView();
+              },
+            );
           },
         ),
         GoRoute(
           path: '/home/:page/reserve/:id',
           name: 'reserve_detail',
           builder: (context, state) {
-            PerfilBinding.register();
-
-            ReserveDetailBinding.register();
-            final page = int.parse(state.pathParameters['page']!);
-            final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
-            final ctrl = Get.find<ReserveDetailController>();
-            ctrl.cargarReserva(id);
-            return ReserveDetailView(pageIndex: page);
+            return _guardAccess(
+              resource: 'reservations',
+              actions: const ['Read'],
+              builder: (_) {
+                PerfilBinding.register();
+                ReserveDetailBinding.register();
+                final page = int.parse(state.pathParameters['page']!);
+                final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+                final ctrl = Get.find<ReserveDetailController>();
+                ctrl.cargarReserva(id);
+                return ReserveDetailView(pageIndex: page);
+              },
+            );
           },
         ),
         GoRoute(
           path: '/home/:page/reserve/:id/update',
           name: UpdateReserveView.name,
           builder: (context, state) {
-            PerfilBinding.register();
-            ReserveUpdateBinding.register();
-            final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
-            final ctrl = Get.find<ReserveUpdateController>();
-            ctrl.cargarReserva(id);
-            return const UpdateReserveView();
+            return _guardAccess(
+              resource: 'reservations',
+              actions: const ['Manage'],
+              builder: (_) {
+                PerfilBinding.register();
+                ReserveUpdateBinding.register();
+                final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+                final ctrl = Get.find<ReserveUpdateController>();
+                ctrl.cargarReserva(id);
+                return const UpdateReserveView();
+              },
+            );
           },
         ),
         GoRoute(
@@ -170,6 +265,15 @@ final appRouter = GoRouter(
     ),
 
     // --------------- Ruta de Login ---------------
+    GoRoute(
+      path: '/business/select',
+      name: BusinessSelectorScreen.name,
+      builder: (context, state) {
+        BusinessSelectorBinding.register();
+        return const BusinessSelectorScreen();
+      },
+    ),
+
     GoRoute(
       path: '/login/:page',
       name: LoginScreen.name,

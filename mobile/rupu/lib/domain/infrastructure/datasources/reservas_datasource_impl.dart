@@ -16,9 +16,12 @@ class ReservasDatasourceImpl extends ReserveDatasource {
       ).dio;
 
   @override
-  Future<List<Reserve>> obtenerReservas() async {
+  Future<List<Reserve>> obtenerReservas({required int businessId}) async {
     try {
-      final response = await _dio.get('/reserves');
+      final response = await _dio.get(
+        '/reserves',
+        queryParameters: {'business_id': businessId},
+      );
 
       final model = ReservasResponseModel.fromJson(
         response.data as Map<String, dynamic>,

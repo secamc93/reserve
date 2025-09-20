@@ -1,4 +1,5 @@
 import 'package:rupu/domain/entities/create_user_result.dart';
+import 'package:rupu/domain/entities/user_detail.dart';
 import 'package:rupu/domain/entities/user_list_item.dart';
 import 'package:rupu/domain/entities/users_page.dart';
 import '../models/create_user_response_model.dart';
@@ -10,6 +11,23 @@ class UsersMapper {
         count: model.count,
         users: model.data.map(userModelToEntity).toList(),
       );
+
+  static UserDetail userModelToDetail(UserModel model) {
+    final base = userModelToEntity(model);
+    return UserDetail(
+      id: base.id,
+      name: base.name,
+      email: base.email,
+      phone: base.phone,
+      avatarUrl: base.avatarUrl,
+      isActive: base.isActive,
+      lastLoginAt: base.lastLoginAt,
+      createdAt: base.createdAt,
+      updatedAt: base.updatedAt,
+      roles: base.roles,
+      businesses: base.businesses,
+    );
+  }
 
   static UserListItem userModelToEntity(UserModel model) => UserListItem(
         id: model.id,

@@ -134,10 +134,22 @@ class LoginView extends GetView<LoginController> {
                                       final ok = await controller.submit();
                                       if (!context.mounted) return;
                                       if (ok) {
-                                        GoRouter.of(context).goNamed(
-                                          HomeScreen.name,
-                                          pathParameters: {'page': '0'},
-                                        );
+                                        final businesses = controller.businesses;
+                                        if (businesses.length == 1) {
+                                          controller.selectBusiness(
+                                            businesses.first,
+                                          );
+                                          GoRouter.of(context).goNamed(
+                                            HomeScreen.name,
+                                            pathParameters: {
+                                              'page': '$pageIndex',
+                                            },
+                                          );
+                                        } else {
+                                          GoRouter.of(context).goNamed(
+                                            BusinessSelectorScreen.name,
+                                          );
+                                        }
                                       } else if (controller
                                               .errorMessage
                                               .value !=

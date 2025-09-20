@@ -145,10 +145,16 @@ class CreateUserView extends GetView<CreateUserController> {
                     ? null
                     : () async {
                         final result = await controller.submit();
-                        if (result != null && context.mounted) {
+                        if (!context.mounted) return;
+                        if (result != null) {
                           await _showSuccessDialog(context, result);
                           if (!context.mounted) return;
                           GoRouter.of(context).pop(true);
+                        } else {
+                          final message = controller.errorMessage.value;
+                          if (message != null) {
+                            await _showErrorDialog(context, message);
+                          }
                         }
                       },
                 child: controller.isSubmitting.value
@@ -220,6 +226,24 @@ Future<void> _showSuccessDialog(
           FilledButton(
             onPressed: () => Navigator.of(dialogCtx).pop(),
             child: const Text('Continuar'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+Future<void> _showErrorDialog(BuildContext context, String message) async {
+  await showDialog<void>(
+    context: context,
+    builder: (dialogCtx) {
+      return AlertDialog(
+        title: const Text('No se pudo crear el usuario'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(),
+            child: const Text('Entendido'),
           ),
         ],
       );

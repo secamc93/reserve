@@ -2,8 +2,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
-import 'package:rupu/config/menu/menu_item.dart';
 import 'package:rupu/config/constants/secure_storage/token_storage.dart';
+import 'package:rupu/config/menu/menu_item.dart';
+import 'package:rupu/presentation/views/home/home_controller.dart';
 import 'package:rupu/presentation/views/login/login_controller.dart';
 
 class SideMenu extends StatefulWidget {
@@ -17,11 +18,15 @@ class SideMenu extends StatefulWidget {
 class _SideMenuState extends State<SideMenu> {
   int navDrawerIndex = 0;
 
-  Future<void> _handleSelection(BuildContext context, int index) async {
-    final totalItems = appMenuItems.length;
+  Future<void> _handleSelection(
+    BuildContext context,
+    int index,
+    List<MenuItem> menuItems,
+  ) async {
+    final totalItems = menuItems.length;
 
     if (index >= 0 && index < totalItems) {
-      final item = appMenuItems[index];
+      final item = menuItems[index];
       context.push(item.link);
     } else {
       // Logout
@@ -35,44 +40,96 @@ class _SideMenuState extends State<SideMenu> {
     widget.scaffoldKey.currentState?.closeDrawer();
   }
 
-  ({List<MenuItem> first, List<MenuItem> second}) _groups() {
-    final total = appMenuItems.length;
+  ({List<MenuItem> first, List<MenuItem> second}) _groups(
+    List<MenuItem> items,
+  ) {
+    final total = items.length;
     final firstCount = min(total, 3);
-    final first = appMenuItems.sublist(0, firstCount);
+    final first = items.sublist(0, firstCount);
     final second = firstCount < total
-        ? appMenuItems.sublist(firstCount)
+        ? items.sublist(firstCount)
         : <MenuItem>[];
     return (first: first, second: second);
   }
 
+  List<MenuItem> _accessibleMenuItems(HomeController home) {
+    final requirementsMet = appMenuItems.where((item) {
+      final requirement = item.access;
+      if (requirement == null) return true;
+      return home.canAccessResource(
+        requirement.resource,
+        actions: requirement.actions,
+        requireActive: requirement.requireActive,
+      );
+    }).toList();
+
+    return requirementsMet;
+  }
+
+  Widget _buildMenu(
+    BuildContext context,
+    List<MenuItem> menuItems,
+  ) {
+    final cs = Theme.of(context).colorScheme;
+    final groups = _groups(menuItems);
+
+    return ListView(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      children: [
+        _headerBrand(context),
+        if (groups.first.isEmpty && groups.second.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Text(
+              'No hay módulos disponibles para tu perfil.',
+              style: TextStyle(color: cs.onSurfaceVariant),
+            ),
+          ),
+        ..._buildDenseTiles(context, groups.first, 0, menuItems),
+        if (groups.second.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Text(
+              'Más opciones',
+              style: TextStyle(color: cs.onSurfaceVariant),
+            ),
+          ),
+        ..._buildDenseTiles(
+          context,
+          groups.second,
+          groups.first.length,
+          menuItems,
+        ),
+        ListTile(
+          dense: true,
+          leading: const Icon(Icons.logout),
+          title: const Text('Cerrar sesión'),
+          onTap: () => _handleSelection(context, menuItems.length, menuItems),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final g = _groups();
+    final home = Get.isRegistered<HomeController>()
+        ? Get.find<HomeController>()
+        : null;
+
+    if (home == null) {
+      return Drawer(
+        child: SafeArea(
+          child: _buildMenu(context, appMenuItems),
+        ),
+      );
+    }
 
     return Drawer(
       child: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          children: [
-            _headerBrand(context),
-            ..._buildDenseTiles(context, g.first, 0),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Text(
-                'Más opciones',
-                style: TextStyle(color: cs.onSurfaceVariant),
-              ),
-            ),
-            ..._buildDenseTiles(context, g.second, g.first.length),
-            ListTile(
-              dense: true,
-              leading: const Icon(Icons.logout),
-              title: const Text('Cerrar sesión'),
-              onTap: () => _handleSelection(context, appMenuItems.length),
-            ),
-          ],
-        ),
+        child: Obx(() {
+          final menuItems = _accessibleMenuItems(home);
+          return _buildMenu(context, menuItems);
+        }),
       ),
     );
   }
@@ -106,6 +163,7 @@ class _SideMenuState extends State<SideMenu> {
     BuildContext context,
     List<MenuItem> items,
     int offset,
+    List<MenuItem> fullList,
   ) {
     final cs = Theme.of(context).colorScheme;
 
@@ -118,7 +176,7 @@ class _SideMenuState extends State<SideMenu> {
       return InkWell(
         onTap: () {
           setState(() => navDrawerIndex = idx);
-          _handleSelection(context, idx);
+          _handleSelection(context, idx, fullList);
         },
         borderRadius: BorderRadius.circular(8),
         child: Container(

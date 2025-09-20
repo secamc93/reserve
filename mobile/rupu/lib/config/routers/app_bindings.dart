@@ -10,6 +10,15 @@ class LoginBinding {
   }
 }
 
+class BusinessSelectorBinding {
+  static void register() {
+    LoginBinding.register();
+    if (!Get.isRegistered<BusinessSelectorController>()) {
+      Get.put(BusinessSelectorController());
+    }
+  }
+}
+
 class HomeBinding {
   static void register() {
     LoginBinding.register();
@@ -71,6 +80,14 @@ class UsersBinding {
   static void register() {
     if (!Get.isRegistered<UsersController>()) {
       Get.put(UsersController());
+    }
+  }
+}
+
+class UserDetailBinding {
+  static void register() {
+    if (!Get.isRegistered<UserDetailController>()) {
+      Get.put(UserDetailController());
     }
   }
 }

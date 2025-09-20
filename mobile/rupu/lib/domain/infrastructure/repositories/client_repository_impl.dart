@@ -7,7 +7,7 @@ class ClientRepositoryImpl extends ClientRepository {
   ClientRepositoryImpl(this.datasource);
 
   @override
-  Future<List<Client>> obtenerClientesConReservaHoy() {
-    return datasource.obtenerClientesConReservaHoy();
+  Future<List<Client>> obtenerClientesConReservaHoy({required int businessId}) {
+    return datasource.obtenerClientesConReservaHoy(businessId: businessId);
   }
 }

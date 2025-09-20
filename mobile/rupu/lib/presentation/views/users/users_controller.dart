@@ -1,20 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:rupu/domain/entities/user_action_result.dart';
+import 'package:rupu/domain/entities/user_detail.dart';
 import 'package:rupu/domain/entities/user_list_item.dart';
 import 'package:rupu/domain/infrastructure/datasources/users_management_datasource_impl.dart';
 import 'package:rupu/domain/infrastructure/repositories/users_repository_impl.dart';
 import 'package:rupu/domain/repositories/users_repository.dart';
+import 'package:rupu/presentation/views/home/home_controller.dart';
 
 class UsersController extends GetxController {
   final UsersRepository repository;
   UsersController()
       : repository = UsersRepositoryImpl(UsersManagementDatasourceImpl());
 
+  final HomeController _homeController = Get.find<HomeController>();
+
   final users = <UserListItem>[].obs;
   final isLoading = false.obs;
   final errorMessage = RxnString();
   final totalCount = 0.obs;
+  final deletingUserId = RxnInt();
 
   // Filters
   final pageCtrl = TextEditingController(text: '1');
@@ -30,6 +36,23 @@ class UsersController extends GetxController {
   final isActive = RxnBool();
 
   final _dateFormat = DateFormat('dd/MM/yyyy HH:mm');
+
+  bool get _hasManage =>
+      _homeController.canAccessResource('users', actions: const ['Manage'], requireActive: false);
+
+  bool _hasAction(String action) {
+    if (_hasManage) return true;
+    return _homeController.canAccessResource(
+      'users',
+      actions: [action],
+      requireActive: false,
+    );
+  }
+
+  bool get canRead => _hasAction('Read');
+  bool get canCreate => _hasAction('Create');
+  bool get canUpdate => _hasAction('Update');
+  bool get canDelete => _hasAction('Delete');
 
   @override
   void onReady() {
@@ -53,6 +76,13 @@ class UsersController extends GetxController {
   }
 
   Future<void> fetchUsers() async {
+    if (!canRead) {
+      users.clear();
+      totalCount.value = 0;
+      errorMessage.value = 'No tienes permisos para ver los usuarios.';
+      return;
+    }
+
     isLoading.value = true;
     errorMessage.value = null;
     try {
@@ -96,6 +126,44 @@ class UsersController extends GetxController {
       errorMessage.value = 'No se pudieron cargar los usuarios';
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<UserActionResult> deleteUser(int id) async {
+    if (!canDelete) {
+      return const UserActionResult(
+        success: false,
+        message: 'No tienes permisos para eliminar usuarios.',
+      );
+    }
+
+    deletingUserId.value = id;
+    try {
+      final result = await repository.deleteUser(id: id);
+      if (result.success) {
+        users.removeWhere((u) => u.id == id);
+        if (totalCount.value > 0) {
+          totalCount.value = totalCount.value - 1;
+        }
+      }
+      return result;
+    } catch (_) {
+      return const UserActionResult(
+        success: false,
+        message: 'No se pudo eliminar el usuario, intenta nuevamente.',
+      );
+    } finally {
+      deletingUserId.value = null;
+    }
+  }
+
+  void upsertUser(UserDetail detail) {
+    final index = users.indexWhere((u) => u.id == detail.id);
+    if (index >= 0) {
+      users[index] = detail;
+      users.refresh();
+    } else {
+      users.insert(0, detail);
     }
   }
 

@@ -1,4 +1,6 @@
 import '../infrastructure/models/create_user_response_model.dart';
+import '../infrastructure/models/simple_response_model.dart';
+import '../infrastructure/models/user_detail_response_model.dart';
 import '../infrastructure/models/users_response_model.dart';
 
 abstract class UserManagementDatasource {
@@ -14,4 +16,22 @@ abstract class UserManagementDatasource {
     String? avatarPath,
     String? avatarFileName,
   });
+
+  Future<UserDetailResponseModel> getUserDetail({required int id});
+
+  Future<UserDetailResponseModel> updateUser({
+    required int id,
+    String? name,
+    String? email,
+    String? password,
+    String? phone,
+    bool? isActive,
+    List<int>? roleIds,
+    List<int>? businessIds,
+    String? avatarUrl,
+    String? avatarPath,
+    String? avatarFileName,
+  });
+
+  Future<SimpleResponseModel> deleteUser({required int id});
 }

@@ -1,5 +1,5 @@
 import '../entities/client.dart';
 
 abstract class ClientRepository {
-  Future<List<Client>> obtenerClientesConReservaHoy();
+  Future<List<Client>> obtenerClientesConReservaHoy({required int businessId});
 }

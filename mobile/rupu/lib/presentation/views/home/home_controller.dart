@@ -18,29 +18,56 @@ class HomeController extends GetxController {
           repository ??
           PermisosRolesRespositoryImpl(PermisosRolesDatasourceImpl());
 
+  final LoginController _loginController = Get.find<LoginController>();
+
   final isLoading = false.obs;
   final errorMessage = RxnString();
   final Rxn<RolesPermisos> rolesPermisos = Rxn();
 
   bool get isSuper => rolesPermisos.value?.isSuper ?? false;
 
-  /// Verifica si existe el `action` permitido.
-  /// - Si [resource] es null, busca el `action` en cualquier recurso.
-  /// - Si [resource] no es null, busca primero el recurso y luego el `action`.
-  /// - Si el usuario es super, permite todo.
+  Worker? _businessWorker;
+
+  /// Verifica si el usuario cuenta con el permiso indicado.
+  /// - Si [resource] es `null`, busca la acción en cualquier recurso activo.
+  /// - Si [resource] tiene valor, delega en [canAccessResource].
   bool hasPermission({required String action, String? resource}) {
+    if (resource == null) {
+      return _hasActionInAnyResource(action);
+    }
+    return canAccessResource(resource, actions: [action]);
+  }
+
+  /// Permite validar acceso a un recurso en particular considerando:
+  /// - Si el usuario es super administrador: acceso total.
+  /// - Que el recurso exista y esté activo (a menos que [requireActive] sea
+  ///   `false`).
+  /// - Que cuente con al menos una de las [actions] indicadas.
+  bool canAccessResource(
+    String resource, {
+    List<String> actions = const [],
+    bool requireActive = true,
+  }) {
     final rp = rolesPermisos.value;
     if (rp == null) return false;
     if (rp.isSuper) return true;
 
-    if (resource == null) {
-      return rp.resources.any((r) => r.actions.contains(action));
-    }
-
     final res = rp.resources.firstWhereOrNull((r) => r.resource == resource);
     if (res == null) return false;
+    if (requireActive && !res.isActive) return false;
 
-    return res.actions.contains(action);
+    if (actions.isEmpty) return true;
+    return actions.any(res.actions.contains);
+  }
+
+  bool _hasActionInAnyResource(String action) {
+    final rp = rolesPermisos.value;
+    if (rp == null) return false;
+    if (rp.isSuper) return true;
+
+    return rp.resources.any(
+      (resource) => resource.isActive && resource.actions.contains(action),
+    );
   }
 
   @override
@@ -48,13 +75,23 @@ class HomeController extends GetxController {
     super.onInit();
     _applyBusinessTheme();
     loadRolesPermisos();
+    _businessWorker = ever(_loginController.selectedBusiness, (_) {
+      _applyBusinessTheme();
+      loadRolesPermisos();
+    });
   }
 
   Future<void> loadRolesPermisos() async {
     isLoading.value = true;
     errorMessage.value = null;
     try {
-      final rp = await repository.obtenerRolesPermisos();
+      final businessId = _loginController.selectedBusinessId;
+      if (businessId == null) {
+        errorMessage.value = 'Debes seleccionar un negocio para continuar.';
+        return;
+      }
+
+      final rp = await repository.obtenerRolesPermisos(businessId: businessId);
       rolesPermisos.value = rp;
     } on DioException catch (e) {
       errorMessage.value = (e.response?.statusCode == 401)
@@ -69,16 +106,23 @@ class HomeController extends GetxController {
 
   /// Saca los colores de negocio desde la sesión y actualiza el tema.
   void _applyBusinessTheme() {
-    final login = Get.find<LoginController>();
-    final businesses = login.sessionModel.value?.data.businesses ?? [];
-    if (businesses.isEmpty) return;
+    final businesses = _loginController.sessionModel.value?.data.businesses ?? [];
+    final selected = _loginController.selectedBusiness.value;
+    final business = selected ?? (businesses.isNotEmpty ? businesses.first : null);
+    if (business == null) return;
 
-    final primary = businesses.first.primaryColor;
-    final secondary = businesses.first.secondaryColor;
+    final primary = business.primaryColor;
+    final secondary = business.secondaryColor;
 
     // Post-frame para no hacerlo en medio de un build.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       AppTheme.instance.updateColors(primary, secondary);
     });
+  }
+
+  @override
+  void onClose() {
+    _businessWorker?.dispose();
+    super.onClose();
   }
 }

@@ -46,9 +46,11 @@ class Role {
 class Resource {
   final String resource;
   final List<String> actions;
+  final bool isActive;
 
   const Resource({
     required this.resource,
     required this.actions,
+    required this.isActive,
   });
 }

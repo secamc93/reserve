@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:rupu/config/theme/app_theme_controller.dart';
+import 'package:rupu/domain/infrastructure/models/login_response_model.dart';
 
 import '../login/login_controller.dart';
 import '../../screens/screens.dart';
@@ -17,11 +18,14 @@ class PerfilController extends GetxController {
   late final String email;
   late final String avatarUrl;
 
-  late final String businessName;
-  late final String businessLogoUrl;
-  late final String businessDescription;
-  late final String businessAddress;
-  late final int businessId;
+  final Rxn<BusinessModel> _business = Rxn();
+  Worker? _businessWorker;
+
+  String get businessName => _business.value?.name ?? '';
+  String get businessLogoUrl => _business.value?.logoUrl ?? '';
+  String get businessDescription => _business.value?.description ?? '';
+  String get businessAddress => _business.value?.address ?? '';
+  int get businessId => _business.value?.id ?? 0;
 
   // Para placeholder de avatar (quedó en el controller)
   late final String randomIndex;
@@ -33,21 +37,33 @@ class PerfilController extends GetxController {
   void onInit() {
     super.onInit();
 
-    final session = _loginCtrl.sessionModel.value!;
-    final user = session.data.user;
-    final negocio = session.data.businesses.first;
+    final session = _loginCtrl.sessionModel.value;
+    if (session != null) {
+      final user = session.data.user;
+      userName = user.name;
+      email = user.email;
+      avatarUrl = user.avatarUrl;
+      randomIndex = Random().nextInt(100).toString();
 
-    userName = user.name;
-    email = user.email;
-    avatarUrl = user.avatarUrl;
+      final initialBusiness = _loginCtrl.selectedBusiness.value ??
+          (session.data.businesses.isNotEmpty
+              ? session.data.businesses.first
+              : null);
+      _setBusiness(initialBusiness);
+    } else {
+      userName = '';
+      email = '';
+      avatarUrl = '';
+      randomIndex = Random().nextInt(100).toString();
+      _setBusiness(null);
+    }
 
-    businessName = negocio.name;
-    businessLogoUrl = negocio.logoUrl;
-    businessDescription = negocio.description;
-    businessAddress = negocio.address;
-    businessId = negocio.id;
+    _businessWorker = ever(_loginCtrl.selectedBusiness, _setBusiness);
+  }
 
-    randomIndex = Random().nextInt(100).toString();
+  void _setBusiness(BusinessModel? business) {
+    _business.value = business;
+    update();
   }
 
   // ---- Acciones para la vista ----
@@ -64,5 +80,11 @@ class PerfilController extends GetxController {
       context,
     ).goNamed(LoginScreen.name, pathParameters: {'page': '0'});
     _loginCtrl.clearFields();
+  }
+
+  @override
+  void onClose() {
+    _businessWorker?.dispose();
+    super.onClose();
   }
 }
