@@ -137,6 +137,20 @@ final appRouter = GoRouter(
           },
         ),
         GoRoute(
+          path: '/home/:page/users/create',
+          name: CreateUserView.name,
+          builder: (context, state) {
+            CreateUserBinding.register();
+            final home = Get.find<HomeController>();
+            if (!home.isSuper) {
+              return const Scaffold(
+                body: Center(child: Text('No autorizado')),
+              );
+            }
+            return const CreateUserView();
+          },
+        ),
+        GoRoute(
           path: '/home/:page/users/:id',
           name: UserDetailView.name,
           builder: (context, state) {
@@ -157,20 +171,6 @@ final appRouter = GoRouter(
                 return UserDetailView(userId: id);
               },
             );
-          },
-        ),
-        GoRoute(
-          path: '/home/:page/users/create',
-          name: CreateUserView.name,
-          builder: (context, state) {
-            CreateUserBinding.register();
-            final home = Get.find<HomeController>();
-            if (!home.isSuper) {
-              return const Scaffold(
-                body: Center(child: Text('No autorizado')),
-              );
-            }
-            return const CreateUserView();
           },
         ),
         GoRoute(
