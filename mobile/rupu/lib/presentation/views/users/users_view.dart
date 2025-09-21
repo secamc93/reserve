@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
+import '../home/home_controller.dart';
 import '../settings/views/create_user_view.dart';
 import 'users_controller.dart';
 import 'widgets/user_list_card.dart';
@@ -14,20 +15,28 @@ class UsersView extends GetView<UsersController> {
 
   @override
   Widget build(BuildContext context) {
+    final home = Get.isRegistered<HomeController>()
+        ? Get.find<HomeController>()
+        : null;
+    final canManageUsers =
+        home?.canAccessResource('users', actions: const ['Manage']) ?? false;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Usuarios'), centerTitle: true),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await GoRouter.of(context).pushNamed(
-            CreateUserView.name,
-            pathParameters: {'page': '$pageIndex'},
-          );
-          if (result == true) {
-            await controller.fetchUsers();
-          }
-        },
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: canManageUsers
+          ? FloatingActionButton(
+              onPressed: () async {
+                final result = await GoRouter.of(context).pushNamed(
+                  CreateUserView.name,
+                  pathParameters: {'page': '$pageIndex'},
+                );
+                if (result == true) {
+                  await controller.fetchUsers();
+                }
+              },
+              child: const Icon(Icons.add),
+            )
+          : null,
       body: Obx(() {
         if (controller.isLoading.value && controller.users.isEmpty) {
           return const Center(child: CircularProgressIndicator());

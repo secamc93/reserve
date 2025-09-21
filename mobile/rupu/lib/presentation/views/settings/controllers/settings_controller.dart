@@ -12,12 +12,13 @@ class SettingsController extends GetxController {
   final HomeController _homeCtrl = Get.find<HomeController>();
 
   RxBool get isDarkRx => _themeCtrl.isDark;
-  bool get isAdmin => _homeCtrl.isSuper;
+  bool get canManageUsers =>
+      _homeCtrl.canAccessResource('users', actions: const ['Manage']);
 
   void toggleTheme() => _themeCtrl.toggleTheme();
 
   void goToCreateUser(BuildContext context, int pageIndex) {
-    if (!isAdmin) return;
+    if (!canManageUsers) return;
     GoRouter.of(context)
         .pushNamed(CreateUserView.name, pathParameters: {'page': '$pageIndex'});
   }

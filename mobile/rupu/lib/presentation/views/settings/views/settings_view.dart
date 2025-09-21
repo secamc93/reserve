@@ -118,7 +118,7 @@ class SettingsView extends GetView<SettingsController> {
 
           const SizedBox(height: 12),
 
-          if (controller.isAdmin)
+          if (controller.canManageUsers)
             SectionCard(
               title: 'Administración',
               children: [

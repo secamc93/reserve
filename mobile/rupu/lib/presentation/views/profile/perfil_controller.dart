@@ -35,7 +35,8 @@ class PerfilController extends GetxController {
 
     final session = _loginCtrl.sessionModel.value!;
     final user = session.data.user;
-    final negocio = session.data.businesses.first;
+    final selected = _loginCtrl.selectedBusiness.value;
+    final negocio = selected ?? session.data.businesses.first;
 
     userName = user.name;
     email = user.email;

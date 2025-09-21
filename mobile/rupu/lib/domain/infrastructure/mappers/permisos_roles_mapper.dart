@@ -17,5 +17,5 @@ class PermisosRolesMapper {
       Role(id: m.id, name: m.name, description: m.description);
 
   static Resource _resourceFromModel(ResourceModel m) =>
-      Resource(resource: m.resource, actions: m.actions);
+      Resource(resource: m.resource, actions: m.actions, isActive: m.active);
 }

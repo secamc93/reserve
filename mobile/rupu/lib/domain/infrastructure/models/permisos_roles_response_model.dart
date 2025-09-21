@@ -82,8 +82,13 @@ class AccessControlDataModel {
 class ResourceModel {
   final String resource;
   final List<String> actions;
+  final bool active;
 
-  ResourceModel({required this.resource, required this.actions});
+  ResourceModel({
+    required this.resource,
+    required this.actions,
+    required this.active,
+  });
 
   factory ResourceModel.fromJson(Map<String, dynamic> json) {
     final actionsJson = json['actions'];
@@ -99,11 +104,16 @@ class ResourceModel {
     return ResourceModel(
       resource: json['resource']?.toString() ?? '',
       actions: actions,
+      active: json['active'] as bool? ?? false,
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {'resource': resource, 'actions': actions};
+    return {
+      'resource': resource,
+      'actions': actions,
+      'active': active,
+    };
   }
 }
 
