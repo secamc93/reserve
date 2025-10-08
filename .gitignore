@@ -71,3 +71,7 @@ Thumbs.db
 # Docker
 .dockerignore
 docker-compose.override.yml
+
+# Archivos grandes - AWS CLI
+infra/nginx/awscliv2.zip
+*.zip
