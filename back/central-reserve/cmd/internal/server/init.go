@@ -1,7 +1,6 @@
 package server
 
 import (
-	_ "central_reserve/cmd/internal/docs"
 	"central_reserve/cmd/internal/routes"
 	"central_reserve/services/auth"
 	"central_reserve/services/auth/middleware"
@@ -12,6 +11,7 @@ import (
 	"central_reserve/services/rooms"
 	"central_reserve/services/tables"
 	"central_reserve/shared/db"
+	_ "central_reserve/shared/docs"
 	"central_reserve/shared/email"
 	"central_reserve/shared/env"
 	"central_reserve/shared/log"

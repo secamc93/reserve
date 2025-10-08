@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"strings"
 
-	docs "central_reserve/cmd/internal/docs"
+	docs "central_reserve/shared/docs"
 
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"

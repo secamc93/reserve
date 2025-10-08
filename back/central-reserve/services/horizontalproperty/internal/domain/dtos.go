@@ -131,3 +131,107 @@ type PaginatedHorizontalPropertyDTO struct {
 	PageSize   int                         `json:"page_size"`
 	TotalPages int                         `json:"total_pages"`
 }
+
+// ═══════════════════════════════════════════════════════════════════
+//
+//  VOTING DTOs
+//
+// ═══════════════════════════════════════════════════════════════════
+
+// CreateVotingGroupDTO - DTO para crear un grupo de votaciones
+type CreateVotingGroupDTO struct {
+	BusinessID       uint      `json:"business_id" validate:"required"`
+	Name             string    `json:"name" validate:"required,min=3,max=150"`
+	Description      string    `json:"description" validate:"max=1000"`
+	VotingStartDate  time.Time `json:"voting_start_date" validate:"required"`
+	VotingEndDate    time.Time `json:"voting_end_date" validate:"required,gtfield=VotingStartDate"`
+	RequiresQuorum   bool      `json:"requires_quorum"`
+	QuorumPercentage *float64  `json:"quorum_percentage,omitempty"`
+	CreatedByUserID  *uint     `json:"created_by_user_id,omitempty"`
+	Notes            string    `json:"notes" validate:"max=2000"`
+}
+
+// VotingGroupDTO - DTO para respuesta de grupo de votaciones
+type VotingGroupDTO struct {
+	ID               uint      `json:"id"`
+	BusinessID       uint      `json:"business_id"`
+	Name             string    `json:"name"`
+	Description      string    `json:"description"`
+	VotingStartDate  time.Time `json:"voting_start_date"`
+	VotingEndDate    time.Time `json:"voting_end_date"`
+	IsActive         bool      `json:"is_active"`
+	RequiresQuorum   bool      `json:"requires_quorum"`
+	QuorumPercentage *float64  `json:"quorum_percentage,omitempty"`
+	CreatedByUserID  *uint     `json:"created_by_user_id,omitempty"`
+	Notes            string    `json:"notes"`
+	CreatedAt        time.Time `json:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at"`
+}
+
+// CreateVotingDTO - DTO para crear una votación
+type CreateVotingDTO struct {
+	VotingGroupID      uint     `json:"voting_group_id" validate:"required"`
+	Title              string   `json:"title" validate:"required,min=3,max=200"`
+	Description        string   `json:"description" validate:"required,max=2000"`
+	VotingType         string   `json:"voting_type" validate:"required,oneof=simple majority unanimity"`
+	IsSecret           bool     `json:"is_secret"`
+	AllowAbstention    bool     `json:"allow_abstention"`
+	DisplayOrder       int      `json:"display_order" validate:"min=1"`
+	RequiredPercentage *float64 `json:"required_percentage,omitempty"`
+}
+
+// VotingDTO - DTO para respuesta de una votación
+type VotingDTO struct {
+	ID                 uint      `json:"id"`
+	VotingGroupID      uint      `json:"voting_group_id"`
+	Title              string    `json:"title"`
+	Description        string    `json:"description"`
+	VotingType         string    `json:"voting_type"`
+	IsSecret           bool      `json:"is_secret"`
+	AllowAbstention    bool      `json:"allow_abstention"`
+	IsActive           bool      `json:"is_active"`
+	DisplayOrder       int       `json:"display_order"`
+	RequiredPercentage *float64  `json:"required_percentage,omitempty"`
+	CreatedAt          time.Time `json:"created_at"`
+	UpdatedAt          time.Time `json:"updated_at"`
+}
+
+// CreateVotingOptionDTO - DTO para crear una opción de votación
+type CreateVotingOptionDTO struct {
+	VotingID     uint   `json:"voting_id" validate:"required"`
+	OptionText   string `json:"option_text" validate:"required,min=1,max=100"`
+	OptionCode   string `json:"option_code" validate:"required,min=1,max=20"`
+	DisplayOrder int    `json:"display_order" validate:"min=1"`
+}
+
+// VotingOptionDTO - DTO para respuesta de opción de votación
+type VotingOptionDTO struct {
+	ID           uint   `json:"id"`
+	VotingID     uint   `json:"voting_id"`
+	OptionText   string `json:"option_text"`
+	OptionCode   string `json:"option_code"`
+	DisplayOrder int    `json:"display_order"`
+	IsActive     bool   `json:"is_active"`
+}
+
+// CreateVoteDTO - DTO para emitir un voto
+type CreateVoteDTO struct {
+	VotingID       uint   `json:"voting_id" validate:"required"`
+	ResidentID     uint   `json:"resident_id" validate:"required"`
+	VotingOptionID uint   `json:"voting_option_id" validate:"required"`
+	IPAddress      string `json:"ip_address" validate:"max=45"`
+	UserAgent      string `json:"user_agent" validate:"max=500"`
+	Notes          string `json:"notes" validate:"max=500"`
+}
+
+// VoteDTO - DTO para respuesta de voto
+type VoteDTO struct {
+	ID             uint      `json:"id"`
+	VotingID       uint      `json:"voting_id"`
+	ResidentID     uint      `json:"resident_id"`
+	VotingOptionID uint      `json:"voting_option_id"`
+	VotedAt        time.Time `json:"voted_at"`
+	IPAddress      string    `json:"ip_address"`
+	UserAgent      string    `json:"user_agent"`
+	Notes          string    `json:"notes"`
+}

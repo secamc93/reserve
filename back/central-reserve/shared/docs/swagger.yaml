@@ -60,9 +60,6 @@ definitions:
         example: 'Carrera 15 #45-67, Bogotá'
         maxLength: 255
         type: string
-      business_type_id:
-        example: 1
-        type: integer
       code:
         example: los-pinos
         maxLength: 50
@@ -131,7 +128,6 @@ definitions:
         type: integer
     required:
     - address
-    - business_type_id
     - code
     - name
     - timezone
@@ -175,6 +171,95 @@ definitions:
         type: string
     required:
     - name
+    type: object
+  request.CreateVoteRequest:
+    properties:
+      ip_address:
+        type: string
+      notes:
+        type: string
+      resident_id:
+        type: integer
+      user_agent:
+        type: string
+      voting_option_id:
+        type: integer
+    required:
+    - resident_id
+    - voting_option_id
+    type: object
+  request.CreateVotingGroupRequest:
+    properties:
+      created_by_user_id:
+        type: integer
+      description:
+        maxLength: 1000
+        type: string
+      name:
+        maxLength: 150
+        minLength: 3
+        type: string
+      notes:
+        maxLength: 2000
+        type: string
+      quorum_percentage:
+        type: number
+      requires_quorum:
+        type: boolean
+      voting_end_date:
+        type: string
+      voting_start_date:
+        type: string
+    required:
+    - name
+    - voting_end_date
+    - voting_start_date
+    type: object
+  request.CreateVotingOptionRequest:
+    properties:
+      display_order:
+        minimum: 1
+        type: integer
+      option_code:
+        maxLength: 20
+        minLength: 1
+        type: string
+      option_text:
+        maxLength: 100
+        minLength: 1
+        type: string
+    required:
+    - option_code
+    - option_text
+    type: object
+  request.CreateVotingRequest:
+    properties:
+      allow_abstention:
+        type: boolean
+      description:
+        maxLength: 2000
+        type: string
+      display_order:
+        minimum: 1
+        type: integer
+      is_secret:
+        type: boolean
+      required_percentage:
+        type: number
+      title:
+        maxLength: 200
+        minLength: 3
+        type: string
+      voting_type:
+        enum:
+        - simple
+        - majority
+        - unanimity
+        type: string
+    required:
+    - description
+    - title
+    - voting_type
     type: object
   request.LoginRequest:
     properties:
@@ -2267,7 +2352,7 @@ paths:
       summary: Crear una nueva propiedad horizontal
       tags:
       - Propiedades Horizontales
-  /horizontal-properties/{id}:
+  /horizontal-properties/{hp_id}:
     delete:
       consumes:
       - application/json
@@ -2275,7 +2360,7 @@ paths:
       parameters:
       - description: ID de la propiedad horizontal
         in: path
-        name: id
+        name: hp_id
         required: true
         type: integer
       produces:
@@ -2311,7 +2396,7 @@ paths:
       parameters:
       - description: ID de la propiedad horizontal
         in: path
-        name: id
+        name: hp_id
         required: true
         type: integer
       produces:
@@ -2343,7 +2428,7 @@ paths:
       parameters:
       - description: ID de la propiedad horizontal
         in: path
-        name: id
+        name: hp_id
         required: true
         type: integer
       - description: Datos a actualizar
@@ -2378,6 +2463,490 @@ paths:
       summary: Actualizar propiedad horizontal
       tags:
       - Propiedades Horizontales
+  /horizontal-properties/{hp_id}/voting-groups:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene la lista de grupos de votación de una propiedad horizontal
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: hp_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Listar grupos de votación
+      tags:
+      - Votaciones
+    post:
+      consumes:
+      - application/json
+      description: Crea un nuevo grupo de votación para una propiedad horizontal
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: hp_id
+        required: true
+        type: integer
+      - description: Datos del grupo de votación
+        in: body
+        name: voting_group
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateVotingGroupRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Crear un nuevo grupo de votación
+      tags:
+      - Votaciones
+  /horizontal-properties/{hp_id}/voting-groups/{group_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Desactiva un grupo de votación existente
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: hp_id
+        required: true
+        type: integer
+      - description: ID del grupo de votación
+        in: path
+        name: group_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Desactivar un grupo de votación
+      tags:
+      - Votaciones
+    put:
+      consumes:
+      - application/json
+      description: Actualiza los datos de un grupo de votación existente
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: hp_id
+        required: true
+        type: integer
+      - description: ID del grupo de votación
+        in: path
+        name: group_id
+        required: true
+        type: integer
+      - description: Datos actualizados del grupo
+        in: body
+        name: voting_group
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateVotingGroupRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Actualizar un grupo de votación
+      tags:
+      - Votaciones
+  /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene la lista de votaciones de un grupo de votación específico
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: hp_id
+        required: true
+        type: integer
+      - description: ID del grupo de votación
+        in: path
+        name: group_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Listar votaciones de un grupo
+      tags:
+      - Votaciones
+    post:
+      consumes:
+      - application/json
+      description: Crea una nueva votación dentro de un grupo de votación
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: hp_id
+        required: true
+        type: integer
+      - description: ID del grupo de votación
+        in: path
+        name: group_id
+        required: true
+        type: integer
+      - description: Datos de la votación
+        in: body
+        name: voting
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateVotingRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Crear una nueva votación
+      tags:
+      - Votaciones
+  /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Desactiva una votación existente
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: hp_id
+        required: true
+        type: integer
+      - description: ID del grupo de votación
+        in: path
+        name: group_id
+        required: true
+        type: integer
+      - description: ID de la votación
+        in: path
+        name: voting_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Desactivar una votación
+      tags:
+      - Votaciones
+    put:
+      consumes:
+      - application/json
+      description: Actualiza los datos de una votación existente
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: hp_id
+        required: true
+        type: integer
+      - description: ID del grupo de votación
+        in: path
+        name: group_id
+        required: true
+        type: integer
+      - description: ID de la votación
+        in: path
+        name: voting_id
+        required: true
+        type: integer
+      - description: Datos actualizados de la votación
+        in: body
+        name: voting
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateVotingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Actualizar una votación
+      tags:
+      - Votaciones
+  /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/options:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene la lista de opciones de una votación específica
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: hp_id
+        required: true
+        type: integer
+      - description: ID del grupo de votación
+        in: path
+        name: group_id
+        required: true
+        type: integer
+      - description: ID de la votación
+        in: path
+        name: voting_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Listar opciones de votación
+      tags:
+      - Votaciones
+    post:
+      consumes:
+      - application/json
+      description: Crea una nueva opción para una votación específica
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: hp_id
+        required: true
+        type: integer
+      - description: ID del grupo de votación
+        in: path
+        name: group_id
+        required: true
+        type: integer
+      - description: ID de la votación
+        in: path
+        name: voting_id
+        required: true
+        type: integer
+      - description: Datos de la opción de votación
+        in: body
+        name: option
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateVotingOptionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Crear una opción de votación
+      tags:
+      - Votaciones
+  /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/options/{option_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Desactiva una opción de votación existente
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: hp_id
+        required: true
+        type: integer
+      - description: ID del grupo de votación
+        in: path
+        name: group_id
+        required: true
+        type: integer
+      - description: ID de la votación
+        in: path
+        name: voting_id
+        required: true
+        type: integer
+      - description: ID de la opción de votación
+        in: path
+        name: option_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Desactivar una opción de votación
+      tags:
+      - Votaciones
+  /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/votes:
+    post:
+      consumes:
+      - application/json
+      description: Registra el voto de un residente para una votación específica
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: hp_id
+        required: true
+        type: integer
+      - description: ID del grupo de votación
+        in: path
+        name: group_id
+        required: true
+        type: integer
+      - description: ID de la votación
+        in: path
+        name: voting_id
+        required: true
+        type: integer
+      - description: Datos del voto
+        in: body
+        name: vote
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateVoteRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Registrar un voto
+      tags:
+      - Votaciones
   /horizontal-properties/code/{code}:
     get:
       consumes:

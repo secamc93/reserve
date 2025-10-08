@@ -16,15 +16,15 @@ import (
 // @Tags Propiedades Horizontales
 // @Accept json
 // @Produce json
-// @Param id path int true "ID de la propiedad horizontal"
+// @Param hp_id path int true "ID de la propiedad horizontal"
 // @Success 200 {object} response.HorizontalPropertySuccessResponse
 // @Failure 400 {object} object
 // @Failure 404 {object} object
 // @Failure 500 {object} object
-// @Router /horizontal-properties/{id} [get]
+// @Router /horizontal-properties/{hp_id} [get]
 func (h *HorizontalPropertyHandler) GetHorizontalPropertyByID(c *gin.Context) {
 	// Get ID from path parameter
-	idParam := c.Param("id")
+	idParam := c.Param("hp_id")
 	id, err := strconv.ParseUint(idParam, 10, 32)
 	if err != nil {
 		h.logger.Error().Err(err).Str("id_param", idParam).Msg("Error parsing ID parameter")
