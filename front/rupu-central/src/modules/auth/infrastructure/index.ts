@@ -7,3 +7,6 @@
 // import { loginAction } from '@modules/auth/infrastructure/actions';
 
 // Los repositorios NO se exportan (son internos del módulo)
+
+// Storage es exportable para uso en cliente
+export * from './storage';

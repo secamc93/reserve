@@ -3,8 +3,8 @@
  * Lógica de negocio para autenticar usuarios
  */
 
-import { IUserRepository } from '../domain/ports/user.repository';
-import { User } from '../domain/entities/user.entity';
+import { ILoginRepository } from '../domain/ports/login.repository';
+import { User, BusinessInfo } from '../domain/entities/user.entity';
 
 export interface LoginInput {
   email: string;
@@ -14,29 +14,20 @@ export interface LoginInput {
 export interface LoginOutput {
   user: User;
   token: string;
+  businesses: BusinessInfo[];
 }
 
 export class LoginUseCase {
-  constructor(private readonly userRepository: IUserRepository) {}
+  constructor(private readonly loginRepository: ILoginRepository) {}
 
   async execute(input: LoginInput): Promise<LoginOutput> {
-    // 1. Buscar usuario por email
-    const user = await this.userRepository.findByEmail(input.email);
+    // 1. Llamar al backend para autenticar
+    const result = await this.loginRepository.login(input.email, input.password);
     
-    if (!user) {
-      throw new Error('Credenciales inválidas');
-    }
-
-    // 2. Verificar contraseña (aquí iría la lógica de bcrypt)
-    // const isValidPassword = await bcrypt.compare(input.password, user.password);
-    // if (!isValidPassword) throw new Error('Credenciales inválidas');
-
-    // 3. Generar token (aquí iría la lógica de JWT)
-    const token = 'jwt-token-here';
-
     return {
-      user,
-      token,
+      user: result.user,
+      token: result.token,
+      businesses: result.businesses,
     };
   }
 }

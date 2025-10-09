@@ -6,19 +6,23 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from './hooks';
+import type { LoginActionResult } from '../infrastructure/actions/login.action';
 
 interface LoginFormProps {
-  onLogin: (data: { email: string; password: string }) => Promise<{
-    success: boolean;
-    error?: string;
-  }>;
+  onLogin: (data: { email: string; password: string }) => Promise<LoginActionResult>;
 }
 
 export function LoginForm({ onLogin }: LoginFormProps) {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  // Hook para manejar autenticación y guardar token
+  const { login } = useAuth(onLogin);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,13 +30,16 @@ export function LoginForm({ onLogin }: LoginFormProps) {
     setError('');
 
     try {
-      const result = await onLogin({ email, password });
+      const result = await login({ email, password });
       
       if (!result.success) {
         setError(result.error || 'Error al iniciar sesión');
       } else {
-        // Redirigir o actualizar estado global
-        console.log('Login exitoso');
+        // Token, usuario y colores guardados automáticamente por useAuth
+        console.log('✅ Login exitoso - Redirigiendo...');
+        
+        // Redirigir a la página principal
+        router.push('/home');
       }
     } catch {
       setError('Error inesperado');

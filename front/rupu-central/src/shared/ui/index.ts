@@ -2,5 +2,16 @@
  * Barrel de componentes UI compartidos
  */
 
-export * from './button';
+export * from './alert';
+export * from './badge';
+export * from './confirm-modal';
+export * from './input';
+export * from './modal';
+export * from './select';
+export * from './sidebar';
+export * from './spinner';
+export * from './table';
+
+// Re-exportar tipos útiles
+export type { TableColumn } from './table';
 
