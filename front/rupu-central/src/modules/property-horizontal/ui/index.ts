@@ -3,4 +3,5 @@
  */
 
 export * from './dashboard-stats';
+export * from './horizontal-properties-table';
 
