@@ -3,4 +3,5 @@
  */
 
 export * from './horizontal-properties.response';
+export * from './voting-groups.response';
 

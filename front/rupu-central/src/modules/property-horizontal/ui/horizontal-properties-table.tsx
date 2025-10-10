@@ -5,9 +5,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Table, Badge, Spinner, type TableColumn } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
 import { getHorizontalPropertiesAction } from '../infrastructure/actions/get-horizontal-properties.action';
+import { CreatePropertyModal } from './create-property-modal';
 
 interface HorizontalProperty {
   id: number;
@@ -21,12 +23,14 @@ interface HorizontalProperty {
 }
 
 export function HorizontalPropertiesTable() {
+  const router = useRouter();
   const [properties, setProperties] = useState<HorizontalProperty[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
     loadProperties();
@@ -86,7 +90,7 @@ export function HorizontalPropertiesTable() {
       label: 'Tipo', 
       width: '180px',
       render: (value) => (
-        <Badge type="info">{value}</Badge>
+        <Badge type="primary">{value}</Badge>
       )
     },
     { 
@@ -111,7 +115,7 @@ export function HorizontalPropertiesTable() {
       width: '100px',
       align: 'center',
       render: (value) => (
-        <Badge type={value ? 'success' : 'danger'}>
+        <Badge type={value ? 'success' : 'error'}>
           {value ? 'Activo' : 'Inactivo'}
         </Badge>
       ),
@@ -158,18 +162,20 @@ export function HorizontalPropertiesTable() {
   ];
 
   const handleViewDetails = (property: HorizontalProperty) => {
-    console.log('Ver detalles de:', property);
-    // TODO: Implementar modal o navegación a página de detalles
+    router.push(`/properties/${property.id}`);
   };
 
   const handleEditProperty = (property: HorizontalProperty) => {
     console.log('Editar propiedad:', property);
-    // TODO: Implementar modal de edición
   };
 
   const handleCreateProperty = () => {
-    console.log('Crear nueva propiedad');
-    // TODO: Implementar modal de creación
+    setShowCreateModal(true);
+  };
+
+  const handleCreateSuccess = () => {
+    setPage(1);
+    loadProperties();
   };
 
   if (loading) {
@@ -226,6 +232,13 @@ export function HorizontalPropertiesTable() {
           </div>
         </div>
       )}
+
+      {/* Modal de creación */}
+      <CreatePropertyModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={handleCreateSuccess}
+      />
     </div>
   );
 }

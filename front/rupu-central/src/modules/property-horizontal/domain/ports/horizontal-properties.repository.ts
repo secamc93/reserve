@@ -2,7 +2,7 @@
  * Puerto: Repositorio de Propiedades Horizontales
  */
 
-import { HorizontalPropertiesPaginated } from '../entities/horizontal-property.entity';
+import { HorizontalPropertiesPaginated, HorizontalProperty, CreateHorizontalPropertyDTO } from '../entities/horizontal-property.entity';
 
 export interface GetHorizontalPropertiesParams {
   token: string;
@@ -15,7 +15,19 @@ export interface GetHorizontalPropertiesParams {
   orderDir?: 'asc' | 'desc';
 }
 
+export interface GetHorizontalPropertyByIdParams {
+  token: string;
+  id: number;
+}
+
+export interface CreateHorizontalPropertyParams {
+  token: string;
+  data: CreateHorizontalPropertyDTO;
+}
+
 export interface IHorizontalPropertiesRepository {
   getHorizontalProperties(params: GetHorizontalPropertiesParams): Promise<HorizontalPropertiesPaginated>;
+  getHorizontalPropertyById(params: GetHorizontalPropertyByIdParams): Promise<HorizontalProperty>;
+  createHorizontalProperty(params: CreateHorizontalPropertyParams): Promise<HorizontalProperty>;
 }
 
