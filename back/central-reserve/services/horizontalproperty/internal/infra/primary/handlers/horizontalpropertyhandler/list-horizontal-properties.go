@@ -13,17 +13,17 @@ import (
 
 // ListHorizontalProperties godoc
 // @Summary Listar propiedades horizontales
-// @Description Obtiene una lista paginada de propiedades horizontales con filtros opcionales
+// @Description Obtiene una lista paginada de propiedades horizontales con filtros opcionales (incluye URLs de imágenes)
 // @Tags Propiedades Horizontales
 // @Accept json
 // @Produce json
-// @Param name query string false "Filtro por nombre"
-// @Param code query string false "Filtro por código"
+// @Param name query string false "Filtro por nombre (búsqueda parcial)"
+// @Param code query string false "Filtro por código (búsqueda parcial)"
 // @Param is_active query bool false "Filtro por estado activo"
-// @Param page query int false "Número de página" default(1)
-// @Param page_size query int false "Tamaño de página" default(10)
-// @Param order_by query string false "Campo de ordenamiento" Enums(name, code, created_at, updated_at)
-// @Param order_dir query string false "Dirección de ordenamiento" Enums(asc, desc)
+// @Param page query int false "Número de página (mínimo 1)" default(1)
+// @Param page_size query int false "Tamaño de página (1-100)" default(10)
+// @Param order_by query string false "Campo de ordenamiento" Enums(name, code, created_at, updated_at) default(created_at)
+// @Param order_dir query string false "Dirección de ordenamiento" Enums(asc, desc) default(desc)
 // @Success 200 {object} response.HorizontalPropertyListSuccessResponse
 // @Failure 400 {object} object
 // @Failure 500 {object} object

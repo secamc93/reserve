@@ -433,36 +433,6 @@ definitions:
       success:
         type: boolean
     type: object
-  response.CommitteeResponse:
-    properties:
-      committee_type_id:
-        example: 1
-        type: integer
-      end_date:
-        example: "2026-12-31T23:59:59Z"
-        type: string
-      id:
-        example: 1
-        type: integer
-      is_active:
-        example: true
-        type: boolean
-      name:
-        example: Consejo de Administración 2025
-        type: string
-      notes:
-        example: Comité creado automáticamente
-        type: string
-      start_date:
-        example: "2025-01-01T00:00:00Z"
-        type: string
-      type_code:
-        example: admin_council
-        type: string
-      type_name:
-        example: Consejo de Administración
-        type: string
-    type: object
   response.GetBusinessByIDResponse:
     properties:
       data:
@@ -533,10 +503,6 @@ definitions:
       code:
         example: los-pinos
         type: string
-      committees:
-        items:
-          $ref: '#/definitions/response.CommitteeResponse'
-        type: array
       created_at:
         example: "2024-01-15T10:30:00Z"
         type: string
@@ -582,11 +548,6 @@ definitions:
       primary_color:
         example: '#1f2937'
         type: string
-      property_units:
-        description: Información detallada (solo en GET by ID)
-        items:
-          $ref: '#/definitions/response.PropertyUnitResponse'
-        type: array
       quaternary_color:
         example: '#fbbf24'
         type: string
@@ -739,39 +700,6 @@ definitions:
       success:
         example: true
         type: boolean
-    type: object
-  response.PropertyUnitResponse:
-    properties:
-      area:
-        example: 85.5
-        type: number
-      bathrooms:
-        example: 2
-        type: integer
-      bedrooms:
-        example: 3
-        type: integer
-      block:
-        example: A
-        type: string
-      description:
-        example: Apto 101 - Piso 1
-        type: string
-      floor:
-        example: 1
-        type: integer
-      id:
-        example: 1
-        type: integer
-      is_active:
-        example: true
-        type: boolean
-      number:
-        example: "101"
-        type: string
-      unit_type:
-        example: apartment
-        type: string
     type: object
   response.ReservationStatus:
     properties:
@@ -2178,13 +2106,13 @@ paths:
       consumes:
       - application/json
       description: Obtiene una lista paginada de propiedades horizontales con filtros
-        opcionales (incluye URLs de imágenes)
+        opcionales
       parameters:
-      - description: Filtro por nombre (búsqueda parcial)
+      - description: Filtro por nombre
         in: query
         name: name
         type: string
-      - description: Filtro por código (búsqueda parcial)
+      - description: Filtro por código
         in: query
         name: code
         type: string
@@ -2193,17 +2121,16 @@ paths:
         name: is_active
         type: boolean
       - default: 1
-        description: Número de página (mínimo 1)
+        description: Número de página
         in: query
         name: page
         type: integer
       - default: 10
-        description: Tamaño de página (1-100)
+        description: Tamaño de página
         in: query
         name: page_size
         type: integer
-      - default: created_at
-        description: Campo de ordenamiento
+      - description: Campo de ordenamiento
         enum:
         - name
         - code
@@ -2212,8 +2139,7 @@ paths:
         in: query
         name: order_by
         type: string
-      - default: desc
-        description: Dirección de ordenamiento
+      - description: Dirección de ordenamiento
         enum:
         - asc
         - desc
@@ -2241,138 +2167,42 @@ paths:
     post:
       consumes:
       - multipart/form-data
-      description: 'Crea una nueva propiedad horizontal. IMPORTANTE: Los datos se
-        envían como FormData (multipart/form-data), NO como JSON, porque incluye carga
-        de archivos de imagen'
+      description: Crea una nueva propiedad horizontal con la información proporcionada
+        (soporta carga de imágenes)
       parameters:
-      - default: '"Conjunto Residencial Los Pinos"'
-        description: Nombre
+      - description: Nombre de la propiedad
         in: formData
         name: name
         required: true
         type: string
-      - default: '"los-pinos"'
-        description: Código único
+      - description: Código único
         in: formData
         name: code
         required: true
         type: string
-      - default: '"America/Bogota"'
-        description: Zona horaria
+      - description: Zona horaria
         in: formData
         name: timezone
         required: true
         type: string
-      - default: '"Carrera 15 #45-67"'
-        description: Dirección
+      - description: Dirección
         in: formData
         name: address
         required: true
         type: string
-      - default: '"Conjunto residencial familiar"'
-        description: Descripción
-        in: formData
-        name: description
-        type: string
-      - default: 120
-        description: Total de unidades
+      - description: Total de unidades
         in: formData
         name: total_units
         required: true
         type: integer
-      - default: 10
-        description: Total de pisos
-        in: formData
-        name: total_floors
-        type: integer
-      - default: true
-        description: Tiene ascensor
-        in: formData
-        name: has_elevator
-        type: boolean
-      - default: true
-        description: Tiene parqueadero
-        in: formData
-        name: has_parking
-        type: boolean
-      - default: true
-        description: Tiene piscina
-        in: formData
-        name: has_pool
-        type: boolean
-      - default: true
-        description: Tiene gimnasio
-        in: formData
-        name: has_gym
-        type: boolean
-      - default: true
-        description: Tiene área social
-        in: formData
-        name: has_social_area
-        type: boolean
-      - description: Logo (PNG/JPG, max 10MB)
+      - description: Logo de la propiedad
         in: formData
         name: logo_file
         type: file
-      - description: Imagen navbar (PNG/JPG, max 10MB)
+      - description: Imagen del navbar
         in: formData
         name: navbar_image_file
         type: file
-      - default: '"#1f2937"'
-        description: Color primario
-        in: formData
-        name: primary_color
-        type: string
-      - default: '"#3b82f6"'
-        description: Color secundario
-        in: formData
-        name: secondary_color
-        type: string
-      - default: '"#10b981"'
-        description: Color terciario
-        in: formData
-        name: tertiary_color
-        type: string
-      - default: '"#fbbf24"'
-        description: Color cuaternario
-        in: formData
-        name: quaternary_color
-        type: string
-      - default: '"lospinos.com"'
-        description: Dominio personalizado
-        in: formData
-        name: custom_domain
-        type: string
-      - default: true
-        description: Crear unidades automáticamente
-        in: formData
-        name: create_units
-        type: boolean
-      - default: '"Apto"'
-        description: Prefijo unidades
-        in: formData
-        name: unit_prefix
-        type: string
-      - default: '"apartment"'
-        description: Tipo unidad
-        in: formData
-        name: unit_type
-        type: string
-      - default: 12
-        description: Unidades por piso
-        in: formData
-        name: units_per_floor
-        type: integer
-      - default: 101
-        description: Número inicial
-        in: formData
-        name: start_unit_number
-        type: integer
-      - default: true
-        description: Crear comités requeridos
-        in: formData
-        name: create_required_committees
-        type: boolean
       produces:
       - application/json
       responses:
@@ -2399,8 +2229,7 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Elimina una propiedad horizontal (soft delete) y sus imágenes de
-        S3
+      description: Elimina una propiedad horizontal existente
       parameters:
       - description: ID de la propiedad horizontal
         in: path
@@ -2436,8 +2265,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Obtiene una propiedad horizontal con información detallada (incluye
-        unidades y comités)
+      description: Obtiene una propiedad horizontal específica por su ID
       parameters:
       - description: ID de la propiedad horizontal
         in: path
@@ -2469,8 +2297,8 @@ paths:
     put:
       consumes:
       - multipart/form-data
-      description: Actualiza una propiedad horizontal existente (actualización parcial,
-        soporta cambio de imágenes)
+      description: Actualiza una propiedad horizontal existente (soporta carga de
+        imágenes)
       parameters:
       - description: ID de la propiedad horizontal
         in: path
@@ -2481,82 +2309,14 @@ paths:
         in: formData
         name: name
         type: string
-      - description: Código único
-        in: formData
-        name: code
-        type: string
-      - description: Dirección
-        in: formData
-        name: address
-        type: string
-      - description: Descripción
-        in: formData
-        name: description
-        type: string
-      - description: Zona horaria
-        in: formData
-        name: timezone
-        type: string
-      - description: Total de unidades
-        in: formData
-        name: total_units
-        type: integer
-      - description: Total de pisos
-        in: formData
-        name: total_floors
-        type: integer
-      - description: ¿Tiene ascensor?
-        in: formData
-        name: has_elevator
-        type: boolean
-      - description: ¿Tiene parqueadero?
-        in: formData
-        name: has_parking
-        type: boolean
-      - description: ¿Tiene piscina?
-        in: formData
-        name: has_pool
-        type: boolean
-      - description: ¿Tiene gimnasio?
-        in: formData
-        name: has_gym
-        type: boolean
-      - description: ¿Tiene área social?
-        in: formData
-        name: has_social_area
-        type: boolean
-      - description: Nuevo logo (reemplaza el anterior)
+      - description: Nuevo logo
         in: formData
         name: logo_file
         type: file
-      - description: Nueva imagen del navbar (reemplaza la anterior)
+      - description: Nueva imagen del navbar
         in: formData
         name: navbar_image_file
         type: file
-      - description: Color primario (hex)
-        in: formData
-        name: primary_color
-        type: string
-      - description: Color secundario (hex)
-        in: formData
-        name: secondary_color
-        type: string
-      - description: Color terciario (hex)
-        in: formData
-        name: tertiary_color
-        type: string
-      - description: Color cuaternario (hex)
-        in: formData
-        name: quaternary_color
-        type: string
-      - description: Dominio personalizado
-        in: formData
-        name: custom_domain
-        type: string
-      - description: Estado activo
-        in: formData
-        name: is_active
-        type: boolean
       produces:
       - application/json
       responses:

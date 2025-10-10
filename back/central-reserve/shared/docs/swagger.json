@@ -1596,7 +1596,7 @@
         },
         "/horizontal-properties": {
             "get": {
-                "description": "Obtiene una lista paginada de propiedades horizontales con filtros opcionales",
+                "description": "Obtiene una lista paginada de propiedades horizontales con filtros opcionales (incluye URLs de imágenes)",
                 "consumes": [
                     "application/json"
                 ],
@@ -1610,13 +1610,13 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Filtro por nombre",
+                        "description": "Filtro por nombre (búsqueda parcial)",
                         "name": "name",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "Filtro por código",
+                        "description": "Filtro por código (búsqueda parcial)",
                         "name": "code",
                         "in": "query"
                     },
@@ -1629,14 +1629,14 @@
                     {
                         "type": "integer",
                         "default": 1,
-                        "description": "Número de página",
+                        "description": "Número de página (mínimo 1)",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
                         "default": 10,
-                        "description": "Tamaño de página",
+                        "description": "Tamaño de página (1-100)",
                         "name": "page_size",
                         "in": "query"
                     },
@@ -1648,6 +1648,7 @@
                             "updated_at"
                         ],
                         "type": "string",
+                        "default": "created_at",
                         "description": "Campo de ordenamiento",
                         "name": "order_by",
                         "in": "query"
@@ -1658,6 +1659,7 @@
                             "desc"
                         ],
                         "type": "string",
+                        "default": "desc",
                         "description": "Dirección de ordenamiento",
                         "name": "order_dir",
                         "in": "query"
@@ -1685,9 +1687,9 @@
                 }
             },
             "post": {
-                "description": "Crea una nueva propiedad horizontal con la información proporcionada",
+                "description": "Crea una nueva propiedad horizontal. IMPORTANTE: Los datos se envían como FormData (multipart/form-data), NO como JSON, porque incluye carga de archivos de imagen",
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
@@ -1698,13 +1700,182 @@
                 "summary": "Crear una nueva propiedad horizontal",
                 "parameters": [
                     {
-                        "description": "Datos de la propiedad horizontal",
-                        "name": "horizontal_property",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/request.CreateHorizontalPropertyRequest"
-                        }
+                        "type": "string",
+                        "default": "\"Conjunto Residencial Los Pinos\"",
+                        "description": "Nombre",
+                        "name": "name",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "\"los-pinos\"",
+                        "description": "Código único",
+                        "name": "code",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "\"America/Bogota\"",
+                        "description": "Zona horaria",
+                        "name": "timezone",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "\"Carrera 15 #45-67\"",
+                        "description": "Dirección",
+                        "name": "address",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "\"Conjunto residencial familiar\"",
+                        "description": "Descripción",
+                        "name": "description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 120,
+                        "description": "Total de unidades",
+                        "name": "total_units",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Total de pisos",
+                        "name": "total_floors",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Tiene ascensor",
+                        "name": "has_elevator",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Tiene parqueadero",
+                        "name": "has_parking",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Tiene piscina",
+                        "name": "has_pool",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Tiene gimnasio",
+                        "name": "has_gym",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Tiene área social",
+                        "name": "has_social_area",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Logo (PNG/JPG, max 10MB)",
+                        "name": "logo_file",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Imagen navbar (PNG/JPG, max 10MB)",
+                        "name": "navbar_image_file",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "default": "\"#1f2937\"",
+                        "description": "Color primario",
+                        "name": "primary_color",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "default": "\"#3b82f6\"",
+                        "description": "Color secundario",
+                        "name": "secondary_color",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "default": "\"#10b981\"",
+                        "description": "Color terciario",
+                        "name": "tertiary_color",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "default": "\"#fbbf24\"",
+                        "description": "Color cuaternario",
+                        "name": "quaternary_color",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "default": "\"lospinos.com\"",
+                        "description": "Dominio personalizado",
+                        "name": "custom_domain",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Crear unidades automáticamente",
+                        "name": "create_units",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "default": "\"Apto\"",
+                        "description": "Prefijo unidades",
+                        "name": "unit_prefix",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "default": "\"apartment\"",
+                        "description": "Tipo unidad",
+                        "name": "unit_type",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 12,
+                        "description": "Unidades por piso",
+                        "name": "units_per_floor",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 101,
+                        "description": "Número inicial",
+                        "name": "start_unit_number",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Crear comités requeridos",
+                        "name": "create_required_committees",
+                        "in": "formData"
                     }
                 ],
                 "responses": {
@@ -1735,59 +1906,9 @@
                 }
             }
         },
-        "/horizontal-properties/code/{code}": {
-            "get": {
-                "description": "Obtiene una propiedad horizontal específica por su código único",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Propiedades Horizontales"
-                ],
-                "summary": "Obtener propiedad horizontal por código",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Código de la propiedad horizontal",
-                        "name": "code",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.HorizontalPropertySuccessResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "type": "object"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object"
-                        }
-                    }
-                }
-            }
-        },
         "/horizontal-properties/{hp_id}": {
             "get": {
-                "description": "Obtiene una propiedad horizontal específica por su ID",
+                "description": "Obtiene una propiedad horizontal con información detallada (incluye unidades y comités)",
                 "consumes": [
                     "application/json"
                 ],
@@ -1835,9 +1956,9 @@
                 }
             },
             "put": {
-                "description": "Actualiza una propiedad horizontal existente",
+                "description": "Actualiza una propiedad horizontal existente (actualización parcial, soporta cambio de imágenes)",
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
@@ -1855,13 +1976,124 @@
                         "required": true
                     },
                     {
-                        "description": "Datos a actualizar",
-                        "name": "horizontal_property",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/request.UpdateHorizontalPropertyRequest"
-                        }
+                        "type": "string",
+                        "description": "Nombre de la propiedad",
+                        "name": "name",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Código único",
+                        "name": "code",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Dirección",
+                        "name": "address",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Descripción",
+                        "name": "description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Zona horaria",
+                        "name": "timezone",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Total de unidades",
+                        "name": "total_units",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Total de pisos",
+                        "name": "total_floors",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "¿Tiene ascensor?",
+                        "name": "has_elevator",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "¿Tiene parqueadero?",
+                        "name": "has_parking",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "¿Tiene piscina?",
+                        "name": "has_pool",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "¿Tiene gimnasio?",
+                        "name": "has_gym",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "¿Tiene área social?",
+                        "name": "has_social_area",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Nuevo logo (reemplaza el anterior)",
+                        "name": "logo_file",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Nueva imagen del navbar (reemplaza la anterior)",
+                        "name": "navbar_image_file",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Color primario (hex)",
+                        "name": "primary_color",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Color secundario (hex)",
+                        "name": "secondary_color",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Color terciario (hex)",
+                        "name": "tertiary_color",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Color cuaternario (hex)",
+                        "name": "quaternary_color",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Dominio personalizado",
+                        "name": "custom_domain",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Estado activo",
+                        "name": "is_active",
+                        "in": "formData"
                     }
                 ],
                 "responses": {
@@ -1898,7 +2130,7 @@
                 }
             },
             "delete": {
-                "description": "Elimina una propiedad horizontal existente",
+                "description": "Elimina una propiedad horizontal (soft delete) y sus imágenes de S3",
                 "consumes": [
                     "application/json"
                 ],
@@ -5297,108 +5529,6 @@
                 }
             }
         },
-        "request.CreateHorizontalPropertyRequest": {
-            "type": "object",
-            "required": [
-                "address",
-                "code",
-                "name",
-                "timezone",
-                "total_units"
-            ],
-            "properties": {
-                "address": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "example": "Carrera 15 #45-67, Bogotá"
-                },
-                "code": {
-                    "type": "string",
-                    "maxLength": 50,
-                    "minLength": 2,
-                    "example": "los-pinos"
-                },
-                "custom_domain": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "example": "lospinos.example.com"
-                },
-                "description": {
-                    "type": "string",
-                    "maxLength": 500,
-                    "example": "Conjunto residencial familiar con amplias zonas verdes"
-                },
-                "has_elevator": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "has_gym": {
-                    "type": "boolean",
-                    "example": false
-                },
-                "has_parking": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "has_pool": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "has_social_area": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "logo_url": {
-                    "description": "Configuración de marca blanca",
-                    "type": "string",
-                    "example": "https://example.com/logo.png"
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 120,
-                    "minLength": 3,
-                    "example": "Conjunto Residencial Los Pinos"
-                },
-                "navbar_image_url": {
-                    "type": "string",
-                    "example": "https://example.com/navbar.jpg"
-                },
-                "parent_business_id": {
-                    "type": "integer"
-                },
-                "primary_color": {
-                    "type": "string",
-                    "example": "#1f2937"
-                },
-                "quaternary_color": {
-                    "type": "string",
-                    "example": "#fbbf24"
-                },
-                "secondary_color": {
-                    "type": "string",
-                    "example": "#3b82f6"
-                },
-                "tertiary_color": {
-                    "type": "string",
-                    "example": "#10b981"
-                },
-                "timezone": {
-                    "type": "string",
-                    "example": "America/Bogota"
-                },
-                "total_floors": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "example": 15
-                },
-                "total_units": {
-                    "description": "Configuración específica para propiedades horizontales",
-                    "type": "integer",
-                    "minimum": 1,
-                    "example": 120
-                }
-            }
-        },
         "request.CreatePermissionRequest": {
             "type": "object",
             "required": [
@@ -5700,105 +5830,6 @@
                 }
             }
         },
-        "request.UpdateHorizontalPropertyRequest": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "example": "Carrera 15 #45-67, Bogotá D.C."
-                },
-                "code": {
-                    "type": "string",
-                    "maxLength": 50,
-                    "minLength": 2,
-                    "example": "los-pinos-v2"
-                },
-                "custom_domain": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "example": "lospinos-new.example.com"
-                },
-                "description": {
-                    "type": "string",
-                    "maxLength": 500,
-                    "example": "Conjunto residencial familiar con amplias zonas verdes y nuevas amenidades"
-                },
-                "has_elevator": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "has_gym": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "has_parking": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "has_pool": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "has_social_area": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "is_active": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "logo_url": {
-                    "description": "Configuración de marca blanca",
-                    "type": "string",
-                    "example": "https://example.com/new-logo.png"
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 120,
-                    "minLength": 3,
-                    "example": "Conjunto Residencial Los Pinos Actualizado"
-                },
-                "navbar_image_url": {
-                    "type": "string",
-                    "example": "https://example.com/new-navbar.jpg"
-                },
-                "parent_business_id": {
-                    "type": "integer"
-                },
-                "primary_color": {
-                    "type": "string",
-                    "example": "#2d3748"
-                },
-                "quaternary_color": {
-                    "type": "string",
-                    "example": "#ed8936"
-                },
-                "secondary_color": {
-                    "type": "string",
-                    "example": "#4299e1"
-                },
-                "tertiary_color": {
-                    "type": "string",
-                    "example": "#38b2ac"
-                },
-                "timezone": {
-                    "type": "string",
-                    "example": "America/Bogota"
-                },
-                "total_floors": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "example": 16
-                },
-                "total_units": {
-                    "description": "Configuración específica para propiedades horizontales",
-                    "type": "integer",
-                    "minimum": 1,
-                    "example": 125
-                }
-            }
-        },
         "request.UpdatePermissionRequest": {
             "type": "object",
             "required": [
@@ -6046,6 +6077,47 @@
                 }
             }
         },
+        "response.CommitteeResponse": {
+            "type": "object",
+            "properties": {
+                "committee_type_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "end_date": {
+                    "type": "string",
+                    "example": "2026-12-31T23:59:59Z"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_active": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Consejo de Administración 2025"
+                },
+                "notes": {
+                    "type": "string",
+                    "example": "Comité creado automáticamente"
+                },
+                "start_date": {
+                    "type": "string",
+                    "example": "2025-01-01T00:00:00Z"
+                },
+                "type_code": {
+                    "type": "string",
+                    "example": "admin_council"
+                },
+                "type_name": {
+                    "type": "string",
+                    "example": "Consejo de Administración"
+                }
+            }
+        },
         "response.GetBusinessByIDResponse": {
             "type": "object",
             "properties": {
@@ -6145,6 +6217,12 @@
                     "type": "string",
                     "example": "los-pinos"
                 },
+                "committees": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.CommitteeResponse"
+                    }
+                },
                 "created_at": {
                     "type": "string",
                     "example": "2024-01-15T10:30:00Z"
@@ -6204,6 +6282,13 @@
                 "primary_color": {
                     "type": "string",
                     "example": "#1f2937"
+                },
+                "property_units": {
+                    "description": "Información detallada (solo en GET by ID)",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.PropertyUnitResponse"
+                    }
                 },
                 "quaternary_color": {
                     "type": "string",
@@ -6423,6 +6508,51 @@
                 "success": {
                     "type": "boolean",
                     "example": true
+                }
+            }
+        },
+        "response.PropertyUnitResponse": {
+            "type": "object",
+            "properties": {
+                "area": {
+                    "type": "number",
+                    "example": 85.5
+                },
+                "bathrooms": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "bedrooms": {
+                    "type": "integer",
+                    "example": 3
+                },
+                "block": {
+                    "type": "string",
+                    "example": "A"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Apto 101 - Piso 1"
+                },
+                "floor": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_active": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "number": {
+                    "type": "string",
+                    "example": "101"
+                },
+                "unit_type": {
+                    "type": "string",
+                    "example": "apartment"
                 }
             }
         },

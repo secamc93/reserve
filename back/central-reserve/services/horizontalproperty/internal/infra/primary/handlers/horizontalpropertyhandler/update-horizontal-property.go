@@ -14,12 +14,31 @@ import (
 
 // UpdateHorizontalProperty godoc
 // @Summary Actualizar propiedad horizontal
-// @Description Actualiza una propiedad horizontal existente
+// @Description Actualiza una propiedad horizontal existente (actualización parcial, soporta cambio de imágenes)
 // @Tags Propiedades Horizontales
-// @Accept json
+// @Accept multipart/form-data
 // @Produce json
 // @Param hp_id path int true "ID de la propiedad horizontal"
-// @Param horizontal_property body request.UpdateHorizontalPropertyRequest true "Datos a actualizar"
+// @Param name formData string false "Nombre de la propiedad"
+// @Param code formData string false "Código único"
+// @Param address formData string false "Dirección"
+// @Param description formData string false "Descripción"
+// @Param timezone formData string false "Zona horaria"
+// @Param total_units formData int false "Total de unidades"
+// @Param total_floors formData int false "Total de pisos"
+// @Param has_elevator formData bool false "¿Tiene ascensor?"
+// @Param has_parking formData bool false "¿Tiene parqueadero?"
+// @Param has_pool formData bool false "¿Tiene piscina?"
+// @Param has_gym formData bool false "¿Tiene gimnasio?"
+// @Param has_social_area formData bool false "¿Tiene área social?"
+// @Param logo_file formData file false "Nuevo logo (reemplaza el anterior)"
+// @Param navbar_image_file formData file false "Nueva imagen del navbar (reemplaza la anterior)"
+// @Param primary_color formData string false "Color primario (hex)"
+// @Param secondary_color formData string false "Color secundario (hex)"
+// @Param tertiary_color formData string false "Color terciario (hex)"
+// @Param quaternary_color formData string false "Color cuaternario (hex)"
+// @Param custom_domain formData string false "Dominio personalizado"
+// @Param is_active formData bool false "Estado activo"
 // @Success 200 {object} response.HorizontalPropertySuccessResponse
 // @Failure 400 {object} object
 // @Failure 404 {object} object
@@ -42,9 +61,9 @@ func (h *HorizontalPropertyHandler) UpdateHorizontalProperty(c *gin.Context) {
 
 	var req request.UpdateHorizontalPropertyRequest
 
-	// Bind JSON request
-	if err := c.ShouldBindJSON(&req); err != nil {
-		h.logger.Error().Err(err).Msg("Error binding JSON request")
+	// Bind multipart/form-data request (incluye archivos)
+	if err := c.ShouldBind(&req); err != nil {
+		h.logger.Error().Err(err).Msg("Error binding form-data request")
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{
 			Success: false,
 			Message: "Datos de entrada inválidos",
@@ -85,6 +104,18 @@ func (h *HorizontalPropertyHandler) UpdateHorizontalProperty(c *gin.Context) {
 			c.JSON(http.StatusConflict, response.ErrorResponse{
 				Success: false,
 				Message: "El código de la propiedad horizontal ya existe",
+				Error:   err.Error(),
+			})
+		case "el dominio personalizado ya está en uso":
+			c.JSON(http.StatusConflict, response.ErrorResponse{
+				Success: false,
+				Message: "El dominio personalizado ya está en uso",
+				Error:   err.Error(),
+			})
+		case "el negocio padre especificado no existe":
+			c.JSON(http.StatusBadRequest, response.ErrorResponse{
+				Success: false,
+				Message: "El negocio padre especificado no existe",
 				Error:   err.Error(),
 			})
 		default:

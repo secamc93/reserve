@@ -19,8 +19,11 @@ var (
 	// Errores de negocio
 	ErrHorizontalPropertyNotFound     = errors.New("propiedad horizontal no encontrada")
 	ErrHorizontalPropertyCodeExists   = errors.New("ya existe una propiedad horizontal con este código")
+	ErrCustomDomainExists             = errors.New("el dominio personalizado ya está en uso")
 	ErrHorizontalPropertyHasUnits     = errors.New("no se puede eliminar una propiedad horizontal que tiene unidades registradas")
 	ErrHorizontalPropertyHasResidents = errors.New("no se puede eliminar una propiedad horizontal que tiene residentes registrados")
+	ErrParentBusinessNotFound         = errors.New("el negocio padre especificado no existe")
+	ErrInvalidParentBusiness          = errors.New("el ID del negocio padre no es válido")
 
 	// Errores de tipo de negocio
 	ErrBusinessTypeNotFound              = errors.New("tipo de negocio no encontrado")

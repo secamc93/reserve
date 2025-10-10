@@ -3,6 +3,7 @@ package usecasehorizontalproperty
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"central_reserve/services/horizontalproperty/internal/domain"
 )
@@ -35,7 +36,30 @@ func (uc *HorizontalPropertyUseCase) ListHorizontalProperties(ctx context.Contex
 		return nil, fmt.Errorf("error obteniendo lista de propiedades horizontales: %w", err)
 	}
 
+	// Procesar URLs de imágenes para cada elemento de la lista
+	uc.processImageURLsForList(result.Data)
+
 	uc.logger.Info().Int("count", len(result.Data)).Int64("total", result.Total).Msg("Lista de propiedades horizontales obtenida exitosamente")
 
 	return result, nil
+}
+
+// processImageURLsForList procesa las URLs de imágenes para una lista de propiedades
+func (uc *HorizontalPropertyUseCase) processImageURLsForList(properties []domain.HorizontalPropertyListDTO) {
+	baseURL := strings.TrimRight(uc.env.Get("URL_BASE_DOMAIN_S3"), "/")
+	if baseURL == "" {
+		return
+	}
+
+	for i := range properties {
+		// Procesar LogoURL si es path relativo
+		if properties[i].LogoURL != "" && !strings.HasPrefix(properties[i].LogoURL, "http") {
+			properties[i].LogoURL = fmt.Sprintf("%s/%s", baseURL, strings.TrimLeft(properties[i].LogoURL, "/"))
+		}
+
+		// Procesar NavbarImageURL si es path relativo
+		if properties[i].NavbarImageURL != "" && !strings.HasPrefix(properties[i].NavbarImageURL, "http") {
+			properties[i].NavbarImageURL = fmt.Sprintf("%s/%s", baseURL, strings.TrimLeft(properties[i].NavbarImageURL, "/"))
+		}
+	}
 }

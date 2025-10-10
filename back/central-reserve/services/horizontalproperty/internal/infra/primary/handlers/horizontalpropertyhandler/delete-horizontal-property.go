@@ -11,7 +11,7 @@ import (
 
 // DeleteHorizontalProperty godoc
 // @Summary Eliminar propiedad horizontal
-// @Description Elimina una propiedad horizontal existente
+// @Description Elimina una propiedad horizontal (soft delete) y sus imágenes de S3
 // @Tags Propiedades Horizontales
 // @Accept json
 // @Produce json

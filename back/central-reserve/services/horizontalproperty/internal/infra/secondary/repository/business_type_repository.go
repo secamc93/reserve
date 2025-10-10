@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"central_reserve/services/horizontalproperty/internal/domain"
+	"central_reserve/services/horizontalproperty/internal/infra/secondary/repository/mapper"
 
 	"gorm.io/gorm"
 )
@@ -23,14 +24,7 @@ func (r *Repository) GetBusinessTypeByID(ctx context.Context, id uint) (*domain.
 		return nil, fmt.Errorf("error obteniendo tipo de negocio: %w", err)
 	}
 
-	return &domain.BusinessType{
-		ID:          businessType.ID,
-		Name:        businessType.Name,
-		Code:        businessType.Code,
-		Description: businessType.Description,
-		Icon:        businessType.Icon,
-		IsActive:    businessType.IsActive,
-	}, nil
+	return mapper.ToBusinessType(&businessType), nil
 }
 
 // GetHorizontalPropertyType obtiene el tipo de negocio de propiedad horizontal
@@ -46,12 +40,5 @@ func (r *Repository) GetHorizontalPropertyType(ctx context.Context) (*domain.Bus
 		return nil, fmt.Errorf("error obteniendo tipo de negocio de propiedad horizontal: %w", err)
 	}
 
-	return &domain.BusinessType{
-		ID:          businessType.ID,
-		Name:        businessType.Name,
-		Code:        businessType.Code,
-		Description: businessType.Description,
-		Icon:        businessType.Icon,
-		IsActive:    businessType.IsActive,
-	}, nil
+	return mapper.ToBusinessType(&businessType), nil
 }

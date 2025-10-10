@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"math"
 	"strings"
+	"time"
 
 	"central_reserve/services/horizontalproperty/internal/domain"
+	"central_reserve/services/horizontalproperty/internal/infra/secondary/repository/mapper"
 	"central_reserve/shared/db"
 	"central_reserve/shared/log"
 
@@ -31,7 +33,7 @@ func New(db db.IDatabase, logger log.ILogger) domain.HorizontalPropertyRepositor
 // CreateHorizontalProperty crea una nueva propiedad horizontal
 func (r *Repository) CreateHorizontalProperty(ctx context.Context, property *domain.HorizontalProperty) (*domain.HorizontalProperty, error) {
 	// Mapear a modelo de GORM (Business)
-	businessModel := r.mapToBusinessModel(property)
+	businessModel := mapper.ToBusinessModel(property)
 
 	// Crear en la base de datos
 	if err := r.db.Conn(ctx).Create(businessModel).Error; err != nil {
@@ -40,10 +42,10 @@ func (r *Repository) CreateHorizontalProperty(ctx context.Context, property *dom
 	}
 
 	// Mapear de vuelta a entidad de dominio
-	return r.mapToEntity(businessModel), nil
+	return mapper.ToDomainEntity(businessModel), nil
 }
 
-// GetByID obtiene una propiedad horizontal por ID
+// GetByID obtiene una propiedad horizontal por ID con información detallada
 func (r *Repository) GetHorizontalPropertyByID(ctx context.Context, id uint) (*domain.HorizontalProperty, error) {
 	var business models.Business
 
@@ -55,9 +57,11 @@ func (r *Repository) GetHorizontalPropertyByID(ctx context.Context, id uint) (*d
 		return nil, fmt.Errorf("tipo de negocio horizontal_property no encontrado: %w", err)
 	}
 
-	// Ahora buscar el business con ese tipo específico
+	// Buscar el business con información detallada (unidades y comités)
 	err = r.db.Conn(ctx).
 		Preload("BusinessType").
+		Preload("PropertyUnits", "is_active = ?", true). // Solo unidades activas
+		Preload("Committees.CommitteeType").             // Comités con su tipo
 		Where("id = ? AND business_type_id = ?", id, businessType.ID).
 		First(&business).Error
 
@@ -69,41 +73,12 @@ func (r *Repository) GetHorizontalPropertyByID(ctx context.Context, id uint) (*d
 		return nil, fmt.Errorf("error obteniendo propiedad horizontal: %w", err)
 	}
 
-	return r.mapToEntity(&business), nil
-}
-
-// GetHorizontalPropertyByCode obtiene una propiedad horizontal por código
-func (r *Repository) GetHorizontalPropertyByCode(ctx context.Context, code string) (*domain.HorizontalProperty, error) {
-	var business models.Business
-
-	// Primero obtener el BusinessType de propiedad horizontal
-	var businessType models.BusinessType
-	err := r.db.Conn(ctx).Where("code = ?", "horizontal_property").First(&businessType).Error
-	if err != nil {
-		r.logger.Error().Err(err).Msg("Error obteniendo tipo de negocio horizontal_property")
-		return nil, fmt.Errorf("tipo de negocio horizontal_property no encontrado: %w", err)
-	}
-
-	// Ahora buscar el business con ese tipo específico
-	err = r.db.Conn(ctx).
-		Preload("BusinessType").
-		Where("code = ? AND business_type_id = ?", code, businessType.ID).
-		First(&business).Error
-
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, fmt.Errorf("propiedad horizontal no encontrada")
-		}
-		r.logger.Error().Err(err).Str("code", code).Msg("Error obteniendo propiedad horizontal por código")
-		return nil, fmt.Errorf("error obteniendo propiedad horizontal: %w", err)
-	}
-
-	return r.mapToEntity(&business), nil
+	return mapper.ToDomainEntityWithDetails(&business), nil
 }
 
 // UpdateHorizontalProperty actualiza una propiedad horizontal
 func (r *Repository) UpdateHorizontalProperty(ctx context.Context, id uint, property *domain.HorizontalProperty) (*domain.HorizontalProperty, error) {
-	businessModel := r.mapToBusinessModel(property)
+	businessModel := mapper.ToBusinessModel(property)
 	businessModel.ID = id
 
 	// Actualizar en la base de datos
@@ -119,7 +94,7 @@ func (r *Repository) UpdateHorizontalProperty(ctx context.Context, id uint, prop
 		return nil, fmt.Errorf("error obteniendo propiedad horizontal actualizada: %w", err)
 	}
 
-	return r.mapToEntity(&updatedBusiness), nil
+	return mapper.ToDomainEntity(&updatedBusiness), nil
 }
 
 // DeleteHorizontalProperty elimina una propiedad horizontal
@@ -188,20 +163,8 @@ func (r *Repository) ListHorizontalProperties(ctx context.Context, filters domai
 		return nil, fmt.Errorf("error obteniendo lista de propiedades horizontales: %w", err)
 	}
 
-	// Mapear a DTOs de lista
-	data := make([]domain.HorizontalPropertyListDTO, len(businesses))
-	for i, business := range businesses {
-		data[i] = domain.HorizontalPropertyListDTO{
-			ID:               business.ID,
-			Name:             business.Name,
-			Code:             business.Code,
-			BusinessTypeName: business.BusinessType.Name,
-			Address:          business.Address,
-			TotalUnits:       getTotalUnitsFromDescription(business.Description), // Temporal hasta que se agregue el campo
-			IsActive:         business.IsActive,
-			CreatedAt:        business.CreatedAt,
-		}
-	}
+	// Mapear a DTOs de lista usando el mapper
+	data := mapper.ToHorizontalPropertyListDTOs(businesses)
 
 	// Calcular páginas totales
 	totalPages := int(math.Ceil(float64(total) / float64(filters.PageSize)))
@@ -243,79 +206,132 @@ func (r *Repository) ExistsHorizontalPropertyByCode(ctx context.Context, code st
 	return count > 0, nil
 }
 
-// Funciones auxiliares de mapeo
+// ExistsCustomDomain verifica si existe un custom_domain en uso
+func (r *Repository) ExistsCustomDomain(ctx context.Context, customDomain string, excludeID *uint) (bool, error) {
+	// Si el custom_domain está vacío, validar que no haya otros vacíos
+	// porque el constraint único no permite múltiples strings vacíos
+	trimmed := strings.TrimSpace(customDomain)
 
-// mapToBusinessModel mapea una entidad de dominio a modelo GORM
-func (r *Repository) mapToBusinessModel(property *domain.HorizontalProperty) *models.Business {
-	business := &models.Business{
-		Name:               property.Name,
-		Code:               property.Code,
-		BusinessTypeID:     property.BusinessTypeID,
-		ParentBusinessID:   property.ParentBusinessID,
-		Timezone:           property.Timezone,
-		Address:            property.Address,
-		Description:        property.Description,
-		LogoURL:            property.LogoURL,
-		PrimaryColor:       property.PrimaryColor,
-		SecondaryColor:     property.SecondaryColor,
-		TertiaryColor:      property.TertiaryColor,
-		QuaternaryColor:    property.QuaternaryColor,
-		NavbarImageURL:     property.NavbarImageURL,
-		CustomDomain:       property.CustomDomain,
-		EnableDelivery:     property.EnableDelivery,
-		EnablePickup:       property.EnablePickup,
-		EnableReservations: property.EnableReservations,
-		IsActive:           property.IsActive,
+	var count int64
+	var query *gorm.DB
+
+	if trimmed == "" {
+		// Buscar otros custom_domain vacíos
+		query = r.db.Conn(ctx).Model(&models.Business{}).Where("custom_domain = ''")
+	} else {
+		// Buscar el custom_domain específico
+		query = r.db.Conn(ctx).Model(&models.Business{}).Where("custom_domain = ?", customDomain)
 	}
 
-	// Solo establecer ID, CreatedAt, UpdatedAt si la entidad ya existe (para updates)
-	if property.ID != 0 {
-		business.ID = property.ID
-		business.CreatedAt = property.CreatedAt
-		business.UpdatedAt = property.UpdatedAt
+	if excludeID != nil {
+		query = query.Where("id != ?", *excludeID)
 	}
 
-	return business
+	if err := query.Count(&count).Error; err != nil {
+		r.logger.Error().Err(err).Str("custom_domain", customDomain).Msg("Error verificando existencia de dominio personalizado")
+		return false, fmt.Errorf("error verificando existencia de dominio personalizado: %w", err)
+	}
+
+	return count > 0, nil
 }
 
-// mapToEntity mapea un modelo GORM a entidad de dominio
-func (r *Repository) mapToEntity(business *models.Business) *domain.HorizontalProperty {
-	return &domain.HorizontalProperty{
-		ID:                 business.ID,
-		Name:               business.Name,
-		Code:               business.Code,
-		BusinessTypeID:     business.BusinessTypeID,
-		ParentBusinessID:   business.ParentBusinessID,
-		Timezone:           business.Timezone,
-		Address:            business.Address,
-		Description:        business.Description,
-		LogoURL:            business.LogoURL,
-		PrimaryColor:       business.PrimaryColor,
-		SecondaryColor:     business.SecondaryColor,
-		TertiaryColor:      business.TertiaryColor,
-		QuaternaryColor:    business.QuaternaryColor,
-		NavbarImageURL:     business.NavbarImageURL,
-		CustomDomain:       business.CustomDomain,
-		EnableDelivery:     business.EnableDelivery,
-		EnablePickup:       business.EnablePickup,
-		EnableReservations: business.EnableReservations,
-		// TODO: Mapear campos específicos de propiedad horizontal cuando se agreguen a Business
-		TotalUnits:    getTotalUnitsFromDescription(business.Description), // Temporal
-		TotalFloors:   nil,                                                // Temporal
-		HasElevator:   false,                                              // Temporal
-		HasParking:    false,                                              // Temporal
-		HasPool:       false,                                              // Temporal
-		HasGym:        false,                                              // Temporal
-		HasSocialArea: false,                                              // Temporal
-		IsActive:      business.IsActive,
-		CreatedAt:     business.CreatedAt,
-		UpdatedAt:     business.UpdatedAt,
+// ParentBusinessExists verifica si existe un business padre
+func (r *Repository) ParentBusinessExists(ctx context.Context, parentBusinessID uint) (bool, error) {
+	var count int64
+
+	if err := r.db.Conn(ctx).Model(&models.Business{}).Where("id = ?", parentBusinessID).Count(&count).Error; err != nil {
+		r.logger.Error().Err(err).Uint("parent_business_id", parentBusinessID).Msg("Error verificando existencia de negocio padre")
+		return false, fmt.Errorf("error verificando existencia de negocio padre: %w", err)
 	}
+
+	return count > 0, nil
 }
 
-// getTotalUnitsFromDescription extrae el número de unidades de la descripción (temporal)
-func getTotalUnitsFromDescription(description string) int {
-	// Por ahora retornamos un valor por defecto
-	// TODO: Implementar lógica para extraer o almacenar en campo separado
-	return 1
+// ═══════════════════════════════════════════════════════════════════
+//
+//	MÉTODOS PARA CONFIGURACIÓN INICIAL (SETUP)
+//
+// ═══════════════════════════════════════════════════════════════════
+
+// CreatePropertyUnits crea múltiples unidades de propiedad en bulk
+func (r *Repository) CreatePropertyUnits(ctx context.Context, businessID uint, units []domain.PropertyUnitCreate) error {
+	if len(units) == 0 {
+		return nil
+	}
+
+	// Convertir a modelos de GORM usando mapper
+	propertyUnits := mapper.ToPropertyUnitModels(businessID, units)
+
+	// Crear en batch
+	if err := r.db.Conn(ctx).CreateInBatches(&propertyUnits, 100).Error; err != nil {
+		r.logger.Error().Err(err).Uint("business_id", businessID).Int("units_count", len(units)).Msg("Error creando unidades de propiedad")
+		return fmt.Errorf("error creando unidades de propiedad: %w", err)
+	}
+
+	r.logger.Info().Uint("business_id", businessID).Int("units_created", len(units)).Msg("Unidades de propiedad creadas exitosamente")
+	return nil
+}
+
+// GetRequiredCommitteeTypes obtiene los tipos de comités requeridos por ley
+func (r *Repository) GetRequiredCommitteeTypes(ctx context.Context) ([]domain.CommitteeTypeInfo, error) {
+	var committeeTypes []models.CommitteeType
+
+	// Buscar comités requeridos y activos
+	err := r.db.Conn(ctx).
+		Where("is_required = ? AND is_active = ?", true, true).
+		Find(&committeeTypes).Error
+
+	if err != nil {
+		r.logger.Error().Err(err).Msg("Error obteniendo tipos de comités requeridos")
+		return nil, fmt.Errorf("error obteniendo tipos de comités requeridos: %w", err)
+	}
+
+	// Mapear a DTOs usando mapper
+	return mapper.ToCommitteeTypeInfo(committeeTypes), nil
+}
+
+// CreateRequiredCommittees crea los comités requeridos por ley para una propiedad
+func (r *Repository) CreateRequiredCommittees(ctx context.Context, businessID uint) error {
+	// Obtener tipos de comités requeridos
+	committeeTypes, err := r.GetRequiredCommitteeTypes(ctx)
+	if err != nil {
+		return err
+	}
+
+	if len(committeeTypes) == 0 {
+		r.logger.Warn().Msg("No se encontraron tipos de comités requeridos")
+		return nil
+	}
+
+	// Crear comités para esta propiedad
+	committees := make([]models.Committee, len(committeeTypes))
+	now := time.Now()
+
+	for i, ct := range committeeTypes {
+		// Calcular fecha de fin basado en duración del término
+		var endDate *time.Time
+		if ct.TermDurationMonths != nil && *ct.TermDurationMonths > 0 {
+			end := now.AddDate(0, *ct.TermDurationMonths, 0)
+			endDate = &end
+		}
+
+		committees[i] = models.Committee{
+			BusinessID:      businessID,
+			CommitteeTypeID: ct.ID,
+			Name:            fmt.Sprintf("%s %d", ct.Name, now.Year()),
+			StartDate:       now,
+			EndDate:         endDate,
+			IsActive:        true,
+			Notes:           "Comité creado automáticamente durante la configuración inicial de la propiedad",
+		}
+	}
+
+	// Crear en batch
+	if err := r.db.Conn(ctx).Create(&committees).Error; err != nil {
+		r.logger.Error().Err(err).Uint("business_id", businessID).Msg("Error creando comités requeridos")
+		return fmt.Errorf("error creando comités requeridos: %w", err)
+	}
+
+	r.logger.Info().Uint("business_id", businessID).Int("committees_created", len(committees)).Msg("Comités requeridos creados exitosamente")
+	return nil
 }

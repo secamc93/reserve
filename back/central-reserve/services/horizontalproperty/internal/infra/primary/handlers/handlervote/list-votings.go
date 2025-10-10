@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlervote/mapper"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlervote/response"
 
 	"github.com/gin-gonic/gin"
@@ -33,5 +34,8 @@ func (h *VotingHandler) ListVotings(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Success: false, Message: "Error listando votaciones", Error: err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, response.VotingsSuccess{Success: true, Message: "Votaciones obtenidas", Data: votings})
+
+	// Mapear DTOs a responses
+	responseData := mapper.MapVotingDTOsToResponses(votings)
+	c.JSON(http.StatusOK, response.VotingsSuccess{Success: true, Message: "Votaciones obtenidas", Data: responseData})
 }

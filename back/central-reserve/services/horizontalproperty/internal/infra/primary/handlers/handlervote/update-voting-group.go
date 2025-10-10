@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"central_reserve/services/horizontalproperty/internal/domain"
+	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlervote/mapper"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlervote/request"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlervote/response"
 
@@ -51,5 +52,8 @@ func (h *VotingHandler) UpdateVotingGroup(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "No se pudo actualizar", Error: err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, response.VotingGroupSuccess{Success: true, Message: "Grupo actualizado", Data: *updated})
+
+	// Mapear DTO a response
+	responseData := mapper.MapVotingGroupDTOToResponse(updated)
+	c.JSON(http.StatusOK, response.VotingGroupSuccess{Success: true, Message: "Grupo actualizado", Data: responseData})
 }

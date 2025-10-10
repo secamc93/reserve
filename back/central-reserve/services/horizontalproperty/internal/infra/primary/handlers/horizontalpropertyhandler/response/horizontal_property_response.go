@@ -32,9 +32,40 @@ type HorizontalPropertyResponse struct {
 	HasGym        bool `json:"has_gym" example:"false"`
 	HasSocialArea bool `json:"has_social_area" example:"true"`
 
+	// Información detallada (solo en GET by ID)
+	PropertyUnits []PropertyUnitResponse `json:"property_units"`
+	Committees    []CommitteeResponse    `json:"committees"`
+
 	IsActive  bool      `json:"is_active" example:"true"`
 	CreatedAt time.Time `json:"created_at" example:"2024-01-15T10:30:00Z"`
 	UpdatedAt time.Time `json:"updated_at" example:"2024-01-15T10:30:00Z"`
+}
+
+// PropertyUnitResponse - Respuesta para una unidad de propiedad
+type PropertyUnitResponse struct {
+	ID          uint     `json:"id" example:"1"`
+	Number      string   `json:"number" example:"101"`
+	Floor       *int     `json:"floor,omitempty" example:"1"`
+	Block       string   `json:"block,omitempty" example:"A"`
+	UnitType    string   `json:"unit_type" example:"apartment"`
+	Area        *float64 `json:"area,omitempty" example:"85.5"`
+	Bedrooms    *int     `json:"bedrooms,omitempty" example:"3"`
+	Bathrooms   *int     `json:"bathrooms,omitempty" example:"2"`
+	Description string   `json:"description,omitempty" example:"Apto 101 - Piso 1"`
+	IsActive    bool     `json:"is_active" example:"true"`
+}
+
+// CommitteeResponse - Respuesta para un comité
+type CommitteeResponse struct {
+	ID              uint       `json:"id" example:"1"`
+	CommitteeTypeID uint       `json:"committee_type_id" example:"1"`
+	TypeName        string     `json:"type_name" example:"Consejo de Administración"`
+	TypeCode        string     `json:"type_code" example:"admin_council"`
+	Name            string     `json:"name" example:"Consejo de Administración 2025"`
+	StartDate       time.Time  `json:"start_date" example:"2025-01-01T00:00:00Z"`
+	EndDate         *time.Time `json:"end_date,omitempty" example:"2026-12-31T23:59:59Z"`
+	IsActive        bool       `json:"is_active" example:"true"`
+	Notes           string     `json:"notes,omitempty" example:"Comité creado automáticamente"`
 }
 
 // HorizontalPropertyListResponse - Respuesta para lista de propiedades horizontales

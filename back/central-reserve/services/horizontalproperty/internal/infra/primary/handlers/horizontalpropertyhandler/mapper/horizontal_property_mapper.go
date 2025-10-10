@@ -8,6 +8,19 @@ import (
 
 // MapCreateRequestToDTO mapea request de creación a DTO de dominio
 func MapCreateRequestToDTO(req *request.CreateHorizontalPropertyRequest) domain.CreateHorizontalPropertyDTO {
+	// Preparar opciones de setup si algún campo está activado
+	var setupOptions *domain.HorizontalPropertySetupOptions
+	if req.CreateUnits || req.CreateRequiredCommittees {
+		setupOptions = &domain.HorizontalPropertySetupOptions{
+			CreateUnits:              req.CreateUnits,
+			UnitPrefix:               req.UnitPrefix,
+			UnitType:                 req.UnitType,
+			UnitsPerFloor:            req.UnitsPerFloor,
+			StartUnitNumber:          req.StartUnitNumber,
+			CreateRequiredCommittees: req.CreateRequiredCommittees,
+		}
+	}
+
 	return domain.CreateHorizontalPropertyDTO{
 		Name:             req.Name,
 		Code:             req.Code,
@@ -15,12 +28,12 @@ func MapCreateRequestToDTO(req *request.CreateHorizontalPropertyRequest) domain.
 		Timezone:         req.Timezone,
 		Address:          req.Address,
 		Description:      req.Description,
-		LogoURL:          req.LogoURL,
+		LogoFile:         req.LogoFile,
+		NavbarImageFile:  req.NavbarImageFile,
 		PrimaryColor:     req.PrimaryColor,
 		SecondaryColor:   req.SecondaryColor,
 		TertiaryColor:    req.TertiaryColor,
 		QuaternaryColor:  req.QuaternaryColor,
-		NavbarImageURL:   req.NavbarImageURL,
 		CustomDomain:     req.CustomDomain,
 		TotalUnits:       req.TotalUnits,
 		TotalFloors:      req.TotalFloors,
@@ -29,6 +42,7 @@ func MapCreateRequestToDTO(req *request.CreateHorizontalPropertyRequest) domain.
 		HasPool:          req.HasPool,
 		HasGym:           req.HasGym,
 		HasSocialArea:    req.HasSocialArea,
+		SetupOptions:     setupOptions,
 	}
 }
 
@@ -41,12 +55,12 @@ func MapUpdateRequestToDTO(req *request.UpdateHorizontalPropertyRequest) domain.
 		Timezone:         req.Timezone,
 		Address:          req.Address,
 		Description:      req.Description,
-		LogoURL:          req.LogoURL,
+		LogoFile:         req.LogoFile,
+		NavbarImageFile:  req.NavbarImageFile,
 		PrimaryColor:     req.PrimaryColor,
 		SecondaryColor:   req.SecondaryColor,
 		TertiaryColor:    req.TertiaryColor,
 		QuaternaryColor:  req.QuaternaryColor,
-		NavbarImageURL:   req.NavbarImageURL,
 		CustomDomain:     req.CustomDomain,
 		TotalUnits:       req.TotalUnits,
 		TotalFloors:      req.TotalFloors,
@@ -74,6 +88,47 @@ func MapListRequestToDTO(req *request.ListHorizontalPropertiesRequest) domain.Ho
 
 // MapDTOToResponse mapea DTO de dominio a response
 func MapDTOToResponse(dto *domain.HorizontalPropertyDTO) *response.HorizontalPropertyResponse {
+	// Inicializar slices vacíos (nunca nil)
+	propertyUnits := make([]response.PropertyUnitResponse, 0)
+	committees := make([]response.CommitteeResponse, 0)
+
+	// Mapear unidades de propiedad
+	if len(dto.PropertyUnits) > 0 {
+		propertyUnits = make([]response.PropertyUnitResponse, len(dto.PropertyUnits))
+		for i, unit := range dto.PropertyUnits {
+			propertyUnits[i] = response.PropertyUnitResponse{
+				ID:          unit.ID,
+				Number:      unit.Number,
+				Floor:       unit.Floor,
+				Block:       unit.Block,
+				UnitType:    unit.UnitType,
+				Area:        unit.Area,
+				Bedrooms:    unit.Bedrooms,
+				Bathrooms:   unit.Bathrooms,
+				Description: unit.Description,
+				IsActive:    unit.IsActive,
+			}
+		}
+	}
+
+	// Mapear comités
+	if len(dto.Committees) > 0 {
+		committees = make([]response.CommitteeResponse, len(dto.Committees))
+		for i, committee := range dto.Committees {
+			committees[i] = response.CommitteeResponse{
+				ID:              committee.ID,
+				CommitteeTypeID: committee.CommitteeTypeID,
+				TypeName:        committee.TypeName,
+				TypeCode:        committee.TypeCode,
+				Name:            committee.Name,
+				StartDate:       committee.StartDate,
+				EndDate:         committee.EndDate,
+				IsActive:        committee.IsActive,
+				Notes:           committee.Notes,
+			}
+		}
+	}
+
 	return &response.HorizontalPropertyResponse{
 		ID:               dto.ID,
 		Name:             dto.Name,
@@ -98,6 +153,8 @@ func MapDTOToResponse(dto *domain.HorizontalPropertyDTO) *response.HorizontalPro
 		HasPool:          dto.HasPool,
 		HasGym:           dto.HasGym,
 		HasSocialArea:    dto.HasSocialArea,
+		PropertyUnits:    propertyUnits,
+		Committees:       committees,
 		IsActive:         dto.IsActive,
 		CreatedAt:        dto.CreatedAt,
 		UpdatedAt:        dto.UpdatedAt,

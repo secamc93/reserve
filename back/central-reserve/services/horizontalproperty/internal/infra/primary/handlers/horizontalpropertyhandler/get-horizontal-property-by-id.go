@@ -12,7 +12,7 @@ import (
 
 // GetHorizontalPropertyByID godoc
 // @Summary Obtener propiedad horizontal por ID
-// @Description Obtiene una propiedad horizontal específica por su ID
+// @Description Obtiene una propiedad horizontal con información detallada (incluye unidades y comités)
 // @Tags Propiedades Horizontales
 // @Accept json
 // @Produce json

@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"central_reserve/services/horizontalproperty/internal/domain"
+	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlervote/mapper"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlervote/request"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlervote/response"
 
@@ -48,5 +49,8 @@ func (h *VotingHandler) CreateVotingOption(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "No se pudo crear la opción", Error: err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, response.VotingOptionSuccess{Success: true, Message: "Opción creada", Data: *created})
+
+	// Mapear DTO a response
+	responseData := mapper.MapVotingOptionDTOToResponse(created)
+	c.JSON(http.StatusCreated, response.VotingOptionSuccess{Success: true, Message: "Opción creada", Data: responseData})
 }

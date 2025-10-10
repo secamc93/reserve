@@ -1,6 +1,9 @@
 package domain
 
-import "time"
+import (
+	"mime/multipart"
+	"time"
+)
 
 // ═══════════════════════════════════════════════════════════════════
 //
@@ -10,126 +13,173 @@ import "time"
 
 // CreateHorizontalPropertyDTO - DTO para crear una propiedad horizontal
 type CreateHorizontalPropertyDTO struct {
-	Name             string `json:"name" validate:"required,min=3,max=120"`
-	Code             string `json:"code" validate:"required,min=2,max=50"`
-	ParentBusinessID *uint  `json:"parent_business_id,omitempty"`
-	Timezone         string `json:"timezone" validate:"required"`
-	Address          string `json:"address" validate:"required,max=255"`
-	Description      string `json:"description,omitempty" validate:"max=500"`
+	Name             string
+	Code             string
+	ParentBusinessID *uint
+	Timezone         string
+	Address          string
+	Description      string
 
-	// Configuración de marca blanca
-	LogoURL         string `json:"logo_url,omitempty" validate:"max=255,url"`
-	PrimaryColor    string `json:"primary_color,omitempty" validate:"hexcolor"`
-	SecondaryColor  string `json:"secondary_color,omitempty" validate:"hexcolor"`
-	TertiaryColor   string `json:"tertiary_color,omitempty" validate:"hexcolor"`
-	QuaternaryColor string `json:"quaternary_color,omitempty" validate:"hexcolor"`
-	NavbarImageURL  string `json:"navbar_image_url,omitempty" validate:"max=255,url"`
-	CustomDomain    string `json:"custom_domain,omitempty" validate:"max=100"`
+	// Configuración de marca blanca - Archivos para S3
+	LogoFile        *multipart.FileHeader
+	NavbarImageFile *multipart.FileHeader
+
+	PrimaryColor    string
+	SecondaryColor  string
+	TertiaryColor   string
+	QuaternaryColor string
+	CustomDomain    string
 
 	// Configuración específica para propiedades horizontales
-	TotalUnits    int  `json:"total_units" validate:"required,min=1"`
-	TotalFloors   *int `json:"total_floors,omitempty" validate:"omitempty,min=1"`
-	HasElevator   bool `json:"has_elevator"`
-	HasParking    bool `json:"has_parking"`
-	HasPool       bool `json:"has_pool"`
-	HasGym        bool `json:"has_gym"`
-	HasSocialArea bool `json:"has_social_area"`
+	TotalUnits    int
+	TotalFloors   *int
+	HasElevator   bool
+	HasParking    bool
+	HasPool       bool
+	HasGym        bool
+	HasSocialArea bool
+
+	// Opciones de configuración inicial automática
+	SetupOptions *HorizontalPropertySetupOptions
+}
+
+// HorizontalPropertySetupOptions - Opciones para configuración inicial automática
+type HorizontalPropertySetupOptions struct {
+	CreateUnits              bool
+	UnitPrefix               string
+	UnitType                 string
+	UnitsPerFloor            *int
+	StartUnitNumber          int
+	CreateRequiredCommittees bool
 }
 
 // UpdateHorizontalPropertyDTO - DTO para actualizar una propiedad horizontal
 type UpdateHorizontalPropertyDTO struct {
-	Name             *string `json:"name,omitempty" validate:"omitempty,min=3,max=120"`
-	Code             *string `json:"code,omitempty" validate:"omitempty,min=2,max=50,alphanum"`
-	ParentBusinessID *uint   `json:"parent_business_id,omitempty"`
-	Timezone         *string `json:"timezone,omitempty"`
-	Address          *string `json:"address,omitempty" validate:"omitempty,max=255"`
-	Description      *string `json:"description,omitempty" validate:"omitempty,max=500"`
+	Name             *string
+	Code             *string
+	ParentBusinessID *uint
+	Timezone         *string
+	Address          *string
+	Description      *string
 
 	// Configuración de marca blanca
-	LogoURL         *string `json:"logo_url,omitempty" validate:"omitempty,max=255,url"`
-	PrimaryColor    *string `json:"primary_color,omitempty" validate:"omitempty,hexcolor"`
-	SecondaryColor  *string `json:"secondary_color,omitempty" validate:"omitempty,hexcolor"`
-	TertiaryColor   *string `json:"tertiary_color,omitempty" validate:"omitempty,hexcolor"`
-	QuaternaryColor *string `json:"quaternary_color,omitempty" validate:"omitempty,hexcolor"`
-	NavbarImageURL  *string `json:"navbar_image_url,omitempty" validate:"omitempty,max=255,url"`
-	CustomDomain    *string `json:"custom_domain,omitempty" validate:"omitempty,max=100"`
+	LogoFile        *multipart.FileHeader
+	NavbarImageFile *multipart.FileHeader
+	PrimaryColor    *string
+	SecondaryColor  *string
+	TertiaryColor   *string
+	QuaternaryColor *string
+	CustomDomain    *string
 
 	// Configuración específica para propiedades horizontales
-	TotalUnits    *int  `json:"total_units,omitempty" validate:"omitempty,min=1"`
-	TotalFloors   *int  `json:"total_floors,omitempty" validate:"omitempty,min=1"`
-	HasElevator   *bool `json:"has_elevator,omitempty"`
-	HasParking    *bool `json:"has_parking,omitempty"`
-	HasPool       *bool `json:"has_pool,omitempty"`
-	HasGym        *bool `json:"has_gym,omitempty"`
-	HasSocialArea *bool `json:"has_social_area,omitempty"`
-	IsActive      *bool `json:"is_active,omitempty"`
+	TotalUnits    *int
+	TotalFloors   *int
+	HasElevator   *bool
+	HasParking    *bool
+	HasPool       *bool
+	HasGym        *bool
+	HasSocialArea *bool
+	IsActive      *bool
 }
 
 // HorizontalPropertyDTO - DTO para respuesta de propiedad horizontal
 type HorizontalPropertyDTO struct {
-	ID               uint   `json:"id"`
-	Name             string `json:"name"`
-	Code             string `json:"code"`
-	BusinessTypeID   uint   `json:"business_type_id"`
-	BusinessTypeName string `json:"business_type_name"`
-	ParentBusinessID *uint  `json:"parent_business_id,omitempty"`
-	Timezone         string `json:"timezone"`
-	Address          string `json:"address"`
-	Description      string `json:"description"`
+	ID               uint
+	Name             string
+	Code             string
+	BusinessTypeID   uint
+	BusinessTypeName string
+	ParentBusinessID *uint
+	Timezone         string
+	Address          string
+	Description      string
 
 	// Configuración de marca blanca
-	LogoURL         string `json:"logo_url"`
-	PrimaryColor    string `json:"primary_color"`
-	SecondaryColor  string `json:"secondary_color"`
-	TertiaryColor   string `json:"tertiary_color"`
-	QuaternaryColor string `json:"quaternary_color"`
-	NavbarImageURL  string `json:"navbar_image_url"`
-	CustomDomain    string `json:"custom_domain"`
+	LogoURL         string
+	PrimaryColor    string
+	SecondaryColor  string
+	TertiaryColor   string
+	QuaternaryColor string
+	NavbarImageURL  string
+	CustomDomain    string
 
 	// Configuración específica para propiedades horizontales
-	TotalUnits    int  `json:"total_units"`
-	TotalFloors   *int `json:"total_floors,omitempty"`
-	HasElevator   bool `json:"has_elevator"`
-	HasParking    bool `json:"has_parking"`
-	HasPool       bool `json:"has_pool"`
-	HasGym        bool `json:"has_gym"`
-	HasSocialArea bool `json:"has_social_area"`
+	TotalUnits    int
+	TotalFloors   *int
+	HasElevator   bool
+	HasParking    bool
+	HasPool       bool
+	HasGym        bool
+	HasSocialArea bool
 
-	IsActive  bool      `json:"is_active"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	// Información detallada (solo en GET by ID)
+	PropertyUnits []PropertyUnitDTO
+	Committees    []CommitteeDTO
+
+	IsActive  bool
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+// PropertyUnitDTO - DTO para unidades de propiedad
+type PropertyUnitDTO struct {
+	ID          uint
+	Number      string
+	Floor       *int
+	Block       string
+	UnitType    string
+	Area        *float64
+	Bedrooms    *int
+	Bathrooms   *int
+	Description string
+	IsActive    bool
+}
+
+// CommitteeDTO - DTO para comités
+type CommitteeDTO struct {
+	ID              uint
+	CommitteeTypeID uint
+	TypeName        string
+	TypeCode        string
+	Name            string
+	StartDate       time.Time
+	EndDate         *time.Time
+	IsActive        bool
+	Notes           string
 }
 
 // HorizontalPropertyListDTO - DTO para lista de propiedades horizontales
 type HorizontalPropertyListDTO struct {
-	ID               uint      `json:"id"`
-	Name             string    `json:"name"`
-	Code             string    `json:"code"`
-	BusinessTypeName string    `json:"business_type_name"`
-	Address          string    `json:"address"`
-	TotalUnits       int       `json:"total_units"`
-	IsActive         bool      `json:"is_active"`
-	CreatedAt        time.Time `json:"created_at"`
+	ID               uint
+	Name             string
+	Code             string
+	BusinessTypeName string
+	Address          string
+	TotalUnits       int
+	LogoURL          string
+	NavbarImageURL   string
+	IsActive         bool
+	CreatedAt        time.Time
 }
 
 // HorizontalPropertyFiltersDTO - DTO para filtros de búsqueda
 type HorizontalPropertyFiltersDTO struct {
-	Name     *string `json:"name,omitempty"`
-	Code     *string `json:"code,omitempty"`
-	IsActive *bool   `json:"is_active,omitempty"`
-	Page     int     `json:"page" validate:"min=1"`
-	PageSize int     `json:"page_size" validate:"min=1,max=100"`
-	OrderBy  string  `json:"order_by" validate:"omitempty,oneof=name code created_at updated_at"`
-	OrderDir string  `json:"order_dir" validate:"omitempty,oneof=asc desc"`
+	Name     *string
+	Code     *string
+	IsActive *bool
+	Page     int
+	PageSize int
+	OrderBy  string
+	OrderDir string
 }
 
 // PaginatedHorizontalPropertyDTO - DTO para respuesta paginada
 type PaginatedHorizontalPropertyDTO struct {
-	Data       []HorizontalPropertyListDTO `json:"data"`
-	Total      int64                       `json:"total"`
-	Page       int                         `json:"page"`
-	PageSize   int                         `json:"page_size"`
-	TotalPages int                         `json:"total_pages"`
+	Data       []HorizontalPropertyListDTO
+	Total      int64
+	Page       int
+	PageSize   int
+	TotalPages int
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -140,98 +190,98 @@ type PaginatedHorizontalPropertyDTO struct {
 
 // CreateVotingGroupDTO - DTO para crear un grupo de votaciones
 type CreateVotingGroupDTO struct {
-	BusinessID       uint      `json:"business_id" validate:"required"`
-	Name             string    `json:"name" validate:"required,min=3,max=150"`
-	Description      string    `json:"description" validate:"max=1000"`
-	VotingStartDate  time.Time `json:"voting_start_date" validate:"required"`
-	VotingEndDate    time.Time `json:"voting_end_date" validate:"required,gtfield=VotingStartDate"`
-	RequiresQuorum   bool      `json:"requires_quorum"`
-	QuorumPercentage *float64  `json:"quorum_percentage,omitempty"`
-	CreatedByUserID  *uint     `json:"created_by_user_id,omitempty"`
-	Notes            string    `json:"notes" validate:"max=2000"`
+	BusinessID       uint
+	Name             string
+	Description      string
+	VotingStartDate  time.Time
+	VotingEndDate    time.Time
+	RequiresQuorum   bool
+	QuorumPercentage *float64
+	CreatedByUserID  *uint
+	Notes            string
 }
 
 // VotingGroupDTO - DTO para respuesta de grupo de votaciones
 type VotingGroupDTO struct {
-	ID               uint      `json:"id"`
-	BusinessID       uint      `json:"business_id"`
-	Name             string    `json:"name"`
-	Description      string    `json:"description"`
-	VotingStartDate  time.Time `json:"voting_start_date"`
-	VotingEndDate    time.Time `json:"voting_end_date"`
-	IsActive         bool      `json:"is_active"`
-	RequiresQuorum   bool      `json:"requires_quorum"`
-	QuorumPercentage *float64  `json:"quorum_percentage,omitempty"`
-	CreatedByUserID  *uint     `json:"created_by_user_id,omitempty"`
-	Notes            string    `json:"notes"`
-	CreatedAt        time.Time `json:"created_at"`
-	UpdatedAt        time.Time `json:"updated_at"`
+	ID               uint
+	BusinessID       uint
+	Name             string
+	Description      string
+	VotingStartDate  time.Time
+	VotingEndDate    time.Time
+	IsActive         bool
+	RequiresQuorum   bool
+	QuorumPercentage *float64
+	CreatedByUserID  *uint
+	Notes            string
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
 }
 
 // CreateVotingDTO - DTO para crear una votación
 type CreateVotingDTO struct {
-	VotingGroupID      uint     `json:"voting_group_id" validate:"required"`
-	Title              string   `json:"title" validate:"required,min=3,max=200"`
-	Description        string   `json:"description" validate:"required,max=2000"`
-	VotingType         string   `json:"voting_type" validate:"required,oneof=simple majority unanimity"`
-	IsSecret           bool     `json:"is_secret"`
-	AllowAbstention    bool     `json:"allow_abstention"`
-	DisplayOrder       int      `json:"display_order" validate:"min=1"`
-	RequiredPercentage *float64 `json:"required_percentage,omitempty"`
+	VotingGroupID      uint
+	Title              string
+	Description        string
+	VotingType         string
+	IsSecret           bool
+	AllowAbstention    bool
+	DisplayOrder       int
+	RequiredPercentage *float64
 }
 
 // VotingDTO - DTO para respuesta de una votación
 type VotingDTO struct {
-	ID                 uint      `json:"id"`
-	VotingGroupID      uint      `json:"voting_group_id"`
-	Title              string    `json:"title"`
-	Description        string    `json:"description"`
-	VotingType         string    `json:"voting_type"`
-	IsSecret           bool      `json:"is_secret"`
-	AllowAbstention    bool      `json:"allow_abstention"`
-	IsActive           bool      `json:"is_active"`
-	DisplayOrder       int       `json:"display_order"`
-	RequiredPercentage *float64  `json:"required_percentage,omitempty"`
-	CreatedAt          time.Time `json:"created_at"`
-	UpdatedAt          time.Time `json:"updated_at"`
+	ID                 uint
+	VotingGroupID      uint
+	Title              string
+	Description        string
+	VotingType         string
+	IsSecret           bool
+	AllowAbstention    bool
+	IsActive           bool
+	DisplayOrder       int
+	RequiredPercentage *float64
+	CreatedAt          time.Time
+	UpdatedAt          time.Time
 }
 
 // CreateVotingOptionDTO - DTO para crear una opción de votación
 type CreateVotingOptionDTO struct {
-	VotingID     uint   `json:"voting_id" validate:"required"`
-	OptionText   string `json:"option_text" validate:"required,min=1,max=100"`
-	OptionCode   string `json:"option_code" validate:"required,min=1,max=20"`
-	DisplayOrder int    `json:"display_order" validate:"min=1"`
+	VotingID     uint
+	OptionText   string
+	OptionCode   string
+	DisplayOrder int
 }
 
 // VotingOptionDTO - DTO para respuesta de opción de votación
 type VotingOptionDTO struct {
-	ID           uint   `json:"id"`
-	VotingID     uint   `json:"voting_id"`
-	OptionText   string `json:"option_text"`
-	OptionCode   string `json:"option_code"`
-	DisplayOrder int    `json:"display_order"`
-	IsActive     bool   `json:"is_active"`
+	ID           uint
+	VotingID     uint
+	OptionText   string
+	OptionCode   string
+	DisplayOrder int
+	IsActive     bool
 }
 
 // CreateVoteDTO - DTO para emitir un voto
 type CreateVoteDTO struct {
-	VotingID       uint   `json:"voting_id" validate:"required"`
-	ResidentID     uint   `json:"resident_id" validate:"required"`
-	VotingOptionID uint   `json:"voting_option_id" validate:"required"`
-	IPAddress      string `json:"ip_address" validate:"max=45"`
-	UserAgent      string `json:"user_agent" validate:"max=500"`
-	Notes          string `json:"notes" validate:"max=500"`
+	VotingID       uint
+	ResidentID     uint
+	VotingOptionID uint
+	IPAddress      string
+	UserAgent      string
+	Notes          string
 }
 
 // VoteDTO - DTO para respuesta de voto
 type VoteDTO struct {
-	ID             uint      `json:"id"`
-	VotingID       uint      `json:"voting_id"`
-	ResidentID     uint      `json:"resident_id"`
-	VotingOptionID uint      `json:"voting_option_id"`
-	VotedAt        time.Time `json:"voted_at"`
-	IPAddress      string    `json:"ip_address"`
-	UserAgent      string    `json:"user_agent"`
-	Notes          string    `json:"notes"`
+	ID             uint
+	VotingID       uint
+	ResidentID     uint
+	VotingOptionID uint
+	VotedAt        time.Time
+	IPAddress      string
+	UserAgent      string
+	Notes          string
 }

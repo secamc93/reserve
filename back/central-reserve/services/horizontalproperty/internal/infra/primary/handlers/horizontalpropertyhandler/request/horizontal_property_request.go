@@ -1,60 +1,72 @@
 package request
 
+import "mime/multipart"
+
 // CreateHorizontalPropertyRequest - Request para crear propiedad horizontal
 type CreateHorizontalPropertyRequest struct {
-	Name             string `json:"name" validate:"required,min=3,max=120" example:"Conjunto Residencial Los Pinos"`
-	Code             string `json:"code" validate:"required,min=2,max=50" example:"los-pinos"`
-	ParentBusinessID *uint  `json:"parent_business_id,omitempty"`
-	Timezone         string `json:"timezone" validate:"required" example:"America/Bogota"`
-	Address          string `json:"address" validate:"required,max=255" example:"Carrera 15 #45-67, Bogotá"`
-	Description      string `json:"description,omitempty" validate:"max=500" example:"Conjunto residencial familiar con amplias zonas verdes"`
+	Name             string `form:"name" validate:"required,min=3,max=120"`
+	Code             string `form:"code" validate:"required,min=2,max=50"`
+	ParentBusinessID *uint  `form:"parent_business_id"`
+	Timezone         string `form:"timezone" validate:"required"`
+	Address          string `form:"address" validate:"required,max=255"`
+	Description      string `form:"description" validate:"max=500"`
 
-	// Configuración de marca blanca
-	LogoURL         string `json:"logo_url,omitempty" validate:"omitempty,url" example:"https://example.com/logo.png"`
-	PrimaryColor    string `json:"primary_color,omitempty" validate:"omitempty,hexcolor" example:"#1f2937"`
-	SecondaryColor  string `json:"secondary_color,omitempty" validate:"omitempty,hexcolor" example:"#3b82f6"`
-	TertiaryColor   string `json:"tertiary_color,omitempty" validate:"omitempty,hexcolor" example:"#10b981"`
-	QuaternaryColor string `json:"quaternary_color,omitempty" validate:"omitempty,hexcolor" example:"#fbbf24"`
-	NavbarImageURL  string `json:"navbar_image_url,omitempty" validate:"omitempty,url" example:"https://example.com/navbar.jpg"`
-	CustomDomain    string `json:"custom_domain,omitempty" validate:"omitempty,max=100" example:"lospinos.example.com"`
+	// Configuración de marca blanca - Archivos para subir a S3
+	LogoFile        *multipart.FileHeader `form:"logo_file"`
+	NavbarImageFile *multipart.FileHeader `form:"navbar_image_file"`
+
+	PrimaryColor    string `form:"primary_color" validate:"omitempty,hexcolor"`
+	SecondaryColor  string `form:"secondary_color" validate:"omitempty,hexcolor"`
+	TertiaryColor   string `form:"tertiary_color" validate:"omitempty,hexcolor"`
+	QuaternaryColor string `form:"quaternary_color" validate:"omitempty,hexcolor"`
+	CustomDomain    string `form:"custom_domain" validate:"omitempty,max=100"`
 
 	// Configuración específica para propiedades horizontales
-	TotalUnits    int  `json:"total_units" validate:"required,min=1" example:"120"`
-	TotalFloors   *int `json:"total_floors,omitempty" validate:"omitempty,min=1" example:"15"`
-	HasElevator   bool `json:"has_elevator" example:"true"`
-	HasParking    bool `json:"has_parking" example:"true"`
-	HasPool       bool `json:"has_pool" example:"true"`
-	HasGym        bool `json:"has_gym" example:"false"`
-	HasSocialArea bool `json:"has_social_area" example:"true"`
+	TotalUnits    int  `form:"total_units" validate:"required,min=1"`
+	TotalFloors   *int `form:"total_floors" validate:"omitempty,min=1"`
+	HasElevator   bool `form:"has_elevator"`
+	HasParking    bool `form:"has_parking"`
+	HasPool       bool `form:"has_pool"`
+	HasGym        bool `form:"has_gym"`
+	HasSocialArea bool `form:"has_social_area"`
+
+	// Opciones de configuración inicial automática
+	CreateUnits              bool   `form:"create_units"`
+	UnitPrefix               string `form:"unit_prefix"`
+	UnitType                 string `form:"unit_type"`
+	UnitsPerFloor            *int   `form:"units_per_floor"`
+	StartUnitNumber          int    `form:"start_unit_number"`
+	CreateRequiredCommittees bool   `form:"create_required_committees"`
 }
 
 // UpdateHorizontalPropertyRequest - Request para actualizar propiedad horizontal
 type UpdateHorizontalPropertyRequest struct {
-	Name             *string `json:"name,omitempty" validate:"omitempty,min=3,max=120" example:"Conjunto Residencial Los Pinos Actualizado"`
-	Code             *string `json:"code,omitempty" validate:"omitempty,min=2,max=50" example:"los-pinos-v2"`
-	ParentBusinessID *uint   `json:"parent_business_id,omitempty"`
-	Timezone         *string `json:"timezone,omitempty" example:"America/Bogota"`
-	Address          *string `json:"address,omitempty" validate:"omitempty,max=255" example:"Carrera 15 #45-67, Bogotá D.C."`
-	Description      *string `json:"description,omitempty" validate:"omitempty,max=500" example:"Conjunto residencial familiar con amplias zonas verdes y nuevas amenidades"`
+	Name             *string `form:"name" validate:"omitempty,min=3,max=120"`
+	Code             *string `form:"code" validate:"omitempty,min=2,max=50"`
+	ParentBusinessID *uint   `form:"parent_business_id"`
+	Timezone         *string `form:"timezone"`
+	Address          *string `form:"address" validate:"omitempty,max=255"`
+	Description      *string `form:"description" validate:"omitempty,max=500"`
 
-	// Configuración de marca blanca
-	LogoURL         *string `json:"logo_url,omitempty" validate:"omitempty,url" example:"https://example.com/new-logo.png"`
-	PrimaryColor    *string `json:"primary_color,omitempty" validate:"omitempty,hexcolor" example:"#2d3748"`
-	SecondaryColor  *string `json:"secondary_color,omitempty" validate:"omitempty,hexcolor" example:"#4299e1"`
-	TertiaryColor   *string `json:"tertiary_color,omitempty" validate:"omitempty,hexcolor" example:"#38b2ac"`
-	QuaternaryColor *string `json:"quaternary_color,omitempty" validate:"omitempty,hexcolor" example:"#ed8936"`
-	NavbarImageURL  *string `json:"navbar_image_url,omitempty" validate:"omitempty,url" example:"https://example.com/new-navbar.jpg"`
-	CustomDomain    *string `json:"custom_domain,omitempty" validate:"omitempty,max=100" example:"lospinos-new.example.com"`
+	// Configuración de marca blanca - Archivos para S3
+	LogoFile        *multipart.FileHeader `form:"logo_file"`
+	NavbarImageFile *multipart.FileHeader `form:"navbar_image_file"`
+
+	PrimaryColor    *string `form:"primary_color" validate:"omitempty,hexcolor"`
+	SecondaryColor  *string `form:"secondary_color" validate:"omitempty,hexcolor"`
+	TertiaryColor   *string `form:"tertiary_color" validate:"omitempty,hexcolor"`
+	QuaternaryColor *string `form:"quaternary_color" validate:"omitempty,hexcolor"`
+	CustomDomain    *string `form:"custom_domain" validate:"omitempty,max=100"`
 
 	// Configuración específica para propiedades horizontales
-	TotalUnits    *int  `json:"total_units,omitempty" validate:"omitempty,min=1" example:"125"`
-	TotalFloors   *int  `json:"total_floors,omitempty" validate:"omitempty,min=1" example:"16"`
-	HasElevator   *bool `json:"has_elevator,omitempty" example:"true"`
-	HasParking    *bool `json:"has_parking,omitempty" example:"true"`
-	HasPool       *bool `json:"has_pool,omitempty" example:"true"`
-	HasGym        *bool `json:"has_gym,omitempty" example:"true"`
-	HasSocialArea *bool `json:"has_social_area,omitempty" example:"true"`
-	IsActive      *bool `json:"is_active,omitempty" example:"true"`
+	TotalUnits    *int  `form:"total_units" validate:"omitempty,min=1"`
+	TotalFloors   *int  `form:"total_floors" validate:"omitempty,min=1"`
+	HasElevator   *bool `form:"has_elevator"`
+	HasParking    *bool `form:"has_parking"`
+	HasPool       *bool `form:"has_pool"`
+	HasGym        *bool `form:"has_gym"`
+	HasSocialArea *bool `form:"has_social_area"`
+	IsActive      *bool `form:"is_active"`
 }
 
 // ListHorizontalPropertiesRequest - Request para listar propiedades horizontales

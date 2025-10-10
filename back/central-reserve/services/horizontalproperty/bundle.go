@@ -7,13 +7,15 @@ import (
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/horizontalpropertyhandler"
 	"central_reserve/services/horizontalproperty/internal/infra/secondary/repository"
 	"central_reserve/shared/db"
+	"central_reserve/shared/env"
 	"central_reserve/shared/log"
+	"central_reserve/shared/storage"
 
 	"github.com/gin-gonic/gin"
 )
 
 // New inicializa el servicio de propiedades horizontales con todas sus dependencias
-func New(db db.IDatabase, logger log.ILogger, v1Group *gin.RouterGroup) {
+func New(db db.IDatabase, logger log.ILogger, s3 storage.IS3Service, envConfig env.IConfig, v1Group *gin.RouterGroup) {
 	// Crear repositorio consolidado
 	repo := repository.New(db, logger)
 	// Necesitamos el tipo concreto para satisfacer ambos puertos (HorizontalPropertyRepository y VotingRepository)
@@ -23,6 +25,8 @@ func New(db db.IDatabase, logger log.ILogger, v1Group *gin.RouterGroup) {
 	horizontalPropertyUseCase := usecasehorizontalproperty.NewHorizontalPropertyUseCase(
 		repo,
 		logger,
+		s3,
+		envConfig,
 	)
 
 	// Voting use case
