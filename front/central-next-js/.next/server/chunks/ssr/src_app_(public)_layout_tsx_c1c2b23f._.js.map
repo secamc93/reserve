@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 5, "column": 0}, "map": {"version":3,"sources":["file:///home/cam/Desktop/reserve/front/central-next-js/src/app/%28public%29/layout.tsx"],"sourcesContent":["export default function PublicLayout({\n  children,\n}: {\n  children: React.ReactNode;\n}) {\n  return (\n    <div className=\"min-h-screen bg-gray-50\">\n      {children}\n    </div>\n  );\n} "],"names":[],"mappings":";;;;;AAAe,SAAS,aAAa,EACnC,QAAQ,EAGT;IACC,qBACE,8OAAC;QAAI,WAAU;kBACZ;;;;;;AAGP","debugId":null}}]
+}
