@@ -6,8 +6,8 @@ import {
   IVotingGroupsRepository, 
   GetVotingGroupsParams,
   CreateVotingGroupParams 
-} from '../../domain/ports/voting-groups.repository';
-import { VotingGroup, VotingGroupsList } from '../../domain/entities/voting-group.entity';
+} from '../../domain/ports';
+import { VotingGroup, VotingGroupsList } from '../../domain/entities';
 import { env, logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
 import { BackendGetVotingGroupsResponse, BackendCreateVotingGroupResponse } from './response';
 

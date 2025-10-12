@@ -94,3 +94,12 @@ func MapVoteDTOToResponse(dto *domain.VoteDTO) response.VoteResponse {
 		Notes:          dto.Notes,
 	}
 }
+
+// MapVoteDTOsToResponses mapea slice de DTOs de votos a responses
+func MapVoteDTOsToResponses(dtos []domain.VoteDTO) []response.VoteResponse {
+	responses := make([]response.VoteResponse, len(dtos))
+	for i, dto := range dtos {
+		responses[i] = MapVoteDTOToResponse(&dto)
+	}
+	return responses
+}

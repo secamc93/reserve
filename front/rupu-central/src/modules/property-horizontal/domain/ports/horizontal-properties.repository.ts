@@ -2,7 +2,7 @@
  * Puerto: Repositorio de Propiedades Horizontales
  */
 
-import { HorizontalPropertiesPaginated, HorizontalProperty, CreateHorizontalPropertyDTO } from '../entities/horizontal-property.entity';
+import { HorizontalPropertiesPaginated, HorizontalProperty, CreateHorizontalPropertyDTO } from '../entities';
 
 export interface GetHorizontalPropertiesParams {
   token: string;

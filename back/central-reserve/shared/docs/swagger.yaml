@@ -81,6 +81,81 @@ definitions:
     - resource
     - scope_id
     type: object
+  request.CreatePropertyUnitRequest:
+    properties:
+      area:
+        example: 85.5
+        type: number
+      bathrooms:
+        example: 2
+        type: integer
+      bedrooms:
+        example: 3
+        type: integer
+      block:
+        example: A
+        type: string
+      description:
+        example: Apartamento esquinero con vista
+        type: string
+      floor:
+        example: 1
+        type: integer
+      number:
+        example: "101"
+        type: string
+      unit_type:
+        example: apartment
+        type: string
+    required:
+    - number
+    - unit_type
+    type: object
+  request.CreateResidentRequest:
+    properties:
+      dni:
+        example: "123456789"
+        type: string
+      email:
+        example: juan@email.com
+        type: string
+      emergency_contact:
+        example: María Pérez - 3009876543
+        type: string
+      is_main_resident:
+        example: true
+        type: boolean
+      lease_end_date:
+        example: "2024-12-31T23:59:59Z"
+        type: string
+      lease_start_date:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      monthly_rent:
+        example: 1500000
+        type: number
+      move_in_date:
+        example: "2024-01-15T00:00:00Z"
+        type: string
+      name:
+        example: Juan Pérez
+        type: string
+      phone:
+        example: "+573001234567"
+        type: string
+      property_unit_id:
+        example: 1
+        type: integer
+      resident_type_id:
+        example: 1
+        type: integer
+    required:
+    - dni
+    - email
+    - name
+    - property_unit_id
+    - resident_type_id
+    type: object
   request.CreateResourceRequest:
     description: Solicitud para crear un nuevo recurso en el sistema
     properties:
@@ -293,6 +368,36 @@ definitions:
     - resource
     - scope_id
     type: object
+  request.UpdatePropertyUnitRequest:
+    properties:
+      area:
+        example: 85.5
+        type: number
+      bathrooms:
+        example: 2
+        type: integer
+      bedrooms:
+        example: 3
+        type: integer
+      block:
+        example: A
+        type: string
+      description:
+        example: Apartamento esquinero con vista
+        type: string
+      floor:
+        example: 1
+        type: integer
+      is_active:
+        example: true
+        type: boolean
+      number:
+        example: "101"
+        type: string
+      unit_type:
+        example: apartment
+        type: string
+    type: object
   request.UpdateReservation:
     properties:
       end_at:
@@ -304,6 +409,51 @@ definitions:
       status_id:
         type: integer
       table_id:
+        type: integer
+    type: object
+  request.UpdateResidentRequest:
+    properties:
+      dni:
+        example: "123456789"
+        type: string
+      email:
+        example: juan@email.com
+        type: string
+      emergency_contact:
+        example: María Pérez - 3009876543
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      is_main_resident:
+        example: true
+        type: boolean
+      lease_end_date:
+        example: "2024-12-31T23:59:59Z"
+        type: string
+      lease_start_date:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      monthly_rent:
+        example: 1500000
+        type: number
+      move_in_date:
+        example: "2024-01-15T00:00:00Z"
+        type: string
+      move_out_date:
+        example: "2025-01-15T00:00:00Z"
+        type: string
+      name:
+        example: Juan Pérez
+        type: string
+      phone:
+        example: "+573001234567"
+        type: string
+      property_unit_id:
+        example: 1
+        type: integer
+      resident_type_id:
+        example: 1
         type: integer
     type: object
   request.UpdateResourceRequest:
@@ -585,7 +735,7 @@ definitions:
       property_units:
         description: Información detallada (solo en GET by ID)
         items:
-          $ref: '#/definitions/response.PropertyUnitResponse'
+          $ref: '#/definitions/services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.PropertyUnitResponse'
         type: array
       quaternary_color:
         example: '#fbbf24'
@@ -739,39 +889,6 @@ definitions:
       success:
         example: true
         type: boolean
-    type: object
-  response.PropertyUnitResponse:
-    properties:
-      area:
-        example: 85.5
-        type: number
-      bathrooms:
-        example: 2
-        type: integer
-      bedrooms:
-        example: 3
-        type: integer
-      block:
-        example: A
-        type: string
-      description:
-        example: Apto 101 - Piso 1
-        type: string
-      floor:
-        example: 1
-        type: integer
-      id:
-        example: 1
-        type: integer
-      is_active:
-        example: true
-        type: boolean
-      number:
-        example: "101"
-        type: string
-      unit_type:
-        example: apartment
-        type: string
     type: object
   response.ReservationStatus:
     properties:
@@ -1108,6 +1225,39 @@ definitions:
         type: string
       scope_id:
         type: integer
+    type: object
+  services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.PropertyUnitResponse:
+    properties:
+      area:
+        example: 85.5
+        type: number
+      bathrooms:
+        example: 2
+        type: integer
+      bedrooms:
+        example: 3
+        type: integer
+      block:
+        example: A
+        type: string
+      description:
+        example: Apto 101 - Piso 1
+        type: string
+      floor:
+        example: 1
+        type: integer
+      id:
+        example: 1
+        type: integer
+      is_active:
+        example: true
+        type: boolean
+      number:
+        example: "101"
+        type: string
+      unit_type:
+        example: apartment
+        type: string
     type: object
 host: localhost:3050
 info:
@@ -2583,6 +2733,422 @@ paths:
       summary: Actualizar propiedad horizontal
       tags:
       - Propiedades Horizontales
+  /horizontal-properties/{hp_id}/property-units:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene lista paginada de unidades de una propiedad horizontal
+        con filtros opcionales
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: hp_id
+        required: true
+        type: integer
+      - description: Tipo de unidad (apartment, house, office)
+        in: query
+        name: unit_type
+        type: string
+      - description: Número de piso
+        in: query
+        name: floor
+        type: integer
+      - description: Bloque/Torre
+        in: query
+        name: block
+        type: string
+      - description: Estado activo
+        in: query
+        name: is_active
+        type: boolean
+      - default: 1
+        description: Página
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Tamaño de página
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Listar unidades de propiedad
+      tags:
+      - Property Units
+    post:
+      consumes:
+      - application/json
+      description: Crea una nueva unidad de propiedad (apartamento/casa) en una propiedad
+        horizontal
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: hp_id
+        required: true
+        type: integer
+      - description: Datos de la unidad
+        in: body
+        name: unit
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreatePropertyUnitRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Crear unidad de propiedad
+      tags:
+      - Property Units
+  /horizontal-properties/{hp_id}/property-units/{unit_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Elimina (soft delete) una unidad de propiedad
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: hp_id
+        required: true
+        type: integer
+      - description: ID de la unidad
+        in: path
+        name: unit_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Eliminar unidad de propiedad
+      tags:
+      - Property Units
+    get:
+      consumes:
+      - application/json
+      description: Obtiene los detalles de una unidad de propiedad específica
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: hp_id
+        required: true
+        type: integer
+      - description: ID de la unidad
+        in: path
+        name: unit_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Obtener unidad por ID
+      tags:
+      - Property Units
+    put:
+      consumes:
+      - application/json
+      description: Actualiza los datos de una unidad de propiedad existente
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: hp_id
+        required: true
+        type: integer
+      - description: ID de la unidad
+        in: path
+        name: unit_id
+        required: true
+        type: integer
+      - description: Datos actualizados
+        in: body
+        name: unit
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdatePropertyUnitRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Actualizar unidad de propiedad
+      tags:
+      - Property Units
+  /horizontal-properties/{hp_id}/residents:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene lista paginada de residentes de una propiedad horizontal
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: hp_id
+        required: true
+        type: integer
+      - description: Filtrar por unidad
+        in: query
+        name: property_unit_id
+        type: integer
+      - description: Filtrar por tipo de residente
+        in: query
+        name: resident_type_id
+        type: integer
+      - description: Filtrar por estado activo
+        in: query
+        name: is_active
+        type: boolean
+      - description: Filtrar por residente principal
+        in: query
+        name: is_main_resident
+        type: boolean
+      - default: 1
+        description: Página
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Tamaño de página
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Listar residentes
+      tags:
+      - Residents
+    post:
+      consumes:
+      - application/json
+      description: Crea un nuevo residente en una propiedad horizontal
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: hp_id
+        required: true
+        type: integer
+      - description: Datos del residente
+        in: body
+        name: resident
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateResidentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Crear residente
+      tags:
+      - Residents
+  /horizontal-properties/{hp_id}/residents/{resident_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Elimina (soft delete) un residente
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: hp_id
+        required: true
+        type: integer
+      - description: ID del residente
+        in: path
+        name: resident_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Eliminar residente
+      tags:
+      - Residents
+    get:
+      consumes:
+      - application/json
+      description: Obtiene los detalles de un residente específico
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: hp_id
+        required: true
+        type: integer
+      - description: ID del residente
+        in: path
+        name: resident_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Obtener residente por ID
+      tags:
+      - Residents
+    put:
+      consumes:
+      - application/json
+      description: Actualiza los datos de un residente existente
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: hp_id
+        required: true
+        type: integer
+      - description: ID del residente
+        in: path
+        name: resident_id
+        required: true
+        type: integer
+      - description: Datos actualizados
+        in: body
+        name: resident
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateResidentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Actualizar residente
+      tags:
+      - Residents
   /horizontal-properties/{hp_id}/voting-groups:
     get:
       consumes:
@@ -3023,6 +3589,44 @@ paths:
       tags:
       - Votaciones
   /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/votes:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene la lista de votos registrados en una votación específica
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: hp_id
+        required: true
+        type: integer
+      - description: ID del grupo de votación
+        in: path
+        name: group_id
+        required: true
+        type: integer
+      - description: ID de la votación
+        in: path
+        name: voting_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Listar votos de una votación
+      tags:
+      - Votaciones
     post:
       consumes:
       - application/json

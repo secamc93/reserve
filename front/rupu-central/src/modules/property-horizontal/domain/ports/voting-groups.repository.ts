@@ -2,7 +2,7 @@
  * Puerto: Repositorio de Grupos de Votación
  */
 
-import { VotingGroup, VotingGroupsList, CreateVotingGroupDTO } from '../entities/voting-group.entity';
+import { VotingGroup, VotingGroupsList, CreateVotingGroupDTO } from '../entities';
 
 export interface GetVotingGroupsParams {
   token: string;

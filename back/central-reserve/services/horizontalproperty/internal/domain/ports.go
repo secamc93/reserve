@@ -80,6 +80,7 @@ type VotingRepository interface {
 	// Votes
 	CreateVote(ctx context.Context, vote Vote) error
 	HasResidentVoted(ctx context.Context, votingID uint, residentID uint) (bool, error)
+	ListVotesByVoting(ctx context.Context, votingID uint) ([]Vote, error)
 }
 
 // VotingUseCase - Puerto para casos de uso de votaciones
@@ -103,4 +104,52 @@ type VotingUseCase interface {
 
 	// Votes
 	CreateVote(ctx context.Context, dto CreateVoteDTO) (*VoteDTO, error)
+	ListVotesByVoting(ctx context.Context, votingID uint) ([]VoteDTO, error)
+}
+
+// ───────────────────────────────────────────
+// PROPERTY UNIT PORTS
+// ───────────────────────────────────────────
+
+// PropertyUnitRepository - Puerto para repositorio de unidades de propiedad
+type PropertyUnitRepository interface {
+	CreatePropertyUnit(ctx context.Context, unit *PropertyUnit) (*PropertyUnit, error)
+	GetPropertyUnitByID(ctx context.Context, id uint) (*PropertyUnit, error)
+	ListPropertyUnits(ctx context.Context, filters PropertyUnitFiltersDTO) (*PaginatedPropertyUnitsDTO, error)
+	UpdatePropertyUnit(ctx context.Context, id uint, unit *PropertyUnit) (*PropertyUnit, error)
+	DeletePropertyUnit(ctx context.Context, id uint) error
+	ExistsPropertyUnitByNumber(ctx context.Context, businessID uint, number string, excludeID uint) (bool, error)
+}
+
+// PropertyUnitUseCase - Puerto para casos de uso de unidades de propiedad
+type PropertyUnitUseCase interface {
+	CreatePropertyUnit(ctx context.Context, dto CreatePropertyUnitDTO) (*PropertyUnitDetailDTO, error)
+	GetPropertyUnitByID(ctx context.Context, id uint) (*PropertyUnitDetailDTO, error)
+	ListPropertyUnits(ctx context.Context, filters PropertyUnitFiltersDTO) (*PaginatedPropertyUnitsDTO, error)
+	UpdatePropertyUnit(ctx context.Context, id uint, dto UpdatePropertyUnitDTO) (*PropertyUnitDetailDTO, error)
+	DeletePropertyUnit(ctx context.Context, id uint) error
+}
+
+// ───────────────────────────────────────────
+// RESIDENT PORTS
+// ───────────────────────────────────────────
+
+// ResidentRepository - Puerto para repositorio de residentes
+type ResidentRepository interface {
+	CreateResident(ctx context.Context, resident *Resident) (*Resident, error)
+	GetResidentByID(ctx context.Context, id uint) (*ResidentDetailDTO, error)
+	ListResidents(ctx context.Context, filters ResidentFiltersDTO) (*PaginatedResidentsDTO, error)
+	UpdateResident(ctx context.Context, id uint, resident *Resident) (*Resident, error)
+	DeleteResident(ctx context.Context, id uint) error
+	ExistsResidentByEmail(ctx context.Context, businessID uint, email string, excludeID uint) (bool, error)
+	ExistsResidentByDni(ctx context.Context, businessID uint, dni string, excludeID uint) (bool, error)
+}
+
+// ResidentUseCase - Puerto para casos de uso de residentes
+type ResidentUseCase interface {
+	CreateResident(ctx context.Context, dto CreateResidentDTO) (*ResidentDetailDTO, error)
+	GetResidentByID(ctx context.Context, id uint) (*ResidentDetailDTO, error)
+	ListResidents(ctx context.Context, filters ResidentFiltersDTO) (*PaginatedResidentsDTO, error)
+	UpdateResident(ctx context.Context, id uint, dto UpdateResidentDTO) (*ResidentDetailDTO, error)
+	DeleteResident(ctx context.Context, id uint) error
 }

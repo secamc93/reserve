@@ -27,6 +27,7 @@ func (h *VotingHandler) RegisterRoutes(router *gin.RouterGroup) {
 			votes := votings.Group("/:voting_id/votes")
 			{
 				votes.POST("", h.CreateVote)
+				votes.GET("", h.ListVotes)
 			}
 		}
 	}

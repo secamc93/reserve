@@ -155,3 +155,25 @@ func (u *votingUseCase) ListVotingOptionsByVoting(ctx context.Context, votingID 
 func (u *votingUseCase) DeactivateVotingOption(ctx context.Context, id uint) error {
 	return u.repo.DeactivateVotingOption(ctx, id)
 }
+
+func (u *votingUseCase) ListVotesByVoting(ctx context.Context, votingID uint) ([]domain.VoteDTO, error) {
+	votes, err := u.repo.ListVotesByVoting(ctx, votingID)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]domain.VoteDTO, len(votes))
+	for i := range votes {
+		v := votes[i]
+		res[i] = domain.VoteDTO{
+			ID:             v.ID,
+			VotingID:       v.VotingID,
+			ResidentID:     v.ResidentID,
+			VotingOptionID: v.VotingOptionID,
+			VotedAt:        v.VotedAt,
+			IPAddress:      v.IPAddress,
+			UserAgent:      v.UserAgent,
+			Notes:          v.Notes,
+		}
+	}
+	return res, nil
+}

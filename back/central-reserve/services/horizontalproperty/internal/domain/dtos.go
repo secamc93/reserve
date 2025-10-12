@@ -285,3 +285,179 @@ type VoteDTO struct {
 	UserAgent      string
 	Notes          string
 }
+
+// ───────────────────────────────────────────
+// PROPERTY UNIT DTOs
+// ───────────────────────────────────────────
+
+// CreatePropertyUnitDTO - DTO para crear unidad de propiedad
+type CreatePropertyUnitDTO struct {
+	BusinessID  uint
+	Number      string
+	Floor       *int
+	Block       string
+	UnitType    string
+	Area        *float64
+	Bedrooms    *int
+	Bathrooms   *int
+	Description string
+}
+
+// UpdatePropertyUnitDTO - DTO para actualizar unidad de propiedad
+type UpdatePropertyUnitDTO struct {
+	Number      *string
+	Floor       *int
+	Block       *string
+	UnitType    *string
+	Area        *float64
+	Bedrooms    *int
+	Bathrooms   *int
+	Description *string
+	IsActive    *bool
+}
+
+// PropertyUnitDetailDTO - DTO para respuesta detallada de unidad
+type PropertyUnitDetailDTO struct {
+	ID          uint
+	BusinessID  uint
+	Number      string
+	Floor       *int
+	Block       string
+	UnitType    string
+	Area        *float64
+	Bedrooms    *int
+	Bathrooms   *int
+	Description string
+	IsActive    bool
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+}
+
+// PropertyUnitListDTO - DTO para listado de unidades
+type PropertyUnitListDTO struct {
+	ID        uint
+	Number    string
+	Floor     *int
+	Block     string
+	UnitType  string
+	Area      *float64
+	Bedrooms  *int
+	Bathrooms *int
+	IsActive  bool
+}
+
+// PropertyUnitFiltersDTO - DTO para filtros de búsqueda
+type PropertyUnitFiltersDTO struct {
+	BusinessID uint
+	UnitType   string
+	Floor      *int
+	Block      string
+	IsActive   *bool
+	Page       int
+	PageSize   int
+}
+
+// PaginatedPropertyUnitsDTO - DTO para respuesta paginada
+type PaginatedPropertyUnitsDTO struct {
+	Units      []PropertyUnitListDTO
+	Total      int64
+	Page       int
+	PageSize   int
+	TotalPages int
+}
+
+// ───────────────────────────────────────────
+// RESIDENT DTOs
+// ───────────────────────────────────────────
+
+// CreateResidentDTO - DTO para crear residente
+type CreateResidentDTO struct {
+	BusinessID       uint
+	PropertyUnitID   uint
+	ResidentTypeID   uint
+	Name             string
+	Email            string
+	Phone            string
+	Dni              string
+	EmergencyContact string
+	IsMainResident   bool
+	MoveInDate       *time.Time
+	LeaseStartDate   *time.Time
+	LeaseEndDate     *time.Time
+	MonthlyRent      *float64
+}
+
+// UpdateResidentDTO - DTO para actualizar residente
+type UpdateResidentDTO struct {
+	PropertyUnitID   *uint
+	ResidentTypeID   *uint
+	Name             *string
+	Email            *string
+	Phone            *string
+	Dni              *string
+	EmergencyContact *string
+	IsMainResident   *bool
+	IsActive         *bool
+	MoveInDate       *time.Time
+	MoveOutDate      *time.Time
+	LeaseStartDate   *time.Time
+	LeaseEndDate     *time.Time
+	MonthlyRent      *float64
+}
+
+// ResidentDetailDTO - DTO para respuesta detallada de residente
+type ResidentDetailDTO struct {
+	ID                 uint
+	BusinessID         uint
+	PropertyUnitID     uint
+	PropertyUnitNumber string
+	ResidentTypeID     uint
+	ResidentTypeName   string
+	ResidentTypeCode   string
+	Name               string
+	Email              string
+	Phone              string
+	Dni                string
+	EmergencyContact   string
+	IsMainResident     bool
+	IsActive           bool
+	MoveInDate         *time.Time
+	MoveOutDate        *time.Time
+	LeaseStartDate     *time.Time
+	LeaseEndDate       *time.Time
+	MonthlyRent        *float64
+	CreatedAt          time.Time
+	UpdatedAt          time.Time
+}
+
+// ResidentListDTO - DTO para listado de residentes
+type ResidentListDTO struct {
+	ID                 uint
+	PropertyUnitNumber string
+	ResidentTypeName   string
+	Name               string
+	Email              string
+	Phone              string
+	IsMainResident     bool
+	IsActive           bool
+}
+
+// ResidentFiltersDTO - DTO para filtros de búsqueda
+type ResidentFiltersDTO struct {
+	BusinessID     uint
+	PropertyUnitID *uint
+	ResidentTypeID *uint
+	IsActive       *bool
+	IsMainResident *bool
+	Page           int
+	PageSize       int
+}
+
+// PaginatedResidentsDTO - DTO para respuesta paginada
+type PaginatedResidentsDTO struct {
+	Residents  []ResidentListDTO
+	Total      int64
+	Page       int
+	PageSize   int
+	TotalPages int
+}

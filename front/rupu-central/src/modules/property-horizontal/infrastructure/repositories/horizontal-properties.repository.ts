@@ -7,8 +7,8 @@ import {
   GetHorizontalPropertiesParams,
   GetHorizontalPropertyByIdParams,
   CreateHorizontalPropertyParams
-} from '../../domain/ports/horizontal-properties.repository';
-import { HorizontalProperty, HorizontalPropertiesPaginated } from '../../domain/entities/horizontal-property.entity';
+} from '../../domain/ports';
+import { HorizontalProperty, HorizontalPropertiesPaginated } from '../../domain/entities';
 import { env, logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
 import { 
   BackendHorizontalPropertiesResponse,

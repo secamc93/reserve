@@ -6,7 +6,11 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { VotingGroupsSection } from '@modules/property-horizontal/ui';
+import { 
+  VotingGroupsSection,
+  PropertyUnitsTable,
+  ResidentsTable,
+} from '@modules/property-horizontal/ui';
 import { getHorizontalPropertyByIdAction } from '@modules/property-horizontal/infrastructure/actions';
 import { TokenStorage } from '@shared/config';
 import { Spinner, Badge } from '@shared/ui';
@@ -44,7 +48,7 @@ interface PropertyData {
 export default function PropertyDetailPage({ params }: PropertyDetailPageProps) {
   const router = useRouter();
   const { id } = use(params);
-  const [activeTab, setActiveTab] = useState<'info' | 'votations' | 'units' | 'fees'>('info');
+  const [activeTab, setActiveTab] = useState<'info' | 'votations' | 'units' | 'residents' | 'fees'>('info');
   const [property, setProperty] = useState<PropertyData | null>(null);
   const [loading, setLoading] = useState(true);
   const businessId = parseInt(id);
@@ -131,25 +135,31 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
               className={`btn btn-sm ${activeTab === 'info' ? 'btn-primary' : 'btn-outline'}`}
               onClick={() => setActiveTab('info')}
             >
-              Información
+              📋 Información
             </button>
             <button
               className={`btn btn-sm ${activeTab === 'votations' ? 'btn-primary' : 'btn-outline'}`}
               onClick={() => setActiveTab('votations')}
             >
-              Grupos de Votación
+              🗳️ Grupos de Votación
             </button>
             <button
               className={`btn btn-sm ${activeTab === 'units' ? 'btn-primary' : 'btn-outline'}`}
               onClick={() => setActiveTab('units')}
             >
-              Unidades
+              🏢 Unidades
+            </button>
+            <button
+              className={`btn btn-sm ${activeTab === 'residents' ? 'btn-primary' : 'btn-outline'}`}
+              onClick={() => setActiveTab('residents')}
+            >
+              👥 Residentes
             </button>
             <button
               className={`btn btn-sm ${activeTab === 'fees' ? 'btn-primary' : 'btn-outline'}`}
               onClick={() => setActiveTab('fees')}
             >
-              Cuotas
+              💰 Cuotas
             </button>
           </div>
 
@@ -293,18 +303,26 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
             )}
 
             {activeTab === 'votations' && (
-              <VotingGroupsSection businessId={businessId} />
+              <div className="w-full">
+                <VotingGroupsSection businessId={businessId} />
+              </div>
             )}
 
             {activeTab === 'units' && (
-              <div className="text-center text-gray-500 py-8">
-                <p>Gestión de unidades en construcción...</p>
+              <div className="w-full">
+                <PropertyUnitsTable hpId={businessId} />
+              </div>
+            )}
+
+            {activeTab === 'residents' && (
+              <div className="w-full">
+                <ResidentsTable hpId={businessId} />
               </div>
             )}
 
             {activeTab === 'fees' && (
               <div className="text-center text-gray-500 py-8">
-                <p>Gestión de cuotas en construcción...</p>
+                <p>💰 Gestión de cuotas en construcción...</p>
               </div>
             )}
           </div>

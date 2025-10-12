@@ -240,6 +240,19 @@ func (r *Repository) HasResidentVoted(ctx context.Context, votingID uint, reside
 	return count > 0, nil
 }
 
+func (r *Repository) ListVotesByVoting(ctx context.Context, votingID uint) ([]domain.Vote, error) {
+	var m []models.Vote
+	if err := r.db.Conn(ctx).Where("voting_id = ?", votingID).Order("voted_at DESC").Find(&m).Error; err != nil {
+		r.logger.Error().Err(err).Uint("voting_id", votingID).Msg("Error listando votos")
+		return nil, fmt.Errorf("error listando votos: %w", err)
+	}
+	res := make([]domain.Vote, len(m))
+	for i := range m {
+		res[i] = *r.mapVoteToDomain(&m[i])
+	}
+	return res, nil
+}
+
 // ───────────────────────────────────────────
 // Mapping helpers
 // ───────────────────────────────────────────
@@ -287,5 +300,18 @@ func (r *Repository) mapVotingOptionToDomain(m *models.VotingOption) *domain.Vot
 		OptionCode:   m.OptionCode,
 		DisplayOrder: m.DisplayOrder,
 		IsActive:     m.IsActive,
+	}
+}
+
+func (r *Repository) mapVoteToDomain(m *models.Vote) *domain.Vote {
+	return &domain.Vote{
+		ID:             m.ID,
+		VotingID:       m.VotingID,
+		ResidentID:     m.ResidentID,
+		VotingOptionID: m.VotingOptionID,
+		VotedAt:        m.VotedAt,
+		IPAddress:      m.IPAddress,
+		UserAgent:      m.UserAgent,
+		Notes:          m.Notes,
 	}
 }

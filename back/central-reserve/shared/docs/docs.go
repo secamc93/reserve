@@ -2190,6 +2190,624 @@ const docTemplate = `{
                 }
             }
         },
+        "/horizontal-properties/{hp_id}/property-units": {
+            "get": {
+                "description": "Obtiene lista paginada de unidades de una propiedad horizontal con filtros opcionales",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Property Units"
+                ],
+                "summary": "Listar unidades de propiedad",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la propiedad horizontal",
+                        "name": "hp_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Tipo de unidad (apartment, house, office)",
+                        "name": "unit_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Número de piso",
+                        "name": "floor",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Bloque/Torre",
+                        "name": "block",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Estado activo",
+                        "name": "is_active",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Página",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Tamaño de página",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Crea una nueva unidad de propiedad (apartamento/casa) en una propiedad horizontal",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Property Units"
+                ],
+                "summary": "Crear unidad de propiedad",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la propiedad horizontal",
+                        "name": "hp_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos de la unidad",
+                        "name": "unit",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CreatePropertyUnitRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/{hp_id}/property-units/{unit_id}": {
+            "get": {
+                "description": "Obtiene los detalles de una unidad de propiedad específica",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Property Units"
+                ],
+                "summary": "Obtener unidad por ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la propiedad horizontal",
+                        "name": "hp_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la unidad",
+                        "name": "unit_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Actualiza los datos de una unidad de propiedad existente",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Property Units"
+                ],
+                "summary": "Actualizar unidad de propiedad",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la propiedad horizontal",
+                        "name": "hp_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la unidad",
+                        "name": "unit_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos actualizados",
+                        "name": "unit",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.UpdatePropertyUnitRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Elimina (soft delete) una unidad de propiedad",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Property Units"
+                ],
+                "summary": "Eliminar unidad de propiedad",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la propiedad horizontal",
+                        "name": "hp_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la unidad",
+                        "name": "unit_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/{hp_id}/residents": {
+            "get": {
+                "description": "Obtiene lista paginada de residentes de una propiedad horizontal",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Residents"
+                ],
+                "summary": "Listar residentes",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la propiedad horizontal",
+                        "name": "hp_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filtrar por unidad",
+                        "name": "property_unit_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filtrar por tipo de residente",
+                        "name": "resident_type_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filtrar por estado activo",
+                        "name": "is_active",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filtrar por residente principal",
+                        "name": "is_main_resident",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Página",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Tamaño de página",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Crea un nuevo residente en una propiedad horizontal",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Residents"
+                ],
+                "summary": "Crear residente",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la propiedad horizontal",
+                        "name": "hp_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos del residente",
+                        "name": "resident",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CreateResidentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/{hp_id}/residents/{resident_id}": {
+            "get": {
+                "description": "Obtiene los detalles de un residente específico",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Residents"
+                ],
+                "summary": "Obtener residente por ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la propiedad horizontal",
+                        "name": "hp_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID del residente",
+                        "name": "resident_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Actualiza los datos de un residente existente",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Residents"
+                ],
+                "summary": "Actualizar residente",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la propiedad horizontal",
+                        "name": "hp_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID del residente",
+                        "name": "resident_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos actualizados",
+                        "name": "resident",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.UpdateResidentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Elimina (soft delete) un residente",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Residents"
+                ],
+                "summary": "Eliminar residente",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la propiedad horizontal",
+                        "name": "hp_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID del residente",
+                        "name": "resident_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
         "/horizontal-properties/{hp_id}/voting-groups": {
             "get": {
                 "description": "Obtiene la lista de grupos de votación de una propiedad horizontal",
@@ -2845,6 +3463,62 @@ const docTemplate = `{
             }
         },
         "/horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/votes": {
+            "get": {
+                "description": "Obtiene la lista de votos registrados en una votación específica",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones"
+                ],
+                "summary": "Listar votos de una votación",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la propiedad horizontal",
+                        "name": "hp_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID del grupo de votación",
+                        "name": "group_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la votación",
+                        "name": "voting_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Registra el voto de un residente para una votación específica",
                 "consumes": [
@@ -5571,6 +6245,107 @@ const docTemplate = `{
                 }
             }
         },
+        "request.CreatePropertyUnitRequest": {
+            "type": "object",
+            "required": [
+                "number",
+                "unit_type"
+            ],
+            "properties": {
+                "area": {
+                    "type": "number",
+                    "example": 85.5
+                },
+                "bathrooms": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "bedrooms": {
+                    "type": "integer",
+                    "example": 3
+                },
+                "block": {
+                    "type": "string",
+                    "example": "A"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Apartamento esquinero con vista"
+                },
+                "floor": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "number": {
+                    "type": "string",
+                    "example": "101"
+                },
+                "unit_type": {
+                    "type": "string",
+                    "example": "apartment"
+                }
+            }
+        },
+        "request.CreateResidentRequest": {
+            "type": "object",
+            "required": [
+                "dni",
+                "email",
+                "name",
+                "property_unit_id",
+                "resident_type_id"
+            ],
+            "properties": {
+                "dni": {
+                    "type": "string",
+                    "example": "123456789"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "juan@email.com"
+                },
+                "emergency_contact": {
+                    "type": "string",
+                    "example": "María Pérez - 3009876543"
+                },
+                "is_main_resident": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "lease_end_date": {
+                    "type": "string",
+                    "example": "2024-12-31T23:59:59Z"
+                },
+                "lease_start_date": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "monthly_rent": {
+                    "type": "number",
+                    "example": 1500000
+                },
+                "move_in_date": {
+                    "type": "string",
+                    "example": "2024-01-15T00:00:00Z"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Juan Pérez"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+573001234567"
+                },
+                "property_unit_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "resident_type_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
         "request.CreateResourceRequest": {
             "description": "Solicitud para crear un nuevo recurso en el sistema",
             "type": "object",
@@ -5872,6 +6647,47 @@ const docTemplate = `{
                 }
             }
         },
+        "request.UpdatePropertyUnitRequest": {
+            "type": "object",
+            "properties": {
+                "area": {
+                    "type": "number",
+                    "example": 85.5
+                },
+                "bathrooms": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "bedrooms": {
+                    "type": "integer",
+                    "example": 3
+                },
+                "block": {
+                    "type": "string",
+                    "example": "A"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Apartamento esquinero con vista"
+                },
+                "floor": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_active": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "number": {
+                    "type": "string",
+                    "example": "101"
+                },
+                "unit_type": {
+                    "type": "string",
+                    "example": "apartment"
+                }
+            }
+        },
         "request.UpdateReservation": {
             "type": "object",
             "properties": {
@@ -5889,6 +6705,67 @@ const docTemplate = `{
                 },
                 "table_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "request.UpdateResidentRequest": {
+            "type": "object",
+            "properties": {
+                "dni": {
+                    "type": "string",
+                    "example": "123456789"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "juan@email.com"
+                },
+                "emergency_contact": {
+                    "type": "string",
+                    "example": "María Pérez - 3009876543"
+                },
+                "is_active": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "is_main_resident": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "lease_end_date": {
+                    "type": "string",
+                    "example": "2024-12-31T23:59:59Z"
+                },
+                "lease_start_date": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "monthly_rent": {
+                    "type": "number",
+                    "example": 1500000
+                },
+                "move_in_date": {
+                    "type": "string",
+                    "example": "2024-01-15T00:00:00Z"
+                },
+                "move_out_date": {
+                    "type": "string",
+                    "example": "2025-01-15T00:00:00Z"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Juan Pérez"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+573001234567"
+                },
+                "property_unit_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "resident_type_id": {
+                    "type": "integer",
+                    "example": 1
                 }
             }
         },
@@ -6293,7 +7170,7 @@ const docTemplate = `{
                     "description": "Información detallada (solo en GET by ID)",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/response.PropertyUnitResponse"
+                        "$ref": "#/definitions/services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.PropertyUnitResponse"
                     }
                 },
                 "quaternary_color": {
@@ -6514,51 +7391,6 @@ const docTemplate = `{
                 "success": {
                     "type": "boolean",
                     "example": true
-                }
-            }
-        },
-        "response.PropertyUnitResponse": {
-            "type": "object",
-            "properties": {
-                "area": {
-                    "type": "number",
-                    "example": 85.5
-                },
-                "bathrooms": {
-                    "type": "integer",
-                    "example": 2
-                },
-                "bedrooms": {
-                    "type": "integer",
-                    "example": 3
-                },
-                "block": {
-                    "type": "string",
-                    "example": "A"
-                },
-                "description": {
-                    "type": "string",
-                    "example": "Apto 101 - Piso 1"
-                },
-                "floor": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "is_active": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "number": {
-                    "type": "string",
-                    "example": "101"
-                },
-                "unit_type": {
-                    "type": "string",
-                    "example": "apartment"
                 }
             }
         },
@@ -7064,6 +7896,51 @@ const docTemplate = `{
                 },
                 "scope_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.PropertyUnitResponse": {
+            "type": "object",
+            "properties": {
+                "area": {
+                    "type": "number",
+                    "example": 85.5
+                },
+                "bathrooms": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "bedrooms": {
+                    "type": "integer",
+                    "example": 3
+                },
+                "block": {
+                    "type": "string",
+                    "example": "A"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Apto 101 - Piso 1"
+                },
+                "floor": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_active": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "number": {
+                    "type": "string",
+                    "example": "101"
+                },
+                "unit_type": {
+                    "type": "string",
+                    "example": "apartment"
                 }
             }
         }
