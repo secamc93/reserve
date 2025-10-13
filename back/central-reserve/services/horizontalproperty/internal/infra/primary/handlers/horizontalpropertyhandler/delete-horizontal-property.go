@@ -10,18 +10,20 @@ import (
 )
 
 // DeleteHorizontalProperty godoc
-// @Summary Eliminar propiedad horizontal
-// @Description Elimina una propiedad horizontal (soft delete) y sus imágenes de S3
-// @Tags Propiedades Horizontales
-// @Accept json
-// @Produce json
-// @Param hp_id path int true "ID de la propiedad horizontal"
-// @Success 200 {object} response.HorizontalPropertyDeleteSuccessResponse
-// @Failure 400 {object} object
-// @Failure 404 {object} object
-// @Failure 409 {object} object
-// @Failure 500 {object} object
-// @Router /horizontal-properties/{hp_id} [delete]
+//
+//	@Summary		Eliminar propiedad horizontal
+//	@Description	Elimina una propiedad horizontal (soft delete) y sus imágenes de S3
+//	@Tags			Propiedades Horizontales
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			hp_id	path		int	true	"ID de la propiedad horizontal"
+//	@Success		200		{object}	response.HorizontalPropertyDeleteSuccessResponse
+//	@Failure		400		{object}	object
+//	@Failure		404		{object}	object
+//	@Failure		409		{object}	object
+//	@Failure		500		{object}	object
+//	@Router			/horizontal-properties/{hp_id} [delete]
 func (h *HorizontalPropertyHandler) DeleteHorizontalProperty(c *gin.Context) {
 	// Get ID from path parameter
 	idParam := c.Param("hp_id")

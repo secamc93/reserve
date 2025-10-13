@@ -11,8 +11,12 @@ func (uc *propertyUnitUseCase) ListPropertyUnits(ctx context.Context, filters do
 	if filters.Page < 1 {
 		filters.Page = 1
 	}
-	if filters.PageSize < 1 || filters.PageSize > 100 {
+	// Solo validar límite si PageSize está configurado
+	if filters.PageSize < 1 {
 		filters.PageSize = 10
+	} else if filters.PageSize > 1000 {
+		// Permitir hasta 1000 (para casos sin paginación como votación pública)
+		filters.PageSize = 1000
 	}
 
 	// Obtener unidades paginadas

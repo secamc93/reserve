@@ -9,19 +9,20 @@ import (
 )
 
 // GetResourceByIDHandler obtiene un recurso por su ID
-// @Summary Obtener recurso por ID
-// @Description Obtiene un recurso específico del sistema por su ID único
-// @Tags Resources
-// @Accept json
-// @Produce json
-// @Param id path int true "ID del recurso" minimum(1)
-// @Success 200 {object} map[string]interface{} "Recurso obtenido exitosamente"
-// @Failure 400 {object} map[string]interface{} "ID de recurso inválido"
-// @Failure 401 {object} map[string]interface{} "No autorizado"
-// @Failure 404 {object} map[string]interface{} "Recurso no encontrado"
-// @Failure 500 {object} map[string]interface{} "Error interno del servidor"
-// @Router /resources/{id} [get]
-// @Security BearerAuth
+//
+//	@Summary		Obtener recurso por ID
+//	@Description	Obtiene un recurso específico del sistema por su ID único
+//	@Tags			Resources
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		int						true	"ID del recurso"	minimum(1)
+//	@Success		200	{object}	map[string]interface{}	"Recurso obtenido exitosamente"
+//	@Failure		400	{object}	map[string]interface{}	"ID de recurso inválido"
+//	@Failure		401	{object}	map[string]interface{}	"No autorizado"
+//	@Failure		404	{object}	map[string]interface{}	"Recurso no encontrado"
+//	@Failure		500	{object}	map[string]interface{}	"Error interno del servidor"
+//	@Router			/resources/{id} [get]
+//	@Security		BearerAuth
 func (h *ResourceHandler) GetResourceByIDHandler(c *gin.Context) {
 	// Obtener el ID del recurso de los parámetros de la URL
 	resourceIDStr := c.Param("id")

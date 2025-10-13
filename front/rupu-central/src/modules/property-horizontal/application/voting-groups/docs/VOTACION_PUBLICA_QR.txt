@@ -1,0 +1,727 @@
+================================================================================
+  SISTEMA DE VOTACIÓN PÚBLICA CON QR
+  Base URL: http://localhost:3050/api/v1
+================================================================================
+
+DESCRIPCIÓN GENERAL:
+Este sistema permite que los residentes voten desde sus dispositivos móviles
+escaneando un código QR, sin necesidad de tener la aplicación instalada.
+El flujo es completamente público y seguro mediante tokens temporales.
+
+################################################################################
+# FLUJO COMPLETO
+################################################################################
+
+1. ADMINISTRADOR genera URL pública con QR
+   ↓
+2. Administrador muestra QR en pantalla/imprime
+   ↓
+3. RESIDENTE escanea QR con su celular
+   ↓
+4. Se abre página de validación
+   ↓
+5. Residente selecciona su UNIDAD (apartamento/casa)
+   ↓
+6. Residente ingresa su DNI
+   ↓
+7. Sistema VALIDA que el residente pertenezca a esa unidad
+   ↓
+8. Sistema genera TOKEN TEMPORAL de votación
+   ↓
+9. Residente accede a pantalla de votación
+   ↓
+10. Residente VOTA usando endpoint existente
+   ↓
+11. Voto se registra y aparece en tiempo real (SSE)
+
+
+################################################################################
+# API ENDPOINTS
+################################################################################
+
+================================================================================
+1. GENERAR URL PÚBLICA DE VOTACIÓN (Solo Administradores)
+================================================================================
+Method: POST
+URL: /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/generate-public-url
+Content-Type: application/json
+Authentication: JWT Token Required (Admin)
+
+--- PARAMS PATH ---
+- hp_id (number): ID de la propiedad horizontal
+- group_id (number): ID del grupo de votación
+- voting_id (number): ID de la votación
+
+--- REQUEST BODY ---
+{
+  "duration_hours": 24,
+  "frontend_url": "https://miapp.com/public/vote"
+}
+
+CAMPOS:
+- duration_hours (number, default: 24): Duración del token en horas
+- frontend_url (string): URL base del frontend donde redirige el QR
+
+--- RESPONSE 200 (SUCCESS) ---
+{
+  "success": true,
+  "message": "URL de votación pública generada exitosamente",
+  "data": {
+    "public_url": "https://miapp.com/public/vote?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...&voting_id=1&hp_id=14",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "voting_id": 1,
+    "hp_id": 14,
+    "expires_in_hours": 24
+  }
+}
+
+--- RESPONSE 400 (BAD REQUEST) ---
+{
+  "success": false,
+  "message": "Datos inválidos",
+  "error": "validation error"
+}
+
+--- RESPONSE 401 (UNAUTHORIZED) ---
+{
+  "success": false,
+  "message": "No autorizado",
+  "error": "Se requiere autenticación de administrador"
+}
+
+--- EJEMPLO CURL ---
+curl -X POST "http://localhost:3050/api/v1/horizontal-properties/14/voting-groups/1/votings/1/generate-public-url" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ADMIN_JWT_TOKEN" \
+  -d '{
+    "duration_hours": 24,
+    "frontend_url": "https://votacion.miconjunto.com"
+  }'
+
+NOTAS IMPORTANTES:
+- Solo administradores pueden generar URLs públicas
+- El token de votación pública tiene duración limitada (default 24 horas)
+- La URL debe usarse para generar el código QR
+- El token incluye voting_id y hp_id encriptados
+
+
+================================================================================
+2. VALIDAR RESIDENTE PARA VOTACIÓN (Público)
+================================================================================
+Method: POST
+URL: /public/horizontal-properties/{hp_id}/validate-resident
+Content-Type: application/json
+Authentication: Public Voting Token (del QR)
+
+--- PARAMS PATH ---
+- hp_id (number): ID de la propiedad horizontal
+
+--- REQUEST BODY ---
+{
+  "property_unit_id": 1,
+  "dni": "123456789"
+}
+
+CAMPOS REQUERIDOS:
+- property_unit_id (number): ID de la unidad donde reside
+- dni (string): Documento de identidad del residente
+
+--- RESPONSE 200 (SUCCESS - Residente validado) ---
+{
+  "success": true,
+  "message": "Residente validado exitosamente",
+  "data": {
+    "resident_id": 10,
+    "resident_name": "Juan Pérez García",
+    "property_unit_id": 1,
+    "property_unit_number": "101",
+    "voting_auth_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "voting_id": 1,
+    "hp_id": 14
+  }
+}
+
+IMPORTANTE:
+El campo "voting_auth_token" es el token temporal que debes usar para votar.
+Este token tiene duración de 2 horas y contiene el resident_id.
+
+--- RESPONSE 400 (BAD REQUEST) ---
+{
+  "success": false,
+  "message": "Datos inválidos",
+  "error": "el DNI es requerido"
+}
+
+--- RESPONSE 401 (UNAUTHORIZED - Token inválido) ---
+{
+  "success": false,
+  "message": "Token de votación inválido",
+  "error": "token expired"
+}
+
+--- RESPONSE 403 (FORBIDDEN - HP ID no coincide) ---
+{
+  "success": false,
+  "message": "Token no válido para esta propiedad",
+  "error": "El token no corresponde a esta propiedad horizontal"
+}
+
+--- RESPONSE 404 (NOT FOUND - Residente no existe) ---
+{
+  "success": false,
+  "message": "Residente no encontrado",
+  "error": "residente no encontrado"
+}
+
+--- EJEMPLO CURL ---
+curl -X POST "http://localhost:3050/api/v1/public/horizontal-properties/14/validate-resident" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TOKEN_DEL_QR" \
+  -d '{
+    "property_unit_id": 1,
+    "dni": "123456789"
+  }'
+
+VALIDACIONES:
+- El residente DEBE existir en la base de datos
+- El residente DEBE pertenecer a la unidad especificada (property_unit_id)
+- El residente DEBE estar activo (is_active = true)
+- El DNI DEBE coincidir exactamente
+- El token de votación pública DEBE ser válido y no expirado
+
+
+================================================================================
+3. VOTAR (Usando token de autenticación de votación)
+================================================================================
+Method: POST
+URL: /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/votes
+Content-Type: application/json
+Authentication: Voting Auth Token (del paso anterior)
+
+--- PARAMS PATH ---
+- hp_id (number): ID de la propiedad horizontal (del token)
+- group_id (number): ID del grupo de votación
+- voting_id (number): ID de la votación (del token)
+
+--- REQUEST BODY ---
+{
+  "resident_id": 10,
+  "voting_option_id": 1,
+  "ip_address": "192.168.1.100",
+  "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)",
+  "notes": "Voto desde QR público"
+}
+
+CAMPOS REQUERIDOS:
+- resident_id (number): ID del residente (viene del paso de validación)
+- voting_option_id (number): ID de la opción seleccionada
+
+--- RESPONSE 201 (SUCCESS) ---
+{
+  "success": true,
+  "message": "Voto registrado",
+  "data": {
+    "id": 1,
+    "voting_id": 1,
+    "resident_id": 10,
+    "voting_option_id": 1,
+    "voted_at": "2025-03-05T14:30:00Z",
+    "ip_address": "192.168.1.100",
+    "user_agent": "Mozilla/5.0...",
+    "notes": "Voto desde QR público"
+  }
+}
+
+--- RESPONSE 400 (BAD REQUEST - Ya votó) ---
+{
+  "success": false,
+  "message": "No se pudo registrar el voto",
+  "error": "el residente ya ha votado en esta votación"
+}
+
+--- EJEMPLO CURL ---
+curl -X POST "http://localhost:3050/api/v1/horizontal-properties/14/voting-groups/1/votings/1/votes" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer VOTING_AUTH_TOKEN" \
+  -d '{
+    "resident_id": 10,
+    "voting_option_id": 1,
+    "ip_address": "192.168.1.100"
+  }'
+
+
+################################################################################
+# TIPOS DE TOKENS
+################################################################################
+
+1. PUBLIC_VOTING_TOKEN (Scope: "public_voting")
+   - Se genera al crear la URL pública
+   - Duración: 24 horas (configurable)
+   - Permite: Acceder a la página de validación
+   - NO permite: Votar directamente
+   - Payload: { voting_id, hp_id, scope: "public_voting" }
+
+2. VOTING_AUTH_TOKEN (Scope: "voting_auth")
+   - Se genera después de validar al residente
+   - Duración: 2 horas
+   - Permite: Votar en la votación específica
+   - Payload: { resident_id, voting_id, hp_id, scope: "voting_auth" }
+
+
+################################################################################
+# SEGURIDAD
+################################################################################
+
+PROTECCIONES IMPLEMENTADAS:
+
+1. TOKENS SEPARADOS:
+   - Token público solo da acceso a validación
+   - Token de auth solo después de validar residente
+   - Evita votos anónimos o no autorizados
+
+2. VALIDACIÓN ESTRICTA:
+   - DNI debe coincidir exactamente
+   - Residente debe pertenecer a la unidad especificada
+   - Residente debe estar activo
+   - Token debe estar vigente
+
+3. SCOPE LIMITADO:
+   - Tokens tienen scope específico ("public_voting" vs "voting_auth")
+   - No se pueden intercambiar entre endpoints
+   - Tokens expiran automáticamente
+
+4. AUDITORÍA:
+   - IP Address y User Agent se registran
+   - Logs completos de cada operación
+   - Trazabilidad completa del flujo
+
+5. PROTECCIÓN CONTRA VOTO DUPLICADO:
+   - Base de datos tiene constraint único (voting_id + resident_id)
+   - Validación en use case antes de guardar
+   - Error claro si el residente ya votó
+
+
+################################################################################
+# IMPLEMENTACIÓN EN FRONTEND
+################################################################################
+
+PASO 1: GENERAR QR (Pantalla de Administración)
+```typescript
+// Admin genera URL pública
+const response = await fetch(
+  `http://localhost:3050/api/v1/horizontal-properties/14/voting-groups/1/votings/1/generate-public-url`,
+  {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${adminToken}`
+    },
+    body: JSON.stringify({
+      duration_hours: 24,
+      frontend_url: 'https://votacion.miconjunto.com'
+    })
+  }
+);
+
+const { data } = await response.json();
+const { public_url } = data;
+
+// Generar QR con la URL
+import QRCode from 'qrcode';
+const qrCodeDataURL = await QRCode.toDataURL(public_url);
+
+// Mostrar QR en pantalla
+<img src={qrCodeDataURL} alt="QR Code para votar" />
+```
+
+PASO 2: PÁGINA DE VALIDACIÓN (Pantalla Pública)
+```typescript
+// Extraer parámetros de la URL
+const urlParams = new URLSearchParams(window.location.search);
+const publicToken = urlParams.get('token');
+const votingId = urlParams.get('voting_id');
+const hpId = urlParams.get('hp_id');
+
+// Mostrar formulario de validación
+function ValidacionResidente() {
+  const [unidadId, setUnidadId] = useState('');
+  const [dni, setDni] = useState('');
+
+  const handleValidar = async () => {
+    const response = await fetch(
+      `http://localhost:3050/api/v1/public/horizontal-properties/${hpId}/validate-resident`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${publicToken}`
+        },
+        body: JSON.stringify({
+          property_unit_id: parseInt(unidadId),
+          dni: dni
+        })
+      }
+    );
+
+    const result = await response.json();
+
+    if (result.success) {
+      // Guardar token temporal de votación
+      const { voting_auth_token, resident_id, resident_name } = result.data;
+      localStorage.setItem('voting_auth_token', voting_auth_token);
+      localStorage.setItem('resident_id', resident_id);
+      
+      // Redirigir a pantalla de votación
+      window.location.href = `/vote?voting_id=${votingId}`;
+    } else {
+      alert(`Error: ${result.error}`);
+    }
+  };
+
+  return (
+    <div>
+      <h2>Validación de Residente</h2>
+      <select value={unidadId} onChange={(e) => setUnidadId(e.target.value)}>
+        <option value="">Seleccione su apartamento/casa</option>
+        <option value="1">101</option>
+        <option value="2">102</option>
+        {/* Cargar dinámicamente desde API */}
+      </select>
+
+      <input 
+        type="text" 
+        placeholder="Ingrese su DNI" 
+        value={dni}
+        onChange={(e) => setDni(e.target.value)}
+      />
+
+      <button onClick={handleValidar}>Validar</button>
+    </div>
+  );
+}
+```
+
+PASO 3: PANTALLA DE VOTACIÓN
+```typescript
+function PantallaVotacion({ votingId }) {
+  const [opciones, setOpciones] = useState([]);
+  const votingAuthToken = localStorage.getItem('voting_auth_token');
+  const residentId = localStorage.getItem('resident_id');
+
+  useEffect(() => {
+    // Cargar opciones de votación
+    fetch(`http://localhost:3050/api/v1/horizontal-properties/14/voting-groups/1/votings/${votingId}/options`, {
+      headers: {
+        'Authorization': `Bearer ${votingAuthToken}`
+      }
+    })
+    .then(res => res.json())
+    .then(data => setOpciones(data.data));
+  }, [votingId]);
+
+  const handleVotar = async (opcionId) => {
+    const response = await fetch(
+      `http://localhost:3050/api/v1/horizontal-properties/14/voting-groups/1/votings/${votingId}/votes`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${votingAuthToken}`
+        },
+        body: JSON.stringify({
+          resident_id: parseInt(residentId),
+          voting_option_id: opcionId,
+          ip_address: '192.168.1.100', // Obtener del cliente
+          user_agent: navigator.userAgent,
+          notes: 'Voto desde QR público'
+        })
+      }
+    );
+
+    const result = await response.json();
+
+    if (result.success) {
+      alert('✅ Voto registrado exitosamente');
+      window.location.href = '/gracias';
+    } else {
+      alert(`❌ Error: ${result.error}`);
+    }
+  };
+
+  return (
+    <div>
+      <h2>Votación: {votacionTitle}</h2>
+      {opciones.map(opcion => (
+        <button key={opcion.id} onClick={() => handleVotar(opcion.id)}>
+          {opcion.option_text}
+        </button>
+      ))}
+    </div>
+  );
+}
+```
+
+
+################################################################################
+# SEGURIDAD Y VALIDACIONES
+################################################################################
+
+VALIDACIONES EN BACKEND:
+
+1. GENERAR URL PÚBLICA:
+   ✅ Solo administradores autenticados
+   ✅ Voting ID debe existir y estar activo
+   ✅ HP ID debe ser válido
+   ✅ Token expira automáticamente
+
+2. VALIDAR RESIDENTE:
+   ✅ Token de votación pública válido y no expirado
+   ✅ HP ID del token coincide con HP ID del request
+   ✅ Property Unit ID existe
+   ✅ DNI existe en la base de datos
+   ✅ Residente pertenece a la unidad especificada
+   ✅ Residente está activo (is_active = true)
+
+3. REGISTRAR VOTO:
+   ✅ Token de autenticación de votación válido
+   ✅ Resident ID del token coincide con el del request
+   ✅ Voting ID del token coincide con el del request
+   ✅ Residente no ha votado previamente
+   ✅ Opción de votación existe y está activa
+   ✅ IP y User Agent se registran para auditoría
+
+PROTECCIÓN CONTRA FRAUDE:
+
+❌ No se puede votar sin validar DNI primero
+❌ No se puede usar token público para votar directamente
+❌ No se puede votar dos veces (constraint en BD)
+❌ No se puede votar con DNI de otro residente
+❌ No se puede votar después que expire el token
+❌ No se puede manipular el resident_id (viene encriptado en el token)
+
+
+################################################################################
+# ESTRUCTURA DE URLs Y TOKENS
+################################################################################
+
+URL COMPLETA GENERADA:
+https://votacion.miconjunto.com?token=PUBLIC_TOKEN&voting_id=1&hp_id=14
+
+DONDE:
+- token: JWT con scope "public_voting" (duración 24h)
+- voting_id: ID de la votación
+- hp_id: ID de la propiedad horizontal
+
+FLUJO DE TOKENS:
+
+PUBLIC_TOKEN (QR) →
+   Usuario escanea QR →
+   Llega a pantalla de validación →
+   Ingresa unidad + DNI →
+   POST /validate-resident con PUBLIC_TOKEN →
+   Recibe VOTING_AUTH_TOKEN →
+   POST /votes con VOTING_AUTH_TOKEN →
+   ✅ Voto registrado
+
+
+################################################################################
+# PAYLOAD DE TOKENS JWT
+################################################################################
+
+PUBLIC_VOTING_TOKEN:
+```json
+{
+  "voting_id": 1,
+  "hp_id": 14,
+  "scope": "public_voting",
+  "exp": 1709654400,
+  "iat": 1709568000,
+  "nbf": 1709568000,
+  "sub": "public_voting_1"
+}
+```
+
+VOTING_AUTH_TOKEN:
+```json
+{
+  "resident_id": 10,
+  "voting_id": 1,
+  "hp_id": 14,
+  "scope": "voting_auth",
+  "exp": 1709575200,
+  "iat": 1709568000,
+  "nbf": 1709568000,
+  "sub": "voting_auth_10_1"
+}
+```
+
+
+################################################################################
+# CASOS DE USO Y EJEMPLOS
+################################################################################
+
+CASO 1: ASAMBLEA CON QR EN PANTALLA GRANDE
+1. Administrador genera QR para la votación
+2. Proyecta QR en pantalla grande
+3. Residentes escanean con celular
+4. Cada uno valida con su DNI y unidad
+5. Votan desde su celular
+6. Resultados se ven en tiempo real (SSE)
+
+CASO 2: VOTACIÓN IMPRESA
+1. Administrador genera QR
+2. Imprime volantes con QR
+3. Distribuye volantes en buzones
+4. Residentes votan desde casa en 24 horas
+
+CASO 3: VOTACIÓN MIXTA
+1. Algunos votan presencialmente (app normal)
+2. Otros votan vía QR
+3. Todos los votos se consolidan
+4. Resultados únicos en tiempo real
+
+
+################################################################################
+# EJEMPLO COMPLETO: GENERADOR DE QR EN REACT
+################################################################################
+
+```typescript
+import { useState } from 'react';
+import QRCode from 'qrcode';
+
+export function GeneradorQRVotacion({ votingId, groupId, hpId }) {
+  const [qrImage, setQrImage] = useState('');
+  const [publicURL, setPublicURL] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const generarQR = async () => {
+    setLoading(true);
+    
+    try {
+      // 1. Generar URL pública
+      const response = await fetch(
+        `http://localhost:3050/api/v1/horizontal-properties/${hpId}/voting-groups/${groupId}/votings/${votingId}/generate-public-url`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
+          },
+          body: JSON.stringify({
+            duration_hours: 24,
+            frontend_url: 'https://votacion.miconjunto.com'
+          })
+        }
+      );
+
+      const result = await response.json();
+      
+      if (result.success) {
+        const { public_url } = result.data;
+        setPublicURL(public_url);
+
+        // 2. Generar imagen QR
+        const qrDataURL = await QRCode.toDataURL(public_url, {
+          width: 400,
+          margin: 2,
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+          }
+        });
+
+        setQrImage(qrDataURL);
+      }
+    } catch (error) {
+      console.error('Error generando QR:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const descargarQR = () => {
+    const link = document.createElement('a');
+    link.download = `qr-votacion-${votingId}.png`;
+    link.href = qrImage;
+    link.click();
+  };
+
+  return (
+    <div>
+      <h2>Generar QR para Votación</h2>
+      <button onClick={generarQR} disabled={loading}>
+        {loading ? 'Generando...' : 'Generar QR'}
+      </button>
+
+      {qrImage && (
+        <div>
+          <h3>QR Generado</h3>
+          <img src={qrImage} alt="QR de votación" />
+          <p>URL: {publicURL}</p>
+          <button onClick={descargarQR}>Descargar QR</button>
+          
+          <div>
+            <small>Válido por 24 horas</small>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+
+################################################################################
+# NOTAS IMPORTANTES
+################################################################################
+
+1. EXPIRACIÓN DE TOKENS:
+   - Public Voting Token: 24 horas (default, configurable)
+   - Voting Auth Token: 2 horas (fijo)
+   - Los tokens no se pueden renovar, deben generarse nuevos
+
+2. VALIDACIÓN DE UNIDAD:
+   - El frontend debe cargar la lista de unidades de la propiedad
+   - Endpoint: GET /horizontal-properties/{hp_id}/property-units
+   - Mostrar selector con números de unidad
+
+3. DNI:
+   - Debe ser exacto (no búsqueda parcial)
+   - Case-sensitive en la comparación
+   - Almacenado como string para soportar diferentes formatos
+
+4. MÚLTIPLES VOTACIONES:
+   - Cada votación tiene su propia URL/QR
+   - Un residente puede votar en múltiples votaciones
+   - Tokens son independientes por votación
+
+5. REUTILIZACIÓN:
+   - La URL pública puede compartirse múltiples veces
+   - Mientras no expire, cualquiera con el link puede acceder
+   - Ideal para distribución masiva (WhatsApp, email, etc)
+
+
+################################################################################
+# TROUBLESHOOTING
+################################################################################
+
+ERROR: "Token de votación inválido"
+SOLUCIÓN: Generar nuevo QR, el token expiró
+
+ERROR: "Residente no encontrado"
+SOLUCIÓN: Verificar que DNI y unidad sean correctos
+
+ERROR: "Token no válido para esta propiedad"
+SOLUCIÓN: Asegurarse de usar el QR correcto para cada propiedad
+
+ERROR: "el residente ya ha votado en esta votación"
+SOLUCIÓN: El residente solo puede votar una vez, esto es correcto
+
+ERROR: "el DNI es requerido"
+SOLUCIÓN: Enviar el campo dni en el request body
+
+
+################################################################################
+# FIN DE LA DOCUMENTACIÓN
+################################################################################
+

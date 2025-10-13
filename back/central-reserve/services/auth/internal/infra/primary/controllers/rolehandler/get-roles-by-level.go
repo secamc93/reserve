@@ -10,18 +10,19 @@ import (
 )
 
 // GetRolesByLevelHandler maneja la solicitud de obtener roles por nivel
-// @Summary Obtener roles por nivel
-// @Description Obtiene todos los roles de un nivel específico con información del scope
-// @Tags Roles
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param level query int true "Nivel del rol" minimum(1) maximum(10)
-// @Success 200 {object} response.RoleListResponse "Roles obtenidos exitosamente"
-// @Failure 400 {object} response.RoleErrorResponse "Nivel inválido"
-// @Failure 401 {object} response.RoleErrorResponse "Token de acceso requerido"
-// @Failure 500 {object} response.RoleErrorResponse "Error interno del servidor"
-// @Router /roles/by-level [get]
+//
+//	@Summary		Obtener roles por nivel
+//	@Description	Obtiene todos los roles de un nivel específico con información del scope
+//	@Tags			Roles
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			level	query		int							true	"Nivel del rol"	minimum(1)	maximum(10)
+//	@Success		200		{object}	response.RoleListResponse	"Roles obtenidos exitosamente"
+//	@Failure		400		{object}	response.RoleErrorResponse	"Nivel inválido"
+//	@Failure		401		{object}	response.RoleErrorResponse	"Token de acceso requerido"
+//	@Failure		500		{object}	response.RoleErrorResponse	"Error interno del servidor"
+//	@Router			/roles/by-level [get]
 func (h *RoleHandler) GetRolesByLevelHandler(c *gin.Context) {
 	var req request.GetRolesByLevelRequest
 

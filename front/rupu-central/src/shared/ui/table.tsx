@@ -5,7 +5,7 @@
 
 'use client';
 
-import { ReactNode } from 'react';
+import React, { ReactNode } from 'react';
 
 export interface TableColumn<T = any> {
   key: string;
@@ -91,7 +91,19 @@ export function Table<T = any>({
                     >
                       {column.render 
                         ? column.render(row[column.key as keyof T], row, rowIndex)
-                        : String(row[column.key as keyof T] ?? '')}
+                        : (() => {
+                            const value = row[column.key as keyof T];
+                            // Si es un elemento React (JSX), lo renderizamos directamente
+                            if (React.isValidElement(value)) {
+                              return value;
+                            }
+                            // Si es null/undefined, mostramos string vacío
+                            if (value == null) {
+                              return '';
+                            }
+                            // Para otros valores, los convertimos a string
+                            return String(value);
+                          })()}
                     </td>
                   ))}
                 </tr>

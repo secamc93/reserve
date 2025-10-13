@@ -7,16 +7,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// @Summary      Obtiene todas las salas
-// @Description  Este endpoint permite obtener todas las salas del sistema.
-// @Tags         Salas
-// @Accept       json
-// @Produce      json
-// @Security     BearerAuth
-// @Success      200    {object}  map[string]interface{} "Lista de salas"
-// @Failure      401    {object}  map[string]interface{} "Token de acceso requerido"
-// @Failure      500    {object}  map[string]interface{} "Error interno del servidor"
-// @Router       /rooms [get]
+// @Summary		Obtiene todas las salas
+// @Description	Este endpoint permite obtener todas las salas del sistema.
+// @Tags			Salas
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Success		200	{object}	map[string]interface{}	"Lista de salas"
+// @Failure		401	{object}	map[string]interface{}	"Token de acceso requerido"
+// @Failure		500	{object}	map[string]interface{}	"Error interno del servidor"
+// @Router			/rooms [get]
 func (h *RoomHandler) GetRoomsHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -40,18 +40,18 @@ func (h *RoomHandler) GetRoomsHandler(c *gin.Context) {
 	})
 }
 
-// @Summary      Obtiene salas por negocio
-// @Description  Este endpoint permite obtener todas las salas de un negocio específico.
-// @Tags         Salas
-// @Accept       json
-// @Produce      json
-// @Security     BearerAuth
-// @Param        business_id  path      int  true  "ID del negocio"
-// @Success      200    {object}  map[string]interface{} "Lista de salas del negocio"
-// @Failure      400    {object}  map[string]interface{} "ID de negocio inválido"
-// @Failure      401    {object}  map[string]interface{} "Token de acceso requerido"
-// @Failure      500    {object}  map[string]interface{} "Error interno del servidor"
-// @Router       /business-rooms/{business_id} [get]
+// @Summary		Obtiene salas por negocio
+// @Description	Este endpoint permite obtener todas las salas de un negocio específico.
+// @Tags			Salas
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			business_id	path		int						true	"ID del negocio"
+// @Success		200			{object}	map[string]interface{}	"Lista de salas del negocio"
+// @Failure		400			{object}	map[string]interface{}	"ID de negocio inválido"
+// @Failure		401			{object}	map[string]interface{}	"Token de acceso requerido"
+// @Failure		500			{object}	map[string]interface{}	"Error interno del servidor"
+// @Router			/business-rooms/{business_id} [get]
 func (h *RoomHandler) GetRoomsByBusinessHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 

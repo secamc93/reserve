@@ -9,19 +9,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// @Summary      Crea una nueva mesa
-// @Description  Este endpoint permite crear una nueva mesa para un restaurante.
-// @Tags         Mesas
-// @Accept       json
-// @Produce      json
-// @Security     BearerAuth
-// @Param        table  body      request.Table  true  "Datos de la mesa"
-// @Success      201          {object}  map[string]interface{} "Mesa creada exitosamente"
-// @Failure      400          {object}  map[string]interface{} "Solicitud inválida"
-// @Failure      401          {object}  map[string]interface{} "Token de acceso requerido"
-// @Failure      409          {object}  map[string]interface{} "Mesa ya existe para este restaurante"
-// @Failure      500          {object}  map[string]interface{} "Error interno del servidor"
-// @Router       /tables [post]
+// @Summary		Crea una nueva mesa
+// @Description	Este endpoint permite crear una nueva mesa para un restaurante.
+// @Tags			Mesas
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			table	body		request.Table			true	"Datos de la mesa"
+// @Success		201		{object}	map[string]interface{}	"Mesa creada exitosamente"
+// @Failure		400		{object}	map[string]interface{}	"Solicitud inválida"
+// @Failure		401		{object}	map[string]interface{}	"Token de acceso requerido"
+// @Failure		409		{object}	map[string]interface{}	"Mesa ya existe para este restaurante"
+// @Failure		500		{object}	map[string]interface{}	"Error interno del servidor"
+// @Router			/tables [post]
 func (h *TableHandler) CreateTableHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 

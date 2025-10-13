@@ -10,20 +10,21 @@ import (
 )
 
 // GetBusinessTypesWithResources obtiene todos los tipos de negocio con sus recursos asociados con paginación
-// @Summary Obtener tipos de negocio con recursos
-// @Description Obtiene todos los tipos de negocio con sus recursos asociados aplicando paginación
-// @Tags Business Resources
-// @Accept json
-// @Produce json
-// @Param page query int false "Número de página (por defecto: 1)" default(1)
-// @Param per_page query int false "Elementos por página (por defecto: 10, máximo: 100)" default(10)
-// @Param business_type_id query int false "ID del tipo de negocio para filtrar"
-// @Security BearerAuth
-// @Success      200          {object}  map[string]interface{} "Tipos de negocio con recursos obtenidos exitosamente"
-// @Failure      400          {object}  map[string]interface{} "Solicitud inválida"
-// @Failure      401          {object}  map[string]interface{} "Token de acceso requerido"
-// @Failure      500          {object}  map[string]interface{} "Error interno del servidor"
-// @Router /business-resources/resources [get]
+//
+//	@Summary		Obtener tipos de negocio con recursos
+//	@Description	Obtiene todos los tipos de negocio con sus recursos asociados aplicando paginación
+//	@Tags			Business Resources
+//	@Accept			json
+//	@Produce		json
+//	@Param			page				query	int	false	"Número de página (por defecto: 1)"						default(1)
+//	@Param			per_page			query	int	false	"Elementos por página (por defecto: 10, máximo: 100)"	default(10)
+//	@Param			business_type_id	query	int	false	"ID del tipo de negocio para filtrar"
+//	@Security		BearerAuth
+//	@Success		200	{object}	map[string]interface{}	"Tipos de negocio con recursos obtenidos exitosamente"
+//	@Failure		400	{object}	map[string]interface{}	"Solicitud inválida"
+//	@Failure		401	{object}	map[string]interface{}	"Token de acceso requerido"
+//	@Failure		500	{object}	map[string]interface{}	"Error interno del servidor"
+//	@Router			/business-resources/resources [get]
 func (h *businessResourceHandler) GetBusinessTypesWithResources(c *gin.Context) {
 	// Obtener parámetros de paginación
 	page := 1

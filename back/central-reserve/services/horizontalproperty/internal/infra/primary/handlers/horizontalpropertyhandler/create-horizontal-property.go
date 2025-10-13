@@ -12,41 +12,43 @@ import (
 )
 
 // CreateHorizontalProperty godoc
-// @Summary Crear una nueva propiedad horizontal
-// @Description Crea una nueva propiedad horizontal. IMPORTANTE: Los datos se envían como FormData (multipart/form-data), NO como JSON, porque incluye carga de archivos de imagen
-// @Tags Propiedades Horizontales
-// @Accept multipart/form-data
-// @Produce json
-// @Param name formData string true "Nombre" default("Conjunto Residencial Los Pinos")
-// @Param code formData string true "Código único" default("los-pinos")
-// @Param timezone formData string true "Zona horaria" default("America/Bogota")
-// @Param address formData string true "Dirección" default("Carrera 15 #45-67")
-// @Param description formData string false "Descripción" default("Conjunto residencial familiar")
-// @Param total_units formData int true "Total de unidades" default(120)
-// @Param total_floors formData int false "Total de pisos" default(10)
-// @Param has_elevator formData bool false "Tiene ascensor" default(true)
-// @Param has_parking formData bool false "Tiene parqueadero" default(true)
-// @Param has_pool formData bool false "Tiene piscina" default(true)
-// @Param has_gym formData bool false "Tiene gimnasio" default(true)
-// @Param has_social_area formData bool false "Tiene área social" default(true)
-// @Param logo_file formData file false "Logo (PNG/JPG, max 10MB)"
-// @Param navbar_image_file formData file false "Imagen navbar (PNG/JPG, max 10MB)"
-// @Param primary_color formData string false "Color primario" default("#1f2937")
-// @Param secondary_color formData string false "Color secundario" default("#3b82f6")
-// @Param tertiary_color formData string false "Color terciario" default("#10b981")
-// @Param quaternary_color formData string false "Color cuaternario" default("#fbbf24")
-// @Param custom_domain formData string false "Dominio personalizado" default("lospinos.com")
-// @Param create_units formData bool false "Crear unidades automáticamente" default(true)
-// @Param unit_prefix formData string false "Prefijo unidades" default("Apto")
-// @Param unit_type formData string false "Tipo unidad" default("apartment")
-// @Param units_per_floor formData int false "Unidades por piso" default(12)
-// @Param start_unit_number formData int false "Número inicial" default(101)
-// @Param create_required_committees formData bool false "Crear comités requeridos" default(true)
-// @Success 201 {object} response.HorizontalPropertySuccessResponse
-// @Failure 400 {object} object
-// @Failure 409 {object} object
-// @Failure 500 {object} object
-// @Router /horizontal-properties [post]
+//
+//	@Summary		Crear una nueva propiedad horizontal
+//	@Description	Crea una nueva propiedad horizontal. IMPORTANTE: Los datos se envían como FormData (multipart/form-data), NO como JSON, porque incluye carga de archivos de imagen
+//	@Tags			Propiedades Horizontales
+//	@Accept			multipart/form-data
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			name						formData	string	true	"Nombre"			default("Conjunto Residencial Los Pinos")
+//	@Param			code						formData	string	true	"Código único"		default("los-pinos")
+//	@Param			timezone					formData	string	true	"Zona horaria"		default("America/Bogota")
+//	@Param			address						formData	string	true	"Dirección"			default("Carrera 15 #45-67")
+//	@Param			description					formData	string	false	"Descripción"		default("Conjunto residencial familiar")
+//	@Param			total_units					formData	int		true	"Total de unidades"	default(120)
+//	@Param			total_floors				formData	int		false	"Total de pisos"	default(10)
+//	@Param			has_elevator				formData	bool	false	"Tiene ascensor"	default(true)
+//	@Param			has_parking					formData	bool	false	"Tiene parqueadero"	default(true)
+//	@Param			has_pool					formData	bool	false	"Tiene piscina"		default(true)
+//	@Param			has_gym						formData	bool	false	"Tiene gimnasio"	default(true)
+//	@Param			has_social_area				formData	bool	false	"Tiene área social"	default(true)
+//	@Param			logo_file					formData	file	false	"Logo (PNG/JPG, max 10MB)"
+//	@Param			navbar_image_file			formData	file	false	"Imagen navbar (PNG/JPG, max 10MB)"
+//	@Param			primary_color				formData	string	false	"Color primario"					default("#1f2937")
+//	@Param			secondary_color				formData	string	false	"Color secundario"					default("#3b82f6")
+//	@Param			tertiary_color				formData	string	false	"Color terciario"					default("#10b981")
+//	@Param			quaternary_color			formData	string	false	"Color cuaternario"					default("#fbbf24")
+//	@Param			custom_domain				formData	string	false	"Dominio personalizado"				default("lospinos.com")
+//	@Param			create_units				formData	bool	false	"Crear unidades automáticamente"	default(true)
+//	@Param			unit_prefix					formData	string	false	"Prefijo unidades"					default("Apto")
+//	@Param			unit_type					formData	string	false	"Tipo unidad"						default("apartment")
+//	@Param			units_per_floor				formData	int		false	"Unidades por piso"					default(12)
+//	@Param			start_unit_number			formData	int		false	"Número inicial"					default(101)
+//	@Param			create_required_committees	formData	bool	false	"Crear comités requeridos"			default(true)
+//	@Success		201							{object}	response.HorizontalPropertySuccessResponse
+//	@Failure		400							{object}	object
+//	@Failure		409							{object}	object
+//	@Failure		500							{object}	object
+//	@Router			/horizontal-properties [post]
 func (h *HorizontalPropertyHandler) CreateHorizontalProperty(c *gin.Context) {
 	var req request.CreateHorizontalPropertyRequest
 

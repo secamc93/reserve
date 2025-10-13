@@ -351,7 +351,8 @@ export class VotesRepository implements IVotesRepository {
         duration,
         data,
       });
-      throw new Error(`Error ${response.status}`);
+      // Devolver el mensaje de error específico de la API
+      throw new Error(data.error || data.message || `Error ${response.status}`);
     }
     
     logHttpSuccess({

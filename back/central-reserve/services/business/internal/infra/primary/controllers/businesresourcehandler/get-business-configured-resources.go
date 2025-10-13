@@ -10,19 +10,20 @@ import (
 )
 
 // GetBusinessConfiguredResources obtiene business con recursos configurados con paginación
-// @Summary Obtener business con recursos configurados
-// @Description Obtiene todos los business con sus recursos configurados aplicando paginación
-// @Tags Business Resources
-// @Accept json
-// @Produce json
-// @Param page query int false "Número de página (por defecto: 1)" default(1)
-// @Param per_page query int false "Elementos por página (por defecto: 10, máximo: 100)" default(10)
-// @Param business_id query int false "ID del business para filtrar"
-// @Security BearerAuth
-// @Success 200 {object} map[string]interface{} "Business con recursos configurados obtenidos exitosamente"
-// @Failure 400 {object} map[string]interface{} "Parámetros inválidos"
-// @Failure 500 {object} map[string]interface{} "Error interno del servidor"
-// @Router /business-resources/businesses/configured-resources [get]
+//
+//	@Summary		Obtener business con recursos configurados
+//	@Description	Obtiene todos los business con sus recursos configurados aplicando paginación
+//	@Tags			Business Resources
+//	@Accept			json
+//	@Produce		json
+//	@Param			page		query	int	false	"Número de página (por defecto: 1)"						default(1)
+//	@Param			per_page	query	int	false	"Elementos por página (por defecto: 10, máximo: 100)"	default(10)
+//	@Param			business_id	query	int	false	"ID del business para filtrar"
+//	@Security		BearerAuth
+//	@Success		200	{object}	map[string]interface{}	"Business con recursos configurados obtenidos exitosamente"
+//	@Failure		400	{object}	map[string]interface{}	"Parámetros inválidos"
+//	@Failure		500	{object}	map[string]interface{}	"Error interno del servidor"
+//	@Router			/business-resources/businesses/configured-resources [get]
 func (h *businessResourceHandler) GetBusinessConfiguredResources(c *gin.Context) {
 	// Obtener parámetros de paginación
 	page := 1

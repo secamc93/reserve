@@ -12,3 +12,6 @@ export * from './ports/votings.repository';
 export * from './ports/property-units.repository';
 export * from './ports/residents.repository';
 
+// Validaciones
+export * from './validation';
+

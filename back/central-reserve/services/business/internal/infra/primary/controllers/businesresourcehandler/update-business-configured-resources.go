@@ -12,19 +12,20 @@ import (
 )
 
 // UpdateBusinessConfiguredResources actualiza los recursos configurados para un business específico
-// @Summary Actualizar recursos configurados de un business
-// @Description Actualiza la lista de recursos configurados para un business específico (solo recursos permitidos por su tipo)
-// @Tags Business Resources
-// @Accept json
-// @Produce json
-// @Param business_id path int true "ID del business"
-// @Param request body object{resources_ids=[]int} true "Lista de IDs de recursos"
-// @Security BearerAuth
-// @Success 200 {object} map[string]interface{} "Recursos configurados actualizados exitosamente"
-// @Failure 400 {object} map[string]interface{} "Parámetros inválidos o recursos no permitidos"
-// @Failure 404 {object} map[string]interface{} "Business no encontrado"
-// @Failure 500 {object} map[string]interface{} "Error interno del servidor"
-// @Router /business-resources/businesses/{business_id}/configured-resources [put]
+//
+//	@Summary		Actualizar recursos configurados de un business
+//	@Description	Actualiza la lista de recursos configurados para un business específico (solo recursos permitidos por su tipo)
+//	@Tags			Business Resources
+//	@Accept			json
+//	@Produce		json
+//	@Param			business_id	path	int							true	"ID del business"
+//	@Param			request		body	object{resources_ids=[]int}	true	"Lista de IDs de recursos"
+//	@Security		BearerAuth
+//	@Success		200	{object}	map[string]interface{}	"Recursos configurados actualizados exitosamente"
+//	@Failure		400	{object}	map[string]interface{}	"Parámetros inválidos o recursos no permitidos"
+//	@Failure		404	{object}	map[string]interface{}	"Business no encontrado"
+//	@Failure		500	{object}	map[string]interface{}	"Error interno del servidor"
+//	@Router			/business-resources/businesses/{business_id}/configured-resources [put]
 func (h *businessResourceHandler) UpdateBusinessConfiguredResources(c *gin.Context) {
 	// Obtener el ID del business desde los parámetros de la URL
 	businessIDStr := c.Param("business_id")

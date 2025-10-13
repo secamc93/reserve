@@ -8,19 +8,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// @Summary      Elimina una sala
-// @Description  Este endpoint permite eliminar una sala existente.
-// @Tags         Salas
-// @Accept       json
-// @Produce      json
-// @Security     BearerAuth
-// @Param        id  path      int  true  "ID de la sala"
-// @Success      200    {object}  map[string]interface{} "Sala eliminada exitosamente"
-// @Failure      400    {object}  map[string]interface{} "ID de sala inválido"
-// @Failure      401    {object}  map[string]interface{} "Token de acceso requerido"
-// @Failure      404    {object}  map[string]interface{} "Sala no encontrada"
-// @Failure      500    {object}  map[string]interface{} "Error interno del servidor"
-// @Router       /rooms/{id} [delete]
+// @Summary		Elimina una sala
+// @Description	Este endpoint permite eliminar una sala existente.
+// @Tags			Salas
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id	path		int						true	"ID de la sala"
+// @Success		200	{object}	map[string]interface{}	"Sala eliminada exitosamente"
+// @Failure		400	{object}	map[string]interface{}	"ID de sala inválido"
+// @Failure		401	{object}	map[string]interface{}	"Token de acceso requerido"
+// @Failure		404	{object}	map[string]interface{}	"Sala no encontrada"
+// @Failure		500	{object}	map[string]interface{}	"Error interno del servidor"
+// @Router			/rooms/{id} [delete]
 func (h *RoomHandler) DeleteRoomHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 

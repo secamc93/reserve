@@ -50,7 +50,16 @@ export interface UpdatePropertyUnitDTO {
   isActive?: boolean;
 }
 
-// Tipos de unidad
+/**
+ * Tipos de unidad según API:
+ * - "apartment": Apartamento (unidad residencial en edificio)
+ * - "house": Casa (vivienda independiente)
+ * - "office": Oficina (espacio de trabajo)
+ * - "commercial": Local comercial (tienda, restaurante, etc)
+ * - "parking": Parqueadero (espacio de estacionamiento)
+ * - "storage": Depósito/Bodega (espacio de almacenamiento)
+ * - "penthouse": Penthouse (apartamento de lujo en último piso)
+ */
 export const UNIT_TYPES = {
   APARTMENT: 'apartment',
   HOUSE: 'house',
@@ -58,7 +67,10 @@ export const UNIT_TYPES = {
   COMMERCIAL: 'commercial',
   PARKING: 'parking',
   STORAGE: 'storage',
+  PENTHOUSE: 'penthouse',
 } as const;
+
+export type UnitType = typeof UNIT_TYPES[keyof typeof UNIT_TYPES];
 
 export const UNIT_TYPE_LABELS: Record<string, string> = {
   apartment: 'Apartamento',
@@ -67,5 +79,6 @@ export const UNIT_TYPE_LABELS: Record<string, string> = {
   commercial: 'Local comercial',
   parking: 'Parqueadero',
   storage: 'Depósito',
+  penthouse: 'Penthouse',
 };
 

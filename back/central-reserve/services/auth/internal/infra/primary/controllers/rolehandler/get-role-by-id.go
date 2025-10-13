@@ -10,19 +10,20 @@ import (
 )
 
 // GetRoleByIDHandler maneja la solicitud de obtener un rol por ID
-// @Summary Obtener rol por ID
-// @Description Obtiene un rol específico por su ID con información del scope
-// @Tags Roles
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param id path int true "ID del rol" minimum(1)
-// @Success 200 {object} response.RoleSuccessResponse "Rol obtenido exitosamente"
-// @Failure 400 {object} response.RoleErrorResponse "ID inválido"
-// @Failure 401 {object} response.RoleErrorResponse "Token de acceso requerido"
-// @Failure 404 {object} response.RoleErrorResponse "Rol no encontrado"
-// @Failure 500 {object} response.RoleErrorResponse "Error interno del servidor"
-// @Router /roles/{id} [get]
+//
+//	@Summary		Obtener rol por ID
+//	@Description	Obtiene un rol específico por su ID con información del scope
+//	@Tags			Roles
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		int								true	"ID del rol"	minimum(1)
+//	@Success		200	{object}	response.RoleSuccessResponse	"Rol obtenido exitosamente"
+//	@Failure		400	{object}	response.RoleErrorResponse		"ID inválido"
+//	@Failure		401	{object}	response.RoleErrorResponse		"Token de acceso requerido"
+//	@Failure		404	{object}	response.RoleErrorResponse		"Rol no encontrado"
+//	@Failure		500	{object}	response.RoleErrorResponse		"Error interno del servidor"
+//	@Router			/roles/{id} [get]
 func (h *RoleHandler) GetRoleByIDHandler(c *gin.Context) {
 	var req request.GetRoleByIDRequest
 

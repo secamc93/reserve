@@ -10,23 +10,24 @@ import (
 )
 
 // GetResourcesHandler obtiene todos los recursos con filtros y paginación
-// @Summary Obtener recursos
-// @Description Obtiene una lista paginada de recursos del sistema con opciones de filtrado y ordenamiento
-// @Tags Resources
-// @Accept json
-// @Produce json
-// @Param page query int false "Número de página" default(1) minimum(1)
-// @Param page_size query int false "Tamaño de página" default(10) minimum(1) maximum(100)
-// @Param name query string false "Filtrar por nombre (búsqueda parcial)"
-// @Param description query string false "Filtrar por descripción (búsqueda parcial)"
-// @Param sort_by query string false "Campo para ordenar" Enums(name, created_at, updated_at)
-// @Param sort_order query string false "Orden" Enums(asc, desc)
-// @Success 200 {object} map[string]interface{} "Lista de recursos obtenida exitosamente"
-// @Failure 400 {object} map[string]interface{} "Parámetros de consulta inválidos"
-// @Failure 401 {object} map[string]interface{} "No autorizado"
-// @Failure 500 {object} map[string]interface{} "Error interno del servidor"
-// @Router /resources [get]
-// @Security BearerAuth
+//
+//	@Summary		Obtener recursos
+//	@Description	Obtiene una lista paginada de recursos del sistema con opciones de filtrado y ordenamiento
+//	@Tags			Resources
+//	@Accept			json
+//	@Produce		json
+//	@Param			page		query		int						false	"Número de página"	default(1)	minimum(1)
+//	@Param			page_size	query		int						false	"Tamaño de página"	default(10)	minimum(1)	maximum(100)
+//	@Param			name		query		string					false	"Filtrar por nombre (búsqueda parcial)"
+//	@Param			description	query		string					false	"Filtrar por descripción (búsqueda parcial)"
+//	@Param			sort_by		query		string					false	"Campo para ordenar"	Enums(name, created_at, updated_at)
+//	@Param			sort_order	query		string					false	"Orden"					Enums(asc, desc)
+//	@Success		200			{object}	map[string]interface{}	"Lista de recursos obtenida exitosamente"
+//	@Failure		400			{object}	map[string]interface{}	"Parámetros de consulta inválidos"
+//	@Failure		401			{object}	map[string]interface{}	"No autorizado"
+//	@Failure		500			{object}	map[string]interface{}	"Error interno del servidor"
+//	@Router			/resources [get]
+//	@Security		BearerAuth
 func (h *ResourceHandler) GetResourcesHandler(c *gin.Context) {
 	h.logger.Info().Msg("Iniciando obtención de recursos")
 

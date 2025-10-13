@@ -9,18 +9,19 @@ import (
 )
 
 // CreateBusinessType godoc
-// @Summary Crear un nuevo tipo de negocio
-// @Description Crea un nuevo tipo de negocio en el sistema
-// @Tags business-types
-// @Accept json
-// @Produce json
-// @Security     BearerAuth
-// @Param businessType body request.BusinessTypeRequest true "Datos del tipo de negocio a crear"
-// @Success      201          {object}  map[string]interface{} "Tipo de negocio creado exitosamente"
-// @Failure      400          {object}  map[string]interface{} "Solicitud inválida"
-// @Failure      401          {object}  map[string]interface{} "Token de acceso requerido"
-// @Failure      500          {object}  map[string]interface{} "Error interno del servidor"
-// @Router /business-types [post]
+//
+//	@Summary		Crear un nuevo tipo de negocio
+//	@Description	Crea un nuevo tipo de negocio en el sistema
+//	@Tags			business-types
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			businessType	body		request.BusinessTypeRequest	true	"Datos del tipo de negocio a crear"
+//	@Success		201				{object}	map[string]interface{}		"Tipo de negocio creado exitosamente"
+//	@Failure		400				{object}	map[string]interface{}		"Solicitud inválida"
+//	@Failure		401				{object}	map[string]interface{}		"Token de acceso requerido"
+//	@Failure		500				{object}	map[string]interface{}		"Error interno del servidor"
+//	@Router			/business-types [post]
 func (h *BusinessTypeHandler) CreateBusinessTypeHandler(c *gin.Context) {
 	var createRequest request.BusinessTypeRequest
 

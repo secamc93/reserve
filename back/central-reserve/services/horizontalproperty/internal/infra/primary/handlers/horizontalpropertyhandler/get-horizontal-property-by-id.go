@@ -11,17 +11,19 @@ import (
 )
 
 // GetHorizontalPropertyByID godoc
-// @Summary Obtener propiedad horizontal por ID
-// @Description Obtiene una propiedad horizontal con información detallada (incluye unidades y comités)
-// @Tags Propiedades Horizontales
-// @Accept json
-// @Produce json
-// @Param hp_id path int true "ID de la propiedad horizontal"
-// @Success 200 {object} response.HorizontalPropertySuccessResponse
-// @Failure 400 {object} object
-// @Failure 404 {object} object
-// @Failure 500 {object} object
-// @Router /horizontal-properties/{hp_id} [get]
+//
+//	@Summary		Obtener propiedad horizontal por ID
+//	@Description	Obtiene una propiedad horizontal con información detallada (incluye unidades y comités)
+//	@Tags			Propiedades Horizontales
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			hp_id	path		int	true	"ID de la propiedad horizontal"
+//	@Success		200		{object}	response.HorizontalPropertySuccessResponse
+//	@Failure		400		{object}	object
+//	@Failure		404		{object}	object
+//	@Failure		500		{object}	object
+//	@Router			/horizontal-properties/{hp_id} [get]
 func (h *HorizontalPropertyHandler) GetHorizontalPropertyByID(c *gin.Context) {
 	// Get ID from path parameter
 	idParam := c.Param("hp_id")

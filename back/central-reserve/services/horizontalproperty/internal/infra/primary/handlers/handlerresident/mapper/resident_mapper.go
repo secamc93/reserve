@@ -45,13 +45,15 @@ func MapUpdateRequestToDTO(req request.UpdateResidentRequest) domain.UpdateResid
 
 func MapFiltersRequestToDTO(req request.ResidentFiltersRequest, businessID uint) domain.ResidentFiltersDTO {
 	return domain.ResidentFiltersDTO{
-		BusinessID:     businessID,
-		PropertyUnitID: req.PropertyUnitID,
-		ResidentTypeID: req.ResidentTypeID,
-		IsActive:       req.IsActive,
-		IsMainResident: req.IsMainResident,
-		Page:           req.Page,
-		PageSize:       req.PageSize,
+		BusinessID:         businessID,
+		PropertyUnitNumber: req.PropertyUnitNumber,
+		Name:               req.Name,
+		PropertyUnitID:     req.PropertyUnitID,
+		ResidentTypeID:     req.ResidentTypeID,
+		IsActive:           req.IsActive,
+		IsMainResident:     req.IsMainResident,
+		Page:               req.Page,
+		PageSize:           req.PageSize,
 	}
 }
 

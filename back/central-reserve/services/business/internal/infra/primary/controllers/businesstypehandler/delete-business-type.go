@@ -10,18 +10,19 @@ import (
 )
 
 // DeleteBusinessType godoc
-// @Summary Eliminar tipo de negocio
-// @Description Elimina un tipo de negocio del sistema
-// @Tags business-types
-// @Accept json
-// @Produce json
-// @Security     BearerAuth
-// @Param id path int true "ID del tipo de negocio"
-// @Success      201          {object}  map[string]interface{} "Tipo de negocio eliminado exitosamente"
-// @Failure      400          {object}  map[string]interface{} "Solicitud inválida"
-// @Failure      401          {object}  map[string]interface{} "Token de acceso requerido"
-// @Failure      500          {object}  map[string]interface{} "Error interno del servidor"
-// @Router /business-types/{id} [delete]
+//
+//	@Summary		Eliminar tipo de negocio
+//	@Description	Elimina un tipo de negocio del sistema
+//	@Tags			business-types
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		int						true	"ID del tipo de negocio"
+//	@Success		201	{object}	map[string]interface{}	"Tipo de negocio eliminado exitosamente"
+//	@Failure		400	{object}	map[string]interface{}	"Solicitud inválida"
+//	@Failure		401	{object}	map[string]interface{}	"Token de acceso requerido"
+//	@Failure		500	{object}	map[string]interface{}	"Error interno del servidor"
+//	@Router			/business-types/{id} [delete]
 func (h *BusinessTypeHandler) DeleteBusinessTypeHandler(c *gin.Context) {
 	// Obtener ID del path
 	idStr := c.Param("id")

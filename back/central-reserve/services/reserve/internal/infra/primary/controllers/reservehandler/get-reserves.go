@@ -9,22 +9,22 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// @Summary      Obtiene todas las reservas
-// @Description  Este endpoint obtiene todas las reservas con información completa de cliente, mesa, restaurante y estado. Soporta filtros opcionales.
-// @Tags         Reservas
-// @Accept       json
-// @Produce      json
-// @Security     BearerAuth
-// @Param        status_id   query    int     false  "ID del estado de reserva"
-// @Param        client_id   query    int     false  "ID del cliente"
-// @Param        table_id    query    int     false  "ID de la mesa"
-// @Param        start_date  query    string  false  "Fecha de inicio (formato RFC3339: 2024-01-01T00:00:00Z)"
-// @Param        end_date    query    string  false  "Fecha de fin (formato RFC3339: 2024-12-31T23:59:59Z)"
-// @Success      200  {object}  response.ReserveListSuccessResponse "Lista de reservas obtenida exitosamente"
-// @Failure      400  {object}  map[string]interface{} "Parámetros inválidos"
-// @Failure      401  {object}  map[string]interface{} "Token de acceso requerido"
-// @Failure      500  {object}  map[string]interface{} "Error interno del servidor"
-// @Router       /reserves [get]
+// @Summary		Obtiene todas las reservas
+// @Description	Este endpoint obtiene todas las reservas con información completa de cliente, mesa, restaurante y estado. Soporta filtros opcionales.
+// @Tags			Reservas
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			status_id	query		int									false	"ID del estado de reserva"
+// @Param			client_id	query		int									false	"ID del cliente"
+// @Param			table_id	query		int									false	"ID de la mesa"
+// @Param			start_date	query		string								false	"Fecha de inicio (formato RFC3339: 2024-01-01T00:00:00Z)"
+// @Param			end_date	query		string								false	"Fecha de fin (formato RFC3339: 2024-12-31T23:59:59Z)"
+// @Success		200			{object} object	"Lista de reservas obtenida exitosamente"
+// @Failure		400			{object}	map[string]interface{}				"Parámetros inválidos"
+// @Failure		401			{object}	map[string]interface{}				"Token de acceso requerido"
+// @Failure		500			{object}	map[string]interface{}				"Error interno del servidor"
+// @Router			/reserves [get]
 func (h *ReserveHandler) GetReservesHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 

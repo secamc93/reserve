@@ -8,19 +8,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// @Summary      Obtiene una mesa por ID
-// @Description  Este endpoint permite obtener los datos de una mesa específica por su ID.
-// @Tags         Mesas
-// @Accept       json
-// @Produce      json
-// @Security     BearerAuth
-// @Param        id  path      int  true  "ID de la mesa"
-// @Success      200          {object}  map[string]interface{} "Mesa obtenida exitosamente"
-// @Failure      400          {object}  map[string]interface{} "Solicitud inválida"
-// @Failure      401          {object}  map[string]interface{} "Token de acceso requerido"
-// @Failure      404          {object}  map[string]interface{} "Mesa no encontrada"
-// @Failure      500          {object}  map[string]interface{} "Error interno del servidor"
-// @Router       /tables/{id} [get]
+// @Summary		Obtiene una mesa por ID
+// @Description	Este endpoint permite obtener los datos de una mesa específica por su ID.
+// @Tags			Mesas
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id	path		int						true	"ID de la mesa"
+// @Success		200	{object}	map[string]interface{}	"Mesa obtenida exitosamente"
+// @Failure		400	{object}	map[string]interface{}	"Solicitud inválida"
+// @Failure		401	{object}	map[string]interface{}	"Token de acceso requerido"
+// @Failure		404	{object}	map[string]interface{}	"Mesa no encontrada"
+// @Failure		500	{object}	map[string]interface{}	"Error interno del servidor"
+// @Router			/tables/{id} [get]
 func (h *TableHandler) GetTableByIDHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 

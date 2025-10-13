@@ -10,19 +10,20 @@ import (
 )
 
 // GetUserByIDHandler maneja la solicitud de obtener un usuario por ID
-// @Summary Obtener usuario por ID
-// @Description Obtiene un usuario específico por su ID con sus roles y businesses
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param id path int true "ID del usuario" minimum(1)
-// @Success 200 {object} response.UserSuccessResponse "Usuario obtenido exitosamente"
-// @Failure 400 {object} response.UserErrorResponse "ID inválido"
-// @Failure 401 {object} response.UserErrorResponse "Token de acceso requerido"
-// @Failure 404 {object} response.UserErrorResponse "Usuario no encontrado"
-// @Failure 500 {object} response.UserErrorResponse "Error interno del servidor"
-// @Router /users/{id} [get]
+//
+//	@Summary		Obtener usuario por ID
+//	@Description	Obtiene un usuario específico por su ID con sus roles y businesses
+//	@Tags			Users
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		int								true	"ID del usuario"	minimum(1)
+//	@Success		200	{object}	response.UserSuccessResponse	"Usuario obtenido exitosamente"
+//	@Failure		400	{object}	response.UserErrorResponse		"ID inválido"
+//	@Failure		401	{object}	response.UserErrorResponse		"Token de acceso requerido"
+//	@Failure		404	{object}	response.UserErrorResponse		"Usuario no encontrado"
+//	@Failure		500	{object}	response.UserErrorResponse		"Error interno del servidor"
+//	@Router			/users/{id} [get]
 func (h *UserHandler) GetUserByIDHandler(c *gin.Context) {
 	var req request.GetUserByIDRequest
 

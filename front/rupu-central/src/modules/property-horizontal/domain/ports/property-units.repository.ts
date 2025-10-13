@@ -10,6 +10,7 @@ export interface GetPropertyUnitsParams {
   token: string;
   page?: number;
   pageSize?: number;
+  number?: string; // Filtro por número de unidad (búsqueda parcial, case-insensitive)
   unitType?: string;
   floor?: number;
   block?: string;

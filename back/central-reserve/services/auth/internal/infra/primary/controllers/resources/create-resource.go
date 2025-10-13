@@ -10,19 +10,20 @@ import (
 )
 
 // CreateResourceHandler crea un nuevo recurso
-// @Summary Crear recurso
-// @Description Crea un nuevo recurso en el sistema con nombre y descripción únicos
-// @Tags Resources
-// @Accept json
-// @Produce json
-// @Param request body request.CreateResourceRequest true "Datos del recurso a crear"
-// @Success 201 {object} map[string]interface{} "Recurso creado exitosamente"
-// @Failure 400 {object} map[string]interface{} "Datos de entrada inválidos"
-// @Failure 401 {object} map[string]interface{} "No autorizado"
-// @Failure 409 {object} map[string]interface{} "Recurso ya existe"
-// @Failure 500 {object} map[string]interface{} "Error interno del servidor"
-// @Router /resources [post]
-// @Security BearerAuth
+//
+//	@Summary		Crear recurso
+//	@Description	Crea un nuevo recurso en el sistema con nombre y descripción únicos
+//	@Tags			Resources
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		request.CreateResourceRequest	true	"Datos del recurso a crear"
+//	@Success		201		{object}	map[string]interface{}			"Recurso creado exitosamente"
+//	@Failure		400		{object}	map[string]interface{}			"Datos de entrada inválidos"
+//	@Failure		401		{object}	map[string]interface{}			"No autorizado"
+//	@Failure		409		{object}	map[string]interface{}			"Recurso ya existe"
+//	@Failure		500		{object}	map[string]interface{}			"Error interno del servidor"
+//	@Router			/resources [post]
+//	@Security		BearerAuth
 func (h *ResourceHandler) CreateResourceHandler(c *gin.Context) {
 	h.logger.Info().Msg("Iniciando creación de recurso")
 

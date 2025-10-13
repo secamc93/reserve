@@ -9,16 +9,17 @@ import (
 )
 
 // GetRolesHandler maneja la solicitud de obtener todos los roles
-// @Summary Obtener todos los roles
-// @Description Obtiene la lista completa de roles del sistema
-// @Tags Roles
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Success 200 {object} response.RoleListResponse "Roles obtenidos exitosamente"
-// @Failure 401 {object} response.RoleErrorResponse "Token de acceso requerido"
-// @Failure 500 {object} response.RoleErrorResponse "Error interno del servidor"
-// @Router /roles [get]
+//
+//	@Summary		Obtener todos los roles
+//	@Description	Obtiene la lista completa de roles del sistema
+//	@Tags			Roles
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{object}	response.RoleListResponse	"Roles obtenidos exitosamente"
+//	@Failure		401	{object}	response.RoleErrorResponse	"Token de acceso requerido"
+//	@Failure		500	{object}	response.RoleErrorResponse	"Error interno del servidor"
+//	@Router			/roles [get]
 func (h *RoleHandler) GetRolesHandler(c *gin.Context) {
 	h.logger.Info().Msg("Iniciando solicitud para obtener todos los roles")
 

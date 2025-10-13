@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Table, Badge, Spinner } from '@shared/ui';
+import { Table, Badge, Spinner, Alert, ConfirmModal } from '@shared/ui';
 import { getPropertyUnitsAction, deletePropertyUnitAction } from '../../infrastructure/actions';
 import { PropertyUnit, UNIT_TYPE_LABELS } from '../../domain';
 import { TokenStorage } from '@/modules/auth/infrastructure/storage';
@@ -16,6 +16,27 @@ export function PropertyUnitsTable({ hpId }: { hpId: number }) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState<PropertyUnit | null>(null);
+  
+  // Estados para alertas y confirmación
+  const [alert, setAlert] = useState<{ type: 'success' | 'error' | 'warning' | 'info'; message: string } | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [unitToDelete, setUnitToDelete] = useState<number | null>(null);
+  
+  // Estados para filtros
+  const [filters, setFilters] = useState({
+    number: undefined as string | undefined,
+    unitType: undefined as string | undefined,
+    floor: undefined as number | undefined,
+    block: undefined as string | undefined,
+    isActive: undefined as boolean | undefined,
+  });
+  const [filterInputs, setFilterInputs] = useState({
+    number: '',
+    unitType: '',
+    floor: '',
+    block: '',
+    isActive: '',
+  });
 
   const loadUnits = async () => {
     setLoading(true);
@@ -28,12 +49,15 @@ export function PropertyUnitsTable({ hpId }: { hpId: number }) {
         token,
         page: currentPage,
         pageSize: 10,
+        ...filters, // Aplicar filtros activos
       });
 
       setUnits(data.units);
       setTotalPages(data.totalPages);
     } catch (error) {
       console.error('Error al cargar unidades:', error);
+      setAlert({ type: 'error', message: 'Error al cargar las unidades' });
+      setTimeout(() => setAlert(null), 5000);
     } finally {
       setLoading(false);
     }
@@ -41,20 +65,63 @@ export function PropertyUnitsTable({ hpId }: { hpId: number }) {
 
   useEffect(() => {
     loadUnits();
-  }, [currentPage]);
+  }, [currentPage, filters]);
 
-  const handleDelete = async (unitId: number) => {
-    if (!confirm('¿Estás seguro de eliminar esta unidad?')) return;
+  const handleApplyFilters = () => {
+    setFilters({
+      number: filterInputs.number.trim() || undefined,
+      unitType: filterInputs.unitType || undefined,
+      floor: filterInputs.floor ? Number(filterInputs.floor) : undefined,
+      block: filterInputs.block.trim() || undefined,
+      isActive: filterInputs.isActive ? filterInputs.isActive === 'true' : undefined,
+    });
+    setCurrentPage(1);
+  };
+
+  const handleClearFilters = () => {
+    setFilterInputs({
+      number: '',
+      unitType: '',
+      floor: '',
+      block: '',
+      isActive: '',
+    });
+    setFilters({
+      number: undefined,
+      unitType: undefined,
+      floor: undefined,
+      block: undefined,
+      isActive: undefined,
+    });
+    setCurrentPage(1);
+  };
+
+  const hasActiveFilters = Object.values(filters).some(f => f !== undefined);
+
+  const handleDeleteClick = (unitId: number) => {
+    setUnitToDelete(unitId);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!unitToDelete) return;
 
     try {
       const token = TokenStorage.getToken();
       if (!token) throw new Error('No token found');
 
-      await deletePropertyUnitAction({ hpId, unitId, token });
+      await deletePropertyUnitAction({ hpId, unitId: unitToDelete, token });
       await loadUnits();
+      
+      setAlert({ type: 'success', message: 'Unidad eliminada correctamente' });
+      setTimeout(() => setAlert(null), 3000);
     } catch (error) {
       console.error('Error al eliminar unidad:', error);
-      alert('Error al eliminar la unidad');
+      setAlert({ type: 'error', message: 'Error al eliminar la unidad' });
+      setTimeout(() => setAlert(null), 5000);
+    } finally {
+      setShowDeleteConfirm(false);
+      setUnitToDelete(null);
     }
   };
 
@@ -91,7 +158,7 @@ export function PropertyUnitsTable({ hpId }: { hpId: number }) {
         <button onClick={() => handleEdit(unit)} className="btn btn-sm btn-outline">
           ✏️ Editar
         </button>
-        <button onClick={() => handleDelete(unit.id)} className="btn btn-sm btn-error">
+        <button onClick={() => handleDeleteClick(unit.id)} className="btn btn-sm btn-error">
           🗑️
         </button>
       </div>
@@ -109,6 +176,102 @@ export function PropertyUnitsTable({ hpId }: { hpId: number }) {
         <button onClick={() => setShowCreateModal(true)} className="btn btn-primary">
           ➕ Agregar Unidad
         </button>
+      </div>
+
+      {/* Alertas */}
+      {alert && (
+        <div className="mb-4">
+          <Alert type={alert.type} onClose={() => setAlert(null)}>
+            {alert.message}
+          </Alert>
+        </div>
+      )}
+
+      {/* Filtros */}
+      <div className="mb-4 bg-gray-50 border border-gray-200 rounded-lg p-4">
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">🔍 Filtros de Búsqueda</h3>
+        <div className="grid grid-cols-5 gap-3 mb-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Número</label>
+            <input
+              type="text"
+              placeholder="Ej: 101, A-201..."
+              value={filterInputs.number}
+              onChange={(e) => setFilterInputs({ ...filterInputs, number: e.target.value })}
+              className="input input-sm w-full"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Tipo</label>
+            <select
+              value={filterInputs.unitType}
+              onChange={(e) => setFilterInputs({ ...filterInputs, unitType: e.target.value })}
+              className="input input-sm w-full"
+            >
+              <option value="">Todos</option>
+              <option value="apartment">Apartamento</option>
+              <option value="house">Casa</option>
+              <option value="office">Oficina</option>
+              <option value="commercial">Local comercial</option>
+              <option value="parking">Parqueadero</option>
+              <option value="storage">Depósito</option>
+              <option value="penthouse">Penthouse</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Piso</label>
+            <input
+              type="number"
+              placeholder="Número"
+              value={filterInputs.floor}
+              onChange={(e) => setFilterInputs({ ...filterInputs, floor: e.target.value })}
+              className="input input-sm w-full"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Bloque</label>
+            <input
+              type="text"
+              placeholder="A, B, 1, 2..."
+              value={filterInputs.block}
+              onChange={(e) => setFilterInputs({ ...filterInputs, block: e.target.value })}
+              className="input input-sm w-full"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Estado</label>
+            <select
+              value={filterInputs.isActive}
+              onChange={(e) => setFilterInputs({ ...filterInputs, isActive: e.target.value })}
+              className="input input-sm w-full"
+            >
+              <option value="">Todos</option>
+              <option value="true">Activa</option>
+              <option value="false">Inactiva</option>
+            </select>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={handleApplyFilters}
+            className="btn btn-primary btn-sm"
+          >
+            🔍 Aplicar Filtros
+          </button>
+          {hasActiveFilters && (
+            <button
+              onClick={handleClearFilters}
+              className="btn btn-secondary btn-sm"
+            >
+              ✖️ Limpiar Filtros
+            </button>
+          )}
+          {hasActiveFilters && (
+            <span className="text-xs text-gray-600 flex items-center ml-2">
+              ℹ️ Filtros activos
+            </span>
+          )}
+        </div>
       </div>
 
       <Table columns={columns} data={data} />
@@ -161,6 +324,21 @@ export function PropertyUnitsTable({ hpId }: { hpId: number }) {
           }}
         />
       )}
+
+      {/* Modal de confirmación para eliminar */}
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false);
+          setUnitToDelete(null);
+        }}
+        onConfirm={handleDeleteConfirm}
+        title="Confirmar eliminación"
+        message="¿Estás seguro de que deseas eliminar esta unidad? Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        type="danger"
+      />
     </div>
   );
 }

@@ -24,6 +24,7 @@ type UpdatePropertyUnitRequest struct {
 }
 
 type PropertyUnitFiltersRequest struct {
+	Number   string `form:"number" example:"101"`
 	UnitType string `form:"unit_type" example:"apartment"`
 	Floor    *int   `form:"floor" example:"1"`
 	Block    string `form:"block" example:"A"`

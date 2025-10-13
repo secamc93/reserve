@@ -1,0 +1,1010 @@
+═══════════════════════════════════════════════════════════════════════════════
+  📱 API DE VOTACIÓN PÚBLICA - GUÍA COMPLETA PARA FRONTEND
+═══════════════════════════════════════════════════════════════════════════════
+
+BASE URL: http://localhost:3050/api/v1
+
+═══════════════════════════════════════════════════════════════════════════════
+🔑 IMPORTANTE: DOS TIPOS DE TOKENS
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 1. PUBLIC_VOTING_TOKEN                                                      │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ • Scope: "public_voting"                                                    │
+│ • Se obtiene: Escaneando el QR                                              │
+│ • Duración: 24 horas (configurable)                                         │
+│ • Contiene: voting_id, voting_group_id, hp_id                               │
+│ • Permite:                                                                   │
+│   - Ver contexto de la votación                                             │
+│   - Listar unidades                                                          │
+│   - Validar residente                                                        │
+│ • NO permite: Votar, ver resultados                                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 2. VOTING_AUTH_TOKEN                                                        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ • Scope: "voting_auth"                                                      │
+│ • Se obtiene: Después de validar DNI + unidad                               │
+│ • Duración: 2 horas                                                          │
+│ • Contiene: resident_id, voting_id, voting_group_id, hp_id                  │
+│ • Permite:                                                                   │
+│   - Ver información completa de votación                                     │
+│   - Ver opciones                                                             │
+│   - Votar                                                                    │
+│   - Ver resultados en tiempo real                                           │
+│   - Conectarse al SSE                                                        │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+⚠️ ERROR COMÚN:
+Usar PUBLIC_VOTING_TOKEN en endpoints que requieren VOTING_AUTH_TOKEN
+Resultado: 401 Unauthorized - "scope inválido para token de autenticación"
+
+═══════════════════════════════════════════════════════════════════════════════
+📋 FLUJO COMPLETO PASO A PASO
+═══════════════════════════════════════════════════════════════════════════════
+
+PASO 1: Usuario escanea QR
+  ↓
+  Obtiene: PUBLIC_VOTING_TOKEN
+  URL: https://app.com/public/vote?token=eyJhbGci...
+
+PASO 2: Obtener contexto (nombre de votación y propiedad)
+  ↓
+  GET /public/voting-context
+  Token: PUBLIC_VOTING_TOKEN
+
+PASO 3: Obtener lista de unidades
+  ↓
+  GET /public/property-units?number=101
+  Token: PUBLIC_VOTING_TOKEN
+
+PASO 4: Usuario selecciona unidad e ingresa DNI
+  ↓
+  POST /public/validate-resident
+  Token: PUBLIC_VOTING_TOKEN
+  Body: { property_unit_id, dni }
+  ↓
+  Respuesta: VOTING_AUTH_TOKEN ⬅️ ESTE ES EL NUEVO TOKEN
+
+PASO 5: Obtener información de votación
+  ↓
+  GET /public/voting-info
+  Token: VOTING_AUTH_TOKEN ⬅️ CAMBIO DE TOKEN
+
+PASO 6: Si ya votó, ver resultados en tiempo real
+  ↓
+  GET /public/units-with-residents (lista base)
+  GET /public/votes (votos actuales)
+  GET /public/voting-stream?token=... (SSE tiempo real)
+  Token: VOTING_AUTH_TOKEN
+
+PASO 7: Si no votó, permitir votar
+  ↓
+  POST /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/votes
+  Token: VOTING_AUTH_TOKEN
+
+═══════════════════════════════════════════════════════════════════════════════
+📡 ENDPOINTS PÚBLICOS
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 1. OBTENER CONTEXTO DE VOTACIÓN                                            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ GET /public/voting-context                                                  │
+│ Token: PUBLIC_VOTING_TOKEN (header Authorization)                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+REQUEST:
+GET /api/v1/public/voting-context
+Authorization: Bearer <PUBLIC_VOTING_TOKEN>
+
+RESPONSE SUCCESS (200):
+{
+  "success": true,
+  "message": "Contexto obtenido exitosamente",
+  "data": {
+    "property": {
+      "id": 14,
+      "name": "Conjunto Residencial Los Pinos",
+      "address": "Carrera 15 #45-67, Bogotá"
+    },
+    "voting": {
+      "id": 3,
+      "title": "Elección de presidente",
+      "description": "Votación para elegir presidente del consejo"
+    },
+    "voting_group": {
+      "id": 1,
+      "name": "Asamblea Ordinaria 2025",
+      "description": "Primera asamblea del año"
+    }
+  }
+}
+
+RESPONSE ERROR (401):
+{
+  "success": false,
+  "message": "Token de votación inválido",
+  "error": "token has invalid claims: token is expired"
+}
+
+─────────────────────────────────────────────────────────────────────────────
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 2. LISTAR UNIDADES DE PROPIEDAD                                            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ GET /public/property-units?number={buscar}                                 │
+│ Token: PUBLIC_VOTING_TOKEN (header Authorization)                           │
+│ Query Params: number (opcional) - Filtrar por número de unidad             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+REQUEST SIN FILTRO:
+GET /api/v1/public/property-units
+Authorization: Bearer <PUBLIC_VOTING_TOKEN>
+
+REQUEST CON FILTRO:
+GET /api/v1/public/property-units?number=101
+Authorization: Bearer <PUBLIC_VOTING_TOKEN>
+
+RESPONSE SUCCESS (200):
+{
+  "success": true,
+  "data": {
+    "units": [
+      { "id": 1, "number": "101" },
+      { "id": 2, "number": "102" },
+      { "id": 43, "number": "126" }
+    ]
+  }
+}
+
+NOTA: 
+- Sin paginación (trae hasta 1000 unidades)
+- Solo devuelve id y number (lo mínimo para seleccionar)
+
+─────────────────────────────────────────────────────────────────────────────
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 3. VALIDAR RESIDENTE                                                        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ POST /public/validate-resident                                              │
+│ Token: PUBLIC_VOTING_TOKEN (header Authorization)                           │
+│ ⚠️  IMPORTANTE: Este endpoint retorna el VOTING_AUTH_TOKEN                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+REQUEST:
+POST /api/v1/public/validate-resident
+Authorization: Bearer <PUBLIC_VOTING_TOKEN>
+Content-Type: application/json
+
+{
+  "property_unit_id": 43,
+  "dni": "12345678"
+}
+
+RESPONSE SUCCESS (200):
+{
+  "success": true,
+  "message": "Residente validado exitosamente",
+  "data": {
+    "resident_id": 5,
+    "resident_name": "Juan Pérez",
+    "property_unit_id": 43,
+    "property_unit_number": "126",
+    "voting_auth_token": "eyJhbGci...",  ⬅️ ⚠️ GUARDAR ESTE TOKEN
+    "voting_id": 3,
+    "voting_group_id": 1,
+    "hp_id": 14
+  }
+}
+
+⚠️ IMPORTANTE FRONTEND:
+const votingAuthToken = response.data.voting_auth_token;
+// USAR ESTE TOKEN EN TODOS LOS SIGUIENTES ENDPOINTS
+
+RESPONSE ERROR (404):
+{
+  "success": false,
+  "message": "Residente no encontrado",
+  "error": "residente no encontrado"
+}
+
+RESPONSE ERROR (403):
+{
+  "success": false,
+  "message": "Residente inactivo",
+  "error": "residente inactivo"
+}
+
+─────────────────────────────────────────────────────────────────────────────
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 4. OBTENER INFORMACIÓN DE VOTACIÓN                                         │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ GET /public/voting-info                                                     │
+│ Token: VOTING_AUTH_TOKEN (header Authorization)                             │
+│ ⚠️  CAMBIO DE TOKEN - Usar el que obtuviste en validate-resident           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+REQUEST:
+GET /api/v1/public/voting-info
+Authorization: Bearer <VOTING_AUTH_TOKEN>  ⚠️ Token diferente
+
+RESPONSE SI NO HA VOTADO (200):
+{
+  "success": true,
+  "message": "Información de votación obtenida exitosamente",
+  "data": {
+    "voting": {
+      "id": 3,
+      "voting_group_id": 1,
+      "title": "Elección de presidente",
+      "description": "Votación para elegir presidente",
+      "voting_type": "simple",
+      "is_secret": false,
+      "allow_abstention": true,
+      "is_active": true,
+      "display_order": 1,
+      "required_percentage": 50
+    },
+    "options": [
+      {
+        "id": 2,
+        "voting_id": 3,
+        "option_text": "Sí",
+        "option_code": "yes",
+        "display_order": 1,
+        "is_active": true
+      },
+      {
+        "id": 3,
+        "voting_id": 3,
+        "option_text": "No",
+        "option_code": "no",
+        "display_order": 2,
+        "is_active": true
+      }
+    ],
+    "has_voted": false,  ⬅️ No ha votado
+    "hp_id": 14,
+    "voting_group_id": 1,
+    "resident_id": 1
+  }
+}
+
+RESPONSE SI YA VOTÓ (200):
+{
+  "success": true,
+  "data": {
+    "voting": { ... },
+    "options": [ ... ],
+    "has_voted": true,  ⬅️ Ya votó
+    "my_vote": {
+      "id": 4,
+      "voting_id": 3,
+      "resident_id": 1,
+      "voting_option_id": 3,
+      "option_text": "No",      ⬅️ Qué eligió
+      "option_code": "no",
+      "voted_at": "2025-10-12T21:49:03Z"
+    },
+    "results": [
+      {
+        "voting_option_id": 2,
+        "option_text": "Sí",
+        "option_code": "yes",
+        "vote_count": 45,
+        "percentage": 75.0
+      },
+      {
+        "voting_option_id": 3,
+        "option_text": "No",
+        "option_code": "no",
+        "vote_count": 15,
+        "percentage": 25.0
+      }
+    ],
+    "hp_id": 14,
+    "voting_group_id": 1,
+    "resident_id": 1
+  }
+}
+
+LÓGICA FRONTEND:
+if (data.has_voted) {
+  // Mostrar: "Ya votaste por: {data.my_vote.option_text}"
+  // Mostrar resultados con data.results
+  // Deshabilitar botones de votación
+  // Conectar a SSE para ver resultados en tiempo real
+} else {
+  // Mostrar opciones con data.options
+  // Habilitar botones para votar
+}
+
+─────────────────────────────────────────────────────────────────────────────
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 5. LISTAR UNIDADES CON RESIDENTES (para dashboard en tiempo real)         │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ GET /public/units-with-residents                                            │
+│ Token: VOTING_AUTH_TOKEN (header Authorization)                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+REQUEST:
+GET /api/v1/public/units-with-residents
+Authorization: Bearer <VOTING_AUTH_TOKEN>
+
+RESPONSE SUCCESS (200):
+{
+  "success": true,
+  "message": "Unidades con residentes obtenidas exitosamente",
+  "data": [
+    {
+      "property_unit_id": 19,
+      "property_unit_number": "102",
+      "resident_id": 1,
+      "resident_name": "Juan Pérez"
+    },
+    {
+      "property_unit_id": 20,
+      "property_unit_number": "103",
+      "resident_id": 2,
+      "resident_name": "María López"
+    },
+    {
+      "property_unit_id": 21,
+      "property_unit_number": "104",
+      "resident_id": null,          ⬅️ Unidad sin residente
+      "resident_name": null
+    },
+    {
+      "property_unit_id": 22,
+      "property_unit_number": "105",
+      "resident_id": 3,
+      "resident_name": "Pedro García"
+    }
+  ]
+}
+
+PROPÓSITO:
+Esta es la lista BASE para cruzar con los votos.
+
+─────────────────────────────────────────────────────────────────────────────
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 6. LISTAR VOTOS EMITIDOS                                                   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ GET /public/votes                                                           │
+│ Token: VOTING_AUTH_TOKEN (header Authorization)                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+REQUEST:
+GET /api/v1/public/votes
+Authorization: Bearer <VOTING_AUTH_TOKEN>
+
+RESPONSE SUCCESS (200):
+{
+  "success": true,
+  "message": "Votos obtenidos exitosamente",
+  "data": [
+    {
+      "id": 4,
+      "voting_id": 3,
+      "resident_id": 1,
+      "voting_option_id": 3,
+      "voted_at": "2025-10-12T21:49:03Z"
+    },
+    {
+      "id": 3,
+      "voting_id": 3,
+      "resident_id": 2,
+      "voting_option_id": 2,
+      "voted_at": "2025-10-12T21:37:49Z"
+    }
+  ]
+}
+
+PROPÓSITO:
+Lista de votos para cruzar con unidades y opciones en el frontend.
+
+─────────────────────────────────────────────────────────────────────────────
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 7. SSE - STREAM EN TIEMPO REAL                                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ GET /public/voting-stream?token={VOTING_AUTH_TOKEN}                        │
+│ ⚠️  Token por QUERY STRING (EventSource no soporta headers)                │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+REQUEST:
+const eventSource = new EventSource(
+  `http://localhost:3050/api/v1/public/voting-stream?token=${votingAuthToken}`
+);
+
+⚠️ IMPORTANTE:
+- Token va en QUERY STRING, no en headers
+- EventSource NO soporta headers personalizados
+- El backend validará el token desde ?token=...
+
+EVENTOS QUE RECIBES:
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Evento 1: connected (confirmación de conexión)                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+event: connected
+data: {
+  "message": "Conectado al stream de votación",
+  "voting_id": 3,
+  "resident_id": 1
+}
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Evento 2: initial_data (PRECARGA - votos existentes)                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+event: initial_data
+data: {
+  "votes": [
+    {
+      "id": 4,
+      "voting_id": 3,
+      "resident_id": 1,
+      "voting_option_id": 3,
+      "voted_at": "2025-10-12T21:49:03Z"
+    },
+    {
+      "id": 3,
+      "voting_id": 3,
+      "resident_id": 2,
+      "voting_option_id": 2,
+      "voted_at": "2025-10-12T21:37:49Z"
+    }
+  ]
+}
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Evento 3: new_vote (TIEMPO REAL - cada nuevo voto)                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+event: new_vote
+data: {
+  "id": 5,
+  "voting_id": 3,
+  "resident_id": 3,
+  "voting_option_id": 2,
+  "voted_at": "2025-10-13T01:45:00Z"
+}
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Evento 4: heartbeat (cada 30 segundos - mantiene conexión viva)            │
+└─────────────────────────────────────────────────────────────────────────────┘
+event: heartbeat
+data: {"timestamp": 1728780000}
+
+═══════════════════════════════════════════════════════════════════════════════
+💻 CÓDIGO FRONTEND COMPLETO
+═══════════════════════════════════════════════════════════════════════════════
+
+```typescript
+import { useState, useEffect } from 'react';
+
+function PublicVotingPage() {
+  // ══════════════════════════════════════════════════════════════════════
+  // PASO 1: Obtener token del QR
+  // ══════════════════════════════════════════════════════════════════════
+  const urlParams = new URLSearchParams(window.location.search);
+  const publicToken = urlParams.get('token');
+
+  if (!publicToken) {
+    return <div>Error: Token no encontrado en URL</div>;
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // PASO 2: Obtener contexto (nombre de votación y propiedad)
+  // ══════════════════════════════════════════════════════════════════════
+  const [context, setContext] = useState(null);
+
+  useEffect(() => {
+    fetch('http://localhost:3050/api/v1/public/voting-context', {
+      headers: {
+        'Authorization': `Bearer ${publicToken}`  // ⬅️ PUBLIC_VOTING_TOKEN
+      }
+    })
+      .then(r => r.json())
+      .then(({ data }) => setContext(data))
+      .catch(err => console.error('Error obteniendo contexto:', err));
+  }, [publicToken]);
+
+  // ══════════════════════════════════════════════════════════════════════
+  // PASO 3: Obtener unidades para seleccionar
+  // ══════════════════════════════════════════════════════════════════════
+  const [units, setUnits] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const fetchUnits = (search = '') => {
+    const url = new URL('http://localhost:3050/api/v1/public/property-units');
+    if (search) {
+      url.searchParams.append('number', search);
+    }
+
+    fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${publicToken}`  // ⬅️ PUBLIC_VOTING_TOKEN
+      }
+    })
+      .then(r => r.json())
+      .then(({ data }) => setUnits(data.units))
+      .catch(err => console.error('Error obteniendo unidades:', err));
+  };
+
+  useEffect(() => {
+    fetchUnits();
+  }, [publicToken]);
+
+  // ══════════════════════════════════════════════════════════════════════
+  // PASO 4: Validar residente (obtener VOTING_AUTH_TOKEN)
+  // ══════════════════════════════════════════════════════════════════════
+  const [votingAuthToken, setVotingAuthToken] = useState(null);
+  const [selectedUnit, setSelectedUnit] = useState(null);
+  const [dni, setDni] = useState('');
+
+  const handleValidateResident = async () => {
+    try {
+      const response = await fetch('http://localhost:3050/api/v1/public/validate-resident', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${publicToken}`,  // ⬅️ PUBLIC_VOTING_TOKEN
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          property_unit_id: selectedUnit,
+          dni: dni
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // ⚠️ GUARDAR EL NUEVO TOKEN
+        setVotingAuthToken(result.data.voting_auth_token);
+        console.log('✅ Residente validado:', result.data.resident_name);
+      } else {
+        alert(`Error: ${result.message}`);
+      }
+    } catch (error) {
+      console.error('Error validando residente:', error);
+    }
+  };
+
+  // ══════════════════════════════════════════════════════════════════════
+  // PASO 5: Obtener información de votación
+  // ══════════════════════════════════════════════════════════════════════
+  const [votingInfo, setVotingInfo] = useState(null);
+
+  useEffect(() => {
+    if (!votingAuthToken) return;
+
+    fetch('http://localhost:3050/api/v1/public/voting-info', {
+      headers: {
+        'Authorization': `Bearer ${votingAuthToken}`  // ⬅️ VOTING_AUTH_TOKEN
+      }
+    })
+      .then(r => r.json())
+      .then(({ data }) => {
+        setVotingInfo(data);
+        console.log('Has votado:', data.has_voted);
+      })
+      .catch(err => console.error('Error obteniendo info:', err));
+  }, [votingAuthToken]);
+
+  // ══════════════════════════════════════════════════════════════════════
+  // PASO 6: DASHBOARD EN TIEMPO REAL (si ya votó)
+  // ══════════════════════════════════════════════════════════════════════
+  const [allUnits, setAllUnits] = useState([]);
+  const [allVotes, setAllVotes] = useState({});
+  const [allOptions, setAllOptions] = useState({});
+
+  useEffect(() => {
+    if (!votingAuthToken || !votingInfo?.has_voted) return;
+
+    // 1. Cargar opciones (para cruzar)
+    if (votingInfo.options) {
+      const optionsMap = {};
+      votingInfo.options.forEach(opt => {
+        optionsMap[opt.id] = opt;
+      });
+      setAllOptions(optionsMap);
+    }
+
+    // 2. Cargar todas las unidades con residentes
+    fetch('http://localhost:3050/api/v1/public/units-with-residents', {
+      headers: {
+        'Authorization': `Bearer ${votingAuthToken}`  // ⬅️ VOTING_AUTH_TOKEN
+      }
+    })
+      .then(r => r.json())
+      .then(({ data }) => {
+        setAllUnits(data);
+        console.log('📦 Unidades cargadas:', data.length);
+      });
+
+    // 3. Cargar votos actuales
+    fetch('http://localhost:3050/api/v1/public/votes', {
+      headers: {
+        'Authorization': `Bearer ${votingAuthToken}`  // ⬅️ VOTING_AUTH_TOKEN
+      }
+    })
+      .then(r => r.json())
+      .then(({ data }) => {
+        // Convertir a map para búsqueda rápida
+        const votesMap = {};
+        data.forEach(vote => {
+          votesMap[vote.resident_id] = vote;
+        });
+        setAllVotes(votesMap);
+        console.log('📦 Votos cargados:', data.length);
+      });
+
+    // 4. Conectar al SSE para actualizaciones en tiempo real
+    const eventSource = new EventSource(
+      `http://localhost:3050/api/v1/public/voting-stream?token=${votingAuthToken}`
+      // ⚠️ Token por QUERY STRING, no header
+    );
+
+    eventSource.addEventListener('connected', (e) => {
+      console.log('✅ SSE conectado:', JSON.parse(e.data));
+    });
+
+    // PRECARGA (si no cargaste votos antes)
+    eventSource.addEventListener('initial_data', (e) => {
+      const data = JSON.parse(e.data);
+      console.log('📦 Precarga SSE:', data.votes.length, 'votos');
+      
+      const votesMap = {};
+      data.votes.forEach(vote => {
+        votesMap[vote.resident_id] = vote;
+      });
+      setAllVotes(votesMap);
+    });
+
+    // NUEVO VOTO EN TIEMPO REAL
+    eventSource.addEventListener('new_vote', (e) => {
+      const newVote = JSON.parse(e.data);
+      console.log('🗳️ Nuevo voto en tiempo real:', newVote);
+      
+      // Agregar al map
+      setAllVotes(prev => ({
+        ...prev,
+        [newVote.resident_id]: newVote
+      }));
+    });
+
+    eventSource.addEventListener('heartbeat', () => {
+      console.log('💓 Heartbeat');
+    });
+
+    eventSource.onerror = (error) => {
+      console.error('❌ Error SSE:', error);
+      eventSource.close();
+    };
+
+    return () => {
+      console.log('🔌 Desconectando SSE');
+      eventSource.close();
+    };
+  }, [votingAuthToken, votingInfo]);
+
+  // ══════════════════════════════════════════════════════════════════════
+  // RENDERIZAR DASHBOARD CON CRUCE DE DATOS
+  // ══════════════════════════════════════════════════════════════════════
+  const unitsWithVotes = allUnits.map(unit => {
+    const vote = allVotes[unit.resident_id];
+    const option = vote ? allOptions[vote.voting_option_id] : null;
+
+    return {
+      ...unit,
+      has_voted: !!vote,
+      vote_option_text: option?.option_text || null,
+      vote_option_code: option?.option_code || null,
+      voted_at: vote?.voted_at || null
+    };
+  });
+
+  // Calcular estadísticas
+  const totalUnits = allUnits.length;
+  const unitsVoted = Object.keys(allVotes).length;
+  const unitsPending = totalUnits - unitsVoted;
+
+  return (
+    <div className="public-voting-page">
+      {/* Contexto */}
+      {context && (
+        <div className="context">
+          <h1>{context.property.name}</h1>
+          <p>{context.property.address}</p>
+          <h2>{context.voting.title}</h2>
+          <p>{context.voting.description}</p>
+        </div>
+      )}
+
+      {/* Selección de unidad */}
+      {!votingAuthToken && (
+        <div className="unit-selection">
+          <input
+            type="text"
+            placeholder="Buscar unidad (ej: 101)"
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              fetchUnits(e.target.value);
+            }}
+          />
+          <select onChange={(e) => setSelectedUnit(Number(e.target.value))}>
+            <option value="">Selecciona tu unidad</option>
+            {units.map(unit => (
+              <option key={unit.id} value={unit.id}>
+                {unit.number}
+              </option>
+            ))}
+          </select>
+          <input
+            type="text"
+            placeholder="Ingresa tu DNI"
+            value={dni}
+            onChange={(e) => setDni(e.target.value)}
+          />
+          <button onClick={handleValidateResident}>
+            Validar identidad
+          </button>
+        </div>
+      )}
+
+      {/* Información de votación */}
+      {votingInfo && !votingInfo.has_voted && (
+        <div className="voting-options">
+          <h3>Opciones de votación</h3>
+          {votingInfo.options.map(option => (
+            <button key={option.id} onClick={() => vote(option.id)}>
+              {option.option_text}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Dashboard en tiempo real (si ya votó) */}
+      {votingInfo && votingInfo.has_voted && (
+        <div className="live-dashboard">
+          <h3>Resultados en tiempo real</h3>
+          
+          {/* Tu voto */}
+          <div className="my-vote">
+            <h4>Tu voto</h4>
+            <p>Votaste: <strong>{votingInfo.my_vote.option_text}</strong></p>
+            <small>{new Date(votingInfo.my_vote.voted_at).toLocaleString()}</small>
+          </div>
+
+          {/* Estadísticas generales */}
+          <div className="stats">
+            <div>Total unidades: {totalUnits}</div>
+            <div>Han votado: {unitsVoted}</div>
+            <div>Pendientes: {unitsPending}</div>
+          </div>
+
+          {/* Resumen por opción */}
+          {votingInfo.results && (
+            <div className="summary">
+              {votingInfo.results.map(result => (
+                <div key={result.voting_option_id} className="result-bar">
+                  <span>{result.option_text}</span>
+                  <div 
+                    className="bar" 
+                    style={{width: `${result.percentage}%`}}
+                  />
+                  <span>{result.vote_count} votos ({result.percentage.toFixed(1)}%)</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Lista detallada por unidad */}
+          <div className="units-list">
+            <h4>Detalle por unidad</h4>
+            {unitsWithVotes.map(unit => (
+              <div 
+                key={unit.property_unit_id} 
+                className={`unit-item ${unit.has_voted ? 'voted' : 'pending'}`}
+              >
+                <div className="unit-number">{unit.property_unit_number}</div>
+                <div className="resident">
+                  {unit.resident_name || 'Sin residente'}
+                </div>
+                {unit.has_voted ? (
+                  <div className="voted">
+                    ✅ Votó: <strong>{unit.vote_option_text}</strong>
+                    <small>{new Date(unit.voted_at).toLocaleTimeString()}</small>
+                  </div>
+                ) : (
+                  <div className="pending">⏳ Pendiente</div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+═══════════════════════════════════════════════════════════════════════════════
+❌ ERRORES COMUNES Y SOLUCIONES
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ ERROR 1: 404 Not Found - /api/v1/public/votes/stream                       │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Problema: Ruta incorrecta                                                   │
+│ ❌ Incorrecto: /api/v1/public/votes/stream                                  │
+│ ✅ Correcto:   /api/v1/public/voting-stream                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ ERROR 2: 401 Unauthorized - "scope inválido"                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Problema: Usando PUBLIC_VOTING_TOKEN en endpoint que requiere              │
+│           VOTING_AUTH_TOKEN                                                  │
+│                                                                              │
+│ Solución:                                                                    │
+│ 1. Validar residente primero: POST /public/validate-resident               │
+│ 2. Guardar el voting_auth_token de la respuesta                            │
+│ 3. Usar ese token en los siguientes endpoints                              │
+│                                                                              │
+│ ❌ Incorrecto:                                                              │
+│    fetch('/public/voting-info', {                                           │
+│      headers: { 'Authorization': `Bearer ${publicToken}` }                 │
+│    });                                                                       │
+│                                                                              │
+│ ✅ Correcto:                                                                │
+│    fetch('/public/voting-info', {                                           │
+│      headers: { 'Authorization': `Bearer ${votingAuthToken}` }             │
+│    });                                                                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ ERROR 3: EventSource no envía el token                                     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Problema: EventSource NO soporta headers personalizados                     │
+│                                                                              │
+│ ❌ Incorrecto:                                                              │
+│    const es = new EventSource('/public/voting-stream', {                   │
+│      headers: { 'Authorization': 'Bearer token' }  // NO funciona          │
+│    });                                                                       │
+│                                                                              │
+│ ✅ Correcto:                                                                │
+│    const es = new EventSource(                                              │
+│      `/public/voting-stream?token=${votingAuthToken}`                      │
+│    );                                                                        │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ ERROR 4: Token expirado                                                     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Problema: El token tiene tiempo de expiración                               │
+│                                                                              │
+│ PUBLIC_VOTING_TOKEN: 24 horas                                               │
+│ VOTING_AUTH_TOKEN: 2 horas                                                  │
+│                                                                              │
+│ Solución: Manejar error 401 y pedir al usuario que vuelva a escanear QR    │
+│                                                                              │
+│ if (response.status === 401) {                                              │
+│   alert('Tu sesión ha expirado. Por favor escanea el QR nuevamente.');     │
+│   window.location.href = '/';                                               │
+│ }                                                                            │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════
+📊 RESUMEN DE ENDPOINTS
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ CON PUBLIC_VOTING_TOKEN (header Authorization)                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 1. GET  /public/voting-context         → Ver nombre de votación/propiedad  │
+│ 2. GET  /public/property-units?number= → Listar/buscar unidades            │
+│ 3. POST /public/validate-resident      → Validar DNI (obtiene AUTH token)  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ CON VOTING_AUTH_TOKEN                                                       │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 1. GET /public/voting-info              → Info + opciones + si ya votó     │
+│    (header Authorization)                                                    │
+│                                                                              │
+│ 2. GET /public/units-with-residents     → Lista base para cruzar           │
+│    (header Authorization)                                                    │
+│                                                                              │
+│ 3. GET /public/votes                    → Votos emitidos (IDs)             │
+│    (header Authorization)                                                    │
+│                                                                              │
+│ 4. GET /public/voting-stream?token=...  → SSE tiempo real                  │
+│    (query string)                        ⚠️ Token por query, no header     │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════
+🔄 FLUJO DE TOKENS (DIAGRAMA)
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────┐
+│ 1. Escanear QR  │
+└────────┬────────┘
+         │
+         v
+┌─────────────────────────────┐
+│ PUBLIC_VOTING_TOKEN         │  ⬅️ Token 1
+│ (scope: "public_voting")    │
+└────────┬────────────────────┘
+         │
+         │ Usar en:
+         ├─→ GET /voting-context
+         ├─→ GET /property-units
+         └─→ POST /validate-resident
+                    │
+                    v
+         ┌─────────────────────────────┐
+         │ VOTING_AUTH_TOKEN           │  ⬅️ Token 2
+         │ (scope: "voting_auth")      │
+         └────────┬────────────────────┘
+                  │
+                  │ Usar en:
+                  ├─→ GET /voting-info
+                  ├─→ GET /units-with-residents
+                  ├─→ GET /votes
+                  └─→ GET /voting-stream?token=...
+
+═══════════════════════════════════════════════════════════════════════════════
+🔍 DEBUGGING
+═══════════════════════════════════════════════════════════════════════════════
+
+Ver logs del backend:
+• Cada endpoint imprime logs detallados
+• Busca emojis: 🔗 🔐 👤 ✅ 📊 🗳️ 📡
+• Verifica qué token estás enviando
+
+Ejemplo de logs correctos:
+```
+🔐 [VOTACION PUBLICA - VALIDACION TOKEN]
+   Token decodificado exitosamente
+   HP ID: 14
+   Grupo de Votación ID: 1
+   Votación ID: 3
+   Scope: public_voting  ⬅️ Verificar scope
+
+✅ [VOTACION PUBLICA - RESIDENTE ENCONTRADO]
+   Residente ID: 1
+   Nombre: Juan Pérez
+   Unidad: 102
+
+🎫 [VOTACION PUBLICA - TOKEN DE AUTENTICACION GENERADO]
+   Scope: voting_auth  ⬅️ Nuevo scope
+```
+
+═══════════════════════════════════════════════════════════════════════════════
+📝 CHECKLIST PARA EL FRONTEND
+═══════════════════════════════════════════════════════════════════════════════
+
+□ Extraer PUBLIC_VOTING_TOKEN del query string (?token=...)
+□ Llamar /voting-context para mostrar nombre de votación
+□ Llamar /property-units para listar unidades
+□ Permitir búsqueda con ?number= 
+□ Al validar residente, GUARDAR el voting_auth_token
+□ CAMBIAR a VOTING_AUTH_TOKEN para los siguientes endpoints
+□ Ruta SSE correcta: /public/voting-stream (no /votes/stream)
+□ Token SSE por query string: ?token=... (no en header)
+□ Cruzar datos en frontend (units + votes + options)
+□ Manejar error 401 (token expirado)
+□ Cerrar EventSource al desmontar componente
+
+═══════════════════════════════════════════════════════════════════════════════
+FIN DEL DOCUMENTO
+═══════════════════════════════════════════════════════════════════════════════
+

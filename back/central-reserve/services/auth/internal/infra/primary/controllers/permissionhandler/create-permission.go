@@ -10,19 +10,20 @@ import (
 )
 
 // CreatePermissionHandler maneja la solicitud de crear un nuevo permiso
-// @Summary Crear nuevo permiso
-// @Description Crea un nuevo permiso en el sistema
-// @Tags Permissions
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param permission body request.CreatePermissionRequest true "Datos del permiso a crear"
-// @Success 201 {object} response.PermissionMessageResponse "Permiso creado exitosamente"
-// @Failure 400 {object} response.PermissionErrorResponse "Datos de entrada inválidos"
-// @Failure 401 {object} response.PermissionErrorResponse "Token de acceso requerido"
-// @Failure 409 {object} response.PermissionErrorResponse "Permiso con código duplicado"
-// @Failure 500 {object} response.PermissionErrorResponse "Error interno del servidor"
-// @Router /permissions [post]
+//
+//	@Summary		Crear nuevo permiso
+//	@Description	Crea un nuevo permiso en el sistema
+//	@Tags			Permissions
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			permission	body		request.CreatePermissionRequest		true	"Datos del permiso a crear"
+//	@Success		201			{object}	response.PermissionMessageResponse	"Permiso creado exitosamente"
+//	@Failure		400			{object}	response.PermissionErrorResponse	"Datos de entrada inválidos"
+//	@Failure		401			{object}	response.PermissionErrorResponse	"Token de acceso requerido"
+//	@Failure		409			{object}	response.PermissionErrorResponse	"Permiso con código duplicado"
+//	@Failure		500			{object}	response.PermissionErrorResponse	"Error interno del servidor"
+//	@Router			/permissions [post]
 func (h *PermissionHandler) CreatePermissionHandler(c *gin.Context) {
 	var req request.CreatePermissionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

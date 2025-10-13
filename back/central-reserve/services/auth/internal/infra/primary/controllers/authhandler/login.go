@@ -11,18 +11,19 @@ import (
 )
 
 // LoginHandler maneja la solicitud de login
-// @Summary Autenticar usuario
-// @Description Autentica un usuario con email y contraseña, retornando información del usuario y token de acceso
-// @Tags Auth
-// @Accept json
-// @Produce json
-// @Param request body request.LoginRequest true "Credenciales de login"
-// @Success 200 {object} response.LoginSuccessResponse "Login exitoso"
-// @Failure 400 {object} response.LoginBadRequestResponse "Datos de entrada inválidos"
-// @Failure 401 {object} response.LoginErrorResponse "Credenciales inválidas"
-// @Failure 403 {object} response.LoginErrorResponse "Usuario inactivo"
-// @Failure 500 {object} response.LoginErrorResponse "Error interno del servidor"
-// @Router /auth/login [post]
+//
+//	@Summary		Autenticar usuario
+//	@Description	Autentica un usuario con email y contraseña, retornando información del usuario y token de acceso
+//	@Tags			Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		request.LoginRequest				true	"Credenciales de login"
+//	@Success		200		{object}	response.LoginSuccessResponse		"Login exitoso"
+//	@Failure		400		{object}	response.LoginBadRequestResponse	"Datos de entrada inválidos"
+//	@Failure		401		{object}	response.LoginErrorResponse			"Credenciales inválidas"
+//	@Failure		403		{object}	response.LoginErrorResponse			"Usuario inactivo"
+//	@Failure		500		{object}	response.LoginErrorResponse			"Error interno del servidor"
+//	@Router			/auth/login [post]
 func (h *AuthHandler) LoginHandler(c *gin.Context) {
 	var loginRequest request.LoginRequest
 

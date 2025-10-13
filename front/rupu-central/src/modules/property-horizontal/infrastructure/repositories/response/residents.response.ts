@@ -2,6 +2,19 @@
  * Tipos de respuesta del backend para Residents
  */
 
+// Interfaz para el listado (información resumida)
+export interface BackendResidentListItem {
+  id: number;
+  property_unit_number: string;
+  resident_type_name: string;
+  name: string;
+  email: string;
+  phone?: string;
+  is_main_resident: boolean;
+  is_active: boolean;
+}
+
+// Interfaz para el detalle completo
 export interface BackendResident {
   id: number;
   business_id: number;
@@ -30,7 +43,7 @@ export interface BackendGetResidentsResponse {
   success: boolean;
   message: string;
   data: {
-    residents: BackendResident[];
+    residents: BackendResidentListItem[]; // Cambiado a lista resumida
     total: number;
     page: number;
     page_size: number;

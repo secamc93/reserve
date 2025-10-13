@@ -11,19 +11,20 @@ import (
 )
 
 // GetUserRolesPermissionsHandler maneja la solicitud de obtener roles y permisos del usuario
-// @Summary Obtener roles y permisos del usuario
-// @Description Obtiene los roles y permisos del usuario autenticado validados contra recursos configurados del business
-// @Tags Auth
-// @Accept json
-// @Produce json
-// @Param business_id query int true "ID del business para validar recursos activos"
-// @Security BearerAuth
-// @Success 200 {object} response.UserRolesPermissionsSuccessResponse "Roles y permisos obtenidos exitosamente"
-// @Failure 400 {object} response.LoginErrorResponse "Business ID requerido o inválido"
-// @Failure 401 {object} response.LoginErrorResponse "Token de acceso requerido"
-// @Failure 404 {object} response.LoginErrorResponse "Usuario no encontrado"
-// @Failure 500 {object} response.LoginErrorResponse "Error interno del servidor"
-// @Router /auth/roles-permissions [get]
+//
+//	@Summary		Obtener roles y permisos del usuario
+//	@Description	Obtiene los roles y permisos del usuario autenticado validados contra recursos configurados del business
+//	@Tags			Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			business_id	query	int	true	"ID del business para validar recursos activos"
+//	@Security		BearerAuth
+//	@Success		200	{object}	response.UserRolesPermissionsSuccessResponse	"Roles y permisos obtenidos exitosamente"
+//	@Failure		400	{object}	response.LoginErrorResponse						"Business ID requerido o inválido"
+//	@Failure		401	{object}	response.LoginErrorResponse						"Token de acceso requerido"
+//	@Failure		404	{object}	response.LoginErrorResponse						"Usuario no encontrado"
+//	@Failure		500	{object}	response.LoginErrorResponse						"Error interno del servidor"
+//	@Router			/auth/roles-permissions [get]
 func (h *AuthHandler) GetUserRolesPermissionsHandler(c *gin.Context) {
 	// Obtener el ID del usuario autenticado desde el middleware
 	userID, exists := middleware.GetUserID(c)

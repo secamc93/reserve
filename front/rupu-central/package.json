@@ -6,10 +6,15 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "clean": "rm -rf .next",
+    "clean:dev": "rm -rf .next && npm run dev",
+    "clean:all": "rm -rf .next node_modules && npm install"
   },
   "dependencies": {
+    "@types/qrcode": "^1.5.5",
     "next": "15.5.4",
+    "qrcode": "^1.5.4",
     "qrcode.react": "^4.2.0",
     "react": "19.1.0",
     "react-dom": "19.1.0"

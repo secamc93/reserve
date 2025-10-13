@@ -10,19 +10,20 @@ import (
 )
 
 // ChangePasswordHandler maneja la solicitud de cambio de contraseña
-// @Summary Cambiar contraseña
-// @Description Cambia la contraseña del usuario autenticado
-// @Tags Auth
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param password body request.ChangePasswordRequest true "Datos para cambiar contraseña"
-// @Success 200 {object} response.ChangePasswordResponse "Contraseña cambiada exitosamente"
-// @Failure 400 {object} response.LoginErrorResponse "Datos inválidos"
-// @Failure 401 {object} response.LoginErrorResponse "Token de acceso requerido"
-// @Failure 403 {object} response.LoginErrorResponse "Contraseña actual incorrecta"
-// @Failure 500 {object} response.LoginErrorResponse "Error interno del servidor"
-// @Router /auth/change-password [post]
+//
+//	@Summary		Cambiar contraseña
+//	@Description	Cambia la contraseña del usuario autenticado
+//	@Tags			Auth
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			password	body		request.ChangePasswordRequest	true	"Datos para cambiar contraseña"
+//	@Success		200			{object}	response.ChangePasswordResponse	"Contraseña cambiada exitosamente"
+//	@Failure		400			{object}	response.LoginErrorResponse		"Datos inválidos"
+//	@Failure		401			{object}	response.LoginErrorResponse		"Token de acceso requerido"
+//	@Failure		403			{object}	response.LoginErrorResponse		"Contraseña actual incorrecta"
+//	@Failure		500			{object}	response.LoginErrorResponse		"Error interno del servidor"
+//	@Router			/auth/change-password [post]
 func (h *AuthHandler) ChangePasswordHandler(c *gin.Context) {
 	var changePasswordRequest request.ChangePasswordRequest
 

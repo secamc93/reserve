@@ -1,7 +1,9 @@
 package handlerpropertyunit
 
 import (
+	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 
 	"central_reserve/services/horizontalproperty/internal/domain"
@@ -13,24 +15,28 @@ import (
 )
 
 // UpdatePropertyUnit godoc
-// @Summary Actualizar unidad de propiedad
-// @Description Actualiza los datos de una unidad de propiedad existente
-// @Tags Property Units
-// @Accept json
-// @Produce json
-// @Param hp_id path int true "ID de la propiedad horizontal"
-// @Param unit_id path int true "ID de la unidad"
-// @Param unit body request.UpdatePropertyUnitRequest true "Datos actualizados"
-// @Success 200 {object} object
-// @Failure 400 {object} object
-// @Failure 404 {object} object
-// @Failure 409 {object} object
-// @Failure 500 {object} object
-// @Router /horizontal-properties/{hp_id}/property-units/{unit_id} [put]
+//
+//	@Summary		Actualizar unidad de propiedad
+//	@Description	Actualiza los datos de una unidad de propiedad existente
+//	@Tags			Property Units
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			hp_id	path		int									true	"ID de la propiedad horizontal"
+//	@Param			unit_id	path		int									true	"ID de la unidad"
+//	@Param			unit	body		request.UpdatePropertyUnitRequest	true	"Datos actualizados"
+//	@Success		200		{object}	object
+//	@Failure		400		{object}	object
+//	@Failure		404		{object}	object
+//	@Failure		409		{object}	object
+//	@Failure		500		{object}	object
+//	@Router			/horizontal-properties/{hp_id}/property-units/{unit_id} [put]
 func (h *PropertyUnitHandler) UpdatePropertyUnit(c *gin.Context) {
 	unitIDParam := c.Param("unit_id")
 	unitID, err := strconv.ParseUint(unitIDParam, 10, 32)
 	if err != nil {
+		fmt.Fprintf(os.Stderr, "[ERROR] handlerpropertyunit/update-property-unit.go - Error en handler: %v\n", err)
+		h.logger.Error().Err(err).Str("unit_id", unitIDParam).Msg("Error parseando ID de unidad")
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{
 			Success: false,
 			Message: "ID de unidad inválido",
@@ -41,6 +47,8 @@ func (h *PropertyUnitHandler) UpdatePropertyUnit(c *gin.Context) {
 
 	var req request.UpdatePropertyUnitRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		fmt.Fprintf(os.Stderr, "[ERROR] handlerpropertyunit/update-property-unit.go - Error en handler: %v\n", err)
+		h.logger.Error().Err(err).Uint("unit_id", uint(unitID)).Msg("Error validando datos del request")
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{
 			Success: false,
 			Message: "Datos inválidos",
@@ -59,6 +67,8 @@ func (h *PropertyUnitHandler) UpdatePropertyUnit(c *gin.Context) {
 			status = http.StatusConflict
 		}
 
+		fmt.Fprintf(os.Stderr, "[ERROR] handlerpropertyunit/update-property-unit.go - Error en handler: %v\n", err)
+		h.logger.Error().Err(err).Uint("unit_id", uint(unitID)).Interface("dto", dto).Msg("Error actualizando unidad de propiedad")
 		c.JSON(status, response.ErrorResponse{
 			Success: false,
 			Message: "No se pudo actualizar la unidad",

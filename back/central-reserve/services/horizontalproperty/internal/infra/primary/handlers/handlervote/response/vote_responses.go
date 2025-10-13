@@ -63,10 +63,42 @@ type VoteResponse struct {
 	VotingID       uint      `json:"voting_id" example:"1"`
 	ResidentID     uint      `json:"resident_id" example:"10"`
 	VotingOptionID uint      `json:"voting_option_id" example:"1"`
+	OptionText     string    `json:"option_text,omitempty" example:"Sí, apruebo"`
+	OptionCode     string    `json:"option_code,omitempty" example:"YES"`
 	VotedAt        time.Time `json:"voted_at" example:"2025-03-05T14:30:00Z"`
 	IPAddress      string    `json:"ip_address,omitempty" example:"192.168.1.100"`
 	UserAgent      string    `json:"user_agent,omitempty" example:"Mozilla/5.0"`
 	Notes          string    `json:"notes,omitempty" example:"Voto emitido correctamente"`
+}
+
+// VotingResultResponse - Response para resultados de votación
+type VotingResultResponse struct {
+	VotingOptionID uint    `json:"voting_option_id" example:"1"`
+	OptionText     string  `json:"option_text" example:"Sí, apruebo"`
+	OptionCode     string  `json:"option_code" example:"YES"`
+	VoteCount      int     `json:"vote_count" example:"45"`
+	Percentage     float64 `json:"percentage" example:"75.5"`
+}
+
+// UnitWithResidentResponse - Response para unidad con residente
+type UnitWithResidentResponse struct {
+	PropertyUnitID     uint    `json:"property_unit_id" example:"1"`
+	PropertyUnitNumber string  `json:"property_unit_number" example:"101"`
+	ResidentID         *uint   `json:"resident_id,omitempty" example:"5"`
+	ResidentName       *string `json:"resident_name,omitempty" example:"Juan Pérez"`
+}
+
+// VotingDetailByUnitResponse - Response para detalle de votación por unidad
+type VotingDetailByUnitResponse struct {
+	PropertyUnitID     uint    `json:"property_unit_id" example:"1"`
+	PropertyUnitNumber string  `json:"property_unit_number" example:"101"`
+	ResidentID         *uint   `json:"resident_id,omitempty" example:"5"`
+	ResidentName       *string `json:"resident_name,omitempty" example:"Juan Pérez"`
+	HasVoted           bool    `json:"has_voted" example:"true"`
+	VotingOptionID     *uint   `json:"voting_option_id,omitempty" example:"3"`
+	OptionText         *string `json:"option_text,omitempty" example:"Sí"`
+	OptionCode         *string `json:"option_code,omitempty" example:"yes"`
+	VotedAt            *string `json:"voted_at,omitempty" example:"2025-10-13T01:30:00Z"`
 }
 
 // Tipos de respuesta con datos

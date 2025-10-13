@@ -80,6 +80,10 @@ type VotingRepository interface {
 	// Votes
 	CreateVote(ctx context.Context, vote Vote) error
 	HasResidentVoted(ctx context.Context, votingID uint, residentID uint) (bool, error)
+	GetResidentVote(ctx context.Context, votingID, residentID uint) (*Vote, error)
+	GetVotingResults(ctx context.Context, votingID uint) ([]VotingResultDTO, error)
+	GetVotingDetailsByUnit(ctx context.Context, votingID, hpID uint) ([]VotingDetailByUnitDTO, error)
+	GetUnitsWithResidents(ctx context.Context, hpID uint) ([]UnitWithResidentDTO, error)
 	ListVotesByVoting(ctx context.Context, votingID uint) ([]Vote, error)
 }
 
@@ -87,12 +91,14 @@ type VotingRepository interface {
 type VotingUseCase interface {
 	// Groups
 	CreateVotingGroup(ctx context.Context, dto CreateVotingGroupDTO) (*VotingGroupDTO, error)
+	GetVotingGroupByID(ctx context.Context, id uint) (*VotingGroupDTO, error)
 	ListVotingGroupsByBusiness(ctx context.Context, businessID uint) ([]VotingGroupDTO, error)
 	UpdateVotingGroup(ctx context.Context, id uint, dto CreateVotingGroupDTO) (*VotingGroupDTO, error)
 	DeactivateVotingGroup(ctx context.Context, id uint) error
 
 	// Votings
 	CreateVoting(ctx context.Context, dto CreateVotingDTO) (*VotingDTO, error)
+	GetVotingByID(ctx context.Context, hpID, groupID, votingID uint) (*VotingDTO, error)
 	ListVotingsByGroup(ctx context.Context, groupID uint) ([]VotingDTO, error)
 	UpdateVoting(ctx context.Context, id uint, dto CreateVotingDTO) (*VotingDTO, error)
 	DeactivateVoting(ctx context.Context, id uint) error
@@ -105,6 +111,14 @@ type VotingUseCase interface {
 	// Votes
 	CreateVote(ctx context.Context, dto CreateVoteDTO) (*VoteDTO, error)
 	ListVotesByVoting(ctx context.Context, votingID uint) ([]VoteDTO, error)
+	HasResidentVoted(ctx context.Context, votingID, residentID uint) (bool, error)
+	GetResidentVote(ctx context.Context, votingID, residentID uint) (*VoteDTO, error)
+	GetVotingResults(ctx context.Context, votingID uint) ([]VotingResultDTO, error)
+	GetVotingDetailsByUnit(ctx context.Context, votingID, hpID uint) ([]VotingDetailByUnitDTO, error)
+
+	// Public Voting
+	ValidateResidentForVoting(ctx context.Context, hpID, propertyUnitID uint, dni string) (*ResidentBasicDTO, error)
+	GetUnitsWithResidents(ctx context.Context, hpID uint) ([]UnitWithResidentDTO, error)
 }
 
 // ───────────────────────────────────────────
@@ -143,6 +157,7 @@ type ResidentRepository interface {
 	DeleteResident(ctx context.Context, id uint) error
 	ExistsResidentByEmail(ctx context.Context, businessID uint, email string, excludeID uint) (bool, error)
 	ExistsResidentByDni(ctx context.Context, businessID uint, dni string, excludeID uint) (bool, error)
+	GetResidentByUnitAndDni(ctx context.Context, hpID, propertyUnitID uint, dni string) (*ResidentBasicDTO, error)
 }
 
 // ResidentUseCase - Puerto para casos de uso de residentes

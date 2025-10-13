@@ -10,6 +10,7 @@ import { VotingGroup, CreateVotingGroupDTO } from '../../../domain/entities';
 
 export interface CreateVotingGroupInput {
   token: string;
+  businessId: number; // ID de la propiedad horizontal
   data: CreateVotingGroupDTO;
 }
 
@@ -25,7 +26,11 @@ export async function createVotingGroupAction(
   try {
     const repository = new VotingGroupsRepository();
     const useCase = new CreateVotingGroupUseCase(repository);
-    const result = await useCase.execute(input);
+    const result = await useCase.execute({
+      token: input.token,
+      businessId: input.businessId,
+      data: input.data,
+    });
 
     return {
       success: true,

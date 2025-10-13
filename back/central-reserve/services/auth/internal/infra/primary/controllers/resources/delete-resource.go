@@ -9,19 +9,20 @@ import (
 )
 
 // DeleteResourceHandler elimina un recurso por su ID
-// @Summary Eliminar recurso
-// @Description Elimina un recurso del sistema por su ID único (eliminación suave)
-// @Tags Resources
-// @Accept json
-// @Produce json
-// @Param id path int true "ID del recurso" minimum(1)
-// @Success 200 {object} map[string]interface{} "Recurso eliminado exitosamente"
-// @Failure 400 {object} map[string]interface{} "ID de recurso inválido"
-// @Failure 401 {object} map[string]interface{} "No autorizado"
-// @Failure 404 {object} map[string]interface{} "Recurso no encontrado"
-// @Failure 500 {object} map[string]interface{} "Error interno del servidor"
-// @Router /resources/{id} [delete]
-// @Security BearerAuth
+//
+//	@Summary		Eliminar recurso
+//	@Description	Elimina un recurso del sistema por su ID único (eliminación suave)
+//	@Tags			Resources
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		int						true	"ID del recurso"	minimum(1)
+//	@Success		200	{object}	map[string]interface{}	"Recurso eliminado exitosamente"
+//	@Failure		400	{object}	map[string]interface{}	"ID de recurso inválido"
+//	@Failure		401	{object}	map[string]interface{}	"No autorizado"
+//	@Failure		404	{object}	map[string]interface{}	"Recurso no encontrado"
+//	@Failure		500	{object}	map[string]interface{}	"Error interno del servidor"
+//	@Router			/resources/{id} [delete]
+//	@Security		BearerAuth
 func (h *ResourceHandler) DeleteResourceHandler(c *gin.Context) {
 	// Obtener el ID del recurso de los parámetros de la URL
 	resourceIDStr := c.Param("id")

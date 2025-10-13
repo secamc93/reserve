@@ -10,32 +10,33 @@ import (
 )
 
 // UpdateBusiness godoc
-// @Summary Actualizar negocio
-// @Description Actualiza un negocio existente
-// @Tags businesses
-// @Accept multipart/form-data
-// @Produce json
-// @Security     BearerAuth
-// @Param id path int true "ID del negocio"
-// @Param name formData string false "Nombre del negocio"
-// @Param code formData string false "Código del negocio"
-// @Param business_type_id formData int false "ID del tipo de negocio"
-// @Param timezone formData string false "Zona horaria"
-// @Param address formData string false "Dirección"
-// @Param description formData string false "Descripción"
-// @Param logo_url formData file false "Logo del negocio"
-// @Param primary_color formData string false "Color primario"
-// @Param secondary_color formData string false "Color secundario"
-// @Param custom_domain formData string false "Dominio personalizado"
-// @Param is_active formData boolean false "¿Activo?"
-// @Param enable_delivery formData boolean false "Habilitar delivery"
-// @Param enable_pickup formData boolean false "Habilitar pickup"
-// @Param enable_reservations formData boolean false "Habilitar reservas"
-// @Success      201          {object}  map[string]interface{} "Negocio actualizado exitosamente"
-// @Failure      400          {object}  map[string]interface{} "Solicitud inválida"
-// @Failure      401          {object}  map[string]interface{} "Token de acceso requerido"
-// @Failure      500          {object}  map[string]interface{} "Error interno del servidor"
-// @Router /businesses/{id} [put]
+//
+//	@Summary		Actualizar negocio
+//	@Description	Actualiza un negocio existente
+//	@Tags			businesses
+//	@Accept			multipart/form-data
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id					path		int						true	"ID del negocio"
+//	@Param			name				formData	string					false	"Nombre del negocio"
+//	@Param			code				formData	string					false	"Código del negocio"
+//	@Param			business_type_id	formData	int						false	"ID del tipo de negocio"
+//	@Param			timezone			formData	string					false	"Zona horaria"
+//	@Param			address				formData	string					false	"Dirección"
+//	@Param			description			formData	string					false	"Descripción"
+//	@Param			logo_url			formData	file					false	"Logo del negocio"
+//	@Param			primary_color		formData	string					false	"Color primario"
+//	@Param			secondary_color		formData	string					false	"Color secundario"
+//	@Param			custom_domain		formData	string					false	"Dominio personalizado"
+//	@Param			is_active			formData	boolean					false	"¿Activo?"
+//	@Param			enable_delivery		formData	boolean					false	"Habilitar delivery"
+//	@Param			enable_pickup		formData	boolean					false	"Habilitar pickup"
+//	@Param			enable_reservations	formData	boolean					false	"Habilitar reservas"
+//	@Success		201					{object}	map[string]interface{}	"Negocio actualizado exitosamente"
+//	@Failure		400					{object}	map[string]interface{}	"Solicitud inválida"
+//	@Failure		401					{object}	map[string]interface{}	"Token de acceso requerido"
+//	@Failure		500					{object}	map[string]interface{}	"Error interno del servidor"
+//	@Router			/businesses/{id} [put]
 func (h *BusinessHandler) UpdateBusinessHandler(c *gin.Context) {
 	// Obtener ID del path
 	idStr := c.Param("id")

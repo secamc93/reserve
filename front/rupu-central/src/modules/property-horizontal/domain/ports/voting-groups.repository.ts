@@ -11,6 +11,7 @@ export interface GetVotingGroupsParams {
 
 export interface CreateVotingGroupParams {
   token: string;
+  businessId: number; // ID de la propiedad horizontal (va en la URL, no en el body)
   data: CreateVotingGroupDTO;
 }
 

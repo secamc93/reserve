@@ -1,6 +1,8 @@
 package horizontalpropertyhandler
 
 import (
+	"central_reserve/services/auth/middleware"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -10,10 +12,10 @@ func (h *HorizontalPropertyHandler) RegisterRoutes(router *gin.RouterGroup) {
 	horizontalProperties := router.Group("/horizontal-properties")
 	{
 		// CRUD básico
-		horizontalProperties.POST("", h.CreateHorizontalProperty)          // POST /api/v1/horizontal-properties
-		horizontalProperties.GET("", h.ListHorizontalProperties)           // GET /api/v1/horizontal-properties
-		horizontalProperties.GET("/:hp_id", h.GetHorizontalPropertyByID)   // GET /api/v1/horizontal-properties/:hp_id
-		horizontalProperties.PUT("/:hp_id", h.UpdateHorizontalProperty)    // PUT /api/v1/horizontal-properties/:hp_id
-		horizontalProperties.DELETE("/:hp_id", h.DeleteHorizontalProperty) // DELETE /api/v1/horizontal-properties/:hp_id
+		horizontalProperties.POST("", middleware.JWT(), h.CreateHorizontalProperty)          // POST /api/v1/horizontal-properties
+		horizontalProperties.GET("", middleware.JWT(), h.ListHorizontalProperties)           // GET /api/v1/horizontal-properties
+		horizontalProperties.GET("/:hp_id", middleware.JWT(), h.GetHorizontalPropertyByID)   // GET /api/v1/horizontal-properties/:hp_id
+		horizontalProperties.PUT("/:hp_id", middleware.JWT(), h.UpdateHorizontalProperty)    // PUT /api/v1/horizontal-properties/:hp_id
+		horizontalProperties.DELETE("/:hp_id", middleware.JWT(), h.DeleteHorizontalProperty) // DELETE /api/v1/horizontal-properties/:hp_id
 	}
 }

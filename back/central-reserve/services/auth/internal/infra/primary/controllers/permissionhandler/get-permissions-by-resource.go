@@ -9,18 +9,19 @@ import (
 )
 
 // GetPermissionsByResourceHandler maneja la solicitud de obtener permisos por recurso
-// @Summary Obtener permisos por recurso
-// @Description Obtiene todos los permisos de un recurso específico
-// @Tags Permissions
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param resource path string true "Recurso de los permisos" example("users")
-// @Success 200 {object} response.PermissionListResponse "Permisos por recurso obtenidos exitosamente"
-// @Failure 400 {object} response.PermissionErrorResponse "Recurso inválido"
-// @Failure 401 {object} response.PermissionErrorResponse "Token de acceso requerido"
-// @Failure 500 {object} response.PermissionErrorResponse "Error interno del servidor"
-// @Router /permissions/resource/{resource} [get]
+//
+//	@Summary		Obtener permisos por recurso
+//	@Description	Obtiene todos los permisos de un recurso específico
+//	@Tags			Permissions
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			resource	path		string								true	"Recurso de los permisos"	example("users")
+//	@Success		200			{object}	response.PermissionListResponse		"Permisos por recurso obtenidos exitosamente"
+//	@Failure		400			{object}	response.PermissionErrorResponse	"Recurso inválido"
+//	@Failure		401			{object}	response.PermissionErrorResponse	"Token de acceso requerido"
+//	@Failure		500			{object}	response.PermissionErrorResponse	"Error interno del servidor"
+//	@Router			/permissions/resource/{resource} [get]
 func (h *PermissionHandler) GetPermissionsByResourceHandler(c *gin.Context) {
 	resource := c.Param("resource")
 	if resource == "" {

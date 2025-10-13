@@ -12,19 +12,20 @@ import (
 )
 
 // UpdateBusinessTypeResources actualiza los recursos permitidos para un tipo de negocio
-// @Summary Actualizar recursos de un tipo de negocio
-// @Description Actualiza la lista de recursos permitidos para un tipo de negocio específico
-// @Tags Business Resources
-// @Accept json
-// @Produce json
-// @Param business_type_id path int true "ID del tipo de negocio"
-// @Param request body object{resources_ids=[]int} true "Lista de IDs de recursos"
-// @Success      201          {object}  map[string]interface{} "Tipo de negocio creado exitosamente"
-// @Failure      400          {object}  map[string]interface{} "Solicitud inválida"
-// @Failure      401          {object}  map[string]interface{} "Token de acceso requerido"
-// @Failure      500          {object}  map[string]interface{} "Error interno del servidor"
-// @Security BearerAuth
-// @Router /business-resources/{business_type_id}/resources [put]
+//
+//	@Summary		Actualizar recursos de un tipo de negocio
+//	@Description	Actualiza la lista de recursos permitidos para un tipo de negocio específico
+//	@Tags			Business Resources
+//	@Accept			json
+//	@Produce		json
+//	@Param			business_type_id	path		int							true	"ID del tipo de negocio"
+//	@Param			request				body		object{resources_ids=[]int}	true	"Lista de IDs de recursos"
+//	@Success		201					{object}	map[string]interface{}		"Tipo de negocio creado exitosamente"
+//	@Failure		400					{object}	map[string]interface{}		"Solicitud inválida"
+//	@Failure		401					{object}	map[string]interface{}		"Token de acceso requerido"
+//	@Failure		500					{object}	map[string]interface{}		"Error interno del servidor"
+//	@Security		BearerAuth
+//	@Router			/business-resources/{business_type_id}/resources [put]
 func (h *businessResourceHandler) UpdateBusinessTypeResources(c *gin.Context) {
 	// Obtener el ID del tipo de negocio desde los parámetros de la URL
 	businessTypeIDStr := c.Param("business_type_id")

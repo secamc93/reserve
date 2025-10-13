@@ -7,19 +7,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// @Summary      Obtiene un cliente por ID
-// @Description  Este endpoint permite obtener los datos de un cliente específico por su ID.
-// @Tags         Clientes
-// @Accept       json
-// @Produce      json
-// @Security     BearerAuth
-// @Param        id  path      int  true  "ID del cliente"
-// @Success      200 {object}  map[string]interface{} "Cliente obtenido exitosamente"
-// @Failure      400 {object}  map[string]interface{} "Solicitud inválida"
-// @Failure      401 {object}  map[string]interface{} "Token de acceso requerido"
-// @Failure      404 {object}  map[string]interface{} "Cliente no encontrado"
-// @Failure      500 {object}  map[string]interface{} "Error interno del servidor"
-// @Router       /clients/{id} [get]
+// @Summary		Obtiene un cliente por ID
+// @Description	Este endpoint permite obtener los datos de un cliente específico por su ID.
+// @Tags			Clientes
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id	path		int						true	"ID del cliente"
+// @Success		200	{object}	map[string]interface{}	"Cliente obtenido exitosamente"
+// @Failure		400	{object}	map[string]interface{}	"Solicitud inválida"
+// @Failure		401	{object}	map[string]interface{}	"Token de acceso requerido"
+// @Failure		404	{object}	map[string]interface{}	"Cliente no encontrado"
+// @Failure		500	{object}	map[string]interface{}	"Error interno del servidor"
+// @Router			/clients/{id} [get]
 func (h *ClientHandler) GetClientByIDHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 

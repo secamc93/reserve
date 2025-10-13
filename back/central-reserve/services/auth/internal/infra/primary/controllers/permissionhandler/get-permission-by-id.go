@@ -10,19 +10,20 @@ import (
 )
 
 // GetPermissionByIDHandler maneja la solicitud de obtener un permiso por ID
-// @Summary Obtener permiso por ID
-// @Description Obtiene un permiso específico por su ID
-// @Tags Permissions
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param id path int true "ID del permiso" minimum(1)
-// @Success 200 {object} response.PermissionSuccessResponse "Permiso obtenido exitosamente"
-// @Failure 400 {object} response.PermissionErrorResponse "ID inválido"
-// @Failure 401 {object} response.PermissionErrorResponse "Token de acceso requerido"
-// @Failure 404 {object} response.PermissionErrorResponse "Permiso no encontrado"
-// @Failure 500 {object} response.PermissionErrorResponse "Error interno del servidor"
-// @Router /permissions/{id} [get]
+//
+//	@Summary		Obtener permiso por ID
+//	@Description	Obtiene un permiso específico por su ID
+//	@Tags			Permissions
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		int									true	"ID del permiso"	minimum(1)
+//	@Success		200	{object}	response.PermissionSuccessResponse	"Permiso obtenido exitosamente"
+//	@Failure		400	{object}	response.PermissionErrorResponse	"ID inválido"
+//	@Failure		401	{object}	response.PermissionErrorResponse	"Token de acceso requerido"
+//	@Failure		404	{object}	response.PermissionErrorResponse	"Permiso no encontrado"
+//	@Failure		500	{object}	response.PermissionErrorResponse	"Error interno del servidor"
+//	@Router			/permissions/{id} [get]
 func (h *PermissionHandler) GetPermissionByIDHandler(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 32)

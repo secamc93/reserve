@@ -10,29 +10,30 @@ import (
 )
 
 // GetUsersHandler maneja la solicitud de obtener usuarios filtrados y paginados
-// @Summary Obtener usuarios filtrados y paginados
-// @Description Obtiene la lista filtrada y paginada de usuarios del sistema con sus roles y businesses
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param page query int false "Número de página" default(1) minimum(1)
-// @Param page_size query int false "Tamaño de página" default(10) minimum(1) maximum(100)
-// @Param name query string false "Filtrar por nombre (búsqueda parcial)"
-// @Param email query string false "Filtrar por email (búsqueda parcial)"
-// @Param phone query string false "Filtrar por teléfono (búsqueda parcial)"
-// @Param user_ids query string false "Filtrar por IDs de usuarios separados por comas (ej: 1,2,3)"
-// @Param is_active query bool false "Filtrar por estado activo"
-// @Param role_id query int false "Filtrar por ID de rol"
-// @Param business_id query int false "Filtrar por ID de business"
-// @Param created_at query string false "Filtrar por fecha de creación (YYYY-MM-DD o YYYY-MM-DD,YYYY-MM-DD para rango)"
-// @Param sort_by query string false "Campo para ordenar" Enums(id, name, email, phone, is_active, created_at, updated_at) default(created_at)
-// @Param sort_order query string false "Orden de clasificación" Enums(asc, desc) default(desc)
-// @Success 200 {object} response.UserListResponse "Usuarios obtenidos exitosamente"
-// @Failure 400 {object} response.UserErrorResponse "Parámetros de filtro inválidos"
-// @Failure 401 {object} response.UserErrorResponse "Token de acceso requerido"
-// @Failure 500 {object} response.UserErrorResponse "Error interno del servidor"
-// @Router /users [get]
+//
+//	@Summary		Obtener usuarios filtrados y paginados
+//	@Description	Obtiene la lista filtrada y paginada de usuarios del sistema con sus roles y businesses
+//	@Tags			Users
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			page		query		int							false	"Número de página"	default(1)	minimum(1)
+//	@Param			page_size	query		int							false	"Tamaño de página"	default(10)	minimum(1)	maximum(100)
+//	@Param			name		query		string						false	"Filtrar por nombre (búsqueda parcial)"
+//	@Param			email		query		string						false	"Filtrar por email (búsqueda parcial)"
+//	@Param			phone		query		string						false	"Filtrar por teléfono (búsqueda parcial)"
+//	@Param			user_ids	query		string						false	"Filtrar por IDs de usuarios separados por comas (ej: 1,2,3)"
+//	@Param			is_active	query		bool						false	"Filtrar por estado activo"
+//	@Param			role_id		query		int							false	"Filtrar por ID de rol"
+//	@Param			business_id	query		int							false	"Filtrar por ID de business"
+//	@Param			created_at	query		string						false	"Filtrar por fecha de creación (YYYY-MM-DD o YYYY-MM-DD,YYYY-MM-DD para rango)"
+//	@Param			sort_by		query		string						false	"Campo para ordenar"		Enums(id, name, email, phone, is_active, created_at, updated_at)	default(created_at)
+//	@Param			sort_order	query		string						false	"Orden de clasificación"	Enums(asc, desc)													default(desc)
+//	@Success		200			{object}	response.UserListResponse	"Usuarios obtenidos exitosamente"
+//	@Failure		400			{object}	response.UserErrorResponse	"Parámetros de filtro inválidos"
+//	@Failure		401			{object}	response.UserErrorResponse	"Token de acceso requerido"
+//	@Failure		500			{object}	response.UserErrorResponse	"Error interno del servidor"
+//	@Router			/users [get]
 func (h *UserHandler) GetUsersHandler(c *gin.Context) {
 	// Crear struct de request y bindear parámetros de query
 	var req request.GetUsersRequest

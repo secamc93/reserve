@@ -12,6 +12,12 @@ type IJWTService interface {
 	GenerateToken(userID uint, email string, roles []string, businessID uint) (string, error)
 	ValidateToken(tokenString string) (*JWTClaims, error)
 	RefreshToken(tokenString string) (string, error)
+
+	// Tokens para votación pública
+	GeneratePublicVotingToken(votingID, votingGroupID, hpID uint, durationHours int) (string, error)
+	GenerateVotingAuthToken(residentID, votingID, votingGroupID, hpID uint) (string, error)
+	ValidatePublicVotingToken(tokenString string) (*PublicVotingClaims, error)
+	ValidateVotingAuthToken(tokenString string) (*VotingAuthClaims, error)
 }
 
 // JWTService implementación concreta

@@ -79,20 +79,23 @@ export class VotingGroupsRepository implements IVotingGroupsRepository {
   }
 
   async createVotingGroup(params: CreateVotingGroupParams): Promise<VotingGroup> {
-    const { token, data } = params;
-    const url = `${env.API_BASE_URL}/horizontal-properties/${data.businessId}/voting-groups`;
+    const { token, businessId, data } = params;
+    const url = `${env.API_BASE_URL}/horizontal-properties/${businessId}/voting-groups`;
     const startTime = Date.now();
 
-    const requestBody = {
+    // Solo incluir campos que no sean undefined
+    const requestBody: Record<string, unknown> = {
       name: data.name,
-      description: data.description,
       voting_start_date: data.votingStartDate,
       voting_end_date: data.votingEndDate,
-      requires_quorum: data.requiresQuorum,
-      quorum_percentage: data.quorumPercentage,
-      created_by_user_id: data.createdByUserId,
-      notes: data.notes,
     };
+
+    // Campos opcionales
+    if (data.description !== undefined) requestBody.description = data.description;
+    if (data.requiresQuorum !== undefined) requestBody.requires_quorum = data.requiresQuorum;
+    if (data.quorumPercentage !== undefined) requestBody.quorum_percentage = data.quorumPercentage;
+    if (data.createdByUserId !== undefined) requestBody.created_by_user_id = data.createdByUserId;
+    if (data.notes !== undefined) requestBody.notes = data.notes;
 
     logHttpRequest({
       method: 'POST',

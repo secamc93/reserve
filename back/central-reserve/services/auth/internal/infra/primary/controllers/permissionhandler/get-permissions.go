@@ -9,16 +9,17 @@ import (
 )
 
 // GetPermissionsHandler maneja la solicitud de obtener todos los permisos
-// @Summary Obtener todos los permisos
-// @Description Obtiene la lista completa de permisos del sistema
-// @Tags Permissions
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Success 200 {object} response.PermissionListResponse "Lista de permisos obtenida exitosamente"
-// @Failure 401 {object} response.PermissionErrorResponse "Token de acceso requerido"
-// @Failure 500 {object} response.PermissionErrorResponse "Error interno del servidor"
-// @Router /permissions [get]
+//
+//	@Summary		Obtener todos los permisos
+//	@Description	Obtiene la lista completa de permisos del sistema
+//	@Tags			Permissions
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{object}	response.PermissionListResponse		"Lista de permisos obtenida exitosamente"
+//	@Failure		401	{object}	response.PermissionErrorResponse	"Token de acceso requerido"
+//	@Failure		500	{object}	response.PermissionErrorResponse	"Error interno del servidor"
+//	@Router			/permissions [get]
 func (h *PermissionHandler) GetPermissionsHandler(c *gin.Context) {
 	h.logger.Info().Msg("Iniciando solicitud para obtener todos los permisos")
 

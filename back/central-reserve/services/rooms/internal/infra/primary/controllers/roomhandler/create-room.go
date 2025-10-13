@@ -9,19 +9,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// @Summary      Crea una nueva sala
-// @Description  Este endpoint permite crear una nueva sala para un negocio.
-// @Tags         Salas
-// @Accept       json
-// @Produce      json
-// @Security     BearerAuth
-// @Param        room  body      request.Room  true  "Datos de la sala"
-// @Success      201    {object}  map[string]interface{} "Sala creada exitosamente"
-// @Failure      400    {object}  map[string]interface{} "Solicitud inválida"
-// @Failure      401    {object}  map[string]interface{} "Token de acceso requerido"
-// @Failure      409    {object}  map[string]interface{} "Sala ya existe para este negocio"
-// @Failure      500    {object}  map[string]interface{} "Error interno del servidor"
-// @Router       /rooms [post]
+// @Summary		Crea una nueva sala
+// @Description	Este endpoint permite crear una nueva sala para un negocio.
+// @Tags			Salas
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			room	body		request.Room			true	"Datos de la sala"
+// @Success		201		{object}	map[string]interface{}	"Sala creada exitosamente"
+// @Failure		400		{object}	map[string]interface{}	"Solicitud inválida"
+// @Failure		401		{object}	map[string]interface{}	"Token de acceso requerido"
+// @Failure		409		{object}	map[string]interface{}	"Sala ya existe para este negocio"
+// @Failure		500		{object}	map[string]interface{}	"Error interno del servidor"
+// @Router			/rooms [post]
 func (h *RoomHandler) CreateRoomHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 

@@ -11,21 +11,22 @@ import (
 )
 
 // UpdateResourceHandler actualiza un recurso existente
-// @Summary Actualizar recurso
-// @Description Actualiza un recurso existente en el sistema
-// @Tags Resources
-// @Accept json
-// @Produce json
-// @Param id path int true "ID del recurso" minimum(1)
-// @Param request body request.UpdateResourceRequest true "Datos del recurso a actualizar"
-// @Success 200 {object} map[string]interface{} "Recurso actualizado exitosamente"
-// @Failure 400 {object} map[string]interface{} "Datos de entrada inválidos"
-// @Failure 401 {object} map[string]interface{} "No autorizado"
-// @Failure 404 {object} map[string]interface{} "Recurso no encontrado"
-// @Failure 409 {object} map[string]interface{} "Conflicto con recurso existente"
-// @Failure 500 {object} map[string]interface{} "Error interno del servidor"
-// @Router /resources/{id} [put]
-// @Security BearerAuth
+//
+//	@Summary		Actualizar recurso
+//	@Description	Actualiza un recurso existente en el sistema
+//	@Tags			Resources
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		int								true	"ID del recurso"	minimum(1)
+//	@Param			request	body		request.UpdateResourceRequest	true	"Datos del recurso a actualizar"
+//	@Success		200		{object}	map[string]interface{}			"Recurso actualizado exitosamente"
+//	@Failure		400		{object}	map[string]interface{}			"Datos de entrada inválidos"
+//	@Failure		401		{object}	map[string]interface{}			"No autorizado"
+//	@Failure		404		{object}	map[string]interface{}			"Recurso no encontrado"
+//	@Failure		409		{object}	map[string]interface{}			"Conflicto con recurso existente"
+//	@Failure		500		{object}	map[string]interface{}			"Error interno del servidor"
+//	@Router			/resources/{id} [put]
+//	@Security		BearerAuth
 func (h *ResourceHandler) UpdateResourceHandler(c *gin.Context) {
 	// Obtener el ID del recurso de los parámetros de la URL
 	resourceIDStr := c.Param("id")

@@ -6,13 +6,28 @@ import (
 )
 
 type VotingHandler struct {
-	votingUseCase domain.VotingUseCase
-	logger        log.ILogger
+	votingUseCase             domain.VotingUseCase
+	propertyUnitUseCase       domain.PropertyUnitUseCase
+	horizontalPropertyUseCase domain.HorizontalPropertyUseCase
+	votingCache               domain.VotingCacheService
+	jwtSecret                 string
+	logger                    log.ILogger
 }
 
-func NewVotingHandler(votingUseCase domain.VotingUseCase, logger log.ILogger) *VotingHandler {
+func NewVotingHandler(
+	votingUseCase domain.VotingUseCase,
+	propertyUnitUseCase domain.PropertyUnitUseCase,
+	horizontalPropertyUseCase domain.HorizontalPropertyUseCase,
+	votingCache domain.VotingCacheService,
+	jwtSecret string,
+	logger log.ILogger,
+) *VotingHandler {
 	return &VotingHandler{
-		votingUseCase: votingUseCase,
-		logger:        logger,
+		votingUseCase:             votingUseCase,
+		propertyUnitUseCase:       propertyUnitUseCase,
+		horizontalPropertyUseCase: horizontalPropertyUseCase,
+		votingCache:               votingCache,
+		jwtSecret:                 jwtSecret,
+		logger:                    logger,
 	}
 }

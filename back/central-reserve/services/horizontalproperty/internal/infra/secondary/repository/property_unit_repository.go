@@ -1,11 +1,12 @@
 package repository
 
 import (
+	"central_reserve/services/horizontalproperty/internal/domain"
 	"context"
+	"dbpostgres/app/infra/models"
 	"fmt"
 	"math"
-	"central_reserve/services/horizontalproperty/internal/domain"
-	"dbpostgres/app/infra/models"
+
 	"gorm.io/gorm"
 )
 
@@ -36,6 +37,9 @@ func (r *Repository) ListPropertyUnits(ctx context.Context, filters domain.Prope
 	var ms []models.PropertyUnit
 	var total int64
 	query := r.db.Conn(ctx).Model(&models.PropertyUnit{}).Where("business_id = ?", filters.BusinessID)
+	if filters.Number != "" {
+		query = query.Where("number ILIKE ?", "%"+filters.Number+"%")
+	}
 	if filters.UnitType != "" {
 		query = query.Where("unit_type = ?", filters.UnitType)
 	}

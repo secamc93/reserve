@@ -8,19 +8,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// @Summary      Obtiene una reserva por ID
-// @Description  Este endpoint obtiene una reserva específica con información completa de cliente, mesa, restaurante y estado
-// @Tags         Reservas
-// @Accept       json
-// @Produce      json
-// @Security     BearerAuth
-// @Param        id   path    int  true  "ID de la reserva"
-// @Success      200  {object}  response.ReserveSuccessResponse "Reserva obtenida exitosamente"
-// @Failure      400  {object}  map[string]interface{} "ID inválido"
-// @Failure      401  {object}  map[string]interface{} "Token de acceso requerido"
-// @Failure      404  {object}  map[string]interface{} "Reserva no encontrada"
-// @Failure      500  {object}  map[string]interface{} "Error interno del servidor"
-// @Router       /reserves/{id} [get]
+// @Summary		Obtiene una reserva por ID
+// @Description	Este endpoint obtiene una reserva específica con información completa de cliente, mesa, restaurante y estado
+// @Tags			Reservas
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id	path		int								true	"ID de la reserva"
+// @Success		200	{object} object	"Reserva obtenida exitosamente"
+// @Failure		400	{object}	map[string]interface{}			"ID inválido"
+// @Failure		401	{object}	map[string]interface{}			"Token de acceso requerido"
+// @Failure		404	{object}	map[string]interface{}			"Reserva no encontrada"
+// @Failure		500	{object}	map[string]interface{}			"Error interno del servidor"
+// @Router			/reserves/{id} [get]
 func (h *ReserveHandler) GetReserveByIDHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 

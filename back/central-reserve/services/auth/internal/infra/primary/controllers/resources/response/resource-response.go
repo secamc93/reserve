@@ -3,7 +3,8 @@ package response
 import "time"
 
 // ResourceResponse representa la respuesta de un recurso
-// @Description Información completa de un recurso
+//
+//	@Description	Información completa de un recurso
 type ResourceResponse struct {
 	ID          uint      `json:"id" example:"1" description:"ID único del recurso"`
 	Name        string    `json:"name" example:"users" description:"Nombre del recurso"`
@@ -13,7 +14,8 @@ type ResourceResponse struct {
 }
 
 // ResourceListResponse representa la respuesta de lista paginada de recursos
-// @Description Lista paginada de recursos con metadatos de paginación
+//
+//	@Description	Lista paginada de recursos con metadatos de paginación
 type ResourceListResponse struct {
 	Resources  []ResourceResponse `json:"resources" description:"Lista de recursos"`
 	Total      int64              `json:"total" example:"50" description:"Total de recursos disponibles"`
@@ -23,7 +25,8 @@ type ResourceListResponse struct {
 }
 
 // GetResourcesResponse representa la respuesta para obtener recursos
-// @Description Respuesta exitosa al obtener lista de recursos
+//
+//	@Description	Respuesta exitosa al obtener lista de recursos
 type GetResourcesResponse struct {
 	Success bool                 `json:"success" example:"true" description:"Indica si la operación fue exitosa"`
 	Message string               `json:"message" example:"Recursos obtenidos exitosamente" description:"Mensaje descriptivo"`
@@ -31,7 +34,8 @@ type GetResourcesResponse struct {
 }
 
 // GetResourceByIDResponse representa la respuesta para obtener un recurso por ID
-// @Description Respuesta exitosa al obtener un recurso específico
+//
+//	@Description	Respuesta exitosa al obtener un recurso específico
 type GetResourceByIDResponse struct {
 	Success bool             `json:"success" example:"true" description:"Indica si la operación fue exitosa"`
 	Message string           `json:"message" example:"Recurso obtenido exitosamente" description:"Mensaje descriptivo"`
@@ -39,7 +43,8 @@ type GetResourceByIDResponse struct {
 }
 
 // CreateResourceResponse representa la respuesta para crear un recurso
-// @Description Respuesta exitosa al crear un nuevo recurso
+//
+//	@Description	Respuesta exitosa al crear un nuevo recurso
 type CreateResourceResponse struct {
 	Success bool             `json:"success" example:"true" description:"Indica si la operación fue exitosa"`
 	Message string           `json:"message" example:"Recurso creado exitosamente" description:"Mensaje descriptivo"`
@@ -47,7 +52,8 @@ type CreateResourceResponse struct {
 }
 
 // UpdateResourceResponse representa la respuesta para actualizar un recurso
-// @Description Respuesta exitosa al actualizar un recurso
+//
+//	@Description	Respuesta exitosa al actualizar un recurso
 type UpdateResourceResponse struct {
 	Success bool             `json:"success" example:"true" description:"Indica si la operación fue exitosa"`
 	Message string           `json:"message" example:"Recurso actualizado exitosamente" description:"Mensaje descriptivo"`
@@ -55,14 +61,16 @@ type UpdateResourceResponse struct {
 }
 
 // DeleteResourceResponse representa la respuesta para eliminar un recurso
-// @Description Respuesta exitosa al eliminar un recurso
+//
+//	@Description	Respuesta exitosa al eliminar un recurso
 type DeleteResourceResponse struct {
 	Success bool   `json:"success" example:"true" description:"Indica si la operación fue exitosa"`
 	Message string `json:"message" example:"Recurso eliminado exitosamente" description:"Mensaje descriptivo"`
 }
 
 // ErrorResponse representa una respuesta de error
-// @Description Respuesta de error estándar
+//
+//	@Description	Respuesta de error estándar
 type ErrorResponse struct {
 	Success bool   `json:"success" example:"false" description:"Indica que la operación falló"`
 	Message string `json:"message" example:"Error al procesar la solicitud" description:"Mensaje de error"`

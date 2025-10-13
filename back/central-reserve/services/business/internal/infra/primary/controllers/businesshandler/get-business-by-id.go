@@ -12,18 +12,19 @@ import (
 var _ response.GetBusinessByIDResponse
 
 // GetBusinessByID godoc
-// @Summary Obtener negocio por ID
-// @Description Obtiene un negocio específico por su ID
-// @Tags businesses
-// @Accept json
-// @Produce json
-// @Security     BearerAuth
-// @Param id path int true "ID del negocio"
-// @Success      200          {object}  response.GetBusinessByIDResponse "Negocio obtenido exitosamente"
-// @Failure      400          {object}  map[string]interface{} "Solicitud inválida"
-// @Failure      401          {object}  map[string]interface{} "Token de acceso requerido"
-// @Failure      500          {object}  map[string]interface{} "Error interno del servidor"
-// @Router /businesses/{id} [get]
+//
+//	@Summary		Obtener negocio por ID
+//	@Description	Obtiene un negocio específico por su ID
+//	@Tags			businesses
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		int									true	"ID del negocio"
+//	@Success		200	{object}	response.GetBusinessByIDResponse	"Negocio obtenido exitosamente"
+//	@Failure		400	{object}	map[string]interface{}				"Solicitud inválida"
+//	@Failure		401	{object}	map[string]interface{}				"Token de acceso requerido"
+//	@Failure		500	{object}	map[string]interface{}				"Error interno del servidor"
+//	@Router			/businesses/{id} [get]
 func (h *BusinessHandler) GetBusinessByIDHandler(c *gin.Context) {
 	// Obtener ID del path
 	idStr := c.Param("id")

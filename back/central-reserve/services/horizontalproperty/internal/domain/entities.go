@@ -188,6 +188,8 @@ type Vote struct {
 	VotingID       uint
 	ResidentID     uint
 	VotingOptionID uint
+	OptionText     string // Texto de la opción votada (solo cuando se carga con Preload)
+	OptionCode     string // Código de la opción votada (solo cuando se carga con Preload)
 	VotedAt        time.Time
 	IPAddress      string
 	UserAgent      string

@@ -1,7 +1,8 @@
 package response
 
 // BusinessTypeResourcePermittedResponse representa un recurso permitido para un tipo de negocio
-// @Description Información detallada de un recurso permitido para un tipo de negocio
+//
+//	@Description	Información detallada de un recurso permitido para un tipo de negocio
 type BusinessTypeResourcePermittedResponse struct {
 	ID             uint   `json:"id" example:"1" description:"ID único del registro"`
 	BusinessTypeID uint   `json:"business_type_id" example:"1" description:"ID del tipo de negocio"`
@@ -12,7 +13,8 @@ type BusinessTypeResourcePermittedResponse struct {
 }
 
 // BusinessTypeResourcesResponse representa la respuesta completa de recursos permitidos para un tipo de negocio
-// @Description Lista completa de recursos permitidos para un tipo de negocio con estadísticas
+//
+//	@Description	Lista completa de recursos permitidos para un tipo de negocio con estadísticas
 type BusinessTypeResourcesResponse struct {
 	BusinessTypeID uint                                    `json:"business_type_id" example:"1" description:"ID del tipo de negocio"`
 	Resources      []BusinessTypeResourcePermittedResponse `json:"resources" description:"Lista de recursos permitidos"`
@@ -22,7 +24,8 @@ type BusinessTypeResourcesResponse struct {
 }
 
 // GetBusinessTypeResourcesResponse representa la respuesta para obtener recursos permitidos de un tipo de negocio
-// @Description Respuesta exitosa al obtener recursos permitidos de un tipo de negocio
+//
+//	@Description	Respuesta exitosa al obtener recursos permitidos de un tipo de negocio
 type GetBusinessTypeResourcesResponse struct {
 	Success bool                          `json:"success" example:"true" description:"Indica si la operación fue exitosa"`
 	Message string                        `json:"message" example:"Recursos permitidos obtenidos exitosamente" description:"Mensaje descriptivo de la operación"`
@@ -30,9 +33,9 @@ type GetBusinessTypeResourcesResponse struct {
 }
 
 // UpdateBusinessTypeResourcesResponse representa la respuesta para actualizar recursos permitidos
-// @Description Respuesta exitosa al actualizar recursos permitidos de un tipo de negocio
+//
+//	@Description	Respuesta exitosa al actualizar recursos permitidos de un tipo de negocio
 type UpdateBusinessTypeResourcesResponse struct {
 	Success bool   `json:"success" example:"true" description:"Indica si la operación fue exitosa"`
 	Message string `json:"message" example:"Recursos permitidos actualizados exitosamente" description:"Mensaje descriptivo de la operación"`
 }
-

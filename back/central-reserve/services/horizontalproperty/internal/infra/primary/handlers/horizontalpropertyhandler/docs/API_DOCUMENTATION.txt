@@ -1,0 +1,904 @@
+================================================================================
+  DOCUMENTACIÓN API - HORIZONTAL PROPERTIES (PROPIEDADES HORIZONTALES)
+  Base URL: http://localhost:3050/api/v1
+================================================================================
+
+DESCRIPCIÓN GENERAL:
+Las Horizontal Properties (Propiedades Horizontales) son conjuntos residenciales,
+edificios o complejos que contienen múltiples unidades de propiedad. Este módulo
+permite gestionar la información principal de cada propiedad incluyendo datos de
+ubicación, configuración de marca blanca (white label), amenidades y creación
+automática de estructuras iniciales (unidades y comités).
+
+IMPORTANTE: Los endpoints de CREATE y UPDATE utilizan multipart/form-data para
+permitir la subida de archivos (logo, imagen de navbar) junto con los datos.
+
+################################################################################
+# HORIZONTAL PROPERTIES CRUD
+################################################################################
+
+================================================================================
+1. CREAR PROPIEDAD HORIZONTAL
+================================================================================
+Method: POST
+URL: /horizontal-properties
+Content-Type: multipart/form-data
+Authentication: JWT Token Required
+
+--- REQUEST BODY (MULTIPART FORM-DATA) ---
+
+CAMPOS REQUERIDOS:
+- name (string): Nombre de la propiedad (min: 3, max: 120)
+  Ejemplo: "Conjunto Residencial Los Pinos"
+
+- code (string): Código identificador único (min: 2, max: 50)
+  Ejemplo: "los-pinos"
+
+- timezone (string): Zona horaria
+  Ejemplo: "America/Bogota"
+
+- address (string): Dirección completa (max: 255)
+  Ejemplo: "Carrera 15 #45-67, Bogotá"
+
+- total_units (number): Número total de unidades (min: 1)
+  Ejemplo: 120
+
+CAMPOS OPCIONALES - INFORMACIÓN BÁSICA:
+- description (string): Descripción de la propiedad (max: 500)
+  Ejemplo: "Conjunto residencial familiar con zonas verdes"
+
+- parent_business_id (number): ID del negocio padre (si aplica)
+  Ejemplo: 5
+
+CAMPOS OPCIONALES - CONFIGURACIÓN DE MARCA BLANCA:
+- logo_file (file): Archivo de imagen para el logo
+  Formatos: JPG, PNG, GIF, WEBP
+
+- navbar_image_file (file): Archivo de imagen para la barra de navegación
+  Formatos: JPG, PNG, GIF, WEBP
+
+- primary_color (string): Color primario (hexadecimal)
+  Ejemplo: "#1f2937"
+
+- secondary_color (string): Color secundario (hexadecimal)
+  Ejemplo: "#3b82f6"
+
+- tertiary_color (string): Color terciario (hexadecimal)
+  Ejemplo: "#10b981"
+
+- quaternary_color (string): Color cuaternario (hexadecimal)
+  Ejemplo: "#fbbf24"
+
+- custom_domain (string): Dominio personalizado (max: 100)
+  Ejemplo: "lospinos.midominio.com"
+
+CAMPOS OPCIONALES - CARACTERÍSTICAS DE LA PROPIEDAD:
+- total_floors (number): Número total de pisos (min: 1)
+  Ejemplo: 15
+
+- has_elevator (boolean): Tiene ascensor
+  Ejemplo: true
+
+- has_parking (boolean): Tiene parqueadero
+  Ejemplo: true
+
+- has_pool (boolean): Tiene piscina
+  Ejemplo: true
+
+- has_gym (boolean): Tiene gimnasio
+  Ejemplo: false
+
+- has_social_area (boolean): Tiene área social
+  Ejemplo: true
+
+CAMPOS OPCIONALES - CONFIGURACIÓN INICIAL AUTOMÁTICA:
+- create_units (boolean): Crear unidades automáticamente
+  Ejemplo: true
+
+- unit_prefix (string): Prefijo para números de unidades
+  Ejemplo: "APT-"
+
+- unit_type (string): Tipo de unidad a crear
+  Ejemplo: "apartment"
+
+- units_per_floor (number): Unidades por piso
+  Ejemplo: 8
+
+- start_unit_number (number): Número inicial de unidades
+  Ejemplo: 101
+
+- create_required_committees (boolean): Crear comités requeridos automáticamente
+  Ejemplo: true
+
+--- RESPONSE 201 (SUCCESS) ---
+{
+  "success": true,
+  "message": "Propiedad horizontal creada exitosamente",
+  "data": {
+    "id": 1,
+    "name": "Conjunto Residencial Los Pinos",
+    "code": "los-pinos",
+    "business_type_id": 1,
+    "business_type_name": "Propiedad Horizontal",
+    "parent_business_id": null,
+    "timezone": "America/Bogota",
+    "address": "Carrera 15 #45-67, Bogotá",
+    "description": "Conjunto residencial familiar con zonas verdes",
+    "logo_url": "https://s3.amazonaws.com/bucket/logos/12345.jpg",
+    "primary_color": "#1f2937",
+    "secondary_color": "#3b82f6",
+    "tertiary_color": "#10b981",
+    "quaternary_color": "#fbbf24",
+    "navbar_image_url": "https://s3.amazonaws.com/bucket/navbars/67890.jpg",
+    "custom_domain": "lospinos.midominio.com",
+    "total_units": 120,
+    "total_floors": 15,
+    "has_elevator": true,
+    "has_parking": true,
+    "has_pool": true,
+    "has_gym": false,
+    "has_social_area": true,
+    "property_units": [],
+    "committees": [],
+    "is_active": true,
+    "created_at": "2024-01-15T10:30:00Z",
+    "updated_at": "2024-01-15T10:30:00Z"
+  }
+}
+
+--- RESPONSE 400 (BAD REQUEST - Validación) ---
+{
+  "success": false,
+  "message": "Datos inválidos",
+  "error": "validation error details"
+}
+
+--- RESPONSE 409 (CONFLICT - Código duplicado) ---
+{
+  "success": false,
+  "message": "No se pudo crear la propiedad horizontal",
+  "error": "ya existe una propiedad horizontal con este código"
+}
+
+--- RESPONSE 409 (CONFLICT - Dominio duplicado) ---
+{
+  "success": false,
+  "message": "No se pudo crear la propiedad horizontal",
+  "error": "el dominio personalizado ya está en uso"
+}
+
+--- RESPONSE 500 (INTERNAL SERVER ERROR) ---
+{
+  "success": false,
+  "message": "Error al crear la propiedad horizontal",
+  "error": "database error details"
+}
+
+--- EJEMPLO CURL ---
+curl -X POST "http://localhost:3050/api/v1/horizontal-properties" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -F "name=Conjunto Residencial Los Pinos" \
+  -F "code=los-pinos" \
+  -F "timezone=America/Bogota" \
+  -F "address=Carrera 15 #45-67, Bogotá" \
+  -F "description=Conjunto residencial familiar" \
+  -F "total_units=120" \
+  -F "total_floors=15" \
+  -F "has_elevator=true" \
+  -F "has_parking=true" \
+  -F "has_pool=true" \
+  -F "has_gym=false" \
+  -F "has_social_area=true" \
+  -F "primary_color=#1f2937" \
+  -F "secondary_color=#3b82f6" \
+  -F "logo_file=@/path/to/logo.jpg" \
+  -F "navbar_image_file=@/path/to/navbar.jpg" \
+  -F "create_units=true" \
+  -F "unit_type=apartment"
+
+
+================================================================================
+2. LISTAR PROPIEDADES HORIZONTALES (CON PAGINACIÓN Y FILTROS)
+================================================================================
+Method: GET
+URL: /horizontal-properties
+Authentication: JWT Token Required
+
+--- QUERY PARAMETERS (TODOS OPCIONALES) ---
+- name (string): Filtrar por nombre (búsqueda parcial)
+  Ejemplo: "Pinos"
+
+- code (string): Filtrar por código (búsqueda parcial)
+  Ejemplo: "los-pinos"
+
+- is_active (boolean): Filtrar por estado activo
+  Ejemplo: true
+
+- page (number, default: 1, min: 1): Número de página
+  Ejemplo: 1
+
+- page_size (number, default: 10, min: 1, max: 100): Tamaño de página
+  Ejemplo: 10
+
+- order_by (string): Campo de ordenamiento
+  Valores permitidos: name, code, created_at, updated_at
+  Default: created_at
+
+- order_dir (string): Dirección de ordenamiento
+  Valores permitidos: asc, desc
+  Default: desc
+
+--- EJEMPLO DE URL CON FILTROS ---
+GET /horizontal-properties?page=1&page_size=10&is_active=true&order_by=name&order_dir=asc
+
+--- RESPONSE 200 (SUCCESS) ---
+{
+  "success": true,
+  "message": "Lista obtenida exitosamente",
+  "data": {
+    "data": [
+      {
+        "id": 1,
+        "name": "Conjunto Residencial Los Pinos",
+        "code": "los-pinos",
+        "business_type_name": "Propiedad Horizontal",
+        "address": "Carrera 15 #45-67, Bogotá",
+        "total_units": 120,
+        "is_active": true,
+        "created_at": "2024-01-15T10:30:00Z"
+      },
+      {
+        "id": 2,
+        "name": "Edificio Torres del Parque",
+        "code": "torres-parque",
+        "business_type_name": "Propiedad Horizontal",
+        "address": "Calle 50 #20-30, Medellín",
+        "total_units": 80,
+        "is_active": true,
+        "created_at": "2024-02-20T14:00:00Z"
+      }
+    ],
+    "total": 150,
+    "page": 1,
+    "page_size": 10,
+    "total_pages": 15
+  }
+}
+
+--- RESPONSE 400 (BAD REQUEST - Parámetros inválidos) ---
+{
+  "success": false,
+  "message": "Parámetros de consulta inválidos",
+  "error": "validation error details"
+}
+
+--- RESPONSE 500 (INTERNAL SERVER ERROR) ---
+{
+  "success": false,
+  "message": "Error al obtener la lista de propiedades horizontales",
+  "error": "database error"
+}
+
+--- EJEMPLO CURL ---
+curl -X GET "http://localhost:3050/api/v1/horizontal-properties?page=1&page_size=10&is_active=true" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+
+================================================================================
+3. OBTENER PROPIEDAD HORIZONTAL POR ID
+================================================================================
+Method: GET
+URL: /horizontal-properties/{hp_id}
+Authentication: JWT Token Required
+
+--- PARAMS PATH ---
+- hp_id (number): ID de la propiedad horizontal
+
+--- RESPONSE 200 (SUCCESS) ---
+{
+  "success": true,
+  "message": "Operación realizada exitosamente",
+  "data": {
+    "id": 1,
+    "name": "Conjunto Residencial Los Pinos",
+    "code": "los-pinos",
+    "business_type_id": 1,
+    "business_type_name": "Propiedad Horizontal",
+    "parent_business_id": null,
+    "timezone": "America/Bogota",
+    "address": "Carrera 15 #45-67, Bogotá",
+    "description": "Conjunto residencial familiar con amplias zonas verdes",
+    "logo_url": "https://s3.amazonaws.com/bucket/logos/12345.jpg",
+    "primary_color": "#1f2937",
+    "secondary_color": "#3b82f6",
+    "tertiary_color": "#10b981",
+    "quaternary_color": "#fbbf24",
+    "navbar_image_url": "https://s3.amazonaws.com/bucket/navbars/67890.jpg",
+    "custom_domain": "lospinos.midominio.com",
+    "total_units": 120,
+    "total_floors": 15,
+    "has_elevator": true,
+    "has_parking": true,
+    "has_pool": true,
+    "has_gym": false,
+    "has_social_area": true,
+    "property_units": [
+      {
+        "id": 1,
+        "number": "101",
+        "floor": 1,
+        "block": "A",
+        "unit_type": "apartment",
+        "area": 85.5,
+        "bedrooms": 3,
+        "bathrooms": 2,
+        "description": "Apto 101 - Piso 1",
+        "is_active": true
+      }
+    ],
+    "committees": [
+      {
+        "id": 1,
+        "committee_type_id": 1,
+        "type_name": "Consejo de Administración",
+        "type_code": "admin_council",
+        "name": "Consejo de Administración 2025",
+        "start_date": "2025-01-01T00:00:00Z",
+        "end_date": "2026-12-31T23:59:59Z",
+        "is_active": true,
+        "notes": "Comité creado automáticamente"
+      }
+    ],
+    "is_active": true,
+    "created_at": "2024-01-15T10:30:00Z",
+    "updated_at": "2024-01-15T10:30:00Z"
+  }
+}
+
+--- RESPONSE 400 (BAD REQUEST - ID inválido) ---
+{
+  "success": false,
+  "message": "ID de propiedad horizontal inválido",
+  "error": "Debe ser numérico"
+}
+
+--- RESPONSE 404 (NOT FOUND) ---
+{
+  "success": false,
+  "message": "No se pudo obtener la propiedad horizontal",
+  "error": "propiedad horizontal no encontrada"
+}
+
+--- RESPONSE 500 (INTERNAL SERVER ERROR) ---
+{
+  "success": false,
+  "message": "Error al obtener la propiedad horizontal",
+  "error": "database error"
+}
+
+--- EJEMPLO CURL ---
+curl -X GET "http://localhost:3050/api/v1/horizontal-properties/1" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+
+================================================================================
+4. ACTUALIZAR PROPIEDAD HORIZONTAL
+================================================================================
+Method: PUT
+URL: /horizontal-properties/{hp_id}
+Content-Type: multipart/form-data
+Authentication: JWT Token Required
+
+--- PARAMS PATH ---
+- hp_id (number): ID de la propiedad horizontal
+
+--- REQUEST BODY (MULTIPART FORM-DATA - TODOS LOS CAMPOS OPCIONALES) ---
+
+CAMPOS ACTUALIZABLES - INFORMACIÓN BÁSICA:
+- name (string): Nombre de la propiedad (min: 3, max: 120)
+- code (string): Código identificador (min: 2, max: 50)
+- parent_business_id (number): ID del negocio padre
+- timezone (string): Zona horaria
+- address (string): Dirección completa (max: 255)
+- description (string): Descripción (max: 500)
+
+CAMPOS ACTUALIZABLES - MARCA BLANCA:
+- logo_file (file): Nueva imagen para el logo
+- navbar_image_file (file): Nueva imagen para la barra de navegación
+- primary_color (string): Color primario (hexadecimal)
+- secondary_color (string): Color secundario (hexadecimal)
+- tertiary_color (string): Color terciario (hexadecimal)
+- quaternary_color (string): Color cuaternario (hexadecimal)
+- custom_domain (string): Dominio personalizado (max: 100)
+
+CAMPOS ACTUALIZABLES - CARACTERÍSTICAS:
+- total_units (number): Número total de unidades (min: 1)
+- total_floors (number): Número total de pisos (min: 1)
+- has_elevator (boolean): Tiene ascensor
+- has_parking (boolean): Tiene parqueadero
+- has_pool (boolean): Tiene piscina
+- has_gym (boolean): Tiene gimnasio
+- has_social_area (boolean): Tiene área social
+- is_active (boolean): Estado activo/inactivo
+
+NOTA: Solo envía los campos que quieres actualizar. Los campos no enviados
+      permanecerán sin cambios.
+
+--- RESPONSE 200 (SUCCESS) ---
+{
+  "success": true,
+  "message": "Propiedad horizontal actualizada exitosamente",
+  "data": {
+    "id": 1,
+    "name": "Conjunto Residencial Los Pinos - Actualizado",
+    "code": "los-pinos",
+    "business_type_id": 1,
+    "business_type_name": "Propiedad Horizontal",
+    "parent_business_id": null,
+    "timezone": "America/Bogota",
+    "address": "Carrera 15 #45-67, Bogotá",
+    "description": "Descripción actualizada",
+    "logo_url": "https://s3.amazonaws.com/bucket/logos/12345-new.jpg",
+    "primary_color": "#1f2937",
+    "secondary_color": "#3b82f6",
+    "tertiary_color": "#10b981",
+    "quaternary_color": "#fbbf24",
+    "navbar_image_url": "https://s3.amazonaws.com/bucket/navbars/67890.jpg",
+    "custom_domain": "lospinos.midominio.com",
+    "total_units": 120,
+    "total_floors": 15,
+    "has_elevator": true,
+    "has_parking": true,
+    "has_pool": true,
+    "has_gym": true,
+    "has_social_area": true,
+    "property_units": [],
+    "committees": [],
+    "is_active": true,
+    "created_at": "2024-01-15T10:30:00Z",
+    "updated_at": "2024-01-15T14:45:00Z"
+  }
+}
+
+--- RESPONSE 400 (BAD REQUEST - ID inválido) ---
+{
+  "success": false,
+  "message": "ID de propiedad horizontal inválido",
+  "error": "Debe ser numérico"
+}
+
+--- RESPONSE 400 (BAD REQUEST - Validación) ---
+{
+  "success": false,
+  "message": "Datos inválidos",
+  "error": "validation error details"
+}
+
+--- RESPONSE 404 (NOT FOUND) ---
+{
+  "success": false,
+  "message": "No se pudo actualizar la propiedad horizontal",
+  "error": "propiedad horizontal no encontrada"
+}
+
+--- RESPONSE 409 (CONFLICT - Código duplicado) ---
+{
+  "success": false,
+  "message": "No se pudo actualizar la propiedad horizontal",
+  "error": "ya existe una propiedad horizontal con este código"
+}
+
+--- RESPONSE 409 (CONFLICT - Dominio duplicado) ---
+{
+  "success": false,
+  "message": "No se pudo actualizar la propiedad horizontal",
+  "error": "el dominio personalizado ya está en uso"
+}
+
+--- RESPONSE 500 (INTERNAL SERVER ERROR) ---
+{
+  "success": false,
+  "message": "Error al actualizar la propiedad horizontal",
+  "error": "database error"
+}
+
+--- EJEMPLO CURL ---
+curl -X PUT "http://localhost:3050/api/v1/horizontal-properties/1" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -F "name=Conjunto Residencial Los Pinos - Actualizado" \
+  -F "description=Descripción actualizada" \
+  -F "has_gym=true" \
+  -F "logo_file=@/path/to/new-logo.jpg"
+
+
+================================================================================
+5. ELIMINAR PROPIEDAD HORIZONTAL (SOFT DELETE)
+================================================================================
+Method: DELETE
+URL: /horizontal-properties/{hp_id}
+Authentication: JWT Token Required
+
+--- PARAMS PATH ---
+- hp_id (number): ID de la propiedad horizontal
+
+NOTA IMPORTANTE: Esta operación es un SOFT DELETE (eliminación lógica).
+La propiedad se marca como inactiva pero no se elimina físicamente.
+
+--- RESPONSE 200 (SUCCESS) ---
+{
+  "success": true,
+  "message": "Propiedad horizontal eliminada exitosamente"
+}
+
+--- RESPONSE 400 (BAD REQUEST - ID inválido) ---
+{
+  "success": false,
+  "message": "ID de propiedad horizontal inválido",
+  "error": "Debe ser numérico"
+}
+
+--- RESPONSE 404 (NOT FOUND) ---
+{
+  "success": false,
+  "message": "No se pudo eliminar la propiedad horizontal",
+  "error": "propiedad horizontal no encontrada"
+}
+
+--- RESPONSE 500 (INTERNAL SERVER ERROR) ---
+{
+  "success": false,
+  "message": "Error al eliminar la propiedad horizontal",
+  "error": "database error"
+}
+
+--- EJEMPLO CURL ---
+curl -X DELETE "http://localhost:3050/api/v1/horizontal-properties/1" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+
+################################################################################
+# CÓDIGOS DE ESTADO HTTP
+################################################################################
+
+200 OK          - Operación exitosa
+201 Created     - Recurso creado exitosamente
+400 Bad Request - Datos inválidos, parámetros incorrectos o campos requeridos faltantes
+404 Not Found   - Recurso no encontrado
+409 Conflict    - Conflicto con recurso existente (código o dominio duplicado)
+500 Internal    - Error interno del servidor
+
+
+################################################################################
+# MULTIPART/FORM-DATA
+################################################################################
+
+Los endpoints de CREATE y UPDATE usan multipart/form-data debido a que permiten
+la subida de archivos (imágenes).
+
+CARACTERÍSTICAS:
+- Content-Type: multipart/form-data
+- Soporta envío de campos de texto Y archivos simultáneamente
+- Los campos booleanos deben enviarse como "true" o "false" (strings)
+- Los campos numéricos deben enviarse como strings que representan números
+
+SUBIDA DE ARCHIVOS:
+- logo_file: Imagen para el logo de la propiedad
+- navbar_image_file: Imagen para la barra de navegación
+
+FORMATOS SOPORTADOS:
+- JPG/JPEG
+- PNG
+- GIF
+- WEBP
+
+TAMAÑO MÁXIMO:
+- Recomendado: 5MB por archivo
+- El backend puede tener límites configurados
+
+PROCESAMIENTO:
+- Los archivos se suben a S3 (Amazon Web Services)
+- Se generan URLs públicas que se devuelven en logo_url y navbar_image_url
+- Las imágenes anteriores NO se eliminan automáticamente
+
+
+################################################################################
+# CONFIGURACIÓN DE MARCA BLANCA (WHITE LABEL)
+################################################################################
+
+COLORES:
+- primary_color: Color principal de la interfaz
+- secondary_color: Color secundario para botones y acciones
+- tertiary_color: Color terciario para éxitos/confirmaciones
+- quaternary_color: Color cuaternario para advertencias/alertas
+
+FORMATO DE COLORES:
+- Hexadecimal con #
+- Ejemplos: "#1f2937", "#3b82f6", "#10b981"
+- Validación automática de formato hexadecimal
+
+IMÁGENES:
+- logo_url: URL del logo (se genera al subir logo_file)
+- navbar_image_url: URL de imagen de navbar (se genera al subir navbar_image_file)
+
+DOMINIO PERSONALIZADO:
+- custom_domain: Dominio personalizado para la aplicación
+- Debe ser único en todo el sistema
+- Formato: subdominio.dominio.com
+- Requiere configuración DNS externa
+
+
+################################################################################
+# CREACIÓN AUTOMÁTICA DE ESTRUCTURAS
+################################################################################
+
+Al crear una propiedad horizontal, se pueden generar automáticamente:
+
+1. UNIDADES DE PROPIEDAD (create_units: true):
+   - Se crean unidades básicas con número y tipo
+   - Cantidad: Según total_units
+   - Numeración: Según start_unit_number y units_per_floor
+   - Tipo: Según unit_type
+   - Prefijo: Según unit_prefix (opcional)
+   
+   Ejemplo de numeración:
+   - total_units: 16
+   - units_per_floor: 4
+   - start_unit_number: 101
+   - Resultado: 101, 102, 103, 104 (piso 1), 201, 202, 203, 204 (piso 2), etc.
+
+2. COMITÉS REQUERIDOS (create_required_committees: true):
+   - Consejo de Administración
+   - Comité de Convivencia
+   - Comité de Emergencias
+   - Se crean con fechas de inicio del año actual
+   - Estado inicial: activo
+
+
+################################################################################
+# VALIDACIONES Y REGLAS DE NEGOCIO
+################################################################################
+
+1. CÓDIGO (code):
+   - REQUERIDO al crear
+   - Debe ser ÚNICO en todo el sistema
+   - Formato recomendado: kebab-case (minúsculas con guiones)
+   - Ejemplos: "los-pinos", "edificio-central", "torres-del-parque"
+
+2. NOMBRE (name):
+   - REQUERIDO al crear
+   - Mínimo 3 caracteres, máximo 120
+   - Puede contener letras, números, espacios y caracteres especiales
+
+3. DOMINIO PERSONALIZADO (custom_domain):
+   - Debe ser ÚNICO en todo el sistema
+   - Formato: subdominio.dominio.ext
+   - Si está vacío, no se valida unicidad
+
+4. PARENT BUSINESS:
+   - Si se especifica parent_business_id, debe existir el negocio padre
+   - Permite crear jerarquías de propiedades
+
+5. TOTAL DE UNIDADES:
+   - REQUERIDO al crear
+   - Debe ser mayor o igual a 1
+   - Representa la cantidad total de unidades en la propiedad
+
+6. CAMPOS BOOLEANOS:
+   - Por defecto son false si no se especifican
+   - has_elevator, has_parking, has_pool, has_gym, has_social_area
+
+7. RELACIONES:
+   - Una propiedad tiene múltiples property_units
+   - Una propiedad tiene múltiples committees
+   - Una propiedad tiene múltiples residents (a través de property_units)
+   - Una propiedad tiene múltiples voting_groups
+
+
+################################################################################
+# DIFERENCIAS ENTRE LISTADO Y DETALLE
+################################################################################
+
+LISTADO (GET /horizontal-properties):
+- Retorna información resumida
+- NO incluye property_units ni committees
+- Incluye: id, name, code, business_type_name, address, total_units,
+  is_active, created_at
+- Diseñado para mostrar en tablas
+- Soporta paginación y filtros
+
+DETALLE (GET /horizontal-properties/{id}):
+- Retorna información completa
+- INCLUYE arrays de property_units y committees
+- Incluye todos los campos de configuración
+- Incluye URLs de imágenes
+- Incluye colores de marca blanca
+- property_units: Array vacío [] si no hay unidades
+- committees: Array vacío [] si no hay comités
+
+
+################################################################################
+# PAGINACIÓN Y FILTROS
+################################################################################
+
+PARÁMETROS DE PAGINACIÓN:
+- page: Número de página (default: 1, mínimo: 1)
+- page_size: Elementos por página (default: 10, rango: 1-100)
+
+PARÁMETROS DE FILTRO:
+- name: Búsqueda parcial case-insensitive en el nombre
+- code: Búsqueda parcial case-insensitive en el código
+- is_active: Filtro exacto por estado (true/false)
+
+PARÁMETROS DE ORDENAMIENTO:
+- order_by: Campo para ordenar (name, code, created_at, updated_at)
+- order_dir: Dirección (asc, desc)
+
+DEFAULT ORDERING:
+- Campo: created_at
+- Dirección: desc (más recientes primero)
+
+RESPUESTA PAGINADA:
+- data: Array de propiedades
+- total: Total de registros
+- page: Página actual
+- page_size: Tamaño de página
+- total_pages: Total de páginas
+
+
+################################################################################
+# AUTENTICACIÓN Y PERMISOS
+################################################################################
+
+AUTENTICACIÓN:
+- TODOS los endpoints requieren JWT Token
+- Header: Authorization: Bearer YOUR_JWT_TOKEN
+
+PERMISOS:
+
+CREAR PROPIEDAD:
+- Requiere rol de super administrador o administrador del sistema
+
+LISTAR PROPIEDADES:
+- Super administradores: Ven todas las propiedades
+- Administradores de propiedad: Solo ven sus propiedades asignadas
+
+OBTENER PROPIEDAD POR ID:
+- Solo si el usuario tiene acceso a esa propiedad específica
+
+ACTUALIZAR PROPIEDAD:
+- Requiere rol de super administrador o administrador de la propiedad específica
+
+ELIMINAR PROPIEDAD:
+- Requiere rol de super administrador
+
+ERRORES DE AUTENTICACIÓN:
+- 401 Unauthorized: Token inválido, expirado o no proporcionado
+- 403 Forbidden: Usuario sin permisos para la operación
+
+
+################################################################################
+# FORMATO DE FECHAS
+################################################################################
+
+Todas las fechas usan formato ISO 8601 con timezone UTC:
+"2024-01-15T10:30:00Z"
+
+CAMPOS DE FECHA:
+- created_at: Fecha de creación
+- updated_at: Fecha de última actualización
+
+
+################################################################################
+# RELACIÓN CON OTROS MÓDULOS
+################################################################################
+
+PROPERTY UNITS:
+- GET /horizontal-properties/{hp_id}/property-units
+- Ver API_PROPERTY_UNITS.txt
+
+RESIDENTS:
+- GET /horizontal-properties/{hp_id}/residents
+- Ver API_RESIDENTS.txt
+
+VOTING SYSTEM:
+- GET /horizontal-properties/{hp_id}/voting-groups
+- Ver API_VOTING_SYSTEM.txt
+
+
+################################################################################
+# CASOS DE USO COMUNES
+################################################################################
+
+1. CREAR PROPIEDAD BÁSICA:
+   POST con campos mínimos requeridos (name, code, timezone, address, total_units)
+
+2. CREAR PROPIEDAD CON MARCA BLANCA:
+   POST incluyendo colores, logo y navbar_image
+
+3. CREAR PROPIEDAD CON GENERACIÓN AUTOMÁTICA:
+   POST con create_units=true y create_required_committees=true
+
+4. ACTUALIZAR SOLO INFORMACIÓN BÁSICA:
+   PUT con campos de texto (name, address, description)
+
+5. ACTUALIZAR SOLO LOGO:
+   PUT con solo logo_file
+
+6. CAMBIAR COLORES DE MARCA BLANCA:
+   PUT con primary_color, secondary_color, etc.
+
+7. DESACTIVAR PROPIEDAD:
+   PUT con is_active=false
+
+8. LISTAR PROPIEDADES ACTIVAS:
+   GET con ?is_active=true
+
+9. BUSCAR POR NOMBRE:
+   GET con ?name=Pinos
+
+10. ELIMINAR PROPIEDAD:
+    DELETE (marca como inactiva)
+
+
+################################################################################
+# ERRORES COMUNES Y SOLUCIONES
+################################################################################
+
+ERROR: "ya existe una propiedad horizontal con este código"
+SOLUCIÓN: Usar un código diferente. El código debe ser único globalmente.
+
+ERROR: "el dominio personalizado ya está en uso"
+SOLUCIÓN: Usar un dominio diferente o dejar el campo vacío.
+
+ERROR: "validation for 'Code' failed on the 'required' tag"
+SOLUCIÓN: Enviar el campo "code" en el request.
+
+ERROR: "validation for 'PrimaryColor' failed on the 'hexcolor' tag"
+SOLUCIÓN: Verificar que el color tenga formato hexadecimal (#RRGGBB).
+
+ERROR: "propiedad horizontal no encontrada"
+SOLUCIÓN: Verificar que el hp_id sea correcto y que la propiedad exista.
+
+ERROR: "el negocio padre especificado no existe"
+SOLUCIÓN: Verificar que parent_business_id sea válido o no enviarlo.
+
+
+################################################################################
+# NOTAS ADICIONALES
+################################################################################
+
+1. SOFT DELETE:
+   - Las eliminaciones son lógicas (is_active: false)
+   - Los datos se conservan para auditoría
+   - Las relaciones (unidades, residentes, etc) se mantienen
+
+2. ACTUALIZACIÓN PARCIAL:
+   - PUT soporta actualización parcial
+   - Solo envía los campos a modificar
+   - Los demás conservan su valor actual
+
+3. SUBIDA DE IMÁGENES:
+   - Las imágenes se suben a S3
+   - Se generan URLs públicas
+   - Las imágenes antiguas NO se eliminan automáticamente
+   - Considerar implementar limpieza periódica
+
+4. TIMEZONE:
+   - Importante para cálculos de fechas
+   - Formato: Zona/Ciudad (ej: America/Bogota)
+   - Lista: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+
+5. CÓDIGOS RECOMENDADOS:
+   - Usar kebab-case (minúsculas con guiones)
+   - Evitar caracteres especiales
+   - Ejemplos: "conjunto-pinos", "edificio-central"
+
+6. COLORES POR DEFECTO:
+   - Si no se especifican, el sistema usa colores predeterminados
+   - Se recomienda siempre especificar colores personalizados
+
+
+################################################################################
+# FIN DE LA DOCUMENTACIÓN
+################################################################################
+

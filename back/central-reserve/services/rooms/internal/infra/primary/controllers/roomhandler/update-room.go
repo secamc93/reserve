@@ -10,21 +10,21 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// @Summary      Actualiza una sala
-// @Description  Este endpoint permite actualizar una sala existente.
-// @Tags         Salas
-// @Accept       json
-// @Produce      json
-// @Security     BearerAuth
-// @Param        id  path      int  true  "ID de la sala"
-// @Param        room  body      request.UpdateRoom  true  "Datos de la sala"
-// @Success      200    {object}  map[string]interface{} "Sala actualizada exitosamente"
-// @Failure      400    {object}  map[string]interface{} "Solicitud inválida"
-// @Failure      401    {object}  map[string]interface{} "Token de acceso requerido"
-// @Failure      404    {object}  map[string]interface{} "Sala no encontrada"
-// @Failure      409    {object}  map[string]interface{} "Sala ya existe para este negocio"
-// @Failure      500    {object}  map[string]interface{} "Error interno del servidor"
-// @Router       /rooms/{id} [put]
+// @Summary		Actualiza una sala
+// @Description	Este endpoint permite actualizar una sala existente.
+// @Tags			Salas
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id		path		int						true	"ID de la sala"
+// @Param			room	body		request.UpdateRoom		true	"Datos de la sala"
+// @Success		200		{object}	map[string]interface{}	"Sala actualizada exitosamente"
+// @Failure		400		{object}	map[string]interface{}	"Solicitud inválida"
+// @Failure		401		{object}	map[string]interface{}	"Token de acceso requerido"
+// @Failure		404		{object}	map[string]interface{}	"Sala no encontrada"
+// @Failure		409		{object}	map[string]interface{}	"Sala ya existe para este negocio"
+// @Failure		500		{object}	map[string]interface{}	"Error interno del servidor"
+// @Router			/rooms/{id} [put]
 func (h *RoomHandler) UpdateRoomHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 

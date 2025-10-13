@@ -88,6 +88,8 @@ func MapVoteDTOToResponse(dto *domain.VoteDTO) response.VoteResponse {
 		VotingID:       dto.VotingID,
 		ResidentID:     dto.ResidentID,
 		VotingOptionID: dto.VotingOptionID,
+		OptionText:     dto.OptionText,
+		OptionCode:     dto.OptionCode,
 		VotedAt:        dto.VotedAt,
 		IPAddress:      dto.IPAddress,
 		UserAgent:      dto.UserAgent,
@@ -100,6 +102,69 @@ func MapVoteDTOsToResponses(dtos []domain.VoteDTO) []response.VoteResponse {
 	responses := make([]response.VoteResponse, len(dtos))
 	for i, dto := range dtos {
 		responses[i] = MapVoteDTOToResponse(&dto)
+	}
+	return responses
+}
+
+// MapVotingResultToResponse mapea DTO de resultado a response
+func MapVotingResultToResponse(dto *domain.VotingResultDTO) response.VotingResultResponse {
+	return response.VotingResultResponse{
+		VotingOptionID: dto.VotingOptionID,
+		OptionText:     dto.OptionText,
+		OptionCode:     dto.OptionCode,
+		VoteCount:      dto.VoteCount,
+		Percentage:     dto.Percentage,
+	}
+}
+
+// MapVotingResultsToResponses mapea slice de DTOs de resultados a responses
+func MapVotingResultsToResponses(dtos []domain.VotingResultDTO) []response.VotingResultResponse {
+	responses := make([]response.VotingResultResponse, len(dtos))
+	for i, dto := range dtos {
+		responses[i] = MapVotingResultToResponse(&dto)
+	}
+	return responses
+}
+
+// MapUnitWithResidentToResponse mapea DTO a response
+func MapUnitWithResidentToResponse(dto *domain.UnitWithResidentDTO) response.UnitWithResidentResponse {
+	return response.UnitWithResidentResponse{
+		PropertyUnitID:     dto.PropertyUnitID,
+		PropertyUnitNumber: dto.PropertyUnitNumber,
+		ResidentID:         dto.ResidentID,
+		ResidentName:       dto.ResidentName,
+	}
+}
+
+// MapUnitsWithResidentsToResponses mapea slice de DTOs a responses
+func MapUnitsWithResidentsToResponses(dtos []domain.UnitWithResidentDTO) []response.UnitWithResidentResponse {
+	responses := make([]response.UnitWithResidentResponse, len(dtos))
+	for i, dto := range dtos {
+		responses[i] = MapUnitWithResidentToResponse(&dto)
+	}
+	return responses
+}
+
+// MapVotingDetailByUnitToResponse mapea DTO a response
+func MapVotingDetailByUnitToResponse(dto *domain.VotingDetailByUnitDTO) response.VotingDetailByUnitResponse {
+	return response.VotingDetailByUnitResponse{
+		PropertyUnitID:     dto.PropertyUnitID,
+		PropertyUnitNumber: dto.PropertyUnitNumber,
+		ResidentID:         dto.ResidentID,
+		ResidentName:       dto.ResidentName,
+		HasVoted:           dto.HasVoted,
+		VotingOptionID:     dto.VotingOptionID,
+		OptionText:         dto.OptionText,
+		OptionCode:         dto.OptionCode,
+		VotedAt:            dto.VotedAt,
+	}
+}
+
+// MapVotingDetailsByUnitToResponses mapea slice de DTOs a responses
+func MapVotingDetailsByUnitToResponses(dtos []domain.VotingDetailByUnitDTO) []response.VotingDetailByUnitResponse {
+	responses := make([]response.VotingDetailByUnitResponse, len(dtos))
+	for i, dto := range dtos {
+		responses[i] = MapVotingDetailByUnitToResponse(&dto)
 	}
 	return responses
 }

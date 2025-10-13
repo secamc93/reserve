@@ -572,6 +572,7 @@ export function VotingsList({ hpId, groupId, groupName }: VotingsListProps) {
             setShowLiveVotingModal(false);
             setSelectedVotingForLive(null);
           }}
+          hpId={hpId}
           voting={selectedVotingForLive}
           options={votingOptions[selectedVotingForLive.id] || []}
           votes={votingVotes[selectedVotingForLive.id] || []}

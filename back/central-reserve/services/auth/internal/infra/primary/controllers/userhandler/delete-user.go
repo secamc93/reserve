@@ -9,19 +9,20 @@ import (
 )
 
 // DeleteUserHandler maneja la solicitud de eliminar un usuario
-// @Summary Eliminar usuario
-// @Description Elimina un usuario del sistema
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param id path int true "ID del usuario" minimum(1)
-// @Success 200 {object} response.UserMessageResponse "Usuario eliminado exitosamente"
-// @Failure 400 {object} response.UserErrorResponse "ID inválido"
-// @Failure 401 {object} response.UserErrorResponse "Token de acceso requerido"
-// @Failure 404 {object} response.UserErrorResponse "Usuario no encontrado"
-// @Failure 500 {object} response.UserErrorResponse "Error interno del servidor"
-// @Router /users/{id} [delete]
+//
+//	@Summary		Eliminar usuario
+//	@Description	Elimina un usuario del sistema
+//	@Tags			Users
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		int								true	"ID del usuario"	minimum(1)
+//	@Success		200	{object}	response.UserMessageResponse	"Usuario eliminado exitosamente"
+//	@Failure		400	{object}	response.UserErrorResponse		"ID inválido"
+//	@Failure		401	{object}	response.UserErrorResponse		"Token de acceso requerido"
+//	@Failure		404	{object}	response.UserErrorResponse		"Usuario no encontrado"
+//	@Failure		500	{object}	response.UserErrorResponse		"Error interno del servidor"
+//	@Router			/users/{id} [delete]
 func (h *UserHandler) DeleteUserHandler(c *gin.Context) {
 	var req request.DeleteUserRequest
 

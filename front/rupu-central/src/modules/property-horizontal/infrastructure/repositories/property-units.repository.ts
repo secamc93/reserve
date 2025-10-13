@@ -44,13 +44,14 @@ export class PropertyUnitsRepository implements IPropertyUnitsRepository {
   }
 
   async getPropertyUnits(params: GetPropertyUnitsParams): Promise<PropertyUnitsPaginated> {
-    const { hpId, token, page = 1, pageSize = 10, unitType, floor, block, isActive } = params;
+    const { hpId, token, page = 1, pageSize = 10, number, unitType, floor, block, isActive } = params;
 
     const queryParams = new URLSearchParams({
       page: page.toString(),
       page_size: pageSize.toString(),
     });
 
+    if (number) queryParams.append('number', number);
     if (unitType) queryParams.append('unit_type', unitType);
     if (floor !== undefined) queryParams.append('floor', floor.toString());
     if (block) queryParams.append('block', block);
@@ -76,8 +77,6 @@ export class PropertyUnitsRepository implements IPropertyUnitsRepository {
 
       if (!response.ok) {
         logHttpError({
-          method,
-          url,
           status: response.status,
           statusText: response.statusText,
           duration,
@@ -86,7 +85,7 @@ export class PropertyUnitsRepository implements IPropertyUnitsRepository {
         throw new Error(data.message || 'Error al obtener las unidades');
       }
 
-      logHttpSuccess({ method, url, status: response.status, statusText: response.statusText, duration, data });
+      logHttpSuccess({ status: response.status, statusText: response.statusText, duration, data });
 
       return {
         units: data.data.units.map(this.mapBackendPropertyUnit),
@@ -98,8 +97,6 @@ export class PropertyUnitsRepository implements IPropertyUnitsRepository {
     } catch (error) {
       const duration = Date.now() - startTime;
       logHttpError({
-        method,
-        url,
         status: 0,
         statusText: 'Network Error',
         duration,
@@ -131,8 +128,6 @@ export class PropertyUnitsRepository implements IPropertyUnitsRepository {
 
       if (!response.ok) {
         logHttpError({
-          method,
-          url,
           status: response.status,
           statusText: response.statusText,
           duration,
@@ -141,14 +136,12 @@ export class PropertyUnitsRepository implements IPropertyUnitsRepository {
         throw new Error(data.message || 'Error al obtener la unidad');
       }
 
-      logHttpSuccess({ method, url, status: response.status, statusText: response.statusText, duration, data });
+      logHttpSuccess({ status: response.status, statusText: response.statusText, duration, data });
 
       return this.mapBackendPropertyUnit(data.data);
     } catch (error) {
       const duration = Date.now() - startTime;
       logHttpError({
-        method,
-        url,
         status: 0,
         statusText: 'Network Error',
         duration,
@@ -164,16 +157,19 @@ export class PropertyUnitsRepository implements IPropertyUnitsRepository {
     const method = 'POST';
     const startTime = Date.now();
 
-    const body = {
+    // Solo incluir campos requeridos y campos opcionales que estén definidos
+    const body: Record<string, unknown> = {
       number: unitData.number,
-      floor: unitData.floor,
-      block: unitData.block,
       unit_type: unitData.unitType,
-      area: unitData.area,
-      bedrooms: unitData.bedrooms,
-      bathrooms: unitData.bathrooms,
-      description: unitData.description,
     };
+
+    // Agregar campos opcionales solo si están definidos
+    if (unitData.floor !== undefined) body.floor = unitData.floor;
+    if (unitData.block !== undefined) body.block = unitData.block;
+    if (unitData.area !== undefined) body.area = unitData.area;
+    if (unitData.bedrooms !== undefined) body.bedrooms = unitData.bedrooms;
+    if (unitData.bathrooms !== undefined) body.bathrooms = unitData.bathrooms;
+    if (unitData.description !== undefined) body.description = unitData.description;
 
     logHttpRequest({ method, url, body });
 
@@ -192,8 +188,6 @@ export class PropertyUnitsRepository implements IPropertyUnitsRepository {
 
       if (!response.ok) {
         logHttpError({
-          method,
-          url,
           status: response.status,
           statusText: response.statusText,
           duration,
@@ -202,14 +196,12 @@ export class PropertyUnitsRepository implements IPropertyUnitsRepository {
         throw new Error(data.message || 'Error al crear la unidad');
       }
 
-      logHttpSuccess({ method, url, status: response.status, statusText: response.statusText, duration, data });
+      logHttpSuccess({ status: response.status, statusText: response.statusText, duration, data });
 
       return this.mapBackendPropertyUnit(data.data);
     } catch (error) {
       const duration = Date.now() - startTime;
       logHttpError({
-        method,
-        url,
         status: 0,
         statusText: 'Network Error',
         duration,
@@ -253,8 +245,6 @@ export class PropertyUnitsRepository implements IPropertyUnitsRepository {
 
       if (!response.ok) {
         logHttpError({
-          method,
-          url,
           status: response.status,
           statusText: response.statusText,
           duration,
@@ -263,14 +253,12 @@ export class PropertyUnitsRepository implements IPropertyUnitsRepository {
         throw new Error(data.message || 'Error al actualizar la unidad');
       }
 
-      logHttpSuccess({ method, url, status: response.status, statusText: response.statusText, duration, data });
+      logHttpSuccess({ status: response.status, statusText: response.statusText, duration, data });
 
       return this.mapBackendPropertyUnit(data.data);
     } catch (error) {
       const duration = Date.now() - startTime;
       logHttpError({
-        method,
-        url,
         status: 0,
         statusText: 'Network Error',
         duration,
@@ -302,8 +290,6 @@ export class PropertyUnitsRepository implements IPropertyUnitsRepository {
 
       if (!response.ok) {
         logHttpError({
-          method,
-          url,
           status: response.status,
           statusText: response.statusText,
           duration,
@@ -312,12 +298,10 @@ export class PropertyUnitsRepository implements IPropertyUnitsRepository {
         throw new Error(data.message || 'Error al eliminar la unidad');
       }
 
-      logHttpSuccess({ method, url, status: response.status, statusText: response.statusText, duration, data });
+      logHttpSuccess({ status: response.status, statusText: response.statusText, duration, data });
     } catch (error) {
       const duration = Date.now() - startTime;
       logHttpError({
-        method,
-        url,
         status: 0,
         statusText: 'Network Error',
         duration,

@@ -7,19 +7,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// @Summary      Obtiene una sala por ID
-// @Description  Este endpoint permite obtener una sala específica por su ID.
-// @Tags         Salas
-// @Accept       json
-// @Produce      json
-// @Security     BearerAuth
-// @Param        id  path      int  true  "ID de la sala"
-// @Success      200    {object}  map[string]interface{} "Sala encontrada"
-// @Failure      400    {object}  map[string]interface{} "ID de sala inválido"
-// @Failure      401    {object}  map[string]interface{} "Token de acceso requerido"
-// @Failure      404    {object}  map[string]interface{} "Sala no encontrada"
-// @Failure      500    {object}  map[string]interface{} "Error interno del servidor"
-// @Router       /rooms/{id} [get]
+// @Summary		Obtiene una sala por ID
+// @Description	Este endpoint permite obtener una sala específica por su ID.
+// @Tags			Salas
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id	path		int						true	"ID de la sala"
+// @Success		200	{object}	map[string]interface{}	"Sala encontrada"
+// @Failure		400	{object}	map[string]interface{}	"ID de sala inválido"
+// @Failure		401	{object}	map[string]interface{}	"Token de acceso requerido"
+// @Failure		404	{object}	map[string]interface{}	"Sala no encontrada"
+// @Failure		500	{object}	map[string]interface{}	"Error interno del servidor"
+// @Router			/rooms/{id} [get]
 func (h *RoomHandler) GetRoomByIDHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 

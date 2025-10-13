@@ -1,0 +1,756 @@
+================================================================================
+  DOCUMENTACIÓN API - RESIDENTS (RESIDENTES)
+  Base URL: http://localhost:3050/api/v1
+================================================================================
+
+DESCRIPCIÓN GENERAL:
+Los Residents (Residentes) son las personas que habitan o tienen derechos sobre
+una unidad de propiedad dentro de una propiedad horizontal. Pueden ser 
+propietarios, arrendatarios, familiares o invitados. El sistema permite gestionar
+información completa de cada residente incluyendo datos de contacto, fechas de
+entrada/salida, información de arrendamiento y más.
+
+################################################################################
+# RESIDENTS CRUD
+################################################################################
+
+================================================================================
+1. CREAR RESIDENTE
+================================================================================
+Method: POST
+URL: /horizontal-properties/{hp_id}/residents
+Content-Type: application/json
+Authentication: JWT Token Required
+
+--- PARAMS PATH ---
+- hp_id (number): ID de la propiedad horizontal
+
+--- REQUEST BODY ---
+{
+  "property_unit_id": 1,
+  "resident_type_id": 1,
+  "name": "Juan Pérez García",
+  "email": "juan.perez@email.com",
+  "phone": "+573001234567",
+  "dni": "123456789",
+  "emergency_contact": "María Pérez - 3009876543",
+  "is_main_resident": true,
+  "move_in_date": "2024-01-15T00:00:00Z",
+  "lease_start_date": "2024-01-01T00:00:00Z",
+  "lease_end_date": "2024-12-31T23:59:59Z",
+  "monthly_rent": 1500000
+}
+
+CAMPOS REQUERIDOS:
+- property_unit_id (number): ID de la unidad de propiedad donde reside
+- resident_type_id (number): ID del tipo de residente
+- name (string): Nombre completo del residente
+- email (string): Email (debe ser válido y único por propiedad)
+- dni (string): Documento de identidad (único por propiedad)
+
+CAMPOS OPCIONALES:
+- phone (string): Número de teléfono
+- emergency_contact (string): Contacto de emergencia
+- is_main_resident (boolean, default: false): Si es el residente principal de la unidad
+- move_in_date (datetime): Fecha de ingreso a la unidad
+- lease_start_date (datetime): Fecha inicio del contrato (para arrendatarios)
+- lease_end_date (datetime): Fecha fin del contrato (para arrendatarios)
+- monthly_rent (number): Valor mensual del arriendo
+
+TIPOS DE RESIDENTE COMUNES (resident_type_id):
+- 1: Propietario (owner)
+- 2: Arrendatario/Inquilino (tenant)
+- 3: Familiar (family)
+- 4: Invitado (guest)
+
+--- RESPONSE 201 (SUCCESS) ---
+{
+  "success": true,
+  "message": "Residente creado exitosamente",
+  "data": {
+    "id": 1,
+    "business_id": 1,
+    "property_unit_id": 1,
+    "property_unit_number": "101",
+    "resident_type_id": 1,
+    "resident_type_name": "Propietario",
+    "resident_type_code": "owner",
+    "name": "Juan Pérez García",
+    "email": "juan.perez@email.com",
+    "phone": "+573001234567",
+    "dni": "123456789",
+    "emergency_contact": "María Pérez - 3009876543",
+    "is_main_resident": true,
+    "is_active": true,
+    "move_in_date": "2024-01-15T00:00:00Z",
+    "move_out_date": null,
+    "lease_start_date": "2024-01-01T00:00:00Z",
+    "lease_end_date": "2024-12-31T23:59:59Z",
+    "monthly_rent": 1500000,
+    "created_at": "2025-01-15T10:30:00Z",
+    "updated_at": "2025-01-15T10:30:00Z"
+  }
+}
+
+--- RESPONSE 400 (BAD REQUEST - Validación) ---
+{
+  "success": false,
+  "message": "Datos inválidos",
+  "error": "Key: 'CreateResidentRequest.Email' Error:Field validation for 'Email' failed on the 'email' tag"
+}
+
+--- RESPONSE 400 (BAD REQUEST - Campo requerido) ---
+{
+  "success": false,
+  "message": "No se pudo crear el residente",
+  "error": "el nombre del residente es requerido"
+}
+
+--- RESPONSE 409 (CONFLICT - Email duplicado) ---
+{
+  "success": false,
+  "message": "No se pudo crear el residente",
+  "error": "ya existe un residente con este email en la propiedad"
+}
+
+--- RESPONSE 409 (CONFLICT - DNI duplicado) ---
+{
+  "success": false,
+  "message": "No se pudo crear el residente",
+  "error": "ya existe un residente con este DNI en la propiedad"
+}
+
+--- RESPONSE 500 (INTERNAL SERVER ERROR) ---
+{
+  "success": false,
+  "message": "No se pudo crear el residente",
+  "error": "database error details"
+}
+
+--- EJEMPLO CURL ---
+curl -X POST "http://localhost:3050/api/v1/horizontal-properties/1/residents" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{
+    "property_unit_id": 1,
+    "resident_type_id": 1,
+    "name": "Juan Pérez García",
+    "email": "juan.perez@email.com",
+    "phone": "+573001234567",
+    "dni": "123456789",
+    "emergency_contact": "María Pérez - 3009876543",
+    "is_main_resident": true,
+    "move_in_date": "2024-01-15T00:00:00Z"
+  }'
+
+
+================================================================================
+2. LISTAR RESIDENTES (CON PAGINACIÓN Y FILTROS)
+================================================================================
+Method: GET
+URL: /horizontal-properties/{hp_id}/residents
+Authentication: JWT Token Required
+
+--- PARAMS PATH ---
+- hp_id (number): ID de la propiedad horizontal
+
+--- QUERY PARAMETERS (TODOS OPCIONALES) ---
+- property_unit_number (string): Filtrar por número de unidad (búsqueda parcial, case-insensitive)
+  Ejemplo: "101" encontrará "101", "1010", "A-101", etc.
+- name (string): Filtrar por nombre del residente (búsqueda parcial, case-insensitive)
+  Ejemplo: "Juan" encontrará "Juan Pérez", "Juana", "María Juan", etc.
+- property_unit_id (number): Filtrar por ID exacto de unidad de propiedad
+- resident_type_id (number): Filtrar por tipo de residente
+- is_active (boolean): Filtrar por estado activo (true/false)
+- is_main_resident (boolean): Filtrar por residente principal (true/false)
+- page (number, default: 1): Número de página
+- page_size (number, default: 10): Cantidad de elementos por página
+
+--- EJEMPLO DE URL CON FILTROS ---
+GET /horizontal-properties/1/residents?page=1&page_size=10&property_unit_number=101&name=Juan&property_unit_id=1&resident_type_id=1&is_active=true&is_main_resident=true
+
+--- RESPONSE 200 (SUCCESS) ---
+{
+  "success": true,
+  "message": "Residentes obtenidos exitosamente",
+  "data": {
+    "residents": [
+      {
+        "id": 1,
+        "property_unit_number": "101",
+        "resident_type_name": "Propietario",
+        "name": "Juan Pérez García",
+        "email": "juan.perez@email.com",
+        "phone": "+573001234567",
+        "is_main_resident": true,
+        "is_active": true
+      },
+      {
+        "id": 2,
+        "property_unit_number": "102",
+        "resident_type_name": "Arrendatario",
+        "name": "María González López",
+        "email": "maria.gonzalez@email.com",
+        "phone": "+573007654321",
+        "is_main_resident": true,
+        "is_active": true
+      }
+    ],
+    "total": 100,
+    "page": 1,
+    "page_size": 10,
+    "total_pages": 10
+  }
+}
+
+--- RESPONSE 400 (BAD REQUEST - ID inválido) ---
+{
+  "success": false,
+  "message": "ID inválido",
+  "error": "Debe ser numérico"
+}
+
+--- RESPONSE 400 (BAD REQUEST - Parámetros inválidos) ---
+{
+  "success": false,
+  "message": "Parámetros inválidos",
+  "error": "validation error details"
+}
+
+--- RESPONSE 500 (INTERNAL SERVER ERROR) ---
+{
+  "success": false,
+  "message": "Error listando residentes",
+  "error": "database error"
+}
+
+--- EJEMPLO CURL ---
+curl -X GET "http://localhost:3050/api/v1/horizontal-properties/1/residents?page=1&page_size=10&property_unit_number=101&name=Juan&is_active=true" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+
+================================================================================
+3. OBTENER RESIDENTE POR ID
+================================================================================
+Method: GET
+URL: /horizontal-properties/{hp_id}/residents/{resident_id}
+Authentication: JWT Token Required
+
+--- PARAMS PATH ---
+- hp_id (number): ID de la propiedad horizontal
+- resident_id (number): ID del residente
+
+--- RESPONSE 200 (SUCCESS) ---
+{
+  "success": true,
+  "message": "Residente obtenido exitosamente",
+  "data": {
+    "id": 1,
+    "business_id": 1,
+    "property_unit_id": 1,
+    "property_unit_number": "101",
+    "resident_type_id": 1,
+    "resident_type_name": "Propietario",
+    "resident_type_code": "owner",
+    "name": "Juan Pérez García",
+    "email": "juan.perez@email.com",
+    "phone": "+573001234567",
+    "dni": "123456789",
+    "emergency_contact": "María Pérez - 3009876543",
+    "is_main_resident": true,
+    "is_active": true,
+    "move_in_date": "2024-01-15T00:00:00Z",
+    "move_out_date": null,
+    "lease_start_date": "2024-01-01T00:00:00Z",
+    "lease_end_date": "2024-12-31T23:59:59Z",
+    "monthly_rent": 1500000,
+    "created_at": "2025-01-15T10:30:00Z",
+    "updated_at": "2025-01-15T10:30:00Z"
+  }
+}
+
+--- RESPONSE 400 (BAD REQUEST - ID inválido) ---
+{
+  "success": false,
+  "message": "ID inválido",
+  "error": "Debe ser numérico"
+}
+
+--- RESPONSE 404 (NOT FOUND) ---
+{
+  "success": false,
+  "message": "No se pudo obtener el residente",
+  "error": "residente no encontrado"
+}
+
+--- RESPONSE 500 (INTERNAL SERVER ERROR) ---
+{
+  "success": false,
+  "message": "No se pudo obtener el residente",
+  "error": "database error"
+}
+
+--- EJEMPLO CURL ---
+curl -X GET "http://localhost:3050/api/v1/horizontal-properties/1/residents/1" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+
+================================================================================
+4. ACTUALIZAR RESIDENTE
+================================================================================
+Method: PUT
+URL: /horizontal-properties/{hp_id}/residents/{resident_id}
+Content-Type: application/json
+Authentication: JWT Token Required
+
+--- PARAMS PATH ---
+- hp_id (number): ID de la propiedad horizontal
+- resident_id (number): ID del residente
+
+--- REQUEST BODY (TODOS LOS CAMPOS OPCIONALES) ---
+{
+  "property_unit_id": 2,
+  "resident_type_id": 2,
+  "name": "Juan Pérez García Actualizado",
+  "email": "juan.perez.nuevo@email.com",
+  "phone": "+573001111111",
+  "dni": "987654321",
+  "emergency_contact": "Pedro Pérez - 3001234567",
+  "is_main_resident": false,
+  "is_active": false,
+  "move_in_date": "2024-01-15T00:00:00Z",
+  "move_out_date": "2025-01-15T00:00:00Z",
+  "lease_start_date": "2024-01-01T00:00:00Z",
+  "lease_end_date": "2025-12-31T23:59:59Z",
+  "monthly_rent": 1800000
+}
+
+NOTA: Solo envía los campos que quieres actualizar. Los campos no enviados
+      permanecerán sin cambios.
+
+CAMPOS ACTUALIZABLES:
+- property_unit_id (number): Cambiar de unidad
+- resident_type_id (number): Cambiar tipo de residente
+- name (string): Actualizar nombre
+- email (string): Actualizar email (debe ser único)
+- phone (string): Actualizar teléfono
+- dni (string): Actualizar DNI (debe ser único)
+- emergency_contact (string): Actualizar contacto de emergencia
+- is_main_resident (boolean): Cambiar si es residente principal
+- is_active (boolean): Activar/desactivar residente
+- move_in_date (datetime): Actualizar fecha de ingreso
+- move_out_date (datetime): Registrar fecha de salida
+- lease_start_date (datetime): Actualizar inicio de contrato
+- lease_end_date (datetime): Actualizar fin de contrato
+- monthly_rent (number): Actualizar valor de arriendo
+
+--- RESPONSE 200 (SUCCESS) ---
+{
+  "success": true,
+  "message": "Residente actualizado exitosamente",
+  "data": {
+    "id": 1,
+    "business_id": 1,
+    "property_unit_id": 2,
+    "property_unit_number": "102",
+    "resident_type_id": 2,
+    "resident_type_name": "Arrendatario",
+    "resident_type_code": "tenant",
+    "name": "Juan Pérez García Actualizado",
+    "email": "juan.perez.nuevo@email.com",
+    "phone": "+573001111111",
+    "dni": "987654321",
+    "emergency_contact": "Pedro Pérez - 3001234567",
+    "is_main_resident": false,
+    "is_active": false,
+    "move_in_date": "2024-01-15T00:00:00Z",
+    "move_out_date": "2025-01-15T00:00:00Z",
+    "lease_start_date": "2024-01-01T00:00:00Z",
+    "lease_end_date": "2025-12-31T23:59:59Z",
+    "monthly_rent": 1800000,
+    "created_at": "2025-01-15T10:30:00Z",
+    "updated_at": "2025-01-15T15:00:00Z"
+  }
+}
+
+--- RESPONSE 400 (BAD REQUEST - ID inválido) ---
+{
+  "success": false,
+  "message": "ID inválido",
+  "error": "Debe ser numérico"
+}
+
+--- RESPONSE 400 (BAD REQUEST - Datos inválidos) ---
+{
+  "success": false,
+  "message": "Datos inválidos",
+  "error": "validation error details"
+}
+
+--- RESPONSE 404 (NOT FOUND) ---
+{
+  "success": false,
+  "message": "No se pudo actualizar el residente",
+  "error": "residente no encontrado"
+}
+
+--- RESPONSE 409 (CONFLICT - Email duplicado) ---
+{
+  "success": false,
+  "message": "No se pudo actualizar el residente",
+  "error": "ya existe un residente con este email en la propiedad"
+}
+
+--- RESPONSE 409 (CONFLICT - DNI duplicado) ---
+{
+  "success": false,
+  "message": "No se pudo actualizar el residente",
+  "error": "ya existe un residente con este DNI en la propiedad"
+}
+
+--- RESPONSE 500 (INTERNAL SERVER ERROR) ---
+{
+  "success": false,
+  "message": "No se pudo actualizar el residente",
+  "error": "database error"
+}
+
+--- EJEMPLO CURL ---
+curl -X PUT "http://localhost:3050/api/v1/horizontal-properties/1/residents/1" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{
+    "phone": "+573001111111",
+    "is_active": false
+  }'
+
+
+================================================================================
+5. ELIMINAR RESIDENTE (SOFT DELETE)
+================================================================================
+Method: DELETE
+URL: /horizontal-properties/{hp_id}/residents/{resident_id}
+Authentication: JWT Token Required
+
+--- PARAMS PATH ---
+- hp_id (number): ID de la propiedad horizontal
+- resident_id (number): ID del residente
+
+NOTA IMPORTANTE: Esta operación es un SOFT DELETE (eliminación lógica).
+El residente se marca como inactivo pero no se elimina físicamente de la base de datos.
+
+--- RESPONSE 200 (SUCCESS) ---
+{
+  "success": true,
+  "message": "Residente eliminado exitosamente"
+}
+
+--- RESPONSE 400 (BAD REQUEST - ID inválido) ---
+{
+  "success": false,
+  "message": "ID inválido",
+  "error": "Debe ser numérico"
+}
+
+--- RESPONSE 404 (NOT FOUND) ---
+{
+  "success": false,
+  "message": "No se pudo eliminar el residente",
+  "error": "residente no encontrado"
+}
+
+--- RESPONSE 500 (INTERNAL SERVER ERROR) ---
+{
+  "success": false,
+  "message": "No se pudo eliminar el residente",
+  "error": "database error"
+}
+
+--- EJEMPLO CURL ---
+curl -X DELETE "http://localhost:3050/api/v1/horizontal-properties/1/residents/1" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+
+################################################################################
+# CÓDIGOS DE ESTADO HTTP
+################################################################################
+
+200 OK          - Operación exitosa
+201 Created     - Recurso creado exitosamente
+400 Bad Request - Datos inválidos, parámetros incorrectos o campos requeridos faltantes
+404 Not Found   - Recurso no encontrado
+409 Conflict    - Conflicto con recurso existente (email o DNI duplicado)
+500 Internal    - Error interno del servidor
+
+
+################################################################################
+# TIPOS DE RESIDENTE (resident_type_id)
+################################################################################
+
+ID  | NOMBRE        | CÓDIGO  | DESCRIPCIÓN
+----|---------------|---------|------------------------------------------
+1   | Propietario   | owner   | Dueño legal de la unidad
+2   | Arrendatario  | tenant  | Persona que renta/arrienda la unidad
+3   | Familiar      | family  | Familiar del propietario/arrendatario
+4   | Invitado      | guest   | Invitado temporal
+
+
+################################################################################
+# VALIDACIONES Y REGLAS DE NEGOCIO
+################################################################################
+
+1. CAMPOS REQUERIDOS AL CREAR:
+   - property_unit_id: Debe existir una unidad con este ID
+   - resident_type_id: Debe existir un tipo de residente con este ID
+   - name: No puede estar vacío
+   - email: Debe ser un email válido y único en la propiedad
+   - dni: No puede estar vacío y debe ser único en la propiedad
+
+2. EMAIL:
+   - Debe tener formato válido (validación con regex)
+   - Debe ser ÚNICO dentro de la propiedad horizontal
+   - No distingue mayúsculas/minúsculas en la validación de unicidad
+
+3. DNI (DOCUMENTO DE IDENTIDAD):
+   - Debe ser ÚNICO dentro de la propiedad horizontal
+   - Puede contener números, letras y guiones
+   - Representa cualquier tipo de documento (cédula, pasaporte, etc)
+
+4. RESIDENTE PRINCIPAL (is_main_resident):
+   - Por defecto es false
+   - Indica si es el residente principal de la unidad
+   - Se recomienda que cada unidad tenga un residente principal
+   - No hay validación que impida múltiples residentes principales
+
+5. FECHAS:
+   - move_in_date: Fecha de ingreso a la unidad
+   - move_out_date: Fecha de salida (null si aún reside)
+   - lease_start_date: Inicio del contrato de arriendo
+   - lease_end_date: Fin del contrato de arriendo
+   - No hay validaciones automáticas de coherencia entre fechas
+
+6. INFORMACIÓN DE ARRENDAMIENTO:
+   - lease_start_date, lease_end_date, monthly_rent son opcionales
+   - Relevantes principalmente para residentes tipo "tenant" (arrendatarios)
+   - monthly_rent es un valor numérico (sin símbolo de moneda)
+
+7. ESTADO ACTIVO/INACTIVO:
+   - Por defecto los residentes se crean como activos (is_active: true)
+   - Se puede cambiar el estado en la actualización
+   - Al eliminar, se marca como inactivo (soft delete)
+
+8. RELACIONES:
+   - Un residente pertenece a una unidad de propiedad
+   - Un residente tiene un tipo de residente
+   - Una unidad puede tener múltiples residentes
+   - Un residente puede tener votos en el sistema de votaciones
+
+
+################################################################################
+# PAGINACIÓN
+################################################################################
+
+PARÁMETROS:
+- page: Número de página (default: 1, mínimo: 1)
+- page_size: Cantidad de elementos por página (default: 10, rango: 1-100)
+
+RESPUESTA INCLUYE:
+- residents: Array de residentes
+- total: Total de registros que cumplen los filtros
+- page: Página actual
+- page_size: Tamaño de página usado
+- total_pages: Total de páginas disponibles
+
+CÁLCULO DE PÁGINAS:
+total_pages = ceil(total / page_size)
+
+
+################################################################################
+# AUTENTICACIÓN Y PERMISOS
+################################################################################
+
+AUTENTICACIÓN:
+- TODOS los endpoints requieren JWT Token
+- Token en header: Authorization: Bearer YOUR_JWT_TOKEN
+
+PERMISOS:
+
+CREAR RESIDENTE:
+- Requiere rol de administrador de la propiedad
+
+LISTAR RESIDENTES:
+- Administradores: Ven todos los residentes de la propiedad
+- Residentes: Solo ven su propia información
+
+OBTENER RESIDENTE POR ID:
+- Administradores: Pueden ver cualquier residente
+- Residentes: Solo pueden ver su propia información
+
+ACTUALIZAR RESIDENTE:
+- Requiere rol de administrador de la propiedad
+- Residentes pueden actualizar algunos campos propios (teléfono, contacto de emergencia)
+
+ELIMINAR RESIDENTE:
+- Requiere rol de administrador de la propiedad
+
+ERRORES DE AUTENTICACIÓN:
+- 401 Unauthorized: Token inválido, expirado o no proporcionado
+- 403 Forbidden: Usuario sin permisos para la operación
+
+
+################################################################################
+# FORMATO DE FECHAS
+################################################################################
+
+Todas las fechas usan formato ISO 8601 con timezone UTC:
+"2024-01-15T00:00:00Z"
+
+CAMPOS DE FECHA EN REQUEST:
+- move_in_date
+- move_out_date  
+- lease_start_date
+- lease_end_date
+
+CAMPOS DE FECHA EN RESPONSE:
+- created_at: Fecha de creación del registro
+- updated_at: Fecha de última actualización
+- move_in_date, move_out_date, lease_start_date, lease_end_date
+
+
+################################################################################
+# CASOS DE USO COMUNES
+################################################################################
+
+1. REGISTRAR PROPIETARIO:
+   POST con resident_type_id=1, sin lease dates ni monthly_rent
+
+2. REGISTRAR ARRENDATARIO:
+   POST con resident_type_id=2, incluyendo lease_start_date, lease_end_date, monthly_rent
+
+3. BUSCAR RESIDENTE POR NOMBRE:
+   GET con filtro ?name=Juan
+   (Búsqueda parcial: "Juan" encontrará "Juan Pérez", "María Juana", etc.)
+
+4. BUSCAR RESIDENTES DE UNA UNIDAD ESPECÍFICA (POR NÚMERO):
+   GET con filtro ?property_unit_number=101
+   (Búsqueda parcial: "101" encontrará unidades "101", "1010", "A-101", etc.)
+
+5. LISTAR TODOS LOS RESIDENTES DE UNA UNIDAD (POR ID):
+   GET con filtro ?property_unit_id=1
+
+6. LISTAR SOLO PROPIETARIOS:
+   GET con filtro ?resident_type_id=1
+
+7. LISTAR RESIDENTES ACTIVOS:
+   GET con filtro ?is_active=true
+
+8. REGISTRAR SALIDA DE RESIDENTE:
+   PUT con {"move_out_date": "2025-06-30T00:00:00Z", "is_active": false}
+
+9. CAMBIAR RESIDENTE DE UNIDAD:
+   PUT con {"property_unit_id": 2}
+
+10. RENOVAR CONTRATO DE ARRENDATARIO:
+    PUT con {"lease_end_date": "2026-12-31T23:59:59Z", "monthly_rent": 1600000}
+
+
+################################################################################
+# ERRORES COMUNES Y SOLUCIONES
+################################################################################
+
+ERROR: "ya existe un residente con este email en la propiedad"
+SOLUCIÓN: Usar un email diferente o actualizar el residente existente
+
+ERROR: "ya existe un residente con este DNI en la propiedad"
+SOLUCIÓN: Verificar que el DNI sea correcto. Si el residente ya existe, actualizarlo
+
+ERROR: "el nombre del residente es requerido"
+SOLUCIÓN: Enviar el campo "name" en el request body
+
+ERROR: "el email del residente es requerido"
+SOLUCIÓN: Enviar el campo "email" en el request body
+
+ERROR: "el DNI del residente es requerido"
+SOLUCIÓN: Enviar el campo "dni" en el request body
+
+ERROR: "residente no encontrado"
+SOLUCIÓN: Verificar que el resident_id sea correcto y que el residente exista
+
+ERROR: "ID inválido - Debe ser numérico"
+SOLUCIÓN: Verificar que el resident_id en la URL sea un número entero válido
+
+ERROR: "validation for 'Email' failed on the 'email' tag"
+SOLUCIÓN: Verificar que el email tenga formato válido (usuario@dominio.com)
+
+
+################################################################################
+# DIFERENCIAS ENTRE LISTADO Y DETALLE
+################################################################################
+
+LISTADO (GET /residents):
+- Retorna información resumida de cada residente
+- Incluye: id, property_unit_number, resident_type_name, name, email, phone,
+  is_main_resident, is_active
+- Diseñado para mostrar en tablas o listas
+- Soporta paginación y filtros
+
+DETALLE (GET /residents/{id}):
+- Retorna información completa del residente
+- Incluye todos los campos disponibles
+- Incluye fechas completas, DNI, emergency_contact, lease info, etc
+- Incluye property_unit_number, resident_type_name y resident_type_code
+
+
+################################################################################
+# RELACIÓN CON OTROS MÓDULOS
+################################################################################
+
+PROPERTY UNITS:
+- Un residente pertenece a una Property Unit
+- Ver API_PROPERTY_UNITS.txt para gestionar unidades
+- Endpoint: /horizontal-properties/{hp_id}/property-units
+
+VOTACIONES:
+- Los residentes pueden emitir votos en votaciones
+- Ver API_VOTING_SYSTEM.txt para sistema de votaciones
+- Endpoint: /horizontal-properties/{hp_id}/voting-groups/.../votes
+
+
+################################################################################
+# NOTAS ADICIONALES
+################################################################################
+
+1. SOFT DELETE:
+   - Las eliminaciones son lógicas (soft delete)
+   - Los registros se marcan como inactivos (is_active: false)
+   - Los datos históricos se mantienen para auditoría
+
+2. ACTUALIZACIÓN PARCIAL:
+   - El método PUT soporta actualización parcial
+   - Solo envía los campos que quieres modificar
+   - Los demás campos conservan su valor actual
+
+3. CAMPOS NULL:
+   - Los campos opcionales pueden ser null
+   - En responses, los campos null se omiten si tienen tag omitempty
+
+4. CONTACTO DE EMERGENCIA:
+   - Es un campo de texto libre
+   - Formato sugerido: "Nombre - Teléfono"
+   - Ejemplo: "María Pérez - 3009876543"
+
+5. MÚLTIPLES RESIDENTES POR UNIDAD:
+   - Una unidad puede tener múltiples residentes
+   - Útil para familias, compañeros de piso, etc
+   - Usar is_main_resident para identificar al residente principal
+
+6. HISTÓRICO DE RESIDENTES:
+   - El campo move_out_date permite mantener histórico
+   - Al marcar como inactivo, se puede registrar la fecha de salida
+   - Útil para estadísticas y reportes
+
+
+################################################################################
+# FIN DE LA DOCUMENTACIÓN
+################################################################################
+

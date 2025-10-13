@@ -10,29 +10,30 @@ import (
 )
 
 // UpdateUserHandler maneja la solicitud de actualizar un usuario
-// @Summary Actualizar usuario
-// @Description Actualiza un usuario existente en el sistema. Soporta carga de imagen (avatarFile).
-// @Tags Users
-// @Accept multipart/form-data
-// @Produce json
-// @Security BearerAuth
-// @Param id path int true "ID del usuario" minimum(1)
-// @Param name formData string false "Nombre"
-// @Param email formData string false "Email"
-// @Param password formData string false "Nueva contraseña"
-// @Param phone formData string false "Teléfono (10 dígitos)"
-// @Param is_active formData boolean false "¿Activo?"
-// @Param role_ids formData string false "IDs de roles separados por comas (ej: 1,2,3)"
-// @Param business_ids formData string false "IDs de negocios separados por comas (ej: 1,2,3)"
-// @Param avatar_url formData string false "URL de avatar (opcional si se usa avatarFile)"
-// @Param avatarFile formData file false "Imagen de avatar"
-// @Success 200 {object} response.UserSuccessResponse "Usuario actualizado exitosamente"
-// @Failure 400 {object} response.UserErrorResponse "Datos inválidos"
-// @Failure 401 {object} response.UserErrorResponse "Token de acceso requerido"
-// @Failure 404 {object} response.UserErrorResponse "Usuario no encontrado"
-// @Failure 409 {object} response.UserErrorResponse "Email ya existe"
-// @Failure 500 {object} response.UserErrorResponse "Error interno del servidor"
-// @Router /users/{id} [put]
+//
+//	@Summary		Actualizar usuario
+//	@Description	Actualiza un usuario existente en el sistema. Soporta carga de imagen (avatarFile).
+//	@Tags			Users
+//	@Accept			multipart/form-data
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id				path		int								true	"ID del usuario"	minimum(1)
+//	@Param			name			formData	string							false	"Nombre"
+//	@Param			email			formData	string							false	"Email"
+//	@Param			password		formData	string							false	"Nueva contraseña"
+//	@Param			phone			formData	string							false	"Teléfono (10 dígitos)"
+//	@Param			is_active		formData	boolean							false	"¿Activo?"
+//	@Param			role_ids		formData	string							false	"IDs de roles separados por comas (ej: 1,2,3)"
+//	@Param			business_ids	formData	string							false	"IDs de negocios separados por comas (ej: 1,2,3)"
+//	@Param			avatar_url		formData	string							false	"URL de avatar (opcional si se usa avatarFile)"
+//	@Param			avatarFile		formData	file							false	"Imagen de avatar"
+//	@Success		200				{object}	response.UserSuccessResponse	"Usuario actualizado exitosamente"
+//	@Failure		400				{object}	response.UserErrorResponse		"Datos inválidos"
+//	@Failure		401				{object}	response.UserErrorResponse		"Token de acceso requerido"
+//	@Failure		404				{object}	response.UserErrorResponse		"Usuario no encontrado"
+//	@Failure		409				{object}	response.UserErrorResponse		"Email ya existe"
+//	@Failure		500				{object}	response.UserErrorResponse		"Error interno del servidor"
+//	@Router			/users/{id} [put]
 func (h *UserHandler) UpdateUserHandler(c *gin.Context) {
 	var uriReq request.GetUserByIDRequest
 	var bodyReq request.UpdateUserRequest

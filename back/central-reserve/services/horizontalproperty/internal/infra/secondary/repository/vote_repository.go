@@ -240,6 +240,186 @@ func (r *Repository) HasResidentVoted(ctx context.Context, votingID uint, reside
 	return count > 0, nil
 }
 
+func (r *Repository) GetResidentVote(ctx context.Context, votingID, residentID uint) (*domain.Vote, error) {
+	var m models.Vote
+	if err := r.db.Conn(ctx).
+		Preload("VotingOption").
+		Where("voting_id = ? AND resident_id = ?", votingID, residentID).
+		First(&m).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("voto no encontrado")
+		}
+		r.logger.Error().Err(err).Uint("voting_id", votingID).Uint("resident_id", residentID).Msg("Error obteniendo voto del residente")
+		return nil, fmt.Errorf("error obteniendo voto del residente: %w", err)
+	}
+	return r.mapVoteToDomain(&m), nil
+}
+
+func (r *Repository) GetVotingResults(ctx context.Context, votingID uint) ([]domain.VotingResultDTO, error) {
+	type ResultRow struct {
+		VotingOptionID uint
+		OptionText     string
+		OptionCode     string
+		VoteCount      int
+		DisplayOrder   int
+	}
+
+	var results []ResultRow
+	err := r.db.Conn(ctx).
+		Table("horizontal_property.voting_options").
+		Select("voting_options.id as voting_option_id, voting_options.option_text, voting_options.option_code, voting_options.display_order, COUNT(votes.id) as vote_count").
+		Joins("LEFT JOIN horizontal_property.votes ON votes.voting_option_id = voting_options.id AND votes.voting_id = ?", votingID).
+		Where("voting_options.voting_id = ? AND voting_options.is_active = ?", votingID, true).
+		Group("voting_options.id, voting_options.option_text, voting_options.option_code, voting_options.display_order").
+		Order("voting_options.display_order ASC").
+		Scan(&results).Error
+
+	if err != nil {
+		r.logger.Error().Err(err).Uint("voting_id", votingID).Msg("Error obteniendo resultados de votación")
+		return nil, fmt.Errorf("error obteniendo resultados de votación: %w", err)
+	}
+
+	// Calcular total de votos y porcentajes
+	totalVotes := 0
+	for _, result := range results {
+		totalVotes += result.VoteCount
+	}
+
+	// Construir DTOs con porcentajes
+	dtos := make([]domain.VotingResultDTO, len(results))
+	for i, result := range results {
+		percentage := 0.0
+		if totalVotes > 0 {
+			percentage = (float64(result.VoteCount) / float64(totalVotes)) * 100
+		}
+		dtos[i] = domain.VotingResultDTO{
+			VotingOptionID: result.VotingOptionID,
+			OptionText:     result.OptionText,
+			OptionCode:     result.OptionCode,
+			VoteCount:      result.VoteCount,
+			Percentage:     percentage,
+		}
+	}
+
+	return dtos, nil
+}
+
+func (r *Repository) GetVotingDetailsByUnit(ctx context.Context, votingID, hpID uint) ([]domain.VotingDetailByUnitDTO, error) {
+	type DetailRow struct {
+		PropertyUnitID     uint
+		PropertyUnitNumber string
+		ResidentID         *uint
+		ResidentName       *string
+		HasVoted           bool
+		VotingOptionID     *uint
+		OptionText         *string
+		OptionCode         *string
+		VotedAt            *string
+	}
+
+	var details []DetailRow
+
+	// Query compleja: todas las unidades con su estado de votación
+	err := r.db.Conn(ctx).Raw(`
+		SELECT 
+			pu.id as property_unit_id,
+			pu.number as property_unit_number,
+			r.id as resident_id,
+			r.name as resident_name,
+			CASE WHEN v.id IS NOT NULL THEN true ELSE false END as has_voted,
+			v.voting_option_id,
+			vo.option_text,
+			vo.option_code,
+			TO_CHAR(v.voted_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as voted_at
+		FROM horizontal_property.property_units pu
+		LEFT JOIN horizontal_property.residents r 
+			ON r.property_unit_id = pu.id 
+			AND r.is_main_resident = true 
+			AND r.is_active = true
+			AND r.deleted_at IS NULL
+		LEFT JOIN horizontal_property.votes v 
+			ON v.resident_id = r.id 
+			AND v.voting_id = ?
+			AND v.deleted_at IS NULL
+		LEFT JOIN horizontal_property.voting_options vo 
+			ON vo.id = v.voting_option_id
+		WHERE pu.business_id = ? 
+			AND pu.is_active = true
+			AND pu.deleted_at IS NULL
+		ORDER BY pu.number ASC
+	`, votingID, hpID).Scan(&details).Error
+
+	if err != nil {
+		r.logger.Error().Err(err).Uint("voting_id", votingID).Uint("hp_id", hpID).Msg("Error obteniendo detalles por unidad")
+		return nil, fmt.Errorf("error obteniendo detalles por unidad: %w", err)
+	}
+
+	// Convertir a DTOs
+	dtos := make([]domain.VotingDetailByUnitDTO, len(details))
+	for i, detail := range details {
+		dtos[i] = domain.VotingDetailByUnitDTO{
+			PropertyUnitID:     detail.PropertyUnitID,
+			PropertyUnitNumber: detail.PropertyUnitNumber,
+			ResidentID:         detail.ResidentID,
+			ResidentName:       detail.ResidentName,
+			HasVoted:           detail.HasVoted,
+			VotingOptionID:     detail.VotingOptionID,
+			OptionText:         detail.OptionText,
+			OptionCode:         detail.OptionCode,
+			VotedAt:            detail.VotedAt,
+		}
+	}
+
+	return dtos, nil
+}
+
+func (r *Repository) GetUnitsWithResidents(ctx context.Context, hpID uint) ([]domain.UnitWithResidentDTO, error) {
+	type UnitRow struct {
+		PropertyUnitID     uint
+		PropertyUnitNumber string
+		ResidentID         *uint
+		ResidentName       *string
+	}
+
+	var units []UnitRow
+
+	err := r.db.Conn(ctx).Raw(`
+		SELECT 
+			pu.id as property_unit_id,
+			pu.number as property_unit_number,
+			r.id as resident_id,
+			r.name as resident_name
+		FROM horizontal_property.property_units pu
+		LEFT JOIN horizontal_property.residents r 
+			ON r.property_unit_id = pu.id 
+			AND r.is_main_resident = true 
+			AND r.is_active = true
+			AND r.deleted_at IS NULL
+		WHERE pu.business_id = ? 
+			AND pu.is_active = true
+			AND pu.deleted_at IS NULL
+		ORDER BY pu.number ASC
+	`, hpID).Scan(&units).Error
+
+	if err != nil {
+		r.logger.Error().Err(err).Uint("hp_id", hpID).Msg("Error obteniendo unidades con residentes")
+		return nil, fmt.Errorf("error obteniendo unidades con residentes: %w", err)
+	}
+
+	// Convertir a DTOs
+	dtos := make([]domain.UnitWithResidentDTO, len(units))
+	for i, unit := range units {
+		dtos[i] = domain.UnitWithResidentDTO{
+			PropertyUnitID:     unit.PropertyUnitID,
+			PropertyUnitNumber: unit.PropertyUnitNumber,
+			ResidentID:         unit.ResidentID,
+			ResidentName:       unit.ResidentName,
+		}
+	}
+
+	return dtos, nil
+}
+
 func (r *Repository) ListVotesByVoting(ctx context.Context, votingID uint) ([]domain.Vote, error) {
 	var m []models.Vote
 	if err := r.db.Conn(ctx).Where("voting_id = ?", votingID).Order("voted_at DESC").Find(&m).Error; err != nil {
@@ -304,7 +484,7 @@ func (r *Repository) mapVotingOptionToDomain(m *models.VotingOption) *domain.Vot
 }
 
 func (r *Repository) mapVoteToDomain(m *models.Vote) *domain.Vote {
-	return &domain.Vote{
+	vote := &domain.Vote{
 		ID:             m.ID,
 		VotingID:       m.VotingID,
 		ResidentID:     m.ResidentID,
@@ -314,4 +494,12 @@ func (r *Repository) mapVoteToDomain(m *models.Vote) *domain.Vote {
 		UserAgent:      m.UserAgent,
 		Notes:          m.Notes,
 	}
+
+	// Agregar información de la opción si está cargada (Preload)
+	if m.VotingOption.ID != 0 {
+		vote.OptionText = m.VotingOption.OptionText
+		vote.OptionCode = m.VotingOption.OptionCode
+	}
+
+	return vote
 }

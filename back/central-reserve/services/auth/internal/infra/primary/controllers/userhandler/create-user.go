@@ -10,26 +10,27 @@ import (
 )
 
 // CreateUserHandler maneja la solicitud de crear un usuario
-// @Summary Crear usuario
-// @Description Crea un nuevo usuario con roles y businesses opcionales. Soporta carga de imagen (avatarFile).
-// @Tags Users
-// @Accept multipart/form-data
-// @Produce json
-// @Security BearerAuth
-// @Param name formData string true "Nombre"
-// @Param email formData string true "Email"
-// @Param phone formData string false "Teléfono (10 dígitos)"
-// @Param is_active formData boolean false "¿Activo?"
-// @Param role_ids formData string false "IDs de roles separados por comas (ej: 1,2,3)"
-// @Param business_ids formData string false "IDs de negocios separados por comas (ej: 1,2,3)"
-// @Param avatar_url formData string false "URL de avatar (opcional si se usa avatarFile)"
-// @Param avatarFile formData file false "Imagen de avatar"
-// @Success 201 {object} response.UserMessageResponse "Usuario creado exitosamente"
-// @Failure 400 {object} response.UserErrorResponse "Datos inválidos"
-// @Failure 401 {object} response.UserErrorResponse "Token de acceso requerido"
-// @Failure 409 {object} response.UserErrorResponse "Email ya existe"
-// @Failure 500 {object} response.UserErrorResponse "Error interno del servidor"
-// @Router /users [post]
+//
+//	@Summary		Crear usuario
+//	@Description	Crea un nuevo usuario con roles y businesses opcionales. Soporta carga de imagen (avatarFile).
+//	@Tags			Users
+//	@Accept			multipart/form-data
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			name			formData	string							true	"Nombre"
+//	@Param			email			formData	string							true	"Email"
+//	@Param			phone			formData	string							false	"Teléfono (10 dígitos)"
+//	@Param			is_active		formData	boolean							false	"¿Activo?"
+//	@Param			role_ids		formData	string							false	"IDs de roles separados por comas (ej: 1,2,3)"
+//	@Param			business_ids	formData	string							false	"IDs de negocios separados por comas (ej: 1,2,3)"
+//	@Param			avatar_url		formData	string							false	"URL de avatar (opcional si se usa avatarFile)"
+//	@Param			avatarFile		formData	file							false	"Imagen de avatar"
+//	@Success		201				{object}	response.UserMessageResponse	"Usuario creado exitosamente"
+//	@Failure		400				{object}	response.UserErrorResponse		"Datos inválidos"
+//	@Failure		401				{object}	response.UserErrorResponse		"Token de acceso requerido"
+//	@Failure		409				{object}	response.UserErrorResponse		"Email ya existe"
+//	@Failure		500				{object}	response.UserErrorResponse		"Error interno del servidor"
+//	@Router			/users [post]
 func (h *UserHandler) CreateUserHandler(c *gin.Context) {
 	var req request.CreateUserRequest
 	if err := c.ShouldBind(&req); err != nil {

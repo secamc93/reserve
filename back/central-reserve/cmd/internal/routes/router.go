@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"central_reserve/services/auth/middleware"
 	"central_reserve/shared/env"
 	"central_reserve/shared/log"
 	"context"
@@ -13,6 +14,9 @@ func BuildRouter(ctx context.Context, logger log.ILogger, environment env.IConfi
 	gin.SetMode(gin.ReleaseMode)
 
 	r := gin.New()
+
+	// CORS - DEBE IR PRIMERO
+	r.Use(middleware.CorsMiddleware())
 
 	// Logging centralizado
 	SetupGinLogging(r, logger)

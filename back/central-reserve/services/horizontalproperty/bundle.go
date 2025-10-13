@@ -5,6 +5,7 @@ import (
 	"central_reserve/services/horizontalproperty/internal/app/usecasepropertyunit"
 	"central_reserve/services/horizontalproperty/internal/app/usecaseresident"
 	"central_reserve/services/horizontalproperty/internal/app/usecasevote"
+	"central_reserve/services/horizontalproperty/internal/domain"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlerpropertyunit"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlerresident"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlervote"
@@ -33,8 +34,8 @@ func New(db db.IDatabase, logger log.ILogger, s3 storage.IS3Service, envConfig e
 		envConfig,
 	)
 
-	// Voting use case
-	votingUseCase := usecasevote.NewVotingUseCase(repoConcrete, logger)
+	// Voting use case (necesita acceso a voting y resident repos)
+	votingUseCase := usecasevote.NewVotingUseCase(repoConcrete, repoConcrete, logger)
 
 	// Property Unit use case
 	propertyUnitUseCase := usecasepropertyunit.New(repoConcrete, logger)
@@ -42,17 +43,27 @@ func New(db db.IDatabase, logger log.ILogger, s3 storage.IS3Service, envConfig e
 	// Resident use case
 	residentUseCase := usecaseresident.New(repoConcrete, logger)
 
+	// Crear cache de votaciones para SSE en tiempo real
+	votingCache := domain.NewVotingCache()
+
 	// Crear handlers
 	horizontalPropertyHandler := horizontalpropertyhandler.NewHorizontalPropertyHandler(
 		horizontalPropertyUseCase,
 		logger,
 	)
+	// Obtener JWT secret del env
+	jwtSecret := envConfig.Get("JWT_SECRET")
+
 	votingHandler := handlervote.NewVotingHandler(
 		votingUseCase,
+		propertyUnitUseCase,
+		horizontalPropertyUseCase,
+		votingCache,
+		jwtSecret,
 		logger,
 	)
-	propertyUnitHandler := handlerpropertyunit.New(propertyUnitUseCase)
-	residentHandler := handlerresident.New(residentUseCase)
+	propertyUnitHandler := handlerpropertyunit.New(propertyUnitUseCase, logger)
+	residentHandler := handlerresident.New(residentUseCase, logger)
 
 	// Registrar rutas
 	horizontalPropertyHandler.RegisterRoutes(v1Group)

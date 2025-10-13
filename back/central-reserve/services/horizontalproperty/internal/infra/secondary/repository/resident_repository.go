@@ -1,11 +1,12 @@
 package repository
 
 import (
+	"central_reserve/services/horizontalproperty/internal/domain"
 	"context"
+	"dbpostgres/app/infra/models"
 	"fmt"
 	"math"
-	"central_reserve/services/horizontalproperty/internal/domain"
-	"dbpostgres/app/infra/models"
+
 	"gorm.io/gorm"
 )
 
@@ -42,6 +43,14 @@ func (r *Repository) ListResidents(ctx context.Context, filters domain.ResidentF
 	var total int64
 	query := r.db.Conn(ctx).Model(&models.Resident{}).Preload("PropertyUnit").Preload("ResidentType").
 		Where("residents.business_id = ?", filters.BusinessID)
+
+	if filters.PropertyUnitNumber != "" {
+		query = query.Joins("JOIN property_units ON property_units.id = residents.property_unit_id").
+			Where("property_units.number ILIKE ?", "%"+filters.PropertyUnitNumber+"%")
+	}
+	if filters.Name != "" {
+		query = query.Where("residents.name ILIKE ?", "%"+filters.Name+"%")
+	}
 	if filters.PropertyUnitID != nil {
 		query = query.Where("property_unit_id = ?", *filters.PropertyUnitID)
 	}
@@ -116,6 +125,28 @@ func (r *Repository) ExistsResidentByDni(ctx context.Context, businessID uint, d
 		return false, fmt.Errorf("error verificando: %w", err)
 	}
 	return count > 0, nil
+}
+
+func (r *Repository) GetResidentByUnitAndDni(ctx context.Context, hpID, propertyUnitID uint, dni string) (*domain.ResidentBasicDTO, error) {
+	var m models.Resident
+	err := r.db.Conn(ctx).
+		Preload("PropertyUnit").
+		Where("business_id = ? AND property_unit_id = ? AND dni = ? AND is_active = ?", hpID, propertyUnitID, dni, true).
+		First(&m).Error
+
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("residente no encontrado")
+		}
+		return nil, fmt.Errorf("error buscando residente: %w", err)
+	}
+
+	return &domain.ResidentBasicDTO{
+		ID:                 m.ID,
+		Name:               m.Name,
+		PropertyUnitID:     m.PropertyUnitID,
+		PropertyUnitNumber: m.PropertyUnit.Number,
+	}, nil
 }
 
 func mapResidentToDomain(m *models.Resident) *domain.Resident {

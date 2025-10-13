@@ -9,18 +9,19 @@ import (
 )
 
 // GetBusinessTypeByID godoc
-// @Summary Obtener tipo de negocio por ID
-// @Description Obtiene un tipo de negocio específico por su ID
-// @Tags business-types
-// @Accept json
-// @Produce json
-// @Security     BearerAuth
-// @Param id path int true "ID del tipo de negocio"
-// @Success      201          {object}  map[string]interface{} "Tipo de negocio obtenido exitosamente"
-// @Failure      400          {object}  map[string]interface{} "Solicitud inválida"
-// @Failure      401          {object}  map[string]interface{} "Token de acceso requerido"
-// @Failure      500          {object}  map[string]interface{} "Error interno del servidor"
-// @Router /business-types/{id} [get]
+//
+//	@Summary		Obtener tipo de negocio por ID
+//	@Description	Obtiene un tipo de negocio específico por su ID
+//	@Tags			business-types
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		int						true	"ID del tipo de negocio"
+//	@Success		201	{object}	map[string]interface{}	"Tipo de negocio obtenido exitosamente"
+//	@Failure		400	{object}	map[string]interface{}	"Solicitud inválida"
+//	@Failure		401	{object}	map[string]interface{}	"Token de acceso requerido"
+//	@Failure		500	{object}	map[string]interface{}	"Error interno del servidor"
+//	@Router			/business-types/{id} [get]
 func (h *BusinessTypeHandler) GetBusinessTypeByIDHandler(c *gin.Context) {
 	// Obtener ID del path
 	idStr := c.Param("id")

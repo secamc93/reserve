@@ -6,16 +6,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// @Summary      Obtiene todos los clientes
-// @Description  Este endpoint permite obtener la lista de todos los clientes registrados.
-// @Tags         Clientes
-// @Accept       json
-// @Produce      json
-// @Security     BearerAuth
-// @Success      200  {object}  map[string]interface{} "Lista de clientes obtenida exitosamente"
-// @Failure      401  {object}  map[string]interface{} "Token de acceso requerido"
-// @Failure      500  {object}  map[string]interface{} "Error interno del servidor"
-// @Router       /clients [get]
+// @Summary		Obtiene todos los clientes
+// @Description	Este endpoint permite obtener la lista de todos los clientes registrados.
+// @Tags			Clientes
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Success		200	{object}	map[string]interface{}	"Lista de clientes obtenida exitosamente"
+// @Failure		401	{object}	map[string]interface{}	"Token de acceso requerido"
+// @Failure		500	{object}	map[string]interface{}	"Error interno del servidor"
+// @Router			/clients [get]
 func (h *ClientHandler) GetClientsHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 

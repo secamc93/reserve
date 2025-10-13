@@ -1,7 +1,9 @@
 package handlervote
 
 import (
+	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 
 	"central_reserve/services/horizontalproperty/internal/domain"
@@ -13,28 +15,34 @@ import (
 )
 
 // CreateVotingOption godoc
-// @Summary Crear una opción de votación
-// @Description Crea una nueva opción para una votación específica
-// @Tags Votaciones
-// @Accept json
-// @Produce json
-// @Param hp_id path int true "ID de la propiedad horizontal"
-// @Param group_id path int true "ID del grupo de votación"
-// @Param voting_id path int true "ID de la votación"
-// @Param option body request.CreateVotingOptionRequest true "Datos de la opción de votación"
-// @Success 201 {object} object
-// @Failure 400 {object} object
-// @Failure 500 {object} object
-// @Router /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/options [post]
+//
+//	@Summary		Crear una opción de votación
+//	@Description	Crea una nueva opción para una votación específica
+//	@Tags			Votaciones
+//	@Security		BearerAuth
+//	@Accept			json
+//	@Produce		json
+//	@Param			hp_id		path		int									true	"ID de la propiedad horizontal"
+//	@Param			group_id	path		int									true	"ID del grupo de votación"
+//	@Param			voting_id	path		int									true	"ID de la votación"
+//	@Param			option		body		request.CreateVotingOptionRequest	true	"Datos de la opción de votación"
+//	@Success		201			{object}	object
+//	@Failure		400			{object}	object
+//	@Failure		500			{object}	object
+//	@Router			/horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/options [post]
 func (h *VotingHandler) CreateVotingOption(c *gin.Context) {
 	idParam := c.Param("voting_id")
 	id64, err := strconv.ParseUint(idParam, 10, 32)
 	if err != nil {
+		fmt.Fprintf(os.Stderr, "[ERROR] handlervote/create-voting-option.go - Error en handler: %v\n", err)
+		h.logger.Error().Err(err).Str("voting_id", idParam).Msg("Error parseando ID de votación")
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "id inválido", Error: "Debe ser numérico"})
 		return
 	}
 	var req request.CreateVotingOptionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		fmt.Fprintf(os.Stderr, "[ERROR] handlervote/create-voting-option.go - Error en handler: %v\n", err)
+		h.logger.Error().Err(err).Uint("voting_id", uint(id64)).Msg("Error validando datos del request")
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "Datos inválidos", Error: err.Error()})
 		return
 	}
@@ -46,6 +54,8 @@ func (h *VotingHandler) CreateVotingOption(c *gin.Context) {
 	}
 	created, err := h.votingUseCase.CreateVotingOption(c.Request.Context(), dto)
 	if err != nil {
+		fmt.Fprintf(os.Stderr, "[ERROR] handlervote/create-voting-option.go - Error en handler: %v\n", err)
+		h.logger.Error().Err(err).Uint("voting_id", uint(id64)).Str("option_text", req.OptionText).Msg("Error creando opción de votación")
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "No se pudo crear la opción", Error: err.Error()})
 		return
 	}

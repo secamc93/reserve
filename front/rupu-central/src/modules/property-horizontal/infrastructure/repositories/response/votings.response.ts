@@ -83,5 +83,6 @@ export interface BackendCreateVoteResponse {
   success: boolean;
   message: string;
   data: BackendVote;
+  error?: string; // Mensaje de error cuando success es false
 }
 

@@ -37,6 +37,7 @@ func MapUpdateRequestToDTO(req request.UpdatePropertyUnitRequest) domain.UpdateP
 func MapFiltersRequestToDTO(req request.PropertyUnitFiltersRequest, businessID uint) domain.PropertyUnitFiltersDTO {
 	return domain.PropertyUnitFiltersDTO{
 		BusinessID: businessID,
+		Number:     req.Number,
 		UnitType:   req.UnitType,
 		Floor:      req.Floor,
 		Block:      req.Block,

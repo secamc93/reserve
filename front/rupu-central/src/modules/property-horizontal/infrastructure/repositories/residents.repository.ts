@@ -20,11 +20,40 @@ import {
   BackendUpdateResidentResponse,
   BackendDeleteResidentResponse,
   BackendResident,
+  BackendResidentListItem,
 } from './response';
 
 export class ResidentsRepository implements IResidentsRepository {
   private baseUrl = env.API_BASE_URL;
 
+  // Mapear listado resumido (solo campos básicos)
+  private mapBackendResidentListItem(resident: BackendResidentListItem): Resident {
+    return {
+      id: resident.id,
+      businessId: 0, // No viene en el listado
+      propertyUnitId: 0, // No viene en el listado
+      propertyUnitNumber: resident.property_unit_number,
+      residentTypeId: 0, // No viene en el listado
+      residentTypeName: resident.resident_type_name,
+      residentTypeCode: '', // No viene en el listado
+      name: resident.name,
+      email: resident.email,
+      phone: resident.phone,
+      dni: '', // No viene en el listado
+      emergencyContact: '', // No viene en el listado
+      isMainResident: resident.is_main_resident,
+      isActive: resident.is_active,
+      moveInDate: undefined,
+      moveOutDate: undefined,
+      leaseStartDate: undefined,
+      leaseEndDate: undefined,
+      monthlyRent: undefined,
+      createdAt: '',
+      updatedAt: '',
+    };
+  }
+
+  // Mapear detalle completo
   private mapBackendResident(resident: BackendResident): Resident {
     return {
       id: resident.id,
@@ -84,8 +113,6 @@ export class ResidentsRepository implements IResidentsRepository {
 
       if (!response.ok) {
         logHttpError({
-          method,
-          url,
           status: response.status,
           statusText: response.statusText,
           duration,
@@ -94,10 +121,10 @@ export class ResidentsRepository implements IResidentsRepository {
         throw new Error(data.message || 'Error al obtener los residentes');
       }
 
-      logHttpSuccess({ method, url, status: response.status, statusText: response.statusText, duration, data });
+      logHttpSuccess({ status: response.status, statusText: response.statusText, duration, data });
 
       return {
-        residents: data.data.residents.map(this.mapBackendResident.bind(this)),
+        residents: data.data.residents.map(this.mapBackendResidentListItem.bind(this)),
         total: data.data.total,
         page: data.data.page,
         pageSize: data.data.page_size,
@@ -106,8 +133,6 @@ export class ResidentsRepository implements IResidentsRepository {
     } catch (error) {
       const duration = Date.now() - startTime;
       logHttpError({
-        method,
-        url,
         status: 0,
         statusText: 'Network Error',
         duration,
@@ -139,8 +164,6 @@ export class ResidentsRepository implements IResidentsRepository {
 
       if (!response.ok) {
         logHttpError({
-          method,
-          url,
           status: response.status,
           statusText: response.statusText,
           duration,
@@ -149,14 +172,12 @@ export class ResidentsRepository implements IResidentsRepository {
         throw new Error(data.message || 'Error al obtener el residente');
       }
 
-      logHttpSuccess({ method, url, status: response.status, statusText: response.statusText, duration, data });
+      logHttpSuccess({ status: response.status, statusText: response.statusText, duration, data });
 
       return this.mapBackendResident(data.data);
     } catch (error) {
       const duration = Date.now() - startTime;
       logHttpError({
-        method,
-        url,
         status: 0,
         statusText: 'Network Error',
         duration,
@@ -204,8 +225,6 @@ export class ResidentsRepository implements IResidentsRepository {
 
       if (!response.ok) {
         logHttpError({
-          method,
-          url,
           status: response.status,
           statusText: response.statusText,
           duration,
@@ -214,14 +233,12 @@ export class ResidentsRepository implements IResidentsRepository {
         throw new Error(data.message || 'Error al crear el residente');
       }
 
-      logHttpSuccess({ method, url, status: response.status, statusText: response.statusText, duration, data });
+      logHttpSuccess({ status: response.status, statusText: response.statusText, duration, data });
 
       return this.mapBackendResident(data.data);
     } catch (error) {
       const duration = Date.now() - startTime;
       logHttpError({
-        method,
-        url,
         status: 0,
         statusText: 'Network Error',
         duration,
@@ -270,8 +287,6 @@ export class ResidentsRepository implements IResidentsRepository {
 
       if (!response.ok) {
         logHttpError({
-          method,
-          url,
           status: response.status,
           statusText: response.statusText,
           duration,
@@ -280,14 +295,12 @@ export class ResidentsRepository implements IResidentsRepository {
         throw new Error(data.message || 'Error al actualizar el residente');
       }
 
-      logHttpSuccess({ method, url, status: response.status, statusText: response.statusText, duration, data });
+      logHttpSuccess({ status: response.status, statusText: response.statusText, duration, data });
 
       return this.mapBackendResident(data.data);
     } catch (error) {
       const duration = Date.now() - startTime;
       logHttpError({
-        method,
-        url,
         status: 0,
         statusText: 'Network Error',
         duration,
@@ -319,8 +332,6 @@ export class ResidentsRepository implements IResidentsRepository {
 
       if (!response.ok) {
         logHttpError({
-          method,
-          url,
           status: response.status,
           statusText: response.statusText,
           duration,
@@ -329,12 +340,10 @@ export class ResidentsRepository implements IResidentsRepository {
         throw new Error(data.message || 'Error al eliminar el residente');
       }
 
-      logHttpSuccess({ method, url, status: response.status, statusText: response.statusText, duration, data });
+      logHttpSuccess({ status: response.status, statusText: response.statusText, duration, data });
     } catch (error) {
       const duration = Date.now() - startTime;
       logHttpError({
-        method,
-        url,
         status: 0,
         statusText: 'Network Error',
         duration,

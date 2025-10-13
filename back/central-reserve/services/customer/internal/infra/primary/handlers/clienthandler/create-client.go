@@ -8,18 +8,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// @Summary      Crea un nuevo cliente
-// @Description  Este endpoint permite crear un nuevo cliente para un restaurante.
-// @Tags         Clientes
-// @Accept       json
-// @Produce      json
-// @Security     BearerAuth
-// @Param        client  body      request.Client  true  "Datos del cliente"
-// @Success      201     {object}  map[string]interface{} "Cliente creado exitosamente"
-// @Failure      400     {object}  map[string]interface{} "Solicitud inválida"
-// @Failure      401     {object}  map[string]interface{} "Token de acceso requerido"
-// @Failure      500     {object}  map[string]interface{} "Error interno del servidor"
-// @Router       /clients [post]
+// @Summary		Crea un nuevo cliente
+// @Description	Este endpoint permite crear un nuevo cliente para un restaurante.
+// @Tags			Clientes
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			client	body		request.Client			true	"Datos del cliente"
+// @Success		201		{object}	map[string]interface{}	"Cliente creado exitosamente"
+// @Failure		400		{object}	map[string]interface{}	"Solicitud inválida"
+// @Failure		401		{object}	map[string]interface{}	"Token de acceso requerido"
+// @Failure		500		{object}	map[string]interface{}	"Error interno del servidor"
+// @Router			/clients [post]
 func (h *ClientHandler) CreateClientHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 

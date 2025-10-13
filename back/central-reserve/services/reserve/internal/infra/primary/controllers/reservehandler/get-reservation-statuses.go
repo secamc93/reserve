@@ -9,14 +9,15 @@ import (
 )
 
 // GetReservationStatusesHandler obtiene los estados de reserva
-// @Summary      Lista los estados de reserva
-// @Description  Obtiene todos los estados de reserva disponibles
-// @Tags         Reservas
-// @Produce      json
-// @Security     BearerAuth
-// @Success      200  {object}  response.ReservationStatusListSuccessResponse "Estados de reserva obtenidos correctamente"
-// @Failure      500  {object}  map[string]interface{} "Error interno del servidor"
-// @Router       /reserves/status [get]
+//
+//	@Summary		Lista los estados de reserva
+//	@Description	Obtiene todos los estados de reserva disponibles
+//	@Tags			Reservas
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{object}	response.ReservationStatusListSuccessResponse	"Estados de reserva obtenidos correctamente"
+//	@Failure		500	{object}	map[string]interface{}							"Error interno del servidor"
+//	@Router			/reserves/status [get]
 func (h *ReserveHandler) GetReservationStatusesHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 

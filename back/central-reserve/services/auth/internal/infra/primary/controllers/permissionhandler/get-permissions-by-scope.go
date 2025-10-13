@@ -10,18 +10,19 @@ import (
 )
 
 // GetPermissionsByScopeHandler maneja la solicitud de obtener permisos por scope
-// @Summary Obtener permisos por scope
-// @Description Obtiene todos los permisos de un scope específico
-// @Tags Permissions
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param scope_id path int true "ID del scope" minimum(1)
-// @Success 200 {object} response.PermissionListResponse "Permisos por scope obtenidos exitosamente"
-// @Failure 400 {object} response.PermissionErrorResponse "Scope ID inválido"
-// @Failure 401 {object} response.PermissionErrorResponse "Token de acceso requerido"
-// @Failure 500 {object} response.PermissionErrorResponse "Error interno del servidor"
-// @Router /permissions/scope/{scope_id} [get]
+//
+//	@Summary		Obtener permisos por scope
+//	@Description	Obtiene todos los permisos de un scope específico
+//	@Tags			Permissions
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			scope_id	path		int									true	"ID del scope"	minimum(1)
+//	@Success		200			{object}	response.PermissionListResponse		"Permisos por scope obtenidos exitosamente"
+//	@Failure		400			{object}	response.PermissionErrorResponse	"Scope ID inválido"
+//	@Failure		401			{object}	response.PermissionErrorResponse	"Token de acceso requerido"
+//	@Failure		500			{object}	response.PermissionErrorResponse	"Error interno del servidor"
+//	@Router			/permissions/scope/{scope_id} [get]
 func (h *PermissionHandler) GetPermissionsByScopeHandler(c *gin.Context) {
 	scopeIDStr := c.Param("scope_id")
 	scopeID, err := strconv.ParseUint(scopeIDStr, 10, 32)

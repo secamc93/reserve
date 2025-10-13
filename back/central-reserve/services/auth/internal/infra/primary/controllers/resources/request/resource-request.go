@@ -1,21 +1,24 @@
 package request
 
 // CreateResourceRequest representa la solicitud para crear un recurso
-// @Description Solicitud para crear un nuevo recurso en el sistema
+//
+//	@Description	Solicitud para crear un nuevo recurso en el sistema
 type CreateResourceRequest struct {
 	Name        string `json:"name" binding:"required" example:"users" description:"Nombre único del recurso"`
 	Description string `json:"description" example:"Gestión de usuarios del sistema" description:"Descripción del recurso"`
 }
 
 // UpdateResourceRequest representa la solicitud para actualizar un recurso
-// @Description Solicitud para actualizar un recurso existente
+//
+//	@Description	Solicitud para actualizar un recurso existente
 type UpdateResourceRequest struct {
 	Name        string `json:"name" binding:"required" example:"users" description:"Nombre único del recurso"`
 	Description string `json:"description" example:"Gestión de usuarios del sistema" description:"Descripción del recurso"`
 }
 
 // GetResourcesRequest representa los parámetros de consulta para obtener recursos
-// @Description Parámetros para filtrar y paginar la lista de recursos
+//
+//	@Description	Parámetros para filtrar y paginar la lista de recursos
 type GetResourcesRequest struct {
 	Page        int    `form:"page" example:"1" description:"Número de página (por defecto: 1)"`
 	PageSize    int    `form:"page_size" example:"10" description:"Tamaño de página (por defecto: 10)"`

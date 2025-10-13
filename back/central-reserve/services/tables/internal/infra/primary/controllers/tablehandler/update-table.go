@@ -9,20 +9,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// @Summary      Actualiza una mesa
-// @Description  Este endpoint permite actualizar los datos de una mesa específica.
-// @Tags         Mesas
-// @Accept       json
-// @Produce      json
-// @Security     BearerAuth
-// @Param        id     path      int                true  "ID de la mesa"
-// @Param        table  body      request.UpdateTable true  "Datos a actualizar"
-// @Success      200          {object}  map[string]interface{} "Mesa actualizada exitosamente"
-// @Failure      400          {object}  map[string]interface{} "Solicitud inválida"
-// @Failure      401          {object}  map[string]interface{} "Token de acceso requerido"
-// @Failure      404          {object}  map[string]interface{} "Mesa no encontrada"
-// @Failure      500          {object}  map[string]interface{} "Error interno del servidor"
-// @Router       /tables/{id} [put]
+// @Summary		Actualiza una mesa
+// @Description	Este endpoint permite actualizar los datos de una mesa específica.
+// @Tags			Mesas
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id		path		int						true	"ID de la mesa"
+// @Param			table	body		request.UpdateTable		true	"Datos a actualizar"
+// @Success		200		{object}	map[string]interface{}	"Mesa actualizada exitosamente"
+// @Failure		400		{object}	map[string]interface{}	"Solicitud inválida"
+// @Failure		401		{object}	map[string]interface{}	"Token de acceso requerido"
+// @Failure		404		{object}	map[string]interface{}	"Mesa no encontrada"
+// @Failure		500		{object}	map[string]interface{}	"Error interno del servidor"
+// @Router			/tables/{id} [put]
 func (h *TableHandler) UpdateTableHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 

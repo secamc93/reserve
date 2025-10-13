@@ -244,6 +244,7 @@ type VotingDTO struct {
 	RequiredPercentage *float64
 	CreatedAt          time.Time
 	UpdatedAt          time.Time
+	Options            []VotingOptionDTO
 }
 
 // CreateVotingOptionDTO - DTO para crear una opción de votación
@@ -280,10 +281,42 @@ type VoteDTO struct {
 	VotingID       uint
 	ResidentID     uint
 	VotingOptionID uint
+	OptionText     string
+	OptionCode     string
 	VotedAt        time.Time
 	IPAddress      string
 	UserAgent      string
 	Notes          string
+}
+
+// VotingResultDTO - DTO para resultados de votación
+type VotingResultDTO struct {
+	VotingOptionID uint
+	OptionText     string
+	OptionCode     string
+	VoteCount      int
+	Percentage     float64
+}
+
+// VotingDetailByUnitDTO - DTO para detalle de votación por unidad
+type VotingDetailByUnitDTO struct {
+	PropertyUnitID     uint
+	PropertyUnitNumber string
+	ResidentID         *uint
+	ResidentName       *string
+	HasVoted           bool
+	VotingOptionID     *uint
+	OptionText         *string
+	OptionCode         *string
+	VotedAt            *string
+}
+
+// UnitWithResidentDTO - DTO simple para unidad con su residente principal
+type UnitWithResidentDTO struct {
+	PropertyUnitID     uint
+	PropertyUnitNumber string
+	ResidentID         *uint
+	ResidentName       *string
 }
 
 // ───────────────────────────────────────────
@@ -349,6 +382,7 @@ type PropertyUnitListDTO struct {
 // PropertyUnitFiltersDTO - DTO para filtros de búsqueda
 type PropertyUnitFiltersDTO struct {
 	BusinessID uint
+	Number     string
 	UnitType   string
 	Floor      *int
 	Block      string
@@ -369,6 +403,14 @@ type PaginatedPropertyUnitsDTO struct {
 // ───────────────────────────────────────────
 // RESIDENT DTOs
 // ───────────────────────────────────────────
+
+// ResidentBasicDTO - DTO básico de residente para validación pública
+type ResidentBasicDTO struct {
+	ID                 uint
+	Name               string
+	PropertyUnitID     uint
+	PropertyUnitNumber string
+}
 
 // CreateResidentDTO - DTO para crear residente
 type CreateResidentDTO struct {
@@ -444,13 +486,15 @@ type ResidentListDTO struct {
 
 // ResidentFiltersDTO - DTO para filtros de búsqueda
 type ResidentFiltersDTO struct {
-	BusinessID     uint
-	PropertyUnitID *uint
-	ResidentTypeID *uint
-	IsActive       *bool
-	IsMainResident *bool
-	Page           int
-	PageSize       int
+	BusinessID         uint
+	PropertyUnitNumber string
+	Name               string
+	PropertyUnitID     *uint
+	ResidentTypeID     *uint
+	IsActive           *bool
+	IsMainResident     *bool
+	Page               int
+	PageSize           int
 }
 
 // PaginatedResidentsDTO - DTO para respuesta paginada

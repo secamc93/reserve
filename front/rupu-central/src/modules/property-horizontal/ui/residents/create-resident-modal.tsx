@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Modal, Input } from '@shared/ui';
+import { Modal, Input, Alert } from '@shared/ui';
 import { createResidentAction } from '../../infrastructure/actions';
 import { getPropertyUnitsAction } from '../../infrastructure/actions';
 import { CreateResidentDTO } from '../../domain';
@@ -26,6 +26,7 @@ export function CreateResidentModal({ hpId, onClose, onSuccess }: CreateResident
     isMainResident: false,
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadUnits = async () => {
@@ -44,10 +45,16 @@ export function CreateResidentModal({ hpId, onClose, onSuccess }: CreateResident
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null); // Limpiar error previo
 
     try {
       const token = TokenStorage.getToken();
-      if (!token) throw new Error('No token found');
+      if (!token) throw new Error('No se encontró el token de autenticación');
+
+      // Validación de unidad seleccionada
+      if (!formData.propertyUnitId || formData.propertyUnitId === 0) {
+        throw new Error('Debes seleccionar una unidad');
+      }
 
       await createResidentAction({
         hpId,
@@ -58,7 +65,26 @@ export function CreateResidentModal({ hpId, onClose, onSuccess }: CreateResident
       onSuccess();
     } catch (error) {
       console.error('Error al crear residente:', error);
-      alert('Error al crear el residente');
+      
+      // Extraer mensaje de error más específico
+      let errorMessage = 'Error al crear el residente';
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
+      // Mensajes de error más amigables según el tipo
+      if (errorMessage.includes('email')) {
+        errorMessage = 'El email ya está registrado o no es válido';
+      } else if (errorMessage.includes('DNI') || errorMessage.includes('dni')) {
+        errorMessage = 'El documento de identidad ya está registrado';
+      } else if (errorMessage.includes('token')) {
+        errorMessage = 'Sesión expirada. Por favor, inicia sesión nuevamente';
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -67,6 +93,13 @@ export function CreateResidentModal({ hpId, onClose, onSuccess }: CreateResident
   return (
     <Modal isOpen onClose={onClose} title="Crear Residente">
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Alerta de error */}
+        {error && (
+          <Alert type="error" onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        )}
+
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1">Unidad</label>

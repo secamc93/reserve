@@ -35,10 +35,12 @@ type UpdateResidentRequest struct {
 }
 
 type ResidentFiltersRequest struct {
-	PropertyUnitID *uint `form:"property_unit_id" example:"1"`
-	ResidentTypeID *uint `form:"resident_type_id" example:"1"`
-	IsActive       *bool `form:"is_active" example:"true"`
-	IsMainResident *bool `form:"is_main_resident" example:"true"`
-	Page           int   `form:"page" example:"1"`
-	PageSize       int   `form:"page_size" example:"10"`
+	PropertyUnitNumber string `form:"property_unit_number" example:"101"`
+	Name               string `form:"name" example:"Juan"`
+	PropertyUnitID     *uint  `form:"property_unit_id" example:"1"`
+	ResidentTypeID     *uint  `form:"resident_type_id" example:"1"`
+	IsActive           *bool  `form:"is_active" example:"true"`
+	IsMainResident     *bool  `form:"is_main_resident" example:"true"`
+	Page               int    `form:"page" example:"1"`
+	PageSize           int    `form:"page_size" example:"10"`
 }

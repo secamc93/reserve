@@ -72,6 +72,7 @@ export function CreatePropertyUnitModal({ hpId, onClose, onSuccess }: CreateProp
               <option value={UNIT_TYPES.COMMERCIAL}>Local comercial</option>
               <option value={UNIT_TYPES.PARKING}>Parqueadero</option>
               <option value={UNIT_TYPES.STORAGE}>Depósito</option>
+              <option value={UNIT_TYPES.PENTHOUSE}>Penthouse</option>
             </select>
           </div>
         </div>

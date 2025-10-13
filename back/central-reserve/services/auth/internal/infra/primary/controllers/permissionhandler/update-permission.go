@@ -11,21 +11,22 @@ import (
 )
 
 // UpdatePermissionHandler maneja la solicitud de actualizar un permiso existente
-// @Summary Actualizar permiso
-// @Description Actualiza un permiso existente en el sistema
-// @Tags Permissions
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param id path int true "ID del permiso" minimum(1)
-// @Param permission body request.UpdatePermissionRequest true "Datos del permiso a actualizar"
-// @Success 200 {object} response.PermissionMessageResponse "Permiso actualizado exitosamente"
-// @Failure 400 {object} response.PermissionErrorResponse "Datos de entrada inválidos"
-// @Failure 401 {object} response.PermissionErrorResponse "Token de acceso requerido"
-// @Failure 404 {object} response.PermissionErrorResponse "Permiso no encontrado"
-// @Failure 409 {object} response.PermissionErrorResponse "Permiso con código duplicado"
-// @Failure 500 {object} response.PermissionErrorResponse "Error interno del servidor"
-// @Router /permissions/{id} [put]
+//
+//	@Summary		Actualizar permiso
+//	@Description	Actualiza un permiso existente en el sistema
+//	@Tags			Permissions
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id			path		int									true	"ID del permiso"	minimum(1)
+//	@Param			permission	body		request.UpdatePermissionRequest		true	"Datos del permiso a actualizar"
+//	@Success		200			{object}	response.PermissionMessageResponse	"Permiso actualizado exitosamente"
+//	@Failure		400			{object}	response.PermissionErrorResponse	"Datos de entrada inválidos"
+//	@Failure		401			{object}	response.PermissionErrorResponse	"Token de acceso requerido"
+//	@Failure		404			{object}	response.PermissionErrorResponse	"Permiso no encontrado"
+//	@Failure		409			{object}	response.PermissionErrorResponse	"Permiso con código duplicado"
+//	@Failure		500			{object}	response.PermissionErrorResponse	"Error interno del servidor"
+//	@Router			/permissions/{id} [put]
 func (h *PermissionHandler) UpdatePermissionHandler(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 32)

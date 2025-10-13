@@ -6,10 +6,15 @@ import (
 )
 
 type votingUseCase struct {
-	repo   domain.VotingRepository
-	logger log.ILogger
+	repo         domain.VotingRepository
+	residentRepo domain.ResidentRepository
+	logger       log.ILogger
 }
 
-func NewVotingUseCase(repo domain.VotingRepository, logger log.ILogger) domain.VotingUseCase {
-	return &votingUseCase{repo: repo, logger: logger}
+func NewVotingUseCase(repo domain.VotingRepository, residentRepo domain.ResidentRepository, logger log.ILogger) domain.VotingUseCase {
+	return &votingUseCase{
+		repo:         repo,
+		residentRepo: residentRepo,
+		logger:       logger,
+	}
 }
