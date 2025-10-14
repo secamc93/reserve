@@ -77,7 +77,7 @@ export function ResourcesTable() {
       key: 'createdAt',
       label: 'Fecha Creación',
       width: '180px',
-      render: (value) => new Date(value).toLocaleDateString('es-ES', {
+      render: (value) => new Date(String(value)).toLocaleDateString('es-ES', {
         year: 'numeric',
         month: 'short',
         day: 'numeric'

@@ -105,3 +105,4 @@ export function PublicVotingContext({
 
   return null; // Este componente solo carga el contexto y pasa al siguiente paso
 }
+

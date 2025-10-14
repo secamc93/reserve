@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { PublicVotingContext } from '@/modules/property-horizontal/ui/public-voting/public-voting-context';
 import { PublicVotingValidation } from '@/modules/property-horizontal/ui/public-voting/public-voting-validation';
@@ -47,7 +47,7 @@ interface ResidentData {
   groupId?: number;
 }
 
-export default function PublicVotePage() {
+function PublicVotePageContent() {
   const searchParams = useSearchParams();
   const [step, setStep] = useState<'context' | 'validation' | 'voting' | 'progress' | 'success' | 'error'>('context');
   const [votingParams, setVotingParams] = useState<VotingParams | null>(null);
@@ -233,5 +233,17 @@ export default function PublicVotePage() {
         />
       )}
     </div>
+  );
+}
+
+export default function PublicVotePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Spinner size="lg" />
+      </div>
+    }>
+      <PublicVotePageContent />
+    </Suspense>
   );
 }

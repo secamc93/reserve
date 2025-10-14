@@ -320,7 +320,7 @@ export function PublicVotingValidation({
               {/* Mensaje cuando no hay resultados */}
               {showDropdown && unitSearchTerm && filteredUnits.length === 0 && (
                 <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg p-4 text-center text-gray-500 text-sm">
-                  No se encontraron unidades que coincidan con "{unitSearchTerm}"
+                  No se encontraron unidades que coincidan con &quot;{unitSearchTerm}&quot;
                 </div>
               )}
 

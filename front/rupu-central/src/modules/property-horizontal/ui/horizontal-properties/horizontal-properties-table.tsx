@@ -82,7 +82,7 @@ export function HorizontalPropertiesTable() {
       label: 'Código', 
       width: '150px',
       render: (value) => (
-        <span className="font-mono text-sm text-gray-600">{value}</span>
+        <span className="font-mono text-sm text-gray-600">{String(value)}</span>
       )
     },
     { 
@@ -90,14 +90,14 @@ export function HorizontalPropertiesTable() {
       label: 'Tipo', 
       width: '180px',
       render: (value) => (
-        <Badge type="primary">{value}</Badge>
+        <Badge type="primary">{String(value)}</Badge>
       )
     },
     { 
       key: 'address', 
       label: 'Dirección',
       render: (value) => (
-        <span className="text-sm text-gray-600">{value}</span>
+        <span className="text-sm text-gray-600">{String(value)}</span>
       )
     },
     { 
@@ -106,7 +106,7 @@ export function HorizontalPropertiesTable() {
       width: '100px',
       align: 'center',
       render: (value) => (
-        <span className="font-semibold text-gray-800">{value}</span>
+        <span className="font-semibold text-gray-800">{String(value)}</span>
       )
     },
     {
@@ -124,7 +124,7 @@ export function HorizontalPropertiesTable() {
       key: 'createdAt',
       label: 'Fecha Creación',
       width: '140px',
-      render: (value) => new Date(value).toLocaleDateString('es-ES', {
+      render: (value) => new Date(String(value)).toLocaleDateString('es-ES', {
         year: 'numeric',
         month: 'short',
         day: 'numeric'

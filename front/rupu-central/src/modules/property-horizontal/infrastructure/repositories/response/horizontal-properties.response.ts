@@ -28,8 +28,8 @@ export interface BackendHorizontalProperty {
   total_floors?: number;
   timezone?: string;
   updated_at?: string;
-  property_units?: any[];
-  committees?: any[];
+  property_units?: unknown[];
+  committees?: unknown[];
 }
 
 export interface BackendHorizontalPropertiesResponse {

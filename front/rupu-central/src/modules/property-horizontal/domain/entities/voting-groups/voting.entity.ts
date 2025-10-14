@@ -8,7 +8,7 @@
  * - "majority": Mayoría calificada (2/3 o porcentaje específico)
  * - "unanimity": Unanimidad (100% de aprobación)
  */
-export type VotingType = 'simple' | 'majority' | 'unanimity';
+export type VotingType = 'simple' | 'majority' | 'unanimity' | 'multiple' | 'weighted';
 
 export interface Voting {
   id: number;

@@ -254,7 +254,7 @@ export class ResidentsRepository implements IResidentsRepository {
     const method = 'PUT';
     const startTime = Date.now();
 
-    const body: Record<string, any> = {};
+    const body: Record<string, unknown> = {};
     if (residentData.propertyUnitId !== undefined) body.property_unit_id = residentData.propertyUnitId;
     if (residentData.residentTypeId !== undefined) body.resident_type_id = residentData.residentTypeId;
     if (residentData.name !== undefined) body.name = residentData.name;

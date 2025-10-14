@@ -7,15 +7,15 @@
 
 import React, { ReactNode } from 'react';
 
-export interface TableColumn<T = any> {
+export interface TableColumn<T = Record<string, unknown>> {
   key: string;
   label: string;
-  render?: (value: any, row: T, index: number) => ReactNode;
+  render?: (value: unknown, row: T, index: number) => ReactNode;
   width?: string;
   align?: 'left' | 'center' | 'right';
 }
 
-interface TableProps<T = any> {
+interface TableProps<T = Record<string, unknown>> {
   columns: TableColumn<T>[];
   data: T[];
   keyExtractor?: (row: T, index: number) => string | number;
@@ -24,7 +24,7 @@ interface TableProps<T = any> {
   onRowClick?: (row: T, index: number) => void;
 }
 
-export function Table<T = any>({ 
+export function Table<T = Record<string, unknown>>({ 
   columns, 
   data, 
   keyExtractor = (_, i) => i,

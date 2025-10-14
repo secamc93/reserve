@@ -14,14 +14,14 @@ import (
 
 // GeneratePublicVotingURLRequest - Request para generar URL pública
 type GeneratePublicVotingURLRequest struct {
-	DurationHours int    `json:"duration_hours" example:"24"`                   // Duración del token en horas
-	FrontendURL   string `json:"frontend_url" example:"https://miapp.com/vote"` // URL base del frontend
+	DurationHours int    `json:"duration_hours" example:"24"`                                           // Duración del token en horas
+	FrontendURL   string `json:"frontend_url,omitempty" example:"https://votacion.miconjunto.com/vote"` // URL base del frontend (opcional, usa URL_BASE_SWAGGER + /public/vote si está vacío)
 }
 
 // GeneratePublicVotingURL godoc
 //
 //	@Summary		Generar URL pública para votación con QR
-//	@Description	Genera una URL con token especial para compartir vía QR y permitir votación pública
+//	@Description	Genera una URL con token especial para compartir vía QR y permitir votación pública. La URL se construye usando: 1) frontend_url del request, o 2) URL_BASE_SWAGGER + /public/vote
 //	@Tags			Votaciones
 //	@Accept			json
 //	@Produce		json
@@ -91,7 +91,12 @@ func (h *VotingHandler) GeneratePublicVotingURL(c *gin.Context) {
 		req.DurationHours = 24
 	}
 	if req.FrontendURL == "" {
-		req.FrontendURL = "https://app.example.com/public/vote" // Default
+		// Usar URL_BASE_SWAGGER como base
+		baseURL := os.Getenv("URL_BASE_SWAGGER")
+		if baseURL == "" {
+			baseURL = "http://localhost:3050" // Default para desarrollo
+		}
+		req.FrontendURL = baseURL + "/public/vote"
 	}
 
 	// Generar token de votación pública

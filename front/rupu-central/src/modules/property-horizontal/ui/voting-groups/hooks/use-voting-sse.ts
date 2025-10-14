@@ -31,7 +31,7 @@ interface Vote {
 
 interface SSEEvent {
   type: 'connected' | 'vote' | 'preload_complete' | 'heartbeat';
-  data: any;
+  data: unknown;
 }
 
 interface UseVotingSSEReturn {

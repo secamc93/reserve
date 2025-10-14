@@ -71,7 +71,7 @@ export function RolesTable() {
       label: 'Alcance',
       render: (value, row) => (
         <Badge type={row.scopeCode === 'platform' ? 'primary' : 'success'}>
-          {value}
+          {String(value)}
         </Badge>
       )
     },

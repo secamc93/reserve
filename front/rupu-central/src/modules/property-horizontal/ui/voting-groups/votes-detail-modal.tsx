@@ -99,7 +99,7 @@ export function VotesDetailModal({
       label: 'Fecha de Voto',
       width: '180px',
       render: (value) =>
-        new Date(value).toLocaleDateString('es-ES', {
+        new Date(String(value)).toLocaleDateString('es-ES', {
           year: 'numeric',
           month: 'short',
           day: 'numeric',
@@ -111,7 +111,7 @@ export function VotesDetailModal({
       key: 'notes',
       label: 'Notas',
       render: (value) => (
-        <span className="text-sm text-gray-600">{value || '-'}</span>
+        <span className="text-sm text-gray-600">{value ? String(value) : '-'}</span>
       ),
     },
   ];

@@ -5,7 +5,7 @@
 import { IResourcesRepository, CreateResourceParams } from '../domain/ports/resources.repository';
 import { Resource } from '../domain/entities/resource.entity';
 
-export interface CreateResourceInput extends CreateResourceParams {}
+export type CreateResourceInput = CreateResourceParams;
 
 export interface CreateResourceOutput {
   resource: Resource;

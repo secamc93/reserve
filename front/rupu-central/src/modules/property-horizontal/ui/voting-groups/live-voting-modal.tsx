@@ -114,7 +114,16 @@ export function LiveVotingModal({
   });
 
   // Función para convertir votos SSE a formato del frontend
-  const convertSSEVotesToFrontend = (sseVotes: any[]): Vote[] => {
+  const convertSSEVotesToFrontend = (sseVotes: Array<{
+    id: number;
+    voting_id: number;
+    resident_id: number;
+    voting_option_id: number;
+    voted_at: string;
+    ip_address?: string;
+    user_agent?: string;
+    notes?: string;
+  }>): Vote[] => {
     return sseVotes.map(sseVote => ({
       id: sseVote.id,
       votingId: sseVote.voting_id,

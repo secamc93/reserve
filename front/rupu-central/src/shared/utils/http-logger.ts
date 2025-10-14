@@ -9,14 +9,14 @@ interface LogRequestOptions {
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
   url: string;
   token?: string;
-  body?: any;
+  body?: unknown;
 }
 
 interface LogResponseOptions {
   status: number;
   statusText: string;
   duration: number;
-  data?: any;
+  data?: unknown;
   summary?: string;
 }
 

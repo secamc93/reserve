@@ -391,7 +391,9 @@ export function VotingsList({ hpId, groupId, groupName }: VotingsListProps) {
                               </div>
                             </div>
                             {!option.isActive && (
-                              <Badge type="error" className="flex-shrink-0 ml-2">Inactiva</Badge>
+                              <span className="flex-shrink-0 ml-2">
+                                <Badge type="error">Inactiva</Badge>
+                              </span>
                             )}
                           </div>
                         ))}

@@ -328,14 +328,14 @@ export function PublicVotingProgress({ votingAuthToken }: PublicVotingProgressPr
                       {unit.residentName || 'Sin residente'}
                     </p>
                     <p className="text-gray-500 text-xs mb-2">Unidad {unit.unitNumber}</p>
-                    {unit.hasVoted && unit.votedOptionText ? (
+                    {unit.hasVoted && unit.votedOption ? (
                       <div className="space-y-1">
                         <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                           colors.badge === 'success' 
                             ? 'bg-green-100 text-green-800' 
                             : 'bg-blue-100 text-blue-800'
                         }`}>
-                          ✅ {unit.votedOptionText}
+                          ✅ {unit.votedOption.text}
                         </div>
                       </div>
                     ) : (

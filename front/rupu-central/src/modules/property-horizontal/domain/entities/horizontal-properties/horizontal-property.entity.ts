@@ -28,8 +28,8 @@ export interface HorizontalProperty {
   totalFloors?: number;
   timezone?: string;
   updatedAt?: string;
-  propertyUnits?: any[];
-  committees?: any[];
+  propertyUnits?: unknown[];
+  committees?: unknown[];
 }
 
 export interface HorizontalPropertiesPaginated {

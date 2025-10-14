@@ -217,7 +217,7 @@ export class PropertyUnitsRepository implements IPropertyUnitsRepository {
     const method = 'PUT';
     const startTime = Date.now();
 
-    const body: Record<string, any> = {};
+    const body: Record<string, unknown> = {};
     if (unitData.number !== undefined) body.number = unitData.number;
     if (unitData.floor !== undefined) body.floor = unitData.floor;
     if (unitData.block !== undefined) body.block = unitData.block;

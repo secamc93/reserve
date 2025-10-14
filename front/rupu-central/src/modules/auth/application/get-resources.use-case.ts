@@ -5,7 +5,7 @@
 import { IResourcesRepository, GetResourcesParams } from '../domain/ports/resources.repository';
 import { ResourcesList } from '../domain/entities/resource.entity';
 
-export interface GetResourcesInput extends GetResourcesParams {}
+export type GetResourcesInput = GetResourcesParams;
 
 export interface GetResourcesOutput {
   resources: ResourcesList;

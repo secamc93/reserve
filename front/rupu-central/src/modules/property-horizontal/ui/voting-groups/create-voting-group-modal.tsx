@@ -66,8 +66,8 @@ export function CreateVotingGroupModal({ isOpen, onClose, onSuccess, businessId 
 
       const result = await createVotingGroupAction({
         token,
+        businessId,
         data: {
-          businessId,
           name: name.trim(),
           description: description.trim(),
           votingStartDate: startDateISO,

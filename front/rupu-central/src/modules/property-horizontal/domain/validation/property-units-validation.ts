@@ -40,7 +40,7 @@ export function validateUnitType(unitType: string): void {
     throw new PropertyUnitValidationError('El tipo de unidad es requerido');
   }
 
-  if (!ALLOWED_UNIT_TYPES.includes(unitType)) {
+  if (!ALLOWED_UNIT_TYPES.includes(unitType as typeof ALLOWED_UNIT_TYPES[number])) {
     throw new PropertyUnitValidationError(
       `Tipo de unidad inválido. Valores permitidos: ${ALLOWED_UNIT_TYPES.join(', ')}`
     );

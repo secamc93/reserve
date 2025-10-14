@@ -66,8 +66,8 @@ export function PermissionsTable() {
       label: 'Acción',
       width: '120px',
       render: (value) => (
-        <Badge type={value === 'Manage' ? 'primary' : value === 'Read' ? 'info' : 'warning'}>
-          {value}
+        <Badge type={value === 'Manage' ? 'primary' : value === 'Read' ? 'primary' : 'warning'}>
+          {String(value)}
         </Badge>
       )
     },

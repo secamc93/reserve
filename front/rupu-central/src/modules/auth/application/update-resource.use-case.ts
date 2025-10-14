@@ -5,7 +5,7 @@
 import { IResourcesRepository, UpdateResourceParams } from '../domain/ports/resources.repository';
 import { Resource } from '../domain/entities/resource.entity';
 
-export interface UpdateResourceInput extends UpdateResourceParams {}
+export type UpdateResourceInput = UpdateResourceParams;
 
 export interface UpdateResourceOutput {
   resource: Resource;

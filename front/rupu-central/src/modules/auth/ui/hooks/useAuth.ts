@@ -100,7 +100,7 @@ export function useAuth(
               firstActiveBusiness.tertiary_color &&
               firstActiveBusiness.quaternary_color
             ) {
-              applyBusinessTheme(firstActiveBusiness as any);
+              applyBusinessTheme(firstActiveBusiness as unknown as { name: string; primary_color: string; secondary_color: string; tertiary_color: string; quaternary_color: string });
             }
           }
 

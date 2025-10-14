@@ -131,3 +131,4 @@ Todos los endpoints ahora tienen logs detallados:
 
 ¡Frontend actualizado y funcionando con las nuevas rutas! 🚀
 
+

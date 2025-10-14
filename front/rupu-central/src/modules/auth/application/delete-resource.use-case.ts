@@ -4,7 +4,7 @@
 
 import { IResourcesRepository, DeleteResourceParams } from '../domain/ports/resources.repository';
 
-export interface DeleteResourceInput extends DeleteResourceParams {}
+export type DeleteResourceInput = DeleteResourceParams;
 
 export class DeleteResourceUseCase {
   constructor(private readonly resourcesRepository: IResourcesRepository) {}
