@@ -1,35 +1,6 @@
 version: "3.8"
 
 services:
-  website:
-    platform: linux/arm64
-    image: public.ecr.aws/d3a6d4r1/cam/reserve:website-latest
-    container_name: reserve-website-1
-    ports:
-      - "8081:80"
-    environment:
-      PUBLIC_API_BASE_URL: "http://central_reserve:3050"
-    networks:
-      - app-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    deploy:
-      resources:
-        limits:
-          cpus: "0.50"
-          memory: 256M
-        reservations:
-          cpus: "0.25"
-          memory: 128M
 
   frontend:
     platform: linux/arm64
@@ -148,45 +119,6 @@ services:
           memory: 1G
         reservations:
           memory: 512M
-
-  db_migrator:
-    image: public.ecr.aws/d3a6d4r1/cam/reserve:migrator-latest
-    container_name: db_migrator_prod
-    env_file:
-      - .env
-    environment:
-      DB_HOST:      "postgres"
-      DB_PORT:      "5432"
-      DB_NAME:      "${DB_NAME}"
-      DB_USER:      "${DB_USER}"
-      DB_PASS:      "${DB_PASSWORD}"
-      DB_LOG_LEVEL: "${DB_LOG_LEVEL}"
-      PGSSLMODE:    "${DB_SSLMODE}"
-      APP_ENV:      "${APP_ENV}"
-      HTTP_PORT:    "8080"
-      LOG_LEVEL:    "${LOG_LEVEL}"
-      JWT_SECRET:   "${JWT_SECRET}"
-      USER_PASS_DEFAULT:  "${USER_PASS_DEFAULT}"
-      EMAIL_USER_DEFAULT:  "${EMAIL_USER_DEFAULT}"
-
-
-    restart: "no"
-    depends_on:
-      - postgres
-    networks:
-      - app-network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "2"
-    deploy:
-      resources:
-        limits:
-          cpus: "0.25"
-          memory: 128M
-        reservations:
-          memory: 64M
 
   nginx:
     image: public.ecr.aws/d3a6d4r1/cam/reserve:nginx-latest
