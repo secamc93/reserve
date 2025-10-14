@@ -48,7 +48,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_request.ChangePasswordRequest"
+                            "$ref": "#/definitions/request.ChangePasswordRequest"
                         }
                     }
                 ],
@@ -56,31 +56,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Contraseña cambiada exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.ChangePasswordResponse"
+                            "$ref": "#/definitions/response.ChangePasswordResponse"
                         }
                     },
                     "400": {
                         "description": "Datos inválidos",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginErrorResponse"
+                            "$ref": "#/definitions/response.LoginErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Token de acceso requerido",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginErrorResponse"
+                            "$ref": "#/definitions/response.LoginErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Contraseña actual incorrecta",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginErrorResponse"
+                            "$ref": "#/definitions/response.LoginErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginErrorResponse"
+                            "$ref": "#/definitions/response.LoginErrorResponse"
                         }
                     }
                 }
@@ -106,7 +106,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_request.LoginRequest"
+                            "$ref": "#/definitions/request.LoginRequest"
                         }
                     }
                 ],
@@ -114,31 +114,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Login exitoso",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginSuccessResponse"
+                            "$ref": "#/definitions/response.LoginSuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Datos de entrada inválidos",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginBadRequestResponse"
+                            "$ref": "#/definitions/response.LoginBadRequestResponse"
                         }
                     },
                     "401": {
                         "description": "Credenciales inválidas",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginErrorResponse"
+                            "$ref": "#/definitions/response.LoginErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Usuario inactivo",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginErrorResponse"
+                            "$ref": "#/definitions/response.LoginErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginErrorResponse"
+                            "$ref": "#/definitions/response.LoginErrorResponse"
                         }
                     }
                 }
@@ -175,31 +175,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Roles y permisos obtenidos exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.UserRolesPermissionsSuccessResponse"
+                            "$ref": "#/definitions/response.UserRolesPermissionsSuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Business ID requerido o inválido",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginErrorResponse"
+                            "$ref": "#/definitions/response.LoginErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Token de acceso requerido",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginErrorResponse"
+                            "$ref": "#/definitions/response.LoginErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Usuario no encontrado",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginErrorResponse"
+                            "$ref": "#/definitions/response.LoginErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginErrorResponse"
+                            "$ref": "#/definitions/response.LoginErrorResponse"
                         }
                     }
                 }
@@ -626,7 +626,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_business_internal_infra_primary_controllers_businesstypehandler_request.BusinessTypeRequest"
+                            "$ref": "#/definitions/request.BusinessTypeRequest"
                         }
                     }
                 ],
@@ -751,7 +751,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_business_internal_infra_primary_controllers_businesstypehandler_request.BusinessTypeRequest"
+                            "$ref": "#/definitions/request.BusinessTypeRequest"
                         }
                     }
                 ],
@@ -1070,7 +1070,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Negocio obtenido exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_business_internal_infra_primary_controllers_businesshandler_response.GetBusinessByIDResponse"
+                            "$ref": "#/definitions/response.GetBusinessByIDResponse"
                         }
                     },
                     "400": {
@@ -1361,7 +1361,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_customer_internal_infra_primary_handlers_clienthandler_request.Client"
+                            "$ref": "#/definitions/request.Client"
                         }
                     }
                 ],
@@ -1493,7 +1493,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_customer_internal_infra_primary_handlers_clienthandler_request.UpdateClient"
+                            "$ref": "#/definitions/request.UpdateClient"
                         }
                     }
                 ],
@@ -1680,7 +1680,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.HorizontalPropertyListSuccessResponse"
+                            "$ref": "#/definitions/response.HorizontalPropertyListSuccessResponse"
                         }
                     },
                     "400": {
@@ -1898,7 +1898,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.HorizontalPropertySuccessResponse"
+                            "$ref": "#/definitions/response.HorizontalPropertySuccessResponse"
                         }
                     },
                     "400": {
@@ -1953,7 +1953,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.HorizontalPropertySuccessResponse"
+                            "$ref": "#/definitions/response.HorizontalPropertySuccessResponse"
                         }
                     },
                     "400": {
@@ -2126,7 +2126,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.HorizontalPropertySuccessResponse"
+                            "$ref": "#/definitions/response.HorizontalPropertySuccessResponse"
                         }
                     },
                     "400": {
@@ -2185,7 +2185,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.HorizontalPropertyDeleteSuccessResponse"
+                            "$ref": "#/definitions/response.HorizontalPropertyDeleteSuccessResponse"
                         }
                     },
                     "400": {
@@ -2338,7 +2338,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlerpropertyunit_request.CreatePropertyUnitRequest"
+                            "$ref": "#/definitions/request.CreatePropertyUnitRequest"
                         }
                     }
                 ],
@@ -2463,7 +2463,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlerpropertyunit_request.UpdatePropertyUnitRequest"
+                            "$ref": "#/definitions/request.UpdatePropertyUnitRequest"
                         }
                     }
                 ],
@@ -2684,7 +2684,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlerresident_request.CreateResidentRequest"
+                            "$ref": "#/definitions/request.CreateResidentRequest"
                         }
                     }
                 ],
@@ -2809,7 +2809,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlerresident_request.UpdateResidentRequest"
+                            "$ref": "#/definitions/request.UpdateResidentRequest"
                         }
                     }
                 ],
@@ -2980,7 +2980,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlervote_request.CreateVotingGroupRequest"
+                            "$ref": "#/definitions/request.CreateVotingGroupRequest"
                         }
                     }
                 ],
@@ -3045,7 +3045,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlervote_request.CreateVotingGroupRequest"
+                            "$ref": "#/definitions/request.CreateVotingGroupRequest"
                         }
                     }
                 ],
@@ -3230,7 +3230,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlervote_request.CreateVotingRequest"
+                            "$ref": "#/definitions/request.CreateVotingRequest"
                         }
                     }
                 ],
@@ -3302,7 +3302,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlervote_request.CreateVotingRequest"
+                            "$ref": "#/definitions/request.CreateVotingRequest"
                         }
                     }
                 ],
@@ -3408,7 +3408,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Genera una URL con token especial para compartir vía QR y permitir votación pública",
+                "description": "Genera una URL con token especial para compartir vía QR y permitir votación pública. La URL se construye usando: 1) frontend_url del request, o 2) URL_BASE_SWAGGER + /public/vote",
                 "consumes": [
                     "application/json"
                 ],
@@ -3447,7 +3447,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/services_horizontalproperty_internal_infra_primary_handlers_handlervote.GeneratePublicVotingURLRequest"
+                            "$ref": "#/definitions/handlervote.GeneratePublicVotingURLRequest"
                         }
                     }
                 ],
@@ -3580,7 +3580,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlervote_request.CreateVotingOptionRequest"
+                            "$ref": "#/definitions/request.CreateVotingOptionRequest"
                         }
                     }
                 ],
@@ -3852,7 +3852,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlervote_request.CreateVoteRequest"
+                            "$ref": "#/definitions/request.CreateVoteRequest"
                         }
                     }
                 ],
@@ -3900,19 +3900,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Lista de permisos obtenida exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionListResponse"
+                            "$ref": "#/definitions/response.PermissionListResponse"
                         }
                     },
                     "401": {
                         "description": "Token de acceso requerido",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse"
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse"
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
                         }
                     }
                 }
@@ -3941,7 +3941,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_request.CreatePermissionRequest"
+                            "$ref": "#/definitions/request.CreatePermissionRequest"
                         }
                     }
                 ],
@@ -3949,31 +3949,31 @@ const docTemplate = `{
                     "201": {
                         "description": "Permiso creado exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionMessageResponse"
+                            "$ref": "#/definitions/response.PermissionMessageResponse"
                         }
                     },
                     "400": {
                         "description": "Datos de entrada inválidos",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse"
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Token de acceso requerido",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse"
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Permiso con código duplicado",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse"
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse"
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
                         }
                     }
                 }
@@ -4011,25 +4011,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Permisos por recurso obtenidos exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionListResponse"
+                            "$ref": "#/definitions/response.PermissionListResponse"
                         }
                     },
                     "400": {
                         "description": "Recurso inválido",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse"
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Token de acceso requerido",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse"
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse"
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
                         }
                     }
                 }
@@ -4067,25 +4067,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Permisos por scope obtenidos exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionListResponse"
+                            "$ref": "#/definitions/response.PermissionListResponse"
                         }
                     },
                     "400": {
                         "description": "Scope ID inválido",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse"
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Token de acceso requerido",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse"
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse"
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
                         }
                     }
                 }
@@ -4123,31 +4123,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Permiso obtenido exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionSuccessResponse"
+                            "$ref": "#/definitions/response.PermissionSuccessResponse"
                         }
                     },
                     "400": {
                         "description": "ID inválido",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse"
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Token de acceso requerido",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse"
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Permiso no encontrado",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse"
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse"
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
                         }
                     }
                 }
@@ -4184,7 +4184,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_request.UpdatePermissionRequest"
+                            "$ref": "#/definitions/request.UpdatePermissionRequest"
                         }
                     }
                 ],
@@ -4192,37 +4192,37 @@ const docTemplate = `{
                     "200": {
                         "description": "Permiso actualizado exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionMessageResponse"
+                            "$ref": "#/definitions/response.PermissionMessageResponse"
                         }
                     },
                     "400": {
                         "description": "Datos de entrada inválidos",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse"
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Token de acceso requerido",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse"
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Permiso no encontrado",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse"
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Permiso con código duplicado",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse"
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse"
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
                         }
                     }
                 }
@@ -4258,39 +4258,133 @@ const docTemplate = `{
                     "200": {
                         "description": "Permiso eliminado exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionMessageResponse"
+                            "$ref": "#/definitions/response.PermissionMessageResponse"
                         }
                     },
                     "400": {
                         "description": "ID inválido",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse"
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Token de acceso requerido",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse"
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Permiso no encontrado",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse"
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse"
+                            "$ref": "#/definitions/response.PermissionErrorResponse"
                         }
                     }
                 }
             }
         },
-        "/public/horizontal-properties/{hp_id}/validate-resident": {
+        "/public/property-units": {
+            "get": {
+                "description": "Obtiene las unidades de propiedad usando el token de votación pública. El HP ID viene en el token. Permite filtrar por número de unidad.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones Públicas"
+                ],
+                "summary": "Obtener unidades de propiedad (público)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Token de votación pública (Bearer token)",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filtrar por número de unidad (ej: 101, Apto 202)",
+                        "name": "number",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/public/units-with-residents": {
+            "get": {
+                "description": "Lista todas las unidades activas con su residente principal. Para cruzar con votos en el frontend.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones Públicas"
+                ],
+                "summary": "Listar unidades con residentes (público)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Token de autenticación de votación (Bearer token)",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/public/validate-resident": {
             "post": {
-                "description": "Valida que un residente pertenezca a una unidad usando su DNI y retorna token temporal para votar",
+                "description": "Valida que un residente pertenezca a una unidad usando su DNI y retorna token temporal para votar. TODA la información viene del token.",
                 "consumes": [
                     "application/json"
                 ],
@@ -4303,19 +4397,12 @@ const docTemplate = `{
                 "summary": "Validar residente para votación pública",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "ID de la propiedad horizontal",
-                        "name": "hp_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
                         "description": "Datos de validación",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/services_horizontalproperty_internal_infra_primary_handlers_handlervote.ValidateResidentRequest"
+                            "$ref": "#/definitions/handlervote.ValidateResidentRequest"
                         }
                     },
                     {
@@ -4347,6 +4434,303 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/public/vote": {
+            "post": {
+                "description": "Permite a un residente validado emitir su voto. Toda la información viene del token de autenticación.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones Públicas"
+                ],
+                "summary": "Emitir voto (público)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Token de autenticación de votación (Bearer token)",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos del voto",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlervote.CreatePublicVoteRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/public/votes": {
+            "get": {
+                "description": "Lista todos los votos emitidos. El frontend cruza con opciones y unidades.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones Públicas"
+                ],
+                "summary": "Listar votos de la votación (público)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Token de autenticación de votación (Bearer token)",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/public/voting-context": {
+            "get": {
+                "description": "Obtiene el nombre de la votación y la propiedad horizontal usando el token público. Se muestra antes de la validación del residente.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones Públicas"
+                ],
+                "summary": "Obtener contexto de votación pública",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Token de votación pública (Bearer token)",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/public/voting-info": {
+            "get": {
+                "description": "Obtiene toda la información de la votación usando solo el VOTING_AUTH_TOKEN. Incluye título, descripción, opciones, etc.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones Públicas"
+                ],
+                "summary": "Obtener información de votación (pública)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Token de autenticación de votación (Bearer token)",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/public/voting-stats": {
+            "get": {
+                "description": "Obtiene las estadísticas completas de la votación: resultados por opción, total de votos, porcentajes. Toda la información viene del token.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones Públicas"
+                ],
+                "summary": "Obtener estadísticas de votación (público)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Token de autenticación de votación (Bearer token)",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/public/voting-stream": {
+            "get": {
+                "description": "Establece una conexión SSE para recibir votos en tiempo real. Toda la información viene del token.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/event-stream"
+                ],
+                "tags": [
+                    "Votaciones Públicas"
+                ],
+                "summary": "Stream público de resultados de votación en tiempo real (SSE)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Token de autenticación de votación (Bearer token)",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Event stream",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "type": "object"
                         }
@@ -4464,7 +4848,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_reserve_internal_infra_primary_controllers_reservehandler_request.Reservation"
+                            "$ref": "#/definitions/request.Reservation"
                         }
                     }
                 ],
@@ -4518,7 +4902,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Estados de reserva obtenidos correctamente",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_reserve_internal_infra_primary_controllers_reservehandler_response.ReservationStatusListSuccessResponse"
+                            "$ref": "#/definitions/response.ReservationStatusListSuccessResponse"
                         }
                     },
                     "500": {
@@ -4626,7 +5010,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_reserve_internal_infra_primary_controllers_reservehandler_request.UpdateReservation"
+                            "$ref": "#/definitions/request.UpdateReservation"
                         }
                     }
                 ],
@@ -4700,7 +5084,7 @@ const docTemplate = `{
                         "name": "cancel",
                         "in": "body",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_reserve_internal_infra_primary_controllers_reservehandler_request.CancelReservation"
+                            "$ref": "#/definitions/request.CancelReservation"
                         }
                     }
                 ],
@@ -4868,7 +5252,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_resources_request.CreateResourceRequest"
+                            "$ref": "#/definitions/request.CreateResourceRequest"
                         }
                     }
                 ],
@@ -5009,7 +5393,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_resources_request.UpdateResourceRequest"
+                            "$ref": "#/definitions/request.UpdateResourceRequest"
                         }
                     }
                 ],
@@ -5146,19 +5530,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Roles obtenidos exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleListResponse"
+                            "$ref": "#/definitions/response.RoleListResponse"
                         }
                     },
                     "401": {
                         "description": "Token de acceso requerido",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleErrorResponse"
+                            "$ref": "#/definitions/response.RoleErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleErrorResponse"
+                            "$ref": "#/definitions/response.RoleErrorResponse"
                         }
                     }
                 }
@@ -5197,25 +5581,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Roles obtenidos exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleListResponse"
+                            "$ref": "#/definitions/response.RoleListResponse"
                         }
                     },
                     "400": {
                         "description": "Nivel inválido",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleErrorResponse"
+                            "$ref": "#/definitions/response.RoleErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Token de acceso requerido",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleErrorResponse"
+                            "$ref": "#/definitions/response.RoleErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleErrorResponse"
+                            "$ref": "#/definitions/response.RoleErrorResponse"
                         }
                     }
                 }
@@ -5253,25 +5637,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Roles por scope obtenidos exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleListResponse"
+                            "$ref": "#/definitions/response.RoleListResponse"
                         }
                     },
                     "400": {
                         "description": "Scope ID inválido",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleErrorResponse"
+                            "$ref": "#/definitions/response.RoleErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Token de acceso requerido",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleErrorResponse"
+                            "$ref": "#/definitions/response.RoleErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleErrorResponse"
+                            "$ref": "#/definitions/response.RoleErrorResponse"
                         }
                     }
                 }
@@ -5299,19 +5683,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Roles del sistema obtenidos exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleListResponse"
+                            "$ref": "#/definitions/response.RoleListResponse"
                         }
                     },
                     "401": {
                         "description": "Token de acceso requerido",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleErrorResponse"
+                            "$ref": "#/definitions/response.RoleErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleErrorResponse"
+                            "$ref": "#/definitions/response.RoleErrorResponse"
                         }
                     }
                 }
@@ -5349,31 +5733,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Rol obtenido exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleSuccessResponse"
+                            "$ref": "#/definitions/response.RoleSuccessResponse"
                         }
                     },
                     "400": {
                         "description": "ID inválido",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleErrorResponse"
+                            "$ref": "#/definitions/response.RoleErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Token de acceso requerido",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleErrorResponse"
+                            "$ref": "#/definitions/response.RoleErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Rol no encontrado",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleErrorResponse"
+                            "$ref": "#/definitions/response.RoleErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleErrorResponse"
+                            "$ref": "#/definitions/response.RoleErrorResponse"
                         }
                     }
                 }
@@ -5445,7 +5829,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_rooms_internal_infra_primary_controllers_roomhandler_request.Room"
+                            "$ref": "#/definitions/request.Room"
                         }
                     }
                 ],
@@ -5584,7 +5968,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_rooms_internal_infra_primary_controllers_roomhandler_request.UpdateRoom"
+                            "$ref": "#/definitions/request.UpdateRoom"
                         }
                     }
                 ],
@@ -5764,7 +6148,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_tables_internal_infra_primary_controllers_tablehandler_request.Table"
+                            "$ref": "#/definitions/request.Table"
                         }
                     }
                 ],
@@ -5903,7 +6287,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_tables_internal_infra_primary_controllers_tablehandler_request.UpdateTable"
+                            "$ref": "#/definitions/request.UpdateTable"
                         }
                     }
                 ],
@@ -6126,25 +6510,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Usuarios obtenidos exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserListResponse"
+                            "$ref": "#/definitions/response.UserListResponse"
                         }
                     },
                     "400": {
                         "description": "Parámetros de filtro inválidos",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse"
+                            "$ref": "#/definitions/response.UserErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Token de acceso requerido",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse"
+                            "$ref": "#/definitions/response.UserErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse"
+                            "$ref": "#/definitions/response.UserErrorResponse"
                         }
                     }
                 }
@@ -6222,31 +6606,31 @@ const docTemplate = `{
                     "201": {
                         "description": "Usuario creado exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserMessageResponse"
+                            "$ref": "#/definitions/response.UserMessageResponse"
                         }
                     },
                     "400": {
                         "description": "Datos inválidos",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse"
+                            "$ref": "#/definitions/response.UserErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Token de acceso requerido",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse"
+                            "$ref": "#/definitions/response.UserErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Email ya existe",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse"
+                            "$ref": "#/definitions/response.UserErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse"
+                            "$ref": "#/definitions/response.UserErrorResponse"
                         }
                     }
                 }
@@ -6284,31 +6668,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Usuario obtenido exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserSuccessResponse"
+                            "$ref": "#/definitions/response.UserSuccessResponse"
                         }
                     },
                     "400": {
                         "description": "ID inválido",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse"
+                            "$ref": "#/definitions/response.UserErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Token de acceso requerido",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse"
+                            "$ref": "#/definitions/response.UserErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Usuario no encontrado",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse"
+                            "$ref": "#/definitions/response.UserErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse"
+                            "$ref": "#/definitions/response.UserErrorResponse"
                         }
                     }
                 }
@@ -6398,37 +6782,37 @@ const docTemplate = `{
                     "200": {
                         "description": "Usuario actualizado exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserSuccessResponse"
+                            "$ref": "#/definitions/response.UserSuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Datos inválidos",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse"
+                            "$ref": "#/definitions/response.UserErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Token de acceso requerido",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse"
+                            "$ref": "#/definitions/response.UserErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Usuario no encontrado",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse"
+                            "$ref": "#/definitions/response.UserErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Email ya existe",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse"
+                            "$ref": "#/definitions/response.UserErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse"
+                            "$ref": "#/definitions/response.UserErrorResponse"
                         }
                     }
                 }
@@ -6464,31 +6848,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Usuario eliminado exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserMessageResponse"
+                            "$ref": "#/definitions/response.UserMessageResponse"
                         }
                     },
                     "400": {
                         "description": "ID inválido",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse"
+                            "$ref": "#/definitions/response.UserErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Token de acceso requerido",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse"
+                            "$ref": "#/definitions/response.UserErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Usuario no encontrado",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse"
+                            "$ref": "#/definitions/response.UserErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse"
+                            "$ref": "#/definitions/response.UserErrorResponse"
                         }
                     }
                 }
@@ -6496,7 +6880,84 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "central_reserve_services_auth_internal_infra_primary_controllers_authhandler_request.ChangePasswordRequest": {
+        "handlervote.CreatePublicVoteRequest": {
+            "type": "object",
+            "required": [
+                "voting_option_id"
+            ],
+            "properties": {
+                "voting_option_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "handlervote.GeneratePublicVotingURLRequest": {
+            "type": "object",
+            "properties": {
+                "duration_hours": {
+                    "description": "Duración del token en horas",
+                    "type": "integer",
+                    "example": 24
+                },
+                "frontend_url": {
+                    "description": "URL base del frontend (opcional, usa URL_BASE_SWAGGER + /public/vote si está vacío)",
+                    "type": "string",
+                    "example": "https://votacion.miconjunto.com/vote"
+                }
+            }
+        },
+        "handlervote.ValidateResidentRequest": {
+            "type": "object",
+            "required": [
+                "dni",
+                "property_unit_id"
+            ],
+            "properties": {
+                "dni": {
+                    "type": "string",
+                    "example": "123456789"
+                },
+                "property_unit_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "request.BusinessTypeRequest": {
+            "type": "object",
+            "required": [
+                "code",
+                "name"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.CancelReservation": {
+            "type": "object",
+            "properties": {
+                "reason": {
+                    "description": "Razón opcional de cancelación",
+                    "type": "string"
+                }
+            }
+        },
+        "request.ChangePasswordRequest": {
             "type": "object",
             "required": [
                 "current_password",
@@ -6515,804 +6976,7 @@ const docTemplate = `{
                 }
             }
         },
-        "central_reserve_services_auth_internal_infra_primary_controllers_authhandler_request.LoginRequest": {
-            "type": "object",
-            "required": [
-                "email",
-                "password"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                }
-            }
-        },
-        "central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.BusinessInfo": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "business_type": {
-                    "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.BusinessTypeInfo"
-                },
-                "business_type_id": {
-                    "type": "integer"
-                },
-                "code": {
-                    "type": "string"
-                },
-                "custom_domain": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "enable_delivery": {
-                    "type": "boolean"
-                },
-                "enable_pickup": {
-                    "type": "boolean"
-                },
-                "enable_reservations": {
-                    "type": "boolean"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "logo_url": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "navbar_image_url": {
-                    "type": "string"
-                },
-                "primary_color": {
-                    "type": "string"
-                },
-                "quaternary_color": {
-                    "type": "string"
-                },
-                "secondary_color": {
-                    "type": "string"
-                },
-                "tertiary_color": {
-                    "type": "string"
-                },
-                "timezone": {
-                    "type": "string"
-                }
-            }
-        },
-        "central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.BusinessTypeInfo": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "icon": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.ChangePasswordResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginBadRequestResponse": {
-            "type": "object",
-            "properties": {
-                "details": {
-                    "type": "string"
-                },
-                "error": {
-                    "type": "string"
-                }
-            }
-        },
-        "central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginErrorResponse": {
-            "type": "object",
-            "properties": {
-                "details": {
-                    "type": "string"
-                },
-                "error": {
-                    "type": "string"
-                }
-            }
-        },
-        "central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginResponse": {
-            "type": "object",
-            "properties": {
-                "businesses": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.BusinessInfo"
-                    }
-                },
-                "require_password_change": {
-                    "type": "boolean"
-                },
-                "token": {
-                    "type": "string"
-                },
-                "user": {
-                    "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.UserInfo"
-                }
-            }
-        },
-        "central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginSuccessResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginResponse"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.ResourcePermissions": {
-            "type": "object",
-            "properties": {
-                "actions": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "active": {
-                    "description": "Indica si el recurso está activo para el business",
-                    "type": "boolean"
-                },
-                "resource": {
-                    "type": "string"
-                }
-            }
-        },
-        "central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.RoleInfo": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.UserInfo": {
-            "type": "object",
-            "properties": {
-                "avatar_url": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "last_login_at": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "phone": {
-                    "type": "string"
-                }
-            }
-        },
-        "central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.UserRolesPermissionsResponse": {
-            "type": "object",
-            "properties": {
-                "is_super": {
-                    "type": "boolean"
-                },
-                "resources": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.ResourcePermissions"
-                    }
-                },
-                "roles": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.RoleInfo"
-                    }
-                }
-            }
-        },
-        "central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.UserRolesPermissionsSuccessResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.UserRolesPermissionsResponse"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_request.CreatePermissionRequest": {
-            "type": "object",
-            "required": [
-                "action",
-                "code",
-                "name",
-                "resource",
-                "scope_id"
-            ],
-            "properties": {
-                "action": {
-                    "type": "string",
-                    "example": "create"
-                },
-                "code": {
-                    "type": "string",
-                    "example": "users:create"
-                },
-                "description": {
-                    "type": "string",
-                    "example": "Permite crear nuevos usuarios en el sistema"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "Crear usuarios"
-                },
-                "resource": {
-                    "type": "string",
-                    "example": "users"
-                },
-                "scope_id": {
-                    "type": "integer",
-                    "example": 1
-                }
-            }
-        },
-        "central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_request.UpdatePermissionRequest": {
-            "type": "object",
-            "required": [
-                "action",
-                "code",
-                "name",
-                "resource",
-                "scope_id"
-            ],
-            "properties": {
-                "action": {
-                    "type": "string",
-                    "example": "create"
-                },
-                "code": {
-                    "type": "string",
-                    "example": "users:create"
-                },
-                "description": {
-                    "type": "string",
-                    "example": "Permite crear nuevos usuarios en el sistema"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "Crear usuarios"
-                },
-                "resource": {
-                    "type": "string",
-                    "example": "users"
-                },
-                "scope_id": {
-                    "type": "integer",
-                    "example": 1
-                }
-            }
-        },
-        "central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string",
-                    "example": "Error al procesar la solicitud"
-                }
-            }
-        },
-        "central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionListResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionResponse"
-                    }
-                },
-                "success": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "total": {
-                    "type": "integer",
-                    "example": 10
-                }
-            }
-        },
-        "central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionMessageResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string",
-                    "example": "Permiso creado exitosamente"
-                },
-                "success": {
-                    "type": "boolean",
-                    "example": true
-                }
-            }
-        },
-        "central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionResponse": {
-            "type": "object",
-            "properties": {
-                "action": {
-                    "type": "string",
-                    "example": "create"
-                },
-                "code": {
-                    "type": "string",
-                    "example": "users:create"
-                },
-                "description": {
-                    "type": "string",
-                    "example": "Permite crear nuevos usuarios en el sistema"
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "name": {
-                    "type": "string",
-                    "example": "Crear usuarios"
-                },
-                "resource": {
-                    "type": "string",
-                    "example": "users"
-                },
-                "scope_code": {
-                    "type": "string",
-                    "example": "system"
-                },
-                "scope_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "scope_name": {
-                    "type": "string",
-                    "example": "Sistema"
-                }
-            }
-        },
-        "central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionSuccessResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionResponse"
-                },
-                "success": {
-                    "type": "boolean",
-                    "example": true
-                }
-            }
-        },
-        "central_reserve_services_auth_internal_infra_primary_controllers_resources_request.CreateResourceRequest": {
-            "description": "Solicitud para crear un nuevo recurso en el sistema",
-            "type": "object",
-            "required": [
-                "name"
-            ],
-            "properties": {
-                "description": {
-                    "type": "string",
-                    "example": "Gestión de usuarios del sistema"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "users"
-                }
-            }
-        },
-        "central_reserve_services_auth_internal_infra_primary_controllers_resources_request.UpdateResourceRequest": {
-            "description": "Solicitud para actualizar un recurso existente",
-            "type": "object",
-            "required": [
-                "name"
-            ],
-            "properties": {
-                "description": {
-                    "type": "string",
-                    "example": "Gestión de usuarios del sistema"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "users"
-                }
-            }
-        },
-        "central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleErrorResponse": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string",
-                    "example": "Error interno del servidor"
-                }
-            }
-        },
-        "central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleListResponse": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer",
-                    "example": 5
-                },
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleResponse"
-                    }
-                },
-                "success": {
-                    "type": "boolean",
-                    "example": true
-                }
-            }
-        },
-        "central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "example": "admin"
-                },
-                "description": {
-                    "type": "string",
-                    "example": "Rol de administrador del sistema"
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "is_system": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "level": {
-                    "type": "integer",
-                    "example": 2
-                },
-                "name": {
-                    "type": "string",
-                    "example": "Administrador"
-                },
-                "scope_code": {
-                    "type": "string",
-                    "example": "system"
-                },
-                "scope_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "scope_name": {
-                    "type": "string",
-                    "example": "Sistema"
-                }
-            }
-        },
-        "central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleSuccessResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleResponse"
-                },
-                "success": {
-                    "type": "boolean",
-                    "example": true
-                }
-            }
-        },
-        "central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.BusinessInfo": {
-            "type": "object",
-            "properties": {
-                "business_type_id": {
-                    "type": "integer"
-                },
-                "business_type_name": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "logo_url": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.RoleInfo": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_system": {
-                    "type": "boolean"
-                },
-                "level": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "scope_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                }
-            }
-        },
-        "central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserListResponse": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserResponse"
-                    }
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserMessageResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserResponse": {
-            "type": "object",
-            "properties": {
-                "avatar_url": {
-                    "type": "string"
-                },
-                "businesses": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.BusinessInfo"
-                    }
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "last_login_at": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "phone": {
-                    "type": "string"
-                },
-                "roles": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.RoleInfo"
-                    }
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserSuccessResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserResponse"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "central_reserve_services_business_internal_infra_primary_controllers_businesshandler_response.BusinessDetailResponse": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "business_type": {
-                    "$ref": "#/definitions/central_reserve_services_business_internal_infra_primary_controllers_businesshandler_response.BusinessTypeDetailResponse"
-                },
-                "code": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "custom_domain": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "enable_delivery": {
-                    "type": "boolean"
-                },
-                "enable_pickup": {
-                    "type": "boolean"
-                },
-                "enable_reservations": {
-                    "type": "boolean"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "logo_url": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "navbar_image_url": {
-                    "type": "string"
-                },
-                "primary_color": {
-                    "type": "string"
-                },
-                "quaternary_color": {
-                    "type": "string"
-                },
-                "secondary_color": {
-                    "type": "string"
-                },
-                "tertiary_color": {
-                    "type": "string"
-                },
-                "timezone": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "central_reserve_services_business_internal_infra_primary_controllers_businesshandler_response.BusinessTypeDetailResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "icon": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "central_reserve_services_business_internal_infra_primary_controllers_businesshandler_response.GetBusinessByIDResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/central_reserve_services_business_internal_infra_primary_controllers_businesshandler_response.BusinessDetailResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "central_reserve_services_business_internal_infra_primary_controllers_businesstypehandler_request.BusinessTypeRequest": {
-            "type": "object",
-            "required": [
-                "code",
-                "name"
-            ],
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "icon": {
-                    "type": "string"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "central_reserve_services_customer_internal_infra_primary_handlers_clienthandler_request.Client": {
+        "request.Client": {
             "type": "object",
             "required": [
                 "business_id",
@@ -7338,24 +7002,43 @@ const docTemplate = `{
                 }
             }
         },
-        "central_reserve_services_customer_internal_infra_primary_handlers_clienthandler_request.UpdateClient": {
+        "request.CreatePermissionRequest": {
             "type": "object",
+            "required": [
+                "action",
+                "code",
+                "name",
+                "resource",
+                "scope_id"
+            ],
             "properties": {
-                "business_id": {
-                    "type": "integer"
+                "action": {
+                    "type": "string",
+                    "example": "create"
                 },
-                "email": {
-                    "type": "string"
+                "code": {
+                    "type": "string",
+                    "example": "users:create"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Permite crear nuevos usuarios en el sistema"
                 },
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Crear usuarios"
                 },
-                "phone": {
-                    "type": "string"
+                "resource": {
+                    "type": "string",
+                    "example": "users"
+                },
+                "scope_id": {
+                    "type": "integer",
+                    "example": 1
                 }
             }
         },
-        "central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlerpropertyunit_request.CreatePropertyUnitRequest": {
+        "request.CreatePropertyUnitRequest": {
             "type": "object",
             "required": [
                 "number",
@@ -7396,48 +7079,7 @@ const docTemplate = `{
                 }
             }
         },
-        "central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlerpropertyunit_request.UpdatePropertyUnitRequest": {
-            "type": "object",
-            "properties": {
-                "area": {
-                    "type": "number",
-                    "example": 85.5
-                },
-                "bathrooms": {
-                    "type": "integer",
-                    "example": 2
-                },
-                "bedrooms": {
-                    "type": "integer",
-                    "example": 3
-                },
-                "block": {
-                    "type": "string",
-                    "example": "A"
-                },
-                "description": {
-                    "type": "string",
-                    "example": "Apartamento esquinero con vista"
-                },
-                "floor": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "is_active": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "number": {
-                    "type": "string",
-                    "example": "101"
-                },
-                "unit_type": {
-                    "type": "string",
-                    "example": "apartment"
-                }
-            }
-        },
-        "central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlerresident_request.CreateResidentRequest": {
+        "request.CreateResidentRequest": {
             "type": "object",
             "required": [
                 "dni",
@@ -7497,7 +7139,369 @@ const docTemplate = `{
                 }
             }
         },
-        "central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlerresident_request.UpdateResidentRequest": {
+        "request.CreateResourceRequest": {
+            "description": "Solicitud para crear un nuevo recurso en el sistema",
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Gestión de usuarios del sistema"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "users"
+                }
+            }
+        },
+        "request.CreateVoteRequest": {
+            "type": "object",
+            "required": [
+                "resident_id",
+                "voting_option_id"
+            ],
+            "properties": {
+                "ip_address": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "resident_id": {
+                    "type": "integer"
+                },
+                "user_agent": {
+                    "type": "string"
+                },
+                "voting_option_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "request.CreateVotingGroupRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "voting_end_date",
+                "voting_start_date"
+            ],
+            "properties": {
+                "created_by_user_id": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 1000
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 150,
+                    "minLength": 3
+                },
+                "notes": {
+                    "type": "string",
+                    "maxLength": 2000
+                },
+                "quorum_percentage": {
+                    "type": "number"
+                },
+                "requires_quorum": {
+                    "type": "boolean"
+                },
+                "voting_end_date": {
+                    "type": "string"
+                },
+                "voting_start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.CreateVotingOptionRequest": {
+            "type": "object",
+            "required": [
+                "option_code",
+                "option_text"
+            ],
+            "properties": {
+                "display_order": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "option_code": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 1
+                },
+                "option_text": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1
+                }
+            }
+        },
+        "request.CreateVotingRequest": {
+            "type": "object",
+            "required": [
+                "description",
+                "title",
+                "voting_type"
+            ],
+            "properties": {
+                "allow_abstention": {
+                    "type": "boolean"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 2000
+                },
+                "display_order": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "is_secret": {
+                    "type": "boolean"
+                },
+                "required_percentage": {
+                    "type": "number"
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 3
+                },
+                "voting_type": {
+                    "type": "string",
+                    "enum": [
+                        "simple",
+                        "majority",
+                        "unanimity"
+                    ]
+                }
+            }
+        },
+        "request.LoginRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.Reservation": {
+            "type": "object",
+            "required": [
+                "email",
+                "end_at",
+                "name",
+                "number_of_guests",
+                "phone",
+                "start_at"
+            ],
+            "properties": {
+                "business_id": {
+                    "type": "integer"
+                },
+                "dni": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "end_at": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "number_of_guests": {
+                    "type": "integer"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "start_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.Room": {
+            "type": "object",
+            "required": [
+                "business_id",
+                "capacity",
+                "code",
+                "name"
+            ],
+            "properties": {
+                "business_id": {
+                    "type": "integer"
+                },
+                "capacity": {
+                    "type": "integer"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "max_capacity": {
+                    "type": "integer"
+                },
+                "min_capacity": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.Table": {
+            "type": "object",
+            "required": [
+                "business_id",
+                "capacity",
+                "number"
+            ],
+            "properties": {
+                "business_id": {
+                    "type": "integer"
+                },
+                "capacity": {
+                    "type": "integer"
+                },
+                "number": {
+                    "type": "integer"
+                }
+            }
+        },
+        "request.UpdateClient": {
+            "type": "object",
+            "properties": {
+                "business_id": {
+                    "type": "integer"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.UpdatePermissionRequest": {
+            "type": "object",
+            "required": [
+                "action",
+                "code",
+                "name",
+                "resource",
+                "scope_id"
+            ],
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "example": "create"
+                },
+                "code": {
+                    "type": "string",
+                    "example": "users:create"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Permite crear nuevos usuarios en el sistema"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Crear usuarios"
+                },
+                "resource": {
+                    "type": "string",
+                    "example": "users"
+                },
+                "scope_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "request.UpdatePropertyUnitRequest": {
+            "type": "object",
+            "properties": {
+                "area": {
+                    "type": "number",
+                    "example": 85.5
+                },
+                "bathrooms": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "bedrooms": {
+                    "type": "integer",
+                    "example": 3
+                },
+                "block": {
+                    "type": "string",
+                    "example": "A"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Apartamento esquinero con vista"
+                },
+                "floor": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_active": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "number": {
+                    "type": "string",
+                    "example": "101"
+                },
+                "unit_type": {
+                    "type": "string",
+                    "example": "apartment"
+                }
+            }
+        },
+        "request.UpdateReservation": {
+            "type": "object",
+            "properties": {
+                "end_at": {
+                    "type": "string"
+                },
+                "number_of_guests": {
+                    "type": "integer"
+                },
+                "start_at": {
+                    "type": "string"
+                },
+                "status_id": {
+                    "type": "integer"
+                },
+                "table_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "request.UpdateResidentRequest": {
             "type": "object",
             "properties": {
                 "dni": {
@@ -7558,132 +7562,198 @@ const docTemplate = `{
                 }
             }
         },
-        "central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlervote_request.CreateVoteRequest": {
+        "request.UpdateResourceRequest": {
+            "description": "Solicitud para actualizar un recurso existente",
             "type": "object",
             "required": [
-                "resident_id",
-                "voting_option_id"
+                "name"
             ],
             "properties": {
-                "ip_address": {
-                    "type": "string"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "resident_id": {
-                    "type": "integer"
-                },
-                "user_agent": {
-                    "type": "string"
-                },
-                "voting_option_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlervote_request.CreateVotingGroupRequest": {
-            "type": "object",
-            "required": [
-                "name",
-                "voting_end_date",
-                "voting_start_date"
-            ],
-            "properties": {
-                "created_by_user_id": {
-                    "type": "integer"
-                },
                 "description": {
                     "type": "string",
-                    "maxLength": 1000
+                    "example": "Gestión de usuarios del sistema"
                 },
                 "name": {
                     "type": "string",
-                    "maxLength": 150,
-                    "minLength": 3
-                },
-                "notes": {
-                    "type": "string",
-                    "maxLength": 2000
-                },
-                "quorum_percentage": {
-                    "type": "number"
-                },
-                "requires_quorum": {
-                    "type": "boolean"
-                },
-                "voting_end_date": {
-                    "type": "string"
-                },
-                "voting_start_date": {
-                    "type": "string"
+                    "example": "users"
                 }
             }
         },
-        "central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlervote_request.CreateVotingOptionRequest": {
+        "request.UpdateRoom": {
             "type": "object",
             "required": [
-                "option_code",
-                "option_text"
+                "business_id",
+                "capacity",
+                "code",
+                "name"
             ],
             "properties": {
-                "display_order": {
-                    "type": "integer",
-                    "minimum": 1
+                "business_id": {
+                    "type": "integer"
                 },
-                "option_code": {
-                    "type": "string",
-                    "maxLength": 20,
-                    "minLength": 1
+                "capacity": {
+                    "type": "integer"
                 },
-                "option_text": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 1
-                }
-            }
-        },
-        "central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlervote_request.CreateVotingRequest": {
-            "type": "object",
-            "required": [
-                "description",
-                "title",
-                "voting_type"
-            ],
-            "properties": {
-                "allow_abstention": {
-                    "type": "boolean"
+                "code": {
+                    "type": "string"
                 },
                 "description": {
-                    "type": "string",
-                    "maxLength": 2000
+                    "type": "string"
                 },
-                "display_order": {
-                    "type": "integer",
-                    "minimum": 1
-                },
-                "is_secret": {
+                "is_active": {
                     "type": "boolean"
                 },
-                "required_percentage": {
-                    "type": "number"
+                "max_capacity": {
+                    "type": "integer"
                 },
-                "title": {
-                    "type": "string",
-                    "maxLength": 200,
-                    "minLength": 3
+                "min_capacity": {
+                    "type": "integer"
                 },
-                "voting_type": {
-                    "type": "string",
-                    "enum": [
-                        "simple",
-                        "majority",
-                        "unanimity"
-                    ]
+                "name": {
+                    "type": "string"
                 }
             }
         },
-        "central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.CommitteeResponse": {
+        "request.UpdateTable": {
+            "type": "object",
+            "properties": {
+                "business_id": {
+                    "type": "integer"
+                },
+                "capacity": {
+                    "type": "integer"
+                },
+                "number": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.BusinessDetailResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "business_type": {
+                    "$ref": "#/definitions/response.BusinessTypeDetailResponse"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "custom_domain": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "enable_delivery": {
+                    "type": "boolean"
+                },
+                "enable_pickup": {
+                    "type": "boolean"
+                },
+                "enable_reservations": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "logo_url": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "navbar_image_url": {
+                    "type": "string"
+                },
+                "primary_color": {
+                    "type": "string"
+                },
+                "quaternary_color": {
+                    "type": "string"
+                },
+                "secondary_color": {
+                    "type": "string"
+                },
+                "tertiary_color": {
+                    "type": "string"
+                },
+                "timezone": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.BusinessTypeDetailResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.BusinessTypeInfo": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.ChangePasswordResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "response.CommitteeResponse": {
             "type": "object",
             "properties": {
                 "committee_type_id": {
@@ -7724,7 +7794,21 @@ const docTemplate = `{
                 }
             }
         },
-        "central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.HorizontalPropertyDeleteSuccessResponse": {
+        "response.GetBusinessByIDResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.BusinessDetailResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "response.HorizontalPropertyDeleteSuccessResponse": {
             "type": "object",
             "properties": {
                 "message": {
@@ -7737,7 +7821,7 @@ const docTemplate = `{
                 }
             }
         },
-        "central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.HorizontalPropertyListResponse": {
+        "response.HorizontalPropertyListResponse": {
             "type": "object",
             "properties": {
                 "address": {
@@ -7774,11 +7858,11 @@ const docTemplate = `{
                 }
             }
         },
-        "central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.HorizontalPropertyListSuccessResponse": {
+        "response.HorizontalPropertyListSuccessResponse": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.PaginatedHorizontalPropertyResponse"
+                    "$ref": "#/definitions/response.PaginatedHorizontalPropertyResponse"
                 },
                 "message": {
                     "type": "string",
@@ -7790,7 +7874,7 @@ const docTemplate = `{
                 }
             }
         },
-        "central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.HorizontalPropertyResponse": {
+        "response.HorizontalPropertyResponse": {
             "type": "object",
             "properties": {
                 "address": {
@@ -7812,7 +7896,7 @@ const docTemplate = `{
                 "committees": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.CommitteeResponse"
+                        "$ref": "#/definitions/response.CommitteeResponse"
                     }
                 },
                 "created_at": {
@@ -7879,7 +7963,7 @@ const docTemplate = `{
                     "description": "Información detallada (solo en GET by ID)",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.PropertyUnitResponse"
+                        "$ref": "#/definitions/services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.PropertyUnitResponse"
                     }
                 },
                 "quaternary_color": {
@@ -7913,11 +7997,11 @@ const docTemplate = `{
                 }
             }
         },
-        "central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.HorizontalPropertySuccessResponse": {
+        "response.HorizontalPropertySuccessResponse": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.HorizontalPropertyResponse"
+                    "$ref": "#/definitions/response.HorizontalPropertyResponse"
                 },
                 "message": {
                     "type": "string",
@@ -7929,13 +8013,66 @@ const docTemplate = `{
                 }
             }
         },
-        "central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.PaginatedHorizontalPropertyResponse": {
+        "response.LoginBadRequestResponse": {
+            "type": "object",
+            "properties": {
+                "details": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.LoginErrorResponse": {
+            "type": "object",
+            "properties": {
+                "details": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "businesses": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/services_auth_internal_infra_primary_controllers_authhandler_response.BusinessInfo"
+                    }
+                },
+                "require_password_change": {
+                    "type": "boolean"
+                },
+                "token": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/response.UserInfo"
+                }
+            }
+        },
+        "response.LoginSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.LoginResponse"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "response.PaginatedHorizontalPropertyResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.HorizontalPropertyListResponse"
+                        "$ref": "#/definitions/response.HorizontalPropertyListResponse"
                     }
                 },
                 "page": {
@@ -7956,7 +8093,495 @@ const docTemplate = `{
                 }
             }
         },
-        "central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.PropertyUnitResponse": {
+        "response.PermissionErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "Error al procesar la solicitud"
+                }
+            }
+        },
+        "response.PermissionListResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.PermissionResponse"
+                    }
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 10
+                }
+            }
+        },
+        "response.PermissionMessageResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Permiso creado exitosamente"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "response.PermissionResponse": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "example": "create"
+                },
+                "code": {
+                    "type": "string",
+                    "example": "users:create"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Permite crear nuevos usuarios en el sistema"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Crear usuarios"
+                },
+                "resource": {
+                    "type": "string",
+                    "example": "users"
+                },
+                "scope_code": {
+                    "type": "string",
+                    "example": "system"
+                },
+                "scope_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "scope_name": {
+                    "type": "string",
+                    "example": "Sistema"
+                }
+            }
+        },
+        "response.PermissionSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.PermissionResponse"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "response.ReservationStatus": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.ReservationStatusListSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.ReservationStatus"
+                    }
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "response.ResourcePermissions": {
+            "type": "object",
+            "properties": {
+                "actions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "active": {
+                    "description": "Indica si el recurso está activo para el business",
+                    "type": "boolean"
+                },
+                "resource": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.RoleErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "Error interno del servidor"
+                }
+            }
+        },
+        "response.RoleListResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.RoleResponse"
+                    }
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "response.RoleResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "admin"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Rol de administrador del sistema"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_system": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "level": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Administrador"
+                },
+                "scope_code": {
+                    "type": "string",
+                    "example": "system"
+                },
+                "scope_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "scope_name": {
+                    "type": "string",
+                    "example": "Sistema"
+                }
+            }
+        },
+        "response.RoleSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.RoleResponse"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "response.UserErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.UserInfo": {
+            "type": "object",
+            "properties": {
+                "avatar_url": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "last_login_at": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.UserListResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.UserResponse"
+                    }
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "response.UserMessageResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "response.UserResponse": {
+            "type": "object",
+            "properties": {
+                "avatar_url": {
+                    "type": "string"
+                },
+                "businesses": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/services_auth_internal_infra_primary_controllers_userhandler_response.BusinessInfo"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "last_login_at": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/services_auth_internal_infra_primary_controllers_userhandler_response.RoleInfo"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.UserRolesPermissionsResponse": {
+            "type": "object",
+            "properties": {
+                "is_super": {
+                    "type": "boolean"
+                },
+                "resources": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.ResourcePermissions"
+                    }
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/services_auth_internal_infra_primary_controllers_authhandler_response.RoleInfo"
+                    }
+                }
+            }
+        },
+        "response.UserRolesPermissionsSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.UserRolesPermissionsResponse"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "response.UserSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.UserResponse"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "services_auth_internal_infra_primary_controllers_authhandler_response.BusinessInfo": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "business_type": {
+                    "$ref": "#/definitions/response.BusinessTypeInfo"
+                },
+                "business_type_id": {
+                    "type": "integer"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "custom_domain": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "enable_delivery": {
+                    "type": "boolean"
+                },
+                "enable_pickup": {
+                    "type": "boolean"
+                },
+                "enable_reservations": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "logo_url": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "navbar_image_url": {
+                    "type": "string"
+                },
+                "primary_color": {
+                    "type": "string"
+                },
+                "quaternary_color": {
+                    "type": "string"
+                },
+                "secondary_color": {
+                    "type": "string"
+                },
+                "tertiary_color": {
+                    "type": "string"
+                },
+                "timezone": {
+                    "type": "string"
+                }
+            }
+        },
+        "services_auth_internal_infra_primary_controllers_authhandler_response.RoleInfo": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "services_auth_internal_infra_primary_controllers_userhandler_response.BusinessInfo": {
+            "type": "object",
+            "properties": {
+                "business_type_id": {
+                    "type": "integer"
+                },
+                "business_type_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "logo_url": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "services_auth_internal_infra_primary_controllers_userhandler_response.RoleInfo": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_system": {
+                    "type": "boolean"
+                },
+                "level": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "scope_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.PropertyUnitResponse": {
             "type": "object",
             "properties": {
                 "area": {
@@ -7998,235 +8623,6 @@ const docTemplate = `{
                 "unit_type": {
                     "type": "string",
                     "example": "apartment"
-                }
-            }
-        },
-        "central_reserve_services_reserve_internal_infra_primary_controllers_reservehandler_request.CancelReservation": {
-            "type": "object",
-            "properties": {
-                "reason": {
-                    "description": "Razón opcional de cancelación",
-                    "type": "string"
-                }
-            }
-        },
-        "central_reserve_services_reserve_internal_infra_primary_controllers_reservehandler_request.Reservation": {
-            "type": "object",
-            "required": [
-                "email",
-                "end_at",
-                "name",
-                "number_of_guests",
-                "phone",
-                "start_at"
-            ],
-            "properties": {
-                "business_id": {
-                    "type": "integer"
-                },
-                "dni": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "end_at": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "number_of_guests": {
-                    "type": "integer"
-                },
-                "phone": {
-                    "type": "string"
-                },
-                "start_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "central_reserve_services_reserve_internal_infra_primary_controllers_reservehandler_request.UpdateReservation": {
-            "type": "object",
-            "properties": {
-                "end_at": {
-                    "type": "string"
-                },
-                "number_of_guests": {
-                    "type": "integer"
-                },
-                "start_at": {
-                    "type": "string"
-                },
-                "status_id": {
-                    "type": "integer"
-                },
-                "table_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "central_reserve_services_reserve_internal_infra_primary_controllers_reservehandler_response.ReservationStatus": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "central_reserve_services_reserve_internal_infra_primary_controllers_reservehandler_response.ReservationStatusListSuccessResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/central_reserve_services_reserve_internal_infra_primary_controllers_reservehandler_response.ReservationStatus"
-                    }
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "central_reserve_services_rooms_internal_infra_primary_controllers_roomhandler_request.Room": {
-            "type": "object",
-            "required": [
-                "business_id",
-                "capacity",
-                "code",
-                "name"
-            ],
-            "properties": {
-                "business_id": {
-                    "type": "integer"
-                },
-                "capacity": {
-                    "type": "integer"
-                },
-                "code": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "max_capacity": {
-                    "type": "integer"
-                },
-                "min_capacity": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "central_reserve_services_rooms_internal_infra_primary_controllers_roomhandler_request.UpdateRoom": {
-            "type": "object",
-            "required": [
-                "business_id",
-                "capacity",
-                "code",
-                "name"
-            ],
-            "properties": {
-                "business_id": {
-                    "type": "integer"
-                },
-                "capacity": {
-                    "type": "integer"
-                },
-                "code": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "max_capacity": {
-                    "type": "integer"
-                },
-                "min_capacity": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "central_reserve_services_tables_internal_infra_primary_controllers_tablehandler_request.Table": {
-            "type": "object",
-            "required": [
-                "business_id",
-                "capacity",
-                "number"
-            ],
-            "properties": {
-                "business_id": {
-                    "type": "integer"
-                },
-                "capacity": {
-                    "type": "integer"
-                },
-                "number": {
-                    "type": "integer"
-                }
-            }
-        },
-        "central_reserve_services_tables_internal_infra_primary_controllers_tablehandler_request.UpdateTable": {
-            "type": "object",
-            "properties": {
-                "business_id": {
-                    "type": "integer"
-                },
-                "capacity": {
-                    "type": "integer"
-                },
-                "number": {
-                    "type": "integer"
-                }
-            }
-        },
-        "services_horizontalproperty_internal_infra_primary_handlers_handlervote.GeneratePublicVotingURLRequest": {
-            "type": "object",
-            "properties": {
-                "duration_hours": {
-                    "description": "Duración del token en horas",
-                    "type": "integer",
-                    "example": 24
-                },
-                "frontend_url": {
-                    "description": "URL base del frontend",
-                    "type": "string",
-                    "example": "https://miapp.com/vote"
-                }
-            }
-        },
-        "services_horizontalproperty_internal_infra_primary_handlers_handlervote.ValidateResidentRequest": {
-            "type": "object",
-            "required": [
-                "dni",
-                "property_unit_id"
-            ],
-            "properties": {
-                "dni": {
-                    "type": "string",
-                    "example": "123456789"
-                },
-                "property_unit_id": {
-                    "type": "integer",
-                    "example": 1
                 }
             }
         }

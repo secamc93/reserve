@@ -23,13 +23,15 @@ La imagen está optimizada para **ARM64 (AWS Graviton)** y utiliza:
 │                    SERVIDOR PRODUCCIÓN                       │
 │                                                              │
 │  ┌────────────────────────────────────────────────────────┐ │
-│  │         Red Interna Docker: central_reserve_network    │ │
+│  │         Red Interna Docker: app-network                │ │
 │  │                                                         │ │
-│  │  ┌─────────────────┐         ┌──────────────────┐     │ │
-│  │  │   Frontend      │ ──────> │   Backend        │     │ │
-│  │  │   (Next.js)     │  HTTP   │   (Go)           │     │ │
-│  │  │   Puerto: 3000  │ interno │   Puerto: 3050   │     │ │
-│  │  └─────────────────┘         └──────────────────┘     │ │
+│  │  ┌──────────────────────┐    ┌──────────────────┐     │ │
+│  │  │   Frontend           │───>│   Backend        │     │ │
+│  │  │   (Next.js)          │    │   (Go)           │     │ │
+│  │  │   Interno: 80        │    │   Interno: 3050  │     │ │
+│  │  │   Host: 8080         │    │                  │     │ │
+│  │  │   (8080:80)          │    │   central_reserve│     │ │
+│  │  └──────────────────────┘    └──────────────────┘     │ │
 │  │         │                            │                 │ │
 │  └─────────│────────────────────────────│─────────────────┘ │
 │            │                            │                   │
@@ -107,13 +109,15 @@ docker pull public.ecr.aws/d3a6d4r1/cam/reserve:frontend-latest
 docker run -d \
   --name rupu-central-frontend \
   --restart unless-stopped \
-  --network central_reserve_network \
-  -p 3000:3000 \
+  --network app-network \
+  -p 8080:80 \
   public.ecr.aws/d3a6d4r1/cam/reserve:frontend-latest
 ```
 
 **NOTAS:**
-- `--network central_reserve_network`: Conecta a la red Docker del backend
+- Puerto interno: `80` (Next.js escucha en puerto 80)
+- Puerto expuesto: `8080` (acceso desde el host)
+- `--network app-network`: Conecta a la red Docker del backend (según tu docker-compose)
 - Las URLs ya están embebidas en la imagen durante el build
 - El frontend se comunicará con el backend por la red interna (`http://central_reserve:3050`)
 - Los clientes SSE usarán el dominio público (`https://xn--rup-joa.com`)

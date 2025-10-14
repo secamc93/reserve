@@ -1,6 +1,60 @@
 basePath: /api/v1
 definitions:
-  central_reserve_services_auth_internal_infra_primary_controllers_authhandler_request.ChangePasswordRequest:
+  handlervote.CreatePublicVoteRequest:
+    properties:
+      voting_option_id:
+        example: 1
+        type: integer
+    required:
+    - voting_option_id
+    type: object
+  handlervote.GeneratePublicVotingURLRequest:
+    properties:
+      duration_hours:
+        description: Duración del token en horas
+        example: 24
+        type: integer
+      frontend_url:
+        description: URL base del frontend (opcional, usa URL_BASE_SWAGGER + /public/vote
+          si está vacío)
+        example: https://votacion.miconjunto.com/vote
+        type: string
+    type: object
+  handlervote.ValidateResidentRequest:
+    properties:
+      dni:
+        example: "123456789"
+        type: string
+      property_unit_id:
+        example: 1
+        type: integer
+    required:
+    - dni
+    - property_unit_id
+    type: object
+  request.BusinessTypeRequest:
+    properties:
+      code:
+        type: string
+      description:
+        type: string
+      icon:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+    required:
+    - code
+    - name
+    type: object
+  request.CancelReservation:
+    properties:
+      reason:
+        description: Razón opcional de cancelación
+        type: string
+    type: object
+  request.ChangePasswordRequest:
     properties:
       current_password:
         maxLength: 100
@@ -14,545 +68,7 @@ definitions:
     - current_password
     - new_password
     type: object
-  central_reserve_services_auth_internal_infra_primary_controllers_authhandler_request.LoginRequest:
-    properties:
-      email:
-        type: string
-      password:
-        type: string
-    required:
-    - email
-    - password
-    type: object
-  central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.BusinessInfo:
-    properties:
-      address:
-        type: string
-      business_type:
-        $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.BusinessTypeInfo'
-      business_type_id:
-        type: integer
-      code:
-        type: string
-      custom_domain:
-        type: string
-      description:
-        type: string
-      enable_delivery:
-        type: boolean
-      enable_pickup:
-        type: boolean
-      enable_reservations:
-        type: boolean
-      id:
-        type: integer
-      is_active:
-        type: boolean
-      logo_url:
-        type: string
-      name:
-        type: string
-      navbar_image_url:
-        type: string
-      primary_color:
-        type: string
-      quaternary_color:
-        type: string
-      secondary_color:
-        type: string
-      tertiary_color:
-        type: string
-      timezone:
-        type: string
-    type: object
-  central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.BusinessTypeInfo:
-    properties:
-      code:
-        type: string
-      description:
-        type: string
-      icon:
-        type: string
-      id:
-        type: integer
-      name:
-        type: string
-    type: object
-  central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.ChangePasswordResponse:
-    properties:
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginBadRequestResponse:
-    properties:
-      details:
-        type: string
-      error:
-        type: string
-    type: object
-  central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginErrorResponse:
-    properties:
-      details:
-        type: string
-      error:
-        type: string
-    type: object
-  central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginResponse:
-    properties:
-      businesses:
-        items:
-          $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.BusinessInfo'
-        type: array
-      require_password_change:
-        type: boolean
-      token:
-        type: string
-      user:
-        $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.UserInfo'
-    type: object
-  central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginSuccessResponse:
-    properties:
-      data:
-        $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginResponse'
-      success:
-        type: boolean
-    type: object
-  central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.ResourcePermissions:
-    properties:
-      actions:
-        items:
-          type: string
-        type: array
-      active:
-        description: Indica si el recurso está activo para el business
-        type: boolean
-      resource:
-        type: string
-    type: object
-  central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.RoleInfo:
-    properties:
-      description:
-        type: string
-      id:
-        type: integer
-      name:
-        type: string
-    type: object
-  central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.UserInfo:
-    properties:
-      avatar_url:
-        type: string
-      email:
-        type: string
-      id:
-        type: integer
-      is_active:
-        type: boolean
-      last_login_at:
-        type: string
-      name:
-        type: string
-      phone:
-        type: string
-    type: object
-  central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.UserRolesPermissionsResponse:
-    properties:
-      is_super:
-        type: boolean
-      resources:
-        items:
-          $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.ResourcePermissions'
-        type: array
-      roles:
-        items:
-          $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.RoleInfo'
-        type: array
-    type: object
-  central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.UserRolesPermissionsSuccessResponse:
-    properties:
-      data:
-        $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.UserRolesPermissionsResponse'
-      success:
-        type: boolean
-    type: object
-  central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_request.CreatePermissionRequest:
-    properties:
-      action:
-        example: create
-        type: string
-      code:
-        example: users:create
-        type: string
-      description:
-        example: Permite crear nuevos usuarios en el sistema
-        type: string
-      name:
-        example: Crear usuarios
-        type: string
-      resource:
-        example: users
-        type: string
-      scope_id:
-        example: 1
-        type: integer
-    required:
-    - action
-    - code
-    - name
-    - resource
-    - scope_id
-    type: object
-  central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_request.UpdatePermissionRequest:
-    properties:
-      action:
-        example: create
-        type: string
-      code:
-        example: users:create
-        type: string
-      description:
-        example: Permite crear nuevos usuarios en el sistema
-        type: string
-      name:
-        example: Crear usuarios
-        type: string
-      resource:
-        example: users
-        type: string
-      scope_id:
-        example: 1
-        type: integer
-    required:
-    - action
-    - code
-    - name
-    - resource
-    - scope_id
-    type: object
-  central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse:
-    properties:
-      error:
-        example: Error al procesar la solicitud
-        type: string
-    type: object
-  central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionListResponse:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionResponse'
-        type: array
-      success:
-        example: true
-        type: boolean
-      total:
-        example: 10
-        type: integer
-    type: object
-  central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionMessageResponse:
-    properties:
-      message:
-        example: Permiso creado exitosamente
-        type: string
-      success:
-        example: true
-        type: boolean
-    type: object
-  central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionResponse:
-    properties:
-      action:
-        example: create
-        type: string
-      code:
-        example: users:create
-        type: string
-      description:
-        example: Permite crear nuevos usuarios en el sistema
-        type: string
-      id:
-        example: 1
-        type: integer
-      name:
-        example: Crear usuarios
-        type: string
-      resource:
-        example: users
-        type: string
-      scope_code:
-        example: system
-        type: string
-      scope_id:
-        example: 1
-        type: integer
-      scope_name:
-        example: Sistema
-        type: string
-    type: object
-  central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionSuccessResponse:
-    properties:
-      data:
-        $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionResponse'
-      success:
-        example: true
-        type: boolean
-    type: object
-  central_reserve_services_auth_internal_infra_primary_controllers_resources_request.CreateResourceRequest:
-    description: Solicitud para crear un nuevo recurso en el sistema
-    properties:
-      description:
-        example: Gestión de usuarios del sistema
-        type: string
-      name:
-        example: users
-        type: string
-    required:
-    - name
-    type: object
-  central_reserve_services_auth_internal_infra_primary_controllers_resources_request.UpdateResourceRequest:
-    description: Solicitud para actualizar un recurso existente
-    properties:
-      description:
-        example: Gestión de usuarios del sistema
-        type: string
-      name:
-        example: users
-        type: string
-    required:
-    - name
-    type: object
-  central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleErrorResponse:
-    properties:
-      error:
-        example: Error interno del servidor
-        type: string
-    type: object
-  central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleListResponse:
-    properties:
-      count:
-        example: 5
-        type: integer
-      data:
-        items:
-          $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleResponse'
-        type: array
-      success:
-        example: true
-        type: boolean
-    type: object
-  central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleResponse:
-    properties:
-      code:
-        example: admin
-        type: string
-      description:
-        example: Rol de administrador del sistema
-        type: string
-      id:
-        example: 1
-        type: integer
-      is_system:
-        example: true
-        type: boolean
-      level:
-        example: 2
-        type: integer
-      name:
-        example: Administrador
-        type: string
-      scope_code:
-        example: system
-        type: string
-      scope_id:
-        example: 1
-        type: integer
-      scope_name:
-        example: Sistema
-        type: string
-    type: object
-  central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleSuccessResponse:
-    properties:
-      data:
-        $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleResponse'
-      success:
-        example: true
-        type: boolean
-    type: object
-  central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.BusinessInfo:
-    properties:
-      business_type_id:
-        type: integer
-      business_type_name:
-        type: string
-      id:
-        type: integer
-      logo_url:
-        type: string
-      name:
-        type: string
-    type: object
-  central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.RoleInfo:
-    properties:
-      description:
-        type: string
-      id:
-        type: integer
-      is_system:
-        type: boolean
-      level:
-        type: integer
-      name:
-        type: string
-      scope_id:
-        type: integer
-    type: object
-  central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse:
-    properties:
-      error:
-        type: string
-    type: object
-  central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserListResponse:
-    properties:
-      count:
-        type: integer
-      data:
-        items:
-          $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserResponse'
-        type: array
-      success:
-        type: boolean
-    type: object
-  central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserMessageResponse:
-    properties:
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserResponse:
-    properties:
-      avatar_url:
-        type: string
-      businesses:
-        items:
-          $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.BusinessInfo'
-        type: array
-      created_at:
-        type: string
-      email:
-        type: string
-      id:
-        type: integer
-      is_active:
-        type: boolean
-      last_login_at:
-        type: string
-      name:
-        type: string
-      phone:
-        type: string
-      roles:
-        items:
-          $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.RoleInfo'
-        type: array
-      updated_at:
-        type: string
-    type: object
-  central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserSuccessResponse:
-    properties:
-      data:
-        $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserResponse'
-      success:
-        type: boolean
-    type: object
-  central_reserve_services_business_internal_infra_primary_controllers_businesshandler_response.BusinessDetailResponse:
-    properties:
-      address:
-        type: string
-      business_type:
-        $ref: '#/definitions/central_reserve_services_business_internal_infra_primary_controllers_businesshandler_response.BusinessTypeDetailResponse'
-      code:
-        type: string
-      created_at:
-        type: string
-      custom_domain:
-        type: string
-      description:
-        type: string
-      enable_delivery:
-        type: boolean
-      enable_pickup:
-        type: boolean
-      enable_reservations:
-        type: boolean
-      id:
-        type: integer
-      is_active:
-        type: boolean
-      logo_url:
-        type: string
-      name:
-        type: string
-      navbar_image_url:
-        type: string
-      primary_color:
-        type: string
-      quaternary_color:
-        type: string
-      secondary_color:
-        type: string
-      tertiary_color:
-        type: string
-      timezone:
-        type: string
-      updated_at:
-        type: string
-    type: object
-  central_reserve_services_business_internal_infra_primary_controllers_businesshandler_response.BusinessTypeDetailResponse:
-    properties:
-      code:
-        type: string
-      created_at:
-        type: string
-      description:
-        type: string
-      icon:
-        type: string
-      id:
-        type: integer
-      is_active:
-        type: boolean
-      name:
-        type: string
-      updated_at:
-        type: string
-    type: object
-  central_reserve_services_business_internal_infra_primary_controllers_businesshandler_response.GetBusinessByIDResponse:
-    properties:
-      data:
-        $ref: '#/definitions/central_reserve_services_business_internal_infra_primary_controllers_businesshandler_response.BusinessDetailResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  central_reserve_services_business_internal_infra_primary_controllers_businesstypehandler_request.BusinessTypeRequest:
-    properties:
-      code:
-        type: string
-      description:
-        type: string
-      icon:
-        type: string
-      is_active:
-        type: boolean
-      name:
-        type: string
-    required:
-    - code
-    - name
-    type: object
-  central_reserve_services_customer_internal_infra_primary_handlers_clienthandler_request.Client:
+  request.Client:
     properties:
       business_id:
         type: integer
@@ -570,19 +86,35 @@ definitions:
     - name
     - phone
     type: object
-  central_reserve_services_customer_internal_infra_primary_handlers_clienthandler_request.UpdateClient:
+  request.CreatePermissionRequest:
     properties:
-      business_id:
-        type: integer
-      email:
+      action:
+        example: create
+        type: string
+      code:
+        example: users:create
+        type: string
+      description:
+        example: Permite crear nuevos usuarios en el sistema
         type: string
       name:
+        example: Crear usuarios
         type: string
-      phone:
+      resource:
+        example: users
         type: string
+      scope_id:
+        example: 1
+        type: integer
+    required:
+    - action
+    - code
+    - name
+    - resource
+    - scope_id
     type: object
-  ? central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlerpropertyunit_request.CreatePropertyUnitRequest
-  : properties:
+  request.CreatePropertyUnitRequest:
+    properties:
       area:
         example: 85.5
         type: number
@@ -611,37 +143,7 @@ definitions:
     - number
     - unit_type
     type: object
-  ? central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlerpropertyunit_request.UpdatePropertyUnitRequest
-  : properties:
-      area:
-        example: 85.5
-        type: number
-      bathrooms:
-        example: 2
-        type: integer
-      bedrooms:
-        example: 3
-        type: integer
-      block:
-        example: A
-        type: string
-      description:
-        example: Apartamento esquinero con vista
-        type: string
-      floor:
-        example: 1
-        type: integer
-      is_active:
-        example: true
-        type: boolean
-      number:
-        example: "101"
-        type: string
-      unit_type:
-        example: apartment
-        type: string
-    type: object
-  central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlerresident_request.CreateResidentRequest:
+  request.CreateResidentRequest:
     properties:
       dni:
         example: "123456789"
@@ -686,7 +188,262 @@ definitions:
     - property_unit_id
     - resident_type_id
     type: object
-  central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlerresident_request.UpdateResidentRequest:
+  request.CreateResourceRequest:
+    description: Solicitud para crear un nuevo recurso en el sistema
+    properties:
+      description:
+        example: Gestión de usuarios del sistema
+        type: string
+      name:
+        example: users
+        type: string
+    required:
+    - name
+    type: object
+  request.CreateVoteRequest:
+    properties:
+      ip_address:
+        type: string
+      notes:
+        type: string
+      resident_id:
+        type: integer
+      user_agent:
+        type: string
+      voting_option_id:
+        type: integer
+    required:
+    - resident_id
+    - voting_option_id
+    type: object
+  request.CreateVotingGroupRequest:
+    properties:
+      created_by_user_id:
+        type: integer
+      description:
+        maxLength: 1000
+        type: string
+      name:
+        maxLength: 150
+        minLength: 3
+        type: string
+      notes:
+        maxLength: 2000
+        type: string
+      quorum_percentage:
+        type: number
+      requires_quorum:
+        type: boolean
+      voting_end_date:
+        type: string
+      voting_start_date:
+        type: string
+    required:
+    - name
+    - voting_end_date
+    - voting_start_date
+    type: object
+  request.CreateVotingOptionRequest:
+    properties:
+      display_order:
+        minimum: 1
+        type: integer
+      option_code:
+        maxLength: 20
+        minLength: 1
+        type: string
+      option_text:
+        maxLength: 100
+        minLength: 1
+        type: string
+    required:
+    - option_code
+    - option_text
+    type: object
+  request.CreateVotingRequest:
+    properties:
+      allow_abstention:
+        type: boolean
+      description:
+        maxLength: 2000
+        type: string
+      display_order:
+        minimum: 1
+        type: integer
+      is_secret:
+        type: boolean
+      required_percentage:
+        type: number
+      title:
+        maxLength: 200
+        minLength: 3
+        type: string
+      voting_type:
+        enum:
+        - simple
+        - majority
+        - unanimity
+        type: string
+    required:
+    - description
+    - title
+    - voting_type
+    type: object
+  request.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  request.Reservation:
+    properties:
+      business_id:
+        type: integer
+      dni:
+        type: string
+      email:
+        type: string
+      end_at:
+        type: string
+      name:
+        type: string
+      number_of_guests:
+        type: integer
+      phone:
+        type: string
+      start_at:
+        type: string
+    required:
+    - email
+    - end_at
+    - name
+    - number_of_guests
+    - phone
+    - start_at
+    type: object
+  request.Room:
+    properties:
+      business_id:
+        type: integer
+      capacity:
+        type: integer
+      code:
+        type: string
+      description:
+        type: string
+      is_active:
+        type: boolean
+      max_capacity:
+        type: integer
+      min_capacity:
+        type: integer
+      name:
+        type: string
+    required:
+    - business_id
+    - capacity
+    - code
+    - name
+    type: object
+  request.Table:
+    properties:
+      business_id:
+        type: integer
+      capacity:
+        type: integer
+      number:
+        type: integer
+    required:
+    - business_id
+    - capacity
+    - number
+    type: object
+  request.UpdateClient:
+    properties:
+      business_id:
+        type: integer
+      email:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+    type: object
+  request.UpdatePermissionRequest:
+    properties:
+      action:
+        example: create
+        type: string
+      code:
+        example: users:create
+        type: string
+      description:
+        example: Permite crear nuevos usuarios en el sistema
+        type: string
+      name:
+        example: Crear usuarios
+        type: string
+      resource:
+        example: users
+        type: string
+      scope_id:
+        example: 1
+        type: integer
+    required:
+    - action
+    - code
+    - name
+    - resource
+    - scope_id
+    type: object
+  request.UpdatePropertyUnitRequest:
+    properties:
+      area:
+        example: 85.5
+        type: number
+      bathrooms:
+        example: 2
+        type: integer
+      bedrooms:
+        example: 3
+        type: integer
+      block:
+        example: A
+        type: string
+      description:
+        example: Apartamento esquinero con vista
+        type: string
+      floor:
+        example: 1
+        type: integer
+      is_active:
+        example: true
+        type: boolean
+      number:
+        example: "101"
+        type: string
+      unit_type:
+        example: apartment
+        type: string
+    type: object
+  request.UpdateReservation:
+    properties:
+      end_at:
+        type: string
+      number_of_guests:
+        type: integer
+      start_at:
+        type: string
+      status_id:
+        type: integer
+      table_id:
+        type: integer
+    type: object
+  request.UpdateResidentRequest:
     properties:
       dni:
         example: "123456789"
@@ -731,96 +488,134 @@ definitions:
         example: 1
         type: integer
     type: object
-  central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlervote_request.CreateVoteRequest:
+  request.UpdateResourceRequest:
+    description: Solicitud para actualizar un recurso existente
     properties:
-      ip_address:
-        type: string
-      notes:
-        type: string
-      resident_id:
-        type: integer
-      user_agent:
-        type: string
-      voting_option_id:
-        type: integer
-    required:
-    - resident_id
-    - voting_option_id
-    type: object
-  central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlervote_request.CreateVotingGroupRequest:
-    properties:
-      created_by_user_id:
-        type: integer
       description:
-        maxLength: 1000
+        example: Gestión de usuarios del sistema
         type: string
       name:
-        maxLength: 150
-        minLength: 3
-        type: string
-      notes:
-        maxLength: 2000
-        type: string
-      quorum_percentage:
-        type: number
-      requires_quorum:
-        type: boolean
-      voting_end_date:
-        type: string
-      voting_start_date:
+        example: users
         type: string
     required:
     - name
-    - voting_end_date
-    - voting_start_date
     type: object
-  central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlervote_request.CreateVotingOptionRequest:
+  request.UpdateRoom:
     properties:
-      display_order:
-        minimum: 1
+      business_id:
         type: integer
-      option_code:
-        maxLength: 20
-        minLength: 1
+      capacity:
+        type: integer
+      code:
         type: string
-      option_text:
-        maxLength: 100
-        minLength: 1
-        type: string
-    required:
-    - option_code
-    - option_text
-    type: object
-  central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlervote_request.CreateVotingRequest:
-    properties:
-      allow_abstention:
-        type: boolean
       description:
-        maxLength: 2000
         type: string
-      display_order:
-        minimum: 1
-        type: integer
-      is_secret:
+      is_active:
         type: boolean
-      required_percentage:
-        type: number
-      title:
-        maxLength: 200
-        minLength: 3
-        type: string
-      voting_type:
-        enum:
-        - simple
-        - majority
-        - unanimity
+      max_capacity:
+        type: integer
+      min_capacity:
+        type: integer
+      name:
         type: string
     required:
-    - description
-    - title
-    - voting_type
+    - business_id
+    - capacity
+    - code
+    - name
     type: object
-  central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.CommitteeResponse:
+  request.UpdateTable:
+    properties:
+      business_id:
+        type: integer
+      capacity:
+        type: integer
+      number:
+        type: integer
+    type: object
+  response.BusinessDetailResponse:
+    properties:
+      address:
+        type: string
+      business_type:
+        $ref: '#/definitions/response.BusinessTypeDetailResponse'
+      code:
+        type: string
+      created_at:
+        type: string
+      custom_domain:
+        type: string
+      description:
+        type: string
+      enable_delivery:
+        type: boolean
+      enable_pickup:
+        type: boolean
+      enable_reservations:
+        type: boolean
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      logo_url:
+        type: string
+      name:
+        type: string
+      navbar_image_url:
+        type: string
+      primary_color:
+        type: string
+      quaternary_color:
+        type: string
+      secondary_color:
+        type: string
+      tertiary_color:
+        type: string
+      timezone:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  response.BusinessTypeDetailResponse:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      icon:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  response.BusinessTypeInfo:
+    properties:
+      code:
+        type: string
+      description:
+        type: string
+      icon:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  response.ChangePasswordResponse:
+    properties:
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  response.CommitteeResponse:
     properties:
       committee_type_id:
         example: 1
@@ -850,8 +645,17 @@ definitions:
         example: Consejo de Administración
         type: string
     type: object
-  ? central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.HorizontalPropertyDeleteSuccessResponse
-  : properties:
+  response.GetBusinessByIDResponse:
+    properties:
+      data:
+        $ref: '#/definitions/response.BusinessDetailResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  response.HorizontalPropertyDeleteSuccessResponse:
+    properties:
       message:
         example: Propiedad horizontal eliminada exitosamente
         type: string
@@ -859,8 +663,8 @@ definitions:
         example: true
         type: boolean
     type: object
-  ? central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.HorizontalPropertyListResponse
-  : properties:
+  response.HorizontalPropertyListResponse:
+    properties:
       address:
         example: 'Carrera 15 #45-67, Bogotá'
         type: string
@@ -886,10 +690,10 @@ definitions:
         example: 120
         type: integer
     type: object
-  ? central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.HorizontalPropertyListSuccessResponse
-  : properties:
+  response.HorizontalPropertyListSuccessResponse:
+    properties:
       data:
-        $ref: '#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.PaginatedHorizontalPropertyResponse'
+        $ref: '#/definitions/response.PaginatedHorizontalPropertyResponse'
       message:
         example: Lista obtenida exitosamente
         type: string
@@ -897,8 +701,8 @@ definitions:
         example: true
         type: boolean
     type: object
-  ? central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.HorizontalPropertyResponse
-  : properties:
+  response.HorizontalPropertyResponse:
+    properties:
       address:
         example: 'Carrera 15 #45-67, Bogotá'
         type: string
@@ -913,7 +717,7 @@ definitions:
         type: string
       committees:
         items:
-          $ref: '#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.CommitteeResponse'
+          $ref: '#/definitions/response.CommitteeResponse'
         type: array
       created_at:
         example: "2024-01-15T10:30:00Z"
@@ -963,7 +767,7 @@ definitions:
       property_units:
         description: Información detallada (solo en GET by ID)
         items:
-          $ref: '#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.PropertyUnitResponse'
+          $ref: '#/definitions/services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.PropertyUnitResponse'
         type: array
       quaternary_color:
         example: '#fbbf24'
@@ -988,10 +792,10 @@ definitions:
         example: "2024-01-15T10:30:00Z"
         type: string
     type: object
-  ? central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.HorizontalPropertySuccessResponse
-  : properties:
+  response.HorizontalPropertySuccessResponse:
+    properties:
       data:
-        $ref: '#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.HorizontalPropertyResponse'
+        $ref: '#/definitions/response.HorizontalPropertyResponse'
       message:
         example: Operación realizada exitosamente
         type: string
@@ -999,11 +803,45 @@ definitions:
         example: true
         type: boolean
     type: object
-  ? central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.PaginatedHorizontalPropertyResponse
-  : properties:
+  response.LoginBadRequestResponse:
+    properties:
+      details:
+        type: string
+      error:
+        type: string
+    type: object
+  response.LoginErrorResponse:
+    properties:
+      details:
+        type: string
+      error:
+        type: string
+    type: object
+  response.LoginResponse:
+    properties:
+      businesses:
+        items:
+          $ref: '#/definitions/services_auth_internal_infra_primary_controllers_authhandler_response.BusinessInfo'
+        type: array
+      require_password_change:
+        type: boolean
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/response.UserInfo'
+    type: object
+  response.LoginSuccessResponse:
+    properties:
+      data:
+        $ref: '#/definitions/response.LoginResponse'
+      success:
+        type: boolean
+    type: object
+  response.PaginatedHorizontalPropertyResponse:
+    properties:
       data:
         items:
-          $ref: '#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.HorizontalPropertyListResponse'
+          $ref: '#/definitions/response.HorizontalPropertyListResponse'
         type: array
       page:
         example: 1
@@ -1018,8 +856,335 @@ definitions:
         example: 15
         type: integer
     type: object
-  ? central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.PropertyUnitResponse
-  : properties:
+  response.PermissionErrorResponse:
+    properties:
+      error:
+        example: Error al procesar la solicitud
+        type: string
+    type: object
+  response.PermissionListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/response.PermissionResponse'
+        type: array
+      success:
+        example: true
+        type: boolean
+      total:
+        example: 10
+        type: integer
+    type: object
+  response.PermissionMessageResponse:
+    properties:
+      message:
+        example: Permiso creado exitosamente
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  response.PermissionResponse:
+    properties:
+      action:
+        example: create
+        type: string
+      code:
+        example: users:create
+        type: string
+      description:
+        example: Permite crear nuevos usuarios en el sistema
+        type: string
+      id:
+        example: 1
+        type: integer
+      name:
+        example: Crear usuarios
+        type: string
+      resource:
+        example: users
+        type: string
+      scope_code:
+        example: system
+        type: string
+      scope_id:
+        example: 1
+        type: integer
+      scope_name:
+        example: Sistema
+        type: string
+    type: object
+  response.PermissionSuccessResponse:
+    properties:
+      data:
+        $ref: '#/definitions/response.PermissionResponse'
+      success:
+        example: true
+        type: boolean
+    type: object
+  response.ReservationStatus:
+    properties:
+      code:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  response.ReservationStatusListSuccessResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/response.ReservationStatus'
+        type: array
+      success:
+        type: boolean
+    type: object
+  response.ResourcePermissions:
+    properties:
+      actions:
+        items:
+          type: string
+        type: array
+      active:
+        description: Indica si el recurso está activo para el business
+        type: boolean
+      resource:
+        type: string
+    type: object
+  response.RoleErrorResponse:
+    properties:
+      error:
+        example: Error interno del servidor
+        type: string
+    type: object
+  response.RoleListResponse:
+    properties:
+      count:
+        example: 5
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/response.RoleResponse'
+        type: array
+      success:
+        example: true
+        type: boolean
+    type: object
+  response.RoleResponse:
+    properties:
+      code:
+        example: admin
+        type: string
+      description:
+        example: Rol de administrador del sistema
+        type: string
+      id:
+        example: 1
+        type: integer
+      is_system:
+        example: true
+        type: boolean
+      level:
+        example: 2
+        type: integer
+      name:
+        example: Administrador
+        type: string
+      scope_code:
+        example: system
+        type: string
+      scope_id:
+        example: 1
+        type: integer
+      scope_name:
+        example: Sistema
+        type: string
+    type: object
+  response.RoleSuccessResponse:
+    properties:
+      data:
+        $ref: '#/definitions/response.RoleResponse'
+      success:
+        example: true
+        type: boolean
+    type: object
+  response.UserErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  response.UserInfo:
+    properties:
+      avatar_url:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      last_login_at:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+    type: object
+  response.UserListResponse:
+    properties:
+      count:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/response.UserResponse'
+        type: array
+      success:
+        type: boolean
+    type: object
+  response.UserMessageResponse:
+    properties:
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  response.UserResponse:
+    properties:
+      avatar_url:
+        type: string
+      businesses:
+        items:
+          $ref: '#/definitions/services_auth_internal_infra_primary_controllers_userhandler_response.BusinessInfo'
+        type: array
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      last_login_at:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      roles:
+        items:
+          $ref: '#/definitions/services_auth_internal_infra_primary_controllers_userhandler_response.RoleInfo'
+        type: array
+      updated_at:
+        type: string
+    type: object
+  response.UserRolesPermissionsResponse:
+    properties:
+      is_super:
+        type: boolean
+      resources:
+        items:
+          $ref: '#/definitions/response.ResourcePermissions'
+        type: array
+      roles:
+        items:
+          $ref: '#/definitions/services_auth_internal_infra_primary_controllers_authhandler_response.RoleInfo'
+        type: array
+    type: object
+  response.UserRolesPermissionsSuccessResponse:
+    properties:
+      data:
+        $ref: '#/definitions/response.UserRolesPermissionsResponse'
+      success:
+        type: boolean
+    type: object
+  response.UserSuccessResponse:
+    properties:
+      data:
+        $ref: '#/definitions/response.UserResponse'
+      success:
+        type: boolean
+    type: object
+  services_auth_internal_infra_primary_controllers_authhandler_response.BusinessInfo:
+    properties:
+      address:
+        type: string
+      business_type:
+        $ref: '#/definitions/response.BusinessTypeInfo'
+      business_type_id:
+        type: integer
+      code:
+        type: string
+      custom_domain:
+        type: string
+      description:
+        type: string
+      enable_delivery:
+        type: boolean
+      enable_pickup:
+        type: boolean
+      enable_reservations:
+        type: boolean
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      logo_url:
+        type: string
+      name:
+        type: string
+      navbar_image_url:
+        type: string
+      primary_color:
+        type: string
+      quaternary_color:
+        type: string
+      secondary_color:
+        type: string
+      tertiary_color:
+        type: string
+      timezone:
+        type: string
+    type: object
+  services_auth_internal_infra_primary_controllers_authhandler_response.RoleInfo:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  services_auth_internal_infra_primary_controllers_userhandler_response.BusinessInfo:
+    properties:
+      business_type_id:
+        type: integer
+      business_type_name:
+        type: string
+      id:
+        type: integer
+      logo_url:
+        type: string
+      name:
+        type: string
+    type: object
+  services_auth_internal_infra_primary_controllers_userhandler_response.RoleInfo:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      is_system:
+        type: boolean
+      level:
+        type: integer
+      name:
+        type: string
+      scope_id:
+        type: integer
+    type: object
+  services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.PropertyUnitResponse:
+    properties:
       area:
         example: 85.5
         type: number
@@ -1051,162 +1216,6 @@ definitions:
         example: apartment
         type: string
     type: object
-  central_reserve_services_reserve_internal_infra_primary_controllers_reservehandler_request.CancelReservation:
-    properties:
-      reason:
-        description: Razón opcional de cancelación
-        type: string
-    type: object
-  central_reserve_services_reserve_internal_infra_primary_controllers_reservehandler_request.Reservation:
-    properties:
-      business_id:
-        type: integer
-      dni:
-        type: string
-      email:
-        type: string
-      end_at:
-        type: string
-      name:
-        type: string
-      number_of_guests:
-        type: integer
-      phone:
-        type: string
-      start_at:
-        type: string
-    required:
-    - email
-    - end_at
-    - name
-    - number_of_guests
-    - phone
-    - start_at
-    type: object
-  central_reserve_services_reserve_internal_infra_primary_controllers_reservehandler_request.UpdateReservation:
-    properties:
-      end_at:
-        type: string
-      number_of_guests:
-        type: integer
-      start_at:
-        type: string
-      status_id:
-        type: integer
-      table_id:
-        type: integer
-    type: object
-  central_reserve_services_reserve_internal_infra_primary_controllers_reservehandler_response.ReservationStatus:
-    properties:
-      code:
-        type: string
-      id:
-        type: integer
-      name:
-        type: string
-    type: object
-  central_reserve_services_reserve_internal_infra_primary_controllers_reservehandler_response.ReservationStatusListSuccessResponse:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/central_reserve_services_reserve_internal_infra_primary_controllers_reservehandler_response.ReservationStatus'
-        type: array
-      success:
-        type: boolean
-    type: object
-  central_reserve_services_rooms_internal_infra_primary_controllers_roomhandler_request.Room:
-    properties:
-      business_id:
-        type: integer
-      capacity:
-        type: integer
-      code:
-        type: string
-      description:
-        type: string
-      is_active:
-        type: boolean
-      max_capacity:
-        type: integer
-      min_capacity:
-        type: integer
-      name:
-        type: string
-    required:
-    - business_id
-    - capacity
-    - code
-    - name
-    type: object
-  central_reserve_services_rooms_internal_infra_primary_controllers_roomhandler_request.UpdateRoom:
-    properties:
-      business_id:
-        type: integer
-      capacity:
-        type: integer
-      code:
-        type: string
-      description:
-        type: string
-      is_active:
-        type: boolean
-      max_capacity:
-        type: integer
-      min_capacity:
-        type: integer
-      name:
-        type: string
-    required:
-    - business_id
-    - capacity
-    - code
-    - name
-    type: object
-  central_reserve_services_tables_internal_infra_primary_controllers_tablehandler_request.Table:
-    properties:
-      business_id:
-        type: integer
-      capacity:
-        type: integer
-      number:
-        type: integer
-    required:
-    - business_id
-    - capacity
-    - number
-    type: object
-  central_reserve_services_tables_internal_infra_primary_controllers_tablehandler_request.UpdateTable:
-    properties:
-      business_id:
-        type: integer
-      capacity:
-        type: integer
-      number:
-        type: integer
-    type: object
-  services_horizontalproperty_internal_infra_primary_handlers_handlervote.GeneratePublicVotingURLRequest:
-    properties:
-      duration_hours:
-        description: Duración del token en horas
-        example: 24
-        type: integer
-      frontend_url:
-        description: URL base del frontend
-        example: https://miapp.com/vote
-        type: string
-    type: object
-  services_horizontalproperty_internal_infra_primary_handlers_handlervote.ValidateResidentRequest:
-    properties:
-      dni:
-        example: "123456789"
-        type: string
-      property_unit_id:
-        example: 1
-        type: integer
-    required:
-    - dni
-    - property_unit_id
-    type: object
 host: localhost:3050
 info:
   contact:
@@ -1231,30 +1240,30 @@ paths:
         name: password
         required: true
         schema:
-          $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_request.ChangePasswordRequest'
+          $ref: '#/definitions/request.ChangePasswordRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Contraseña cambiada exitosamente
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.ChangePasswordResponse'
+            $ref: '#/definitions/response.ChangePasswordResponse'
         "400":
           description: Datos inválidos
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginErrorResponse'
+            $ref: '#/definitions/response.LoginErrorResponse'
         "401":
           description: Token de acceso requerido
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginErrorResponse'
+            $ref: '#/definitions/response.LoginErrorResponse'
         "403":
           description: Contraseña actual incorrecta
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginErrorResponse'
+            $ref: '#/definitions/response.LoginErrorResponse'
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginErrorResponse'
+            $ref: '#/definitions/response.LoginErrorResponse'
       security:
       - BearerAuth: []
       summary: Cambiar contraseña
@@ -1272,30 +1281,30 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_request.LoginRequest'
+          $ref: '#/definitions/request.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Login exitoso
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginSuccessResponse'
+            $ref: '#/definitions/response.LoginSuccessResponse'
         "400":
           description: Datos de entrada inválidos
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginBadRequestResponse'
+            $ref: '#/definitions/response.LoginBadRequestResponse'
         "401":
           description: Credenciales inválidas
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginErrorResponse'
+            $ref: '#/definitions/response.LoginErrorResponse'
         "403":
           description: Usuario inactivo
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginErrorResponse'
+            $ref: '#/definitions/response.LoginErrorResponse'
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginErrorResponse'
+            $ref: '#/definitions/response.LoginErrorResponse'
       summary: Autenticar usuario
       tags:
       - Auth
@@ -1317,23 +1326,23 @@ paths:
         "200":
           description: Roles y permisos obtenidos exitosamente
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.UserRolesPermissionsSuccessResponse'
+            $ref: '#/definitions/response.UserRolesPermissionsSuccessResponse'
         "400":
           description: Business ID requerido o inválido
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginErrorResponse'
+            $ref: '#/definitions/response.LoginErrorResponse'
         "401":
           description: Token de acceso requerido
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginErrorResponse'
+            $ref: '#/definitions/response.LoginErrorResponse'
         "404":
           description: Usuario no encontrado
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginErrorResponse'
+            $ref: '#/definitions/response.LoginErrorResponse'
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_authhandler_response.LoginErrorResponse'
+            $ref: '#/definitions/response.LoginErrorResponse'
       security:
       - BearerAuth: []
       summary: Obtener roles y permisos del usuario
@@ -1616,7 +1625,7 @@ paths:
         name: businessType
         required: true
         schema:
-          $ref: '#/definitions/central_reserve_services_business_internal_infra_primary_controllers_businesstypehandler_request.BusinessTypeRequest'
+          $ref: '#/definitions/request.BusinessTypeRequest'
       produces:
       - application/json
       responses:
@@ -1737,7 +1746,7 @@ paths:
         name: businessType
         required: true
         schema:
-          $ref: '#/definitions/central_reserve_services_business_internal_infra_primary_controllers_businesstypehandler_request.BusinessTypeRequest'
+          $ref: '#/definitions/request.BusinessTypeRequest'
       produces:
       - application/json
       responses:
@@ -1951,7 +1960,7 @@ paths:
         "200":
           description: Negocio obtenido exitosamente
           schema:
-            $ref: '#/definitions/central_reserve_services_business_internal_infra_primary_controllers_businesshandler_response.GetBusinessByIDResponse'
+            $ref: '#/definitions/response.GetBusinessByIDResponse'
         "400":
           description: Solicitud inválida
           schema:
@@ -2104,7 +2113,7 @@ paths:
         name: client
         required: true
         schema:
-          $ref: '#/definitions/central_reserve_services_customer_internal_infra_primary_handlers_clienthandler_request.Client'
+          $ref: '#/definitions/request.Client'
       produces:
       - application/json
       responses:
@@ -2237,7 +2246,7 @@ paths:
         name: client
         required: true
         schema:
-          $ref: '#/definitions/central_reserve_services_customer_internal_infra_primary_handlers_clienthandler_request.UpdateClient'
+          $ref: '#/definitions/request.UpdateClient'
       produces:
       - application/json
       responses:
@@ -2324,7 +2333,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.HorizontalPropertyListSuccessResponse'
+            $ref: '#/definitions/response.HorizontalPropertyListSuccessResponse'
         "400":
           description: Bad Request
           schema:
@@ -2479,7 +2488,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.HorizontalPropertySuccessResponse'
+            $ref: '#/definitions/response.HorizontalPropertySuccessResponse'
         "400":
           description: Bad Request
           schema:
@@ -2515,7 +2524,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.HorizontalPropertyDeleteSuccessResponse'
+            $ref: '#/definitions/response.HorizontalPropertyDeleteSuccessResponse'
         "400":
           description: Bad Request
           schema:
@@ -2554,7 +2563,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.HorizontalPropertySuccessResponse'
+            $ref: '#/definitions/response.HorizontalPropertySuccessResponse'
         "400":
           description: Bad Request
           schema:
@@ -2669,7 +2678,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.HorizontalPropertySuccessResponse'
+            $ref: '#/definitions/response.HorizontalPropertySuccessResponse'
         "400":
           description: Bad Request
           schema:
@@ -2769,7 +2778,7 @@ paths:
         name: unit
         required: true
         schema:
-          $ref: '#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlerpropertyunit_request.CreatePropertyUnitRequest'
+          $ref: '#/definitions/request.CreatePropertyUnitRequest'
       produces:
       - application/json
       responses:
@@ -2885,7 +2894,7 @@ paths:
         name: unit
         required: true
         schema:
-          $ref: '#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlerpropertyunit_request.UpdatePropertyUnitRequest'
+          $ref: '#/definitions/request.UpdatePropertyUnitRequest'
       produces:
       - application/json
       responses:
@@ -2994,7 +3003,7 @@ paths:
         name: resident
         required: true
         schema:
-          $ref: '#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlerresident_request.CreateResidentRequest'
+          $ref: '#/definitions/request.CreateResidentRequest'
       produces:
       - application/json
       responses:
@@ -3110,7 +3119,7 @@ paths:
         name: resident
         required: true
         schema:
-          $ref: '#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlerresident_request.UpdateResidentRequest'
+          $ref: '#/definitions/request.UpdateResidentRequest'
       produces:
       - application/json
       responses:
@@ -3185,7 +3194,7 @@ paths:
         name: voting_group
         required: true
         schema:
-          $ref: '#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlervote_request.CreateVotingGroupRequest'
+          $ref: '#/definitions/request.CreateVotingGroupRequest'
       produces:
       - application/json
       responses:
@@ -3266,7 +3275,7 @@ paths:
         name: voting_group
         required: true
         schema:
-          $ref: '#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlervote_request.CreateVotingGroupRequest'
+          $ref: '#/definitions/request.CreateVotingGroupRequest'
       produces:
       - application/json
       responses:
@@ -3347,7 +3356,7 @@ paths:
         name: voting
         required: true
         schema:
-          $ref: '#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlervote_request.CreateVotingRequest'
+          $ref: '#/definitions/request.CreateVotingRequest'
       produces:
       - application/json
       responses:
@@ -3438,7 +3447,7 @@ paths:
         name: voting
         required: true
         schema:
-          $ref: '#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlervote_request.CreateVotingRequest'
+          $ref: '#/definitions/request.CreateVotingRequest'
       produces:
       - application/json
       responses:
@@ -3467,8 +3476,9 @@ paths:
     post:
       consumes:
       - application/json
-      description: Genera una URL con token especial para compartir vía QR y permitir
-        votación pública
+      description: 'Genera una URL con token especial para compartir vía QR y permitir
+        votación pública. La URL se construye usando: 1) frontend_url del request,
+        o 2) URL_BASE_SWAGGER + /public/vote'
       parameters:
       - description: ID de la propiedad horizontal
         in: path
@@ -3490,7 +3500,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/services_horizontalproperty_internal_infra_primary_handlers_handlervote.GeneratePublicVotingURLRequest'
+          $ref: '#/definitions/handlervote.GeneratePublicVotingURLRequest'
       produces:
       - application/json
       responses:
@@ -3577,7 +3587,7 @@ paths:
         name: option
         required: true
         schema:
-          $ref: '#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlervote_request.CreateVotingOptionRequest'
+          $ref: '#/definitions/request.CreateVotingOptionRequest'
       produces:
       - application/json
       responses:
@@ -3756,7 +3766,7 @@ paths:
         name: vote
         required: true
         schema:
-          $ref: '#/definitions/central_reserve_services_horizontalproperty_internal_infra_primary_handlers_handlervote_request.CreateVoteRequest'
+          $ref: '#/definitions/request.CreateVoteRequest'
       produces:
       - application/json
       responses:
@@ -3788,15 +3798,15 @@ paths:
         "200":
           description: Lista de permisos obtenida exitosamente
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionListResponse'
+            $ref: '#/definitions/response.PermissionListResponse'
         "401":
           description: Token de acceso requerido
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse'
+            $ref: '#/definitions/response.PermissionErrorResponse'
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse'
+            $ref: '#/definitions/response.PermissionErrorResponse'
       security:
       - BearerAuth: []
       summary: Obtener todos los permisos
@@ -3812,30 +3822,30 @@ paths:
         name: permission
         required: true
         schema:
-          $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_request.CreatePermissionRequest'
+          $ref: '#/definitions/request.CreatePermissionRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Permiso creado exitosamente
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionMessageResponse'
+            $ref: '#/definitions/response.PermissionMessageResponse'
         "400":
           description: Datos de entrada inválidos
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse'
+            $ref: '#/definitions/response.PermissionErrorResponse'
         "401":
           description: Token de acceso requerido
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse'
+            $ref: '#/definitions/response.PermissionErrorResponse'
         "409":
           description: Permiso con código duplicado
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse'
+            $ref: '#/definitions/response.PermissionErrorResponse'
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse'
+            $ref: '#/definitions/response.PermissionErrorResponse'
       security:
       - BearerAuth: []
       summary: Crear nuevo permiso
@@ -3859,23 +3869,23 @@ paths:
         "200":
           description: Permiso eliminado exitosamente
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionMessageResponse'
+            $ref: '#/definitions/response.PermissionMessageResponse'
         "400":
           description: ID inválido
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse'
+            $ref: '#/definitions/response.PermissionErrorResponse'
         "401":
           description: Token de acceso requerido
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse'
+            $ref: '#/definitions/response.PermissionErrorResponse'
         "404":
           description: Permiso no encontrado
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse'
+            $ref: '#/definitions/response.PermissionErrorResponse'
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse'
+            $ref: '#/definitions/response.PermissionErrorResponse'
       security:
       - BearerAuth: []
       summary: Eliminar permiso
@@ -3898,23 +3908,23 @@ paths:
         "200":
           description: Permiso obtenido exitosamente
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionSuccessResponse'
+            $ref: '#/definitions/response.PermissionSuccessResponse'
         "400":
           description: ID inválido
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse'
+            $ref: '#/definitions/response.PermissionErrorResponse'
         "401":
           description: Token de acceso requerido
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse'
+            $ref: '#/definitions/response.PermissionErrorResponse'
         "404":
           description: Permiso no encontrado
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse'
+            $ref: '#/definitions/response.PermissionErrorResponse'
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse'
+            $ref: '#/definitions/response.PermissionErrorResponse'
       security:
       - BearerAuth: []
       summary: Obtener permiso por ID
@@ -3936,34 +3946,34 @@ paths:
         name: permission
         required: true
         schema:
-          $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_request.UpdatePermissionRequest'
+          $ref: '#/definitions/request.UpdatePermissionRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Permiso actualizado exitosamente
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionMessageResponse'
+            $ref: '#/definitions/response.PermissionMessageResponse'
         "400":
           description: Datos de entrada inválidos
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse'
+            $ref: '#/definitions/response.PermissionErrorResponse'
         "401":
           description: Token de acceso requerido
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse'
+            $ref: '#/definitions/response.PermissionErrorResponse'
         "404":
           description: Permiso no encontrado
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse'
+            $ref: '#/definitions/response.PermissionErrorResponse'
         "409":
           description: Permiso con código duplicado
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse'
+            $ref: '#/definitions/response.PermissionErrorResponse'
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse'
+            $ref: '#/definitions/response.PermissionErrorResponse'
       security:
       - BearerAuth: []
       summary: Actualizar permiso
@@ -3987,19 +3997,19 @@ paths:
         "200":
           description: Permisos por recurso obtenidos exitosamente
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionListResponse'
+            $ref: '#/definitions/response.PermissionListResponse'
         "400":
           description: Recurso inválido
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse'
+            $ref: '#/definitions/response.PermissionErrorResponse'
         "401":
           description: Token de acceso requerido
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse'
+            $ref: '#/definitions/response.PermissionErrorResponse'
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse'
+            $ref: '#/definitions/response.PermissionErrorResponse'
       security:
       - BearerAuth: []
       summary: Obtener permisos por recurso
@@ -4023,42 +4033,101 @@ paths:
         "200":
           description: Permisos por scope obtenidos exitosamente
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionListResponse'
+            $ref: '#/definitions/response.PermissionListResponse'
         "400":
           description: Scope ID inválido
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse'
+            $ref: '#/definitions/response.PermissionErrorResponse'
         "401":
           description: Token de acceso requerido
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse'
+            $ref: '#/definitions/response.PermissionErrorResponse'
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionErrorResponse'
+            $ref: '#/definitions/response.PermissionErrorResponse'
       security:
       - BearerAuth: []
       summary: Obtener permisos por scope
       tags:
       - Permissions
-  /public/horizontal-properties/{hp_id}/validate-resident:
+  /public/property-units:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene las unidades de propiedad usando el token de votación pública.
+        El HP ID viene en el token. Permite filtrar por número de unidad.
+      parameters:
+      - description: Token de votación pública (Bearer token)
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: 'Filtrar por número de unidad (ej: 101, Apto 202)'
+        in: query
+        name: number
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Obtener unidades de propiedad (público)
+      tags:
+      - Votaciones Públicas
+  /public/units-with-residents:
+    get:
+      consumes:
+      - application/json
+      description: Lista todas las unidades activas con su residente principal. Para
+        cruzar con votos en el frontend.
+      parameters:
+      - description: Token de autenticación de votación (Bearer token)
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Listar unidades con residentes (público)
+      tags:
+      - Votaciones Públicas
+  /public/validate-resident:
     post:
       consumes:
       - application/json
       description: Valida que un residente pertenezca a una unidad usando su DNI y
-        retorna token temporal para votar
+        retorna token temporal para votar. TODA la información viene del token.
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
-        type: integer
       - description: Datos de validación
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/services_horizontalproperty_internal_infra_primary_handlers_handlervote.ValidateResidentRequest'
+          $ref: '#/definitions/handlervote.ValidateResidentRequest'
       - description: Token de votación pública (Bearer token)
         in: header
         name: Authorization
@@ -4088,6 +4157,208 @@ paths:
           schema:
             type: object
       summary: Validar residente para votación pública
+      tags:
+      - Votaciones Públicas
+  /public/vote:
+    post:
+      consumes:
+      - application/json
+      description: Permite a un residente validado emitir su voto. Toda la información
+        viene del token de autenticación.
+      parameters:
+      - description: Token de autenticación de votación (Bearer token)
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Datos del voto
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlervote.CreatePublicVoteRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Emitir voto (público)
+      tags:
+      - Votaciones Públicas
+  /public/votes:
+    get:
+      consumes:
+      - application/json
+      description: Lista todos los votos emitidos. El frontend cruza con opciones
+        y unidades.
+      parameters:
+      - description: Token de autenticación de votación (Bearer token)
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Listar votos de la votación (público)
+      tags:
+      - Votaciones Públicas
+  /public/voting-context:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene el nombre de la votación y la propiedad horizontal usando
+        el token público. Se muestra antes de la validación del residente.
+      parameters:
+      - description: Token de votación pública (Bearer token)
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Obtener contexto de votación pública
+      tags:
+      - Votaciones Públicas
+  /public/voting-info:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene toda la información de la votación usando solo el VOTING_AUTH_TOKEN.
+        Incluye título, descripción, opciones, etc.
+      parameters:
+      - description: Token de autenticación de votación (Bearer token)
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Obtener información de votación (pública)
+      tags:
+      - Votaciones Públicas
+  /public/voting-stats:
+    get:
+      consumes:
+      - application/json
+      description: 'Obtiene las estadísticas completas de la votación: resultados
+        por opción, total de votos, porcentajes. Toda la información viene del token.'
+      parameters:
+      - description: Token de autenticación de votación (Bearer token)
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Obtener estadísticas de votación (público)
+      tags:
+      - Votaciones Públicas
+  /public/voting-stream:
+    get:
+      consumes:
+      - application/json
+      description: Establece una conexión SSE para recibir votos en tiempo real. Toda
+        la información viene del token.
+      parameters:
+      - description: Token de autenticación de votación (Bearer token)
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - text/event-stream
+      responses:
+        "200":
+          description: Event stream
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Stream público de resultados de votación en tiempo real (SSE)
       tags:
       - Votaciones Públicas
   /reserves:
@@ -4155,7 +4426,7 @@ paths:
         name: reservation
         required: true
         schema:
-          $ref: '#/definitions/central_reserve_services_reserve_internal_infra_primary_controllers_reservehandler_request.Reservation'
+          $ref: '#/definitions/request.Reservation'
       produces:
       - application/json
       responses:
@@ -4243,7 +4514,7 @@ paths:
         name: update
         required: true
         schema:
-          $ref: '#/definitions/central_reserve_services_reserve_internal_infra_primary_controllers_reservehandler_request.UpdateReservation'
+          $ref: '#/definitions/request.UpdateReservation'
       produces:
       - application/json
       responses:
@@ -4292,7 +4563,7 @@ paths:
         in: body
         name: cancel
         schema:
-          $ref: '#/definitions/central_reserve_services_reserve_internal_infra_primary_controllers_reservehandler_request.CancelReservation'
+          $ref: '#/definitions/request.CancelReservation'
       produces:
       - application/json
       responses:
@@ -4335,7 +4606,7 @@ paths:
         "200":
           description: Estados de reserva obtenidos correctamente
           schema:
-            $ref: '#/definitions/central_reserve_services_reserve_internal_infra_primary_controllers_reservehandler_response.ReservationStatusListSuccessResponse'
+            $ref: '#/definitions/response.ReservationStatusListSuccessResponse'
         "500":
           description: Error interno del servidor
           schema:
@@ -4427,7 +4698,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_resources_request.CreateResourceRequest'
+          $ref: '#/definitions/request.CreateResourceRequest'
       produces:
       - application/json
       responses:
@@ -4566,7 +4837,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_resources_request.UpdateResourceRequest'
+          $ref: '#/definitions/request.UpdateResourceRequest'
       produces:
       - application/json
       responses:
@@ -4616,15 +4887,15 @@ paths:
         "200":
           description: Roles obtenidos exitosamente
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleListResponse'
+            $ref: '#/definitions/response.RoleListResponse'
         "401":
           description: Token de acceso requerido
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleErrorResponse'
+            $ref: '#/definitions/response.RoleErrorResponse'
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleErrorResponse'
+            $ref: '#/definitions/response.RoleErrorResponse'
       security:
       - BearerAuth: []
       summary: Obtener todos los roles
@@ -4648,23 +4919,23 @@ paths:
         "200":
           description: Rol obtenido exitosamente
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleSuccessResponse'
+            $ref: '#/definitions/response.RoleSuccessResponse'
         "400":
           description: ID inválido
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleErrorResponse'
+            $ref: '#/definitions/response.RoleErrorResponse'
         "401":
           description: Token de acceso requerido
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleErrorResponse'
+            $ref: '#/definitions/response.RoleErrorResponse'
         "404":
           description: Rol no encontrado
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleErrorResponse'
+            $ref: '#/definitions/response.RoleErrorResponse'
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleErrorResponse'
+            $ref: '#/definitions/response.RoleErrorResponse'
       security:
       - BearerAuth: []
       summary: Obtener rol por ID
@@ -4690,19 +4961,19 @@ paths:
         "200":
           description: Roles obtenidos exitosamente
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleListResponse'
+            $ref: '#/definitions/response.RoleListResponse'
         "400":
           description: Nivel inválido
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleErrorResponse'
+            $ref: '#/definitions/response.RoleErrorResponse'
         "401":
           description: Token de acceso requerido
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleErrorResponse'
+            $ref: '#/definitions/response.RoleErrorResponse'
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleErrorResponse'
+            $ref: '#/definitions/response.RoleErrorResponse'
       security:
       - BearerAuth: []
       summary: Obtener roles por nivel
@@ -4726,19 +4997,19 @@ paths:
         "200":
           description: Roles por scope obtenidos exitosamente
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleListResponse'
+            $ref: '#/definitions/response.RoleListResponse'
         "400":
           description: Scope ID inválido
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleErrorResponse'
+            $ref: '#/definitions/response.RoleErrorResponse'
         "401":
           description: Token de acceso requerido
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleErrorResponse'
+            $ref: '#/definitions/response.RoleErrorResponse'
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleErrorResponse'
+            $ref: '#/definitions/response.RoleErrorResponse'
       security:
       - BearerAuth: []
       summary: Obtener roles por scope
@@ -4755,15 +5026,15 @@ paths:
         "200":
           description: Roles del sistema obtenidos exitosamente
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleListResponse'
+            $ref: '#/definitions/response.RoleListResponse'
         "401":
           description: Token de acceso requerido
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleErrorResponse'
+            $ref: '#/definitions/response.RoleErrorResponse'
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_rolehandler_response.RoleErrorResponse'
+            $ref: '#/definitions/response.RoleErrorResponse'
       security:
       - BearerAuth: []
       summary: Obtener roles del sistema
@@ -4807,7 +5078,7 @@ paths:
         name: room
         required: true
         schema:
-          $ref: '#/definitions/central_reserve_services_rooms_internal_infra_primary_controllers_roomhandler_request.Room'
+          $ref: '#/definitions/request.Room'
       produces:
       - application/json
       responses:
@@ -4943,7 +5214,7 @@ paths:
         name: room
         required: true
         schema:
-          $ref: '#/definitions/central_reserve_services_rooms_internal_infra_primary_controllers_roomhandler_request.UpdateRoom'
+          $ref: '#/definitions/request.UpdateRoom'
       produces:
       - application/json
       responses:
@@ -5020,7 +5291,7 @@ paths:
         name: table
         required: true
         schema:
-          $ref: '#/definitions/central_reserve_services_tables_internal_infra_primary_controllers_tablehandler_request.Table'
+          $ref: '#/definitions/request.Table'
       produces:
       - application/json
       responses:
@@ -5157,7 +5428,7 @@ paths:
         name: table
         required: true
         schema:
-          $ref: '#/definitions/central_reserve_services_tables_internal_infra_primary_controllers_tablehandler_request.UpdateTable'
+          $ref: '#/definitions/request.UpdateTable'
       produces:
       - application/json
       responses:
@@ -5271,19 +5542,19 @@ paths:
         "200":
           description: Usuarios obtenidos exitosamente
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserListResponse'
+            $ref: '#/definitions/response.UserListResponse'
         "400":
           description: Parámetros de filtro inválidos
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse'
+            $ref: '#/definitions/response.UserErrorResponse'
         "401":
           description: Token de acceso requerido
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse'
+            $ref: '#/definitions/response.UserErrorResponse'
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse'
+            $ref: '#/definitions/response.UserErrorResponse'
       security:
       - BearerAuth: []
       summary: Obtener usuarios filtrados y paginados
@@ -5335,23 +5606,23 @@ paths:
         "201":
           description: Usuario creado exitosamente
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserMessageResponse'
+            $ref: '#/definitions/response.UserMessageResponse'
         "400":
           description: Datos inválidos
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse'
+            $ref: '#/definitions/response.UserErrorResponse'
         "401":
           description: Token de acceso requerido
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse'
+            $ref: '#/definitions/response.UserErrorResponse'
         "409":
           description: Email ya existe
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse'
+            $ref: '#/definitions/response.UserErrorResponse'
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse'
+            $ref: '#/definitions/response.UserErrorResponse'
       security:
       - BearerAuth: []
       summary: Crear usuario
@@ -5375,23 +5646,23 @@ paths:
         "200":
           description: Usuario eliminado exitosamente
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserMessageResponse'
+            $ref: '#/definitions/response.UserMessageResponse'
         "400":
           description: ID inválido
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse'
+            $ref: '#/definitions/response.UserErrorResponse'
         "401":
           description: Token de acceso requerido
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse'
+            $ref: '#/definitions/response.UserErrorResponse'
         "404":
           description: Usuario no encontrado
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse'
+            $ref: '#/definitions/response.UserErrorResponse'
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse'
+            $ref: '#/definitions/response.UserErrorResponse'
       security:
       - BearerAuth: []
       summary: Eliminar usuario
@@ -5414,23 +5685,23 @@ paths:
         "200":
           description: Usuario obtenido exitosamente
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserSuccessResponse'
+            $ref: '#/definitions/response.UserSuccessResponse'
         "400":
           description: ID inválido
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse'
+            $ref: '#/definitions/response.UserErrorResponse'
         "401":
           description: Token de acceso requerido
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse'
+            $ref: '#/definitions/response.UserErrorResponse'
         "404":
           description: Usuario no encontrado
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse'
+            $ref: '#/definitions/response.UserErrorResponse'
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse'
+            $ref: '#/definitions/response.UserErrorResponse'
       security:
       - BearerAuth: []
       summary: Obtener usuario por ID
@@ -5490,27 +5761,27 @@ paths:
         "200":
           description: Usuario actualizado exitosamente
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserSuccessResponse'
+            $ref: '#/definitions/response.UserSuccessResponse'
         "400":
           description: Datos inválidos
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse'
+            $ref: '#/definitions/response.UserErrorResponse'
         "401":
           description: Token de acceso requerido
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse'
+            $ref: '#/definitions/response.UserErrorResponse'
         "404":
           description: Usuario no encontrado
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse'
+            $ref: '#/definitions/response.UserErrorResponse'
         "409":
           description: Email ya existe
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse'
+            $ref: '#/definitions/response.UserErrorResponse'
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/central_reserve_services_auth_internal_infra_primary_controllers_userhandler_response.UserErrorResponse'
+            $ref: '#/definitions/response.UserErrorResponse'
       security:
       - BearerAuth: []
       summary: Actualizar usuario

@@ -78,14 +78,17 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # Variables de entorno
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV PORT=3000
+ENV PORT=80
 ENV HOSTNAME="0.0.0.0"
+
+# IMPORTANTE: API_BASE_URL debe pasarse en runtime (no en build time)
+# Se configura en docker-compose.yml o docker run -e API_BASE_URL=...
 
 # Cambiar a usuario no-root
 USER nextjs
 
 # Exponer puerto
-EXPOSE 3000
+EXPOSE 80
 
 # Comando de inicio
 CMD ["node", "server.js"]

@@ -50,6 +50,7 @@ func (h *VotingHandler) RegisterRoutes(router *gin.RouterGroup) {
 
 		// Con VOTING_AUTH_TOKEN (después de validar residente)
 		publicRoutes.GET("/voting-info", h.GetPublicVotingInfo)
+		publicRoutes.POST("/vote", h.CreatePublicVote) // ⬅️ Emitir voto público
 		publicRoutes.GET("/units-with-residents", h.GetPublicUnitsWithResidents)
 		publicRoutes.GET("/votes", h.GetPublicVotes)
 		publicRoutes.GET("/voting-stream", h.PublicSSEVotingResults)
