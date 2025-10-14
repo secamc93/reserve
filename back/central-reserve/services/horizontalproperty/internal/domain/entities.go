@@ -54,19 +54,20 @@ type HorizontalProperty struct {
 
 // PropertyUnit - Unidad de propiedad (apartamento/casa)
 type PropertyUnit struct {
-	ID          uint
-	BusinessID  uint
-	Number      string
-	Floor       *int
-	Block       string
-	UnitType    string
-	Area        *float64
-	Bedrooms    *int
-	Bathrooms   *int
-	Description string
-	IsActive    bool
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID                       uint
+	BusinessID               uint
+	Number                   string
+	Floor                    *int
+	Block                    string
+	UnitType                 string
+	Area                     *float64
+	Bedrooms                 *int
+	Bathrooms                *int
+	ParticipationCoefficient *float64 // Coeficiente de participación para votaciones
+	Description              string
+	IsActive                 bool
+	CreatedAt                time.Time
+	UpdatedAt                time.Time
 }
 
 // Resident - Residente de una propiedad horizontal

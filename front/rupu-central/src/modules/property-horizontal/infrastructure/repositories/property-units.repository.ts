@@ -36,6 +36,7 @@ export class PropertyUnitsRepository implements IPropertyUnitsRepository {
       area: unit.area,
       bedrooms: unit.bedrooms,
       bathrooms: unit.bathrooms,
+      coefficient: unit.participation_coefficient,
       description: unit.description,
       isActive: unit.is_active,
       createdAt: unit.created_at,

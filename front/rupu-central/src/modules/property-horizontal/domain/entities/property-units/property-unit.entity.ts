@@ -13,6 +13,7 @@ export interface PropertyUnit {
   area?: number;
   bedrooms?: number;
   bathrooms?: number;
+  coefficient?: number;
   description?: string;
   isActive: boolean;
   createdAt: string;
@@ -35,6 +36,7 @@ export interface CreatePropertyUnitDTO {
   area?: number;
   bedrooms?: number;
   bathrooms?: number;
+  coefficient?: number;
   description?: string;
 }
 
@@ -46,6 +48,7 @@ export interface UpdatePropertyUnitDTO {
   area?: number;
   bedrooms?: number;
   bathrooms?: number;
+  coefficient?: number;
   description?: string;
   isActive?: boolean;
 }

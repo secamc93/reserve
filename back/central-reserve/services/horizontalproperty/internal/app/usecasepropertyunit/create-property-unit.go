@@ -24,16 +24,17 @@ func (uc *propertyUnitUseCase) CreatePropertyUnit(ctx context.Context, dto domai
 
 	// Crear entidad
 	entity := &domain.PropertyUnit{
-		BusinessID:  dto.BusinessID,
-		Number:      dto.Number,
-		Floor:       dto.Floor,
-		Block:       dto.Block,
-		UnitType:    dto.UnitType,
-		Area:        dto.Area,
-		Bedrooms:    dto.Bedrooms,
-		Bathrooms:   dto.Bathrooms,
-		Description: dto.Description,
-		IsActive:    true,
+		BusinessID:               dto.BusinessID,
+		Number:                   dto.Number,
+		Floor:                    dto.Floor,
+		Block:                    dto.Block,
+		UnitType:                 dto.UnitType,
+		Area:                     dto.Area,
+		Bedrooms:                 dto.Bedrooms,
+		Bathrooms:                dto.Bathrooms,
+		ParticipationCoefficient: dto.ParticipationCoefficient,
+		Description:              dto.Description,
+		IsActive:                 true,
 	}
 
 	// Guardar en repositorio
@@ -45,18 +46,19 @@ func (uc *propertyUnitUseCase) CreatePropertyUnit(ctx context.Context, dto domai
 
 	// Convertir a DTO de respuesta
 	return &domain.PropertyUnitDetailDTO{
-		ID:          created.ID,
-		BusinessID:  created.BusinessID,
-		Number:      created.Number,
-		Floor:       created.Floor,
-		Block:       created.Block,
-		UnitType:    created.UnitType,
-		Area:        created.Area,
-		Bedrooms:    created.Bedrooms,
-		Bathrooms:   created.Bathrooms,
-		Description: created.Description,
-		IsActive:    created.IsActive,
-		CreatedAt:   created.CreatedAt,
-		UpdatedAt:   created.UpdatedAt,
+		ID:                       created.ID,
+		BusinessID:               created.BusinessID,
+		Number:                   created.Number,
+		Floor:                    created.Floor,
+		Block:                    created.Block,
+		UnitType:                 created.UnitType,
+		Area:                     created.Area,
+		Bedrooms:                 created.Bedrooms,
+		Bathrooms:                created.Bathrooms,
+		ParticipationCoefficient: created.ParticipationCoefficient,
+		Description:              created.Description,
+		IsActive:                 created.IsActive,
+		CreatedAt:                created.CreatedAt,
+		UpdatedAt:                created.UpdatedAt,
 	}, nil
 }

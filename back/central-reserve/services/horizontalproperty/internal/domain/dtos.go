@@ -300,15 +300,16 @@ type VotingResultDTO struct {
 
 // VotingDetailByUnitDTO - DTO para detalle de votación por unidad
 type VotingDetailByUnitDTO struct {
-	PropertyUnitID     uint
-	PropertyUnitNumber string
-	ResidentID         *uint
-	ResidentName       *string
-	HasVoted           bool
-	VotingOptionID     *uint
-	OptionText         *string
-	OptionCode         *string
-	VotedAt            *string
+	PropertyUnitID           uint
+	PropertyUnitNumber       string
+	ParticipationCoefficient *float64
+	ResidentID               *uint
+	ResidentName             *string
+	HasVoted                 bool
+	VotingOptionID           *uint
+	OptionText               *string
+	OptionCode               *string
+	VotedAt                  *string
 }
 
 // UnitWithResidentDTO - DTO simple para unidad con su residente principal
@@ -325,58 +326,62 @@ type UnitWithResidentDTO struct {
 
 // CreatePropertyUnitDTO - DTO para crear unidad de propiedad
 type CreatePropertyUnitDTO struct {
-	BusinessID  uint
-	Number      string
-	Floor       *int
-	Block       string
-	UnitType    string
-	Area        *float64
-	Bedrooms    *int
-	Bathrooms   *int
-	Description string
+	BusinessID               uint
+	Number                   string
+	Floor                    *int
+	Block                    string
+	UnitType                 string
+	Area                     *float64
+	Bedrooms                 *int
+	Bathrooms                *int
+	ParticipationCoefficient *float64
+	Description              string
 }
 
 // UpdatePropertyUnitDTO - DTO para actualizar unidad de propiedad
 type UpdatePropertyUnitDTO struct {
-	Number      *string
-	Floor       *int
-	Block       *string
-	UnitType    *string
-	Area        *float64
-	Bedrooms    *int
-	Bathrooms   *int
-	Description *string
-	IsActive    *bool
+	Number                   *string
+	Floor                    *int
+	Block                    *string
+	UnitType                 *string
+	Area                     *float64
+	Bedrooms                 *int
+	Bathrooms                *int
+	ParticipationCoefficient *float64
+	Description              *string
+	IsActive                 *bool
 }
 
 // PropertyUnitDetailDTO - DTO para respuesta detallada de unidad
 type PropertyUnitDetailDTO struct {
-	ID          uint
-	BusinessID  uint
-	Number      string
-	Floor       *int
-	Block       string
-	UnitType    string
-	Area        *float64
-	Bedrooms    *int
-	Bathrooms   *int
-	Description string
-	IsActive    bool
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID                       uint
+	BusinessID               uint
+	Number                   string
+	Floor                    *int
+	Block                    string
+	UnitType                 string
+	Area                     *float64
+	Bedrooms                 *int
+	Bathrooms                *int
+	ParticipationCoefficient *float64
+	Description              string
+	IsActive                 bool
+	CreatedAt                time.Time
+	UpdatedAt                time.Time
 }
 
 // PropertyUnitListDTO - DTO para listado de unidades
 type PropertyUnitListDTO struct {
-	ID        uint
-	Number    string
-	Floor     *int
-	Block     string
-	UnitType  string
-	Area      *float64
-	Bedrooms  *int
-	Bathrooms *int
-	IsActive  bool
+	ID                       uint
+	Number                   string
+	Floor                    *int
+	Block                    string
+	UnitType                 string
+	Area                     *float64
+	Bedrooms                 *int
+	Bathrooms                *int
+	ParticipationCoefficient *float64
+	IsActive                 bool
 }
 
 // PropertyUnitFiltersDTO - DTO para filtros de búsqueda
@@ -400,9 +405,24 @@ type PaginatedPropertyUnitsDTO struct {
 	TotalPages int
 }
 
+// ImportPropertyUnitsResult - Resultado de la importación de unidades
+type ImportPropertyUnitsResult struct {
+	Total   int
+	Created int
+	Skipped int
+	Errors  []string
+}
+
 // ───────────────────────────────────────────
 // RESIDENT DTOs
 // ───────────────────────────────────────────
+
+// ImportResidentsResult - Resultado de la importación de residentes
+type ImportResidentsResult struct {
+	Total   int
+	Created int
+	Errors  []string
+}
 
 // ResidentBasicDTO - DTO básico de residente para validación pública
 type ResidentBasicDTO struct {

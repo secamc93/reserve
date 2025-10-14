@@ -6,7 +6,8 @@ import {
   IHorizontalPropertiesRepository, 
   GetHorizontalPropertiesParams,
   GetHorizontalPropertyByIdParams,
-  CreateHorizontalPropertyParams
+  CreateHorizontalPropertyParams,
+  DeleteHorizontalPropertyParams
 } from '../../domain/ports';
 import { HorizontalProperty, HorizontalPropertiesPaginated } from '../../domain/entities';
 import { env, logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
@@ -193,53 +194,18 @@ export class HorizontalPropertiesRepository implements IHorizontalPropertiesRepo
     const url = `${env.API_BASE_URL}/horizontal-properties`;
     const startTime = Date.now();
 
-    // Crear FormData para enviar archivos
+    // Crear FormData para enviar datos
     const formData = new FormData();
     
-    // Campos requeridos
+    // Solo campos requeridos
     formData.append('name', data.name);
-    formData.append('code', data.code);
     formData.append('address', data.address);
-    formData.append('timezone', data.timezone);
-    formData.append('total_units', data.totalUnits.toString());
-    
-    // Campos opcionales - información básica
-    if (data.description) formData.append('description', data.description);
-    if (data.totalFloors !== undefined) formData.append('total_floors', data.totalFloors.toString());
-    
-    // Amenidades
-    if (data.hasElevator !== undefined) formData.append('has_elevator', data.hasElevator.toString());
-    if (data.hasParking !== undefined) formData.append('has_parking', data.hasParking.toString());
-    if (data.hasPool !== undefined) formData.append('has_pool', data.hasPool.toString());
-    if (data.hasGym !== undefined) formData.append('has_gym', data.hasGym.toString());
-    if (data.hasSocialArea !== undefined) formData.append('has_social_area', data.hasSocialArea.toString());
-    
-    // Archivos
-    if (data.logoFile) formData.append('logo_file', data.logoFile);
-    if (data.navbarImageFile) formData.append('navbar_image_file', data.navbarImageFile);
-    
-    // Personalización
-    if (data.primaryColor) formData.append('primary_color', data.primaryColor);
-    if (data.secondaryColor) formData.append('secondary_color', data.secondaryColor);
-    if (data.tertiaryColor) formData.append('tertiary_color', data.tertiaryColor);
-    if (data.quaternaryColor) formData.append('quaternary_color', data.quaternaryColor);
-    if (data.customDomain) formData.append('custom_domain', data.customDomain);
-    
-    // Creación automática de unidades
-    if (data.createUnits !== undefined) formData.append('create_units', data.createUnits.toString());
-    if (data.unitPrefix) formData.append('unit_prefix', data.unitPrefix);
-    if (data.unitType) formData.append('unit_type', data.unitType);
-    if (data.unitsPerFloor !== undefined) formData.append('units_per_floor', data.unitsPerFloor.toString());
-    if (data.startUnitNumber !== undefined) formData.append('start_unit_number', data.startUnitNumber.toString());
-    
-    // Comités
-    if (data.createRequiredCommittees !== undefined) formData.append('create_required_committees', data.createRequiredCommittees.toString());
 
     logHttpRequest({
       method: 'POST',
       url,
       token,
-      body: `FormData con ${data.logoFile ? 'logo' : 'sin logo'}, ${data.navbarImageFile ? 'navbar image' : 'sin navbar image'}`,
+      body: `FormData con campos básicos: name, address`,
     });
 
     try {
@@ -306,6 +272,54 @@ export class HorizontalPropertiesRepository implements IHorizontalPropertiesRepo
       console.error('Error creando propiedad horizontal:', error);
       throw new Error(
         error instanceof Error ? error.message : 'Error al crear propiedad horizontal en el servidor'
+      );
+    }
+  }
+
+  async deleteHorizontalProperty(params: DeleteHorizontalPropertyParams): Promise<void> {
+    const { token, id } = params;
+    const url = `${env.API_BASE_URL}/horizontal-properties/${id}`;
+    const startTime = Date.now();
+
+    logHttpRequest({
+      method: 'DELETE',
+      url,
+      token,
+    });
+
+    try {
+      const response = await fetch(url, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const duration = Date.now() - startTime;
+      const backendResponse = await response.json();
+
+      if (!response.ok || !backendResponse.success) {
+        logHttpError({
+          status: response.status,
+          statusText: response.statusText,
+          duration,
+          data: backendResponse,
+        });
+        throw new Error(backendResponse.message || `Error eliminando propiedad horizontal: ${response.status}`);
+      }
+
+      logHttpSuccess({
+        status: response.status,
+        statusText: response.statusText,
+        duration,
+        summary: `Propiedad horizontal eliminada`,
+        data: backendResponse,
+      });
+    } catch (error) {
+      console.error('Error eliminando propiedad horizontal:', error);
+      throw new Error(
+        error instanceof Error ? error.message : 'Error al eliminar propiedad horizontal del servidor'
       );
     }
   }

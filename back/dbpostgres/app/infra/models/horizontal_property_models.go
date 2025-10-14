@@ -39,16 +39,17 @@ import (
 // ───────────────────────────────────────────
 type PropertyUnit struct {
 	gorm.Model
-	BusinessID  uint     `gorm:"not null;index;uniqueIndex:idx_business_unit_number,priority:1"`
-	Number      string   `gorm:"size:20;not null;uniqueIndex:idx_business_unit_number,priority:2"` // Número de apartamento/casa
-	Floor       *int     `gorm:"index"`                                                            // Piso (opcional para casas)
-	Block       string   `gorm:"size:10"`                                                          // Bloque/Torre (ej. "A", "B")
-	UnitType    string   `gorm:"size:20;not null;default:'apartment'"`                             // apartment, house, office, etc.
-	Area        *float64 // Área en m²
-	Bedrooms    *int     // Número de habitaciones
-	Bathrooms   *int     // Número de baños
-	Description string   `gorm:"size:500"`
-	IsActive    bool     `gorm:"default:true"`
+	BusinessID               uint     `gorm:"not null;index;uniqueIndex:idx_business_unit_number,priority:1"`
+	Number                   string   `gorm:"size:20;not null;uniqueIndex:idx_business_unit_number,priority:2"` // Número de apartamento/casa
+	Floor                    *int     `gorm:"index"`                                                            // Piso (opcional para casas)
+	Block                    string   `gorm:"size:10"`                                                          // Bloque/Torre (ej. "A", "B")
+	UnitType                 string   `gorm:"size:20;not null;default:'apartment'"`                             // apartment, house, office, etc.
+	Area                     *float64 // Área en m²
+	Bedrooms                 *int     // Número de habitaciones
+	Bathrooms                *int     // Número de baños
+	ParticipationCoefficient *float64 `gorm:"type:decimal(10,6)"` // Coeficiente de participación para votaciones
+	Description              string   `gorm:"size:500"`
+	IsActive                 bool     `gorm:"default:true"`
 
 	// Relaciones
 	Business  Business   `gorm:"foreignKey:BusinessID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`

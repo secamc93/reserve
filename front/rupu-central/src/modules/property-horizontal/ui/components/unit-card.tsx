@@ -15,6 +15,7 @@ export interface ResidentialUnit {
   votedOption?: string; // Texto de la opción votada
   votedOptionId?: number; // ID de la opción votada
   votedOptionColor?: string; // Color de la opción votada (hex)
+  participationCoefficient?: number; // Coeficiente de participación
 }
 
 interface ScaleConfig {
@@ -131,7 +132,12 @@ export function UnitCard({ unit, scale }: UnitCardProps) {
         <p className={`font-semibold text-gray-900 ${currentScale.nameText} mb-1 truncate`} title={unit.resident}>
           {unit.resident}
         </p>
-        <p className={`text-gray-500 ${currentScale.unitText} mb-2`}>Unidad {unit.number}</p>
+        <p className={`text-gray-500 ${currentScale.unitText} mb-1`}>Unidad {unit.number}</p>
+        {unit.participationCoefficient && (
+          <p className={`text-gray-400 ${currentScale.unitText} mb-2`} title="Coeficiente de participación">
+            Coef: {unit.participationCoefficient.toFixed(4)}
+          </p>
+        )}
         <div className="space-y-1">
           <Badge type={colors.badge}>
             ✅ {unit.votedOption}
@@ -152,7 +158,12 @@ export function UnitCard({ unit, scale }: UnitCardProps) {
       <p className={`font-semibold text-gray-900 ${currentScale.nameText} mb-1 truncate`} title={unit.resident}>
         {unit.resident}
       </p>
-      <p className={`text-gray-500 ${currentScale.unitText} mb-2`}>Unidad {unit.number}</p>
+      <p className={`text-gray-500 ${currentScale.unitText} mb-1`}>Unidad {unit.number}</p>
+      {unit.participationCoefficient && (
+        <p className={`text-gray-400 ${currentScale.unitText} mb-2`} title="Coeficiente de participación">
+          Coef: {unit.participationCoefficient.toFixed(4)}
+        </p>
+      )}
       {unit.hasVoted && unit.votedOption ? (
         <div className="space-y-1">
           <Badge type={colors.badge}>

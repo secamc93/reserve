@@ -136,6 +136,9 @@ definitions:
       number:
         example: "101"
         type: string
+      participation_coefficient:
+        example: 0.008333
+        type: number
       unit_type:
         example: apartment
         type: string
@@ -426,6 +429,9 @@ definitions:
       number:
         example: "101"
         type: string
+      participation_coefficient:
+        example: 0.008333
+        type: number
       unit_type:
         example: apartment
         type: string
@@ -2360,17 +2366,15 @@ paths:
         name: name
         required: true
         type: string
-      - default: '"los-pinos"'
-        description: Código único
+      - default: '"conjunto-residencial-los-pinos"'
+        description: Código único (opcional, se genera del nombre)
         in: formData
         name: code
-        required: true
         type: string
       - default: '"America/Bogota"'
-        description: Zona horaria
+        description: 'Zona horaria (opcional, default: America/Bogota)'
         in: formData
         name: timezone
-        required: true
         type: string
       - default: '"Carrera 15 #45-67"'
         description: Dirección
@@ -2383,14 +2387,13 @@ paths:
         in: formData
         name: description
         type: string
-      - default: 120
-        description: Total de unidades
+      - default: 0
+        description: 'Total de unidades (opcional, default: 0)'
         in: formData
         name: total_units
-        required: true
         type: integer
-      - default: 10
-        description: Total de pisos
+      - default: 0
+        description: Total de pisos (opcional)
         in: formData
         name: total_floors
         type: integer
@@ -2923,6 +2926,43 @@ paths:
       summary: Actualizar unidad de propiedad
       tags:
       - Property Units
+  /horizontal-properties/{hp_id}/property-units/import-excel:
+    post:
+      consumes:
+      - multipart/form-data
+      description: 'Importa múltiples unidades de propiedad desde un archivo Excel.
+        El Excel debe tener 2 columnas: ''Número de Unidad'' y ''Coeficiente de Participación'''
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: hp_id
+        required: true
+        type: integer
+      - description: Archivo Excel (.xlsx)
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Importar unidades desde Excel
+      tags:
+      - Unidades de Propiedad
   /horizontal-properties/{hp_id}/residents:
     get:
       consumes:
@@ -3148,6 +3188,44 @@ paths:
       summary: Actualizar residente
       tags:
       - Residents
+  /horizontal-properties/{hp_id}/residents/import-excel:
+    post:
+      consumes:
+      - multipart/form-data
+      description: 'Importa múltiples residentes desde un archivo Excel. VALIDACION
+        TODO O NADA: Si UNA unidad no existe, NO se crea NADA. El Excel debe tener
+        3 columnas: ''Número de Unidad'', ''Nombre Propietario'', ''DNI'''
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: hp_id
+        required: true
+        type: integer
+      - description: Archivo Excel (.xlsx)
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Importar residentes desde Excel
+      tags:
+      - Residentes
   /horizontal-properties/{hp_id}/voting-groups:
     get:
       consumes:
@@ -3785,6 +3863,49 @@ paths:
       security:
       - BearerAuth: []
       summary: Registrar un voto
+      tags:
+      - Votaciones
+  /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/voting-details:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene TODAS las unidades con número, residente principal, coeficiente
+        de participación, y estado de votación (si votó, qué opción eligió, cuándo
+        votó)
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: hp_id
+        required: true
+        type: integer
+      - description: ID del grupo de votación
+        in: path
+        name: group_id
+        required: true
+        type: integer
+      - description: ID de la votación
+        in: path
+        name: voting_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Obtener detalles completos de votación (Admin)
       tags:
       - Votaciones
   /permissions:

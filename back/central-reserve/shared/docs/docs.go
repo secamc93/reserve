@@ -1725,19 +1725,17 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "default": "\"los-pinos\"",
-                        "description": "Código único",
+                        "default": "\"conjunto-residencial-los-pinos\"",
+                        "description": "Código único (opcional, se genera del nombre)",
                         "name": "code",
-                        "in": "formData",
-                        "required": true
+                        "in": "formData"
                     },
                     {
                         "type": "string",
                         "default": "\"America/Bogota\"",
-                        "description": "Zona horaria",
+                        "description": "Zona horaria (opcional, default: America/Bogota)",
                         "name": "timezone",
-                        "in": "formData",
-                        "required": true
+                        "in": "formData"
                     },
                     {
                         "type": "string",
@@ -1756,16 +1754,15 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "default": 120,
-                        "description": "Total de unidades",
+                        "default": 0,
+                        "description": "Total de unidades (opcional, default: 0)",
                         "name": "total_units",
-                        "in": "formData",
-                        "required": true
+                        "in": "formData"
                     },
                     {
                         "type": "integer",
-                        "default": 10,
-                        "description": "Total de pisos",
+                        "default": 0,
+                        "description": "Total de pisos (opcional)",
                         "name": "total_floors",
                         "in": "formData"
                     },
@@ -2370,6 +2367,62 @@ const docTemplate = `{
                 }
             }
         },
+        "/horizontal-properties/{hp_id}/property-units/import-excel": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Importa múltiples unidades de propiedad desde un archivo Excel. El Excel debe tener 2 columnas: 'Número de Unidad' y 'Coeficiente de Participación'",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Unidades de Propiedad"
+                ],
+                "summary": "Importar unidades desde Excel",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la propiedad horizontal",
+                        "name": "hp_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Archivo Excel (.xlsx)",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
         "/horizontal-properties/{hp_id}/property-units/{unit_id}": {
             "get": {
                 "security": [
@@ -2703,6 +2756,62 @@ const docTemplate = `{
                     },
                     "409": {
                         "description": "Conflict",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/{hp_id}/residents/import-excel": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Importa múltiples residentes desde un archivo Excel. VALIDACION TODO O NADA: Si UNA unidad no existe, NO se crea NADA. El Excel debe tener 3 columnas: 'Número de Unidad', 'Nombre Propietario', 'DNI'",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Residentes"
+                ],
+                "summary": "Importar residentes desde Excel",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la propiedad horizontal",
+                        "name": "hp_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Archivo Excel (.xlsx)",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "type": "object"
                         }
@@ -3859,6 +3968,69 @@ const docTemplate = `{
                 "responses": {
                     "201": {
                         "description": "Created",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/voting-details": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene TODAS las unidades con número, residente principal, coeficiente de participación, y estado de votación (si votó, qué opción eligió, cuándo votó)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones"
+                ],
+                "summary": "Obtener detalles completos de votación (Admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la propiedad horizontal",
+                        "name": "hp_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID del grupo de votación",
+                        "name": "group_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la votación",
+                        "name": "voting_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "type": "object"
                         }
@@ -7073,6 +7245,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "101"
                 },
+                "participation_coefficient": {
+                    "type": "number",
+                    "example": 0.008333
+                },
                 "unit_type": {
                     "type": "string",
                     "example": "apartment"
@@ -7474,6 +7650,10 @@ const docTemplate = `{
                 "number": {
                     "type": "string",
                     "example": "101"
+                },
+                "participation_coefficient": {
+                    "type": "number",
+                    "example": 0.008333
                 },
                 "unit_type": {
                     "type": "string",

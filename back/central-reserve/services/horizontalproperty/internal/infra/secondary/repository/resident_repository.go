@@ -45,7 +45,7 @@ func (r *Repository) ListResidents(ctx context.Context, filters domain.ResidentF
 		Where("residents.business_id = ?", filters.BusinessID)
 
 	if filters.PropertyUnitNumber != "" {
-		query = query.Joins("JOIN property_units ON property_units.id = residents.property_unit_id").
+		query = query.Joins("JOIN horizontal_property.property_units ON property_units.id = residents.property_unit_id").
 			Where("property_units.number ILIKE ?", "%"+filters.PropertyUnitNumber+"%")
 	}
 	if filters.Name != "" {

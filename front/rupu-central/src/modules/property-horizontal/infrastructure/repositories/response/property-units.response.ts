@@ -12,6 +12,7 @@ export interface BackendPropertyUnit {
   area?: number;
   bedrooms?: number;
   bathrooms?: number;
+  participation_coefficient?: number;
   description?: string;
   is_active: boolean;
   created_at: string;

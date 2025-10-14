@@ -2,6 +2,7 @@ package horizontalpropertyhandler
 
 import (
 	"net/http"
+	"strings"
 
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/horizontalpropertyhandler/mapper"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/horizontalpropertyhandler/request"
@@ -10,6 +11,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
+
+// contains helper para buscar substring
+func contains(s, substr string) bool {
+	return strings.Contains(s, substr)
+}
 
 // CreateHorizontalProperty godoc
 //
@@ -20,12 +26,12 @@ import (
 //	@Produce		json
 //	@Security		BearerAuth
 //	@Param			name						formData	string	true	"Nombre"			default("Conjunto Residencial Los Pinos")
-//	@Param			code						formData	string	true	"Código único"		default("los-pinos")
-//	@Param			timezone					formData	string	true	"Zona horaria"		default("America/Bogota")
+//	@Param			code						formData	string	false	"Código único (opcional, se genera del nombre)"		default("conjunto-residencial-los-pinos")
+//	@Param			timezone					formData	string	false	"Zona horaria (opcional, default: America/Bogota)"		default("America/Bogota")
 //	@Param			address						formData	string	true	"Dirección"			default("Carrera 15 #45-67")
 //	@Param			description					formData	string	false	"Descripción"		default("Conjunto residencial familiar")
-//	@Param			total_units					formData	int		true	"Total de unidades"	default(120)
-//	@Param			total_floors				formData	int		false	"Total de pisos"	default(10)
+//	@Param			total_units					formData	int		false	"Total de unidades (opcional, default: 0)"	default(0)
+//	@Param			total_floors				formData	int		false	"Total de pisos (opcional)"	default(0)
 //	@Param			has_elevator				formData	bool	false	"Tiene ascensor"	default(true)
 //	@Param			has_parking					formData	bool	false	"Tiene parqueadero"	default(true)
 //	@Param			has_pool					formData	bool	false	"Tiene piscina"		default(true)
@@ -81,41 +87,58 @@ func (h *HorizontalPropertyHandler) CreateHorizontalProperty(c *gin.Context) {
 	// Call use case
 	result, err := h.horizontalPropertyUseCase.CreateHorizontalProperty(c.Request.Context(), dto)
 	if err != nil {
-		h.logger.Error().Err(err).Msg("Error creating horizontal property")
+		h.logger.Error().Err(err).Str("name", req.Name).Str("code", dto.Code).Msg("Error creating horizontal property")
 
 		// Handle specific domain errors
-		switch err.Error() {
-		case "ya existe una propiedad horizontal con este código":
+		errMsg := err.Error()
+		switch {
+		case contains(errMsg, "duplicate key") && contains(errMsg, "uni_business_code"):
+			c.JSON(http.StatusConflict, response.ErrorResponse{
+				Success: false,
+				Message: "El código '" + dto.Code + "' ya está en uso",
+				Error:   "Ya existe una propiedad horizontal con este código. Por favor, use un nombre diferente o especifique un código personalizado.",
+			})
+		case contains(errMsg, "duplicate key") && contains(errMsg, "uni_business_custom_domain"):
+			domainValue := dto.Code // Usar el código generado como referencia
+			if dto.CustomDomain != "" {
+				domainValue = dto.CustomDomain
+			}
+			c.JSON(http.StatusConflict, response.ErrorResponse{
+				Success: false,
+				Message: "El dominio personalizado ya está en uso",
+				Error:   "El dominio '" + domainValue + "' ya está registrado. Por favor, use un nombre diferente.",
+			})
+		case contains(errMsg, "ya existe una propiedad horizontal con este código"):
 			c.JSON(http.StatusConflict, response.ErrorResponse{
 				Success: false,
 				Message: "El código de la propiedad horizontal ya existe",
 				Error:   err.Error(),
 			})
-		case "el dominio personalizado ya está en uso":
+		case contains(errMsg, "el dominio personalizado ya está en uso"):
 			c.JSON(http.StatusConflict, response.ErrorResponse{
 				Success: false,
 				Message: "El dominio personalizado ya está en uso",
 				Error:   err.Error(),
 			})
-		case "tipo de negocio no encontrado":
+		case errMsg == "tipo de negocio no encontrado":
 			c.JSON(http.StatusBadRequest, response.ErrorResponse{
 				Success: false,
 				Message: "Tipo de negocio no válido",
 				Error:   err.Error(),
 			})
-		case "el tipo de negocio debe ser de propiedad horizontal":
+		case errMsg == "el tipo de negocio debe ser de propiedad horizontal":
 			c.JSON(http.StatusBadRequest, response.ErrorResponse{
 				Success: false,
 				Message: "El tipo de negocio debe ser de propiedad horizontal",
 				Error:   err.Error(),
 			})
-		case "el negocio padre especificado no existe":
+		case errMsg == "el negocio padre especificado no existe":
 			c.JSON(http.StatusBadRequest, response.ErrorResponse{
 				Success: false,
 				Message: "El negocio padre especificado no existe",
 				Error:   err.Error(),
 			})
-		case "el ID del negocio padre no es válido":
+		case errMsg == "el ID del negocio padre no es válido":
 			c.JSON(http.StatusBadRequest, response.ErrorResponse{
 				Success: false,
 				Message: "El ID del negocio padre no es válido",

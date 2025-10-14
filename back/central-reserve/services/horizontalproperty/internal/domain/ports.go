@@ -142,6 +142,7 @@ type PropertyUnitUseCase interface {
 	ListPropertyUnits(ctx context.Context, filters PropertyUnitFiltersDTO) (*PaginatedPropertyUnitsDTO, error)
 	UpdatePropertyUnit(ctx context.Context, id uint, dto UpdatePropertyUnitDTO) (*PropertyUnitDetailDTO, error)
 	DeletePropertyUnit(ctx context.Context, id uint) error
+	ImportPropertyUnitsFromExcel(ctx context.Context, businessID uint, filePath string) (*ImportPropertyUnitsResult, error)
 }
 
 // ───────────────────────────────────────────
@@ -158,6 +159,8 @@ type ResidentRepository interface {
 	ExistsResidentByEmail(ctx context.Context, businessID uint, email string, excludeID uint) (bool, error)
 	ExistsResidentByDni(ctx context.Context, businessID uint, dni string, excludeID uint) (bool, error)
 	GetResidentByUnitAndDni(ctx context.Context, hpID, propertyUnitID uint, dni string) (*ResidentBasicDTO, error)
+	GetPropertyUnitsByNumbers(ctx context.Context, businessID uint, numbers []string) (map[string]uint, error) // Retorna map[number]unit_id
+	CreateResidentsInBatch(ctx context.Context, residents []*Resident) error                                   // Crear múltiples residentes en transacción
 }
 
 // ResidentUseCase - Puerto para casos de uso de residentes
@@ -167,4 +170,5 @@ type ResidentUseCase interface {
 	ListResidents(ctx context.Context, filters ResidentFiltersDTO) (*PaginatedResidentsDTO, error)
 	UpdateResident(ctx context.Context, id uint, dto UpdateResidentDTO) (*ResidentDetailDTO, error)
 	DeleteResident(ctx context.Context, id uint) error
+	ImportResidentsFromExcel(ctx context.Context, businessID uint, filePath string) (*ImportResidentsResult, error)
 }

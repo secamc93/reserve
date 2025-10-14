@@ -90,15 +90,16 @@ type UnitWithResidentResponse struct {
 
 // VotingDetailByUnitResponse - Response para detalle de votación por unidad
 type VotingDetailByUnitResponse struct {
-	PropertyUnitID     uint    `json:"property_unit_id" example:"1"`
-	PropertyUnitNumber string  `json:"property_unit_number" example:"101"`
-	ResidentID         *uint   `json:"resident_id,omitempty" example:"5"`
-	ResidentName       *string `json:"resident_name,omitempty" example:"Juan Pérez"`
-	HasVoted           bool    `json:"has_voted" example:"true"`
-	VotingOptionID     *uint   `json:"voting_option_id,omitempty" example:"3"`
-	OptionText         *string `json:"option_text,omitempty" example:"Sí"`
-	OptionCode         *string `json:"option_code,omitempty" example:"yes"`
-	VotedAt            *string `json:"voted_at,omitempty" example:"2025-10-13T01:30:00Z"`
+	PropertyUnitID           uint     `json:"property_unit_id" example:"1"`
+	PropertyUnitNumber       string   `json:"property_unit_number" example:"101"`
+	ParticipationCoefficient *float64 `json:"participation_coefficient" example:"0.008333"`
+	ResidentID               *uint    `json:"resident_id,omitempty" example:"5"`
+	ResidentName             *string  `json:"resident_name,omitempty" example:"Juan Pérez"`
+	HasVoted                 bool     `json:"has_voted" example:"true"`
+	VotingOptionID           *uint    `json:"voting_option_id,omitempty" example:"3"`
+	OptionText               *string  `json:"option_text,omitempty" example:"Sí"`
+	OptionCode               *string  `json:"option_code,omitempty" example:"yes"`
+	VotedAt                  *string  `json:"voted_at,omitempty" example:"2025-10-13T01:30:00Z"`
 }
 
 // Tipos de respuesta con datos

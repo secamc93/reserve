@@ -28,19 +28,17 @@ func (uc *HorizontalPropertyUseCase) CreateHorizontalProperty(ctx context.Contex
 		return nil, domain.ErrHorizontalPropertyCodeExists
 	}
 
-	// 2. Validar que el custom_domain no exista (validar siempre, incluso vacíos)
-	domainExists, err := uc.repo.ExistsCustomDomain(ctx, dto.CustomDomain, nil)
-	if err != nil {
-		uc.logger.Error().Err(err).Str("custom_domain", dto.CustomDomain).Msg("Error verificando existencia del dominio personalizado")
-		return nil, fmt.Errorf("error verificando dominio personalizado: %w", err)
-	}
-	if domainExists {
-		if strings.TrimSpace(dto.CustomDomain) == "" {
-			uc.logger.Warn().Msg("Ya existe una propiedad con dominio personalizado vacío. Debe proporcionar un dominio único.")
+	// 2. Validar que el custom_domain no exista (solo si se proporciona un valor)
+	if dto.CustomDomain != "" {
+		domainExists, err := uc.repo.ExistsCustomDomain(ctx, dto.CustomDomain, nil)
+		if err != nil {
+			uc.logger.Error().Err(err).Str("custom_domain", dto.CustomDomain).Msg("Error verificando existencia del dominio personalizado")
+			return nil, fmt.Errorf("error verificando dominio personalizado: %w", err)
+		}
+		if domainExists {
+			uc.logger.Warn().Str("custom_domain", dto.CustomDomain).Msg("El dominio personalizado ya existe")
 			return nil, domain.ErrCustomDomainExists
 		}
-		uc.logger.Warn().Str("custom_domain", dto.CustomDomain).Msg("El dominio personalizado ya existe")
-		return nil, domain.ErrCustomDomainExists
 	}
 
 	// 3. Validar que el parent_business existe (si se proporciona)

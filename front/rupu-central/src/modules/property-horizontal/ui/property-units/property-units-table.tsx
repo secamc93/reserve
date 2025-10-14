@@ -7,6 +7,7 @@ import { PropertyUnit, UNIT_TYPE_LABELS } from '../../domain';
 import { TokenStorage } from '@/modules/auth/infrastructure/storage';
 import { CreatePropertyUnitModal } from './create-property-unit-modal';
 import { EditPropertyUnitModal } from './edit-property-unit-modal';
+import { ImportUnitsModal } from './import-units-modal';
 
 export function PropertyUnitsTable({ hpId }: { hpId: number }) {
   const [units, setUnits] = useState<PropertyUnit[]>([]);
@@ -15,6 +16,7 @@ export function PropertyUnitsTable({ hpId }: { hpId: number }) {
   const [totalPages, setTotalPages] = useState(1);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState<PropertyUnit | null>(null);
   
   // Estados para alertas y confirmación
@@ -137,6 +139,7 @@ export function PropertyUnitsTable({ hpId }: { hpId: number }) {
     { key: 'block', label: 'Bloque' },
     { key: 'area', label: 'Área (m²)' },
     { key: 'bedrooms', label: 'Habitaciones' },
+    { key: 'coefficient', label: 'Coeficiente' },
     { key: 'isActive', label: 'Estado' },
     { key: 'actions', label: 'Acciones' },
   ];
@@ -148,6 +151,7 @@ export function PropertyUnitsTable({ hpId }: { hpId: number }) {
     block: unit.block || '-',
     area: unit.area ? `${unit.area} m²` : '-',
     bedrooms: unit.bedrooms || '-',
+    coefficient: unit.coefficient ? unit.coefficient.toFixed(6) : '-',
     isActive: (
       <Badge type={unit.isActive ? 'success' : 'error'}>
         {unit.isActive ? 'Activa' : 'Inactiva'}
@@ -173,9 +177,17 @@ export function PropertyUnitsTable({ hpId }: { hpId: number }) {
     <div>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Unidades de Propiedad</h2>
-        <button onClick={() => setShowCreateModal(true)} className="btn btn-primary">
-          ➕ Agregar Unidad
-        </button>
+        <div className="flex gap-2">
+          <button 
+            onClick={() => setShowImportModal(true)} 
+            className="btn btn-secondary"
+          >
+            📊 Importar Excel
+          </button>
+          <button onClick={() => setShowCreateModal(true)} className="btn btn-primary">
+            ➕ Agregar Unidad
+          </button>
+        </div>
       </div>
 
       {/* Alertas */}
@@ -338,6 +350,14 @@ export function PropertyUnitsTable({ hpId }: { hpId: number }) {
         confirmText="Eliminar"
         cancelText="Cancelar"
         type="danger"
+      />
+
+      {/* Modal de importación */}
+      <ImportUnitsModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onSuccess={loadUnits}
+        hpId={hpId}
       />
     </div>
   );

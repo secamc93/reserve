@@ -4,10 +4,11 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Badge, Spinner } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
 import { generatePublicUrlAction } from '@/modules/property-horizontal/infrastructure/actions/public-voting';
+import { getVotingDetailsAction } from '@/modules/property-horizontal/infrastructure/actions/voting';
 import { VoteModal } from './vote-modal';
 import { VotesByUnitSection, type ResidentialUnit } from '../components';
 // import { QRCodeSVG } from 'qrcode.react'; // Ya no se usa, se genera dinámicamente
@@ -88,6 +89,24 @@ export function LiveVotingModal({
   const [publicUrl, setPublicUrl] = useState<string>('');
   const [generatingQR, setGeneratingQR] = useState(false);
   
+  // Estados para datos reales del endpoint
+  const [votingDetails, setVotingDetails] = useState<{
+    units: Array<{
+      property_unit_number: string;
+      participation_coefficient: number;
+      resident_name: string | null;
+      has_voted: boolean;
+      option_text: string | null;
+      option_code: string | null;
+      voted_at: string | null;
+    }>;
+    total_units: number;
+    units_voted: number;
+    units_pending: number;
+  } | null>(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
+  const [detailsError, setDetailsError] = useState<string | null>(null);
+  
   // Hook SSE para recibir votos en tiempo real
   const { 
     votes: sseVotes, 
@@ -101,6 +120,139 @@ export function LiveVotingModal({
     voting?.id || 0, 
     isOpen && useRealTime && voting?.isActive
   );
+
+  const loadVotingDetails = useCallback(async () => {
+    if (!voting || !hpId) return;
+    
+    setLoadingDetails(true);
+    setDetailsError(null);
+    
+    try {
+      const token = TokenStorage.getToken();
+      if (!token) {
+        throw new Error('No se encontró el token de autenticación');
+      }
+
+      const result = await getVotingDetailsAction({
+        hpId,
+        votingGroupId: voting.votingGroupId,
+        votingId: voting.id,
+        token
+      });
+
+      if (result.success && result.data) {
+        setVotingDetails(result.data);
+        setProcessedVoteIds(new Set()); // Limpiar votos procesados al cargar nueva votación
+        console.log('✅ Datos de votación cargados:', result.data);
+      } else {
+        setDetailsError(result.error || 'Error al cargar los detalles de votación');
+      }
+    } catch (error) {
+      console.error('Error cargando detalles de votación:', error);
+      setDetailsError(error instanceof Error ? error.message : 'Error inesperado');
+    } finally {
+      setLoadingDetails(false);
+    }
+  }, [voting, hpId]);
+
+  // Estado para trackear los votos ya procesados
+  const [processedVoteIds, setProcessedVoteIds] = useState<Set<number>>(new Set());
+
+  const updateVotingDetailsFromSSE = useCallback(() => {
+    if (!votingDetails || !sseVotes.length) return;
+
+    // Filtrar solo votos nuevos (no procesados)
+    const newVotes = sseVotes.filter(vote => !processedVoteIds.has(vote.id));
+    
+    if (newVotes.length === 0) return;
+
+    console.log(`🔄 Actualizando ${newVotes.length} votos nuevos via SSE (sin recargar endpoint)`);
+
+    // Marcar estos votos como procesados
+    setProcessedVoteIds(prev => {
+      const newSet = new Set(prev);
+      newVotes.forEach(vote => newSet.add(vote.id));
+      return newSet;
+    });
+
+    // Actualizar solo las unidades que han votado
+    setVotingDetails(prevDetails => {
+      if (!prevDetails) return prevDetails;
+
+      let updatedUnits = [...prevDetails.units];
+      let newUnitsVoted = 0;
+
+      // Para cada nuevo voto, actualizar la unidad correspondiente
+      newVotes.forEach(vote => {
+        // Buscar la opción votada para obtener el texto y color
+        const option = options.find(opt => opt.id === vote.voting_option_id);
+        
+        if (option) {
+          // Buscar una unidad que aún no ha votado para actualizar
+          // Nota: En una implementación real, necesitarías mapear resident_id a property_unit_number
+          const pendingUnitIndex = updatedUnits.findIndex(unit => !unit.has_voted);
+          
+          if (pendingUnitIndex !== -1) {
+            console.log(`✅ Actualizando unidad ${updatedUnits[pendingUnitIndex].property_unit_number} con voto: ${option.optionText}`);
+            
+            updatedUnits[pendingUnitIndex] = {
+              ...updatedUnits[pendingUnitIndex],
+              has_voted: true,
+              option_text: option.optionText,
+              option_code: option.optionCode,
+              voted_at: vote.voted_at,
+            };
+            newUnitsVoted++;
+          }
+        }
+      });
+
+      console.log(`📊 Estadísticas actualizadas: +${newUnitsVoted} votos nuevos`);
+
+      return {
+        ...prevDetails,
+        units: updatedUnits,
+        units_voted: prevDetails.units_voted + newUnitsVoted,
+        units_pending: prevDetails.units_pending - newUnitsVoted,
+      };
+    });
+  }, [sseVotes, votingDetails, options, processedVoteIds]);
+
+  // Cargar detalles de votación cuando se abre el modal
+  useEffect(() => {
+    if (isOpen && voting && hpId) {
+      loadVotingDetails();
+    }
+  }, [isOpen, voting, hpId, loadVotingDetails]);
+
+  // Actualizar datos cuando llegan nuevos votos via SSE (sin recargar todo el endpoint)
+  useEffect(() => {
+    if (sseVotes.length > 0 && votingDetails) {
+      updateVotingDetailsFromSSE();
+    }
+  }, [sseVotes.length, updateVotingDetailsFromSSE, votingDetails]);
+
+  // Función para convertir datos del endpoint al formato de ResidentialUnit
+  const convertToResidentialUnits = (): ResidentialUnit[] => {
+    if (!votingDetails) return [];
+
+    return votingDetails.units.map((unit, index) => {
+      // Buscar la opción correspondiente para obtener el color
+      const option = options.find(opt => opt.optionText === unit.option_text);
+      const optionColor = option ? optionColors[option.id] : undefined;
+
+      return {
+        id: index + 1, // ID temporal basado en índice
+        number: unit.property_unit_number,
+        resident: unit.resident_name || 'Sin residente',
+        hasVoted: unit.has_voted,
+        votedOption: unit.option_text || undefined,
+        votedOptionId: option?.id,
+        votedOptionColor: optionColor,
+        participationCoefficient: unit.participation_coefficient,
+      };
+    });
+  };
 
   // Estado para los colores personalizados de cada opción
   const [optionColors, setOptionColors] = useState<Record<number, string>>(() => {
@@ -271,82 +423,8 @@ export function LiveVotingModal({
     };
   }).sort((a, b) => b.votes - a.votes);
 
-  // Generar 200 unidades residenciales basadas en los votos reales
-  const generateResidentialUnits = () => {
-    const units = [];
-    const firstNames = [
-      'Juan', 'María', 'Carlos', 'Ana', 'Pedro', 'Laura', 'Roberto', 'Carmen', 'Miguel', 'Isabel',
-      'Fernando', 'Patricia', 'Diego', 'Valentina', 'Andrés', 'Sofía', 'Sebastián', 'Camila', 'Alejandro', 'Natalia',
-      'Gabriel', 'Andrea', 'Ricardo', 'Monica', 'Daniel', 'Claudia', 'Javier', 'Elena', 'Sergio', 'Beatriz',
-      'Antonio', 'Rosa', 'Francisco', 'Pilar', 'Manuel', 'Dolores', 'José', 'Teresa', 'Rafael', 'Cristina',
-      'Enrique', 'Marta', 'Alberto', 'Isabel', 'Luis', 'Carmen', 'David', 'Rosa', 'Jorge', 'Ana',
-      'Pablo', 'Elena', 'Álvaro', 'Beatriz', 'Raúl', 'Pilar', 'Rubén', 'Dolores', 'Óscar', 'Teresa',
-      'Víctor', 'Cristina', 'Ángel', 'Marta', 'Adrián', 'Isabel', 'Héctor', 'Carmen', 'Rubén', 'Rosa',
-      'Marcos', 'Ana', 'Nicolás', 'Elena', 'Guillermo', 'Beatriz', 'Ignacio', 'Pilar', 'Vicente', 'Dolores',
-      'Emilio', 'Teresa', 'César', 'Cristina', 'Gonzalo', 'Marta', 'Felipe', 'Isabel', 'León', 'Carmen',
-      'Martín', 'Rosa', 'Tomás', 'Ana', 'Hugo', 'Elena', 'Jaime', 'Beatriz', 'Samuel', 'Pilar',
-      'Bruno', 'Dolores', 'Eduardo', 'Teresa', 'Mario', 'Cristina', 'Lorenzo', 'Marta', 'Lucas', 'Isabel',
-      'Eric', 'Carmen', 'Iván', 'Rosa', 'Óliver', 'Ana', 'Aaron', 'Elena', 'Leo', 'Beatriz',
-      'Marc', 'Pilar', 'Max', 'Dolores', 'Pol', 'Teresa', 'Jan', 'Cristina', 'Nil', 'Marta',
-      'Gael', 'Isabel', 'Biel', 'Carmen', 'Ian', 'Rosa', 'Teo', 'Ana', 'Enzo', 'Elena',
-      'Axel', 'Beatriz', 'Noah', 'Pilar', 'Dylan', 'Dolores', 'Kai', 'Teresa', 'Liam', 'Cristina'
-    ];
-    const lastNames = [
-      'García', 'Rodríguez', 'González', 'Fernández', 'López', 'Martínez', 'Sánchez', 'Pérez', 'Gómez', 'Martín',
-      'Jiménez', 'Ruiz', 'Hernández', 'Díaz', 'Moreno', 'Muñoz', 'Romero', 'Navarro', 'Torres', 'Domínguez',
-      'Vargas', 'Ramos', 'Gil', 'Ramírez', 'Serrano', 'Blanco', 'Suárez', 'Molina', 'Morales', 'Ortega',
-      'Delgado', 'Castro', 'Ortiz', 'Rubio', 'Marín', 'Sanz', 'Iglesias', 'Medina', 'Cortés', 'Garrido',
-      'Castillo', 'Santos', 'Lozano', 'Guerrero', 'Cano', 'Prieto', 'Méndez', 'Cruz', 'Calvo', 'Gallego',
-      'Vidal', 'León', 'Herrera', 'Márquez', 'Peña', 'Flores', 'Cabrera', 'Campos', 'Vega', 'Fuentes',
-      'Carrasco', 'Diez', 'Caballero', 'Reyes', 'Núñez', 'Aguilar', 'Pascual', 'Herrero', 'Santana', 'Montero',
-      'Lara', 'Hidalgo', 'Mora', 'Vicente', 'Benítez', 'Santiago', 'Vargas', 'Arias', 'Carmona', 'Crespo',
-      'Román', 'Pastor', 'Soto', 'Sáez', 'Velasco', 'Moya', 'Soler', 'Parra', 'Esteban', 'Bravo',
-      'Gallardo', 'Rojas', 'Pardo', 'Merino', 'Franco', 'Espinosa', 'Lara', 'Izquierdo', 'Gutiérrez', 'Casado',
-      'Villa', 'Santiago', 'Luna', 'Peña', 'Rey', 'Navarro', 'Guzmán', 'Serrano', 'Ibáñez', 'Méndez'
-    ];
-
-    let unitId = 1;
-    for (let floor = 1; floor <= 20; floor++) {
-      for (let unit = 1; unit <= 10; unit++) {
-        const unitNumber = `${floor}${unit.toString().padStart(2, '0')}`;
-        const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
-        const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
-        const resident = `${firstName} ${lastName}`;
-        
-        // Buscar el voto de esta unidad en votesToUse (que puede ser real o mock)
-        const vote = votesToUse.find(vote => vote.residentId === unitId);
-        const hasVoted = !!vote;
-        
-        // Obtener la opción votada y su color
-        let votedOption: string | undefined;
-        let votedOptionId: number | undefined;
-        let votedOptionColor: string | undefined;
-        
-        if (hasVoted && vote) {
-          const option = options.find(opt => opt.id === vote.votingOptionId);
-          votedOption = option?.optionText;
-          votedOptionId = vote.votingOptionId;
-          votedOptionColor = optionColors[vote.votingOptionId];
-        }
-        
-        units.push({
-          id: unitId,
-          number: unitNumber,
-          resident: resident,
-          hasVoted: hasVoted,
-          votedOption: votedOption,
-          votedOptionId: votedOptionId,
-          votedOptionColor: votedOptionColor
-        });
-        
-        unitId++;
-      }
-    }
-    
-    return units;
-  };
-
-  const residentialUnits = generateResidentialUnits();
+  // Obtener unidades residenciales desde el endpoint
+  const residentialUnits = convertToResidentialUnits();
 
   const handleVote = () => {
     setShowVoteModal(true);
@@ -489,8 +567,8 @@ export function LiveVotingModal({
                       <div className="text-center">
                         <span className="text-gray-600 block">Participación</span>
                         <span className="font-bold text-xl text-blue-600">
-                          {residentialUnits.length > 0 
-                            ? ((totalVotes / residentialUnits.length) * 100).toFixed(1)
+                          {votingDetails 
+                            ? ((votingDetails.units_voted / votingDetails.total_units) * 100).toFixed(1)
                             : '0'
                           }%
                         </span>
@@ -498,13 +576,13 @@ export function LiveVotingModal({
                       <div className="text-center">
                         <span className="text-gray-600 block">Han Votado</span>
                         <span className="font-bold text-xl text-green-600">
-                          {residentialUnits.filter(u => u.hasVoted).length}
+                          {votingDetails?.units_voted || 0}
                         </span>
                       </div>
                       <div className="text-center">
                         <span className="text-gray-600 block">Pendientes</span>
                         <span className="font-bold text-xl text-orange-600">
-                          {residentialUnits.filter(u => !u.hasVoted).length}
+                          {votingDetails?.units_pending || 0}
                         </span>
                       </div>
                     </div>
@@ -515,10 +593,33 @@ export function LiveVotingModal({
 
             {/* Votos por Unidad - Ocupa todo el espacio restante */}
             <div className="flex-1 min-h-0">
-              <VotesByUnitSection 
-                units={residentialUnits}
-                fillAvailableSpace={true}
-              />
+              {loadingDetails ? (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <Spinner size="lg" />
+                    <p className="mt-4 text-gray-600">Cargando detalles de votación...</p>
+                  </div>
+                </div>
+              ) : detailsError ? (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <div className="text-red-500 text-6xl mb-4">⚠️</div>
+                    <p className="text-red-600 font-medium mb-2">Error al cargar datos</p>
+                    <p className="text-gray-600 text-sm mb-4">{detailsError}</p>
+                    <button 
+                      onClick={loadVotingDetails}
+                      className="btn btn-primary btn-sm"
+                    >
+                      Reintentar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <VotesByUnitSection 
+                  units={residentialUnits}
+                  fillAvailableSpace={true}
+                />
+              )}
             </div>
           </div>
         </div>

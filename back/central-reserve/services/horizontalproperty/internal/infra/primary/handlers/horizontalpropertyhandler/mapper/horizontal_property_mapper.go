@@ -1,10 +1,44 @@
 package mapper
 
 import (
+	"regexp"
+	"strings"
+	"unicode"
+
 	"central_reserve/services/horizontalproperty/internal/domain"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/horizontalpropertyhandler/request"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/horizontalpropertyhandler/response"
+
+	"golang.org/x/text/runes"
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
 )
+
+// slugify convierte un string a formato slug (URL-friendly)
+// Ejemplo: "Conjunto Los Pinos" → "conjunto-los-pinos"
+func slugify(s string) string {
+	// Convertir a minúsculas
+	s = strings.ToLower(s)
+
+	// Remover acentos y diacríticos
+	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
+	s, _, _ = transform.String(t, s)
+
+	// Reemplazar espacios y caracteres especiales por guiones
+	reg := regexp.MustCompile(`[^a-z0-9]+`)
+	s = reg.ReplaceAllString(s, "-")
+
+	// Remover guiones al inicio y final
+	s = strings.Trim(s, "-")
+
+	// Limitar longitud a 50 caracteres
+	if len(s) > 50 {
+		s = s[:50]
+		s = strings.TrimRight(s, "-")
+	}
+
+	return s
+}
 
 // MapCreateRequestToDTO mapea request de creación a DTO de dominio
 func MapCreateRequestToDTO(req *request.CreateHorizontalPropertyRequest) domain.CreateHorizontalPropertyDTO {
@@ -21,11 +55,29 @@ func MapCreateRequestToDTO(req *request.CreateHorizontalPropertyRequest) domain.
 		}
 	}
 
+	// Aplicar valores por defecto
+	timezone := req.Timezone
+	if timezone == "" {
+		timezone = "America/Bogota" // Default para Colombia
+	}
+
+	// Generar código automáticamente si está vacío
+	code := req.Code
+	if code == "" {
+		code = slugify(req.Name)
+	}
+
+	// Generar custom_domain automáticamente si está vacío
+	customDomain := req.CustomDomain
+	if customDomain == "" {
+		customDomain = slugify(req.Name)
+	}
+
 	return domain.CreateHorizontalPropertyDTO{
 		Name:             req.Name,
-		Code:             req.Code,
+		Code:             code,
 		ParentBusinessID: req.ParentBusinessID,
-		Timezone:         req.Timezone,
+		Timezone:         timezone,
 		Address:          req.Address,
 		Description:      req.Description,
 		LogoFile:         req.LogoFile,
@@ -34,7 +86,7 @@ func MapCreateRequestToDTO(req *request.CreateHorizontalPropertyRequest) domain.
 		SecondaryColor:   req.SecondaryColor,
 		TertiaryColor:    req.TertiaryColor,
 		QuaternaryColor:  req.QuaternaryColor,
-		CustomDomain:     req.CustomDomain,
+		CustomDomain:     customDomain,
 		TotalUnits:       req.TotalUnits,
 		TotalFloors:      req.TotalFloors,
 		HasElevator:      req.HasElevator,

@@ -51,6 +51,9 @@ func (uc *propertyUnitUseCase) UpdatePropertyUnit(ctx context.Context, id uint, 
 	if dto.Bathrooms != nil {
 		existing.Bathrooms = dto.Bathrooms
 	}
+	if dto.ParticipationCoefficient != nil {
+		existing.ParticipationCoefficient = dto.ParticipationCoefficient
+	}
 	if dto.Description != nil {
 		existing.Description = *dto.Description
 	}
@@ -67,18 +70,19 @@ func (uc *propertyUnitUseCase) UpdatePropertyUnit(ctx context.Context, id uint, 
 
 	// Convertir a DTO de respuesta
 	return &domain.PropertyUnitDetailDTO{
-		ID:          updated.ID,
-		BusinessID:  updated.BusinessID,
-		Number:      updated.Number,
-		Floor:       updated.Floor,
-		Block:       updated.Block,
-		UnitType:    updated.UnitType,
-		Area:        updated.Area,
-		Bedrooms:    updated.Bedrooms,
-		Bathrooms:   updated.Bathrooms,
-		Description: updated.Description,
-		IsActive:    updated.IsActive,
-		CreatedAt:   updated.CreatedAt,
-		UpdatedAt:   updated.UpdatedAt,
+		ID:                       updated.ID,
+		BusinessID:               updated.BusinessID,
+		Number:                   updated.Number,
+		Floor:                    updated.Floor,
+		Block:                    updated.Block,
+		UnitType:                 updated.UnitType,
+		Area:                     updated.Area,
+		Bedrooms:                 updated.Bedrooms,
+		Bathrooms:                updated.Bathrooms,
+		ParticipationCoefficient: updated.ParticipationCoefficient,
+		Description:              updated.Description,
+		IsActive:                 updated.IsActive,
+		CreatedAt:                updated.CreatedAt,
+		UpdatedAt:                updated.UpdatedAt,
 	}, nil
 }

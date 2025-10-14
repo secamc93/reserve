@@ -148,15 +148,16 @@ func MapUnitsWithResidentsToResponses(dtos []domain.UnitWithResidentDTO) []respo
 // MapVotingDetailByUnitToResponse mapea DTO a response
 func MapVotingDetailByUnitToResponse(dto *domain.VotingDetailByUnitDTO) response.VotingDetailByUnitResponse {
 	return response.VotingDetailByUnitResponse{
-		PropertyUnitID:     dto.PropertyUnitID,
-		PropertyUnitNumber: dto.PropertyUnitNumber,
-		ResidentID:         dto.ResidentID,
-		ResidentName:       dto.ResidentName,
-		HasVoted:           dto.HasVoted,
-		VotingOptionID:     dto.VotingOptionID,
-		OptionText:         dto.OptionText,
-		OptionCode:         dto.OptionCode,
-		VotedAt:            dto.VotedAt,
+		PropertyUnitID:           dto.PropertyUnitID,
+		PropertyUnitNumber:       dto.PropertyUnitNumber,
+		ParticipationCoefficient: dto.ParticipationCoefficient,
+		ResidentID:               dto.ResidentID,
+		ResidentName:             dto.ResidentName,
+		HasVoted:                 dto.HasVoted,
+		VotingOptionID:           dto.VotingOptionID,
+		OptionText:               dto.OptionText,
+		OptionCode:               dto.OptionCode,
+		VotedAt:                  dto.VotedAt,
 	}
 }
 

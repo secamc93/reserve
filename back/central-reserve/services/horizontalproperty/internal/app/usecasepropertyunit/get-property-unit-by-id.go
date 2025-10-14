@@ -18,18 +18,19 @@ func (uc *propertyUnitUseCase) GetPropertyUnitByID(ctx context.Context, id uint)
 	}
 
 	return &domain.PropertyUnitDetailDTO{
-		ID:          unit.ID,
-		BusinessID:  unit.BusinessID,
-		Number:      unit.Number,
-		Floor:       unit.Floor,
-		Block:       unit.Block,
-		UnitType:    unit.UnitType,
-		Area:        unit.Area,
-		Bedrooms:    unit.Bedrooms,
-		Bathrooms:   unit.Bathrooms,
-		Description: unit.Description,
-		IsActive:    unit.IsActive,
-		CreatedAt:   unit.CreatedAt,
-		UpdatedAt:   unit.UpdatedAt,
+		ID:                       unit.ID,
+		BusinessID:               unit.BusinessID,
+		Number:                   unit.Number,
+		Floor:                    unit.Floor,
+		Block:                    unit.Block,
+		UnitType:                 unit.UnitType,
+		Area:                     unit.Area,
+		Bedrooms:                 unit.Bedrooms,
+		Bathrooms:                unit.Bathrooms,
+		ParticipationCoefficient: unit.ParticipationCoefficient,
+		Description:              unit.Description,
+		IsActive:                 unit.IsActive,
+		CreatedAt:                unit.CreatedAt,
+		UpdatedAt:                unit.UpdatedAt,
 	}, nil
 }

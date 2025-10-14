@@ -6,16 +6,14 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Table, Badge, Spinner, type TableColumn } from '@shared/ui';
+import { Table, Badge, Spinner, Alert, ConfirmModal, type TableColumn } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
-import { getHorizontalPropertiesAction } from '../../infrastructure/actions';
+import { getHorizontalPropertiesAction, deleteHorizontalPropertyAction } from '../../infrastructure/actions';
 import { CreatePropertyModal } from './create-property-modal';
 
 interface HorizontalProperty {
   id: number;
   name: string;
-  code: string;
-  businessTypeName: string;
   address: string;
   totalUnits: number;
   isActive: boolean;
@@ -31,6 +29,10 @@ export function HorizontalPropertiesTable() {
   const [pageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [propertyToDelete, setPropertyToDelete] = useState<{ id: number; name: string } | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleteSuccess, setDeleteSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     loadProperties();
@@ -65,6 +67,45 @@ export function HorizontalPropertiesTable() {
     setLoading(false);
   };
 
+  const handleDeleteClick = (property: HorizontalProperty) => {
+    setPropertyToDelete({ id: property.id, name: property.name });
+    setShowDeleteConfirm(true);
+    setDeleteError(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!propertyToDelete) return;
+
+    const token = TokenStorage.getToken();
+    if (!token) {
+      setDeleteError('No se encontró el token de autenticación');
+      return;
+    }
+
+    setLoading(true);
+    setShowDeleteConfirm(false);
+
+    try {
+      const result = await deleteHorizontalPropertyAction({
+        token,
+        id: propertyToDelete.id,
+      });
+
+      if (result.success) {
+        setDeleteSuccess(`Propiedad "${propertyToDelete.name}" eliminada correctamente`);
+        setPropertyToDelete(null);
+        // Recargar la lista
+        await loadProperties();
+      } else {
+        setDeleteError(result.message || 'Error al eliminar la propiedad');
+      }
+    } catch (error) {
+      setDeleteError(error instanceof Error ? error.message : 'Error al eliminar la propiedad');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const columns: TableColumn<HorizontalProperty>[] = [
     { 
       key: 'id', 
@@ -76,22 +117,6 @@ export function HorizontalPropertiesTable() {
       key: 'name', 
       label: 'Nombre', 
       width: '250px' 
-    },
-    { 
-      key: 'code', 
-      label: 'Código', 
-      width: '150px',
-      render: (value) => (
-        <span className="font-mono text-sm text-gray-600">{String(value)}</span>
-      )
-    },
-    { 
-      key: 'businessTypeName', 
-      label: 'Tipo', 
-      width: '180px',
-      render: (value) => (
-        <Badge type="primary">{String(value)}</Badge>
-      )
     },
     { 
       key: 'address', 
@@ -145,6 +170,15 @@ export function HorizontalPropertiesTable() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+          </button>
+          <button
+            onClick={() => handleDeleteClick(row)}
+            className="w-8 h-8 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded transition-colors"
+            title="Eliminar"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
           </button>
           <button
@@ -239,6 +273,35 @@ export function HorizontalPropertiesTable() {
         onClose={() => setShowCreateModal(false)}
         onSuccess={handleCreateSuccess}
       />
+
+      {/* Modal de confirmación de eliminación */}
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false);
+          setPropertyToDelete(null);
+        }}
+        onConfirm={handleDeleteConfirm}
+        title="Confirmar Eliminación"
+        message={`¿Estás seguro de que deseas eliminar la propiedad "${propertyToDelete?.name}"? Esta acción no se puede deshacer.`}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        type="danger"
+      />
+
+      {/* Alert de éxito */}
+      {deleteSuccess && (
+        <Alert type="success" onClose={() => setDeleteSuccess(null)}>
+          {deleteSuccess}
+        </Alert>
+      )}
+
+      {/* Alert de error */}
+      {deleteError && (
+        <Alert type="error" onClose={() => setDeleteError(null)}>
+          {deleteError}
+        </Alert>
+      )}
     </div>
   );
 }

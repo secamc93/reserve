@@ -5,9 +5,9 @@ import "mime/multipart"
 // CreateHorizontalPropertyRequest - Request para crear propiedad horizontal
 type CreateHorizontalPropertyRequest struct {
 	Name             string `form:"name" validate:"required,min=3,max=120"`
-	Code             string `form:"code" validate:"required,min=2,max=50"`
+	Code             string `form:"code"` // Opcional, se genera automáticamente del nombre si está vacío
 	ParentBusinessID *uint  `form:"parent_business_id"`
-	Timezone         string `form:"timezone" validate:"required"`
+	Timezone         string `form:"timezone"` // Opcional, usa America/Bogota por defecto
 	Address          string `form:"address" validate:"required,max=255"`
 	Description      string `form:"description" validate:"max=500"`
 
@@ -22,8 +22,8 @@ type CreateHorizontalPropertyRequest struct {
 	CustomDomain    string `form:"custom_domain" validate:"omitempty,max=100"`
 
 	// Configuración específica para propiedades horizontales
-	TotalUnits    int  `form:"total_units" validate:"required,min=1"`
-	TotalFloors   *int `form:"total_floors" validate:"omitempty,min=1"`
+	TotalUnits    int  `form:"total_units" validate:"omitempty,min=0"`  // Opcional, por defecto 0
+	TotalFloors   *int `form:"total_floors" validate:"omitempty,min=0"` // Opcional
 	HasElevator   bool `form:"has_elevator"`
 	HasParking    bool `form:"has_parking"`
 	HasPool       bool `form:"has_pool"`

@@ -15,31 +15,33 @@ type ErrorResponse struct {
 }
 
 type PropertyUnitResponse struct {
-	ID          uint      `json:"id" example:"1"`
-	BusinessID  uint      `json:"business_id" example:"1"`
-	Number      string    `json:"number" example:"101"`
-	Floor       *int      `json:"floor,omitempty" example:"1"`
-	Block       string    `json:"block" example:"A"`
-	UnitType    string    `json:"unit_type" example:"apartment"`
-	Area        *float64  `json:"area,omitempty" example:"85.5"`
-	Bedrooms    *int      `json:"bedrooms,omitempty" example:"3"`
-	Bathrooms   *int      `json:"bathrooms,omitempty" example:"2"`
-	Description string    `json:"description" example:"Apartamento esquinero"`
-	IsActive    bool      `json:"is_active" example:"true"`
-	CreatedAt   time.Time `json:"created_at" example:"2025-01-15T10:30:00Z"`
-	UpdatedAt   time.Time `json:"updated_at" example:"2025-01-15T10:30:00Z"`
+	ID                       uint      `json:"id" example:"1"`
+	BusinessID               uint      `json:"business_id" example:"1"`
+	Number                   string    `json:"number" example:"101"`
+	Floor                    *int      `json:"floor,omitempty" example:"1"`
+	Block                    string    `json:"block" example:"A"`
+	UnitType                 string    `json:"unit_type" example:"apartment"`
+	Area                     *float64  `json:"area,omitempty" example:"85.5"`
+	Bedrooms                 *int      `json:"bedrooms,omitempty" example:"3"`
+	Bathrooms                *int      `json:"bathrooms,omitempty" example:"2"`
+	ParticipationCoefficient *float64  `json:"participation_coefficient" example:"0.008333"` // Sin omitempty para que siempre aparezca
+	Description              string    `json:"description" example:"Apartamento esquinero"`
+	IsActive                 bool      `json:"is_active" example:"true"`
+	CreatedAt                time.Time `json:"created_at" example:"2025-01-15T10:30:00Z"`
+	UpdatedAt                time.Time `json:"updated_at" example:"2025-01-15T10:30:00Z"`
 }
 
 type PropertyUnitListItemResponse struct {
-	ID        uint     `json:"id" example:"1"`
-	Number    string   `json:"number" example:"101"`
-	Floor     *int     `json:"floor,omitempty" example:"1"`
-	Block     string   `json:"block" example:"A"`
-	UnitType  string   `json:"unit_type" example:"apartment"`
-	Area      *float64 `json:"area,omitempty" example:"85.5"`
-	Bedrooms  *int     `json:"bedrooms,omitempty" example:"3"`
-	Bathrooms *int     `json:"bathrooms,omitempty" example:"2"`
-	IsActive  bool     `json:"is_active" example:"true"`
+	ID                       uint     `json:"id" example:"1"`
+	Number                   string   `json:"number" example:"101"`
+	Floor                    *int     `json:"floor,omitempty" example:"1"`
+	Block                    string   `json:"block" example:"A"`
+	UnitType                 string   `json:"unit_type" example:"apartment"`
+	Area                     *float64 `json:"area,omitempty" example:"85.5"`
+	Bedrooms                 *int     `json:"bedrooms,omitempty" example:"3"`
+	Bathrooms                *int     `json:"bathrooms,omitempty" example:"2"`
+	ParticipationCoefficient *float64 `json:"participation_coefficient" example:"0.008333"` // Sin omitempty para que siempre aparezca
+	IsActive                 bool     `json:"is_active" example:"true"`
 }
 
 type PaginatedPropertyUnitsResponse struct {

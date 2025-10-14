@@ -41,43 +41,8 @@ export interface HorizontalPropertiesPaginated {
 }
 
 export interface CreateHorizontalPropertyDTO {
-  // Campos requeridos
+  // Solo campos requeridos
   name: string;
-  code: string;
   address: string;
-  timezone: string;
-  totalUnits: number;
-  
-  // Campos opcionales - información básica
-  description?: string;
-  totalFloors?: number;
-  
-  // Amenidades
-  hasElevator?: boolean;
-  hasParking?: boolean;
-  hasPool?: boolean;
-  hasGym?: boolean;
-  hasSocialArea?: boolean;
-  
-  // Archivos
-  logoFile?: File;
-  navbarImageFile?: File;
-  
-  // Personalización
-  primaryColor?: string;
-  secondaryColor?: string;
-  tertiaryColor?: string;
-  quaternaryColor?: string;
-  customDomain?: string;
-  
-  // Creación automática de unidades
-  createUnits?: boolean;
-  unitPrefix?: string;
-  unitType?: 'apartment' | 'house' | 'office';
-  unitsPerFloor?: number;
-  startUnitNumber?: number;
-  
-  // Comités
-  createRequiredCommittees?: boolean;
 }
 

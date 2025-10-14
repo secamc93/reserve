@@ -81,14 +81,16 @@ export class ResidentsRepository implements IResidentsRepository {
   }
 
   async getResidents(params: GetResidentsParams): Promise<ResidentsPaginated> {
-    const { hpId, token, page = 1, pageSize = 10, propertyUnitId, residentTypeId, isActive, isMainResident } = params;
+    const { hpId, token, page = 1, pageSize = 10, name, propertyUnitId, propertyUnitNumber, residentTypeId, isActive, isMainResident } = params;
 
     const queryParams = new URLSearchParams({
       page: page.toString(),
       page_size: pageSize.toString(),
     });
 
+    if (name !== undefined) queryParams.append('name', name);
     if (propertyUnitId !== undefined) queryParams.append('property_unit_id', propertyUnitId.toString());
+    if (propertyUnitNumber !== undefined) queryParams.append('property_unit_number', propertyUnitNumber);
     if (residentTypeId !== undefined) queryParams.append('resident_type_id', residentTypeId.toString());
     if (isActive !== undefined) queryParams.append('is_active', isActive.toString());
     if (isMainResident !== undefined) queryParams.append('is_main_resident', isMainResident.toString());

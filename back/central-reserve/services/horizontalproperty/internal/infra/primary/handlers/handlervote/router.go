@@ -22,6 +22,7 @@ func (h *VotingHandler) RegisterRoutes(router *gin.RouterGroup) {
 			votings.PUT("/:voting_id", middleware.JWT(), h.UpdateVoting)
 			votings.DELETE("/:voting_id", middleware.JWT(), h.DeactivateVoting)
 			votings.GET("/:voting_id/stream", middleware.JWT(), h.SSEVotingResults)                      // SSE en tiempo real
+			votings.GET("/:voting_id/voting-details", middleware.JWT(), h.GetVotingDetailsAdmin)         // Detalles completos por unidad (admin)
 			votings.POST("/:voting_id/generate-public-url", middleware.JWT(), h.GeneratePublicVotingURL) // Generar URL pública
 
 			options := votings.Group("/:voting_id/options")

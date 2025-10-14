@@ -10,7 +10,9 @@ export interface GetResidentsParams {
   token: string;
   page?: number;
   pageSize?: number;
+  name?: string;
   propertyUnitId?: number;
+  propertyUnitNumber?: string; // Nuevo filtro por número de unidad
   residentTypeId?: number;
   isActive?: boolean;
   isMainResident?: boolean;

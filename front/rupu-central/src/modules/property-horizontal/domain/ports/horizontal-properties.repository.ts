@@ -25,9 +25,15 @@ export interface CreateHorizontalPropertyParams {
   data: CreateHorizontalPropertyDTO;
 }
 
+export interface DeleteHorizontalPropertyParams {
+  token: string;
+  id: number;
+}
+
 export interface IHorizontalPropertiesRepository {
   getHorizontalProperties(params: GetHorizontalPropertiesParams): Promise<HorizontalPropertiesPaginated>;
   getHorizontalPropertyById(params: GetHorizontalPropertyByIdParams): Promise<HorizontalProperty>;
   createHorizontalProperty(params: CreateHorizontalPropertyParams): Promise<HorizontalProperty>;
+  deleteHorizontalProperty(params: DeleteHorizontalPropertyParams): Promise<void>;
 }
 

@@ -7,6 +7,7 @@ import { Resident } from '../../domain';
 import { TokenStorage } from '@/modules/auth/infrastructure/storage';
 import { CreateResidentModal } from './create-resident-modal';
 import { EditResidentModal } from './edit-resident-modal';
+import { ImportResidentsModal } from './import-residents-modal';
 
 export function ResidentsTable({ hpId }: { hpId: number }) {
   const [residents, setResidents] = useState<Resident[]>([]);
@@ -15,6 +16,7 @@ export function ResidentsTable({ hpId }: { hpId: number }) {
   const [totalPages, setTotalPages] = useState(1);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [selectedResident, setSelectedResident] = useState<Resident | null>(null);
   
   // Estados para alertas y confirmación
@@ -24,18 +26,45 @@ export function ResidentsTable({ hpId }: { hpId: number }) {
   
   // Estados para filtros
   const [filters, setFilters] = useState({
+    name: undefined as string | undefined,
     propertyUnitId: undefined as number | undefined,
     residentTypeId: undefined as number | undefined,
     isActive: undefined as boolean | undefined,
     isMainResident: undefined as boolean | undefined,
   });
   const [filterInputs, setFilterInputs] = useState({
+    name: '',
     propertyUnitId: '',
     residentTypeId: '',
     isActive: '',
     isMainResident: '',
   });
   const [units, setUnits] = useState<Array<{ id: number; number: string }>>([]);
+  const [unitSearchTerm, setUnitSearchTerm] = useState('');
+  const [showUnitDropdown, setShowUnitDropdown] = useState(false);
+
+  // Filtrar unidades en memoria
+  const filteredUnits = units.filter(unit => 
+    unit.number.toLowerCase().includes(unitSearchTerm.toLowerCase())
+  );
+
+  // Cerrar dropdown al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.unit-search-dropdown')) {
+        setShowUnitDropdown(false);
+      }
+    };
+
+    if (showUnitDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showUnitDropdown]);
 
   // Cargar unidades para el filtro
   useEffect(() => {
@@ -84,6 +113,7 @@ export function ResidentsTable({ hpId }: { hpId: number }) {
 
   const handleApplyFilters = () => {
     setFilters({
+      name: filterInputs.name.trim() || undefined,
       propertyUnitId: filterInputs.propertyUnitId ? Number(filterInputs.propertyUnitId) : undefined,
       residentTypeId: filterInputs.residentTypeId ? Number(filterInputs.residentTypeId) : undefined,
       isActive: filterInputs.isActive ? filterInputs.isActive === 'true' : undefined,
@@ -94,17 +124,21 @@ export function ResidentsTable({ hpId }: { hpId: number }) {
 
   const handleClearFilters = () => {
     setFilterInputs({
+      name: '',
       propertyUnitId: '',
       residentTypeId: '',
       isActive: '',
       isMainResident: '',
     });
     setFilters({
+      name: undefined,
       propertyUnitId: undefined,
       residentTypeId: undefined,
       isActive: undefined,
       isMainResident: undefined,
     });
+    setUnitSearchTerm('');
+    setShowUnitDropdown(false);
     setCurrentPage(1);
   };
 
@@ -189,9 +223,17 @@ export function ResidentsTable({ hpId }: { hpId: number }) {
     <div>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Residentes</h2>
-        <button onClick={() => setShowCreateModal(true)} className="btn btn-primary">
-          ➕ Agregar Residente
-        </button>
+        <div className="flex gap-2">
+          <button 
+            onClick={() => setShowImportModal(true)} 
+            className="btn btn-secondary"
+          >
+            📊 Importar Excel
+          </button>
+          <button onClick={() => setShowCreateModal(true)} className="btn btn-primary">
+            ➕ Agregar Residente
+          </button>
+        </div>
       </div>
 
       {/* Alertas */}
@@ -206,21 +248,69 @@ export function ResidentsTable({ hpId }: { hpId: number }) {
       {/* Filtros */}
       <div className="mb-4 bg-gray-50 border border-gray-200 rounded-lg p-4">
         <h3 className="text-sm font-semibold text-gray-700 mb-3">🔍 Filtros de Búsqueda</h3>
-        <div className="grid grid-cols-4 gap-3 mb-3">
+        <div className="grid grid-cols-5 gap-3 mb-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Nombre</label>
+            <input
+              type="text"
+              placeholder="Buscar por nombre..."
+              value={filterInputs.name}
+              onChange={(e) => setFilterInputs({ ...filterInputs, name: e.target.value })}
+              className="input input-sm w-full"
+            />
+          </div>
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Unidad</label>
-            <select
-              value={filterInputs.propertyUnitId}
-              onChange={(e) => setFilterInputs({ ...filterInputs, propertyUnitId: e.target.value })}
-              className="input input-sm w-full"
-            >
-              <option value="">Todas</option>
-              {units.map(unit => (
-                <option key={unit.id} value={unit.id}>
-                  {unit.number}
-                </option>
-              ))}
-            </select>
+            <div className="relative unit-search-dropdown">
+              <input
+                type="text"
+                placeholder="Buscar unidad..."
+                value={unitSearchTerm}
+                onChange={(e) => {
+                  setUnitSearchTerm(e.target.value);
+                  setShowUnitDropdown(true);
+                }}
+                onFocus={() => setShowUnitDropdown(true)}
+                className="input input-sm w-full pr-8"
+              />
+              <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              {showUnitDropdown && unitSearchTerm && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto">
+                  <div
+                    className="px-3 py-2 text-xs text-gray-600 cursor-pointer hover:bg-gray-50"
+                    onClick={() => {
+                      setFilterInputs({ ...filterInputs, propertyUnitId: '' });
+                      setUnitSearchTerm('');
+                      setShowUnitDropdown(false);
+                    }}
+                  >
+                    Todas las unidades
+                  </div>
+                  {filteredUnits.map(unit => (
+                    <div
+                      key={unit.id}
+                      className="px-3 py-2 text-xs text-gray-700 cursor-pointer hover:bg-gray-50"
+                      onClick={() => {
+                        setFilterInputs({ ...filterInputs, propertyUnitId: unit.id.toString() });
+                        setUnitSearchTerm(unit.number);
+                        setShowUnitDropdown(false);
+                      }}
+                    >
+                      {unit.number}
+                    </div>
+                  ))}
+                  {filteredUnits.length === 0 && unitSearchTerm && (
+                    <div className="px-3 py-2 text-xs text-gray-500">
+                      No se encontraron unidades
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Tipo</label>
@@ -348,6 +438,14 @@ export function ResidentsTable({ hpId }: { hpId: number }) {
         confirmText="Eliminar"
         cancelText="Cancelar"
         type="danger"
+      />
+
+      {/* Modal de importación */}
+      <ImportResidentsModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onSuccess={loadResidents}
+        hpId={hpId}
       />
     </div>
   );

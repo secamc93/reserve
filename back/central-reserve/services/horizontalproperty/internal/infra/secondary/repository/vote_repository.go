@@ -305,116 +305,145 @@ func (r *Repository) GetVotingResults(ctx context.Context, votingID uint) ([]dom
 }
 
 func (r *Repository) GetVotingDetailsByUnit(ctx context.Context, votingID, hpID uint) ([]domain.VotingDetailByUnitDTO, error) {
-	type DetailRow struct {
-		PropertyUnitID     uint
-		PropertyUnitNumber string
-		ResidentID         *uint
-		ResidentName       *string
-		HasVoted           bool
-		VotingOptionID     *uint
-		OptionText         *string
-		OptionCode         *string
-		VotedAt            *string
+	// PASO 1: Obtener todas las unidades activas de la propiedad
+	var units []models.PropertyUnit
+	if err := r.db.Conn(ctx).
+		Where("business_id = ? AND is_active = ?", hpID, true).
+		Order("number ASC").
+		Find(&units).Error; err != nil {
+		r.logger.Error().Err(err).Uint("hp_id", hpID).Msg("Error obteniendo unidades")
+		return nil, fmt.Errorf("error obteniendo unidades: %w", err)
 	}
 
-	var details []DetailRow
-
-	// Query compleja: todas las unidades con su estado de votación
-	err := r.db.Conn(ctx).Raw(`
-		SELECT 
-			pu.id as property_unit_id,
-			pu.number as property_unit_number,
-			r.id as resident_id,
-			r.name as resident_name,
-			CASE WHEN v.id IS NOT NULL THEN true ELSE false END as has_voted,
-			v.voting_option_id,
-			vo.option_text,
-			vo.option_code,
-			TO_CHAR(v.voted_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as voted_at
-		FROM horizontal_property.property_units pu
-		LEFT JOIN horizontal_property.residents r 
-			ON r.property_unit_id = pu.id 
-			AND r.is_main_resident = true 
-			AND r.is_active = true
-			AND r.deleted_at IS NULL
-		LEFT JOIN horizontal_property.votes v 
-			ON v.resident_id = r.id 
-			AND v.voting_id = ?
-			AND v.deleted_at IS NULL
-		LEFT JOIN horizontal_property.voting_options vo 
-			ON vo.id = v.voting_option_id
-		WHERE pu.business_id = ? 
-			AND pu.is_active = true
-			AND pu.deleted_at IS NULL
-		ORDER BY pu.number ASC
-	`, votingID, hpID).Scan(&details).Error
-
-	if err != nil {
-		r.logger.Error().Err(err).Uint("voting_id", votingID).Uint("hp_id", hpID).Msg("Error obteniendo detalles por unidad")
-		return nil, fmt.Errorf("error obteniendo detalles por unidad: %w", err)
+	// PASO 2: Obtener todos los residentes principales de esas unidades
+	unitIDs := make([]uint, len(units))
+	for i, unit := range units {
+		unitIDs[i] = unit.ID
 	}
 
-	// Convertir a DTOs
-	dtos := make([]domain.VotingDetailByUnitDTO, len(details))
-	for i, detail := range details {
-		dtos[i] = domain.VotingDetailByUnitDTO{
-			PropertyUnitID:     detail.PropertyUnitID,
-			PropertyUnitNumber: detail.PropertyUnitNumber,
-			ResidentID:         detail.ResidentID,
-			ResidentName:       detail.ResidentName,
-			HasVoted:           detail.HasVoted,
-			VotingOptionID:     detail.VotingOptionID,
-			OptionText:         detail.OptionText,
-			OptionCode:         detail.OptionCode,
-			VotedAt:            detail.VotedAt,
+	var residents []models.Resident
+	if len(unitIDs) > 0 {
+		if err := r.db.Conn(ctx).
+			Where("property_unit_id IN ? AND is_main_resident = ? AND is_active = ?", unitIDs, true, true).
+			Find(&residents).Error; err != nil {
+			r.logger.Error().Err(err).Msg("Error obteniendo residentes principales")
+			return nil, fmt.Errorf("error obteniendo residentes: %w", err)
 		}
+	}
+
+	// Crear mapa de unidad -> residente
+	residentByUnit := make(map[uint]*models.Resident)
+	for i := range residents {
+		residentByUnit[residents[i].PropertyUnitID] = &residents[i]
+	}
+
+	// PASO 3: Obtener todos los votos de esta votación con las opciones
+	residentIDs := make([]uint, 0, len(residents))
+	for _, res := range residents {
+		residentIDs = append(residentIDs, res.ID)
+	}
+
+	var votes []models.Vote
+	if len(residentIDs) > 0 {
+		if err := r.db.Conn(ctx).
+			Preload("VotingOption").
+			Where("voting_id = ? AND resident_id IN ?", votingID, residentIDs).
+			Find(&votes).Error; err != nil {
+			r.logger.Error().Err(err).Uint("voting_id", votingID).Msg("Error obteniendo votos")
+			return nil, fmt.Errorf("error obteniendo votos: %w", err)
+		}
+	}
+
+	// Crear mapa de residente -> voto
+	voteByResident := make(map[uint]*models.Vote)
+	for i := range votes {
+		voteByResident[votes[i].ResidentID] = &votes[i]
+	}
+
+	// PASO 4: Combinar todo en DTOs
+	dtos := make([]domain.VotingDetailByUnitDTO, len(units))
+	for i, unit := range units {
+		dto := domain.VotingDetailByUnitDTO{
+			PropertyUnitID:           unit.ID,
+			PropertyUnitNumber:       unit.Number,
+			ParticipationCoefficient: unit.ParticipationCoefficient,
+			HasVoted:                 false,
+		}
+
+		// Agregar info del residente si existe
+		if resident, hasResident := residentByUnit[unit.ID]; hasResident {
+			dto.ResidentID = &resident.ID
+			dto.ResidentName = &resident.Name
+
+			// Agregar info del voto si existe
+			if vote, hasVoted := voteByResident[resident.ID]; hasVoted {
+				dto.HasVoted = true
+				dto.VotingOptionID = &vote.VotingOptionID
+
+				if vote.VotingOption.ID != 0 {
+					dto.OptionText = &vote.VotingOption.OptionText
+					dto.OptionCode = &vote.VotingOption.OptionCode
+				}
+
+				votedAtStr := vote.VotedAt.Format("2006-01-02T15:04:05Z07:00")
+				dto.VotedAt = &votedAtStr
+			}
+		}
+
+		dtos[i] = dto
 	}
 
 	return dtos, nil
 }
 
 func (r *Repository) GetUnitsWithResidents(ctx context.Context, hpID uint) ([]domain.UnitWithResidentDTO, error) {
-	type UnitRow struct {
-		PropertyUnitID     uint
-		PropertyUnitNumber string
-		ResidentID         *uint
-		ResidentName       *string
+	// PASO 1: Obtener todas las unidades activas
+	var units []models.PropertyUnit
+	if err := r.db.Conn(ctx).
+		Where("business_id = ? AND is_active = ?", hpID, true).
+		Order("number ASC").
+		Find(&units).Error; err != nil {
+		r.logger.Error().Err(err).Uint("hp_id", hpID).Msg("Error obteniendo unidades")
+		return nil, fmt.Errorf("error obteniendo unidades: %w", err)
 	}
 
-	var units []UnitRow
-
-	err := r.db.Conn(ctx).Raw(`
-		SELECT 
-			pu.id as property_unit_id,
-			pu.number as property_unit_number,
-			r.id as resident_id,
-			r.name as resident_name
-		FROM horizontal_property.property_units pu
-		LEFT JOIN horizontal_property.residents r 
-			ON r.property_unit_id = pu.id 
-			AND r.is_main_resident = true 
-			AND r.is_active = true
-			AND r.deleted_at IS NULL
-		WHERE pu.business_id = ? 
-			AND pu.is_active = true
-			AND pu.deleted_at IS NULL
-		ORDER BY pu.number ASC
-	`, hpID).Scan(&units).Error
-
-	if err != nil {
-		r.logger.Error().Err(err).Uint("hp_id", hpID).Msg("Error obteniendo unidades con residentes")
-		return nil, fmt.Errorf("error obteniendo unidades con residentes: %w", err)
+	// PASO 2: Obtener residentes principales de esas unidades
+	unitIDs := make([]uint, len(units))
+	for i, unit := range units {
+		unitIDs[i] = unit.ID
 	}
 
-	// Convertir a DTOs
+	var residents []models.Resident
+	if len(unitIDs) > 0 {
+		if err := r.db.Conn(ctx).
+			Where("property_unit_id IN ? AND is_main_resident = ? AND is_active = ?", unitIDs, true, true).
+			Find(&residents).Error; err != nil {
+			r.logger.Error().Err(err).Msg("Error obteniendo residentes")
+			return nil, fmt.Errorf("error obteniendo residentes: %w", err)
+		}
+	}
+
+	// PASO 3: Crear mapa de unidad -> residente
+	residentByUnit := make(map[uint]*models.Resident)
+	for i := range residents {
+		residentByUnit[residents[i].PropertyUnitID] = &residents[i]
+	}
+
+	// PASO 4: Combinar en DTOs
 	dtos := make([]domain.UnitWithResidentDTO, len(units))
 	for i, unit := range units {
-		dtos[i] = domain.UnitWithResidentDTO{
-			PropertyUnitID:     unit.PropertyUnitID,
-			PropertyUnitNumber: unit.PropertyUnitNumber,
-			ResidentID:         unit.ResidentID,
-			ResidentName:       unit.ResidentName,
+		dto := domain.UnitWithResidentDTO{
+			PropertyUnitID:     unit.ID,
+			PropertyUnitNumber: unit.Number,
 		}
+
+		// Agregar residente si existe
+		if resident, hasResident := residentByUnit[unit.ID]; hasResident {
+			dto.ResidentID = &resident.ID
+			dto.ResidentName = &resident.Name
+		}
+
+		dtos[i] = dto
 	}
 
 	return dtos, nil
