@@ -325,6 +325,7 @@ type VotingOption struct {
 	VotingID     uint   `gorm:"not null;index;uniqueIndex:idx_voting_option_text,priority:1"`    // Votación a la que pertenece
 	OptionText   string `gorm:"size:100;not null;uniqueIndex:idx_voting_option_text,priority:2"` // Texto de la opción (Sí, No, Abstención, etc.)
 	OptionCode   string `gorm:"size:20;not null"`                                                // Código interno (yes, no, abstention, etc.)
+	Color        string `gorm:"size:20;not null;default:'#3b82f6'"`                              // Color hexadecimal para la opción (ej. #22c55e para verde)
 	DisplayOrder int    `gorm:"default:1"`                                                       // Orden de visualización
 	IsActive     bool   `gorm:"default:true"`                                                    // Si está activa
 

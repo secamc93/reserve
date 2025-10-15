@@ -9,6 +9,7 @@ export interface VotingOption {
   optionCode: string;
   displayOrder: number;
   isActive: boolean;
+  color?: string; // Color hexadecimal opcional (ej: "#22c55e")
 }
 
 export interface VotingOptionsList {
@@ -21,5 +22,6 @@ export interface CreateVotingOptionDTO {
   optionText: string;
   optionCode: string;
   displayOrder: number;
+  color?: string; // Color hexadecimal opcional (ej: "#22c55e")
 }
 

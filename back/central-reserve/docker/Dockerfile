@@ -1,5 +1,5 @@
 # Etapa 1: build con Go
-FROM golang:1.23-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 # Variables de compilación (solo para build)
 ENV CGO_ENABLED=0 \

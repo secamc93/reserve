@@ -67,6 +67,7 @@ func MapVotingOptionDTOToResponse(dto *domain.VotingOptionDTO) response.VotingOp
 		VotingID:     dto.VotingID,
 		OptionText:   dto.OptionText,
 		OptionCode:   dto.OptionCode,
+		Color:        dto.Color,
 		DisplayOrder: dto.DisplayOrder,
 		IsActive:     dto.IsActive,
 	}
@@ -157,6 +158,7 @@ func MapVotingDetailByUnitToResponse(dto *domain.VotingDetailByUnitDTO) response
 		VotingOptionID:           dto.VotingOptionID,
 		OptionText:               dto.OptionText,
 		OptionCode:               dto.OptionCode,
+		OptionColor:              dto.OptionColor,
 		VotedAt:                  dto.VotedAt,
 	}
 }

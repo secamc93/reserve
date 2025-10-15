@@ -7397,10 +7397,14 @@ const docTemplate = `{
         "request.CreateVotingOptionRequest": {
             "type": "object",
             "required": [
+                "color",
                 "option_code",
                 "option_text"
             ],
             "properties": {
+                "color": {
+                    "type": "string"
+                },
                 "display_order": {
                     "type": "integer",
                     "minimum": 1

@@ -252,6 +252,7 @@ type CreateVotingOptionDTO struct {
 	VotingID     uint
 	OptionText   string
 	OptionCode   string
+	Color        string
 	DisplayOrder int
 }
 
@@ -261,6 +262,7 @@ type VotingOptionDTO struct {
 	VotingID     uint
 	OptionText   string
 	OptionCode   string
+	Color        string
 	DisplayOrder int
 	IsActive     bool
 }
@@ -309,6 +311,7 @@ type VotingDetailByUnitDTO struct {
 	VotingOptionID           *uint
 	OptionText               *string
 	OptionCode               *string
+	OptionColor              *string
 	VotedAt                  *string
 }
 

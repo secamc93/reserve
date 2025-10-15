@@ -50,6 +50,7 @@ func (h *VotingHandler) CreateVotingOption(c *gin.Context) {
 		VotingID:     uint(id64),
 		OptionText:   req.OptionText,
 		OptionCode:   req.OptionCode,
+		Color:        req.Color,
 		DisplayOrder: req.DisplayOrder,
 	}
 	created, err := h.votingUseCase.CreateVotingOption(c.Request.Context(), dto)

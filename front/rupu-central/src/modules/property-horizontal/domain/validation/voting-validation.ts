@@ -212,9 +212,15 @@ export function validateCreateVotingOption(data: {
   optionText: string;
   optionCode: string;
   displayOrder: number;
+  color?: string;
 }): void {
   validateStringLength(data.optionText, 'Texto de la opción', 1, 100);
   validateStringLength(data.optionCode, 'Código de la opción', 1, 20);
   validateDisplayOrder(data.displayOrder);
+  
+  // Validar color hexadecimal si se proporciona
+  if (data.color && !/^#[0-9A-Fa-f]{6}$/.test(data.color)) {
+    throw new Error('El color debe ser un código hexadecimal válido (ej: #22c55e)');
+  }
 }
 

@@ -179,6 +179,7 @@ type VotingOption struct {
 	VotingID     uint
 	OptionText   string
 	OptionCode   string
+	Color        string
 	DisplayOrder int
 	IsActive     bool
 }

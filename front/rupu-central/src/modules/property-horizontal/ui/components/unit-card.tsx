@@ -11,6 +11,7 @@ export interface ResidentialUnit {
   id: number;
   number: string;
   resident: string;
+  residentId?: number | null; // ✅ NUEVO: ID del residente para debugging
   hasVoted: boolean;
   votedOption?: string; // Texto de la opción votada
   votedOptionId?: number; // ID de la opción votada
@@ -44,17 +45,17 @@ export function UnitCard({ unit, scale }: UnitCardProps) {
 
   const currentScale = scale || defaultScale;
 
-  // Función para generar tonos claros y oscuros a partir de un color hex
+  // Función para generar tonos más intensos a partir de un color hex
   const generateColorShades = (hex: string) => {
     // Convertir hex a RGB
     const r = parseInt(hex.slice(1, 3), 16);
     const g = parseInt(hex.slice(3, 5), 16);
     const b = parseInt(hex.slice(5, 7), 16);
     
-    // Generar tonos más claros para el fondo
-    const bgLight = `rgba(${r}, ${g}, ${b}, 0.1)`;
-    const borderLight = `rgba(${r}, ${g}, ${b}, 0.3)`;
-    const iconBgLight = `rgba(${r}, ${g}, ${b}, 0.2)`;
+    // Generar tonos más intensos para resaltar el voto
+    const bgLight = `rgba(${r}, ${g}, ${b}, 0.15)`; // Más intenso que 0.1
+    const borderLight = `rgba(${r}, ${g}, ${b}, 0.5)`; // Más intenso que 0.3
+    const iconBgLight = `rgba(${r}, ${g}, ${b}, 0.3)`; // Más intenso que 0.2
     const iconText = hex;
     
     return { bgLight, borderLight, iconBgLight, iconText };
@@ -74,7 +75,7 @@ export function UnitCard({ unit, scale }: UnitCardProps) {
       };
     }
 
-    // Si tiene color personalizado, usarlo
+    // Si tiene color personalizado del voto, usarlo con mayor intensidad
     if (unit.votedOptionColor) {
       const shades = generateColorShades(unit.votedOptionColor);
       return {
@@ -82,10 +83,10 @@ export function UnitCard({ unit, scale }: UnitCardProps) {
         customStyles: {
           bg: shades.bgLight,
           border: shades.borderLight,
-          iconBg: shades.iconBgLight,
-          iconText: shades.iconText
+          iconBg: unit.votedOptionColor, // Color sólido más fuerte para el icono
+          iconText: "#ffffff" // Texto blanco para contraste
         },
-        badge: 'primary' as const
+        badge: 'success' as const
       };
     }
 
@@ -111,70 +112,97 @@ export function UnitCard({ unit, scale }: UnitCardProps) {
   const colors = getColors();
 
   if (colors.useCustom && colors.customStyles) {
-    // Usar estilos inline para colores personalizados
+    // Nuevo diseño con rectángulos y efectos
     return (
       <div 
-        className={`${currentScale.cardPadding} rounded-xl border-2 text-center transition-all hover:shadow-md`}
+        className={`${currentScale.cardPadding} rounded-xl border-2 text-center transition-all duration-300 hover:shadow-lg hover:scale-105 cursor-pointer relative group`}
         style={{
           backgroundColor: colors.customStyles.bg,
-          borderColor: colors.customStyles.border
+          borderColor: colors.customStyles.border,
+          boxShadow: `0 4px 6px -1px ${colors.customStyles.iconBg}20, 0 2px 4px -1px ${colors.customStyles.iconBg}10`
         }}
       >
+        {/* Rectángulo del número de unidad */}
         <div 
-          className={`${currentScale.iconSize} mx-auto mb-3 flex items-center justify-center rounded-full font-bold ${currentScale.iconText}`}
+          className="mx-auto mb-3 px-3 py-1 rounded-lg font-bold text-black shadow-sm"
           style={{
             backgroundColor: colors.customStyles.iconBg,
-            color: colors.customStyles.iconText
+            color: '#000000' // Texto negro como solicitado
           }}
         >
           {unit.number}
         </div>
-        <p className={`font-semibold text-gray-900 ${currentScale.nameText} mb-1 truncate`} title={unit.resident}>
+        
+        {/* Información del residente */}
+        <p className={`font-semibold text-black ${currentScale.nameText} mb-1 truncate`} title={unit.resident}>
           {unit.resident}
         </p>
-        <p className={`text-gray-500 ${currentScale.unitText} mb-1`}>Unidad {unit.number}</p>
+        <p className={`text-gray-600 ${currentScale.unitText} mb-1`}>Unidad {unit.number}</p>
         {unit.participationCoefficient && (
-          <p className={`text-gray-400 ${currentScale.unitText} mb-2`} title="Coeficiente de participación">
+          <p className={`text-gray-500 ${currentScale.unitText} mb-3`} title="Coeficiente de participación">
             Coef: {unit.participationCoefficient.toFixed(4)}
           </p>
         )}
-        <div className="space-y-1">
-          <Badge type={colors.badge}>
-            ✅ {unit.votedOption}
-          </Badge>
+        
+        {/* Rectángulo de la opción votada */}
+        <div 
+          className="px-3 py-2 rounded-lg font-bold text-black transition-all duration-300 hover:shadow-md"
+          style={{
+            backgroundColor: colors.customStyles.iconBg,
+            color: '#000000' // Texto negro como solicitado
+          }}
+        >
+          {unit.votedOption}
+        </div>
+        
+        {/* Tooltip con detalles */}
+        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap z-10">
+          <div className="font-semibold mb-1">{unit.number}</div>
+          <div className="text-gray-300">{unit.resident}</div>
+          <div className="text-gray-300">ID Residente: {unit.residentId || 'N/A'}</div>
+          <div className="text-gray-300">Coef: {unit.participationCoefficient?.toFixed(4) || '0.0000'}</div>
+          <div className="text-gray-300">Estado: {unit.hasVoted ? `Votó: ${unit.votedOption}` : 'Pendiente'}</div>
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
         </div>
       </div>
     );
   }
 
-  // Usar clases de Tailwind para colores por defecto
+  // Usar clases de Tailwind para colores por defecto con el nuevo diseño
   return (
     <div 
-      className={`${currentScale.cardPadding} rounded-xl border-2 text-center transition-all hover:shadow-md ${colors.bg} ${colors.border}`}
+      className={`${currentScale.cardPadding} rounded-xl border-2 text-center transition-all duration-300 hover:shadow-lg hover:scale-105 cursor-pointer relative group ${colors.bg} ${colors.border}`}
     >
-      <div className={`${currentScale.iconSize} mx-auto mb-3 flex items-center justify-center rounded-full font-bold ${currentScale.iconText} ${colors.iconBg} ${colors.iconText}`}>
+      {/* Rectángulo del número de unidad */}
+      <div className={`mx-auto mb-3 px-3 py-1 rounded-lg font-bold text-black shadow-sm ${colors.iconBg}`}>
         {unit.number}
       </div>
-      <p className={`font-semibold text-gray-900 ${currentScale.nameText} mb-1 truncate`} title={unit.resident}>
+      
+      {/* Información del residente */}
+      <p className={`font-semibold text-black ${currentScale.nameText} mb-1 truncate`} title={unit.resident}>
         {unit.resident}
       </p>
-      <p className={`text-gray-500 ${currentScale.unitText} mb-1`}>Unidad {unit.number}</p>
+      <p className={`text-gray-600 ${currentScale.unitText} mb-1`}>Unidad {unit.number}</p>
       {unit.participationCoefficient && (
-        <p className={`text-gray-400 ${currentScale.unitText} mb-2`} title="Coeficiente de participación">
+        <p className={`text-gray-500 ${currentScale.unitText} mb-3`} title="Coeficiente de participación">
           Coef: {unit.participationCoefficient.toFixed(4)}
         </p>
       )}
-      {unit.hasVoted && unit.votedOption ? (
-        <div className="space-y-1">
-          <Badge type={colors.badge}>
-            ✅ {unit.votedOption}
-          </Badge>
-        </div>
-      ) : (
-        <Badge type="error">
-          ⏳ Pendiente
-        </Badge>
-      )}
+      
+      {/* Rectángulo de la opción votada o pendiente */}
+      <div className={`px-3 py-2 rounded-lg font-bold text-black transition-all duration-300 hover:shadow-md ${colors.iconBg}`}>
+        {unit.hasVoted && unit.votedOption ? unit.votedOption : 'Pendiente'}
+      </div>
+      
+      {/* Tooltip con detalles */}
+      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap z-10">
+        <div className="font-semibold mb-1">{unit.number}</div>
+        <div className="text-gray-300">{unit.resident}</div>
+        <div className="text-gray-300">ID Residente: {unit.residentId || 'N/A'}</div>
+        <div className="text-gray-300">Coef: {unit.participationCoefficient?.toFixed(4) || '0.0000'}</div>
+        <div className="text-gray-300">Estado: {unit.hasVoted ? `Votó: ${unit.votedOption}` : 'Pendiente'}</div>
+        <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+      </div>
     </div>
   );
 }

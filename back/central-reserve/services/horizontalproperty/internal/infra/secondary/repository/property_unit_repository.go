@@ -64,7 +64,11 @@ func (r *Repository) ListPropertyUnits(ctx context.Context, filters domain.Prope
 		return nil, fmt.Errorf("error contando: %w", err)
 	}
 	offset := (filters.Page - 1) * filters.PageSize
-	if err := query.Order("number ASC").Limit(filters.PageSize).Offset(offset).Find(&ms).Error; err != nil {
+	if err := query.
+		Order("REGEXP_REPLACE(number, '[^0-9]', '', 'g') != '' DESC").
+		Order("REGEXP_REPLACE(number, '[0-9]+', '', 'g') ASC").
+		Order("COALESCE(NULLIF(REGEXP_REPLACE(number, '[^0-9]', '', 'g'), '')::integer, 0) ASC").
+		Limit(filters.PageSize).Offset(offset).Find(&ms).Error; err != nil {
 		return nil, fmt.Errorf("error listando: %w", err)
 	}
 	units := make([]domain.PropertyUnitListDTO, len(ms))

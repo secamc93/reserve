@@ -309,7 +309,9 @@ func (r *Repository) GetVotingDetailsByUnit(ctx context.Context, votingID, hpID 
 	var units []models.PropertyUnit
 	if err := r.db.Conn(ctx).
 		Where("business_id = ? AND is_active = ?", hpID, true).
-		Order("number ASC").
+		Order("REGEXP_REPLACE(number, '[^0-9]', '', 'g') != '' DESC").
+		Order("REGEXP_REPLACE(number, '[0-9]+', '', 'g') ASC").
+		Order("COALESCE(NULLIF(REGEXP_REPLACE(number, '[^0-9]', '', 'g'), '')::integer, 0) ASC").
 		Find(&units).Error; err != nil {
 		r.logger.Error().Err(err).Uint("hp_id", hpID).Msg("Error obteniendo unidades")
 		return nil, fmt.Errorf("error obteniendo unidades: %w", err)
@@ -383,6 +385,7 @@ func (r *Repository) GetVotingDetailsByUnit(ctx context.Context, votingID, hpID 
 				if vote.VotingOption.ID != 0 {
 					dto.OptionText = &vote.VotingOption.OptionText
 					dto.OptionCode = &vote.VotingOption.OptionCode
+					dto.OptionColor = &vote.VotingOption.Color
 				}
 
 				votedAtStr := vote.VotedAt.Format("2006-01-02T15:04:05Z07:00")
@@ -401,7 +404,9 @@ func (r *Repository) GetUnitsWithResidents(ctx context.Context, hpID uint) ([]do
 	var units []models.PropertyUnit
 	if err := r.db.Conn(ctx).
 		Where("business_id = ? AND is_active = ?", hpID, true).
-		Order("number ASC").
+		Order("REGEXP_REPLACE(number, '[^0-9]', '', 'g') != '' DESC").
+		Order("REGEXP_REPLACE(number, '[0-9]+', '', 'g') ASC").
+		Order("COALESCE(NULLIF(REGEXP_REPLACE(number, '[^0-9]', '', 'g'), '')::integer, 0) ASC").
 		Find(&units).Error; err != nil {
 		r.logger.Error().Err(err).Uint("hp_id", hpID).Msg("Error obteniendo unidades")
 		return nil, fmt.Errorf("error obteniendo unidades: %w", err)

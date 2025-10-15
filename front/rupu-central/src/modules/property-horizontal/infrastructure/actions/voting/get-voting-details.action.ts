@@ -9,9 +9,11 @@ interface VotingDetailsResult {
       property_unit_number: string;
       participation_coefficient: number;
       resident_name: string | null;
+      resident_id: number | null; // ✅ NUEVO: ID del residente para mapeo correcto
       has_voted: boolean;
       option_text: string | null;
       option_code: string | null;
+      option_color: string | null; // Color del voto decidido
       voted_at: string | null;
     }>;
     total_units: number;

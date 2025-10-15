@@ -44,6 +44,7 @@ export interface BackendVotingOption {
   option_code: string;
   display_order: number;
   is_active: boolean;
+  color?: string; // Color hexadecimal opcional
 }
 
 export interface BackendGetVotingOptionsResponse {

@@ -19,6 +19,7 @@ func (u *votingUseCase) CreateVotingOption(ctx context.Context, dto domain.Creat
 		VotingID:     dto.VotingID,
 		OptionText:   dto.OptionText,
 		OptionCode:   dto.OptionCode,
+		Color:        dto.Color,
 		DisplayOrder: dto.DisplayOrder,
 	}
 
@@ -32,6 +33,7 @@ func (u *votingUseCase) CreateVotingOption(ctx context.Context, dto domain.Creat
 		VotingID:     created.VotingID,
 		OptionText:   created.OptionText,
 		OptionCode:   created.OptionCode,
+		Color:        created.Color,
 		DisplayOrder: created.DisplayOrder,
 		IsActive:     created.IsActive,
 	}, nil

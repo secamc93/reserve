@@ -53,6 +53,7 @@ type VotingOptionResponse struct {
 	VotingID     uint   `json:"voting_id" example:"1"`
 	OptionText   string `json:"option_text" example:"Sí, apruebo"`
 	OptionCode   string `json:"option_code" example:"YES"`
+	Color        string `json:"color" example:"#22c55e"`
 	DisplayOrder int    `json:"display_order" example:"1"`
 	IsActive     bool   `json:"is_active" example:"true"`
 }
@@ -76,6 +77,7 @@ type VotingResultResponse struct {
 	VotingOptionID uint    `json:"voting_option_id" example:"1"`
 	OptionText     string  `json:"option_text" example:"Sí, apruebo"`
 	OptionCode     string  `json:"option_code" example:"YES"`
+	Color          string  `json:"color" example:"#22c55e"`
 	VoteCount      int     `json:"vote_count" example:"45"`
 	Percentage     float64 `json:"percentage" example:"75.5"`
 }
@@ -93,13 +95,14 @@ type VotingDetailByUnitResponse struct {
 	PropertyUnitID           uint     `json:"property_unit_id" example:"1"`
 	PropertyUnitNumber       string   `json:"property_unit_number" example:"101"`
 	ParticipationCoefficient *float64 `json:"participation_coefficient" example:"0.008333"`
-	ResidentID               *uint    `json:"resident_id,omitempty" example:"5"`
-	ResidentName             *string  `json:"resident_name,omitempty" example:"Juan Pérez"`
+	ResidentID               *uint    `json:"resident_id" example:"5"`
+	ResidentName             *string  `json:"resident_name" example:"Juan Pérez"`
 	HasVoted                 bool     `json:"has_voted" example:"true"`
-	VotingOptionID           *uint    `json:"voting_option_id,omitempty" example:"3"`
-	OptionText               *string  `json:"option_text,omitempty" example:"Sí"`
-	OptionCode               *string  `json:"option_code,omitempty" example:"yes"`
-	VotedAt                  *string  `json:"voted_at,omitempty" example:"2025-10-13T01:30:00Z"`
+	VotingOptionID           *uint    `json:"voting_option_id" example:"3"`
+	OptionText               *string  `json:"option_text" example:"Sí"`
+	OptionCode               *string  `json:"option_code" example:"yes"`
+	OptionColor              *string  `json:"option_color" example:"#22c55e"`
+	VotedAt                  *string  `json:"voted_at" example:"2025-10-13T01:30:00Z"`
 }
 
 // Tipos de respuesta con datos

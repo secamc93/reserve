@@ -145,6 +145,7 @@ func (u *votingUseCase) ListVotingOptionsByVoting(ctx context.Context, votingID 
 			VotingID:     o.VotingID,
 			OptionText:   o.OptionText,
 			OptionCode:   o.OptionCode,
+			Color:        o.Color,
 			DisplayOrder: o.DisplayOrder,
 			IsActive:     o.IsActive,
 		}

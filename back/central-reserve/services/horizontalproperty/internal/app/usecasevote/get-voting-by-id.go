@@ -55,6 +55,7 @@ func (uc *votingUseCase) GetVotingByID(ctx context.Context, hpID, groupID, votin
 			VotingID:     opt.VotingID,
 			OptionText:   opt.OptionText,
 			OptionCode:   opt.OptionCode,
+			Color:        opt.Color,
 			DisplayOrder: opt.DisplayOrder,
 			IsActive:     opt.IsActive,
 		})

@@ -26,6 +26,7 @@ type CreateVotingRequest struct {
 type CreateVotingOptionRequest struct {
 	OptionText   string `json:"option_text" binding:"required,min=1,max=100"`
 	OptionCode   string `json:"option_code" binding:"required,min=1,max=20"`
+	Color        string `json:"color" binding:"required,hexcolor"`
 	DisplayOrder int    `json:"display_order" binding:"min=1"`
 }
 

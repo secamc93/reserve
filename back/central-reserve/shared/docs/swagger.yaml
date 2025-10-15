@@ -248,6 +248,8 @@ definitions:
     type: object
   request.CreateVotingOptionRequest:
     properties:
+      color:
+        type: string
       display_order:
         minimum: 1
         type: integer
@@ -260,6 +262,7 @@ definitions:
         minLength: 1
         type: string
     required:
+    - color
     - option_code
     - option_text
     type: object

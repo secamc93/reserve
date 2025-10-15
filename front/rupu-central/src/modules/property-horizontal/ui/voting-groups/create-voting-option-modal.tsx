@@ -33,6 +33,7 @@ export function CreateVotingOptionModal({
   const [optionText, setOptionText] = useState('');
   const [optionCode, setOptionCode] = useState('');
   const [displayOrder, setDisplayOrder] = useState('1');
+  const [color, setColor] = useState('#3b82f6'); // Color azul por defecto
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,6 +55,8 @@ export function CreateVotingOptionModal({
         return;
       }
 
+      console.log(`🎨 Color seleccionado en el frontend:`, color.trim());
+      
       const result = await createVotingOptionAction({
         token,
         hpId,
@@ -64,6 +67,7 @@ export function CreateVotingOptionModal({
           optionText: optionText.trim(),
           optionCode: optionCode.trim(),
           displayOrder: parseInt(displayOrder),
+          color: color.trim(),
         },
       });
 
@@ -87,6 +91,7 @@ export function CreateVotingOptionModal({
     setOptionText('');
     setOptionCode('');
     setDisplayOrder('1');
+    setColor('#3b82f6');
     setError(null);
   };
 
@@ -118,15 +123,47 @@ export function CreateVotingOptionModal({
           required
         />
 
-        <Input
-          label="Orden de Visualización"
-          type="number"
-          value={displayOrder}
-          onChange={(e) => setDisplayOrder(e.target.value)}
-          placeholder="1"
-          disabled={loading}
-          min="1"
-        />
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            label="Orden de Visualización"
+            type="number"
+            value={displayOrder}
+            onChange={(e) => setDisplayOrder(e.target.value)}
+            placeholder="1"
+            disabled={loading}
+            min="1"
+          />
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Color de la Opción
+            </label>
+            <div className="flex items-center gap-3">
+              <input
+                type="color"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                disabled={loading}
+                className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
+                title="Seleccionar color"
+              />
+              <div className="flex-1">
+                <input
+                  type="text"
+                  value={color}
+                  onChange={(e) => setColor(e.target.value)}
+                  placeholder="#3b82f6"
+                  disabled={loading}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  pattern="^#[0-9A-Fa-f]{6}$"
+                />
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Formato: #RRGGBB (ej: #22c55e)
+            </p>
+          </div>
+        </div>
 
         {/* Error */}
         {error && (

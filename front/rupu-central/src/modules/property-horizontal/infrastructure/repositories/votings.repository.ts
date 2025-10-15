@@ -198,6 +198,7 @@ export class VotingOptionsRepository implements IVotingOptionsRepository {
       optionCode: option.option_code,
       displayOrder: option.display_order,
       isActive: option.is_active,
+      color: option.color, // Mapear el color del backend
     }));
 
     return {
@@ -214,8 +215,10 @@ export class VotingOptionsRepository implements IVotingOptionsRepository {
       option_text: params.data.optionText,
       option_code: params.data.optionCode,
       display_order: params.data.displayOrder,
+      color: params.data.color, // Incluir el color en la request
     };
 
+    console.log(`🎨 Enviando color al backend:`, params.data.color);
     logHttpRequest({ method: 'POST', url, body });
 
     const response = await fetch(url, {
@@ -249,6 +252,8 @@ export class VotingOptionsRepository implements IVotingOptionsRepository {
     });
 
     // Mapear la respuesta del backend al dominio
+    console.log(`🎨 Color devuelto por el backend:`, data.data.color);
+    
     return {
       id: data.data.id,
       votingId: data.data.voting_id,
@@ -256,6 +261,7 @@ export class VotingOptionsRepository implements IVotingOptionsRepository {
       optionCode: data.data.option_code,
       displayOrder: data.data.display_order,
       isActive: data.data.is_active,
+      color: data.data.color, // Mapear el color de la respuesta
     };
   }
 }
