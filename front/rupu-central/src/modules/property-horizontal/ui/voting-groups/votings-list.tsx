@@ -8,7 +8,11 @@ import { useState, useEffect } from 'react';
 import { Badge, Spinner } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
 import { getVotingsAction, getVotingOptionsAction, getVotesAction } from '../../infrastructure/actions';
+import { activateVotingAction } from '../../infrastructure/actions/voting/activate-voting.action';
+import { deactivateVotingAction } from '../../infrastructure/actions/voting/deactivate-voting.action';
 import { CreateVotingModal } from './create-voting-modal';
+import { EditVotingModal } from './edit-voting-modal';
+import { DeleteVotingModal } from './delete-voting-modal';
 import { CreateVotingOptionModal } from './create-voting-option-modal';
 import { VotesDetailModal } from './votes-detail-modal';
 import { VoteModal } from './vote-modal';
@@ -67,8 +71,12 @@ export function VotingsList({ hpId, groupId, groupName }: VotingsListProps) {
   const [showVotesDetailModal, setShowVotesDetailModal] = useState(false);
   const [showVoteModal, setShowVoteModal] = useState(false);
   const [showLiveVotingModal, setShowLiveVotingModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedVotingForDetails, setSelectedVotingForDetails] = useState<Voting | null>(null);
   const [selectedVotingForLive, setSelectedVotingForLive] = useState<Voting | null>(null);
+  const [selectedVotingForEdit, setSelectedVotingForEdit] = useState<Voting | null>(null);
+  const [selectedVotingForDelete, setSelectedVotingForDelete] = useState<Voting | null>(null);
 
   useEffect(() => {
     loadVotings();
@@ -193,18 +201,99 @@ export function VotingsList({ hpId, groupId, groupName }: VotingsListProps) {
     }
   };
 
-  const handleLiveVoting = async (voting: Voting) => {
-    // Asegurar que las opciones estén cargadas
-    if (!votingOptions[voting.id]) {
-      await loadVotingOptions(voting.id);
+  const handleLiveVoting = (voting: Voting) => {
+    // Navegar a la página de votación en vivo
+    window.location.href = `/properties/${hpId}/voting-groups/${groupId}/votings/${voting.id}/live`;
+  };
+
+  const handleEditClick = (voting: Voting) => {
+    setSelectedVotingForEdit(voting);
+    setShowEditModal(true);
+  };
+
+  const handleEditSuccess = () => {
+    console.log('✅ Votación editada exitosamente');
+    loadVotings();
+  };
+
+  const handleEditClose = () => {
+    setShowEditModal(false);
+    setSelectedVotingForEdit(null);
+  };
+
+  const handleDeleteClick = (voting: Voting) => {
+    setSelectedVotingForDelete(voting);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteSuccess = () => {
+    console.log('✅ Votación eliminada exitosamente');
+    loadVotings();
+  };
+
+  const handleDeleteClose = () => {
+    setShowDeleteModal(false);
+    setSelectedVotingForDelete(null);
+  };
+
+  const handleActivateVoting = async (voting: Voting) => {
+    try {
+      const token = TokenStorage.getToken();
+      
+      if (!token) {
+        console.error('❌ No se encontró el token de autenticación');
+        return;
+      }
+
+      console.log('🔄 Activando votación:', { votingId: voting.id, title: voting.title });
+
+      const result = await activateVotingAction({
+        token,
+        hpId,
+        groupId,
+        votingId: voting.id,
+      });
+
+      if (result.success) {
+        console.log('✅ Votación activada:', result.message);
+        // Actualizar la lista de votaciones
+        loadVotings();
+      } else {
+        console.error('❌ Error activando votación:', result.error);
+      }
+    } catch (err) {
+      console.error('❌ Error inesperado activando votación:', err);
     }
-    // Asegurar que los votos estén cargados
-    if (!votingVotes[voting.id]) {
-      await loadVotes(voting.id);
+  };
+
+  const handleDeactivateVoting = async (voting: Voting) => {
+    try {
+      const token = TokenStorage.getToken();
+      
+      if (!token) {
+        console.error('❌ No se encontró el token de autenticación');
+        return;
+      }
+
+      console.log('🔄 Desactivando votación:', { votingId: voting.id, title: voting.title });
+
+      const result = await deactivateVotingAction({
+        token,
+        hpId,
+        groupId,
+        votingId: voting.id,
+      });
+
+      if (result.success) {
+        console.log('✅ Votación desactivada:', result.message);
+        // Actualizar la lista de votaciones
+        loadVotings();
+      } else {
+        console.error('❌ Error desactivando votación:', result.error);
+      }
+    } catch (err) {
+      console.error('❌ Error inesperado desactivando votación:', err);
     }
-    
-    setSelectedVotingForLive(voting);
-    setShowLiveVotingModal(true);
   };
 
   const getVotingTypeBadge = (type: string) => {
@@ -323,26 +412,74 @@ export function VotingsList({ hpId, groupId, groupName }: VotingsListProps) {
                   </div>
 
                   {/* Botones de acción */}
-                  <div className="flex gap-4 pt-4 border-t border-gray-100">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleLiveVoting(voting);
-                      }}
-                      className="btn btn-primary flex-1"
-                      disabled={!voting.isActive}
-                    >
-                      🔴 Votación en Vivo
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleViewVotes(voting);
-                      }}
-                      className="btn btn-outline flex-1"
-                    >
-                      📊 Ver Votos
-                    </button>
+                  <div className="pt-4 border-t border-gray-100">
+                    {/* Botones principales */}
+                    <div className="flex gap-2 mb-3">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleLiveVoting(voting);
+                        }}
+                        className="btn btn-primary flex-1"
+                        disabled={!voting.isActive}
+                      >
+                        🔴 Votación en Vivo
+                      </button>
+                    </div>
+                    
+                    {/* Botones de administración */}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditClick(voting);
+                        }}
+                        className="btn btn-secondary flex-1"
+                        title="Editar votación"
+                      >
+                        ✏️ Editar
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteClick(voting);
+                        }}
+                        className="btn btn-danger flex-1"
+                        title="Eliminar votación"
+                      >
+                        🗑️ Eliminar
+                      </button>
+                      {voting.isActive ? (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeactivateVoting(voting);
+                          }}
+                          className="btn btn-warning flex-1"
+                          title="Desactivar votación"
+                        >
+                          ⏸️ Desactivar
+                        </button>
+                      ) : (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleActivateVoting(voting);
+                          }}
+                          className="btn btn-success flex-1"
+                          title="Activar votación"
+                        >
+                          ▶️ Activar
+                        </button>
+                      )}
+                      <div className={`flex-1 px-3 py-2 rounded-lg text-center text-sm font-medium ${
+                        voting.isActive 
+                          ? 'bg-green-100 text-green-800 border border-green-200' 
+                          : 'bg-red-100 text-red-800 border border-red-200'
+                      }`}>
+                        {voting.isActive ? '✅ Activa' : '❌ Inactiva'}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -579,6 +716,30 @@ export function VotingsList({ hpId, groupId, groupName }: VotingsListProps) {
           options={votingOptions[selectedVotingForLive.id] || []}
           votes={votingVotes[selectedVotingForLive.id] || []}
           onVoteSuccess={handleVoteSuccess}
+        />
+      )}
+
+      {/* Modal Editar Votación */}
+      {selectedVotingForEdit && (
+        <EditVotingModal
+          isOpen={showEditModal}
+          onClose={handleEditClose}
+          onSuccess={handleEditSuccess}
+          hpId={hpId}
+          groupId={groupId}
+          voting={selectedVotingForEdit}
+        />
+      )}
+
+      {/* Modal Eliminar Votación */}
+      {selectedVotingForDelete && (
+        <DeleteVotingModal
+          isOpen={showDeleteModal}
+          onClose={handleDeleteClose}
+          onSuccess={handleDeleteSuccess}
+          hpId={hpId}
+          groupId={groupId}
+          voting={selectedVotingForDelete}
         />
       )}
     </div>

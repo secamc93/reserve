@@ -38,3 +38,9 @@ func (u *votingUseCase) CreateVotingOption(ctx context.Context, dto domain.Creat
 		IsActive:     created.IsActive,
 	}, nil
 }
+
+}
+
+}
+
+}

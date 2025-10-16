@@ -17,6 +17,10 @@
 /.next/
 /out/
 
+# Archivos temporales de Next.js
+*.tmp.*
+_buildManifest.js.tmp.*
+
 # production
 /build
 

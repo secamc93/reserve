@@ -66,6 +66,7 @@ type VoteResponse struct {
 	VotingOptionID uint      `json:"voting_option_id" example:"1"`
 	OptionText     string    `json:"option_text,omitempty" example:"Sí, apruebo"`
 	OptionCode     string    `json:"option_code,omitempty" example:"YES"`
+	OptionColor    string    `json:"option_color,omitempty" example:"#22c55e"`
 	VotedAt        time.Time `json:"voted_at" example:"2025-03-05T14:30:00Z"`
 	IPAddress      string    `json:"ip_address,omitempty" example:"192.168.1.100"`
 	UserAgent      string    `json:"user_agent,omitempty" example:"Mozilla/5.0"`
@@ -111,6 +112,18 @@ type VotingGroupsSuccess = SuccessResponse[[]VotingGroupResponse]
 type VotingSuccess = SuccessResponse[VotingResponse]
 type VotingsSuccess = SuccessResponse[[]VotingResponse]
 type VotingOptionSuccess = SuccessResponse[VotingOptionResponse]
+type VotingOptionsSuccess = SuccessResponse[[]VotingOptionResponse]
+type VoteSuccess = SuccessResponse[VoteResponse]
+type VotesSuccess = SuccessResponse[[]VoteResponse]
+
+type VotingOptionsSuccess = SuccessResponse[[]VotingOptionResponse]
+type VoteSuccess = SuccessResponse[VoteResponse]
+type VotesSuccess = SuccessResponse[[]VoteResponse]
+
+type VotingOptionsSuccess = SuccessResponse[[]VotingOptionResponse]
+type VoteSuccess = SuccessResponse[VoteResponse]
+type VotesSuccess = SuccessResponse[[]VoteResponse]
+
 type VotingOptionsSuccess = SuccessResponse[[]VotingOptionResponse]
 type VoteSuccess = SuccessResponse[VoteResponse]
 type VotesSuccess = SuccessResponse[[]VoteResponse]

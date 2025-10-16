@@ -170,6 +170,22 @@ func (r *Repository) DeactivateVoting(ctx context.Context, id uint) error {
 	return nil
 }
 
+func (r *Repository) ActivateVoting(ctx context.Context, id uint) error {
+	if err := r.db.Conn(ctx).Model(&models.Voting{}).Where("id = ?", id).Update("is_active", true).Error; err != nil {
+		r.logger.Error().Err(err).Uint("id", id).Msg("Error activando votación")
+		return fmt.Errorf("error activando votación: %w", err)
+	}
+	return nil
+}
+
+func (r *Repository) DeleteVoting(ctx context.Context, id uint) error {
+	if err := r.db.Conn(ctx).Delete(&models.Voting{}, id).Error; err != nil {
+		r.logger.Error().Err(err).Uint("id", id).Msg("Error eliminando votación")
+		return fmt.Errorf("error eliminando votación: %w", err)
+	}
+	return nil
+}
+
 // ───────────────────────────────────────────
 // Voting Options
 // ───────────────────────────────────────────
@@ -179,6 +195,7 @@ func (r *Repository) CreateVotingOption(ctx context.Context, option *domain.Voti
 		VotingID:     option.VotingID,
 		OptionText:   option.OptionText,
 		OptionCode:   option.OptionCode,
+		Color:        option.Color,
 		DisplayOrder: option.DisplayOrder,
 		IsActive:     true,
 	}
@@ -214,7 +231,7 @@ func (r *Repository) DeactivateVotingOption(ctx context.Context, id uint) error 
 // Votes
 // ───────────────────────────────────────────
 
-func (r *Repository) CreateVote(ctx context.Context, vote domain.Vote) error {
+func (r *Repository) CreateVote(ctx context.Context, vote domain.Vote) (*domain.Vote, error) {
 	m := &models.Vote{
 		VotingID:       vote.VotingID,
 		ResidentID:     vote.ResidentID,
@@ -226,9 +243,16 @@ func (r *Repository) CreateVote(ctx context.Context, vote domain.Vote) error {
 	}
 	if err := r.db.Conn(ctx).Create(m).Error; err != nil {
 		r.logger.Error().Err(err).Uint("voting_id", vote.VotingID).Uint("resident_id", vote.ResidentID).Msg("Error creando voto")
-		return fmt.Errorf("error creando voto: %w", err)
+		return nil, fmt.Errorf("error creando voto: %w", err)
 	}
-	return nil
+
+	// Obtener información de la opción de votación para incluir en el voto
+	var option models.VotingOption
+	if err := r.db.Conn(ctx).First(&option, vote.VotingOptionID).Error; err == nil {
+		m.VotingOption = option
+	}
+
+	return r.mapVoteToDomain(m), nil
 }
 
 func (r *Repository) HasResidentVoted(ctx context.Context, votingID uint, residentID uint) (bool, error) {
@@ -512,6 +536,7 @@ func (r *Repository) mapVotingOptionToDomain(m *models.VotingOption) *domain.Vot
 		VotingID:     m.VotingID,
 		OptionText:   m.OptionText,
 		OptionCode:   m.OptionCode,
+		Color:        m.Color,
 		DisplayOrder: m.DisplayOrder,
 		IsActive:     m.IsActive,
 	}
@@ -533,6 +558,100 @@ func (r *Repository) mapVoteToDomain(m *models.Vote) *domain.Vote {
 	if m.VotingOption.ID != 0 {
 		vote.OptionText = m.VotingOption.OptionText
 		vote.OptionCode = m.VotingOption.OptionCode
+		vote.OptionColor = m.VotingOption.Color
+	}
+
+	return vote
+}
+
+		VotingID:     m.VotingID,
+		OptionText:   m.OptionText,
+		OptionCode:   m.OptionCode,
+		Color:        m.Color,
+		DisplayOrder: m.DisplayOrder,
+		IsActive:     m.IsActive,
+	}
+}
+
+func (r *Repository) mapVoteToDomain(m *models.Vote) *domain.Vote {
+	vote := &domain.Vote{
+		ID:             m.ID,
+		VotingID:       m.VotingID,
+		ResidentID:     m.ResidentID,
+		VotingOptionID: m.VotingOptionID,
+		VotedAt:        m.VotedAt,
+		IPAddress:      m.IPAddress,
+		UserAgent:      m.UserAgent,
+		Notes:          m.Notes,
+	}
+
+	// Agregar información de la opción si está cargada (Preload)
+	if m.VotingOption.ID != 0 {
+		vote.OptionText = m.VotingOption.OptionText
+		vote.OptionCode = m.VotingOption.OptionCode
+		vote.OptionColor = m.VotingOption.Color
+	}
+
+	return vote
+}
+
+		VotingID:     m.VotingID,
+		OptionText:   m.OptionText,
+		OptionCode:   m.OptionCode,
+		Color:        m.Color,
+		DisplayOrder: m.DisplayOrder,
+		IsActive:     m.IsActive,
+	}
+}
+
+func (r *Repository) mapVoteToDomain(m *models.Vote) *domain.Vote {
+	vote := &domain.Vote{
+		ID:             m.ID,
+		VotingID:       m.VotingID,
+		ResidentID:     m.ResidentID,
+		VotingOptionID: m.VotingOptionID,
+		VotedAt:        m.VotedAt,
+		IPAddress:      m.IPAddress,
+		UserAgent:      m.UserAgent,
+		Notes:          m.Notes,
+	}
+
+	// Agregar información de la opción si está cargada (Preload)
+	if m.VotingOption.ID != 0 {
+		vote.OptionText = m.VotingOption.OptionText
+		vote.OptionCode = m.VotingOption.OptionCode
+		vote.OptionColor = m.VotingOption.Color
+	}
+
+	return vote
+}
+
+		VotingID:     m.VotingID,
+		OptionText:   m.OptionText,
+		OptionCode:   m.OptionCode,
+		Color:        m.Color,
+		DisplayOrder: m.DisplayOrder,
+		IsActive:     m.IsActive,
+	}
+}
+
+func (r *Repository) mapVoteToDomain(m *models.Vote) *domain.Vote {
+	vote := &domain.Vote{
+		ID:             m.ID,
+		VotingID:       m.VotingID,
+		ResidentID:     m.ResidentID,
+		VotingOptionID: m.VotingOptionID,
+		VotedAt:        m.VotedAt,
+		IPAddress:      m.IPAddress,
+		UserAgent:      m.UserAgent,
+		Notes:          m.Notes,
+	}
+
+	// Agregar información de la opción si está cargada (Preload)
+	if m.VotingOption.ID != 0 {
+		vote.OptionText = m.VotingOption.OptionText
+		vote.OptionCode = m.VotingOption.OptionCode
+		vote.OptionColor = m.VotingOption.Color
 	}
 
 	return vote

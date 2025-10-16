@@ -11,7 +11,7 @@ export interface BackendVoting {
   voting_group_id: number;
   title: string;
   description: string;
-  voting_type: 'simple' | 'multiple' | 'weighted';
+  voting_type: 'simple' | 'multiple' | 'weighted' | 'majority';
   is_secret: boolean;
   allow_abstention: boolean;
   is_active: boolean;
@@ -27,10 +27,41 @@ export interface BackendGetVotingsResponse {
   data: BackendVoting[];
 }
 
+export interface BackendGetVotingByIdResponse {
+  success: boolean;
+  message: string;
+  data: BackendVoting;
+}
+
 export interface BackendCreateVotingResponse {
   success: boolean;
   message: string;
   data: BackendVoting;
+}
+
+export interface BackendUpdateVotingResponse {
+  success: boolean;
+  message: string;
+  data: BackendVoting;
+  error?: string;
+}
+
+export interface BackendDeleteVotingResponse {
+  success: boolean;
+  message: string;
+  error?: string;
+}
+
+export interface BackendActivateVotingResponse {
+  success: boolean;
+  message: string;
+  error?: string;
+}
+
+export interface BackendDeactivateVotingResponse {
+  success: boolean;
+  message: string;
+  error?: string;
 }
 
 // ============================================

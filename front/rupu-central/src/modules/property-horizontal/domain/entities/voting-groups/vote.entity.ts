@@ -11,6 +11,10 @@ export interface Vote {
   ipAddress: string;
   userAgent: string;
   notes?: string;
+  // Campos adicionales del SSE para facilitar el renderizado
+  optionText?: string;
+  optionCode?: string;
+  optionColor?: string;
 }
 
 export interface VotesList {

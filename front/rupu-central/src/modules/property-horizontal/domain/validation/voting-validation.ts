@@ -188,6 +188,53 @@ export function validateCreateVotingGroup(data: {
 }
 
 /**
+ * Valida todos los campos de un UpdateVotingGroupDTO
+ * Nota: Todos los campos son opcionales en el update
+ */
+export function validateUpdateVotingGroup(data: {
+  name?: string;
+  description?: string;
+  votingStartDate?: string;
+  votingEndDate?: string;
+  requiresQuorum?: boolean;
+  quorumPercentage?: number;
+  notes?: string;
+}): void {
+  // Validar nombre si se proporciona
+  if (data.name !== undefined) {
+    validateStringLength(data.name, 'Nombre', 3, 150);
+  }
+
+  // Validar fechas si se proporcionan
+  if (data.votingStartDate !== undefined) {
+    validateISO8601Format(data.votingStartDate, 'Fecha de inicio');
+  }
+
+  if (data.votingEndDate !== undefined) {
+    validateISO8601Format(data.votingEndDate, 'Fecha de fin');
+  }
+
+  // Validar rango de fechas si ambas se proporcionan
+  if (data.votingStartDate !== undefined && data.votingEndDate !== undefined) {
+    validateDateRange(data.votingStartDate, data.votingEndDate);
+  }
+
+  // Validar campos opcionales
+  if (data.description !== undefined && data.description) {
+    validateStringLength(data.description, 'Descripción', undefined, 1000);
+  }
+
+  if (data.notes !== undefined && data.notes) {
+    validateStringLength(data.notes, 'Notas', undefined, 2000);
+  }
+
+  // Validar configuración de quórum
+  if (data.requiresQuorum !== undefined) {
+    validateQuorumConfiguration(data.requiresQuorum, data.quorumPercentage);
+  }
+}
+
+/**
  * Valida todos los campos de un CreateVotingDTO
  */
 export function validateCreateVoting(data: {
@@ -200,6 +247,50 @@ export function validateCreateVoting(data: {
   validateStringLength(data.description, 'Descripción', 1, 2000);
   validateDisplayOrder(data.displayOrder);
   
+  if (data.requiredPercentage !== undefined) {
+    validateRequiredPercentage(data.requiredPercentage);
+  }
+}
+
+/**
+ * Valida todos los campos de un UpdateVotingDTO
+ * Nota: Todos los campos son opcionales en el update
+ */
+export function validateUpdateVoting(data: {
+  title?: string;
+  description?: string;
+  votingType?: string;
+  isSecret?: boolean;
+  allowAbstention?: boolean;
+  displayOrder?: number;
+  requiredPercentage?: number;
+}): void {
+  // Validar título si se proporciona
+  if (data.title !== undefined) {
+    validateStringLength(data.title, 'Título', 3, 200);
+  }
+
+  // Validar descripción si se proporciona
+  if (data.description !== undefined) {
+    validateStringLength(data.description, 'Descripción', 1, 2000);
+  }
+
+  // Validar tipo de votación si se proporciona
+  if (data.votingType !== undefined) {
+    const validTypes = ['simple', 'multiple', 'weighted', 'majority'];
+    if (!validTypes.includes(data.votingType)) {
+      throw new VotingValidationError(
+        `Tipo de votación inválido. Debe ser uno de: ${validTypes.join(', ')}`
+      );
+    }
+  }
+
+  // Validar display order si se proporciona
+  if (data.displayOrder !== undefined) {
+    validateDisplayOrder(data.displayOrder);
+  }
+
+  // Validar porcentaje requerido si se proporciona
   if (data.requiredPercentage !== undefined) {
     validateRequiredPercentage(data.requiredPercentage);
   }

@@ -31,3 +31,16 @@ export interface BackendCreateVotingGroupResponse {
   error?: string;
 }
 
+export interface BackendUpdateVotingGroupResponse {
+  success: boolean;
+  message: string;
+  data: BackendVotingGroup;
+  error?: string;
+}
+
+export interface BackendDeleteVotingGroupResponse {
+  success: boolean;
+  message: string;
+  error?: string;
+}
+

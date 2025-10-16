@@ -2,7 +2,7 @@
  * Puerto: Repositorio de Votaciones
  */
 
-import { Voting, VotingsList, CreateVotingDTO, VotingOption, VotingOptionsList, CreateVotingOptionDTO, Vote, VotesList, CreateVoteDTO } from '../entities';
+import { Voting, VotingsList, CreateVotingDTO, UpdateVotingDTO, VotingOption, VotingOptionsList, CreateVotingOptionDTO, Vote, VotesList, CreateVoteDTO } from '../entities';
 
 // ============================================
 // VOTINGS (Votaciones)
@@ -14,6 +14,13 @@ export interface GetVotingsParams {
   groupId: number;
 }
 
+export interface GetVotingByIdParams {
+  token: string;
+  hpId: number;
+  groupId: number;
+  votingId: number;
+}
+
 export interface CreateVotingParams {
   token: string;
   hpId: number;
@@ -21,9 +28,43 @@ export interface CreateVotingParams {
   data: CreateVotingDTO;
 }
 
+export interface UpdateVotingParams {
+  token: string;
+  hpId: number;
+  groupId: number;
+  votingId: number;
+  data: UpdateVotingDTO;
+}
+
+export interface DeleteVotingParams {
+  token: string;
+  hpId: number;
+  groupId: number;
+  votingId: number;
+}
+
+export interface ActivateVotingParams {
+  token: string;
+  hpId: number;
+  groupId: number;
+  votingId: number;
+}
+
+export interface DeactivateVotingParams {
+  token: string;
+  hpId: number;
+  groupId: number;
+  votingId: number;
+}
+
 export interface IVotingsRepository {
   getVotings(params: GetVotingsParams): Promise<VotingsList>;
+  getVotingById(params: GetVotingByIdParams): Promise<Voting>;
   createVoting(params: CreateVotingParams): Promise<Voting>;
+  updateVoting(params: UpdateVotingParams): Promise<Voting>;
+  deleteVoting(params: DeleteVotingParams): Promise<string>;
+  activateVoting(params: ActivateVotingParams): Promise<string>;
+  deactivateVoting(params: DeactivateVotingParams): Promise<string>;
 }
 
 // ============================================

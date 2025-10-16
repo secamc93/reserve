@@ -10,6 +10,8 @@ import {
   CreateResidentParams,
   UpdateResidentParams,
   DeleteResidentParams,
+  BulkUpdateResidentsParams,
+  BulkUpdateResidentsResponse,
   Resident,
   ResidentsPaginated,
 } from '../../domain';
@@ -343,6 +345,77 @@ export class ResidentsRepository implements IResidentsRepository {
       }
 
       logHttpSuccess({ status: response.status, statusText: response.statusText, duration, data });
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      logHttpError({
+        status: 0,
+        statusText: 'Network Error',
+        duration,
+        data: { error: String(error) },
+      });
+      throw error;
+    }
+  }
+
+  async bulkUpdateResidents(params: BulkUpdateResidentsParams): Promise<BulkUpdateResidentsResponse> {
+    const { hpId, file, token } = params;
+    const url = `${this.baseUrl}/horizontal-properties/${hpId}/residents/bulk-update`;
+    const startTime = Date.now();
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    logHttpRequest({
+      method: 'PUT',
+      url,
+      token,
+      body: `FormData con archivo Excel: ${file.name}`,
+    });
+
+    try {
+      const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const duration = Date.now() - startTime;
+      const backendResponse: {
+        success: boolean;
+        message: string;
+        data: {
+          total_processed: number;
+          updated: number;
+          errors: number;
+          error_details: Array<{
+            row: number;
+            property_unit_number: string;
+            error: string;
+          }>;
+        };
+      } = await response.json();
+
+      if (!response.ok || !backendResponse.success) {
+        logHttpError({
+          status: response.status,
+          statusText: response.statusText,
+          duration,
+          data: backendResponse,
+        });
+        throw new Error(backendResponse.message || `Error en edición masiva: ${response.status}`);
+      }
+
+      logHttpSuccess({
+        status: response.status,
+        statusText: response.statusText,
+        duration,
+        summary: `Edición masiva completada: ${backendResponse.data.updated} actualizados, ${backendResponse.data.errors} errores`,
+        data: backendResponse,
+      });
+
+      return backendResponse;
     } catch (error) {
       const duration = Date.now() - startTime;
       logHttpError({

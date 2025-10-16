@@ -8,6 +8,8 @@ import {
   getPublicVotesAction
 } from '@/modules/property-horizontal/infrastructure/actions/public-voting';
 import { usePublicVotingSSE } from './hooks/use-public-voting-sse';
+import { VotesByUnitSection } from '../components';
+import type { ResidentialUnit } from '../components';
 
 interface VotingOption {
   id: number;
@@ -119,6 +121,19 @@ export function PublicVotingProgress({ votingAuthToken }: PublicVotingProgressPr
   const totalUnits = units.length;
   const totalVotes = currentTotalVotes;
   const participationPercentage = totalUnits > 0 ? (totalVotes / totalUnits) * 100 : 0;
+
+  // Mapear a formato reutilizable de tarjetas simples como en votación en vivo
+  const residentialUnits: ResidentialUnit[] = unitVoteStatus.map((unit, index) => ({
+    id: index + 1,
+    number: unit.unitNumber,
+    resident: unit.residentName || 'Sin residente',
+    residentId: unit.residentName ? undefined : null,
+    hasVoted: unit.hasVoted,
+    votedOption: unit.votedOption?.text,
+    votedOptionId: unit.votedOption?.id,
+    votedOptionColor: undefined,
+    participationCoefficient: undefined,
+  }));
 
   useEffect(() => {
     const loadVotingProgress = async () => {
@@ -289,65 +304,15 @@ export function PublicVotingProgress({ votingAuthToken }: PublicVotingProgressPr
           </div>
         </div>
 
-        {/* Estado por unidad - Estilo de votación en vivo */}
+        {/* Estado por unidad - Reutiliza las mismas tarjetas simples de la votación en vivo */}
         <div className="mt-6 bg-white rounded-lg shadow-md p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-gray-900">
-              🏠 Votos por Unidad
-            </h2>
-          </div>
-          
-          {/* Cuadrícula de Unidades Residenciales con scroll independiente */}
-          <div className="h-[60vh] overflow-y-auto border border-gray-200 rounded-lg bg-gray-50 px-4 pt-4">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-4 pb-4">
-              {unitVoteStatus.map((unit, index) => {
-                // Colores por defecto según si votó o no
-                const colors = unit.hasVoted ? {
-                  bg: 'bg-green-50',
-                  border: 'border-green-300',
-                  iconBg: 'bg-green-100',
-                  iconText: 'text-green-700',
-                  badge: 'success' as const
-                } : {
-                  bg: 'bg-white',
-                  border: 'border-gray-300',
-                  iconBg: 'bg-gray-100',
-                  iconText: 'text-gray-500',
-                  badge: 'error' as const
-                };
-
-                return (
-                  <div 
-                    key={unit.unitId || `unit-${index}`}
-                    className={`p-4 rounded-xl border-2 text-center transition-all hover:shadow-md ${colors.bg} ${colors.border}`}
-                  >
-                    <div className={`w-12 h-12 mx-auto mb-3 flex items-center justify-center rounded-full font-bold text-lg ${colors.iconBg} ${colors.iconText}`}>
-                      {unit.unitNumber}
-                    </div>
-                    <p className="font-semibold text-gray-900 text-sm mb-1 truncate" title={unit.residentName || 'Sin residente'}>
-                      {unit.residentName || 'Sin residente'}
-                    </p>
-                    <p className="text-gray-500 text-xs mb-2">Unidad {unit.unitNumber}</p>
-                    {unit.hasVoted && unit.votedOption ? (
-                      <div className="space-y-1">
-                        <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                          colors.badge === 'success' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-blue-100 text-blue-800'
-                        }`}>
-                          ✅ {unit.votedOption.text}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                        ⏳ Pendiente
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          <VotesByUnitSection 
+            units={residentialUnits}
+            title="🏠 Votos por Unidad"
+            showPreviewNote={false}
+            showScaleControl={true}
+            fillAvailableSpace={false}
+          />
         </div>
 
         {/* Información adicional */}

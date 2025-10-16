@@ -112,7 +112,7 @@ export function UnitCard({ unit, scale }: UnitCardProps) {
   const colors = getColors();
 
   if (colors.useCustom && colors.customStyles) {
-    // Nuevo diseño con rectángulos y efectos
+    // Diseño simplificado: solo número de unidad y color de opción
     return (
       <div 
         className={`${currentScale.cardPadding} rounded-xl border-2 text-center transition-all duration-300 hover:shadow-lg hover:scale-105 cursor-pointer relative group`}
@@ -122,41 +122,18 @@ export function UnitCard({ unit, scale }: UnitCardProps) {
           boxShadow: `0 4px 6px -1px ${colors.customStyles.iconBg}20, 0 2px 4px -1px ${colors.customStyles.iconBg}10`
         }}
       >
-        {/* Rectángulo del número de unidad */}
+        {/* Solo el número de unidad con color de fondo de la opción */}
         <div 
-          className="mx-auto mb-3 px-3 py-1 rounded-lg font-bold text-black shadow-sm"
+          className="w-full px-3 py-3 rounded-lg font-bold text-white shadow-sm"
           style={{
             backgroundColor: colors.customStyles.iconBg,
-            color: '#000000' // Texto negro como solicitado
           }}
         >
           {unit.number}
         </div>
         
-        {/* Información del residente */}
-        <p className={`font-semibold text-black ${currentScale.nameText} mb-1 truncate`} title={unit.resident}>
-          {unit.resident}
-        </p>
-        <p className={`text-gray-600 ${currentScale.unitText} mb-1`}>Unidad {unit.number}</p>
-        {unit.participationCoefficient && (
-          <p className={`text-gray-500 ${currentScale.unitText} mb-3`} title="Coeficiente de participación">
-            Coef: {unit.participationCoefficient.toFixed(4)}
-          </p>
-        )}
-        
-        {/* Rectángulo de la opción votada */}
-        <div 
-          className="px-3 py-2 rounded-lg font-bold text-black transition-all duration-300 hover:shadow-md"
-          style={{
-            backgroundColor: colors.customStyles.iconBg,
-            color: '#000000' // Texto negro como solicitado
-          }}
-        >
-          {unit.votedOption}
-        </div>
-        
-        {/* Tooltip con detalles */}
-        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap z-10">
+        {/* Tooltip con detalles - z-index muy alto para aparecer por encima de todo */}
+        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap z-[9999]">
           <div className="font-semibold mb-1">{unit.number}</div>
           <div className="text-gray-300">{unit.resident}</div>
           <div className="text-gray-300">ID Residente: {unit.residentId || 'N/A'}</div>
@@ -168,34 +145,18 @@ export function UnitCard({ unit, scale }: UnitCardProps) {
     );
   }
 
-  // Usar clases de Tailwind para colores por defecto con el nuevo diseño
+  // Usar clases de Tailwind para colores por defecto con el diseño simplificado
   return (
     <div 
       className={`${currentScale.cardPadding} rounded-xl border-2 text-center transition-all duration-300 hover:shadow-lg hover:scale-105 cursor-pointer relative group ${colors.bg} ${colors.border}`}
     >
-      {/* Rectángulo del número de unidad */}
-      <div className={`mx-auto mb-3 px-3 py-1 rounded-lg font-bold text-black shadow-sm ${colors.iconBg}`}>
+      {/* Solo el número de unidad con color de fondo */}
+      <div className={`w-full px-3 py-3 rounded-lg font-bold text-white shadow-sm ${colors.iconBg}`}>
         {unit.number}
       </div>
       
-      {/* Información del residente */}
-      <p className={`font-semibold text-black ${currentScale.nameText} mb-1 truncate`} title={unit.resident}>
-        {unit.resident}
-      </p>
-      <p className={`text-gray-600 ${currentScale.unitText} mb-1`}>Unidad {unit.number}</p>
-      {unit.participationCoefficient && (
-        <p className={`text-gray-500 ${currentScale.unitText} mb-3`} title="Coeficiente de participación">
-          Coef: {unit.participationCoefficient.toFixed(4)}
-        </p>
-      )}
-      
-      {/* Rectángulo de la opción votada o pendiente */}
-      <div className={`px-3 py-2 rounded-lg font-bold text-black transition-all duration-300 hover:shadow-md ${colors.iconBg}`}>
-        {unit.hasVoted && unit.votedOption ? unit.votedOption : 'Pendiente'}
-      </div>
-      
-      {/* Tooltip con detalles */}
-      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap z-10">
+      {/* Tooltip con detalles - z-index muy alto para aparecer por encima de todo */}
+      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap z-[9999]">
         <div className="font-semibold mb-1">{unit.number}</div>
         <div className="text-gray-300">{unit.resident}</div>
         <div className="text-gray-300">ID Residente: {unit.residentId || 'N/A'}</div>

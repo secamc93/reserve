@@ -130,6 +130,7 @@ export function CreateVotingModal({ isOpen, onClose, onSuccess, hpId, groupId }:
               className="input w-full"
               disabled={loading}
               required
+              style={{ color: '#111827' }}
             />
           </div>
 

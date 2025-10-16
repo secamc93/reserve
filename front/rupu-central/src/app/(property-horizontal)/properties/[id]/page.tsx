@@ -11,6 +11,7 @@ import {
   PropertyUnitsTable,
   ResidentsTable,
 } from '@modules/property-horizontal/ui';
+import { PropertyNavigation } from '@modules/property-horizontal/ui/components/property-navigation';
 import { getHorizontalPropertyByIdAction } from '@modules/property-horizontal/infrastructure/actions';
 import { TokenStorage } from '@shared/config';
 import { Spinner, Badge } from '@shared/ui';
@@ -48,10 +49,9 @@ interface PropertyData {
 export default function PropertyDetailPage({ params }: PropertyDetailPageProps) {
   const router = useRouter();
   const { id } = use(params);
-  const [activeTab, setActiveTab] = useState<'info' | 'votations' | 'units' | 'residents' | 'fees'>('info');
   const [property, setProperty] = useState<PropertyData | null>(null);
   const [loading, setLoading] = useState(true);
-  const businessId = parseInt(id);
+  const hpId = parseInt(id);
 
   useEffect(() => {
     loadProperty();
@@ -69,7 +69,7 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
 
       const result = await getHorizontalPropertyByIdAction({
         token,
-        id: businessId,
+        id: hpId,
       });
 
       if (result.success && result.data) {
@@ -105,227 +105,172 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
   }
 
   return (
-    <div className="p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Botón Volver */}
-        <button
-          onClick={() => router.push('/properties')}
-          className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          <span>Volver a Propiedades</span>
-        </button>
+    <div>
+      {/* Navegación */}
+      <PropertyNavigation hpId={hpId} propertyName={property.name} />
+      
+      {/* Contenido del Dashboard */}
+      <div className="p-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Botón Volver */}
+          <button
+            onClick={() => router.push('/properties')}
+            className="mb-6 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            <span>Volver a Propiedades</span>
+          </button>
 
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
-            {property.name}
-          </h1>
-          <p className="text-gray-600 mt-2">
-            {property.address}
-          </p>
-        </div>
-
-        {/* Tabs */}
-        <div className="card mb-6">
-          <div className="flex gap-4 border-b pb-4">
-            <button
-              className={`btn btn-sm ${activeTab === 'info' ? 'btn-primary' : 'btn-outline'}`}
-              onClick={() => setActiveTab('info')}
-            >
-              📋 Información
-            </button>
-            <button
-              className={`btn btn-sm ${activeTab === 'votations' ? 'btn-primary' : 'btn-outline'}`}
-              onClick={() => setActiveTab('votations')}
-            >
-              🗳️ Grupos de Votación
-            </button>
-            <button
-              className={`btn btn-sm ${activeTab === 'units' ? 'btn-primary' : 'btn-outline'}`}
-              onClick={() => setActiveTab('units')}
-            >
-              🏢 Unidades
-            </button>
-            <button
-              className={`btn btn-sm ${activeTab === 'residents' ? 'btn-primary' : 'btn-outline'}`}
-              onClick={() => setActiveTab('residents')}
-            >
-              👥 Residentes
-            </button>
-            <button
-              className={`btn btn-sm ${activeTab === 'fees' ? 'btn-primary' : 'btn-outline'}`}
-              onClick={() => setActiveTab('fees')}
-            >
-              💰 Cuotas
-            </button>
+          {/* Dashboard Overview */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              📊 Dashboard
+            </h2>
+            <p className="text-gray-600">
+              Resumen general de {property.name}
+            </p>
           </div>
 
-          {/* Content */}
-          <div className="py-4">
-            {activeTab === 'info' && (
-              <div className="space-y-6">
-                {/* Información General */}
-                <div className="card">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">
-                    Información General
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-600">Código</p>
-                      <p className="font-medium">{property.code}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Tipo de Negocio</p>
-                      <p className="font-medium">{property.businessTypeName}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Total de Unidades</p>
-                      <p className="font-medium">{property.totalUnits}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Estado</p>
-                      <Badge type={property.isActive ? 'success' : 'error'}>
-                        {property.isActive ? 'Activa' : 'Inactiva'}
-                      </Badge>
-                    </div>
-                    {property.timezone && (
-                      <div>
-                        <p className="text-sm text-gray-600">Zona Horaria</p>
-                        <p className="font-medium">{property.timezone}</p>
-                      </div>
-                    )}
-                    {property.customDomain && (
-                      <div>
-                        <p className="text-sm text-gray-600">Dominio Personalizado</p>
-                        <p className="font-medium">{property.customDomain}</p>
-                      </div>
-                    )}
-                  </div>
-                  {property.description && (
-                    <div className="mt-4">
-                      <p className="text-sm text-gray-600">Descripción</p>
-                      <p className="font-medium">{property.description}</p>
-                    </div>
-                  )}
+          {/* Dashboard Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {/* Unidades */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-blue-100">
+                  <span className="text-2xl">🏢</span>
                 </div>
-
-                {/* Amenidades */}
-                <div className="card">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">
-                    Amenidades
-                  </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    <div className={`flex items-center space-x-2 ${property.hasElevator ? 'text-green-600' : 'text-gray-400'}`}>
-                      <span className="text-2xl">{property.hasElevator ? '✓' : '✗'}</span>
-                      <span>Ascensor</span>
-                    </div>
-                    <div className={`flex items-center space-x-2 ${property.hasParking ? 'text-green-600' : 'text-gray-400'}`}>
-                      <span className="text-2xl">{property.hasParking ? '✓' : '✗'}</span>
-                      <span>Parqueadero</span>
-                    </div>
-                    <div className={`flex items-center space-x-2 ${property.hasPool ? 'text-green-600' : 'text-gray-400'}`}>
-                      <span className="text-2xl">{property.hasPool ? '✓' : '✗'}</span>
-                      <span>Piscina</span>
-                    </div>
-                    <div className={`flex items-center space-x-2 ${property.hasGym ? 'text-green-600' : 'text-gray-400'}`}>
-                      <span className="text-2xl">{property.hasGym ? '✓' : '✗'}</span>
-                      <span>Gimnasio</span>
-                    </div>
-                    <div className={`flex items-center space-x-2 ${property.hasSocialArea ? 'text-green-600' : 'text-gray-400'}`}>
-                      <span className="text-2xl">{property.hasSocialArea ? '✓' : '✗'}</span>
-                      <span>Área Social</span>
-                    </div>
-                  </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Unidades</p>
+                  <p className="text-2xl font-bold text-gray-900">{property.totalUnits || 0}</p>
                 </div>
+              </div>
+            </div>
 
-                {/* Colores de Marca */}
-                {(property.primaryColor || property.secondaryColor || property.tertiaryColor || property.quaternaryColor) && (
-                  <div className="card">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">
-                      Colores de Marca
-                    </h3>
-                    <div className="grid grid-cols-4 gap-4">
-                      {property.primaryColor && (
-                        <div>
-                          <p className="text-sm text-gray-600 mb-2">Primario</p>
-                          <div className="flex items-center space-x-2">
-                            <div 
-                              className="w-12 h-12 rounded border"
-                              style={{ backgroundColor: property.primaryColor }}
-                            />
-                            <span className="text-sm font-mono">{property.primaryColor}</span>
-                          </div>
-                        </div>
-                      )}
-                      {property.secondaryColor && (
-                        <div>
-                          <p className="text-sm text-gray-600 mb-2">Secundario</p>
-                          <div className="flex items-center space-x-2">
-                            <div 
-                              className="w-12 h-12 rounded border"
-                              style={{ backgroundColor: property.secondaryColor }}
-                            />
-                            <span className="text-sm font-mono">{property.secondaryColor}</span>
-                          </div>
-                        </div>
-                      )}
-                      {property.tertiaryColor && (
-                        <div>
-                          <p className="text-sm text-gray-600 mb-2">Terciario</p>
-                          <div className="flex items-center space-x-2">
-                            <div 
-                              className="w-12 h-12 rounded border"
-                              style={{ backgroundColor: property.tertiaryColor }}
-                            />
-                            <span className="text-sm font-mono">{property.tertiaryColor}</span>
-                          </div>
-                        </div>
-                      )}
-                      {property.quaternaryColor && (
-                        <div>
-                          <p className="text-sm text-gray-600 mb-2">Cuaternario</p>
-                          <div className="flex items-center space-x-2">
-                            <div 
-                              className="w-12 h-12 rounded border"
-                              style={{ backgroundColor: property.quaternaryColor }}
-                            />
-                            <span className="text-sm font-mono">{property.quaternaryColor}</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+            {/* Residentes */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-green-100">
+                  <span className="text-2xl">👥</span>
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Residentes</p>
+                  <p className="text-2xl font-bold text-gray-900">-</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Grupos de Votación */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-purple-100">
+                  <span className="text-2xl">🗳️</span>
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Grupos de Votación</p>
+                  <p className="text-2xl font-bold text-gray-900">-</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Cuotas */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-yellow-100">
+                  <span className="text-2xl">💰</span>
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Cuotas</p>
+                  <p className="text-2xl font-bold text-gray-900">-</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Información General */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm mb-8">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">
+              📋 Información General
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-gray-600">Nombre</p>
+                  <p className="font-medium text-gray-900">{property.name}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Código</p>
+                  <p className="font-medium text-gray-900">{property.code}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Dirección</p>
+                  <p className="font-medium text-gray-900">{property.address}</p>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-gray-600">Tipo de Negocio</p>
+                  <Badge>{property.businessTypeName}</Badge>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Total de Unidades</p>
+                  <p className="font-medium text-gray-900">{property.totalUnits || 0}</p>
+                </div>
+                {property.description && (
+                  <div>
+                    <p className="text-sm text-gray-600">Descripción</p>
+                    <p className="font-medium text-gray-900">{property.description}</p>
                   </div>
                 )}
               </div>
-            )}
-
-            {activeTab === 'votations' && (
-              <div className="w-full">
-                <VotingGroupsSection businessId={businessId} />
-              </div>
-            )}
-
-            {activeTab === 'units' && (
-              <div className="w-full">
-                <PropertyUnitsTable hpId={businessId} />
-              </div>
-            )}
-
-            {activeTab === 'residents' && (
-              <div className="w-full">
-                <ResidentsTable hpId={businessId} />
-              </div>
-            )}
-
-            {activeTab === 'fees' && (
-              <div className="text-center text-gray-500 py-8">
-                <p>💰 Gestión de cuotas en construcción...</p>
-              </div>
-            )}
+            </div>
           </div>
+
+          {/* Acciones Rápidas */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">
+              🚀 Acciones Rápidas
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <button
+                onClick={() => router.push(`/properties/${hpId}/units`)}
+                className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
+              >
+                <div className="text-2xl mb-2">🏢</div>
+                <div className="font-medium text-gray-900">Gestionar Unidades</div>
+                <div className="text-sm text-gray-600">Ver y editar unidades</div>
+              </button>
+              
+              <button
+                onClick={() => router.push(`/properties/${hpId}/residents`)}
+                className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
+              >
+                <div className="text-2xl mb-2">👥</div>
+                <div className="font-medium text-gray-900">Gestionar Residentes</div>
+                <div className="text-sm text-gray-600">Ver y editar residentes</div>
+              </button>
+              
+              <button
+                onClick={() => router.push(`/properties/${hpId}/voting-groups`)}
+                className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
+              >
+                <div className="text-2xl mb-2">🗳️</div>
+                <div className="font-medium text-gray-900">Grupos de Votación</div>
+                <div className="text-sm text-gray-600">Crear y gestionar votaciones</div>
+              </button>
+              
+              <button
+                onClick={() => router.push(`/properties/${hpId}/fees`)}
+                className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
+              >
+                <div className="text-2xl mb-2">💰</div>
+                <div className="font-medium text-gray-900">Gestionar Cuotas</div>
+                <div className="text-sm text-gray-600">Ver y editar cuotas</div>
+              </button>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>

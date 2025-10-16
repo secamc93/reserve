@@ -37,3 +37,6 @@ type CreateVoteRequest struct {
 	UserAgent      string `json:"user_agent"`
 	Notes          string `json:"notes"`
 }
+
+
+

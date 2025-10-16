@@ -8,6 +8,7 @@ import { TokenStorage } from '@/modules/auth/infrastructure/storage';
 import { CreateResidentModal } from './create-resident-modal';
 import { EditResidentModal } from './edit-resident-modal';
 import { ImportResidentsModal } from './import-residents-modal';
+import { BulkEditResidentsModal } from './bulk-edit-residents-modal';
 
 export function ResidentsTable({ hpId }: { hpId: number }) {
   const [residents, setResidents] = useState<Resident[]>([]);
@@ -17,6 +18,7 @@ export function ResidentsTable({ hpId }: { hpId: number }) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showBulkEditModal, setShowBulkEditModal] = useState(false);
   const [selectedResident, setSelectedResident] = useState<Resident | null>(null);
   
   // Estados para alertas y confirmación
@@ -229,6 +231,12 @@ export function ResidentsTable({ hpId }: { hpId: number }) {
             className="btn btn-secondary"
           >
             📊 Importar Excel
+          </button>
+          <button 
+            onClick={() => setShowBulkEditModal(true)} 
+            className="btn btn-secondary"
+          >
+            ✏️ Edición Masiva
           </button>
           <button onClick={() => setShowCreateModal(true)} className="btn btn-primary">
             ➕ Agregar Residente
@@ -444,6 +452,14 @@ export function ResidentsTable({ hpId }: { hpId: number }) {
       <ImportResidentsModal
         isOpen={showImportModal}
         onClose={() => setShowImportModal(false)}
+        onSuccess={loadResidents}
+        hpId={hpId}
+      />
+
+      {/* Modal de edición masiva */}
+      <BulkEditResidentsModal
+        isOpen={showBulkEditModal}
+        onClose={() => setShowBulkEditModal(false)}
         onSuccess={loadResidents}
         hpId={hpId}
       />

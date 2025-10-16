@@ -4,3 +4,4 @@ export * from './create-resident.action';
 export * from './update-resident.action';
 export * from './delete-resident.action';
 export * from './import-residents-from-excel.action';
+export * from './bulk-update-residents.action';

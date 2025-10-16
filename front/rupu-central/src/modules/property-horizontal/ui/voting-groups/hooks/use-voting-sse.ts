@@ -18,11 +18,14 @@ const getApiBaseUrl = (): string => {
   return url;
 };
 
-interface Vote {
+interface SSEVote {
   id: number;
   voting_id: number;
   resident_id: number;
   voting_option_id: number;
+  option_text: string;
+  option_code: string;
+  option_color: string;
   voted_at: string;
   ip_address?: string;
   user_agent?: string;
@@ -35,7 +38,7 @@ interface SSEEvent {
 }
 
 interface UseVotingSSEReturn {
-  votes: Vote[];
+  votes: SSEVote[];
   isConnected: boolean;
   totalVotes: number;
   error: string | null;
@@ -48,7 +51,7 @@ export function useVotingSSE(
   votingId: number,
   enabled: boolean = true
 ): UseVotingSSEReturn {
-  const [votes, setVotes] = useState<Vote[]>([]);
+  const [votes, setVotes] = useState<SSEVote[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [totalVotes, setTotalVotes] = useState(0);
   const [error, setError] = useState<string | null>(null);

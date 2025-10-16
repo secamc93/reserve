@@ -9,7 +9,9 @@
     "lint": "eslint",
     "clean": "rm -rf .next",
     "clean:dev": "rm -rf .next && npm run dev",
-    "clean:all": "rm -rf .next node_modules && npm install"
+    "clean:all": "rm -rf .next node_modules && npm install",
+    "fresh:dev": "./script/clean-dev.sh",
+    "reset": "rm -rf .next node_modules/.cache && npm cache clean --force && npm run dev"
   },
   "dependencies": {
     "@types/qrcode": "^1.5.5",

@@ -128,8 +128,16 @@ func (u *votingUseCase) UpdateVoting(ctx context.Context, id uint, dto domain.Cr
 	}, nil
 }
 
+func (u *votingUseCase) ActivateVoting(ctx context.Context, id uint) error {
+	return u.repo.ActivateVoting(ctx, id)
+}
+
 func (u *votingUseCase) DeactivateVoting(ctx context.Context, id uint) error {
 	return u.repo.DeactivateVoting(ctx, id)
+}
+
+func (u *votingUseCase) DeleteVoting(ctx context.Context, id uint) error {
+	return u.repo.DeleteVoting(ctx, id)
 }
 
 func (u *votingUseCase) ListVotingOptionsByVoting(ctx context.Context, votingID uint) ([]domain.VotingOptionDTO, error) {
@@ -170,6 +178,33 @@ func (u *votingUseCase) ListVotesByVoting(ctx context.Context, votingID uint) ([
 			VotingID:       v.VotingID,
 			ResidentID:     v.ResidentID,
 			VotingOptionID: v.VotingOptionID,
+			VotedAt:        v.VotedAt,
+			IPAddress:      v.IPAddress,
+			UserAgent:      v.UserAgent,
+			Notes:          v.Notes,
+		}
+	}
+	return res, nil
+}
+
+			VotedAt:        v.VotedAt,
+			IPAddress:      v.IPAddress,
+			UserAgent:      v.UserAgent,
+			Notes:          v.Notes,
+		}
+	}
+	return res, nil
+}
+
+			VotedAt:        v.VotedAt,
+			IPAddress:      v.IPAddress,
+			UserAgent:      v.UserAgent,
+			Notes:          v.Notes,
+		}
+	}
+	return res, nil
+}
+
 			VotedAt:        v.VotedAt,
 			IPAddress:      v.IPAddress,
 			UserAgent:      v.UserAgent,

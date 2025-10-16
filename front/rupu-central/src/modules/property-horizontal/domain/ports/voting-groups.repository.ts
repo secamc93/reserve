@@ -2,7 +2,7 @@
  * Puerto: Repositorio de Grupos de Votación
  */
 
-import { VotingGroup, VotingGroupsList, CreateVotingGroupDTO } from '../entities';
+import { VotingGroup, VotingGroupsList, CreateVotingGroupDTO, UpdateVotingGroupDTO } from '../entities';
 
 export interface GetVotingGroupsParams {
   token: string;
@@ -15,8 +15,23 @@ export interface CreateVotingGroupParams {
   data: CreateVotingGroupDTO;
 }
 
+export interface UpdateVotingGroupParams {
+  token: string;
+  hpId: number;
+  groupId: number;
+  data: UpdateVotingGroupDTO;
+}
+
+export interface DeleteVotingGroupParams {
+  token: string;
+  hpId: number;
+  groupId: number;
+}
+
 export interface IVotingGroupsRepository {
   getVotingGroups(params: GetVotingGroupsParams): Promise<VotingGroupsList>;
   createVotingGroup(params: CreateVotingGroupParams): Promise<VotingGroup>;
+  updateVotingGroup(params: UpdateVotingGroupParams): Promise<VotingGroup>;
+  deleteVotingGroup(params: DeleteVotingGroupParams): Promise<string>;
 }
 

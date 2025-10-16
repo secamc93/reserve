@@ -285,6 +285,7 @@ type VoteDTO struct {
 	VotingOptionID uint
 	OptionText     string
 	OptionCode     string
+	OptionColor    string
 	VotedAt        time.Time
 	IPAddress      string
 	UserAgent      string
@@ -527,4 +528,148 @@ type PaginatedResidentsDTO struct {
 	Page       int
 	PageSize   int
 	TotalPages int
+}
+
+// BulkUpdateResidentItem - DTO para un residente en edición masiva
+type BulkUpdateResidentItem struct {
+	PropertyUnitNumber string  `json:"property_unit_number" binding:"required" example:"101" description:"Número de unidad (columna principal para identificar el residente)"`
+	Name               *string `json:"name,omitempty" example:"Juan Pérez" description:"Nombre del residente (opcional)"`
+	Dni                *string `json:"dni,omitempty" example:"12345678" description:"DNI del residente (opcional)"`
+}
+
+// BulkUpdateResidentsRequest - DTO para solicitud de edición masiva
+type BulkUpdateResidentsRequest struct {
+	Residents []BulkUpdateResidentItem `json:"residents" binding:"required,min=1" description:"Lista de residentes a actualizar"`
+}
+
+// BulkUpdateResidentsResult - DTO para resultado de edición masiva
+type BulkUpdateResidentsResult struct {
+	TotalProcessed int                     `json:"total_processed" example:"10" description:"Total de residentes procesados"`
+	Updated        int                     `json:"updated" example:"8" description:"Residentes actualizados exitosamente"`
+	Errors         int                     `json:"errors" example:"2" description:"Residentes con errores"`
+	ErrorDetails   []BulkUpdateErrorDetail `json:"error_details,omitempty" description:"Detalles de errores específicos"`
+}
+
+// BulkUpdateErrorDetail detalla un error por fila/unidad para graficar en frontend
+type BulkUpdateErrorDetail struct {
+	Row                int    `json:"row" example:"4" description:"Número de fila en el Excel (1-based incluyendo encabezado)"`
+	PropertyUnitNumber string `json:"property_unit_number" example:"101A" description:"Número de unidad asociado al error"`
+	Error              string `json:"error" example:"Unidad no encontrada" description:"Mensaje claro del error"`
+}
+
+// ResidentUpdatePair representa una actualización a aplicar en batch
+type ResidentUpdatePair struct {
+	ID        uint              `json:"id"`
+	UpdateDTO UpdateResidentDTO `json:"update"`
+}
+
+	PageSize   int
+	TotalPages int
+}
+
+// BulkUpdateResidentItem - DTO para un residente en edición masiva
+type BulkUpdateResidentItem struct {
+	PropertyUnitNumber string  `json:"property_unit_number" binding:"required" example:"101" description:"Número de unidad (columna principal para identificar el residente)"`
+	Name               *string `json:"name,omitempty" example:"Juan Pérez" description:"Nombre del residente (opcional)"`
+	Dni                *string `json:"dni,omitempty" example:"12345678" description:"DNI del residente (opcional)"`
+}
+
+// BulkUpdateResidentsRequest - DTO para solicitud de edición masiva
+type BulkUpdateResidentsRequest struct {
+	Residents []BulkUpdateResidentItem `json:"residents" binding:"required,min=1" description:"Lista de residentes a actualizar"`
+}
+
+// BulkUpdateResidentsResult - DTO para resultado de edición masiva
+type BulkUpdateResidentsResult struct {
+	TotalProcessed int                     `json:"total_processed" example:"10" description:"Total de residentes procesados"`
+	Updated        int                     `json:"updated" example:"8" description:"Residentes actualizados exitosamente"`
+	Errors         int                     `json:"errors" example:"2" description:"Residentes con errores"`
+	ErrorDetails   []BulkUpdateErrorDetail `json:"error_details,omitempty" description:"Detalles de errores específicos"`
+}
+
+// BulkUpdateErrorDetail detalla un error por fila/unidad para graficar en frontend
+type BulkUpdateErrorDetail struct {
+	Row                int    `json:"row" example:"4" description:"Número de fila en el Excel (1-based incluyendo encabezado)"`
+	PropertyUnitNumber string `json:"property_unit_number" example:"101A" description:"Número de unidad asociado al error"`
+	Error              string `json:"error" example:"Unidad no encontrada" description:"Mensaje claro del error"`
+}
+
+// ResidentUpdatePair representa una actualización a aplicar en batch
+type ResidentUpdatePair struct {
+	ID        uint              `json:"id"`
+	UpdateDTO UpdateResidentDTO `json:"update"`
+}
+
+	PageSize   int
+	TotalPages int
+}
+
+// BulkUpdateResidentItem - DTO para un residente en edición masiva
+type BulkUpdateResidentItem struct {
+	PropertyUnitNumber string  `json:"property_unit_number" binding:"required" example:"101" description:"Número de unidad (columna principal para identificar el residente)"`
+	Name               *string `json:"name,omitempty" example:"Juan Pérez" description:"Nombre del residente (opcional)"`
+	Dni                *string `json:"dni,omitempty" example:"12345678" description:"DNI del residente (opcional)"`
+}
+
+// BulkUpdateResidentsRequest - DTO para solicitud de edición masiva
+type BulkUpdateResidentsRequest struct {
+	Residents []BulkUpdateResidentItem `json:"residents" binding:"required,min=1" description:"Lista de residentes a actualizar"`
+}
+
+// BulkUpdateResidentsResult - DTO para resultado de edición masiva
+type BulkUpdateResidentsResult struct {
+	TotalProcessed int                     `json:"total_processed" example:"10" description:"Total de residentes procesados"`
+	Updated        int                     `json:"updated" example:"8" description:"Residentes actualizados exitosamente"`
+	Errors         int                     `json:"errors" example:"2" description:"Residentes con errores"`
+	ErrorDetails   []BulkUpdateErrorDetail `json:"error_details,omitempty" description:"Detalles de errores específicos"`
+}
+
+// BulkUpdateErrorDetail detalla un error por fila/unidad para graficar en frontend
+type BulkUpdateErrorDetail struct {
+	Row                int    `json:"row" example:"4" description:"Número de fila en el Excel (1-based incluyendo encabezado)"`
+	PropertyUnitNumber string `json:"property_unit_number" example:"101A" description:"Número de unidad asociado al error"`
+	Error              string `json:"error" example:"Unidad no encontrada" description:"Mensaje claro del error"`
+}
+
+// ResidentUpdatePair representa una actualización a aplicar en batch
+type ResidentUpdatePair struct {
+	ID        uint              `json:"id"`
+	UpdateDTO UpdateResidentDTO `json:"update"`
+}
+
+	PageSize   int
+	TotalPages int
+}
+
+// BulkUpdateResidentItem - DTO para un residente en edición masiva
+type BulkUpdateResidentItem struct {
+	PropertyUnitNumber string  `json:"property_unit_number" binding:"required" example:"101" description:"Número de unidad (columna principal para identificar el residente)"`
+	Name               *string `json:"name,omitempty" example:"Juan Pérez" description:"Nombre del residente (opcional)"`
+	Dni                *string `json:"dni,omitempty" example:"12345678" description:"DNI del residente (opcional)"`
+}
+
+// BulkUpdateResidentsRequest - DTO para solicitud de edición masiva
+type BulkUpdateResidentsRequest struct {
+	Residents []BulkUpdateResidentItem `json:"residents" binding:"required,min=1" description:"Lista de residentes a actualizar"`
+}
+
+// BulkUpdateResidentsResult - DTO para resultado de edición masiva
+type BulkUpdateResidentsResult struct {
+	TotalProcessed int                     `json:"total_processed" example:"10" description:"Total de residentes procesados"`
+	Updated        int                     `json:"updated" example:"8" description:"Residentes actualizados exitosamente"`
+	Errors         int                     `json:"errors" example:"2" description:"Residentes con errores"`
+	ErrorDetails   []BulkUpdateErrorDetail `json:"error_details,omitempty" description:"Detalles de errores específicos"`
+}
+
+// BulkUpdateErrorDetail detalla un error por fila/unidad para graficar en frontend
+type BulkUpdateErrorDetail struct {
+	Row                int    `json:"row" example:"4" description:"Número de fila en el Excel (1-based incluyendo encabezado)"`
+	PropertyUnitNumber string `json:"property_unit_number" example:"101A" description:"Número de unidad asociado al error"`
+	Error              string `json:"error" example:"Unidad no encontrada" description:"Mensaje claro del error"`
+}
+
+// ResidentUpdatePair representa una actualización a aplicar en batch
+type ResidentUpdatePair struct {
+	ID        uint              `json:"id"`
+	UpdateDTO UpdateResidentDTO `json:"update"`
 }

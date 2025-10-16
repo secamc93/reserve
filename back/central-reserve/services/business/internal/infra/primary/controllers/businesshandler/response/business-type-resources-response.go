@@ -39,3 +39,5 @@ type UpdateBusinessTypeResourcesResponse struct {
 	Success bool   `json:"success" example:"true" description:"Indica si la operación fue exitosa"`
 	Message string `json:"message" example:"Recursos permitidos actualizados exitosamente" description:"Mensaje descriptivo de la operación"`
 }
+
+

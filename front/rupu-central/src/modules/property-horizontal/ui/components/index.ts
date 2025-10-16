@@ -4,3 +4,4 @@
 
 export * from './unit-card';
 export * from './votes-by-unit-section';
+export * from './property-navigation';

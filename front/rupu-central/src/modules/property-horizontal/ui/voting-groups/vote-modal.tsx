@@ -45,6 +45,7 @@ export function VoteModal({
   const [loading, setLoading] = useState(false);
   const [loadingResidents, setLoadingResidents] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [selectedOptionId, setSelectedOptionId] = useState<number | null>(null);
   const [selectedResidentId, setSelectedResidentId] = useState<number | null>(null);
 
@@ -263,9 +264,24 @@ export function VoteModal({
 
       if (result.success) {
         console.log('✅ Voto registrado exitosamente:', result.data);
+        
+        // Obtener el nombre del residente y la opción votada para el mensaje
+        const resident = residents.find(r => r.id === selectedResidentId);
+        const option = options.find(o => o.id === selectedOptionId);
+        const residentName = resident?.name || 'Residente';
+        const optionText = option?.optionText || 'Opción';
+        
+        // Mostrar mensaje de confirmación y resetear formulario para siguiente voto
+        setSuccessMessage(`✅ Voto registrado exitosamente: ${residentName} votó por "${optionText}"`);
         resetForm();
+        
+        // Limpiar mensaje después de 3 segundos
+        setTimeout(() => {
+          setSuccessMessage(null);
+        }, 3000);
+        
+        // Notificar al componente padre (para actualizaciones SSE) pero NO cerrar modal
         onSuccess();
-        onClose();
       } else {
         console.log('❌ Error en la respuesta:', result.error);
         setError(result.error || 'Error al registrar el voto');
@@ -304,6 +320,7 @@ export function VoteModal({
     setSelectedResidentId(null);
     setSelectedResidentName('');
     setError(null);
+    setSuccessMessage(null); // Limpiar mensaje de éxito
     setUnitFilter(''); // Limpiar filtro al resetear
   };
 
@@ -510,6 +527,13 @@ export function VoteModal({
         {error && (
           <Alert type="error" onClose={() => setError(null)}>
             {error}
+          </Alert>
+        )}
+
+        {/* Mensaje de éxito */}
+        {successMessage && (
+          <Alert type="success" onClose={() => setSuccessMessage(null)}>
+            {successMessage}
           </Alert>
         )}
 

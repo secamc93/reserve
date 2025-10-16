@@ -70,7 +70,9 @@ type VotingRepository interface {
 	GetVotingByID(ctx context.Context, id uint) (*Voting, error)
 	ListVotingsByGroup(ctx context.Context, groupID uint) ([]Voting, error)
 	UpdateVoting(ctx context.Context, id uint, voting *Voting) (*Voting, error)
+	ActivateVoting(ctx context.Context, id uint) error
 	DeactivateVoting(ctx context.Context, id uint) error
+	DeleteVoting(ctx context.Context, id uint) error
 
 	// Voting Options
 	CreateVotingOption(ctx context.Context, option *VotingOption) (*VotingOption, error)
@@ -78,7 +80,7 @@ type VotingRepository interface {
 	DeactivateVotingOption(ctx context.Context, id uint) error
 
 	// Votes
-	CreateVote(ctx context.Context, vote Vote) error
+	CreateVote(ctx context.Context, vote Vote) (*Vote, error)
 	HasResidentVoted(ctx context.Context, votingID uint, residentID uint) (bool, error)
 	GetResidentVote(ctx context.Context, votingID, residentID uint) (*Vote, error)
 	GetVotingResults(ctx context.Context, votingID uint) ([]VotingResultDTO, error)
@@ -101,7 +103,9 @@ type VotingUseCase interface {
 	GetVotingByID(ctx context.Context, hpID, groupID, votingID uint) (*VotingDTO, error)
 	ListVotingsByGroup(ctx context.Context, groupID uint) ([]VotingDTO, error)
 	UpdateVoting(ctx context.Context, id uint, dto CreateVotingDTO) (*VotingDTO, error)
+	ActivateVoting(ctx context.Context, id uint) error
 	DeactivateVoting(ctx context.Context, id uint) error
+	DeleteVoting(ctx context.Context, id uint) error
 
 	// Options
 	CreateVotingOption(ctx context.Context, dto CreateVotingOptionDTO) (*VotingOptionDTO, error)
@@ -161,6 +165,9 @@ type ResidentRepository interface {
 	GetResidentByUnitAndDni(ctx context.Context, hpID, propertyUnitID uint, dni string) (*ResidentBasicDTO, error)
 	GetPropertyUnitsByNumbers(ctx context.Context, businessID uint, numbers []string) (map[string]uint, error) // Retorna map[number]unit_id
 	CreateResidentsInBatch(ctx context.Context, residents []*Resident) error                                   // Crear múltiples residentes en transacción
+	// Nuevos métodos para edición masiva eficiente
+	GetMainResidentsByUnitIDs(ctx context.Context, businessID uint, unitIDs []uint) (map[uint]ResidentDetailDTO, error)
+	UpdateResidentsInBatch(ctx context.Context, pairs []ResidentUpdatePair) error
 }
 
 // ResidentUseCase - Puerto para casos de uso de residentes
@@ -171,4 +178,6 @@ type ResidentUseCase interface {
 	UpdateResident(ctx context.Context, id uint, dto UpdateResidentDTO) (*ResidentDetailDTO, error)
 	DeleteResident(ctx context.Context, id uint) error
 	ImportResidentsFromExcel(ctx context.Context, businessID uint, filePath string) (*ImportResidentsResult, error)
+	BulkUpdateResidents(ctx context.Context, businessID uint, request BulkUpdateResidentsRequest) (*BulkUpdateResidentsResult, error)
+	BulkUpdateResidentsFromExcel(ctx context.Context, businessID uint, filePath string) (*BulkUpdateResidentsResult, error)
 }

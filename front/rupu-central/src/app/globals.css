@@ -164,7 +164,8 @@ body {
 
 /* Inputs - usando color dinámico */
 .input {
-  @apply w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none transition-all duration-300;
+  @apply w-full px-4 py-3 bg-white border border-gray-300 rounded-lg placeholder-gray-500 focus:outline-none transition-all duration-300;
+  color: #111827 !important; /* text-gray-900 forçado */
 }
 
 .input:focus {

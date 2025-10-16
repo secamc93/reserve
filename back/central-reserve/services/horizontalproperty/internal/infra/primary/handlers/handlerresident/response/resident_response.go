@@ -57,5 +57,21 @@ type PaginatedResidentsResponse struct {
 	TotalPages int                        `json:"total_pages" example:"10"`
 }
 
+// BulkUpdateResidentsResponse - Response para edición masiva de residentes
+type BulkUpdateResidentsResponse struct {
+	TotalProcessed int                           `json:"total_processed" example:"10" description:"Total de residentes procesados"`
+	Updated        int                           `json:"updated" example:"8" description:"Residentes actualizados exitosamente"`
+	Errors         int                           `json:"errors" example:"2" description:"Residentes con errores"`
+	ErrorDetails   []BulkUpdateErrorDetailResult `json:"error_details,omitempty" description:"Detalles de errores específicos"`
+}
+
+// BulkUpdateErrorDetailResult - estructura de error para frontend
+type BulkUpdateErrorDetailResult struct {
+	Row                int    `json:"row" example:"4"`
+	PropertyUnitNumber string `json:"property_unit_number" example:"101A"`
+	Error              string `json:"error" example:"Unidad no encontrada"`
+}
+
 type ResidentSuccess = SuccessResponse[ResidentResponse]
 type ResidentsSuccess = SuccessResponse[PaginatedResidentsResponse]
+type BulkUpdateResidentsSuccess = SuccessResponse[BulkUpdateResidentsResponse]

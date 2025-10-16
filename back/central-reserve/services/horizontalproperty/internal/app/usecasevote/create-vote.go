@@ -33,18 +33,23 @@ func (u *votingUseCase) CreateVote(ctx context.Context, dto domain.CreateVoteDTO
 		Notes:          dto.Notes,
 	}
 
-	if err := u.repo.CreateVote(ctx, entity); err != nil {
+	created, err := u.repo.CreateVote(ctx, entity)
+	if err != nil {
 		return nil, err
 	}
 
-	// Idealmente recuperar con timestamps reales si es necesario
+	// Mapear el voto creado a DTO con todos los datos reales de la BD
 	return &domain.VoteDTO{
-		ID:             0,
-		VotingID:       entity.VotingID,
-		ResidentID:     entity.ResidentID,
-		VotingOptionID: entity.VotingOptionID,
-		IPAddress:      entity.IPAddress,
-		UserAgent:      entity.UserAgent,
-		Notes:          entity.Notes,
+		ID:             created.ID,
+		VotingID:       created.VotingID,
+		ResidentID:     created.ResidentID,
+		VotingOptionID: created.VotingOptionID,
+		OptionText:     created.OptionText,
+		OptionCode:     created.OptionCode,
+		OptionColor:    created.OptionColor,
+		VotedAt:        created.VotedAt,
+		IPAddress:      created.IPAddress,
+		UserAgent:      created.UserAgent,
+		Notes:          created.Notes,
 	}, nil
 }

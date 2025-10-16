@@ -67,6 +67,17 @@ export interface UpdateResidentDTO {
   monthlyRent?: number;
 }
 
+export interface BulkUpdateResidentDTO {
+  property_unit_number: string;
+  name?: string;
+  dni?: string;
+  email?: string;
+  phone?: string;
+  emergencyContact?: string;
+  isMainResident?: boolean;
+  isActive?: boolean;
+}
+
 // Tipos de residente comunes
 export const RESIDENT_TYPES = {
   OWNER: 1,

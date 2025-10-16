@@ -11,6 +11,7 @@ import { generatePublicUrlAction } from '@/modules/property-horizontal/infrastru
 import { getVotingDetailsAction } from '@/modules/property-horizontal/infrastructure/actions/voting';
 import { VoteModal } from './vote-modal';
 import { VotesByUnitSection, type ResidentialUnit } from '../components';
+import { VotingSummaryBlock } from './voting-summary-block';
 // import { QRCodeSVG } from 'qrcode.react'; // Ya no se usa, se genera dinámicamente
 import { useVotingSSE } from './hooks';
 
@@ -56,6 +57,9 @@ interface SSEVote {
   voting_id: number;
   resident_id: number;
   voting_option_id: number;
+  option_text: string;
+  option_code: string;
+  option_color: string;
   voted_at: string;
   ip_address?: string;
   user_agent?: string;
@@ -192,29 +196,24 @@ export function LiveVotingModal({
       let newUnitsVoted = 0;
 
       // Para cada nuevo voto, actualizar la unidad correspondiente
-      newVotes.forEach(vote => {
-        // Buscar la opción votada para obtener el texto y color
-        const option = options.find(opt => opt.id === vote.voting_option_id);
+      newVotes.forEach(sseVote => {
+        // ✅ MEJORADO: Usar directamente los datos del SSE (incluye option_color)
+        const unitIndex = updatedUnits.findIndex(unit => unit.resident_id === sseVote.resident_id);
         
-        if (option) {
-          // ✅ CORREGIDO: Buscar la unidad específica por resident_id
-          const unitIndex = updatedUnits.findIndex(unit => unit.resident_id === vote.resident_id);
+        if (unitIndex !== -1) {
+          console.log(`✅ Actualizando unidad ${updatedUnits[unitIndex].property_unit_number} (resident_id: ${sseVote.resident_id}) con voto: ${sseVote.option_text} (color: ${sseVote.option_color})`);
           
-          if (unitIndex !== -1) {
-            console.log(`✅ Actualizando unidad ${updatedUnits[unitIndex].property_unit_number} (resident_id: ${vote.resident_id}) con voto: ${option.optionText}`);
-            
-            updatedUnits[unitIndex] = {
-              ...updatedUnits[unitIndex],
-              has_voted: true,
-              option_text: option.optionText,
-              option_code: option.optionCode,
-              option_color: option.color || null,
-              voted_at: vote.voted_at,
-            };
-            newUnitsVoted++;
-          } else {
-            console.warn(`⚠️ No se encontró unidad para resident_id: ${vote.resident_id}`);
-          }
+          updatedUnits[unitIndex] = {
+            ...updatedUnits[unitIndex],
+            has_voted: true,
+            option_text: sseVote.option_text,
+            option_code: sseVote.option_code,
+            option_color: sseVote.option_color, // ✅ NUEVO: Usar directamente el color del SSE
+            voted_at: sseVote.voted_at,
+          };
+          newUnitsVoted++;
+        } else {
+          console.warn(`⚠️ No se encontró unidad para resident_id: ${sseVote.resident_id}`);
         }
       });
 
@@ -235,6 +234,20 @@ export function LiveVotingModal({
       loadVotingDetails();
     }
   }, [isOpen, voting, hpId, loadVotingDetails]);
+
+  // Estado para los colores personalizados de cada opción (solo para override temporal)
+  const [optionColors, setOptionColors] = useState<Record<number, string>>({});
+  
+  // Estado para errores de configuración de colores
+  const [colorConfigError, setColorConfigError] = useState<string | null>(null);
+
+  // useEffect para validar colores cuando se cargan las opciones
+  useEffect(() => {
+    if (options && options.length > 0) {
+      const error = validateOptionColors();
+      setColorConfigError(error);
+    }
+  }, [options, optionColors]);
 
   // Actualizar datos cuando llegan nuevos votos via SSE (sin recargar todo el endpoint)
   useEffect(() => {
@@ -257,10 +270,15 @@ export function LiveVotingModal({
         votedOptionColor = unit.option_color;
         console.log(`🎨 Color del backend para ${unit.property_unit_number}:`, unit.option_color);
       } else if (unit.has_voted) {
-        // Fallback: buscar en las opciones configuradas
+        // Buscar en las opciones configuradas
         const option = options.find(opt => opt.optionText === unit.option_text);
         votedOptionColor = option ? getOptionColor(option.id, option.color) : undefined;
-        console.log(`🎨 Color de fallback para ${unit.property_unit_number}:`, votedOptionColor, 'opción:', option?.optionText);
+        console.log(`🎨 Color para ${unit.property_unit_number}:`, votedOptionColor, 'opción:', option?.optionText);
+        
+        // Si no hay color configurado, mostrar error
+        if (!votedOptionColor && option) {
+          console.error(`❌ ERROR: Opción "${option.optionText}" no tiene color configurado`);
+        }
       }
 
       return {
@@ -277,13 +295,8 @@ export function LiveVotingModal({
     });
   };
 
-  // Estado para los colores personalizados de cada opción (solo para override temporal)
-  const [optionColors, setOptionColors] = useState<Record<number, string>>({});
-
-  // Función para obtener el color de una opción (prioriza el color personalizado, luego el del backend, luego un default)
-  const getOptionColor = (optionId: number, optionColor?: string): string => {
-    const colorPalette = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#6366f1', '#ef4444', '#f97316'];
-    
+  // Función para obtener el color de una opción (NO usa colores predeterminados)
+  const getOptionColor = (optionId: number, optionColor?: string): string | undefined => {
     // 1. Color personalizado temporal (si el usuario lo cambió en el UI)
     if (optionColors[optionId]) {
       return optionColors[optionId];
@@ -294,27 +307,39 @@ export function LiveVotingModal({
       return optionColor;
     }
     
-    // 3. Color por defecto de la paleta
-    const optionIndex = options.findIndex(opt => opt.id === optionId);
-    return colorPalette[optionIndex % colorPalette.length];
+    // 3. NO hay color configurado - retornar undefined
+    return undefined;
+  };
+
+  // Función para validar que todas las opciones tengan colores configurados
+  const validateOptionColors = (): string | null => {
+    if (!options || options.length === 0) {
+      return null; // No hay opciones para validar
+    }
+
+    const optionsWithoutColor = options.filter(option => {
+      const color = getOptionColor(option.id, option.color);
+      return !color;
+    });
+
+    if (optionsWithoutColor.length > 0) {
+      const optionNames = optionsWithoutColor.map(opt => `"${opt.optionText}"`).join(', ');
+      return `Las siguientes opciones de votación no tienen color configurado: ${optionNames}. Por favor, configure los colores para todas las opciones antes de continuar.`;
+    }
+
+    return null;
   };
 
   // Función para convertir votos SSE a formato del frontend
-  const convertSSEVotesToFrontend = (sseVotes: Array<{
-    id: number;
-    voting_id: number;
-    resident_id: number;
-    voting_option_id: number;
-    voted_at: string;
-    ip_address?: string;
-    user_agent?: string;
-    notes?: string;
-  }>): Vote[] => {
+  const convertSSEVotesToFrontend = (sseVotes: SSEVote[]): Vote[] => {
     return sseVotes.map(sseVote => ({
       id: sseVote.id,
       votingId: sseVote.voting_id,
       residentId: sseVote.resident_id,
       votingOptionId: sseVote.voting_option_id,
+      optionText: sseVote.option_text,
+      optionCode: sseVote.option_code,
+      optionColor: sseVote.option_color,
       votedAt: sseVote.voted_at,
       ipAddress: sseVote.ip_address,
       userAgent: sseVote.user_agent,
@@ -323,8 +348,9 @@ export function LiveVotingModal({
   };
 
   // Usar votos del SSE si está conectado, sino usar votos iniciales o mock
-  const currentVotes = useRealTime && sseConnected ? convertSSEVotesToFrontend(sseVotes) : initialVotes;
-  const currentTotalVotes = useRealTime && sseConnected ? sseTotalVotes : initialVotes.length;
+  const safeInitialVotes = initialVotes || [];
+  const currentVotes = useRealTime && sseConnected ? convertSSEVotesToFrontend(sseVotes) : safeInitialVotes;
+  const currentTotalVotes = useRealTime && sseConnected ? sseTotalVotes : safeInitialVotes.length;
 
   if (!isOpen || !voting) return null;
   
@@ -443,7 +469,7 @@ export function LiveVotingModal({
   const mockVotes = generateMockVotes();
 
   // Usar votos reales del SSE si están disponibles, sino usar votos iniciales o mock
-  const votesToUse = currentVotes.length > 0 ? currentVotes : (initialVotes.length > 0 ? initialVotes : mockVotes);
+  const votesToUse = currentVotes.length > 0 ? currentVotes : (safeInitialVotes.length > 0 ? safeInitialVotes : mockVotes);
 
   // Calcular estadísticas con coeficientes de participación
   const totalCoefficient = 100; // La suma de todos los coeficientes siempre es 100
@@ -513,8 +539,9 @@ export function LiveVotingModal({
   };
 
   const handleVoteSuccess = () => {
-    setShowVoteModal(false);
-    onVoteSuccess();
+    // NO cerrar el modal para permitir votos continuos
+    // El modal permanecerá abierto para el siguiente voto
+    console.log('✅ Voto registrado exitosamente. Modal permanece abierto para votos continuos.');
   };
 
   return (
@@ -581,184 +608,12 @@ export function LiveVotingModal({
 
           {/* Contenido scrolleable con flex layout */}
           <div className="flex-1 overflow-hidden p-6 flex flex-col">
-            {/* Resultados y Resumen en la misma fila */}
-            <div className="mb-6">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Opciones de Votación - COMPACTAS */}
-                <div className="lg:col-span-2">
-                  <div className="grid grid-cols-3 gap-2">
-                    {allStats.map((option) => {
-                      // Color especial para "No Votado"
-                      const isNotVoted = option.id === -1;
-                      const optionColor = isNotVoted 
-                        ? '#9ca3af' 
-                        : getOptionColor(option.id, option.color);
-                      
-                      return (
-                        <div 
-                          key={option.id} 
-                          className={`bg-white border rounded-lg p-2 shadow-sm hover:shadow-md transition-shadow ${
-                            isNotVoted ? 'border-gray-300 bg-gray-50' : 'border-gray-200'
-                          }`}
-                        >
-                          {/* Header compacto */}
-                          <div className="flex items-center justify-between gap-1 mb-2">
-                            <div className="flex items-center gap-1 flex-1">
-                              <span 
-                                className="w-6 h-6 flex items-center justify-center rounded-full font-bold text-white text-xs"
-                                style={{ backgroundColor: optionColor }}
-                              >
-                                {isNotVoted ? '⏳' : option.displayOrder}
-                              </span>
-                              <div className="min-w-0 flex-1">
-                                <span className="font-semibold text-gray-900 text-xs block truncate">
-                                  {option.optionText}
-                                </span>
-                                <span className="text-xs text-gray-500 truncate block">
-                                  {option.optionCode}
-                                </span>
-                              </div>
-                            </div>
-                            {/* Selector de color compacto */}
-                            {!isNotVoted && (
-                              <input
-                                type="color"
-                                value={optionColor}
-                                onChange={(e) => setOptionColors(prev => ({ ...prev, [option.id]: e.target.value }))}
-                                className="w-5 h-5 rounded cursor-pointer border border-gray-300"
-                                title="Cambiar color"
-                              />
-                            )}
-                          </div>
-                          
-                          {/* Métricas compactas en una sola fila */}
-                          <div className="grid grid-cols-3 gap-1 mb-2">
-                            {/* % Coeficiente */}
-                            <div className="text-center bg-blue-50 rounded p-1 border border-blue-200">
-                              <span className="text-xs text-blue-600 font-medium block">
-                                {option.percentageByCoefficient.toFixed(1)}%
-                              </span>
-                              <span className="text-xs text-blue-500">
-                                Legal
-                              </span>
-                            </div>
-                            
-                            {/* Cantidad */}
-                            <div className="text-center bg-green-50 rounded p-1 border border-green-200">
-                              <span className="text-xs text-green-600 font-medium block">
-                                {option.votes}
-                              </span>
-                              <span className="text-xs text-green-500">
-                                Unid
-                              </span>
-                            </div>
-                            
-                            {/* % Asistencia */}
-                            <div className="text-center bg-purple-50 rounded p-1 border border-purple-200">
-                              <span className="text-xs text-purple-600 font-medium block">
-                                {isNotVoted ? '-' : option.percentageOfVoted.toFixed(0)}%
-                              </span>
-                              <span className="text-xs text-purple-500">
-                                Asist
-                              </span>
-                            </div>
-                          </div>
-                          
-                          {/* Barra de progreso compacta */}
-                          <div className="space-y-1">
-                            <div className="flex justify-between text-xs text-gray-600">
-                              <span>Coef:</span>
-                              <span className="font-semibold">{option.coefficientSum.toFixed(3)}</span>
-                            </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                              <div 
-                                className="h-2 rounded-full transition-all duration-700"
-                                style={{ 
-                                  width: `${option.percentageByCoefficient}%`,
-                                  backgroundColor: optionColor
-                                }}
-                              >
-                                {option.percentageByCoefficient >= 15 && (
-                                  <span className="text-xs text-white font-bold absolute right-1 top-0 leading-none">
-                                    {option.percentageByCoefficient.toFixed(0)}%
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Resumen de Estadísticas - COMPACTO */}
-                <div className="lg:col-span-1">
-                  <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow">
-                    <h3 className="text-sm font-bold text-gray-900 mb-3 border-b pb-1">
-                      📊 Resumen
-                    </h3>
-                    
-                    {/* Estadísticas compactas en grid 2x2 */}
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      {/* Total Unidades */}
-                      <div className="bg-gray-50 rounded p-2 border border-gray-200 text-center">
-                        <span className="text-gray-600 block">Total</span>
-                        <span className="font-bold text-lg text-gray-900">{votingDetails?.total_units || 0}</span>
-                      </div>
-                      
-                      {/* Han Votado */}
-                      <div className="bg-green-50 rounded p-2 border border-green-200 text-center">
-                        <span className="text-green-600 block">Votados</span>
-                        <span className="font-bold text-lg text-green-700">
-                          {votingDetails?.units_voted || 0}
-                        </span>
-                        <span className="text-green-600 text-xs">
-                          ({votingDetails && votingDetails.total_units > 0
-                            ? ((votingDetails.units_voted / votingDetails.total_units) * 100).toFixed(1)
-                            : '0'}%)
-                        </span>
-                      </div>
-                      
-                      {/* Pendientes */}
-                      <div className="bg-orange-50 rounded p-2 border border-orange-200 text-center">
-                        <span className="text-orange-600 block">Pendientes</span>
-                        <span className="font-bold text-lg text-orange-700">
-                          {votingDetails?.units_pending || 0}
-                        </span>
-                        <span className="text-orange-600 text-xs">
-                          ({notVotedPercentage.toFixed(1)}%)
-                        </span>
-                      </div>
-                      
-                      {/* % Requerido */}
-                      <div className="bg-purple-50 rounded p-2 border border-purple-200 text-center">
-                        <span className="text-purple-600 block">% Requerido</span>
-                        <span className="font-bold text-lg text-purple-700">{voting.requiredPercentage}%</span>
-                        <div className="mt-1">
-                          {(100 - notVotedPercentage) >= voting.requiredPercentage ? (
-                            <span className="text-xs text-green-600 font-semibold">✅ Quórum</span>
-                          ) : (
-                            <span className="text-xs text-orange-600 font-semibold">
-                              ⏳ -{((100 - notVotedPercentage) - voting.requiredPercentage).toFixed(1)}%
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Coeficientes en una línea compacta */}
-                    <div className="mt-2 pt-2 border-t border-gray-200 text-xs">
-                      <div className="flex justify-between text-gray-600">
-                        <span>Coeficientes:</span>
-                        <span>Votados: <span className="font-semibold text-blue-600">{(100 - notVotedPercentage).toFixed(1)}%</span></span>
-                        <span>Pendientes: <span className="font-semibold text-orange-600">{notVotedPercentage.toFixed(1)}%</span></span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            {/* Componente unificado de resumen */}
+            <VotingSummaryBlock 
+              voting={voting}
+              options={options}
+              votingDetails={votingDetails}
+            />
 
             {/* Votos por Unidad - Ocupa todo el espacio restante */}
             <div className="flex-1 min-h-0">
@@ -781,6 +636,25 @@ export function LiveVotingModal({
                     >
                       Reintentar
                     </button>
+                  </div>
+                </div>
+              ) : colorConfigError ? (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center max-w-2xl mx-auto p-6">
+                    <div className="text-red-500 text-6xl mb-4">🎨</div>
+                    <p className="text-red-600 font-medium mb-4">Error de Configuración de Colores</p>
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                      <p className="text-red-800 text-sm leading-relaxed">{colorConfigError}</p>
+                    </div>
+                    <div className="text-gray-600 text-sm">
+                      <p className="mb-2">Para solucionar este problema:</p>
+                      <ul className="text-left space-y-1">
+                        <li>• Ve a la lista de votaciones</li>
+                        <li>• Edita las opciones de votación que no tienen color</li>
+                        <li>• Asigna un color a cada opción</li>
+                        <li>• Guarda los cambios</li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
               ) : (

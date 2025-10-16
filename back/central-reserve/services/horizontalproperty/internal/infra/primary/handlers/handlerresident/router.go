@@ -11,6 +11,7 @@ func (h *ResidentHandler) RegisterRoutes(router *gin.RouterGroup) {
 	{
 		residents.POST("", middleware.JWT(), h.CreateResident)
 		residents.POST("/import-excel", middleware.JWT(), h.ImportResidentsExcel) // Importar residentes desde Excel
+		residents.PUT("/bulk-update", middleware.JWT(), h.BulkUpdateResidents)    // Edición masiva de residentes
 		residents.GET("", middleware.JWT(), h.ListResidents)
 		residents.GET("/:resident_id", middleware.JWT(), h.GetResidentByID)
 		residents.PUT("/:resident_id", middleware.JWT(), h.UpdateResident)

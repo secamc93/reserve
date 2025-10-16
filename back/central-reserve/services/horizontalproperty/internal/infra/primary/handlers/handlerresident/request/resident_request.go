@@ -34,6 +34,18 @@ type UpdateResidentRequest struct {
 	MonthlyRent      *float64   `json:"monthly_rent" example:"1500000"`
 }
 
+// BulkUpdateResidentItemRequest - Request para un residente en edición masiva
+type BulkUpdateResidentItemRequest struct {
+	PropertyUnitNumber string  `json:"property_unit_number" binding:"required" example:"101" description:"Número de unidad (columna principal para identificar el residente)"`
+	Name               *string `json:"name,omitempty" example:"Juan Pérez" description:"Nombre del residente (opcional)"`
+	Dni                *string `json:"dni,omitempty" example:"12345678" description:"DNI del residente (opcional)"`
+}
+
+// BulkUpdateResidentsRequest - Request para edición masiva de residentes
+type BulkUpdateResidentsRequest struct {
+	Residents []BulkUpdateResidentItemRequest `json:"residents" binding:"required,min=1" description:"Lista de residentes a actualizar"`
+}
+
 type ResidentFiltersRequest struct {
 	PropertyUnitNumber string `form:"property_unit_number" example:"101"`
 	Name               string `form:"name" example:"Juan"`

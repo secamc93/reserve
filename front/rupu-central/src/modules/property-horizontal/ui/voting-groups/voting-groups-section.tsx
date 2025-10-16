@@ -7,6 +7,8 @@
 import { useState, useEffect } from 'react';
 import { Badge, Spinner } from '@shared/ui';
 import { CreateVotingGroupModal } from './create-voting-group-modal';
+import { EditVotingGroupModal } from './edit-voting-group-modal';
+import { DeleteVotingGroupModal } from './delete-voting-group-modal';
 import { VotingsList } from './votings-list';
 import { TokenStorage } from '@shared/config';
 import { getVotingGroupsAction } from '../../infrastructure/actions';
@@ -35,6 +37,9 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
   const [votingGroups, setVotingGroups] = useState<VotingGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState<VotingGroup | null>(null);
   const [expandedGroupId, setExpandedGroupId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -70,6 +75,36 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
   const handleCreateSuccess = () => {
     console.log('✅ Grupo de votación creado exitosamente');
     loadVotingGroups();
+  };
+
+  const handleEditClick = (group: VotingGroup) => {
+    setSelectedGroup(group);
+    setShowEditModal(true);
+  };
+
+  const handleEditSuccess = () => {
+    console.log('✅ Grupo de votación editado exitosamente');
+    loadVotingGroups();
+  };
+
+  const handleEditClose = () => {
+    setShowEditModal(false);
+    setSelectedGroup(null);
+  };
+
+  const handleDeleteClick = (group: VotingGroup) => {
+    setSelectedGroup(group);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteSuccess = () => {
+    console.log('✅ Grupo de votación eliminado exitosamente');
+    loadVotingGroups();
+  };
+
+  const handleDeleteClose = () => {
+    setShowDeleteModal(false);
+    setSelectedGroup(null);
   };
 
   const handleToggleGroup = (groupId: number) => {
@@ -184,14 +219,48 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
                         )}
                       </div>
                     </div>
-                    <button
-                      className="text-gray-400 hover:text-gray-600 transition-transform flex-shrink-0"
-                      style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
-                    >
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
+                    {/* Botones de Acciones */}
+                    <div className="flex items-center gap-2">
+                      {/* Botón Editar */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditClick(group);
+                        }}
+                        className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="Editar grupo"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                      
+                      {/* Botón Eliminar */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteClick(group);
+                        }}
+                        className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Eliminar grupo"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                      
+                      {/* Botón Expandir */}
+                      <button
+                        onClick={() => handleToggleGroup(group.id)}
+                        className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-all flex-shrink-0"
+                        style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                        title={isExpanded ? 'Contraer' : 'Expandir'}
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Votaciones del Grupo (Expandible) */}
@@ -218,6 +287,28 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
         onSuccess={handleCreateSuccess}
         businessId={businessId}
       />
+
+      {/* Modal de edición */}
+      {selectedGroup && (
+        <EditVotingGroupModal
+          isOpen={showEditModal}
+          onClose={handleEditClose}
+          onSuccess={handleEditSuccess}
+          hpId={businessId}
+          group={selectedGroup}
+        />
+      )}
+
+      {/* Modal de eliminación */}
+      {selectedGroup && (
+        <DeleteVotingGroupModal
+          isOpen={showDeleteModal}
+          onClose={handleDeleteClose}
+          onSuccess={handleDeleteSuccess}
+          hpId={businessId}
+          group={selectedGroup}
+        />
+      )}
     </div>
   );
 }

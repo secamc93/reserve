@@ -65,3 +65,6 @@ func (h *VotingHandler) CreateVotingOption(c *gin.Context) {
 	responseData := mapper.MapVotingOptionDTOToResponse(created)
 	c.JSON(http.StatusCreated, response.VotingOptionSuccess{Success: true, Message: "Opción creada", Data: responseData})
 }
+
+
+

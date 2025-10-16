@@ -143,6 +143,7 @@ export function CreateVotingGroupModal({ isOpen, onClose, onSuccess, businessId 
               className="input w-full"
               disabled={loading}
               required
+              style={{ color: '#111827' }}
             />
           </div>
         </div>
@@ -237,6 +238,7 @@ export function CreateVotingGroupModal({ isOpen, onClose, onSuccess, businessId 
               rows={3}
               className="input w-full"
               disabled={loading}
+              style={{ color: '#111827' }}
             />
           </div>
         </div>
