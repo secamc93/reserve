@@ -180,7 +180,8 @@ class ReservasDatasourceImpl extends ReserveDatasource {
       }
       if (json == null) {
         throw Exception(
-            'Formato de respuesta inesperado en PATCH /reserves/$id/cancel');
+          'Formato de respuesta inesperado en PATCH /reserves/$id/cancel',
+        );
       }
 
       final model = ReservaModel.fromJson(json);
