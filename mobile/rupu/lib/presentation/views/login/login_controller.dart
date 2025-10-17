@@ -55,6 +55,11 @@ class LoginController extends GetxController {
     selectedBusiness.value = null;
   }
 
+  Future<void> logout() async {
+    await TokenStorage().deleteToken();
+    clearFields();
+  }
+
   void selectBusiness(BusinessModel business) {
     selectedBusiness.value = business;
     AppTheme.instance.updateColors(

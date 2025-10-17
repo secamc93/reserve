@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:rupu/config/theme/app_theme_controller.dart';
 import 'package:rupu/domain/infrastructure/models/login_response_model.dart';
 
+import '../home/home_controller.dart';
 import '../login/login_controller.dart';
 import '../../screens/screens.dart';
 
@@ -14,12 +15,13 @@ class PerfilController extends GetxController {
   final LoginController _loginCtrl = Get.find<LoginController>();
 
   // ---- Estado expuesto a la vista ----
-  late final String userName;
-  late final String email;
-  late final String avatarUrl;
+  String userName = '';
+  String email = '';
+  String avatarUrl = '';
 
   final Rxn<BusinessModel> _business = Rxn();
   Worker? _businessWorker;
+  Worker? _sessionWorker;
 
   String get businessName => _business.value?.name ?? '';
   String get businessLogoUrl => _business.value?.logoUrl ?? '';
@@ -28,7 +30,7 @@ class PerfilController extends GetxController {
   int get businessId => _business.value?.id ?? 0;
 
   // Para placeholder de avatar (quedó en el controller)
-  late final String randomIndex;
+  String randomIndex = Random().nextInt(100).toString();
 
   // Tema (reactivo)
   RxBool get isDarkRx => _themeCtrl.isDark;
@@ -37,7 +39,15 @@ class PerfilController extends GetxController {
   void onInit() {
     super.onInit();
 
-    final session = _loginCtrl.sessionModel.value;
+    _applySession(_loginCtrl.sessionModel.value);
+    _sessionWorker = ever<LoginResponseModel?>(
+      _loginCtrl.sessionModel,
+      _applySession,
+    );
+    _businessWorker = ever(_loginCtrl.selectedBusiness, _setBusiness);
+  }
+
+  void _applySession(LoginResponseModel? session) {
     if (session != null) {
       final user = session.data.user;
       userName = user.name;
@@ -57,8 +67,6 @@ class PerfilController extends GetxController {
       randomIndex = Random().nextInt(100).toString();
       _setBusiness(null);
     }
-
-    _businessWorker = ever(_loginCtrl.selectedBusiness, _setBusiness);
   }
 
   void _setBusiness(BusinessModel? business) {
@@ -75,15 +83,21 @@ class PerfilController extends GetxController {
     ).pushNamed(CambiarContrasenaScreen.name, pathParameters: {'page': '0'});
   }
 
-  void logout(BuildContext context) {
-    GoRouter.of(
-      context,
-    ).goNamed(LoginScreen.name, pathParameters: {'page': '0'});
-    _loginCtrl.clearFields();
+  Future<void> logout(BuildContext context) async {
+    await _loginCtrl.logout();
+    if (Get.isRegistered<HomeController>()) {
+      Get.delete<HomeController>();
+    }
+    if (context.mounted) {
+      GoRouter.of(
+        context,
+      ).goNamed(LoginScreen.name, pathParameters: {'page': '0'});
+    }
   }
 
   @override
   void onClose() {
+    _sessionWorker?.dispose();
     _businessWorker?.dispose();
     super.onClose();
   }

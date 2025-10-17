@@ -29,10 +29,13 @@ class _SideMenuState extends State<SideMenu> {
       final item = menuItems[index];
       context.push(item.link);
     } else {
-      // Logout
-      await TokenStorage().deleteToken();
       if (Get.isRegistered<LoginController>()) {
-        Get.delete<LoginController>();
+        await Get.find<LoginController>().logout();
+      } else {
+        await TokenStorage().deleteToken();
+      }
+      if (Get.isRegistered<HomeController>()) {
+        Get.delete<HomeController>();
       }
       if (context.mounted) context.go('/login/0');
     }
