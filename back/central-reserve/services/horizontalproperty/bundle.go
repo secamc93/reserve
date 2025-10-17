@@ -1,11 +1,13 @@
 package horizontalproperty
 
 import (
+	"central_reserve/services/horizontalproperty/internal/app/usecaseattendance"
 	"central_reserve/services/horizontalproperty/internal/app/usecasehorizontalproperty"
 	"central_reserve/services/horizontalproperty/internal/app/usecasepropertyunit"
 	"central_reserve/services/horizontalproperty/internal/app/usecaseresident"
 	"central_reserve/services/horizontalproperty/internal/app/usecasevote"
 	"central_reserve/services/horizontalproperty/internal/domain"
+	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlerattendance"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlerpropertyunit"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlerresident"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlervote"
@@ -43,6 +45,9 @@ func New(db db.IDatabase, logger log.ILogger, s3 storage.IS3Service, envConfig e
 	// Resident use case
 	residentUseCase := usecaseresident.New(repoConcrete, logger)
 
+	// Attendance use case
+	attendanceUseCase := usecaseattendance.NewAttendanceUseCase(repoConcrete, logger)
+
 	// Crear cache de votaciones para SSE en tiempo real
 	votingCache := domain.NewVotingCache()
 
@@ -56,6 +61,7 @@ func New(db db.IDatabase, logger log.ILogger, s3 storage.IS3Service, envConfig e
 
 	votingHandler := handlervote.NewVotingHandler(
 		votingUseCase,
+		repoConcrete,
 		propertyUnitUseCase,
 		horizontalPropertyUseCase,
 		votingCache,
@@ -64,10 +70,12 @@ func New(db db.IDatabase, logger log.ILogger, s3 storage.IS3Service, envConfig e
 	)
 	propertyUnitHandler := handlerpropertyunit.New(propertyUnitUseCase, logger)
 	residentHandler := handlerresident.New(residentUseCase, logger)
+	attendanceHandler := handlerattendance.NewAttendanceHandler(attendanceUseCase, logger)
 
 	// Registrar rutas
 	horizontalPropertyHandler.RegisterRoutes(v1Group)
 	votingHandler.RegisterRoutes(v1Group)
 	propertyUnitHandler.RegisterRoutes(v1Group)
 	residentHandler.RegisterRoutes(v1Group)
+	attendanceHandler.RegisterRoutes(v1Group)
 }

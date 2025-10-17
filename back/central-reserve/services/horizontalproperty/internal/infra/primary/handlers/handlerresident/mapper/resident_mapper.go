@@ -48,6 +48,7 @@ func MapFiltersRequestToDTO(req request.ResidentFiltersRequest, businessID uint)
 		BusinessID:         businessID,
 		PropertyUnitNumber: req.PropertyUnitNumber,
 		Name:               req.Name,
+		Dni:                req.Dni,
 		PropertyUnitID:     req.PropertyUnitID,
 		ResidentTypeID:     req.ResidentTypeID,
 		IsActive:           req.IsActive,

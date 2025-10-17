@@ -45,41 +45,45 @@ func (uc *MigrationUseCase) MigrateDB() error {
 
 	// Auto-migrar todos los modelos
 	if err := uc.db.AutoMigrate(
-		&models.BusinessType{},
-		&models.Scope{},
-		&models.Business{},
-		&models.Role{},
-		&models.Permission{},
-		&models.User{},
-		&models.BusinessStaff{},
-		&models.Client{},
-		&models.Table{},
-		&models.ReservationStatus{},
-		&models.Reservation{},
-		&models.ReservationStatusHistory{},
-		&models.Room{},
-		&models.APIKey{},
-		&models.Resource{},
-		&models.BusinessTypeResourcePermitted{},
-		&models.BusinessResourceConfigured{},
-		&models.Action{},
-		&models.StaffType{}, // Genérico para todos los dominios
-		// Modelos de Propiedad Horizontal
-		&models.PropertyUnit{},
-		&models.ResidentType{},
-		&models.Resident{},
-		// Modelos de Gobernanza de Propiedad Horizontal
-		&models.CommitteeType{},
-		&models.CommitteePosition{},
-		&models.Committee{},
-		&models.CommitteeMember{},
-		// Modelos de Staff/Empleados de Propiedad Horizontal
-		&models.PropertyStaff{},
-		// Modelos de Sistema de Votaciones
-		&models.VotingGroup{},
-		&models.Voting{},
-		&models.VotingOption{},
-		&models.Vote{},
+		// &models.BusinessType{},
+		// &models.Scope{},
+		// &models.Business{},
+		// &models.Role{},
+		// &models.Permission{},
+		// &models.User{},
+		// &models.BusinessStaff{},
+		// &models.Client{},
+		// &models.Table{},
+		// &models.ReservationStatus{},
+		// &models.Reservation{},
+		// &models.ReservationStatusHistory{},
+		// &models.Room{},
+		// &models.APIKey{},
+		// &models.Resource{},
+		// &models.BusinessTypeResourcePermitted{},
+		// &models.BusinessResourceConfigured{},
+		// &models.Action{},
+		// &models.StaffType{}, // Genérico para todos los dominios
+		// // Modelos de Propiedad Horizontal
+		// &models.PropertyUnit{},
+		// &models.ResidentType{},
+		// &models.Resident{},
+		// &models.ResidentUnit{},
+		// // Modelos de Gobernanza de Propiedad Horizontal
+		// &models.CommitteeType{},
+		// &models.CommitteePosition{},
+		// &models.Committee{},
+		// &models.CommitteeMember{},
+		// // Modelos de Staff/Empleados de Propiedad Horizontal
+		// &models.PropertyStaff{},
+		// // Modelos de Sistema de Votaciones
+		// &models.VotingGroup{},
+		// &models.Voting{},
+		// &models.VotingOption{},
+		// &models.Vote{},
+		&models.Proxy{},
+		&models.AttendanceRecord{},
+		&models.AttendanceList{},
 	); err != nil {
 		return err
 	}

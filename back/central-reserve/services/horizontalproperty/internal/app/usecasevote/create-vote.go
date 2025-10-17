@@ -15,18 +15,18 @@ func (u *votingUseCase) CreateVote(ctx context.Context, dto domain.CreateVoteDTO
 		return nil, fmt.Errorf("errores de validación: %w", err)
 	}
 
-	// Un residente solo puede votar una vez por votación
-	voted, err := u.repo.HasResidentVoted(ctx, dto.VotingID, dto.ResidentID)
+	// Una unidad solo puede votar una vez por votación
+	voted, err := u.repo.HasUnitVoted(ctx, dto.VotingID, dto.PropertyUnitID)
 	if err != nil {
 		return nil, err
 	}
 	if voted {
-		return nil, fmt.Errorf("el residente ya votó en esta votación")
+		return nil, fmt.Errorf("la unidad ya votó en esta votación")
 	}
 
 	entity := domain.Vote{
 		VotingID:       dto.VotingID,
-		ResidentID:     dto.ResidentID,
+		PropertyUnitID: dto.PropertyUnitID,
 		VotingOptionID: dto.VotingOptionID,
 		IPAddress:      dto.IPAddress,
 		UserAgent:      dto.UserAgent,
@@ -42,7 +42,7 @@ func (u *votingUseCase) CreateVote(ctx context.Context, dto domain.CreateVoteDTO
 	return &domain.VoteDTO{
 		ID:             created.ID,
 		VotingID:       created.VotingID,
-		ResidentID:     created.ResidentID,
+		PropertyUnitID: created.PropertyUnitID,
 		VotingOptionID: created.VotingOptionID,
 		OptionText:     created.OptionText,
 		OptionCode:     created.OptionCode,

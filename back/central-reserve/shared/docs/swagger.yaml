@@ -86,6 +86,31 @@ definitions:
     - name
     - phone
     type: object
+  request.CreateAttendanceListRequest:
+    properties:
+      created_by_user_id:
+        example: 5
+        type: integer
+      description:
+        example: Lista de asistencia para la asamblea ordinaria
+        maxLength: 1000
+        type: string
+      notes:
+        example: Notas adicionales
+        maxLength: 2000
+        type: string
+      title:
+        example: Asistencia Asamblea Ordinaria 2024
+        maxLength: 200
+        minLength: 3
+        type: string
+      voting_group_id:
+        example: 1
+        type: integer
+    required:
+    - title
+    - voting_group_id
+    type: object
   request.CreatePermissionRequest:
     properties:
       action:
@@ -207,16 +232,14 @@ definitions:
     properties:
       ip_address:
         type: string
-      notes:
-        type: string
-      resident_id:
+      property_unit_id:
         type: integer
       user_agent:
         type: string
       voting_option_id:
         type: integer
     required:
-    - resident_id
+    - property_unit_id
     - voting_option_id
     type: object
   request.CreateVotingGroupRequest:
@@ -304,6 +327,45 @@ definitions:
     required:
     - email
     - password
+    type: object
+  request.MarkAttendanceRequest:
+    properties:
+      attendance_list_id:
+        example: 1
+        type: integer
+      attended_as_owner:
+        example: true
+        type: boolean
+      attended_as_proxy:
+        example: false
+        type: boolean
+      notes:
+        example: Notas adicionales
+        maxLength: 1000
+        type: string
+      property_unit_id:
+        example: 123
+        type: integer
+      proxy_id:
+        example: 789
+        type: integer
+      resident_id:
+        example: 456
+        type: integer
+      signature:
+        example: Firma digital
+        maxLength: 500
+        type: string
+      signature_method:
+        enum:
+        - digital
+        - handwritten
+        - electronic
+        example: digital
+        type: string
+    required:
+    - attendance_list_id
+    - property_unit_id
     type: object
   request.Reservation:
     properties:
@@ -1238,6 +1300,233 @@ info:
   title: Restaurant Reservation API
   version: "1.0"
 paths:
+  /attendance/lists:
+    get:
+      consumes:
+      - application/json
+      description: Lista todas las listas de asistencia por business con filtros opcionales
+      parameters:
+      - description: ID del business
+        in: query
+        name: business_id
+        required: true
+        type: integer
+      - description: Filtro por título
+        in: query
+        name: title
+        type: string
+      - description: Filtro por activo
+        in: query
+        name: is_active
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Listar listas de asistencia
+      tags:
+      - Asistencia
+    post:
+      consumes:
+      - application/json
+      description: Crea una nueva lista de asistencia para un grupo de votación
+      parameters:
+      - description: Datos de la lista de asistencia
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateAttendanceListRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Crear lista de asistencia
+      tags:
+      - Asistencia
+  /attendance/lists/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Elimina una lista de asistencia por ID
+      parameters:
+      - description: ID de la lista
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Eliminar lista de asistencia
+      tags:
+      - Asistencia
+  /attendance/lists/{id}/records:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene todos los registros de una lista de asistencia
+      parameters:
+      - description: ID de la lista
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Listar registros de asistencia de una lista
+      tags:
+      - Asistencia
+  /attendance/lists/{id}/summary:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene el resumen estadístico de una lista
+      parameters:
+      - description: ID de la lista
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Resumen de asistencia
+      tags:
+      - Asistencia
+  /attendance/lists/generate:
+    post:
+      consumes:
+      - application/json
+      description: Genera una lista de asistencia automáticamente para un grupo de
+        votación con todas las unidades
+      parameters:
+      - description: ID del grupo de votación
+        in: query
+        name: voting_group_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Generar lista de asistencia automáticamente
+      tags:
+      - Asistencia
+  /attendance/records/mark:
+    post:
+      consumes:
+      - application/json
+      description: Marca la asistencia de una unidad en una lista de asistencia
+      parameters:
+      - description: Datos de la asistencia
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.MarkAttendanceRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Marcar asistencia
+      tags:
+      - Asistencia
   /auth/change-password:
     post:
       consumes:
@@ -3191,6 +3480,44 @@ paths:
       summary: Actualizar residente
       tags:
       - Residents
+  /horizontal-properties/{hp_id}/residents/bulk-update:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Actualiza múltiples residentes usando un archivo Excel. La columna
+        principal es 'unidad' para identificar el residente. Solo se pueden actualizar
+        nombre y DNI.
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: hp_id
+        required: true
+        type: integer
+      - description: Archivo Excel con residentes a actualizar
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Edición masiva de residentes por Excel
+      tags:
+      - Residentes
   /horizontal-properties/{hp_id}/residents/import-excel:
     post:
       consumes:
@@ -3462,7 +3789,7 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Desactiva una votación existente
+      description: Elimina permanentemente una votación usando soft delete (gorm.DeletedAt)
       parameters:
       - description: ID de la propiedad horizontal
         in: path
@@ -3500,7 +3827,7 @@ paths:
             type: object
       security:
       - BearerAuth: []
-      summary: Desactivar una votación
+      summary: Eliminar una votación
       tags:
       - Votaciones
     put:
@@ -3551,6 +3878,96 @@ paths:
       security:
       - BearerAuth: []
       summary: Actualizar una votación
+      tags:
+      - Votaciones
+  /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/activate:
+    patch:
+      consumes:
+      - application/json
+      description: Activa una votación existente (is_active = true)
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: hp_id
+        required: true
+        type: integer
+      - description: ID del grupo de votación
+        in: path
+        name: group_id
+        required: true
+        type: integer
+      - description: ID de la votación
+        in: path
+        name: voting_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Activar una votación
+      tags:
+      - Votaciones
+  /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/deactivate:
+    patch:
+      consumes:
+      - application/json
+      description: Desactiva una votación existente (is_active = false)
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: hp_id
+        required: true
+        type: integer
+      - description: ID del grupo de votación
+        in: path
+        name: group_id
+        required: true
+        type: integer
+      - description: ID de la votación
+        in: path
+        name: voting_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Desactivar una votación
       tags:
       - Votaciones
   /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/generate-public-url:
@@ -3781,6 +4198,58 @@ paths:
       summary: Stream de resultados de votación en tiempo real (SSE)
       tags:
       - Votaciones
+  /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/unvoted-units:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene la lista de unidades que no han votado en una votación
+        específica, útil para formularios de votación. Permite filtrar por número
+        de unidad.
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: hp_id
+        required: true
+        type: integer
+      - description: ID del grupo de votación
+        in: path
+        name: group_id
+        required: true
+        type: integer
+      - description: ID de la votación
+        in: path
+        name: voting_id
+        required: true
+        type: integer
+      - description: 'Filtrar por número de unidad (ej: ''15'' encuentra todas las
+          unidades con 15, ''casa 15'' encuentra CASA 15, CASA 150, etc.)'
+        in: query
+        name: unit_number
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Obtener unidades sin votar
+      tags:
+      - Voting
   /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/votes:
     get:
       consumes:

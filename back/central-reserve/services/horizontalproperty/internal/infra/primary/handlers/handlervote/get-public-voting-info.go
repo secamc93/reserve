@@ -93,11 +93,20 @@ func (h *VotingHandler) GetPublicVotingInfo(c *gin.Context) {
 		return
 	}
 
-	// Verificar si el residente ya votó y obtener su voto
-	hasVoted, err := h.votingUseCase.HasResidentVoted(c.Request.Context(), votingID, residentID)
+	// Obtener la unidad principal del residente
+	propertyUnitID, err := h.votingRepository.GetResidentMainUnitID(c.Request.Context(), residentID)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] handlervote/get-public-voting-info.go - Error verificando si votó: resident_id=%d, voting_id=%d, error=%v\n", residentID, votingID, err)
-		h.logger.Error().Err(err).Uint("resident_id", residentID).Uint("voting_id", votingID).Msg("Error verificando si residente ya votó")
+		fmt.Fprintf(os.Stderr, "[ERROR] handlervote/get-public-voting-info.go - Error obteniendo unidad principal: %v\n", err)
+		h.logger.Error().Err(err).Uint("resident_id", residentID).Msg("Error obteniendo unidad principal del residente")
+		// No retornamos error, solo asumimos que no ha votado
+		propertyUnitID = 0
+	}
+
+	// Verificar si la unidad ya votó y obtener su voto
+	hasVoted, err := h.votingUseCase.HasUnitVoted(c.Request.Context(), votingID, propertyUnitID)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "[ERROR] handlervote/get-public-voting-info.go - Error verificando si votó: property_unit_id=%d, voting_id=%d, error=%v\n", propertyUnitID, votingID, err)
+		h.logger.Error().Err(err).Uint("property_unit_id", propertyUnitID).Uint("voting_id", votingID).Msg("Error verificando si unidad ya votó")
 		// No retornamos error, solo asumimos que no ha votado
 		hasVoted = false
 	}
@@ -109,8 +118,8 @@ func (h *VotingHandler) GetPublicVotingInfo(c *gin.Context) {
 	if hasVoted {
 		fmt.Printf("📊 [VOTACION PUBLICA - OBTENIENDO VOTO Y RESULTADOS]\n")
 
-		// Obtener el voto del residente
-		vote, err := h.votingUseCase.GetResidentVote(c.Request.Context(), votingID, residentID)
+		// Obtener el voto de la unidad
+		vote, err := h.votingUseCase.GetUnitVote(c.Request.Context(), votingID, propertyUnitID)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "[ERROR] handlervote/get-public-voting-info.go - Error obteniendo voto del residente: %v\n", err)
 			fmt.Printf("   ❌ Error obteniendo mi voto: %v\n", err)

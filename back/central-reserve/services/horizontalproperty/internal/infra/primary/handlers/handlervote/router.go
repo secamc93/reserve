@@ -25,6 +25,7 @@ func (h *VotingHandler) RegisterRoutes(router *gin.RouterGroup) {
 			votings.PATCH("/:voting_id/deactivate", middleware.JWT(), h.DeactivateVotingHandler)         // Desactivar votación
 			votings.GET("/:voting_id/stream", middleware.JWT(), h.SSEVotingResults)                      // SSE en tiempo real
 			votings.GET("/:voting_id/voting-details", middleware.JWT(), h.GetVotingDetailsAdmin)         // Detalles completos por unidad (admin)
+			votings.GET("/:voting_id/unvoted-units", middleware.JWT(), h.GetUnvotedUnitsByVoting)        // Unidades que no han votado
 			votings.POST("/:voting_id/generate-public-url", middleware.JWT(), h.GeneratePublicVotingURL) // Generar URL pública
 
 			options := votings.Group("/:voting_id/options")

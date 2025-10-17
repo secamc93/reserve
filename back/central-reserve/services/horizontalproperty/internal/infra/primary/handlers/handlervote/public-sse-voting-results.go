@@ -108,25 +108,29 @@ func (h *VotingHandler) PublicSSEVotingResults(c *gin.Context) {
 	})
 	c.Writer.Flush()
 
-	// Enviar datos iniciales (preload) - votos existentes
+	// Enviar datos iniciales (preload) - votos existentes y resultados
 	existingVotes, err := h.votingUseCase.ListVotesByVoting(c.Request.Context(), votingID)
+	var votesResponse []response.VoteResponse
 	if err == nil && len(existingVotes) > 0 {
-		votesResponse := mapper.MapVoteDTOsToResponses(existingVotes)
-
-		c.SSEvent("initial_data", gin.H{
-			"votes": votesResponse,
-		})
-		c.Writer.Flush()
-
+		votesResponse = mapper.MapVoteDTOsToResponses(existingVotes)
 		fmt.Printf("📊 [SSE PUBLICO] Precarga enviada: %d votos existentes\n", len(existingVotes))
 	} else {
-		// Enviar array vacío si no hay votos
-		c.SSEvent("initial_data", gin.H{
-			"votes": []interface{}{},
-		})
-		c.Writer.Flush()
 		fmt.Printf("📊 [SSE PUBLICO] Precarga enviada: 0 votos\n")
 	}
+
+	// Obtener resultados de votación con colores
+	votingResults, err := h.votingUseCase.GetVotingResults(c.Request.Context(), votingID)
+	var resultsResponse []response.VotingResultResponse
+	if err == nil && len(votingResults) > 0 {
+		resultsResponse = mapper.MapVotingResultsToResponses(votingResults)
+		fmt.Printf("📊 [SSE PUBLICO] Resultados enviados: %d opciones\n", len(votingResults))
+	}
+
+	c.SSEvent("initial_data", gin.H{
+		"votes":   votesResponse,
+		"results": resultsResponse,
+	})
+	c.Writer.Flush()
 
 	// Mantener conexión abierta y enviar eventos
 	ticker := time.NewTicker(30 * time.Second)
@@ -146,13 +150,24 @@ func (h *VotingHandler) PublicSSEVotingResults(c *gin.Context) {
 				return
 			}
 
-			// Nuevo voto recibido - enviar simple (frontend hace el cruce)
+			// Nuevo voto recibido - enviar voto y resultados actualizados
 			voteResponse := mapper.MapVoteDTOToResponse(&vote)
-			c.SSEvent("new_vote", voteResponse)
+
+			// Obtener resultados actualizados
+			updatedResults, err := h.votingUseCase.GetVotingResults(c.Request.Context(), votingID)
+			var resultsResponse []response.VotingResultResponse
+			if err == nil && len(updatedResults) > 0 {
+				resultsResponse = mapper.MapVotingResultsToResponses(updatedResults)
+			}
+
+			c.SSEvent("new_vote", gin.H{
+				"vote":    voteResponse,
+				"results": resultsResponse,
+			})
 			c.Writer.Flush()
 
 			fmt.Printf("🗳️  [SSE PUBLICO] Nuevo voto transmitido\n")
-			fmt.Printf("   Residente ID: %d\n", vote.ResidentID)
+			fmt.Printf("   Unidad ID: %d\n", vote.PropertyUnitID)
 			fmt.Printf("   Opción ID: %d\n", vote.VotingOptionID)
 			fmt.Printf("   Votación ID: %d\n\n", votingID)
 		}

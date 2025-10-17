@@ -4,6 +4,8 @@ import (
 	"context"
 	"dbpostgres/app/infra/models"
 	"fmt"
+	"regexp"
+	"strings"
 	"time"
 
 	"central_reserve/services/horizontalproperty/internal/domain"
@@ -234,7 +236,7 @@ func (r *Repository) DeactivateVotingOption(ctx context.Context, id uint) error 
 func (r *Repository) CreateVote(ctx context.Context, vote domain.Vote) (*domain.Vote, error) {
 	m := &models.Vote{
 		VotingID:       vote.VotingID,
-		ResidentID:     vote.ResidentID,
+		PropertyUnitID: vote.PropertyUnitID,
 		VotingOptionID: vote.VotingOptionID,
 		VotedAt:        time.Now(),
 		IPAddress:      vote.IPAddress,
@@ -242,7 +244,7 @@ func (r *Repository) CreateVote(ctx context.Context, vote domain.Vote) (*domain.
 		Notes:          vote.Notes,
 	}
 	if err := r.db.Conn(ctx).Create(m).Error; err != nil {
-		r.logger.Error().Err(err).Uint("voting_id", vote.VotingID).Uint("resident_id", vote.ResidentID).Msg("Error creando voto")
+		r.logger.Error().Err(err).Uint("voting_id", vote.VotingID).Uint("property_unit_id", vote.PropertyUnitID).Msg("Error creando voto")
 		return nil, fmt.Errorf("error creando voto: %w", err)
 	}
 
@@ -255,26 +257,26 @@ func (r *Repository) CreateVote(ctx context.Context, vote domain.Vote) (*domain.
 	return r.mapVoteToDomain(m), nil
 }
 
-func (r *Repository) HasResidentVoted(ctx context.Context, votingID uint, residentID uint) (bool, error) {
+func (r *Repository) HasUnitVoted(ctx context.Context, votingID uint, propertyUnitID uint) (bool, error) {
 	var count int64
-	if err := r.db.Conn(ctx).Model(&models.Vote{}).Where("voting_id = ? AND resident_id = ?", votingID, residentID).Count(&count).Error; err != nil {
-		r.logger.Error().Err(err).Uint("voting_id", votingID).Uint("resident_id", residentID).Msg("Error verificando voto existente")
+	if err := r.db.Conn(ctx).Model(&models.Vote{}).Where("voting_id = ? AND property_unit_id = ?", votingID, propertyUnitID).Count(&count).Error; err != nil {
+		r.logger.Error().Err(err).Uint("voting_id", votingID).Uint("property_unit_id", propertyUnitID).Msg("Error verificando voto existente")
 		return false, fmt.Errorf("error verificando voto existente: %w", err)
 	}
 	return count > 0, nil
 }
 
-func (r *Repository) GetResidentVote(ctx context.Context, votingID, residentID uint) (*domain.Vote, error) {
+func (r *Repository) GetUnitVote(ctx context.Context, votingID, propertyUnitID uint) (*domain.Vote, error) {
 	var m models.Vote
 	if err := r.db.Conn(ctx).
 		Preload("VotingOption").
-		Where("voting_id = ? AND resident_id = ?", votingID, residentID).
+		Where("voting_id = ? AND property_unit_id = ?", votingID, propertyUnitID).
 		First(&m).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("voto no encontrado")
 		}
-		r.logger.Error().Err(err).Uint("voting_id", votingID).Uint("resident_id", residentID).Msg("Error obteniendo voto del residente")
-		return nil, fmt.Errorf("error obteniendo voto del residente: %w", err)
+		r.logger.Error().Err(err).Uint("voting_id", votingID).Uint("property_unit_id", propertyUnitID).Msg("Error obteniendo voto de la unidad")
+		return nil, fmt.Errorf("error obteniendo voto de la unidad: %w", err)
 	}
 	return r.mapVoteToDomain(&m), nil
 }
@@ -284,6 +286,7 @@ func (r *Repository) GetVotingResults(ctx context.Context, votingID uint) ([]dom
 		VotingOptionID uint
 		OptionText     string
 		OptionCode     string
+		Color          string
 		VoteCount      int
 		DisplayOrder   int
 	}
@@ -291,10 +294,10 @@ func (r *Repository) GetVotingResults(ctx context.Context, votingID uint) ([]dom
 	var results []ResultRow
 	err := r.db.Conn(ctx).
 		Table("horizontal_property.voting_options").
-		Select("voting_options.id as voting_option_id, voting_options.option_text, voting_options.option_code, voting_options.display_order, COUNT(votes.id) as vote_count").
+		Select("voting_options.id as voting_option_id, voting_options.option_text, voting_options.option_code, voting_options.color, voting_options.display_order, COUNT(votes.id) as vote_count").
 		Joins("LEFT JOIN horizontal_property.votes ON votes.voting_option_id = voting_options.id AND votes.voting_id = ?", votingID).
 		Where("voting_options.voting_id = ? AND voting_options.is_active = ?", votingID, true).
-		Group("voting_options.id, voting_options.option_text, voting_options.option_code, voting_options.display_order").
+		Group("voting_options.id, voting_options.option_text, voting_options.option_code, voting_options.color, voting_options.display_order").
 		Order("voting_options.display_order ASC").
 		Scan(&results).Error
 
@@ -320,6 +323,7 @@ func (r *Repository) GetVotingResults(ctx context.Context, votingID uint) ([]dom
 			VotingOptionID: result.VotingOptionID,
 			OptionText:     result.OptionText,
 			OptionCode:     result.OptionCode,
+			Color:          result.Color,
 			VoteCount:      result.VoteCount,
 			Percentage:     percentage,
 		}
@@ -347,43 +351,54 @@ func (r *Repository) GetVotingDetailsByUnit(ctx context.Context, votingID, hpID 
 		unitIDs[i] = unit.ID
 	}
 
-	var residents []models.Resident
+	// Obtener TODOS los residentes por unidad vía tabla pivote (marcando principal si existe)
+	type residentRow struct {
+		UnitID         uint
+		ResidentID     uint
+		ResidentName   string
+		IsMainResident bool
+	}
+	residentRows := []residentRow{}
 	if len(unitIDs) > 0 {
 		if err := r.db.Conn(ctx).
-			Where("property_unit_id IN ? AND is_main_resident = ? AND is_active = ?", unitIDs, true, true).
-			Find(&residents).Error; err != nil {
+			Table("horizontal_property.resident_units ru").
+			Select("ru.property_unit_id as unit_id, r.id as resident_id, r.name as resident_name, ru.is_main_resident").
+			Joins("JOIN horizontal_property.residents r ON r.id = ru.resident_id").
+			Where("ru.property_unit_id IN ? AND ru.is_main_resident = ? AND r.is_active = ?", unitIDs, true, true).
+			Or("ru.property_unit_id IN ? AND r.is_active = ?", unitIDs, true).
+			Scan(&residentRows).Error; err != nil {
 			r.logger.Error().Err(err).Msg("Error obteniendo residentes principales")
 			return nil, fmt.Errorf("error obteniendo residentes: %w", err)
 		}
 	}
 
-	// Crear mapa de unidad -> residente
-	residentByUnit := make(map[uint]*models.Resident)
-	for i := range residents {
-		residentByUnit[residents[i].PropertyUnitID] = &residents[i]
+	// Crear mapa de unidad -> datos de residente
+	type residentInfo struct {
+		ID     uint
+		Name   string
+		IsMain bool
+	}
+	residentByUnit := make(map[uint][]residentInfo)
+	for _, rw := range residentRows {
+		residentByUnit[rw.UnitID] = append(residentByUnit[rw.UnitID], residentInfo{ID: rw.ResidentID, Name: rw.ResidentName, IsMain: rw.IsMainResident})
 	}
 
 	// PASO 3: Obtener todos los votos de esta votación con las opciones
-	residentIDs := make([]uint, 0, len(residents))
-	for _, res := range residents {
-		residentIDs = append(residentIDs, res.ID)
-	}
-
 	var votes []models.Vote
-	if len(residentIDs) > 0 {
+	if len(unitIDs) > 0 {
 		if err := r.db.Conn(ctx).
 			Preload("VotingOption").
-			Where("voting_id = ? AND resident_id IN ?", votingID, residentIDs).
+			Where("voting_id = ? AND property_unit_id IN ?", votingID, unitIDs).
 			Find(&votes).Error; err != nil {
 			r.logger.Error().Err(err).Uint("voting_id", votingID).Msg("Error obteniendo votos")
 			return nil, fmt.Errorf("error obteniendo votos: %w", err)
 		}
 	}
 
-	// Crear mapa de residente -> voto
-	voteByResident := make(map[uint]*models.Vote)
+	// Crear mapa de unidad -> voto
+	voteByUnit := make(map[uint]*models.Vote)
 	for i := range votes {
-		voteByResident[votes[i].ResidentID] = &votes[i]
+		voteByUnit[votes[i].PropertyUnitID] = &votes[i]
 	}
 
 	// PASO 4: Combinar todo en DTOs
@@ -396,25 +411,33 @@ func (r *Repository) GetVotingDetailsByUnit(ctx context.Context, votingID, hpID 
 			HasVoted:                 false,
 		}
 
-		// Agregar info del residente si existe
-		if resident, hasResident := residentByUnit[unit.ID]; hasResident {
-			dto.ResidentID = &resident.ID
-			dto.ResidentName = &resident.Name
+		// Verificar si la unidad ha votado
+		if vote, hasVoted := voteByUnit[unit.ID]; hasVoted {
+			dto.HasVoted = true
+			dto.VotingOptionID = &vote.VotingOptionID
 
-			// Agregar info del voto si existe
-			if vote, hasVoted := voteByResident[resident.ID]; hasVoted {
-				dto.HasVoted = true
-				dto.VotingOptionID = &vote.VotingOptionID
-
-				if vote.VotingOption.ID != 0 {
-					dto.OptionText = &vote.VotingOption.OptionText
-					dto.OptionCode = &vote.VotingOption.OptionCode
-					dto.OptionColor = &vote.VotingOption.Color
-				}
-
-				votedAtStr := vote.VotedAt.Format("2006-01-02T15:04:05Z07:00")
-				dto.VotedAt = &votedAtStr
+			if vote.VotingOption.ID != 0 {
+				dto.OptionText = &vote.VotingOption.OptionText
+				dto.OptionCode = &vote.VotingOption.OptionCode
+				dto.OptionColor = &vote.VotingOption.Color
 			}
+
+			votedAtStr := vote.VotedAt.Format("2006-01-02T15:04:05Z07:00")
+			dto.VotedAt = &votedAtStr
+		}
+
+		// Agregar info del residente si existe
+		if infos, hasResident := residentByUnit[unit.ID]; hasResident && len(infos) > 0 {
+			// Elegir principal si existe; si no, el primero
+			chosen := infos[0]
+			for _, inf := range infos {
+				if inf.IsMain {
+					chosen = inf
+					break
+				}
+			}
+			dto.ResidentID = &chosen.ID
+			dto.ResidentName = &chosen.Name
 		}
 
 		dtos[i] = dto
@@ -442,20 +465,29 @@ func (r *Repository) GetUnitsWithResidents(ctx context.Context, hpID uint) ([]do
 		unitIDs[i] = unit.ID
 	}
 
-	var residents []models.Resident
+	// PASO 3: Obtener todos los residentes por unidad vía pivote
+	type residentRow2 struct {
+		UnitID         uint
+		ResidentID     uint
+		ResidentName   string
+		IsMainResident bool
+	}
+	rows := []residentRow2{}
 	if len(unitIDs) > 0 {
 		if err := r.db.Conn(ctx).
-			Where("property_unit_id IN ? AND is_main_resident = ? AND is_active = ?", unitIDs, true, true).
-			Find(&residents).Error; err != nil {
+			Table("horizontal_property.resident_units ru").
+			Select("ru.property_unit_id as unit_id, r.id as resident_id, r.name as resident_name, ru.is_main_resident").
+			Joins("JOIN horizontal_property.residents r ON r.id = ru.resident_id").
+			Where("ru.property_unit_id IN ? AND r.is_active = ?", unitIDs, true).
+			Scan(&rows).Error; err != nil {
 			r.logger.Error().Err(err).Msg("Error obteniendo residentes")
 			return nil, fmt.Errorf("error obteniendo residentes: %w", err)
 		}
 	}
 
-	// PASO 3: Crear mapa de unidad -> residente
-	residentByUnit := make(map[uint]*models.Resident)
-	for i := range residents {
-		residentByUnit[residents[i].PropertyUnitID] = &residents[i]
+	residentByUnit := make(map[uint][]residentRow2)
+	for _, rw := range rows {
+		residentByUnit[rw.UnitID] = append(residentByUnit[rw.UnitID], rw)
 	}
 
 	// PASO 4: Combinar en DTOs
@@ -467,9 +499,16 @@ func (r *Repository) GetUnitsWithResidents(ctx context.Context, hpID uint) ([]do
 		}
 
 		// Agregar residente si existe
-		if resident, hasResident := residentByUnit[unit.ID]; hasResident {
-			dto.ResidentID = &resident.ID
-			dto.ResidentName = &resident.Name
+		if list, hasResident := residentByUnit[unit.ID]; hasResident && len(list) > 0 {
+			chosen := list[0]
+			for _, rinfo := range list {
+				if rinfo.IsMainResident {
+					chosen = rinfo
+					break
+				}
+			}
+			dto.ResidentID = &chosen.ResidentID
+			dto.ResidentName = &chosen.ResidentName
 		}
 
 		dtos[i] = dto
@@ -546,7 +585,7 @@ func (r *Repository) mapVoteToDomain(m *models.Vote) *domain.Vote {
 	vote := &domain.Vote{
 		ID:             m.ID,
 		VotingID:       m.VotingID,
-		ResidentID:     m.ResidentID,
+		PropertyUnitID: m.PropertyUnitID,
 		VotingOptionID: m.VotingOptionID,
 		VotedAt:        m.VotedAt,
 		IPAddress:      m.IPAddress,
@@ -564,95 +603,186 @@ func (r *Repository) mapVoteToDomain(m *models.Vote) *domain.Vote {
 	return vote
 }
 
-		VotingID:     m.VotingID,
-		OptionText:   m.OptionText,
-		OptionCode:   m.OptionCode,
-		Color:        m.Color,
-		DisplayOrder: m.DisplayOrder,
-		IsActive:     m.IsActive,
+// GetUnvotedUnitsByVoting - Obtiene las unidades que no han votado en una votación específica
+func (r *Repository) GetUnvotedUnitsByVoting(ctx context.Context, votingID uint, unitNumberFilter string) ([]domain.UnvotedUnit, error) {
+	// PASO 1: Obtener el business_id de la votación
+	businessID, err := r.getBusinessIDByVotingID(ctx, votingID)
+	if err != nil {
+		return nil, err
 	}
+
+	// PASO 2: Obtener todas las unidades activas del negocio
+	units, err := r.getActivePropertyUnits(ctx, businessID, unitNumberFilter)
+	if err != nil {
+		return nil, err
+	}
+
+	// PASO 3: Obtener residentes principales de esas unidades
+	unitsWithResidents, err := r.getMainResidentsByUnits(ctx, units)
+	if err != nil {
+		return nil, err
+	}
+
+	// PASO 4: Obtener unidades que ya han votado
+	votedUnitIDs, err := r.getVotedUnitIDs(ctx, votingID)
+	if err != nil {
+		return nil, err
+	}
+
+	// PASO 5: Filtrar unidades que no han votado y construir resultado
+	unvotedUnits := r.filterUnvotedUnits(unitsWithResidents, votedUnitIDs, units)
+
+	r.logger.Info().Uint("voting_id", votingID).Int("count", len(unvotedUnits)).Msg("Unidades sin votar obtenidas")
+	return unvotedUnits, nil
 }
 
-func (r *Repository) mapVoteToDomain(m *models.Vote) *domain.Vote {
-	vote := &domain.Vote{
-		ID:             m.ID,
-		VotingID:       m.VotingID,
-		ResidentID:     m.ResidentID,
-		VotingOptionID: m.VotingOptionID,
-		VotedAt:        m.VotedAt,
-		IPAddress:      m.IPAddress,
-		UserAgent:      m.UserAgent,
-		Notes:          m.Notes,
+// getBusinessIDByVotingID - Obtiene el business_id de una votación
+func (r *Repository) getBusinessIDByVotingID(ctx context.Context, votingID uint) (uint, error) {
+	var voting models.Voting
+	if err := r.db.Conn(ctx).First(&voting, votingID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return 0, fmt.Errorf("votación no encontrada")
+		}
+		r.logger.Error().Err(err).Uint("voting_id", votingID).Msg("Error obteniendo votación")
+		return 0, fmt.Errorf("error obteniendo votación: %w", err)
 	}
 
-	// Agregar información de la opción si está cargada (Preload)
-	if m.VotingOption.ID != 0 {
-		vote.OptionText = m.VotingOption.OptionText
-		vote.OptionCode = m.VotingOption.OptionCode
-		vote.OptionColor = m.VotingOption.Color
+	// Obtener el business_id a través del grupo de votación
+	var votingGroup models.VotingGroup
+	if err := r.db.Conn(ctx).First(&votingGroup, voting.VotingGroupID).Error; err != nil {
+		r.logger.Error().Err(err).Uint("voting_group_id", voting.VotingGroupID).Msg("Error obteniendo grupo de votación")
+		return 0, fmt.Errorf("error obteniendo grupo de votación: %w", err)
 	}
 
-	return vote
+	return votingGroup.BusinessID, nil
 }
 
-		VotingID:     m.VotingID,
-		OptionText:   m.OptionText,
-		OptionCode:   m.OptionCode,
-		Color:        m.Color,
-		DisplayOrder: m.DisplayOrder,
-		IsActive:     m.IsActive,
+// getActivePropertyUnits - Obtiene todas las unidades activas de un negocio
+func (r *Repository) getActivePropertyUnits(ctx context.Context, businessID uint, unitNumberFilter string) ([]models.PropertyUnit, error) {
+	var units []models.PropertyUnit
+	query := r.db.Conn(ctx).Where("business_id = ? AND is_active = ?", businessID, true)
+
+	// Aplicar filtro por número de unidad si se proporciona
+	if unitNumberFilter != "" {
+		// Normalizar el filtro: convertir a mayúsculas y agregar espacios si es necesario
+		normalizedFilter := strings.ToUpper(strings.TrimSpace(unitNumberFilter))
+
+		// Si es solo un número, buscar en cualquier parte del número de unidad
+		if matched, _ := regexp.MatchString(`^\d+$`, normalizedFilter); matched {
+			query = query.Where("UPPER(number) LIKE ?", "%"+normalizedFilter+"%")
+		} else {
+			// Si contiene letras, buscar que empiece con el término
+			query = query.Where("UPPER(number) LIKE ?", normalizedFilter+"%")
+		}
 	}
+
+	if err := query.Order("number ASC").Find(&units).Error; err != nil {
+		r.logger.Error().Err(err).Uint("business_id", businessID).Str("unit_filter", unitNumberFilter).Msg("Error obteniendo unidades activas")
+		return nil, fmt.Errorf("error obteniendo unidades activas: %w", err)
+	}
+	return units, nil
 }
 
-func (r *Repository) mapVoteToDomain(m *models.Vote) *domain.Vote {
-	vote := &domain.Vote{
-		ID:             m.ID,
-		VotingID:       m.VotingID,
-		ResidentID:     m.ResidentID,
-		VotingOptionID: m.VotingOptionID,
-		VotedAt:        m.VotedAt,
-		IPAddress:      m.IPAddress,
-		UserAgent:      m.UserAgent,
-		Notes:          m.Notes,
+// getMainResidentsByUnits - Obtiene los residentes principales de las unidades
+func (r *Repository) getMainResidentsByUnits(ctx context.Context, units []models.PropertyUnit) (map[uint]*models.Resident, error) {
+	if len(units) == 0 {
+		return make(map[uint]*models.Resident), nil
 	}
 
-	// Agregar información de la opción si está cargada (Preload)
-	if m.VotingOption.ID != 0 {
-		vote.OptionText = m.VotingOption.OptionText
-		vote.OptionCode = m.VotingOption.OptionCode
-		vote.OptionColor = m.VotingOption.Color
+	unitIDs := make([]uint, len(units))
+	for i, unit := range units {
+		unitIDs[i] = unit.ID
 	}
 
-	return vote
+	var residentUnits []models.ResidentUnit
+	if err := r.db.Conn(ctx).
+		Preload("Resident").
+		Where("property_unit_id IN ? AND is_main_resident = ?", unitIDs, true).
+		Find(&residentUnits).Error; err != nil {
+		r.logger.Error().Err(err).Msg("Error obteniendo residentes principales")
+		return nil, fmt.Errorf("error obteniendo residentes principales: %w", err)
+	}
+
+	// Crear mapa de unit_id -> resident
+	unitToResident := make(map[uint]*models.Resident)
+	for i := range residentUnits {
+		if residentUnits[i].Resident.IsActive {
+			unitToResident[residentUnits[i].PropertyUnitID] = &residentUnits[i].Resident
+		}
+	}
+
+	return unitToResident, nil
 }
 
-		VotingID:     m.VotingID,
-		OptionText:   m.OptionText,
-		OptionCode:   m.OptionCode,
-		Color:        m.Color,
-		DisplayOrder: m.DisplayOrder,
-		IsActive:     m.IsActive,
+// getVotedUnitIDs - Obtiene los IDs de las unidades que ya han votado
+func (r *Repository) getVotedUnitIDs(ctx context.Context, votingID uint) (map[uint]bool, error) {
+	// Obtener todos los votos de esta votación
+	var votes []models.Vote
+	if err := r.db.Conn(ctx).
+		Where("voting_id = ?", votingID).
+		Find(&votes).Error; err != nil {
+		r.logger.Error().Err(err).Uint("voting_id", votingID).Msg("Error obteniendo votos")
+		return nil, fmt.Errorf("error obteniendo votos: %w", err)
 	}
+
+	// Obtener los IDs de las unidades que votaron
+	unitIDs := make([]uint, len(votes))
+	for i, vote := range votes {
+		unitIDs[i] = vote.PropertyUnitID
+	}
+
+	if len(unitIDs) == 0 {
+		return make(map[uint]bool), nil
+	}
+
+	// Crear mapa de unit_id -> true para las unidades que ya votaron
+	votedUnits := make(map[uint]bool)
+	for _, unitID := range unitIDs {
+		votedUnits[unitID] = true
+	}
+
+	return votedUnits, nil
 }
 
-func (r *Repository) mapVoteToDomain(m *models.Vote) *domain.Vote {
-	vote := &domain.Vote{
-		ID:             m.ID,
-		VotingID:       m.VotingID,
-		ResidentID:     m.ResidentID,
-		VotingOptionID: m.VotingOptionID,
-		VotedAt:        m.VotedAt,
-		IPAddress:      m.IPAddress,
-		UserAgent:      m.UserAgent,
-		Notes:          m.Notes,
+// GetResidentMainUnitID - Obtiene el ID de la unidad principal de un residente
+func (r *Repository) GetResidentMainUnitID(ctx context.Context, residentID uint) (uint, error) {
+	var residentUnit models.ResidentUnit
+	if err := r.db.Conn(ctx).
+		Where("resident_id = ? AND is_main_resident = ?", residentID, true).
+		First(&residentUnit).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return 0, fmt.Errorf("residente no tiene unidad principal asignada")
+		}
+		r.logger.Error().Err(err).Uint("resident_id", residentID).Msg("Error obteniendo unidad principal del residente")
+		return 0, fmt.Errorf("error obteniendo unidad principal: %w", err)
+	}
+	return residentUnit.PropertyUnitID, nil
+}
+
+// filterUnvotedUnits - Filtra las unidades que no han votado y construye el resultado final
+func (r *Repository) filterUnvotedUnits(unitsWithResidents map[uint]*models.Resident, votedUnitIDs map[uint]bool, allUnits []models.PropertyUnit) []domain.UnvotedUnit {
+	var unvotedUnits []domain.UnvotedUnit
+
+	// Incluir TODAS las unidades del negocio, con o sin residente
+	for _, unit := range allUnits {
+		// Solo incluir si la unidad no ha votado
+		if !votedUnitIDs[unit.ID] {
+			unvotedUnit := domain.UnvotedUnit{
+				UnitID:       unit.ID,
+				UnitNumber:   unit.Number,
+				ResidentID:   0, // Sin residente por defecto
+				ResidentName: "Sin residente asignado",
+			}
+
+			// Si tiene residente asociado, usar esa información
+			if resident, hasResident := unitsWithResidents[unit.ID]; hasResident {
+				unvotedUnit.ResidentID = resident.ID
+				unvotedUnit.ResidentName = resident.Name
+			}
+
+			unvotedUnits = append(unvotedUnits, unvotedUnit)
+		}
 	}
 
-	// Agregar información de la opción si está cargada (Preload)
-	if m.VotingOption.ID != 0 {
-		vote.OptionText = m.VotingOption.OptionText
-		vote.OptionCode = m.VotingOption.OptionCode
-		vote.OptionColor = m.VotingOption.Color
-	}
-
-	return vote
+	return unvotedUnits
 }

@@ -49,6 +49,7 @@ type BulkUpdateResidentsRequest struct {
 type ResidentFiltersRequest struct {
 	PropertyUnitNumber string `form:"property_unit_number" example:"101"`
 	Name               string `form:"name" example:"Juan"`
+	Dni                string `form:"dni" example:"12345678"`
 	PropertyUnitID     *uint  `form:"property_unit_id" example:"1"`
 	ResidentTypeID     *uint  `form:"resident_type_id" example:"1"`
 	IsActive           *bool  `form:"is_active" example:"true"`

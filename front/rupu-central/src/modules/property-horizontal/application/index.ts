@@ -7,6 +7,7 @@ export * from './voting-groups';
 export * from './dashboard';
 export * from './property-units';
 export * from './residents';
+export * from './attendance';
 
 // Export individual voting group use cases
 export { UpdateVotingGroupUseCase } from './update-voting-group.use-case';

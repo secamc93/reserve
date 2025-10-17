@@ -176,35 +176,8 @@ func (u *votingUseCase) ListVotesByVoting(ctx context.Context, votingID uint) ([
 		res[i] = domain.VoteDTO{
 			ID:             v.ID,
 			VotingID:       v.VotingID,
-			ResidentID:     v.ResidentID,
+			PropertyUnitID: v.PropertyUnitID,
 			VotingOptionID: v.VotingOptionID,
-			VotedAt:        v.VotedAt,
-			IPAddress:      v.IPAddress,
-			UserAgent:      v.UserAgent,
-			Notes:          v.Notes,
-		}
-	}
-	return res, nil
-}
-
-			VotedAt:        v.VotedAt,
-			IPAddress:      v.IPAddress,
-			UserAgent:      v.UserAgent,
-			Notes:          v.Notes,
-		}
-	}
-	return res, nil
-}
-
-			VotedAt:        v.VotedAt,
-			IPAddress:      v.IPAddress,
-			UserAgent:      v.UserAgent,
-			Notes:          v.Notes,
-		}
-	}
-	return res, nil
-}
-
 			VotedAt:        v.VotedAt,
 			IPAddress:      v.IPAddress,
 			UserAgent:      v.UserAgent,

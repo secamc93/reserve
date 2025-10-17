@@ -6,9 +6,9 @@ import (
 	"central_reserve/services/horizontalproperty/internal/domain"
 )
 
-// GetResidentVote obtiene el voto de un residente en una votación específica
-func (uc *votingUseCase) GetResidentVote(ctx context.Context, votingID, residentID uint) (*domain.VoteDTO, error) {
-	vote, err := uc.repo.GetResidentVote(ctx, votingID, residentID)
+// GetUnitVote obtiene el voto de una unidad en una votación específica
+func (uc *votingUseCase) GetUnitVote(ctx context.Context, votingID, propertyUnitID uint) (*domain.VoteDTO, error) {
+	vote, err := uc.repo.GetUnitVote(ctx, votingID, propertyUnitID)
 	if err != nil {
 		return nil, err
 	}
@@ -16,7 +16,7 @@ func (uc *votingUseCase) GetResidentVote(ctx context.Context, votingID, resident
 	return &domain.VoteDTO{
 		ID:             vote.ID,
 		VotingID:       vote.VotingID,
-		ResidentID:     vote.ResidentID,
+		PropertyUnitID: vote.PropertyUnitID,
 		VotingOptionID: vote.VotingOptionID,
 		OptionText:     vote.OptionText,
 		OptionCode:     vote.OptionCode,

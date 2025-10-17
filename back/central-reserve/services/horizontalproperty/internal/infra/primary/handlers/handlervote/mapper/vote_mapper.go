@@ -87,11 +87,11 @@ func MapVoteDTOToResponse(dto *domain.VoteDTO) response.VoteResponse {
 	return response.VoteResponse{
 		ID:             dto.ID,
 		VotingID:       dto.VotingID,
-		ResidentID:     dto.ResidentID,
+		PropertyUnitID: dto.PropertyUnitID,
 		VotingOptionID: dto.VotingOptionID,
 		OptionText:     dto.OptionText,
 		OptionCode:     dto.OptionCode,
-		OptionColor:    dto.OptionColor,
+		Color:          dto.OptionColor, // Cambiar OptionColor por Color
 		VotedAt:        dto.VotedAt,
 		IPAddress:      dto.IPAddress,
 		UserAgent:      dto.UserAgent,
@@ -114,6 +114,7 @@ func MapVotingResultToResponse(dto *domain.VotingResultDTO) response.VotingResul
 		VotingOptionID: dto.VotingOptionID,
 		OptionText:     dto.OptionText,
 		OptionCode:     dto.OptionCode,
+		Color:          dto.Color,
 		VoteCount:      dto.VoteCount,
 		Percentage:     dto.Percentage,
 	}
@@ -170,14 +171,5 @@ func MapVotingDetailsByUnitToResponses(dtos []domain.VotingDetailByUnitDTO) []re
 	for i, dto := range dtos {
 		responses[i] = MapVotingDetailByUnitToResponse(&dto)
 	}
-	return responses
-}
-
-	return responses
-}
-
-	return responses
-}
-
 	return responses
 }

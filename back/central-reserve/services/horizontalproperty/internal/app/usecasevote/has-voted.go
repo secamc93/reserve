@@ -4,7 +4,7 @@ import (
 	"context"
 )
 
-// HasResidentVoted verifica si un residente ya votó en una votación específica
-func (uc *votingUseCase) HasResidentVoted(ctx context.Context, votingID, residentID uint) (bool, error) {
-	return uc.repo.HasResidentVoted(ctx, votingID, residentID)
+// HasUnitVoted verifica si una unidad ya votó en una votación específica
+func (uc *votingUseCase) HasUnitVoted(ctx context.Context, votingID, propertyUnitID uint) (bool, error) {
+	return uc.repo.HasUnitVoted(ctx, votingID, propertyUnitID)
 }

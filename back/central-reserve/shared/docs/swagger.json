@@ -17,6 +17,363 @@
     "host": "localhost:3050",
     "basePath": "/api/v1",
     "paths": {
+        "/attendance/lists": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Lista todas las listas de asistencia por business con filtros opcionales",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Asistencia"
+                ],
+                "summary": "Listar listas de asistencia",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del business",
+                        "name": "business_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filtro por título",
+                        "name": "title",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filtro por activo",
+                        "name": "is_active",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Crea una nueva lista de asistencia para un grupo de votación",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Asistencia"
+                ],
+                "summary": "Crear lista de asistencia",
+                "parameters": [
+                    {
+                        "description": "Datos de la lista de asistencia",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CreateAttendanceListRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/attendance/lists/generate": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Genera una lista de asistencia automáticamente para un grupo de votación con todas las unidades",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Asistencia"
+                ],
+                "summary": "Generar lista de asistencia automáticamente",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del grupo de votación",
+                        "name": "voting_group_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/attendance/lists/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Elimina una lista de asistencia por ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Asistencia"
+                ],
+                "summary": "Eliminar lista de asistencia",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la lista",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/attendance/lists/{id}/records": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene todos los registros de una lista de asistencia",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Asistencia"
+                ],
+                "summary": "Listar registros de asistencia de una lista",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la lista",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/attendance/lists/{id}/summary": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene el resumen estadístico de una lista",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Asistencia"
+                ],
+                "summary": "Resumen de asistencia",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la lista",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/attendance/records/mark": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Marca la asistencia de una unidad en una lista de asistencia",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Asistencia"
+                ],
+                "summary": "Marcar asistencia",
+                "parameters": [
+                    {
+                        "description": "Datos de la asistencia",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.MarkAttendanceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/change-password": {
             "post": {
                 "security": [
@@ -2763,6 +3120,62 @@
                 }
             }
         },
+        "/horizontal-properties/{hp_id}/residents/bulk-update": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Actualiza múltiples residentes usando un archivo Excel. La columna principal es 'unidad' para identificar el residente. Solo se pueden actualizar nombre y DNI.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Residentes"
+                ],
+                "summary": "Edición masiva de residentes por Excel",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la propiedad horizontal",
+                        "name": "hp_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Archivo Excel con residentes a actualizar",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
         "/horizontal-properties/{hp_id}/residents/import-excel": {
             "post": {
                 "security": [
@@ -3442,7 +3855,145 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Desactiva una votación existente",
+                "description": "Elimina permanentemente una votación usando soft delete (gorm.DeletedAt)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones"
+                ],
+                "summary": "Eliminar una votación",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la propiedad horizontal",
+                        "name": "hp_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID del grupo de votación",
+                        "name": "group_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la votación",
+                        "name": "voting_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/activate": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Activa una votación existente (is_active = true)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones"
+                ],
+                "summary": "Activar una votación",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la propiedad horizontal",
+                        "name": "hp_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID del grupo de votación",
+                        "name": "group_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la votación",
+                        "name": "voting_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/deactivate": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Desactiva una votación existente (is_active = false)",
                 "consumes": [
                     "application/json"
                 ],
@@ -3835,6 +4386,81 @@
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/unvoted-units": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene la lista de unidades que no han votado en una votación específica, útil para formularios de votación. Permite filtrar por número de unidad.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Voting"
+                ],
+                "summary": "Obtener unidades sin votar",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la propiedad horizontal",
+                        "name": "hp_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID del grupo de votación",
+                        "name": "group_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la votación",
+                        "name": "voting_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filtrar por número de unidad (ej: '15' encuentra todas las unidades con 15, 'casa 15' encuentra CASA 15, CASA 150, etc.)",
+                        "name": "unit_number",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "type": "object"
                         }
@@ -7168,6 +7794,39 @@
                 }
             }
         },
+        "request.CreateAttendanceListRequest": {
+            "type": "object",
+            "required": [
+                "title",
+                "voting_group_id"
+            ],
+            "properties": {
+                "created_by_user_id": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "example": "Lista de asistencia para la asamblea ordinaria"
+                },
+                "notes": {
+                    "type": "string",
+                    "maxLength": 2000,
+                    "example": "Notas adicionales"
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 3,
+                    "example": "Asistencia Asamblea Ordinaria 2024"
+                },
+                "voting_group_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
         "request.CreatePermissionRequest": {
             "type": "object",
             "required": [
@@ -7329,17 +7988,14 @@
         "request.CreateVoteRequest": {
             "type": "object",
             "required": [
-                "resident_id",
+                "property_unit_id",
                 "voting_option_id"
             ],
             "properties": {
                 "ip_address": {
                     "type": "string"
                 },
-                "notes": {
-                    "type": "string"
-                },
-                "resident_id": {
+                "property_unit_id": {
                     "type": "integer"
                 },
                 "user_agent": {
@@ -7467,6 +8123,58 @@
                 },
                 "password": {
                     "type": "string"
+                }
+            }
+        },
+        "request.MarkAttendanceRequest": {
+            "type": "object",
+            "required": [
+                "attendance_list_id",
+                "property_unit_id"
+            ],
+            "properties": {
+                "attendance_list_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "attended_as_owner": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "attended_as_proxy": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "notes": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "example": "Notas adicionales"
+                },
+                "property_unit_id": {
+                    "type": "integer",
+                    "example": 123
+                },
+                "proxy_id": {
+                    "type": "integer",
+                    "example": 789
+                },
+                "resident_id": {
+                    "type": "integer",
+                    "example": 456
+                },
+                "signature": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "example": "Firma digital"
+                },
+                "signature_method": {
+                    "type": "string",
+                    "enum": [
+                        "digital",
+                        "handwritten",
+                        "electronic"
+                    ],
+                    "example": "digital"
                 }
             }
         },

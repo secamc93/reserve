@@ -10,6 +10,7 @@ import { CreateVotingGroupModal } from './create-voting-group-modal';
 import { EditVotingGroupModal } from './edit-voting-group-modal';
 import { DeleteVotingGroupModal } from './delete-voting-group-modal';
 import { VotingsList } from './votings-list';
+// import { AttendanceManagement } from '../attendance'; // No longer needed - using routes
 import { TokenStorage } from '@shared/config';
 import { getVotingGroupsAction } from '../../infrastructure/actions';
 
@@ -39,7 +40,8 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState<VotingGroup | null>(null);
+  // const [showAttendance, setShowAttendance] = useState(false); // No longer needed - using routes
+  const [selectedGroup, setSelectedGroup] = useState<VotingGroup | null>(null); // Still needed for edit/delete modals
   const [expandedGroupId, setExpandedGroupId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -105,6 +107,11 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
   const handleDeleteClose = () => {
     setShowDeleteModal(false);
     setSelectedGroup(null);
+  };
+
+  const handleAttendanceClick = (group: VotingGroup) => {
+    // Navigate to attendance management page instead of opening modal
+    window.location.href = `/properties/${businessId}/voting-groups/${group.id}/attendance`;
   };
 
   const handleToggleGroup = (groupId: number) => {
@@ -248,6 +255,20 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
                       </button>
+
+                      {/* Botón Asistencia */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAttendanceClick(group);
+                        }}
+                        className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-lg transition-colors"
+                        title="Gestionar asistencia"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </button>
                       
                       {/* Botón Expandir */}
                       <button
@@ -309,6 +330,8 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
           group={selectedGroup}
         />
       )}
+
+      {/* Modal de gestión de asistencia - Removed, now using routes */}
     </div>
   );
 }

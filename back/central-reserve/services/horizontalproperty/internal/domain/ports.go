@@ -81,12 +81,14 @@ type VotingRepository interface {
 
 	// Votes
 	CreateVote(ctx context.Context, vote Vote) (*Vote, error)
-	HasResidentVoted(ctx context.Context, votingID uint, residentID uint) (bool, error)
-	GetResidentVote(ctx context.Context, votingID, residentID uint) (*Vote, error)
+	HasUnitVoted(ctx context.Context, votingID uint, propertyUnitID uint) (bool, error)
+	GetUnitVote(ctx context.Context, votingID, propertyUnitID uint) (*Vote, error)
 	GetVotingResults(ctx context.Context, votingID uint) ([]VotingResultDTO, error)
 	GetVotingDetailsByUnit(ctx context.Context, votingID, hpID uint) ([]VotingDetailByUnitDTO, error)
 	GetUnitsWithResidents(ctx context.Context, hpID uint) ([]UnitWithResidentDTO, error)
 	ListVotesByVoting(ctx context.Context, votingID uint) ([]Vote, error)
+	GetUnvotedUnitsByVoting(ctx context.Context, votingID uint, unitNumberFilter string) ([]UnvotedUnit, error)
+	GetResidentMainUnitID(ctx context.Context, residentID uint) (uint, error)
 }
 
 // VotingUseCase - Puerto para casos de uso de votaciones
@@ -115,10 +117,11 @@ type VotingUseCase interface {
 	// Votes
 	CreateVote(ctx context.Context, dto CreateVoteDTO) (*VoteDTO, error)
 	ListVotesByVoting(ctx context.Context, votingID uint) ([]VoteDTO, error)
-	HasResidentVoted(ctx context.Context, votingID, residentID uint) (bool, error)
-	GetResidentVote(ctx context.Context, votingID, residentID uint) (*VoteDTO, error)
+	HasUnitVoted(ctx context.Context, votingID, propertyUnitID uint) (bool, error)
+	GetUnitVote(ctx context.Context, votingID, propertyUnitID uint) (*VoteDTO, error)
 	GetVotingResults(ctx context.Context, votingID uint) ([]VotingResultDTO, error)
 	GetVotingDetailsByUnit(ctx context.Context, votingID, hpID uint) ([]VotingDetailByUnitDTO, error)
+	GetUnvotedUnitsByVoting(ctx context.Context, votingID uint, unitNumberFilter string) ([]UnvotedUnitDTO, error)
 
 	// Public Voting
 	ValidateResidentForVoting(ctx context.Context, hpID, propertyUnitID uint, dni string) (*ResidentBasicDTO, error)
@@ -168,6 +171,9 @@ type ResidentRepository interface {
 	// Nuevos métodos para edición masiva eficiente
 	GetMainResidentsByUnitIDs(ctx context.Context, businessID uint, unitIDs []uint) (map[uint]ResidentDetailDTO, error)
 	UpdateResidentsInBatch(ctx context.Context, pairs []ResidentUpdatePair) error
+	// Métodos para relación muchos-a-muchos resident-unidad
+	GetResidentIDsByDni(ctx context.Context, businessID uint, dnis []string) (map[string]uint, error)
+	CreateResidentUnitsInBatch(ctx context.Context, pivots []ResidentUnit) error
 }
 
 // ResidentUseCase - Puerto para casos de uso de residentes
@@ -180,4 +186,78 @@ type ResidentUseCase interface {
 	ImportResidentsFromExcel(ctx context.Context, businessID uint, filePath string) (*ImportResidentsResult, error)
 	BulkUpdateResidents(ctx context.Context, businessID uint, request BulkUpdateResidentsRequest) (*BulkUpdateResidentsResult, error)
 	BulkUpdateResidentsFromExcel(ctx context.Context, businessID uint, filePath string) (*BulkUpdateResidentsResult, error)
+}
+
+// ============================================================================
+// ATTENDANCE INTERFACES - Interfaces para gestión de asistencia
+// ============================================================================
+
+// AttendanceRepository - Repositorio para gestión de asistencia
+type AttendanceRepository interface {
+	// Attendance Lists
+	CreateAttendanceList(ctx context.Context, attendanceList AttendanceList) (*AttendanceList, error)
+	GetAttendanceListByID(ctx context.Context, id uint) (*AttendanceList, error)
+	GetAttendanceListByVotingGroup(ctx context.Context, votingGroupID uint) (*AttendanceList, error)
+	ListAttendanceLists(ctx context.Context, businessID uint, filters map[string]interface{}) ([]AttendanceList, error)
+	UpdateAttendanceList(ctx context.Context, id uint, attendanceList AttendanceList) (*AttendanceList, error)
+	DeleteAttendanceList(ctx context.Context, id uint) error
+
+	// Proxies
+	CreateProxy(ctx context.Context, proxy Proxy) (*Proxy, error)
+	GetProxyByID(ctx context.Context, id uint) (*Proxy, error)
+	GetProxiesByPropertyUnit(ctx context.Context, propertyUnitID uint) ([]Proxy, error)
+	GetActiveProxiesByPropertyUnit(ctx context.Context, propertyUnitID uint) ([]Proxy, error)
+	ListProxies(ctx context.Context, businessID uint, filters map[string]interface{}) ([]Proxy, error)
+	UpdateProxy(ctx context.Context, id uint, proxy Proxy) (*Proxy, error)
+	DeleteProxy(ctx context.Context, id uint) error
+
+	// Attendance Records
+	CreateAttendanceRecord(ctx context.Context, record AttendanceRecord) (*AttendanceRecord, error)
+	GetAttendanceRecordByID(ctx context.Context, id uint) (*AttendanceRecord, error)
+	GetAttendanceRecordsByList(ctx context.Context, attendanceListID uint) ([]AttendanceRecord, error)
+	GetAttendanceRecordByListAndUnit(ctx context.Context, attendanceListID, propertyUnitID uint) (*AttendanceRecord, error)
+	UpdateAttendanceRecord(ctx context.Context, id uint, record AttendanceRecord) (*AttendanceRecord, error)
+	DeleteAttendanceRecord(ctx context.Context, id uint) error
+
+	// Bulk operations
+	CreateAttendanceRecordsInBatch(ctx context.Context, records []AttendanceRecord) error
+	GenerateAttendanceListForVotingGroup(ctx context.Context, votingGroupID uint) ([]AttendanceRecord, error)
+	DeleteAttendanceRecordsByList(ctx context.Context, attendanceListID uint) error
+	GetAttendanceSummary(ctx context.Context, attendanceListID uint) (*AttendanceSummaryDTO, error)
+	GetVotingGroupTitleByListID(ctx context.Context, attendanceListID uint) (string, error)
+}
+
+// AttendanceUseCase - Caso de uso para gestión de asistencia
+type AttendanceUseCase interface {
+	// Attendance Lists
+	CreateAttendanceList(ctx context.Context, dto CreateAttendanceListDTO) (*AttendanceListDTO, error)
+	GetAttendanceListByID(ctx context.Context, id uint) (*AttendanceListDTO, error)
+	GetAttendanceListByVotingGroup(ctx context.Context, votingGroupID uint) (*AttendanceListDTO, error)
+	ListAttendanceLists(ctx context.Context, businessID uint, filters map[string]interface{}) ([]AttendanceListDTO, error)
+	UpdateAttendanceList(ctx context.Context, id uint, dto UpdateAttendanceListDTO) (*AttendanceListDTO, error)
+	DeleteAttendanceList(ctx context.Context, id uint) error
+	GenerateAttendanceList(ctx context.Context, votingGroupID uint) (*AttendanceListDTO, error)
+
+	// Proxies
+	CreateProxy(ctx context.Context, dto CreateProxyDTO) (*ProxyDTO, error)
+	GetProxyByID(ctx context.Context, id uint) (*ProxyDTO, error)
+	GetProxiesByPropertyUnit(ctx context.Context, propertyUnitID uint) ([]ProxyDTO, error)
+	GetActiveProxiesByPropertyUnit(ctx context.Context, propertyUnitID uint) ([]ProxyDTO, error)
+	ListProxies(ctx context.Context, businessID uint, filters map[string]interface{}) ([]ProxyDTO, error)
+	UpdateProxy(ctx context.Context, id uint, dto UpdateProxyDTO) (*ProxyDTO, error)
+	DeleteProxy(ctx context.Context, id uint) error
+
+	// Attendance Records
+	CreateAttendanceRecord(ctx context.Context, dto CreateAttendanceRecordDTO) (*AttendanceRecordDTO, error)
+	GetAttendanceRecordByID(ctx context.Context, id uint) (*AttendanceRecordDTO, error)
+	GetAttendanceRecordsByList(ctx context.Context, attendanceListID uint) ([]AttendanceRecordDTO, error)
+	GetAttendanceRecordByListAndUnit(ctx context.Context, attendanceListID, propertyUnitID uint) (*AttendanceRecordDTO, error)
+	UpdateAttendanceRecord(ctx context.Context, id uint, dto UpdateAttendanceRecordDTO) (*AttendanceRecordDTO, error)
+	DeleteAttendanceRecord(ctx context.Context, id uint) error
+
+	// Special operations
+	MarkAttendance(ctx context.Context, attendanceListID, propertyUnitID uint, residentID *uint, proxyID *uint, attendedAsOwner, attendedAsProxy bool, signature, signatureMethod string) (*AttendanceRecordDTO, error)
+	VerifyAttendance(ctx context.Context, recordID uint, verifiedBy uint, verificationNotes string) (*AttendanceRecordDTO, error)
+	GetAttendanceSummary(ctx context.Context, attendanceListID uint) (*AttendanceSummaryDTO, error)
+	GetVotingGroupTitleByListID(ctx context.Context, attendanceListID uint) (string, error)
 }

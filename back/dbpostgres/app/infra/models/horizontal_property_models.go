@@ -52,8 +52,11 @@ type PropertyUnit struct {
 	IsActive                 bool     `gorm:"default:true"`
 
 	// Relaciones
-	Business  Business   `gorm:"foreignKey:BusinessID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	Residents []Resident `gorm:"foreignKey:PropertyUnitID"`
+	Business          Business           `gorm:"foreignKey:BusinessID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Residents         []Resident         `gorm:"many2many:horizontal_property.resident_units"`
+	Votes             []Vote             `gorm:"foreignKey:PropertyUnitID"` // Votos emitidos por la unidad
+	Proxies           []Proxy            `gorm:"foreignKey:PropertyUnitID"` // Apoderados de la unidad
+	AttendanceRecords []AttendanceRecord `gorm:"foreignKey:PropertyUnitID"` // Registros de asistencia de la unidad
 }
 
 // TableName especifica el nombre de tabla con esquema para PropertyUnit
@@ -90,34 +93,60 @@ func (ResidentType) TableName() string {
 type Resident struct {
 	gorm.Model
 	BusinessID       uint       `gorm:"not null;index;uniqueIndex:idx_business_resident_dni,priority:1"` // Propiedad horizontal
-	PropertyUnitID   uint       `gorm:"not null;index;uniqueIndex:idx_unit_resident_email,priority:1"`   // Unidad de propiedad
 	ResidentTypeID   uint       `gorm:"not null;index"`                                                  // Tipo de residente
 	Name             string     `gorm:"size:255;not null"`                                               // Nombre completo
-	Email            string     `gorm:"size:255;uniqueIndex:idx_unit_resident_email,priority:2"`         // Email (único por unidad)
+	Email            string     `gorm:"size:255;uniqueIndex:idx_business_resident_email,priority:2"`     // Email (único por negocio)
 	Phone            string     `gorm:"size:20"`                                                         // Teléfono
 	Dni              string     `gorm:"size:30;uniqueIndex:idx_business_resident_dni,priority:2"`        // Documento de identidad (único por propiedad)
 	EmergencyContact string     `gorm:"size:255"`                                                        // Contacto de emergencia
-	IsMainResident   bool       `gorm:"default:false"`                                                   // Si es el residente principal
 	IsActive         bool       `gorm:"default:true"`                                                    // Si está activo
-	MoveInDate       *time.Time // Fecha de ingreso
-	MoveOutDate      *time.Time // Fecha de salida (opcional)
+	MoveInDate       *time.Time // Fecha de ingreso (compatibilidad: nivel residente)
+	MoveOutDate      *time.Time // Fecha de salida (opcional, compatibilidad)
 
-	// Información específica para arrendatarios
+	// Información específica para arrendatarios (compatibilidad: idealmente por unidad)
 	LeaseStartDate *time.Time // Fecha inicio de contrato (para arrendatarios)
 	LeaseEndDate   *time.Time // Fecha fin de contrato (para arrendatarios)
 	MonthlyRent    *float64   // Valor mensual del arriendo
 
 	// Relaciones
-	Business         Business          `gorm:"foreignKey:BusinessID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	PropertyUnit     PropertyUnit      `gorm:"foreignKey:PropertyUnitID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	ResidentType     ResidentType      `gorm:"foreignKey:ResidentTypeID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
-	CommitteeMembers []CommitteeMember `gorm:"foreignKey:ResidentID"` // Participación en comités
-	Votes            []Vote            `gorm:"foreignKey:ResidentID"` // Votos emitidos por el residente
+	Business          Business           `gorm:"foreignKey:BusinessID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	ResidentType      ResidentType       `gorm:"foreignKey:ResidentTypeID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
+	PropertyUnits     []PropertyUnit     `gorm:"many2many:horizontal_property.resident_units"`
+	CommitteeMembers  []CommitteeMember  `gorm:"foreignKey:ResidentID"` // Participación en comités
+	AttendanceRecords []AttendanceRecord `gorm:"foreignKey:ResidentID"` // Registros de asistencia del residente
 }
 
 // TableName especifica el nombre de tabla con esquema para Resident
 func (Resident) TableName() string {
 	return "horizontal_property.residents"
+}
+
+// ───────────────────────────────────────────
+//
+//	RESIDENT UNITS – Relación muchos-a-muchos Resident <-> PropertyUnit
+//
+// ───────────────────────────────────────────
+type ResidentUnit struct {
+	gorm.Model
+	BusinessID     uint       `gorm:"not null;index"`
+	ResidentID     uint       `gorm:"not null;index;uniqueIndex:idx_resident_property_unit,priority:1"`
+	PropertyUnitID uint       `gorm:"not null;index;uniqueIndex:idx_resident_property_unit,priority:2"`
+	IsMainResident bool       `gorm:"default:false"` // Bandera por unidad
+	MoveInDate     *time.Time // Período por unidad
+	MoveOutDate    *time.Time
+	LeaseStartDate *time.Time
+	LeaseEndDate   *time.Time
+	MonthlyRent    *float64 `gorm:"type:decimal(12,2)"`
+
+	// Relaciones
+	Resident     Resident     `gorm:"foreignKey:ResidentID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	PropertyUnit PropertyUnit `gorm:"foreignKey:PropertyUnitID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Business     Business     `gorm:"foreignKey:BusinessID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+}
+
+// TableName especifica el nombre de tabla con esquema para ResidentUnit
+func (ResidentUnit) TableName() string {
+	return "horizontal_property.resident_units"
 }
 
 // ───────────────────────────────────────────
@@ -275,9 +304,10 @@ type VotingGroup struct {
 	Notes            string    `gorm:"size:2000"`                       // Notas adicionales
 
 	// Relaciones
-	Business  Business `gorm:"foreignKey:BusinessID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	CreatedBy *User    `gorm:"foreignKey:CreatedByUserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
-	Votings   []Voting `gorm:"foreignKey:VotingGroupID"`
+	Business        Business         `gorm:"foreignKey:BusinessID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	CreatedBy       *User            `gorm:"foreignKey:CreatedByUserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+	Votings         []Voting         `gorm:"foreignKey:VotingGroupID"`
+	AttendanceLists []AttendanceList `gorm:"foreignKey:VotingGroupID"`
 }
 
 // TableName especifica el nombre de tabla con esquema para VotingGroup
@@ -341,26 +371,126 @@ func (VotingOption) TableName() string {
 
 // ───────────────────────────────────────────
 //
-//	VOTES – Votos individuales de residentes
+//	VOTES – Votos por unidades residenciales
 //
 // ───────────────────────────────────────────
 type Vote struct {
 	gorm.Model
-	VotingID       uint      `gorm:"not null;index;uniqueIndex:idx_voting_resident_vote,priority:1"` // Votación
-	ResidentID     uint      `gorm:"not null;index;uniqueIndex:idx_voting_resident_vote,priority:2"` // Residente que vota
-	VotingOptionID uint      `gorm:"not null;index"`                                                 // Opción seleccionada
-	VotedAt        time.Time `gorm:"not null;default:CURRENT_TIMESTAMP"`                             // Fecha y hora del voto
-	IPAddress      string    `gorm:"size:45"`                                                        // IP desde donde se votó (para auditoría)
-	UserAgent      string    `gorm:"size:500"`                                                       // User agent (para auditoría)
-	Notes          string    `gorm:"size:500"`                                                       // Notas adicionales
+	VotingID       uint      `gorm:"not null;index;uniqueIndex:idx_voting_property_unit_vote,priority:1"` // Votación
+	PropertyUnitID uint      `gorm:"not null;index;uniqueIndex:idx_voting_property_unit_vote,priority:2"` // Unidad que vota
+	VotingOptionID uint      `gorm:"not null;index"`                                                      // Opción seleccionada
+	VotedAt        time.Time `gorm:"not null;default:CURRENT_TIMESTAMP"`                                  // Fecha y hora del voto
+	IPAddress      string    `gorm:"size:45"`                                                             // IP desde donde se votó (para auditoría)
+	UserAgent      string    `gorm:"size:500"`                                                            // User agent (para auditoría)
+	Notes          string    `gorm:"size:500"`                                                            // Notas adicionales
 
 	// Relaciones
 	Voting       Voting       `gorm:"foreignKey:VotingID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	Resident     Resident     `gorm:"foreignKey:ResidentID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	PropertyUnit PropertyUnit `gorm:"foreignKey:PropertyUnitID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	VotingOption VotingOption `gorm:"foreignKey:VotingOptionID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
 
 // TableName especifica el nombre de tabla con esquema para Vote
 func (Vote) TableName() string {
 	return "horizontal_property.votes"
+}
+
+// ───────────────────────────────────────────
+//
+//	ATTENDANCE LISTS – Listas de asistencia para grupos de votación
+//
+// ───────────────────────────────────────────
+type AttendanceList struct {
+	gorm.Model
+	VotingGroupID   uint   `gorm:"not null;index;uniqueIndex:idx_voting_group_attendance"` // Grupo de votación
+	Title           string `gorm:"size:200;not null"`                                      // Título de la lista (ej. "Asistencia Asamblea Ordinaria 2024")
+	Description     string `gorm:"size:1000"`                                              // Descripción de la lista
+	IsActive        bool   `gorm:"default:true"`                                           // Si está activa
+	CreatedByUserID *uint  `gorm:"index"`                                                  // Usuario que creó la lista
+	Notes           string `gorm:"size:2000"`                                              // Notas adicionales
+
+	// Relaciones
+	VotingGroup       VotingGroup        `gorm:"foreignKey:VotingGroupID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	CreatedBy         *User              `gorm:"foreignKey:CreatedByUserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+	AttendanceRecords []AttendanceRecord `gorm:"foreignKey:AttendanceListID"`
+}
+
+// TableName especifica el nombre de tabla con esquema para AttendanceList
+func (AttendanceList) TableName() string {
+	return "horizontal_property.attendance_lists"
+}
+
+// ───────────────────────────────────────────
+//
+//	PROXIES – Apoderados para representar unidades en votaciones
+//
+// ───────────────────────────────────────────
+type Proxy struct {
+	gorm.Model
+	BusinessID      uint       `gorm:"not null;index"`                      // Propiedad horizontal
+	PropertyUnitID  uint       `gorm:"not null;index"`                      // Unidad que representa
+	ProxyName       string     `gorm:"size:255;not null"`                   // Nombre completo del apoderado
+	ProxyDni        string     `gorm:"size:30;not null"`                    // DNI del apoderado
+	ProxyEmail      string     `gorm:"size:255"`                            // Email del apoderado
+	ProxyPhone      string     `gorm:"size:20"`                             // Teléfono del apoderado
+	ProxyAddress    string     `gorm:"size:500"`                            // Dirección del apoderado
+	ProxyType       string     `gorm:"size:20;not null;default:'external'"` // external, resident, family
+	IsActive        bool       `gorm:"default:true"`                        // Si está activo
+	StartDate       time.Time  `gorm:"not null"`                            // Fecha de inicio del poder
+	EndDate         *time.Time // Fecha de fin del poder (null si no tiene límite)
+	PowerOfAttorney string     `gorm:"size:1000"` // Descripción del poder otorgado
+	Notes           string     `gorm:"size:1000"` // Notas adicionales
+
+	// Relaciones
+	Business          Business           `gorm:"foreignKey:BusinessID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	PropertyUnit      PropertyUnit       `gorm:"foreignKey:PropertyUnitID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	AttendanceRecords []AttendanceRecord `gorm:"foreignKey:ProxyID"`
+}
+
+// TableName especifica el nombre de tabla con esquema para Proxy
+func (Proxy) TableName() string {
+	return "horizontal_property.proxies"
+}
+
+// ───────────────────────────────────────────
+//
+//	ATTENDANCE RECORDS – Registros de asistencia por unidad
+//
+// ───────────────────────────────────────────
+type AttendanceRecord struct {
+	gorm.Model
+	AttendanceListID uint  `gorm:"not null;index"` // Lista de asistencia
+	PropertyUnitID   uint  `gorm:"not null;index"` // Unidad residencial
+	ResidentID       *uint `gorm:"index"`          // Residente que asiste (opcional)
+	ProxyID          *uint `gorm:"index"`          // Apoderado que asiste (opcional)
+
+	// Marcas de asistencia
+	AttendedAsOwner bool `gorm:"default:false"` // Asistió como propietario
+	AttendedAsProxy bool `gorm:"default:false"` // Asistió como apoderado
+
+	// Información de firma
+	Signature       string     `gorm:"size:500"` // Firma digital o texto
+	SignatureDate   *time.Time // Fecha y hora de la firma
+	SignatureMethod string     `gorm:"size:50"` // digital, handwritten, electronic
+
+	// Información de verificación
+	VerifiedBy        *uint      `gorm:"index"` // Usuario que verificó la asistencia
+	VerificationDate  *time.Time // Fecha de verificación
+	VerificationNotes string     `gorm:"size:500"` // Notas de verificación
+
+	// Información adicional
+	Notes   string `gorm:"size:1000"`    // Notas adicionales
+	IsValid bool   `gorm:"default:true"` // Si el registro es válido
+
+	// Relaciones
+	AttendanceList AttendanceList `gorm:"foreignKey:AttendanceListID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	PropertyUnit   PropertyUnit   `gorm:"foreignKey:PropertyUnitID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Resident       *Resident      `gorm:"foreignKey:ResidentID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+	Proxy          *Proxy         `gorm:"foreignKey:ProxyID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+	VerifiedByUser *User          `gorm:"foreignKey:VerifiedBy;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+}
+
+// TableName especifica el nombre de tabla con esquema para AttendanceRecord
+func (AttendanceRecord) TableName() string {
+	return "horizontal_property.attendance_records"
 }

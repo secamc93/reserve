@@ -117,11 +117,17 @@ func (h *ResidentHandler) ImportResidentsExcel(c *gin.Context) {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[ERROR] ImportResidentsExcel - Error procesando: %v\n", err)
 		h.logger.Error().Err(err).Uint("hp_id", uint(hpID)).Msg("Error importando residentes")
+		var details []string
+		if result != nil {
+			details = result.Errors
+		} else {
+			details = []string{}
+		}
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
 			"message": "Error procesando el archivo Excel",
 			"error":   err.Error(),
-			"details": result.Errors,
+			"details": details,
 		})
 		return
 	}

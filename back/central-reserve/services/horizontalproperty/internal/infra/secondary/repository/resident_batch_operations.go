@@ -56,29 +56,46 @@ func (r *Repository) GetMainResidentsByUnitIDs(ctx context.Context, businessID u
 		return result, nil
 	}
 
-	var residents []models.Resident
-	if err := r.db.Conn(ctx).
-		Preload("PropertyUnit").
-		Where("business_id = ? AND property_unit_id IN ? AND is_main_resident = ? AND is_active = ?", businessID, unitIDs, true, true).
-		Find(&residents).Error; err != nil {
+	// Consultar por pivote resident_units
+	type row struct {
+		UnitID         uint
+		UnitNumber     string
+		ResidentID     uint
+		BusinessID     uint
+		ResidentTypeID uint
+		Name           string
+		Email          string
+		Phone          string
+		Dni            string
+		IsActive       bool
+		IsMainResident bool
+		CreatedAtUnix  int64
+		UpdatedAtUnix  int64
+	}
+	rows := []row{}
+	if err := r.db.Conn(ctx).Table("horizontal_property.resident_units ru").
+		Select("ru.property_unit_id as unit_id, pu.number as unit_number, r.id as resident_id, r.business_id, r.resident_type_id, r.name, r.email, r.phone, r.dni, r.is_active, ru.is_main_resident, EXTRACT(EPOCH FROM r.created_at)::bigint as created_at_unix, EXTRACT(EPOCH FROM r.updated_at)::bigint as updated_at_unix").
+		Joins("JOIN horizontal_property.property_units pu ON pu.id = ru.property_unit_id").
+		Joins("JOIN horizontal_property.residents r ON r.id = ru.resident_id").
+		Where("r.business_id = ? AND ru.property_unit_id IN ? AND r.is_active = ?", businessID, unitIDs, true).
+		Where("ru.is_main_resident = ?", true).
+		Scan(&rows).Error; err != nil {
 		return nil, fmt.Errorf("error obteniendo residentes principales: %w", err)
 	}
 
-	for _, m := range residents {
-		result[m.PropertyUnitID] = domain.ResidentDetailDTO{
-			ID:                 m.ID,
-			BusinessID:         m.BusinessID,
-			PropertyUnitID:     m.PropertyUnitID,
-			PropertyUnitNumber: m.PropertyUnit.Number,
-			ResidentTypeID:     m.ResidentTypeID,
-			Name:               m.Name,
-			Email:              m.Email,
-			Phone:              m.Phone,
-			Dni:                m.Dni,
-			IsMainResident:     m.IsMainResident,
-			IsActive:           m.IsActive,
-			CreatedAt:          m.CreatedAt,
-			UpdatedAt:          m.UpdatedAt,
+	for _, rw := range rows {
+		result[rw.UnitID] = domain.ResidentDetailDTO{
+			ID:                 rw.ResidentID,
+			BusinessID:         rw.BusinessID,
+			PropertyUnitID:     rw.UnitID,
+			PropertyUnitNumber: rw.UnitNumber,
+			ResidentTypeID:     rw.ResidentTypeID,
+			Name:               rw.Name,
+			Email:              rw.Email,
+			Phone:              rw.Phone,
+			Dni:                rw.Dni,
+			IsMainResident:     rw.IsMainResident,
+			IsActive:           rw.IsActive,
 		}
 	}
 	return result, nil
@@ -120,23 +137,81 @@ func (r *Repository) CreateResidentsInBatch(ctx context.Context, residents []*do
 	for i, res := range residents {
 		residentModels[i] = &models.Resident{
 			BusinessID:       res.BusinessID,
-			PropertyUnitID:   res.PropertyUnitID,
 			ResidentTypeID:   res.ResidentTypeID,
 			Name:             res.Name,
 			Email:            res.Email,
 			Phone:            res.Phone,
 			Dni:              res.Dni,
 			EmergencyContact: res.EmergencyContact,
-			IsMainResident:   res.IsMainResident,
 			IsActive:         res.IsActive,
 			MoveInDate:       res.MoveInDate,
+			MoveOutDate:      res.MoveOutDate,
+			LeaseStartDate:   res.LeaseStartDate,
+			LeaseEndDate:     res.LeaseEndDate,
+			MonthlyRent:      res.MonthlyRent,
 		}
 	}
 
-	// Usar transacción para crear todos o ninguno
+	// Usar transacción para crear todos o ninguno, incluyendo pivote
 	return r.db.Conn(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.CreateInBatches(residentModels, 100).Error; err != nil {
 			return fmt.Errorf("error creando residentes en batch: %w", err)
+		}
+
+		// Nota: Las relaciones pivote ahora se manejan por separado
+		// Este método solo crea los residentes, las relaciones se crean con CreateResidentUnitsInBatch
+		return nil
+	})
+}
+
+// GetResidentIDsByDni retorna un mapa dni -> resident_id para un business determinado
+func (r *Repository) GetResidentIDsByDni(ctx context.Context, businessID uint, dnis []string) (map[string]uint, error) {
+	result := make(map[string]uint)
+	if len(dnis) == 0 {
+		return result, nil
+	}
+	type row struct {
+		Dni string
+		ID  uint
+	}
+	var rows []row
+	if err := r.db.Conn(ctx).Table("horizontal_property.residents").
+		Select("dni, id").
+		Where("business_id = ? AND dni IN ?", businessID, dnis).
+		Scan(&rows).Error; err != nil {
+		return nil, fmt.Errorf("error obteniendo residentes por DNI: %w", err)
+	}
+	for _, rw := range rows {
+		result[rw.Dni] = rw.ID
+	}
+	return result, nil
+}
+
+// CreateResidentUnitsInBatch crea relaciones Resident-Unit en batch
+func (r *Repository) CreateResidentUnitsInBatch(ctx context.Context, pivots []domain.ResidentUnit) error {
+	if len(pivots) == 0 {
+		return nil
+	}
+
+	// Convertir domain.ResidentUnit a models.ResidentUnit
+	modelPivots := make([]models.ResidentUnit, len(pivots))
+	for i, pivot := range pivots {
+		modelPivots[i] = models.ResidentUnit{
+			BusinessID:     pivot.BusinessID,
+			ResidentID:     pivot.ResidentID,
+			PropertyUnitID: pivot.PropertyUnitID,
+			IsMainResident: pivot.IsMainResident,
+			MoveInDate:     pivot.MoveInDate,
+			MoveOutDate:    pivot.MoveOutDate,
+			LeaseStartDate: pivot.LeaseStartDate,
+			LeaseEndDate:   pivot.LeaseEndDate,
+			MonthlyRent:    pivot.MonthlyRent,
+		}
+	}
+
+	return r.db.Conn(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.CreateInBatches(modelPivots, 300).Error; err != nil {
+			return fmt.Errorf("error creando relaciones residente-unidad en batch: %w", err)
 		}
 		return nil
 	})

@@ -270,7 +270,7 @@ type VotingOptionDTO struct {
 // CreateVoteDTO - DTO para emitir un voto
 type CreateVoteDTO struct {
 	VotingID       uint
-	ResidentID     uint
+	PropertyUnitID uint
 	VotingOptionID uint
 	IPAddress      string
 	UserAgent      string
@@ -281,7 +281,7 @@ type CreateVoteDTO struct {
 type VoteDTO struct {
 	ID             uint
 	VotingID       uint
-	ResidentID     uint
+	PropertyUnitID uint
 	VotingOptionID uint
 	OptionText     string
 	OptionCode     string
@@ -297,6 +297,7 @@ type VotingResultDTO struct {
 	VotingOptionID uint
 	OptionText     string
 	OptionCode     string
+	Color          string
 	VoteCount      int
 	Percentage     float64
 }
@@ -513,6 +514,7 @@ type ResidentFiltersDTO struct {
 	BusinessID         uint
 	PropertyUnitNumber string
 	Name               string
+	Dni                string
 	PropertyUnitID     *uint
 	ResidentTypeID     *uint
 	IsActive           *bool
@@ -531,41 +533,6 @@ type PaginatedResidentsDTO struct {
 }
 
 // BulkUpdateResidentItem - DTO para un residente en edición masiva
-type BulkUpdateResidentItem struct {
-	PropertyUnitNumber string  `json:"property_unit_number" binding:"required" example:"101" description:"Número de unidad (columna principal para identificar el residente)"`
-	Name               *string `json:"name,omitempty" example:"Juan Pérez" description:"Nombre del residente (opcional)"`
-	Dni                *string `json:"dni,omitempty" example:"12345678" description:"DNI del residente (opcional)"`
-}
-
-// BulkUpdateResidentsRequest - DTO para solicitud de edición masiva
-type BulkUpdateResidentsRequest struct {
-	Residents []BulkUpdateResidentItem `json:"residents" binding:"required,min=1" description:"Lista de residentes a actualizar"`
-}
-
-// BulkUpdateResidentsResult - DTO para resultado de edición masiva
-type BulkUpdateResidentsResult struct {
-	TotalProcessed int                     `json:"total_processed" example:"10" description:"Total de residentes procesados"`
-	Updated        int                     `json:"updated" example:"8" description:"Residentes actualizados exitosamente"`
-	Errors         int                     `json:"errors" example:"2" description:"Residentes con errores"`
-	ErrorDetails   []BulkUpdateErrorDetail `json:"error_details,omitempty" description:"Detalles de errores específicos"`
-}
-
-// BulkUpdateErrorDetail detalla un error por fila/unidad para graficar en frontend
-type BulkUpdateErrorDetail struct {
-	Row                int    `json:"row" example:"4" description:"Número de fila en el Excel (1-based incluyendo encabezado)"`
-	PropertyUnitNumber string `json:"property_unit_number" example:"101A" description:"Número de unidad asociado al error"`
-	Error              string `json:"error" example:"Unidad no encontrada" description:"Mensaje claro del error"`
-}
-
-// ResidentUpdatePair representa una actualización a aplicar en batch
-type ResidentUpdatePair struct {
-	ID        uint              `json:"id"`
-	UpdateDTO UpdateResidentDTO `json:"update"`
-}
-
-	PageSize   int
-	TotalPages int
-}
 
 // BulkUpdateResidentItem - DTO para un residente en edición masiva
 type BulkUpdateResidentItem struct {
@@ -600,76 +567,156 @@ type ResidentUpdatePair struct {
 	UpdateDTO UpdateResidentDTO `json:"update"`
 }
 
-	PageSize   int
-	TotalPages int
+// UnvotedUnitDTO - DTO para unidades que no han votado
+type UnvotedUnitDTO struct {
+	UnitID       uint   `json:"unit_id" example:"123"`
+	UnitNumber   string `json:"unit_number" example:"Apto 101"`
+	ResidentID   uint   `json:"resident_id" example:"456"`
+	ResidentName string `json:"resident_name" example:"Juan Pérez"`
 }
 
-// BulkUpdateResidentItem - DTO para un residente en edición masiva
-type BulkUpdateResidentItem struct {
-	PropertyUnitNumber string  `json:"property_unit_number" binding:"required" example:"101" description:"Número de unidad (columna principal para identificar el residente)"`
-	Name               *string `json:"name,omitempty" example:"Juan Pérez" description:"Nombre del residente (opcional)"`
-	Dni                *string `json:"dni,omitempty" example:"12345678" description:"DNI del residente (opcional)"`
+// ============================================================================
+// ATTENDANCE DTOs - DTOs para gestión de asistencia
+// ============================================================================
+
+// CreateAttendanceListDTO - DTO para crear lista de asistencia
+type CreateAttendanceListDTO struct {
+	VotingGroupID   uint   `json:"voting_group_id" binding:"required" example:"1"`
+	Title           string `json:"title" binding:"required,min=3,max=200" example:"Asistencia Asamblea Ordinaria 2024"`
+	Description     string `json:"description" binding:"max=1000" example:"Lista de asistencia para la asamblea ordinaria"`
+	CreatedByUserID *uint  `json:"created_by_user_id,omitempty" example:"5"`
+	Notes           string `json:"notes" binding:"max=2000" example:"Notas adicionales"`
 }
 
-// BulkUpdateResidentsRequest - DTO para solicitud de edición masiva
-type BulkUpdateResidentsRequest struct {
-	Residents []BulkUpdateResidentItem `json:"residents" binding:"required,min=1" description:"Lista de residentes a actualizar"`
+// UpdateAttendanceListDTO - DTO para actualizar lista de asistencia
+type UpdateAttendanceListDTO struct {
+	Title       string `json:"title" binding:"omitempty,min=3,max=200" example:"Asistencia Asamblea Ordinaria 2024 - Actualizada"`
+	Description string `json:"description" binding:"omitempty,max=1000" example:"Lista actualizada"`
+	IsActive    *bool  `json:"is_active,omitempty" example:"true"`
+	Notes       string `json:"notes" binding:"omitempty,max=2000" example:"Notas actualizadas"`
 }
 
-// BulkUpdateResidentsResult - DTO para resultado de edición masiva
-type BulkUpdateResidentsResult struct {
-	TotalProcessed int                     `json:"total_processed" example:"10" description:"Total de residentes procesados"`
-	Updated        int                     `json:"updated" example:"8" description:"Residentes actualizados exitosamente"`
-	Errors         int                     `json:"errors" example:"2" description:"Residentes con errores"`
-	ErrorDetails   []BulkUpdateErrorDetail `json:"error_details,omitempty" description:"Detalles de errores específicos"`
+// AttendanceListDTO - DTO para respuesta de lista de asistencia
+type AttendanceListDTO struct {
+	ID              uint      `json:"id" example:"1"`
+	VotingGroupID   uint      `json:"voting_group_id" example:"1"`
+	Title           string    `json:"title" example:"Asistencia Asamblea Ordinaria 2024"`
+	Description     string    `json:"description" example:"Lista de asistencia para la asamblea"`
+	IsActive        bool      `json:"is_active" example:"true"`
+	CreatedByUserID *uint     `json:"created_by_user_id,omitempty" example:"5"`
+	Notes           string    `json:"notes" example:"Notas adicionales"`
+	CreatedAt       time.Time `json:"created_at" example:"2025-01-15T10:30:00Z"`
+	UpdatedAt       time.Time `json:"updated_at" example:"2025-01-15T10:30:00Z"`
 }
 
-// BulkUpdateErrorDetail detalla un error por fila/unidad para graficar en frontend
-type BulkUpdateErrorDetail struct {
-	Row                int    `json:"row" example:"4" description:"Número de fila en el Excel (1-based incluyendo encabezado)"`
-	PropertyUnitNumber string `json:"property_unit_number" example:"101A" description:"Número de unidad asociado al error"`
-	Error              string `json:"error" example:"Unidad no encontrada" description:"Mensaje claro del error"`
+// CreateProxyDTO - DTO para crear apoderado
+type CreateProxyDTO struct {
+	BusinessID      uint       `json:"business_id" binding:"required" example:"1"`
+	PropertyUnitID  uint       `json:"property_unit_id" binding:"required" example:"123"`
+	ProxyName       string     `json:"proxy_name" binding:"required,min=3,max=255" example:"María García López"`
+	ProxyDni        string     `json:"proxy_dni" binding:"required,min=5,max=30" example:"12345678"`
+	ProxyEmail      string     `json:"proxy_email" binding:"omitempty,email,max=255" example:"maria@email.com"`
+	ProxyPhone      string     `json:"proxy_phone" binding:"omitempty,max=20" example:"+57 300 123 4567"`
+	ProxyAddress    string     `json:"proxy_address" binding:"omitempty,max=500" example:"Calle 123 #45-67"`
+	ProxyType       string     `json:"proxy_type" binding:"required,oneof=external resident family" example:"external"`
+	StartDate       time.Time  `json:"start_date" binding:"required" example:"2025-01-15T00:00:00Z"`
+	EndDate         *time.Time `json:"end_date,omitempty" example:"2025-12-31T23:59:59Z"`
+	PowerOfAttorney string     `json:"power_of_attorney" binding:"omitempty,max=1000" example:"Poder para representar en asambleas"`
+	Notes           string     `json:"notes" binding:"omitempty,max=1000" example:"Notas adicionales"`
 }
 
-// ResidentUpdatePair representa una actualización a aplicar en batch
-type ResidentUpdatePair struct {
-	ID        uint              `json:"id"`
-	UpdateDTO UpdateResidentDTO `json:"update"`
+// UpdateProxyDTO - DTO para actualizar apoderado
+type UpdateProxyDTO struct {
+	ProxyName       string     `json:"proxy_name" binding:"omitempty,min=3,max=255" example:"María García López"`
+	ProxyDni        string     `json:"proxy_dni" binding:"omitempty,min=5,max=30" example:"12345678"`
+	ProxyEmail      string     `json:"proxy_email" binding:"omitempty,email,max=255" example:"maria@email.com"`
+	ProxyPhone      string     `json:"proxy_phone" binding:"omitempty,max=20" example:"+57 300 123 4567"`
+	ProxyAddress    string     `json:"proxy_address" binding:"omitempty,max=500" example:"Calle 123 #45-67"`
+	ProxyType       string     `json:"proxy_type" binding:"omitempty,oneof=external resident family" example:"external"`
+	IsActive        *bool      `json:"is_active,omitempty" example:"true"`
+	StartDate       *time.Time `json:"start_date,omitempty" example:"2025-01-15T00:00:00Z"`
+	EndDate         *time.Time `json:"end_date,omitempty" example:"2025-12-31T23:59:59Z"`
+	PowerOfAttorney string     `json:"power_of_attorney" binding:"omitempty,max=1000" example:"Poder para representar en asambleas"`
+	Notes           string     `json:"notes" binding:"omitempty,max=1000" example:"Notas adicionales"`
 }
 
-	PageSize   int
-	TotalPages int
+// ProxyDTO - DTO para respuesta de apoderado
+type ProxyDTO struct {
+	ID              uint       `json:"id" example:"1"`
+	BusinessID      uint       `json:"business_id" example:"1"`
+	PropertyUnitID  uint       `json:"property_unit_id" example:"123"`
+	ProxyName       string     `json:"proxy_name" example:"María García López"`
+	ProxyDni        string     `json:"proxy_dni" example:"12345678"`
+	ProxyEmail      string     `json:"proxy_email" example:"maria@email.com"`
+	ProxyPhone      string     `json:"proxy_phone" example:"+57 300 123 4567"`
+	ProxyAddress    string     `json:"proxy_address" example:"Calle 123 #45-67"`
+	ProxyType       string     `json:"proxy_type" example:"external"`
+	IsActive        bool       `json:"is_active" example:"true"`
+	StartDate       time.Time  `json:"start_date" example:"2025-01-15T00:00:00Z"`
+	EndDate         *time.Time `json:"end_date,omitempty" example:"2025-12-31T23:59:59Z"`
+	PowerOfAttorney string     `json:"power_of_attorney" example:"Poder para representar en asambleas"`
+	Notes           string     `json:"notes" example:"Notas adicionales"`
+	CreatedAt       time.Time  `json:"created_at" example:"2025-01-15T10:30:00Z"`
+	UpdatedAt       time.Time  `json:"updated_at" example:"2025-01-15T10:30:00Z"`
 }
 
-// BulkUpdateResidentItem - DTO para un residente en edición masiva
-type BulkUpdateResidentItem struct {
-	PropertyUnitNumber string  `json:"property_unit_number" binding:"required" example:"101" description:"Número de unidad (columna principal para identificar el residente)"`
-	Name               *string `json:"name,omitempty" example:"Juan Pérez" description:"Nombre del residente (opcional)"`
-	Dni                *string `json:"dni,omitempty" example:"12345678" description:"DNI del residente (opcional)"`
+// CreateAttendanceRecordDTO - DTO para crear registro de asistencia
+type CreateAttendanceRecordDTO struct {
+	AttendanceListID uint   `json:"attendance_list_id" binding:"required" example:"1"`
+	PropertyUnitID   uint   `json:"property_unit_id" binding:"required" example:"123"`
+	ResidentID       *uint  `json:"resident_id,omitempty" example:"456"`
+	ProxyID          *uint  `json:"proxy_id,omitempty" example:"789"`
+	AttendedAsOwner  bool   `json:"attended_as_owner" example:"true"`
+	AttendedAsProxy  bool   `json:"attended_as_proxy" example:"false"`
+	Signature        string `json:"signature" binding:"omitempty,max=500" example:"Firma digital"`
+	SignatureMethod  string `json:"signature_method" binding:"omitempty,oneof=digital handwritten electronic" example:"digital"`
+	Notes            string `json:"notes" binding:"omitempty,max=1000" example:"Notas adicionales"`
 }
 
-// BulkUpdateResidentsRequest - DTO para solicitud de edición masiva
-type BulkUpdateResidentsRequest struct {
-	Residents []BulkUpdateResidentItem `json:"residents" binding:"required,min=1" description:"Lista de residentes a actualizar"`
+// UpdateAttendanceRecordDTO - DTO para actualizar registro de asistencia
+type UpdateAttendanceRecordDTO struct {
+	ResidentID        *uint  `json:"resident_id,omitempty" example:"456"`
+	ProxyID           *uint  `json:"proxy_id,omitempty" example:"789"`
+	AttendedAsOwner   *bool  `json:"attended_as_owner,omitempty" example:"true"`
+	AttendedAsProxy   *bool  `json:"attended_as_proxy,omitempty" example:"false"`
+	Signature         string `json:"signature" binding:"omitempty,max=500" example:"Firma digital"`
+	SignatureMethod   string `json:"signature_method" binding:"omitempty,oneof=digital handwritten electronic" example:"digital"`
+	VerifiedBy        *uint  `json:"verified_by,omitempty" example:"5"`
+	VerificationNotes string `json:"verification_notes" binding:"omitempty,max=500" example:"Verificado por administrador"`
+	Notes             string `json:"notes" binding:"omitempty,max=1000" example:"Notas adicionales"`
+	IsValid           *bool  `json:"is_valid,omitempty" example:"true"`
 }
 
-// BulkUpdateResidentsResult - DTO para resultado de edición masiva
-type BulkUpdateResidentsResult struct {
-	TotalProcessed int                     `json:"total_processed" example:"10" description:"Total de residentes procesados"`
-	Updated        int                     `json:"updated" example:"8" description:"Residentes actualizados exitosamente"`
-	Errors         int                     `json:"errors" example:"2" description:"Residentes con errores"`
-	ErrorDetails   []BulkUpdateErrorDetail `json:"error_details,omitempty" description:"Detalles de errores específicos"`
+// AttendanceRecordDTO - DTO para respuesta de registro de asistencia
+type AttendanceRecordDTO struct {
+	ID                uint       `json:"id" example:"1"`
+	AttendanceListID  uint       `json:"attendance_list_id" example:"1"`
+	PropertyUnitID    uint       `json:"property_unit_id" example:"123"`
+	ResidentID        *uint      `json:"resident_id,omitempty" example:"456"`
+	ProxyID           *uint      `json:"proxy_id,omitempty" example:"789"`
+	AttendedAsOwner   bool       `json:"attended_as_owner" example:"true"`
+	AttendedAsProxy   bool       `json:"attended_as_proxy" example:"false"`
+	Signature         string     `json:"signature" example:"Firma digital"`
+	SignatureDate     *time.Time `json:"signature_date,omitempty" example:"2025-01-15T14:30:00Z"`
+	SignatureMethod   string     `json:"signature_method" example:"digital"`
+	VerifiedBy        *uint      `json:"verified_by,omitempty" example:"5"`
+	VerificationDate  *time.Time `json:"verification_date,omitempty" example:"2025-01-15T15:00:00Z"`
+	VerificationNotes string     `json:"verification_notes" example:"Verificado por administrador"`
+	Notes             string     `json:"notes" example:"Notas adicionales"`
+	IsValid           bool       `json:"is_valid" example:"true"`
+	CreatedAt         time.Time  `json:"created_at" example:"2025-01-15T10:30:00Z"`
+	UpdatedAt         time.Time  `json:"updated_at" example:"2025-01-15T10:30:00Z"`
+	ResidentName      string     `json:"resident_name" example:"Juan Pérez"`
+	ProxyName         string     `json:"proxy_name" example:"María García"`
+	UnitNumber        string     `json:"unit_number" example:"CASA 126"`
 }
 
-// BulkUpdateErrorDetail detalla un error por fila/unidad para graficar en frontend
-type BulkUpdateErrorDetail struct {
-	Row                int    `json:"row" example:"4" description:"Número de fila en el Excel (1-based incluyendo encabezado)"`
-	PropertyUnitNumber string `json:"property_unit_number" example:"101A" description:"Número de unidad asociado al error"`
-	Error              string `json:"error" example:"Unidad no encontrada" description:"Mensaje claro del error"`
-}
-
-// ResidentUpdatePair representa una actualización a aplicar en batch
-type ResidentUpdatePair struct {
-	ID        uint              `json:"id"`
-	UpdateDTO UpdateResidentDTO `json:"update"`
+// AttendanceSummaryDTO - DTO para resumen de asistencia
+type AttendanceSummaryDTO struct {
+	TotalUnits      int     `json:"total_units" example:"100"`
+	AttendedUnits   int     `json:"attended_units" example:"85"`
+	AbsentUnits     int     `json:"absent_units" example:"15"`
+	AttendedAsOwner int     `json:"attended_as_owner" example:"70"`
+	AttendedAsProxy int     `json:"attended_as_proxy" example:"15"`
+	AttendanceRate  float64 `json:"attendance_rate" example:"85.0"`
 }

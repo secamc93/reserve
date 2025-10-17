@@ -31,12 +31,8 @@ type CreateVotingOptionRequest struct {
 }
 
 type CreateVoteRequest struct {
-	ResidentID     uint   `json:"resident_id" binding:"required"`
+	PropertyUnitID uint   `json:"property_unit_id" binding:"required"`
 	VotingOptionID uint   `json:"voting_option_id" binding:"required"`
 	IPAddress      string `json:"ip_address"`
 	UserAgent      string `json:"user_agent"`
-	Notes          string `json:"notes"`
 }
-
-
-

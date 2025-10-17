@@ -7,6 +7,7 @@ import (
 
 type VotingHandler struct {
 	votingUseCase             domain.VotingUseCase
+	votingRepository          domain.VotingRepository
 	propertyUnitUseCase       domain.PropertyUnitUseCase
 	horizontalPropertyUseCase domain.HorizontalPropertyUseCase
 	votingCache               domain.VotingCacheService
@@ -16,6 +17,7 @@ type VotingHandler struct {
 
 func NewVotingHandler(
 	votingUseCase domain.VotingUseCase,
+	votingRepository domain.VotingRepository,
 	propertyUnitUseCase domain.PropertyUnitUseCase,
 	horizontalPropertyUseCase domain.HorizontalPropertyUseCase,
 	votingCache domain.VotingCacheService,
@@ -24,6 +26,7 @@ func NewVotingHandler(
 ) *VotingHandler {
 	return &VotingHandler{
 		votingUseCase:             votingUseCase,
+		votingRepository:          votingRepository,
 		propertyUnitUseCase:       propertyUnitUseCase,
 		horizontalPropertyUseCase: horizontalPropertyUseCase,
 		votingCache:               votingCache,

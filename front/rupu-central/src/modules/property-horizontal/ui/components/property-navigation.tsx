@@ -6,9 +6,16 @@ import Link from 'next/link';
 interface PropertyNavigationProps {
   hpId: number;
   propertyName?: string;
+  currentSection?: 'dashboard' | 'units' | 'residents' | 'voting-groups' | 'attendance';
+  groupId?: number;
 }
 
-export function PropertyNavigation({ hpId, propertyName }: PropertyNavigationProps) {
+export function PropertyNavigation({ 
+  hpId, 
+  propertyName, 
+  currentSection, 
+  groupId 
+}: PropertyNavigationProps) {
   const pathname = usePathname();
   
   const navigationItems = [
@@ -16,27 +23,37 @@ export function PropertyNavigation({ hpId, propertyName }: PropertyNavigationPro
       name: 'Dashboard',
       href: `/properties/${hpId}`,
       icon: '🏠',
-      current: pathname === `/properties/${hpId}`
+      current: currentSection === 'dashboard' || pathname === `/properties/${hpId}`
     },
     {
       name: 'Unidades',
       href: `/properties/${hpId}/units`,
       icon: '🏢',
-      current: pathname === `/properties/${hpId}/units`
+      current: currentSection === 'units' || pathname === `/properties/${hpId}/units`
     },
     {
       name: 'Residentes',
       href: `/properties/${hpId}/residents`,
       icon: '👥',
-      current: pathname === `/properties/${hpId}/residents`
+      current: currentSection === 'residents' || pathname === `/properties/${hpId}/residents`
     },
     {
       name: 'Votaciones',
       href: `/properties/${hpId}/voting-groups`,
       icon: '🗳️',
-      current: pathname.startsWith(`/properties/${hpId}/voting-groups`)
+      current: currentSection === 'voting-groups' || pathname.startsWith(`/properties/${hpId}/voting-groups`)
     }
   ];
+
+  // Add attendance navigation if we're in attendance section
+  if (currentSection === 'attendance' && groupId) {
+    navigationItems.push({
+      name: 'Asistencia',
+      href: `/properties/${hpId}/voting-groups/${groupId}/attendance`,
+      icon: '✅',
+      current: true
+    });
+  }
 
   return (
     <div className="bg-white shadow-sm border-b border-gray-200">

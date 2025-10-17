@@ -1,0 +1,831 @@
+# API DOCUMENTACIÓN - SISTEMA DE ASISTENCIA
+# ================================================
+
+## ENDPOINTS IMPLEMENTADOS
+
+### 1. CREAR LISTA DE ASISTENCIA
+**URL:** `POST /api/v1/attendance/lists`
+**Descripción:** Crea una nueva lista de asistencia para un grupo de votación
+
+**Request Body:**
+```json
+{
+  "voting_group_id": 1,
+  "title": "Asistencia Asamblea Ordinaria 2024",
+  "description": "Lista de asistencia para la asamblea ordinaria",
+  "created_by_user_id": 5,
+  "notes": "Notas adicionales"
+}
+```
+
+**Response (201):**
+```json
+{
+  "success": true,
+  "message": "Lista de asistencia creada exitosamente",
+  "data": {
+    "id": 1,
+    "voting_group_id": 1,
+    "title": "Asistencia Asamblea Ordinaria 2024",
+    "description": "Lista de asistencia para la asamblea",
+    "is_active": true,
+    "created_by_user_id": 5,
+    "notes": "Notas adicionales",
+    "created_at": "2025-01-15T10:30:00Z",
+    "updated_at": "2025-01-15T10:30:00Z"
+  }
+}
+```
+
+**Response (400):**
+```json
+{
+  "success": false,
+  "message": "Datos inválidos",
+  "error": "validation error details"
+}
+```
+
+---
+
+### 2. GENERAR LISTA DE ASISTENCIA AUTOMÁTICAMENTE
+**URL:** `POST /api/v1/attendance/lists/generate`
+**Descripción:** Genera una lista de asistencia automáticamente para un grupo de votación con todas las unidades
+
+**Query Parameters:**
+- `voting_group_id` (required): ID del grupo de votación
+
+**URL Example:** `POST /api/v1/attendance/lists/generate?voting_group_id=1`
+
+**Response (201):**
+```json
+{
+  "success": true,
+  "message": "Lista de asistencia generada exitosamente",
+  "data": {
+    "id": 1,
+    "voting_group_id": 1,
+    "title": "Lista de Asistencia - Generada Automáticamente",
+    "description": "Lista de asistencia generada automáticamente para el grupo de votación",
+    "is_active": true,
+    "created_by_user_id": null,
+    "notes": "Generada automáticamente por el sistema",
+    "created_at": "2025-01-15T10:30:00Z",
+    "updated_at": "2025-01-15T10:30:00Z"
+  }
+}
+```
+
+**Response (400):**
+```json
+{
+  "success": false,
+  "message": "ID del grupo de votación requerido",
+  "error": "El parámetro voting_group_id es obligatorio"
+}
+```
+
+---
+
+### 3. MARCAR ASISTENCIA
+**URL:** `POST /api/v1/attendance/records/mark`
+**Descripción:** Marca la asistencia de una unidad en una lista de asistencia
+
+**Request Body:**
+```json
+{
+  "attendance_list_id": 1,
+  "property_unit_id": 123,
+  "resident_id": 456,
+  "proxy_id": null,
+  "attended_as_owner": true,
+  "attended_as_proxy": false,
+  "signature": "Firma digital",
+  "signature_method": "digital",
+  "notes": "Notas adicionales"
+}
+```
+
+**Response (201):**
+```json
+{
+  "success": true,
+  "message": "Asistencia marcada exitosamente",
+  "data": {
+    "id": 1,
+    "attendance_list_id": 1,
+    "property_unit_id": 123,
+    "resident_id": 456,
+    "proxy_id": null,
+    "attended_as_owner": true,
+    "attended_as_proxy": false,
+    "signature": "Firma digital",
+    "signature_date": "2025-01-15T14:30:00Z",
+    "signature_method": "digital",
+    "verified_by": null,
+    "verification_date": null,
+    "verification_notes": "",
+    "notes": "Notas adicionales",
+    "is_valid": true,
+    "created_at": "2025-01-15T10:30:00Z",
+    "updated_at": "2025-01-15T10:30:00Z"
+  }
+}
+```
+
+**Response (400):**
+```json
+{
+  "success": false,
+  "message": "Datos inválidos",
+  "error": "validation error details"
+}
+```
+
+---
+
+## ENDPOINTS PLACEHOLDER (EN DESARROLLO)
+
+### 4. LISTAR LISTAS DE ASISTENCIA
+**URL:** `GET /api/v1/attendance/lists`
+**Descripción:** Lista todas las listas de asistencia de una propiedad horizontal
+
+**Query Parameters:**
+- `business_id` (required): ID de la propiedad horizontal
+- `title` (optional): Filtrar por título
+- `is_active` (optional): Filtrar por estado activo
+
+**URL Example:** `GET /api/v1/attendance/lists?business_id=1&is_active=true`
+
+**Response (501):**
+```json
+{
+  "success": false,
+  "message": "Funcionalidad en desarrollo",
+  "error": "ListAttendanceLists no implementado aún"
+}
+```
+
+---
+
+### 5. OBTENER LISTA DE ASISTENCIA POR ID
+**URL:** `GET /api/v1/attendance/lists/:id`
+**Descripción:** Obtiene una lista de asistencia específica por su ID
+
+**Path Parameters:**
+- `id` (required): ID de la lista de asistencia
+
+**URL Example:** `GET /api/v1/attendance/lists/1`
+
+**Response (501):**
+```json
+{
+  "success": false,
+  "message": "Funcionalidad en desarrollo",
+  "error": "GetAttendanceListByID no implementado aún"
+}
+```
+
+---
+
+### 6. ACTUALIZAR LISTA DE ASISTENCIA
+**URL:** `PUT /api/v1/attendance/lists/:id`
+**Descripción:** Actualiza una lista de asistencia existente
+
+**Path Parameters:**
+- `id` (required): ID de la lista de asistencia
+
+**Request Body:**
+```json
+{
+  "title": "Asistencia Asamblea Ordinaria 2024 - Actualizada",
+  "description": "Lista actualizada",
+  "is_active": true,
+  "notes": "Notas actualizadas"
+}
+```
+
+**Response (501):**
+```json
+{
+  "success": false,
+  "message": "Funcionalidad en desarrollo",
+  "error": "UpdateAttendanceList no implementado aún"
+}
+```
+
+---
+
+### 7. ELIMINAR LISTA DE ASISTENCIA
+**URL:** `DELETE /api/v1/attendance/lists/:id`
+**Descripción:** Elimina una lista de asistencia (permite reiniciar manualmente)
+
+**Path Parameters:**
+- `id` (required): ID de la lista de asistencia
+
+**URL Example:** `DELETE /api/v1/attendance/lists/123`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Lista de asistencia eliminada",
+  "data": { "id": 123 }
+}
+```
+
+---
+
+### 8. CREAR APODERADO
+**URL:** `POST /api/v1/attendance/proxies`
+**Descripción:** Crea un nuevo apoderado asociado a una unidad
+
+**Request Body:**
+```json
+{
+  "business_id": 1,
+  "property_unit_id": 123,
+  "proxy_name": "María García López",
+  "proxy_dni": "12345678",
+  "proxy_email": "maria@email.com",
+  "proxy_phone": "+57 300 123 4567",
+  "proxy_address": "Calle 123 #45-67",
+  "proxy_type": "external",
+  "start_date": "2025-01-15T00:00:00Z",
+  "end_date": "2025-12-31T23:59:59Z",
+  "power_of_attorney": "Poder para representar en asambleas",
+  "notes": "Notas adicionales"
+}
+```
+
+**Response (201):**
+```json
+{
+  "success": true,
+  "message": "Apoderado creado",
+  "data": {
+    "id": 10,
+    "business_id": 1,
+    "property_unit_id": 123,
+    "proxy_name": "María García López",
+    "proxy_dni": "12345678",
+    "proxy_email": "maria@email.com",
+    "proxy_phone": "+57 300 123 4567",
+    "proxy_address": "Calle 123 #45-67",
+    "proxy_type": "external",
+    "is_active": true,
+    "start_date": "2025-01-15T00:00:00Z",
+    "end_date": "2025-12-31T23:59:59Z",
+    "power_of_attorney": "Poder para representar en asambleas",
+    "notes": "Notas adicionales",
+    "created_at": "2025-01-15T10:30:00Z",
+    "updated_at": "2025-01-15T10:30:00Z"
+  }
+}
+```
+
+---
+
+### 9. LISTAR APODERADOS
+**URL:** `GET /api/v1/attendance/proxies`
+**Descripción:** Lista apoderados por business con filtros
+
+**Query Parameters:**
+- `business_id` (required): ID del business
+- `property_unit_id` (optional): ID de la unidad
+- `proxy_type` (optional): external | resident | family
+- `is_active` (optional): true | false
+
+**URL Example:** `GET /api/v1/attendance/proxies?business_id=1&proxy_type=external`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Apoderados listados",
+  "data": [
+    {
+      "id": 10,
+      "business_id": 1,
+      "property_unit_id": 123,
+      "proxy_name": "María García López",
+      "proxy_dni": "12345678",
+      "proxy_email": "maria@email.com",
+      "proxy_phone": "+57 300 123 4567",
+      "proxy_address": "Calle 123 #45-67",
+      "proxy_type": "external",
+      "is_active": true,
+      "start_date": "2025-01-15T00:00:00Z",
+      "end_date": "2025-12-31T23:59:59Z",
+      "power_of_attorney": "Poder para representar en asambleas",
+      "notes": "Notas adicionales",
+      "created_at": "2025-01-15T10:30:00Z",
+      "updated_at": "2025-01-15T10:30:00Z"
+    }
+  ]
+}
+```
+
+---
+
+### 10. OBTENER APODERADO POR ID
+**URL:** `GET /api/v1/attendance/proxies/:id`
+**Descripción:** Obtiene un apoderado por su ID
+
+**Path Parameters:**
+- `id` (required): ID del apoderado
+
+**URL Example:** `GET /api/v1/attendance/proxies/10`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Apoderado obtenido",
+  "data": {
+    "id": 10,
+    "business_id": 1,
+    "property_unit_id": 123,
+    "proxy_name": "María García López",
+    "proxy_dni": "12345678",
+    "proxy_email": "maria@email.com",
+    "proxy_phone": "+57 300 123 4567",
+    "proxy_address": "Calle 123 #45-67",
+    "proxy_type": "external",
+    "is_active": true,
+    "start_date": "2025-01-15T00:00:00Z",
+    "end_date": "2025-12-31T23:59:59Z",
+    "power_of_attorney": "Poder para representar en asambleas",
+    "notes": "Notas adicionales",
+    "created_at": "2025-01-15T10:30:00Z",
+    "updated_at": "2025-01-15T10:30:00Z"
+  }
+}
+```
+
+---
+
+### 11. ACTUALIZAR APODERADO
+**URL:** `PUT /api/v1/attendance/proxies/:id`
+**Descripción:** Actualiza un apoderado existente
+
+**Path Parameters:**
+- `id` (required): ID del apoderado
+
+**Request Body:**
+```json
+{
+  "proxy_name": "María García López",
+  "proxy_dni": "12345678",
+  "proxy_email": "maria@email.com",
+  "proxy_phone": "+57 300 123 4567",
+  "proxy_address": "Calle 123 #45-67",
+  "proxy_type": "external",
+  "is_active": true,
+  "start_date": "2025-01-15T00:00:00Z",
+  "end_date": "2025-12-31T23:59:59Z",
+  "power_of_attorney": "Poder para representar en asambleas",
+  "notes": "Notas adicionales"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Apoderado actualizado",
+  "data": { /* igual estructura de Crear */ }
+}
+```
+
+---
+
+### 12. ELIMINAR APODERADO
+**URL:** `DELETE /api/v1/attendance/proxies/:id`
+**Descripción:** Elimina un apoderado
+
+**Path Parameters:**
+- `id` (required): ID del apoderado
+
+**URL Example:** `DELETE /api/v1/attendance/proxies/10`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Apoderado eliminado",
+  "data": { "id": 10 }
+}
+```
+
+---
+
+### 13. OBTENER APODERADOS POR UNIDAD
+**URL:** `GET /api/v1/attendance/proxies/unit/:unit_id`
+**Descripción:** Obtiene los apoderados asociados a una unidad
+
+**Path Parameters:**
+- `unit_id` (required): ID de la unidad
+
+**URL Example:** `GET /api/v1/attendance/proxies/unit/123`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Apoderados por unidad",
+  "data": [ { /* igual estructura de Listar */ } ]
+}
+```
+
+---
+
+### 14. CREAR REGISTRO DE ASISTENCIA
+**URL:** `POST /api/v1/attendance/records`
+**Descripción:** Crea un nuevo registro de asistencia
+
+**Request Body:**
+```json
+{
+  "attendance_list_id": 1,
+  "property_unit_id": 123,
+  "resident_id": 456,
+  "proxy_id": null,
+  "attended_as_owner": true,
+  "attended_as_proxy": false,
+  "signature": "Firma digital",
+  "signature_method": "digital",
+  "notes": "Notas adicionales"
+}
+```
+
+**Response (501):**
+```json
+{
+  "success": false,
+  "message": "Funcionalidad en desarrollo",
+  "error": "CreateAttendanceRecord no implementado aún"
+}
+```
+
+---
+
+### 15. LISTAR REGISTROS DE ASISTENCIA
+**URL:** `GET /api/v1/attendance/records`
+**Descripción:** Lista todos los registros de asistencia
+
+**Query Parameters:**
+- `attendance_list_id` (optional): Filtrar por lista de asistencia
+- `property_unit_id` (optional): Filtrar por unidad
+
+**URL Example:** `GET /api/v1/attendance/records?attendance_list_id=1`
+
+**Response (501):**
+```json
+{
+  "success": false,
+  "message": "Funcionalidad en desarrollo",
+  "error": "ListAttendanceRecords no implementado aún"
+}
+```
+
+---
+
+### 16. OBTENER REGISTRO DE ASISTENCIA POR ID
+**URL:** `GET /api/v1/attendance/records/:id`
+**Descripción:** Obtiene un registro de asistencia específico por su ID
+
+**Path Parameters:**
+- `id` (required): ID del registro de asistencia
+
+**URL Example:** `GET /api/v1/attendance/records/1`
+
+**Response (501):**
+```json
+{
+  "success": false,
+  "message": "Funcionalidad en desarrollo",
+  "error": "GetAttendanceRecordByID no implementado aún"
+}
+```
+
+---
+
+### 17. ACTUALIZAR REGISTRO DE ASISTENCIA
+**URL:** `PUT /api/v1/attendance/records/:id`
+**Descripción:** Actualiza un registro de asistencia existente
+
+**Path Parameters:**
+- `id` (required): ID del registro de asistencia
+
+**Request Body:**
+```json
+{
+  "resident_id": 456,
+  "proxy_id": null,
+  "attended_as_owner": true,
+  "attended_as_proxy": false,
+  "signature": "Firma digital",
+  "signature_method": "digital",
+  "verified_by": 5,
+  "verification_notes": "Verificado por administrador",
+  "notes": "Notas adicionales",
+  "is_valid": true
+}
+```
+
+**Response (501):**
+```json
+{
+  "success": false,
+  "message": "Funcionalidad en desarrollo",
+  "error": "UpdateAttendanceRecord no implementado aún"
+}
+```
+
+---
+
+### 18. ELIMINAR REGISTRO DE ASISTENCIA
+**URL:** `DELETE /api/v1/attendance/records/:id`
+**Descripción:** Elimina un registro de asistencia
+
+**Path Parameters:**
+- `id` (required): ID del registro de asistencia
+
+**URL Example:** `DELETE /api/v1/attendance/records/1`
+
+**Response (501):**
+```json
+{
+  "success": false,
+  "message": "Funcionalidad en desarrollo",
+  "error": "DeleteAttendanceRecord no implementado aún"
+}
+```
+
+---
+
+### 19. VERIFICAR ASISTENCIA
+**URL:** `POST /api/v1/attendance/records/:id/verify`
+**Descripción:** Verifica un registro de asistencia
+
+**Path Parameters:**
+- `id` (required): ID del registro de asistencia
+
+**Request Body:**
+```json
+{
+  "verified_by": 5,
+  "verification_notes": "Verificado por administrador"
+}
+```
+
+**Response (501):**
+```json
+{
+  "success": false,
+  "message": "Funcionalidad en desarrollo",
+  "error": "VerifyAttendance no implementado aún"
+}
+```
+
+---
+
+### 20. OBTENER RESUMEN DE ASISTENCIA
+**URL:** `GET /api/v1/attendance/lists/:id/summary`
+**Descripción:** Obtiene el resumen estadístico de una lista de asistencia
+
+**Path Parameters:**
+- `id` (required): ID de la lista de asistencia
+
+**URL Example:** `GET /api/v1/attendance/lists/123/summary`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Resumen obtenido",
+  "data": {
+    "total_units": 160,
+    "attended_units": 85,
+    "absent_units": 75,
+    "attended_as_owner": 70,
+    "attended_as_proxy": 15,
+    "attendance_rate": 53.125
+  }
+}
+```
+
+---
+
+### 21. OBTENER REGISTROS POR LISTA
+**URL:** `GET /api/v1/attendance/lists/:id/records`
+**Descripción:** Obtiene todos los registros de asistencia de una lista específica
+
+**Path Parameters:**
+- `id` (required): ID de la lista de asistencia
+
+**URL Example:** `GET /api/v1/attendance/lists/123/records`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Registros obtenidos",
+  "data": [
+    {
+      "id": 1,
+      "attendance_list_id": 123,
+      "property_unit_id": 456,
+      "resident_id": 789,
+      "proxy_id": null,
+      "attended_as_owner": true,
+      "attended_as_proxy": false,
+      "signature": "Firma digital",
+      "signature_date": "2025-01-15T14:30:00Z",
+      "signature_method": "digital",
+      "verified_by": null,
+      "verification_date": null,
+      "verification_notes": "",
+      "notes": "",
+      "is_valid": true,
+      "created_at": "2025-01-15T10:30:00Z",
+      "updated_at": "2025-01-15T10:30:00Z"
+    }
+  ]
+}
+```
+
+---
+
+## CÓDIGOS DE RESPUESTA
+
+- **200 OK**: Operación exitosa
+- **201 Created**: Recurso creado exitosamente
+- **400 Bad Request**: Datos inválidos o parámetros faltantes
+- **401 Unauthorized**: Token de autenticación inválido o faltante
+- **404 Not Found**: Recurso no encontrado
+- **500 Internal Server Error**: Error interno del servidor
+- **501 Not Implemented**: Funcionalidad en desarrollo
+
+---
+
+## VALIDACIONES
+
+### CreateAttendanceListRequest
+- `voting_group_id`: Requerido, debe ser un número entero positivo
+- `title`: Requerido, entre 3 y 200 caracteres
+- `description`: Opcional, máximo 1000 caracteres
+- `created_by_user_id`: Opcional, debe ser un número entero positivo
+- `notes`: Opcional, máximo 2000 caracteres
+
+### MarkAttendanceRequest
+- `attendance_list_id`: Requerido, debe ser un número entero positivo
+- `property_unit_id`: Requerido, debe ser un número entero positivo
+- `resident_id`: Opcional, debe ser un número entero positivo
+- `proxy_id`: Opcional, debe ser un número entero positivo
+- `attended_as_owner`: Requerido, debe ser un booleano
+- `attended_as_proxy`: Requerido, debe ser un booleano
+- `signature`: Opcional, máximo 500 caracteres
+- `signature_method`: Opcional, debe ser uno de: "digital", "handwritten", "electronic"
+- `notes`: Opcional, máximo 1000 caracteres
+
+### CreateProxyRequest
+- `business_id`: Requerido, debe ser un número entero positivo
+- `property_unit_id`: Requerido, debe ser un número entero positivo
+- `proxy_name`: Requerido, entre 3 y 255 caracteres
+- `proxy_dni`: Requerido, entre 5 y 30 caracteres
+- `proxy_email`: Opcional, debe ser un email válido, máximo 255 caracteres
+- `proxy_phone`: Opcional, máximo 20 caracteres
+- `proxy_address`: Opcional, máximo 500 caracteres
+- `proxy_type`: Requerido, debe ser uno de: "external", "resident", "family"
+- `start_date`: Requerido, debe ser una fecha válida
+- `end_date`: Opcional, debe ser una fecha válida posterior a start_date
+- `power_of_attorney`: Opcional, máximo 1000 caracteres
+- `notes`: Opcional, máximo 1000 caracteres
+
+---
+
+## TIPOS DE DATOS
+
+### AttendanceListResponse
+```json
+{
+  "id": "number",
+  "voting_group_id": "number",
+  "title": "string",
+  "description": "string",
+  "is_active": "boolean",
+  "created_by_user_id": "number|null",
+  "notes": "string",
+  "created_at": "datetime",
+  "updated_at": "datetime"
+}
+```
+
+### ProxyResponse
+```json
+{
+  "id": "number",
+  "business_id": "number",
+  "property_unit_id": "number",
+  "proxy_name": "string",
+  "proxy_dni": "string",
+  "proxy_email": "string",
+  "proxy_phone": "string",
+  "proxy_address": "string",
+  "proxy_type": "string",
+  "is_active": "boolean",
+  "start_date": "datetime",
+  "end_date": "datetime|null",
+  "power_of_attorney": "string",
+  "notes": "string",
+  "created_at": "datetime",
+  "updated_at": "datetime"
+}
+```
+
+### AttendanceRecordResponse
+```json
+{
+  "id": "number",
+  "attendance_list_id": "number",
+  "property_unit_id": "number",
+  "resident_id": "number|null",
+  "proxy_id": "number|null",
+  "attended_as_owner": "boolean",
+  "attended_as_proxy": "boolean",
+  "signature": "string",
+  "signature_date": "datetime|null",
+  "signature_method": "string",
+  "verified_by": "number|null",
+  "verification_date": "datetime|null",
+  "verification_notes": "string",
+  "notes": "string",
+  "is_valid": "boolean",
+  "created_at": "datetime",
+  "updated_at": "datetime"
+}
+```
+
+### AttendanceSummaryResponse
+```json
+{
+  "total_units": "number",
+  "attended_units": "number",
+  "absent_units": "number",
+  "attended_as_owner": "number",
+  "attended_as_proxy": "number",
+  "attendance_rate": "number"
+}
+```
+
+---
+
+## NOTAS IMPORTANTES
+
+1. **Autenticación**: Todos los endpoints requieren autenticación Bearer Token
+2. **Validación**: Todos los requests son validados según las reglas definidas
+3. **Respuestas**: Todas las respuestas exitosas incluyen un campo `success: true`
+4. **Errores**: Los errores incluyen detalles específicos en el campo `error`
+5. **Fechas**: Todas las fechas están en formato ISO 8601 (UTC)
+6. **Paginación**: Los endpoints de listado soportarán paginación en futuras versiones
+7. **Filtros**: Los filtros de búsqueda son opcionales y se aplican con lógica AND
+
+---
+
+## ESTADO DE IMPLEMENTACIÓN
+
+✅ **IMPLEMENTADO:**
+- Crear lista de asistencia
+- Generar lista de asistencia automáticamente (solo crea registros si la lista no existe)
+- Marcar asistencia
+- Eliminar lista de asistencia
+- Obtener resumen de asistencia
+- Obtener registros por lista
+- CRUD de apoderados (crear, listar, obtener, actualizar, eliminar, listar por unidad)
+
+🔄 **EN DESARROLLO:**
+- Listar listas de asistencia
+- Obtener lista por ID
+- Actualizar lista de asistencia
+- Listar apoderados
+- Obtener apoderado por ID
+- Actualizar apoderado
+- Eliminar apoderado
+- Obtener apoderados por unidad
+- Crear registro de asistencia (manual)
+- Listar registros (consulta general)
+- Obtener registro por ID
+- Actualizar registro de asistencia
+- Eliminar registro de asistencia
+- Verificar asistencia
+
+---
+
+## VERSIONES
+
+- **v1.0.0**: Implementación inicial con endpoints básicos
+- **v1.1.0**: (Planificado) Implementación completa de todos los endpoints
+- **v1.2.0**: (Planificado) Paginación y filtros avanzados
+- **v1.3.0**: (Planificado) Reportes y exportación de datos

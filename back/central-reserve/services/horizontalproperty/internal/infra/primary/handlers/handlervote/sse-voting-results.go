@@ -84,27 +84,40 @@ func (h *VotingHandler) SSEVotingResults(c *gin.Context) {
 		existingVotes = votes
 	}
 
-	// Enviar precarga (votos existentes)
+	// Enviar precarga (votos existentes y resultados)
+	var votesResponse []response.VoteResponse
 	if len(existingVotes) > 0 {
+		votesResponse = mapper.MapVoteDTOsToResponses(existingVotes)
 		h.logger.Info().Uint("voting_id", uint(votingID)).Int("votes_count", len(existingVotes)).Msg("Enviando precarga de votos")
-
-		for _, vote := range existingVotes {
-			responseVote := mapper.MapVoteDTOToResponse(&vote)
-			data, _ := json.Marshal(responseVote)
-
-			event := fmt.Sprintf("event: vote\ndata: %s\n\n", string(data))
-			if _, err := c.Writer.WriteString(event); err != nil {
-				fmt.Fprintf(os.Stderr, "[ERROR] handlervote/sse-voting-results.go - Error enviando precarga: %v\n", err)
-				return
-			}
-			c.Writer.Flush()
-		}
-
-		// Enviar evento de precarga completada
-		completedEvent := fmt.Sprintf("event: preload_complete\ndata: {\"message\": \"Precarga completada\", \"total_votes\": %d}\n\n", len(existingVotes))
-		c.Writer.WriteString(completedEvent)
-		c.Writer.Flush()
 	}
+
+	// Obtener resultados de votación con colores
+	votingResults, err := h.votingUseCase.GetVotingResults(c.Request.Context(), uint(votingID))
+	var resultsResponse []response.VotingResultResponse
+	if err == nil && len(votingResults) > 0 {
+		resultsResponse = mapper.MapVotingResultsToResponses(votingResults)
+		h.logger.Info().Uint("voting_id", uint(votingID)).Int("results_count", len(votingResults)).Msg("Enviando resultados de votación")
+	}
+
+	// Enviar datos iniciales completos
+	initialData := gin.H{
+		"votes":   votesResponse,
+		"results": resultsResponse,
+	}
+	data, err := json.Marshal(initialData)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "[ERROR] handlervote/sse-voting-results.go - Error serializando datos iniciales: %v\n", err)
+		h.logger.Error().Err(err).Uint("voting_id", uint(votingID)).Msg("Error serializando datos iniciales")
+		return
+	}
+
+	event := fmt.Sprintf("event: initial_data\ndata: %s\n\n", string(data))
+	if _, err := c.Writer.WriteString(event); err != nil {
+		fmt.Fprintf(os.Stderr, "[ERROR] handlervote/sse-voting-results.go - Error enviando datos iniciales por SSE: %v\n", err)
+		h.logger.Error().Err(err).Uint("voting_id", uint(votingID)).Msg("Error enviando datos iniciales por SSE")
+		return
+	}
+	c.Writer.Flush()
 
 	// Suscribirse a nuevos votos
 	voteChan, err := h.votingCache.Subscribe(c.Request.Context(), uint(votingID))
@@ -144,19 +157,32 @@ func (h *VotingHandler) SSEVotingResults(c *gin.Context) {
 				return
 			}
 
-			// Enviar nuevo voto
+			// Enviar nuevo voto y resultados actualizados
 			responseVote := mapper.MapVoteDTOToResponse(&vote)
-			data, err := json.Marshal(responseVote)
+
+			// Obtener resultados actualizados
+			updatedResults, err := h.votingUseCase.GetVotingResults(c.Request.Context(), uint(votingID))
+			var resultsResponse []response.VotingResultResponse
+			if err == nil && len(updatedResults) > 0 {
+				resultsResponse = mapper.MapVotingResultsToResponses(updatedResults)
+			}
+
+			newVoteData := gin.H{
+				"vote":    responseVote,
+				"results": resultsResponse,
+			}
+
+			data, err := json.Marshal(newVoteData)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "[ERROR] handlervote/sse-voting-results.go - Error serializando voto: %v\n", err)
-				h.logger.Error().Err(err).Uint("voting_id", uint(votingID)).Msg("Error serializando voto")
+				fmt.Fprintf(os.Stderr, "[ERROR] handlervote/sse-voting-results.go - Error serializando nuevo voto: %v\n", err)
+				h.logger.Error().Err(err).Uint("voting_id", uint(votingID)).Msg("Error serializando nuevo voto")
 				continue
 			}
 
-			event := fmt.Sprintf("event: vote\ndata: %s\n\n", string(data))
+			event := fmt.Sprintf("event: new_vote\ndata: %s\n\n", string(data))
 			if _, err := c.Writer.WriteString(event); err != nil {
-				fmt.Fprintf(os.Stderr, "[ERROR] handlervote/sse-voting-results.go - Error enviando voto por SSE: %v\n", err)
-				h.logger.Error().Err(err).Uint("voting_id", uint(votingID)).Msg("Error enviando voto por SSE")
+				fmt.Fprintf(os.Stderr, "[ERROR] handlervote/sse-voting-results.go - Error enviando nuevo voto por SSE: %v\n", err)
+				h.logger.Error().Err(err).Uint("voting_id", uint(votingID)).Msg("Error enviando nuevo voto por SSE")
 				return
 			}
 			c.Writer.Flush()

@@ -62,11 +62,11 @@ type VotingOptionResponse struct {
 type VoteResponse struct {
 	ID             uint      `json:"id" example:"1"`
 	VotingID       uint      `json:"voting_id" example:"1"`
-	ResidentID     uint      `json:"resident_id" example:"10"`
+	PropertyUnitID uint      `json:"property_unit_id" example:"10"`
 	VotingOptionID uint      `json:"voting_option_id" example:"1"`
 	OptionText     string    `json:"option_text,omitempty" example:"Sí, apruebo"`
 	OptionCode     string    `json:"option_code,omitempty" example:"YES"`
-	OptionColor    string    `json:"option_color,omitempty" example:"#22c55e"`
+	Color          string    `json:"color,omitempty" example:"#22c55e"`
 	VotedAt        time.Time `json:"voted_at" example:"2025-03-05T14:30:00Z"`
 	IPAddress      string    `json:"ip_address,omitempty" example:"192.168.1.100"`
 	UserAgent      string    `json:"user_agent,omitempty" example:"Mozilla/5.0"`
@@ -106,6 +106,14 @@ type VotingDetailByUnitResponse struct {
 	VotedAt                  *string  `json:"voted_at" example:"2025-10-13T01:30:00Z"`
 }
 
+// UnvotedUnitResponse - Response para unidad que no ha votado
+type UnvotedUnitResponse struct {
+	UnitID       uint   `json:"unit_id" example:"123"`
+	UnitNumber   string `json:"unit_number" example:"Apto 101"`
+	ResidentID   uint   `json:"resident_id" example:"456"`
+	ResidentName string `json:"resident_name" example:"Juan Pérez"`
+}
+
 // Tipos de respuesta con datos
 type VotingGroupSuccess = SuccessResponse[VotingGroupResponse]
 type VotingGroupsSuccess = SuccessResponse[[]VotingGroupResponse]
@@ -115,15 +123,4 @@ type VotingOptionSuccess = SuccessResponse[VotingOptionResponse]
 type VotingOptionsSuccess = SuccessResponse[[]VotingOptionResponse]
 type VoteSuccess = SuccessResponse[VoteResponse]
 type VotesSuccess = SuccessResponse[[]VoteResponse]
-
-type VotingOptionsSuccess = SuccessResponse[[]VotingOptionResponse]
-type VoteSuccess = SuccessResponse[VoteResponse]
-type VotesSuccess = SuccessResponse[[]VoteResponse]
-
-type VotingOptionsSuccess = SuccessResponse[[]VotingOptionResponse]
-type VoteSuccess = SuccessResponse[VoteResponse]
-type VotesSuccess = SuccessResponse[[]VoteResponse]
-
-type VotingOptionsSuccess = SuccessResponse[[]VotingOptionResponse]
-type VoteSuccess = SuccessResponse[VoteResponse]
-type VotesSuccess = SuccessResponse[[]VoteResponse]
+type UnvotedUnitsSuccess = SuccessResponse[[]UnvotedUnitResponse]

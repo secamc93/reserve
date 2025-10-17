@@ -73,6 +73,18 @@ func (h *VotingHandler) CreatePublicVote(c *gin.Context) {
 	hpID := authClaims.HPID
 	groupID := authClaims.VotingGroupID
 
+	// Validar que el residentID no sea 0
+	if residentID == 0 {
+		fmt.Fprintf(os.Stderr, "[ERROR] handlervote/create-public-vote.go - Token con resident_id=0 inválido\n")
+		h.logger.Error().Uint("voting_id", votingID).Msg("Token de votación con resident_id=0 inválido")
+		c.JSON(http.StatusUnauthorized, response.ErrorResponse{
+			Success: false,
+			Message: "Token de autenticación inválido",
+			Error:   "El token no contiene un residente válido",
+		})
+		return
+	}
+
 	// Validar request
 	var req CreatePublicVoteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -91,13 +103,27 @@ func (h *VotingHandler) CreatePublicVote(c *gin.Context) {
 	fmt.Printf("   Grupo de Votación ID: %d\n", groupID)
 	fmt.Printf("   Votación ID: %d\n", votingID)
 	fmt.Printf("   Residente ID: %d\n", residentID)
-	fmt.Printf("   Opción seleccionada ID: %d\n\n", req.VotingOptionID)
+	fmt.Printf("   Opción seleccionada ID: %d\n", req.VotingOptionID)
+	fmt.Printf("   Token decodificado correctamente\n\n")
 
-	// Verificar si ya votó
-	hasVoted, err := h.votingUseCase.HasResidentVoted(c.Request.Context(), votingID, residentID)
+	// Obtener la unidad principal del residente
+	propertyUnitID, err := h.votingRepository.GetResidentMainUnitID(c.Request.Context(), residentID)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "[ERROR] handlervote/create-public-vote.go - Error obteniendo unidad principal: %v\n", err)
+		h.logger.Error().Err(err).Uint("voting_id", votingID).Uint("resident_id", residentID).Msg("Error obteniendo unidad principal del residente")
+		c.JSON(http.StatusInternalServerError, response.ErrorResponse{
+			Success: false,
+			Message: "Error obteniendo unidad principal",
+			Error:   err.Error(),
+		})
+		return
+	}
+
+	// Verificar si la unidad ya votó
+	hasVoted, err := h.votingUseCase.HasUnitVoted(c.Request.Context(), votingID, propertyUnitID)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[ERROR] handlervote/create-public-vote.go - Error verificando si ya votó: %v\n", err)
-		h.logger.Error().Err(err).Uint("voting_id", votingID).Uint("resident_id", residentID).Msg("Error verificando voto existente")
+		h.logger.Error().Err(err).Uint("voting_id", votingID).Uint("property_unit_id", propertyUnitID).Msg("Error verificando voto existente")
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{
 			Success: false,
 			Message: "Error verificando voto",
@@ -107,8 +133,8 @@ func (h *VotingHandler) CreatePublicVote(c *gin.Context) {
 	}
 
 	if hasVoted {
-		fmt.Fprintf(os.Stderr, "[ERROR] handlervote/create-public-vote.go - Residente ya votó: resident_id=%d, voting_id=%d\n", residentID, votingID)
-		h.logger.Warn().Uint("voting_id", votingID).Uint("resident_id", residentID).Msg("Residente ya emitió su voto")
+		fmt.Fprintf(os.Stderr, "[ERROR] handlervote/create-public-vote.go - Unidad ya votó: property_unit_id=%d, voting_id=%d\n", propertyUnitID, votingID)
+		h.logger.Warn().Uint("voting_id", votingID).Uint("property_unit_id", propertyUnitID).Msg("Unidad ya emitió su voto")
 		c.JSON(http.StatusConflict, response.ErrorResponse{
 			Success: false,
 			Message: "Ya has emitido tu voto",
@@ -124,7 +150,7 @@ func (h *VotingHandler) CreatePublicVote(c *gin.Context) {
 	// Crear DTO para el voto
 	voteDTO := domain.CreateVoteDTO{
 		VotingID:       votingID,
-		ResidentID:     residentID,
+		PropertyUnitID: propertyUnitID,
 		VotingOptionID: req.VotingOptionID,
 		IPAddress:      ipAddress,
 		UserAgent:      userAgent,
@@ -158,14 +184,14 @@ func (h *VotingHandler) CreatePublicVote(c *gin.Context) {
 	fmt.Printf("✅ [VOTACION PUBLICA - VOTO REGISTRADO]\n")
 	fmt.Printf("   Voto ID: %d\n", created.ID)
 	fmt.Printf("   Votación ID: %d\n", votingID)
-	fmt.Printf("   Residente ID: %d\n", residentID)
+	fmt.Printf("   Unidad ID: %d\n", propertyUnitID)
 	fmt.Printf("   Opción seleccionada ID: %d\n", req.VotingOptionID)
 	fmt.Printf("   Timestamp: %s\n\n", created.VotedAt.Format("2006-01-02 15:04:05"))
 
 	h.logger.Info().
 		Uint("vote_id", created.ID).
 		Uint("voting_id", votingID).
-		Uint("resident_id", residentID).
+		Uint("property_unit_id", propertyUnitID).
 		Uint("voting_option_id", req.VotingOptionID).
 		Str("ip_address", ipAddress).
 		Msg("✅ [VOTACION PUBLICA] Voto registrado exitosamente")

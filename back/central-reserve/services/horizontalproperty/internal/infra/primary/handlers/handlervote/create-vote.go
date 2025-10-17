@@ -48,25 +48,24 @@ func (h *VotingHandler) CreateVote(c *gin.Context) {
 	}
 	fmt.Printf("\n🗳️  [VOTACION PUBLICA - REGISTRANDO VOTO]\n")
 	fmt.Printf("   Votación ID: %d\n", uint(id64))
-	fmt.Printf("   Residente ID: %d\n", req.ResidentID)
+	fmt.Printf("   Unidad ID: %d\n", req.PropertyUnitID)
 	fmt.Printf("   Opción seleccionada ID: %d\n", req.VotingOptionID)
 	fmt.Printf("   IP: %s\n", req.IPAddress)
 	fmt.Printf("   User Agent: %s\n\n", req.UserAgent)
 
 	dto := domain.CreateVoteDTO{
 		VotingID:       uint(id64),
-		ResidentID:     req.ResidentID,
+		PropertyUnitID: req.PropertyUnitID,
 		VotingOptionID: req.VotingOptionID,
 		IPAddress:      req.IPAddress,
 		UserAgent:      req.UserAgent,
-		Notes:          req.Notes,
 	}
 	created, err := h.votingUseCase.CreateVote(c.Request.Context(), dto)
 	if err != nil {
-		fmt.Printf("[ERROR] CreateVote - Error registrando voto: voting_id=%d, resident_id=%d, option_id=%d, error=%v\n",
-			uint(id64), req.ResidentID, req.VotingOptionID, err)
+		fmt.Printf("[ERROR] CreateVote - Error registrando voto: voting_id=%d, property_unit_id=%d, option_id=%d, error=%v\n",
+			uint(id64), req.PropertyUnitID, req.VotingOptionID, err)
 		fmt.Fprintf(os.Stderr, "[ERROR] handlervote/create-vote.go - Error en handler: %v\n", err)
-		h.logger.Error().Err(err).Uint("voting_id", uint(id64)).Uint("resident_id", req.ResidentID).Uint("option_id", req.VotingOptionID).Msg("Error registrando voto")
+		h.logger.Error().Err(err).Uint("voting_id", uint(id64)).Uint("property_unit_id", req.PropertyUnitID).Uint("option_id", req.VotingOptionID).Msg("Error registrando voto")
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "No se pudo registrar el voto", Error: err.Error()})
 		return
 	}
@@ -74,7 +73,7 @@ func (h *VotingHandler) CreateVote(c *gin.Context) {
 	fmt.Printf("✅ [VOTACION PUBLICA - VOTO REGISTRADO]\n")
 	fmt.Printf("   Voto ID: %d\n", created.ID)
 	fmt.Printf("   Votación ID: %d\n", created.VotingID)
-	fmt.Printf("   Residente ID: %d\n", created.ResidentID)
+	fmt.Printf("   Unidad ID: %d\n", created.PropertyUnitID)
 	fmt.Printf("   Opción ID: %d\n", created.VotingOptionID)
 	fmt.Printf("   Fecha: %s\n\n", created.VotedAt)
 
@@ -91,7 +90,7 @@ func (h *VotingHandler) CreateVote(c *gin.Context) {
 	h.logger.Info().
 		Uint("vote_id", created.ID).
 		Uint("voting_id", created.VotingID).
-		Uint("resident_id", created.ResidentID).
+		Uint("property_unit_id", created.PropertyUnitID).
 		Uint("option_id", created.VotingOptionID).
 		Msg("✅ [VOTACION PUBLICA] Voto registrado exitosamente")
 
