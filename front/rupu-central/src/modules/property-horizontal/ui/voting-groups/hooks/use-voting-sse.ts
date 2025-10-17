@@ -21,11 +21,11 @@ const getApiBaseUrl = (): string => {
 interface SSEVote {
   id: number;
   voting_id: number;
-  resident_id: number;
+  property_unit_id: number;
   voting_option_id: number;
   option_text: string;
   option_code: string;
-  option_color: string;
+  color: string;
   voted_at: string;
   ip_address?: string;
   user_agent?: string;
@@ -33,7 +33,7 @@ interface SSEVote {
 }
 
 interface SSEEvent {
-  type: 'connected' | 'vote' | 'preload_complete' | 'heartbeat';
+  type: 'connected' | 'initial_data' | 'new_vote' | 'preload_complete' | 'heartbeat';
   data: unknown;
 }
 
@@ -130,13 +130,25 @@ export function useVotingSSE(
                   setConnectionStatus('connected');
                   break;
 
+                case 'initial_data':
+                  console.log('📊 SSE: Datos iniciales recibidos', data.votes?.length, 'votos');
+                  // Los datos iniciales vienen con estructura { votes: [...], results: [...] }
+                  if (data.votes && Array.isArray(data.votes)) {
+                    setVotes(data.votes);
+                    setTotalVotes(data.votes.length);
+                  }
+                  break;
+
                 case 'vote':
+                case 'new_vote':
                   console.log('📊 SSE: Nuevo voto recibido', data);
+                  // El evento new_vote puede venir con estructura { vote: {...}, results: [...] }
+                  const voteData = data.vote || data;
                   setVotes(prev => {
                     // Evitar votos duplicados
-                    const exists = prev.some(v => v.id === data.id);
+                    const exists = prev.some(v => v.id === voteData.id);
                     if (exists) return prev;
-                    return [...prev, data];
+                    return [...prev, voteData];
                   });
                   setTotalVotes(prev => prev + 1);
                   break;

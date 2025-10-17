@@ -49,6 +49,10 @@ export function EditResidentModal({ hpId, resident, onClose, onSuccess }: EditRe
         
         setResidentData(fullResidentData);
         
+        console.log('🔍 [EDIT RESIDENT] Datos completos del residente:', fullResidentData);
+        console.log('🔍 [EDIT RESIDENT] PropertyUnitId del backend:', fullResidentData.propertyUnitId);
+        console.log('🔍 [EDIT RESIDENT] PropertyUnitNumber del backend:', fullResidentData.propertyUnitNumber);
+        
         // Inicializar formulario con datos completos
         setFormData({
           propertyUnitId: fullResidentData.propertyUnitId,
@@ -79,7 +83,19 @@ export function EditResidentModal({ hpId, resident, onClose, onSuccess }: EditRe
         const token = TokenStorage.getToken();
         if (!token) return;
         const data = await getPropertyUnitsAction({ hpId, token, page: 1, pageSize: 100 });
-        setUnits(data.units.map(u => ({ id: u.id, number: u.number })));
+        const unitsData = data.units.map(u => ({ id: u.id, number: u.number }));
+        setUnits(unitsData);
+        
+        console.log('🔍 [EDIT RESIDENT] Unidades cargadas:', unitsData);
+        console.log('🔍 [EDIT RESIDENT] PropertyUnitId actual en formData:', formData.propertyUnitId);
+        
+        // Verificar si la unidad del residente está en la lista
+        const residentUnit = unitsData.find(u => u.id === formData.propertyUnitId);
+        if (residentUnit) {
+          console.log('✅ [EDIT RESIDENT] Unidad del residente encontrada:', residentUnit);
+        } else {
+          console.warn('⚠️ [EDIT RESIDENT] Unidad del residente NO encontrada en la lista. ID buscado:', formData.propertyUnitId);
+        }
       } catch (error) {
         console.error('Error loading units:', error);
       } finally {
@@ -87,7 +103,19 @@ export function EditResidentModal({ hpId, resident, onClose, onSuccess }: EditRe
       }
     };
     loadUnits();
-  }, [hpId]);
+  }, [hpId, formData.propertyUnitId]); // Agregar formData.propertyUnitId como dependencia
+
+  // Forzar re-render del select cuando los datos estén listos
+  useEffect(() => {
+    if (residentData && units.length > 0 && formData.propertyUnitId && formData.propertyUnitId > 0) {
+      console.log('🔄 [EDIT RESIDENT] Forzando actualización del select con:', {
+        residentData: residentData.propertyUnitNumber,
+        formDataPropertyUnitId: formData.propertyUnitId,
+        unitsCount: units.length,
+        matchingUnit: units.find(u => u.id === formData.propertyUnitId)
+      });
+    }
+  }, [residentData, units, formData.propertyUnitId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -169,11 +197,20 @@ export function EditResidentModal({ hpId, resident, onClose, onSuccess }: EditRe
               {loadingUnits ? (
                 <option value={formData.propertyUnitId}>Cargando unidades...</option>
               ) : (
-                units.map(unit => (
-                  <option key={unit.id} value={unit.id}>
-                    {unit.number}
-                  </option>
-                ))
+                <>
+                  <option value={0}>Seleccionar unidad...</option>
+                  {units.map(unit => (
+                    <option key={unit.id} value={unit.id}>
+                      {unit.number}
+                    </option>
+                  ))}
+                  {/* Mostrar la unidad del residente si no está en la lista */}
+                  {residentData && formData.propertyUnitId && !units.find(u => u.id === formData.propertyUnitId) && formData.propertyUnitId > 0 && (
+                    <option value={formData.propertyUnitId} disabled>
+                      {residentData.propertyUnitNumber} (No disponible)
+                    </option>
+                  )}
+                </>
               )}
             </select>
           </div>

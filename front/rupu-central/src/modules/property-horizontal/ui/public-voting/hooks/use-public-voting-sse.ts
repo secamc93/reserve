@@ -4,17 +4,34 @@ import { envPublic } from '@shared/config';
 interface PublicVote {
   id: number;
   voting_id: number;
-  resident_id: number;
+  property_unit_id: number;
   voting_option_id: number;
   voted_at: string;
+  option_text: string;
+  option_code: string;
+  option_color: string;
 }
 
 interface SSEVote {
   id: number;
   voting_id: number;
-  resident_id: number;
+  property_unit_id: number;
   voting_option_id: number;
+  option_text: string;
+  option_code: string;
+  color: string;
   voted_at: string;
+  ip_address?: string;
+  user_agent?: string;
+}
+
+interface SSEResult {
+  voting_option_id: number;
+  option_text: string;
+  option_code: string;
+  color: string;
+  vote_count: number;
+  percentage: number;
 }
 
 export const usePublicVotingSSE = (
@@ -23,6 +40,7 @@ export const usePublicVotingSSE = (
 ) => {
   const [votes, setVotes] = useState<PublicVote[]>([]);
   const [totalVotes, setTotalVotes] = useState(0);
+  const [results, setResults] = useState<SSEResult[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected');
@@ -96,8 +114,17 @@ export const usePublicVotingSSE = (
 
                 case 'initial_data':
                   console.log('📦 [PUBLIC SSE] Precarga de votos existentes:', data.votes?.length || 0, 'votos');
+                  console.log('📦 [PUBLIC SSE] Resultados disponibles:', data.results?.length || 0, 'opciones');
+                  
+                  // Guardar resultados para usar en conversiones
+                  if (data.results && Array.isArray(data.results)) {
+                    setResults(data.results);
+                  }
+                  
                   if (data.votes && Array.isArray(data.votes)) {
-                    const preloadedVotes = data.votes.map(convertSSEVoteToPublicVote);
+                    console.log('📦 [PUBLIC SSE] Primer voto de ejemplo:', data.votes[0]);
+                    const preloadedVotes = data.votes.map((vote: SSEVote) => convertSSEVoteToPublicVote(vote));
+                    console.log('📦 [PUBLIC SSE] Voto convertido:', preloadedVotes[0]);
                     setVotes(preloadedVotes);
                     setTotalVotes(preloadedVotes.length);
                   }
@@ -105,7 +132,8 @@ export const usePublicVotingSSE = (
 
                 case 'new_vote':
                   console.log('🗳️ [PUBLIC SSE] Nuevo voto en tiempo real:', data);
-                  const newVote = convertSSEVoteToPublicVote(data);
+                  const newVote = convertSSEVoteToPublicVote(data.vote);
+                  console.log('🗳️ [PUBLIC SSE] Nuevo voto convertido:', newVote);
                   setVotes(prev => {
                     const exists = prev.some(v => v.id === newVote.id);
                     if (exists) return prev;
@@ -139,14 +167,19 @@ export const usePublicVotingSSE = (
     setConnectionStatus('disconnected');
   }, []);
 
-  // Convertir voto SSE a formato público
+  // Convertir voto SSE a formato público (ahora los datos vienen directamente en el voto)
   const convertSSEVoteToPublicVote = (sseVote: SSEVote): PublicVote => {
+    console.log('🔍 [SSE CONVERT] Voto:', sseVote.voting_option_id, '| Color directo:', sseVote.color);
+    
     return {
       id: sseVote.id,
       voting_id: sseVote.voting_id,
-      resident_id: sseVote.resident_id,
+      property_unit_id: sseVote.property_unit_id,
       voting_option_id: sseVote.voting_option_id,
-      voted_at: sseVote.voted_at
+      voted_at: sseVote.voted_at,
+      option_text: sseVote.option_text,
+      option_code: sseVote.option_code,
+      option_color: sseVote.color
     };
   };
 
@@ -165,6 +198,7 @@ export const usePublicVotingSSE = (
   return { 
     votes, 
     totalVotes, 
+    results,
     isConnected, 
     error, 
     connectionStatus,

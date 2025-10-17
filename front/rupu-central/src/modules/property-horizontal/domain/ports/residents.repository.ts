@@ -16,6 +16,7 @@ export interface GetResidentsParams {
   residentTypeId?: number;
   isActive?: boolean;
   isMainResident?: boolean;
+  dni?: string; // Filtro por DNI parcial
 }
 
 export interface GetResidentByIdParams {

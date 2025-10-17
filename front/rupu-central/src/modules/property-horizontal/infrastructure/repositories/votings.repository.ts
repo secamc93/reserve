@@ -708,7 +708,7 @@ export class VotesRepository implements IVotesRepository {
       id: vote.id,
       votingId: vote.voting_id,
       votingOptionId: vote.voting_option_id,
-      residentId: vote.resident_id,
+      propertyUnitId: vote.property_unit_id,
       votedAt: vote.voted_at,
       ipAddress: vote.ip_address,
       userAgent: vote.user_agent,
@@ -726,11 +726,10 @@ export class VotesRepository implements IVotesRepository {
     const startTime = Date.now();
 
     const body = {
+      property_unit_id: params.data.propertyUnitId,
       voting_option_id: params.data.votingOptionId,
-      resident_id: params.data.residentId,
       ip_address: params.data.ipAddress,
       user_agent: params.data.userAgent,
-      notes: params.data.notes,
     };
 
     logHttpRequest({ method: 'POST', url, body });
@@ -771,11 +770,10 @@ export class VotesRepository implements IVotesRepository {
       id: data.data.id,
       votingId: data.data.voting_id,
       votingOptionId: data.data.voting_option_id,
-      residentId: data.data.resident_id,
+      propertyUnitId: data.data.property_unit_id,
       votedAt: data.data.voted_at,
       ipAddress: data.data.ip_address,
       userAgent: data.data.user_agent,
-      notes: data.data.notes,
     };
   }
 }

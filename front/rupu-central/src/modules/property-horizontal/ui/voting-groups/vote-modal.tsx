@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import { Modal, Spinner, Alert } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
 import { createVoteAction, getResidentsAction } from '../../infrastructure/actions';
+import { getUnvotedUnitsAction } from '../../infrastructure/actions/voting';
 
 interface VoteModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ interface VoteModalProps {
   votingType: string;
   allowAbstention: boolean;
   options: Array<{ id: number; optionText: string; optionCode: string; displayOrder: number }>;
+  currentVotes?: Array<{ property_unit_id: number; voted_at: string }>; // ✅ NUEVO: Votos actuales para filtrar
 }
 
 interface ResidentOption {
@@ -41,6 +43,7 @@ export function VoteModal({
   votingType,
   allowAbstention,
   options,
+  currentVotes = [], // ✅ NUEVO: Votos actuales para filtrar
 }: VoteModalProps) {
   const [loading, setLoading] = useState(false);
   const [loadingResidents, setLoadingResidents] = useState(true);
@@ -72,6 +75,14 @@ export function VoteModal({
     }
   }, [isOpen, hpId]);
 
+  // 🔄 IMPORTANTE: Consultar endpoint cada vez que se abre el dropdown
+  useEffect(() => {
+    if (showResidentDropdown && isOpen) {
+      console.log('🔄 [VOTE MODAL] Dropdown abierto - consultando endpoint directamente');
+      loadResidents();
+    }
+  }, [showResidentDropdown, isOpen]);
+
   // Buscar residentes en el backend cuando cambia el filtro (solo cuando se está buscando)
   useEffect(() => {
     // Solo buscar si el usuario está escribiendo (dropdown abierto)
@@ -95,30 +106,55 @@ export function VoteModal({
       }
 
       try {
-        const data = await getResidentsAction({
+        // Usar el endpoint de unidades sin votar con filtro (SIEMPRE consulta directa al endpoint, sin cache)
+        const unvotedData = await getUnvotedUnitsAction({
           hpId,
+          groupId,
+          votingId,
           token,
-          page: 1,
-          pageSize: 100, // Límite razonable para búsqueda en tiempo real
-          propertyUnitNumber: unitFilter.trim() || undefined, // Filtrar por número de unidad
+          unitNumber: unitFilter.trim() || undefined, // Filtrar por número de unidad
         });
 
-        console.log('🔍 Búsqueda:', {
+        console.log('🔍 [VOTE MODAL] Búsqueda de unidades sin votar (consulta directa):', {
           filtro: unitFilter || '(todos)',
-          resultados: data.residents.length,
+          resultados: unvotedData.data?.length || 0,
+          response: unvotedData
         });
 
-        const residentOptions: ResidentOption[] = data.residents.map((r) => ({
-          id: r.id,
-          name: r.name,
-          unitNumber: r.propertyUnitNumber,
-          isMain: r.isMainResident,
-          isActive: r.isActive,
+        if (!unvotedData.success || !unvotedData.data) {
+          setResidents([]);
+          return;
+        }
+
+        // Mapear unidades sin votar a formato de residentes
+        let residentOptions: ResidentOption[] = unvotedData.data.map((unit) => ({
+          id: unit.unit_id,
+          name: unit.resident_name || `Unidad ${unit.unit_number}`,
+          unitNumber: unit.unit_number,
+          isMain: true,
+          isActive: true,
         }));
+
+        // ✅ FILTRO ADICIONAL: Eliminar unidades que ya votaron (según datos del SSE)
+        if (currentVotes.length > 0) {
+          const votedUnitIds = new Set(currentVotes.map(vote => vote.property_unit_id));
+          const beforeFilter = residentOptions.length;
+          
+          residentOptions = residentOptions.filter(resident => {
+            const hasVoted = votedUnitIds.has(resident.id);
+            if (hasVoted) {
+              console.log(`🚫 [VOTE MODAL] Filtrando unidad ${resident.unitNumber} (ID: ${resident.id}) - ya votó (búsqueda)`);
+            }
+            return !hasVoted;
+          });
+          
+          console.log(`🔍 [VOTE MODAL] Filtro aplicado en búsqueda: ${beforeFilter} → ${residentOptions.length} unidades (eliminadas ${beforeFilter - residentOptions.length})`);
+        }
 
         setResidents(residentOptions);
       } catch (err) {
-        console.error('❌ Error buscando residentes:', err);
+        console.error('❌ Error buscando unidades sin votar:', err);
+        setResidents([]);
       } finally {
         setIsSearching(false);
       }
@@ -164,31 +200,56 @@ export function VoteModal({
         return;
       }
 
-      // Cargar los primeros residentes (sin filtro inicial)
-      // La búsqueda se hará en tiempo real usando el filtro property_unit_number
-      const data = await getResidentsAction({
+      // Cargar solo unidades sin votar (SIEMPRE consulta directa al endpoint, sin cache)
+      console.log('🔍 [VOTE MODAL] Cargando unidades sin votar (consulta directa):', { hpId, groupId, votingId });
+      
+      const unvotedData = await getUnvotedUnitsAction({
         hpId,
+        groupId,
+        votingId,
         token,
-        page: 1,
-        pageSize: 100, // Cargar primeros 100 para mostrar inicialmente
       });
 
-      console.log('📊 Total de residentes en backend:', data.total);
-      console.log('✅ Primeros residentes cargados:', data.residents.length);
+      console.log('📊 [VOTE MODAL] Respuesta del endpoint:', unvotedData);
+      console.log('📊 Unidades sin votar obtenidas:', unvotedData.data?.length || 0);
 
-      const residentOptions: ResidentOption[] = data.residents.map((r) => ({
-        id: r.id,
-        name: r.name,
-        unitNumber: r.propertyUnitNumber,
-        isMain: r.isMainResident,
-        isActive: r.isActive,
+      if (!unvotedData.success || !unvotedData.data) {
+        setError('Error al cargar unidades sin votar');
+        return;
+      }
+
+      // Mapear unidades sin votar a formato de residentes
+      let residentOptions: ResidentOption[] = unvotedData.data.map((unit) => ({
+        id: unit.unit_id,
+        name: unit.resident_name || `Unidad ${unit.unit_number}`,
+        unitNumber: unit.unit_number,
+        isMain: true, // Asumir que es residente principal
+        isActive: true,
       }));
+
+      // ✅ FILTRO ADICIONAL: Eliminar unidades que ya votaron (según datos del SSE)
+      if (currentVotes.length > 0) {
+        const votedUnitIds = new Set(currentVotes.map(vote => vote.property_unit_id));
+        const beforeFilter = residentOptions.length;
+        
+        residentOptions = residentOptions.filter(resident => {
+          const hasVoted = votedUnitIds.has(resident.id);
+          if (hasVoted) {
+            console.log(`🚫 [VOTE MODAL] Filtrando unidad ${resident.unitNumber} (ID: ${resident.id}) - ya votó`);
+          }
+          return !hasVoted;
+        });
+        
+        console.log(`🔍 [VOTE MODAL] Filtro aplicado: ${beforeFilter} → ${residentOptions.length} unidades (eliminadas ${beforeFilter - residentOptions.length})`);
+      }
+
+      console.log('✅ Residentes sin votar cargados:', residentOptions.length);
 
       setResidents(residentOptions);
       setAllResidents(residentOptions); // Guardar lista inicial
 
-      if (data.total === 0) {
-        setError('No hay residentes registrados para esta propiedad. Por favor, registra al menos un residente en la sección de Residentes.');
+      if (residentOptions.length === 0) {
+        setError('No hay unidades disponibles para votar. Todas las unidades ya han emitido su voto.');
       }
     } catch (err) {
       console.error('❌ Error cargando residentes:', err);
@@ -241,7 +302,7 @@ export function VoteModal({
       console.log('📤 Enviando voto al servidor...', {
         votingId,
         votingOptionId: selectedOptionId,
-        residentId: selectedResidentId,
+        propertyUnitId: selectedResidentId, // selectedResidentId contiene el unit_id
         hpId,
         groupId
       });
@@ -254,7 +315,7 @@ export function VoteModal({
         data: {
           votingId,
           votingOptionId: selectedOptionId,
-          residentId: selectedResidentId,
+          propertyUnitId: selectedResidentId, // selectedResidentId contiene el unit_id
           ipAddress,
           userAgent,
         },
@@ -274,6 +335,10 @@ export function VoteModal({
         // Mostrar mensaje de confirmación y resetear formulario para siguiente voto
         setSuccessMessage(`✅ Voto registrado exitosamente: ${residentName} votó por "${optionText}"`);
         resetForm();
+        
+        // 🔄 IMPORTANTE: Recargar lista de unidades sin votar para reflejar el nuevo estado
+        console.log('🔄 Recargando lista de unidades sin votar después del voto...');
+        await loadResidents();
         
         // Limpiar mensaje después de 3 segundos
         setTimeout(() => {
@@ -400,10 +465,14 @@ export function VoteModal({
                     placeholder="Buscar por número de unidad..."
                     value={unitFilter}
                     onChange={(e) => {
+                      console.log('✏️ [VOTE MODAL] Escribiendo en filtro - abriendo dropdown y consultando endpoint');
                       setUnitFilter(e.target.value);
                       setShowResidentDropdown(true);
                     }}
-                    onFocus={() => setShowResidentDropdown(true)}
+                    onFocus={() => {
+                      console.log('🎯 [VOTE MODAL] Input enfocado - abriendo dropdown y consultando endpoint');
+                      setShowResidentDropdown(true);
+                    }}
                     className="input w-full pr-8"
                     disabled={loading}
                   />
@@ -471,24 +540,8 @@ export function VoteModal({
               </div>
             )}
             
-            {!selectedResidentId && (
-              <div className="mt-2 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                <p className="text-sm text-yellow-800">
-                  ⚠️ <strong>Selecciona un residente</strong> para continuar con la votación
-                </p>
-              </div>
-            )}
           </div>
 
-          {/* Mensaje de error si no hay residentes */}
-          {allResidents.length === 0 && (
-            <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded">
-              <p className="font-medium mb-1">⚠️ No hay residentes activos</p>
-              <p className="text-sm">
-                {error || 'No hay residentes activos registrados para esta propiedad. Verifica que los residentes estén marcados como activos en la sección de Residentes.'}
-              </p>
-            </div>
-          )}
 
           {/* Opciones de votación */}
           <div>

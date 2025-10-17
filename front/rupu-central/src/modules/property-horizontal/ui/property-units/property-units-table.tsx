@@ -289,23 +289,23 @@ export function PropertyUnitsTable({ hpId }: { hpId: number }) {
       <Table columns={columns} data={data} />
 
       {totalPages > 1 && (
-        <div className="flex justify-center gap-2 mt-4">
+        <div className="pagination-alt">
           <button
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            className="btn btn-sm"
+            className="pagination-button"
           >
-            Anterior
+            ← Anterior
           </button>
-          <span className="py-2 px-4">
+          <span className="pagination-info">
             Página {currentPage} de {totalPages}
           </span>
           <button
             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
-            className="btn btn-sm"
+            className="pagination-button"
           >
-            Siguiente
+            Siguiente →
           </button>
         </div>
       )}

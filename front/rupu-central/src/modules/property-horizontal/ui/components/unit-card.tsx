@@ -11,7 +11,8 @@ export interface ResidentialUnit {
   id: number;
   number: string;
   resident: string;
-  residentId?: number | null; // ✅ NUEVO: ID del residente para debugging
+  propertyUnitId: number; // ✅ ID de la unidad
+  residentId?: number | null; // ID del residente
   hasVoted: boolean;
   votedOption?: string; // Texto de la opción votada
   votedOptionId?: number; // ID de la opción votada

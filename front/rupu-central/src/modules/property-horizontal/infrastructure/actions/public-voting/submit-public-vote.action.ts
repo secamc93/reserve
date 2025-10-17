@@ -9,8 +9,6 @@ import { env } from '@shared/config';
 export interface SubmitPublicVoteInput {
   votingAuthToken: string;
   votingOptionId: number;
-  ipAddress?: string;
-  userAgent?: string;
 }
 
 export interface SubmitPublicVoteResult {
@@ -45,9 +43,7 @@ export async function submitPublicVoteAction(
         'Authorization': `Bearer ${input.votingAuthToken}`
       },
       body: JSON.stringify({
-        voting_option_id: input.votingOptionId,
-        ip_address: input.ipAddress,
-        user_agent: input.userAgent
+        voting_option_id: input.votingOptionId
       })
     });
 

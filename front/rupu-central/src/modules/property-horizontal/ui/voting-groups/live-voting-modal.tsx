@@ -14,6 +14,7 @@ import { VotesByUnitSection, type ResidentialUnit } from '../components';
 import { VotingSummaryBlock } from './voting-summary-block';
 // import { QRCodeSVG } from 'qrcode.react'; // Ya no se usa, se genera dinámicamente
 import { useVotingSSE } from './hooks';
+import { Vote } from '../../domain/entities'; // ✅ Usar la interfaz oficial
 
 interface Voting {
   id: number;
@@ -40,26 +41,15 @@ interface VotingOption {
   color?: string; // Color personalizado para la opción (hex)
 }
 
-interface Vote {
-  id: number;
-  votingId: number;
-  residentId: number;
-  votingOptionId: number;
-  votedAt: string;
-  ipAddress?: string;
-  userAgent?: string;
-  notes?: string;
-}
-
 // Interfaz para votos del SSE (formato del backend)
 interface SSEVote {
   id: number;
   voting_id: number;
-  resident_id: number;
+  property_unit_id: number;
   voting_option_id: number;
   option_text: string;
   option_code: string;
-  option_color: string;
+  color: string;
   voted_at: string;
   ip_address?: string;
   user_agent?: string;
@@ -96,6 +86,7 @@ export function LiveVotingModal({
   // Estados para datos reales del endpoint
   const [votingDetails, setVotingDetails] = useState<{
     units: Array<{
+      property_unit_id: number; // ✅ NUEVO: ID de la unidad para mapeo correcto
       property_unit_number: string;
       participation_coefficient: number;
       resident_name: string | null;
@@ -174,12 +165,11 @@ export function LiveVotingModal({
     const newVotes = sseVotes.filter(vote => !processedVoteIds.has(vote.id));
     
     if (newVotes.length === 0) {
-      console.log(`⚠️ No hay votos nuevos para procesar. Total SSE: ${sseVotes.length}, Procesados: ${processedVoteIds.size}`);
+      // No hay votos nuevos para procesar
       return;
     }
 
-    console.log(`🔄 Actualizando ${newVotes.length} votos nuevos via SSE (sin recargar endpoint)`);
-    console.log(`📊 Votos nuevos:`, newVotes.map(v => ({ id: v.id, resident_id: v.resident_id, option_id: v.voting_option_id })));
+    // Logs de debugging eliminados para reducir ruido
 
     // Marcar estos votos como procesados
     setProcessedVoteIds(prev => {
@@ -197,27 +187,27 @@ export function LiveVotingModal({
 
       // Para cada nuevo voto, actualizar la unidad correspondiente
       newVotes.forEach(sseVote => {
-        // ✅ MEJORADO: Usar directamente los datos del SSE (incluye option_color)
-        const unitIndex = updatedUnits.findIndex(unit => unit.resident_id === sseVote.resident_id);
+        // ✅ MEJORADO: Usar directamente los datos del SSE (incluye color)
+        const unitIndex = updatedUnits.findIndex(unit => unit.property_unit_id === sseVote.property_unit_id);
         
         if (unitIndex !== -1) {
-          console.log(`✅ Actualizando unidad ${updatedUnits[unitIndex].property_unit_number} (resident_id: ${sseVote.resident_id}) con voto: ${sseVote.option_text} (color: ${sseVote.option_color})`);
+          // Log de actualización eliminado para reducir ruido
           
           updatedUnits[unitIndex] = {
             ...updatedUnits[unitIndex],
             has_voted: true,
             option_text: sseVote.option_text,
             option_code: sseVote.option_code,
-            option_color: sseVote.option_color, // ✅ NUEVO: Usar directamente el color del SSE
+            option_color: sseVote.color, // ✅ NUEVO: Usar directamente el color del SSE
             voted_at: sseVote.voted_at,
           };
           newUnitsVoted++;
         } else {
-          console.warn(`⚠️ No se encontró unidad para resident_id: ${sseVote.resident_id}`);
+          console.warn(`⚠️ No se encontró unidad para property_unit_id: ${sseVote.property_unit_id}`);
         }
       });
 
-      console.log(`📊 Estadísticas actualizadas: +${newUnitsVoted} votos nuevos`);
+      // Log de estadísticas eliminado para reducir ruido
 
       return {
         ...prevDetails,
@@ -252,7 +242,7 @@ export function LiveVotingModal({
   // Actualizar datos cuando llegan nuevos votos via SSE (sin recargar todo el endpoint)
   useEffect(() => {
     if (sseVotes.length > 0 && votingDetails) {
-      console.log(`🔄 SSE: Detectados ${sseVotes.length} votos, actualizando interfaz...`);
+      // Log de SSE eliminado para reducir ruido
       updateVotingDetailsFromSSE();
     }
   }, [sseVotes, updateVotingDetailsFromSSE, votingDetails]); // ✅ CORREGIDO: usar sseVotes en lugar de sseVotes.length
@@ -268,12 +258,10 @@ export function LiveVotingModal({
       if (unit.has_voted && unit.option_color) {
         // Usar el color directo del voto del backend (más fuerte)
         votedOptionColor = unit.option_color;
-        console.log(`🎨 Color del backend para ${unit.property_unit_number}:`, unit.option_color);
       } else if (unit.has_voted) {
         // Buscar en las opciones configuradas
         const option = options.find(opt => opt.optionText === unit.option_text);
         votedOptionColor = option ? getOptionColor(option.id, option.color) : undefined;
-        console.log(`🎨 Color para ${unit.property_unit_number}:`, votedOptionColor, 'opción:', option?.optionText);
         
         // Si no hay color configurado, mostrar error
         if (!votedOptionColor && option) {
@@ -281,22 +269,27 @@ export function LiveVotingModal({
         }
       }
 
-      return {
+      const result = {
         id: index + 1, // ID temporal basado en índice
         number: unit.property_unit_number,
         resident: unit.resident_name || 'Sin residente',
-        residentId: unit.resident_id, // ✅ NUEVO: ID del residente para debugging
+        propertyUnitId: unit.property_unit_id, // ✅ ID de la unidad
+        residentId: unit.resident_id, // ID del residente
         hasVoted: unit.has_voted,
         votedOption: unit.option_text || undefined,
         votedOptionId: options.find(opt => opt.optionText === unit.option_text)?.id,
         votedOptionColor: votedOptionColor,
         participationCoefficient: unit.participation_coefficient,
       };
+      
+      // Log eliminado para reducir ruido en consola
+      
+      return result;
     });
   };
 
-  // Función para obtener el color de una opción (NO usa colores predeterminados)
-  const getOptionColor = (optionId: number, optionColor?: string): string | undefined => {
+  // Función para obtener el color de una opción
+  const getOptionColor = (optionId: number, optionColor?: string): string => {
     // 1. Color personalizado temporal (si el usuario lo cambió en el UI)
     if (optionColors[optionId]) {
       return optionColors[optionId];
@@ -307,8 +300,20 @@ export function LiveVotingModal({
       return optionColor;
     }
     
-    // 3. NO hay color configurado - retornar undefined
-    return undefined;
+    // 3. Colores predeterminados por ID de opción
+    const defaultColors = [
+      '#22c55e', // Verde
+      '#3b82f6', // Azul
+      '#8b5cf6', // Púrpura
+      '#f59e0b', // Amarillo
+      '#ec4899', // Rosa
+      '#6366f1', // Índigo
+      '#ef4444', // Rojo
+      '#f97316', // Naranja
+    ];
+    
+    const colorIndex = optionId % defaultColors.length;
+    return defaultColors[colorIndex];
   };
 
   // Función para validar que todas las opciones tengan colores configurados
@@ -335,15 +340,15 @@ export function LiveVotingModal({
     return sseVotes.map(sseVote => ({
       id: sseVote.id,
       votingId: sseVote.voting_id,
-      residentId: sseVote.resident_id,
+      propertyUnitId: sseVote.property_unit_id,
       votingOptionId: sseVote.voting_option_id,
+      votedAt: sseVote.voted_at,
+      ipAddress: sseVote.ip_address || '',
+      userAgent: sseVote.user_agent || '',
+      // Campos adicionales del SSE para facilitar el renderizado
       optionText: sseVote.option_text,
       optionCode: sseVote.option_code,
-      optionColor: sseVote.option_color,
-      votedAt: sseVote.voted_at,
-      ipAddress: sseVote.ip_address,
-      userAgent: sseVote.user_agent,
-      notes: sseVote.notes,
+      optionColor: sseVote.color,
     }));
   };
 
@@ -432,10 +437,14 @@ export function LiveVotingModal({
       votes.push({
         id: voteId++,
         votingId: voting.id,
-        residentId: votingResidents[i],
+        propertyUnitId: votingResidents[i],
         votingOptionId: 1,
         votedAt: new Date(Date.now() - Math.random() * 3600000).toISOString(),
-        notes: ['Sí', 'A favor', 'Totalmente de acuerdo', 'Definitivamente sí', 'Voto a favor'][Math.floor(Math.random() * 5)]
+        ipAddress: '127.0.0.1',
+        userAgent: 'Mozilla/5.0 (Mock Browser)',
+        optionText: 'Sí',
+        optionCode: 'SI',
+        optionColor: '#10B981'
       });
     }
     
@@ -444,10 +453,14 @@ export function LiveVotingModal({
       votes.push({
         id: voteId++,
         votingId: voting.id,
-        residentId: votingResidents[votesDistribution.positive + i],
+        propertyUnitId: votingResidents[votesDistribution.positive + i],
         votingOptionId: 2,
         votedAt: new Date(Date.now() - Math.random() * 3600000).toISOString(),
-        notes: ['No', 'En contra', 'No estoy de acuerdo', 'Voto negativo', 'No apoyo'][Math.floor(Math.random() * 5)]
+        ipAddress: '127.0.0.1',
+        userAgent: 'Mozilla/5.0 (Mock Browser)',
+        optionText: 'No',
+        optionCode: 'NO',
+        optionColor: '#EF4444'
       });
     }
     
@@ -456,10 +469,14 @@ export function LiveVotingModal({
       votes.push({
         id: voteId++,
         votingId: voting.id,
-        residentId: votingResidents[votesDistribution.positive + votesDistribution.negative + i],
+        propertyUnitId: votingResidents[votesDistribution.positive + votesDistribution.negative + i],
         votingOptionId: 3,
         votedAt: new Date(Date.now() - Math.random() * 3600000).toISOString(),
-        notes: ['Me abstengo', 'Sin opinión', 'Neutral', 'No participo', 'Abstención'][Math.floor(Math.random() * 5)]
+        ipAddress: '127.0.0.1',
+        userAgent: 'Mozilla/5.0 (Mock Browser)',
+        optionText: 'Abstención',
+        optionCode: 'ABS',
+        optionColor: '#6B7280'
       });
     }
     
@@ -681,6 +698,10 @@ export function LiveVotingModal({
           votingType={voting.votingType}
           allowAbstention={voting.allowAbstention}
           options={options}
+          currentVotes={sseVotes.map(vote => ({
+            property_unit_id: vote.property_unit_id,
+            voted_at: vote.voted_at
+          }))} // ✅ NUEVO: Pasar votos actuales para filtrar
         />
       )}
 

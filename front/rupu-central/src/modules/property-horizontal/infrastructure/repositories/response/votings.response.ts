@@ -98,11 +98,10 @@ export interface BackendVote {
   id: number;
   voting_id: number;
   voting_option_id: number;
-  resident_id: number;
+  property_unit_id: number;
   voted_at: string;
   ip_address: string;
   user_agent: string;
-  notes?: string;
 }
 
 export interface BackendGetVotesResponse {

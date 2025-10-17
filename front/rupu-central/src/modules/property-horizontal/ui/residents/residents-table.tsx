@@ -33,6 +33,7 @@ export function ResidentsTable({ hpId }: { hpId: number }) {
     residentTypeId: undefined as number | undefined,
     isActive: undefined as boolean | undefined,
     isMainResident: undefined as boolean | undefined,
+    dni: undefined as string | undefined,
   });
   const [filterInputs, setFilterInputs] = useState({
     name: '',
@@ -40,6 +41,7 @@ export function ResidentsTable({ hpId }: { hpId: number }) {
     residentTypeId: '',
     isActive: '',
     isMainResident: '',
+    dni: '',
   });
   const [units, setUnits] = useState<Array<{ id: number; number: string }>>([]);
   const [unitSearchTerm, setUnitSearchTerm] = useState('');
@@ -120,6 +122,7 @@ export function ResidentsTable({ hpId }: { hpId: number }) {
       residentTypeId: filterInputs.residentTypeId ? Number(filterInputs.residentTypeId) : undefined,
       isActive: filterInputs.isActive ? filterInputs.isActive === 'true' : undefined,
       isMainResident: filterInputs.isMainResident ? filterInputs.isMainResident === 'true' : undefined,
+      dni: filterInputs.dni.trim() || undefined,
     });
     setCurrentPage(1);
   };
@@ -131,6 +134,7 @@ export function ResidentsTable({ hpId }: { hpId: number }) {
       residentTypeId: '',
       isActive: '',
       isMainResident: '',
+      dni: '',
     });
     setFilters({
       name: undefined,
@@ -138,6 +142,7 @@ export function ResidentsTable({ hpId }: { hpId: number }) {
       residentTypeId: undefined,
       isActive: undefined,
       isMainResident: undefined,
+      dni: undefined,
     });
     setUnitSearchTerm('');
     setShowUnitDropdown(false);
@@ -256,7 +261,7 @@ export function ResidentsTable({ hpId }: { hpId: number }) {
       {/* Filtros */}
       <div className="mb-4 bg-gray-50 border border-gray-200 rounded-lg p-4">
         <h3 className="text-sm font-semibold text-gray-700 mb-3">🔍 Filtros de Búsqueda</h3>
-        <div className="grid grid-cols-5 gap-3 mb-3">
+        <div className="grid grid-cols-6 gap-3 mb-3">
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Nombre</label>
             <input
@@ -264,6 +269,16 @@ export function ResidentsTable({ hpId }: { hpId: number }) {
               placeholder="Buscar por nombre..."
               value={filterInputs.name}
               onChange={(e) => setFilterInputs({ ...filterInputs, name: e.target.value })}
+              className="input input-sm w-full"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">DNI</label>
+            <input
+              type="text"
+              placeholder="Buscar por DNI..."
+              value={filterInputs.dni}
+              onChange={(e) => setFilterInputs({ ...filterInputs, dni: e.target.value })}
               className="input input-sm w-full"
             />
           </div>
@@ -385,23 +400,23 @@ export function ResidentsTable({ hpId }: { hpId: number }) {
       <Table columns={columns} data={data} />
 
       {totalPages > 1 && (
-        <div className="flex justify-center gap-2 mt-4">
+        <div className="pagination-alt">
           <button
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            className="btn btn-sm"
+            className="pagination-button"
           >
-            Anterior
+            ← Anterior
           </button>
-          <span className="py-2 px-4">
+          <span className="pagination-info">
             Página {currentPage} de {totalPages}
           </span>
           <button
             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
-            className="btn btn-sm"
+            className="pagination-button"
           >
-            Siguiente
+            Siguiente →
           </button>
         </div>
       )}

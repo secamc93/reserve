@@ -7,9 +7,10 @@ interface VotingDetailsResult {
   data?: {
     units: Array<{
       property_unit_number: string;
+      property_unit_id: number; // ✅ NUEVO: ID de la unidad
       participation_coefficient: number;
       resident_name: string | null;
-      resident_id: number | null; // ✅ NUEVO: ID del residente para mapeo correcto
+      resident_id: number | null;
       has_voted: boolean;
       option_text: string | null;
       option_code: string | null;

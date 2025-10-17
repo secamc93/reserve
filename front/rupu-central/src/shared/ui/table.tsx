@@ -41,17 +41,14 @@ export function Table<T = Record<string, unknown>>({
   return (
     <div className="card overflow-hidden p-0">
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="table">
           {/* Header */}
           <thead>
-            <tr style={{ 
-              backgroundColor: 'var(--color-primary)', 
-              color: 'white' 
-            }}>
+            <tr>
               {columns.map((column) => (
                 <th
                   key={column.key}
-                  className={`px-6 py-4 text-sm font-semibold ${alignClass[column.align || 'left']}`}
+                  className={alignClass[column.align || 'left']}
                   style={{ width: column.width }}
                 >
                   {column.label}
@@ -81,13 +78,13 @@ export function Table<T = Record<string, unknown>>({
               data.map((row, rowIndex) => (
                 <tr
                   key={keyExtractor(row, rowIndex)}
-                  className={`border-t border-gray-200 hover:bg-gray-50 transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
+                  className={`transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
                   onClick={() => onRowClick?.(row, rowIndex)}
                 >
                   {columns.map((column) => (
                     <td
                       key={column.key}
-                      className={`px-6 py-4 text-sm text-gray-700 ${alignClass[column.align || 'left']}`}
+                      className={alignClass[column.align || 'left']}
                     >
                       {column.render 
                         ? column.render(row[column.key as keyof T], row, rowIndex)

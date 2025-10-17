@@ -83,7 +83,7 @@ export class ResidentsRepository implements IResidentsRepository {
   }
 
   async getResidents(params: GetResidentsParams): Promise<ResidentsPaginated> {
-    const { hpId, token, page = 1, pageSize = 10, name, propertyUnitId, propertyUnitNumber, residentTypeId, isActive, isMainResident } = params;
+    const { hpId, token, page = 1, pageSize = 10, name, propertyUnitId, propertyUnitNumber, residentTypeId, isActive, isMainResident, dni } = params;
 
     const queryParams = new URLSearchParams({
       page: page.toString(),
@@ -96,6 +96,7 @@ export class ResidentsRepository implements IResidentsRepository {
     if (residentTypeId !== undefined) queryParams.append('resident_type_id', residentTypeId.toString());
     if (isActive !== undefined) queryParams.append('is_active', isActive.toString());
     if (isMainResident !== undefined) queryParams.append('is_main_resident', isMainResident.toString());
+    if (dni !== undefined) queryParams.append('dni', dni);
 
     const url = `${this.baseUrl}/horizontal-properties/${hpId}/residents?${queryParams.toString()}`;
     const method = 'GET';

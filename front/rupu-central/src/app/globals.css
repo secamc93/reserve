@@ -274,6 +274,95 @@ body {
   animation: spin 0.8s linear infinite;
 }
 
+/* ============================================
+   ESTILOS DE TABLAS Y PAGINACIÓN
+   ============================================ */
+
+/* Tabla base */
+.table {
+  @apply w-full bg-white border-collapse;
+}
+
+.table th {
+  @apply px-6 py-4 text-sm font-semibold text-left;
+  background: var(--color-primary);
+  color: white;
+}
+
+.table td {
+  @apply px-6 py-4 text-sm border-t border-gray-200;
+  color: var(--gray-800);
+}
+
+.table tbody tr:hover {
+  @apply bg-gray-50;
+}
+
+.table tbody tr:nth-child(even) {
+  @apply bg-gray-50;
+}
+
+/* Paginación */
+.pagination {
+  @apply flex justify-center items-center gap-2 mt-6;
+}
+
+.pagination-button {
+  @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300;
+  background: var(--color-primary);
+  color: white;
+  border: 1px solid var(--color-primary);
+}
+
+.pagination-button:hover:not(:disabled) {
+  filter: brightness(1.1);
+  @apply shadow-md;
+}
+
+.pagination-button:disabled {
+  @apply opacity-50 cursor-not-allowed;
+  background: var(--gray-300);
+  border-color: var(--gray-300);
+  color: var(--gray-600);
+}
+
+.pagination-info {
+  @apply px-4 py-2 text-sm font-medium;
+  color: var(--gray-700);
+  background: var(--gray-100);
+  border: 1px solid var(--gray-300);
+  border-radius: 0.5rem;
+}
+
+/* Paginación alternativa más visible */
+.pagination-alt {
+  @apply flex justify-between items-center mt-6 p-4 rounded-lg;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+}
+
+.pagination-alt .pagination-info {
+  @apply text-sm font-semibold;
+  color: var(--gray-800);
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.pagination-alt .pagination-button {
+  @apply px-6 py-2;
+  background: var(--color-primary);
+  color: white;
+  border: 2px solid var(--color-primary);
+  font-weight: 600;
+}
+
+.pagination-alt .pagination-button:hover:not(:disabled) {
+  background: white;
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);

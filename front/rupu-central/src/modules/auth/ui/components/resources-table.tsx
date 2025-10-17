@@ -190,23 +190,23 @@ export function ResourcesTable() {
 
       {/* Paginación */}
       {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2 mt-6">
+        <div className="pagination-alt">
           <button
             onClick={() => setPage(page - 1)}
             disabled={page === 1}
-            className="btn btn-sm btn-outline"
+            className="pagination-button"
           >
             ← Anterior
           </button>
           
-          <span className="text-sm text-gray-600">
+          <span className="pagination-info">
             Página {page} de {totalPages}
           </span>
           
           <button
             onClick={() => setPage(page + 1)}
             disabled={page === totalPages}
-            className="btn btn-sm btn-outline"
+            className="pagination-button"
           >
             Siguiente →
           </button>

@@ -244,26 +244,24 @@ export function HorizontalPropertiesTable() {
 
       {/* Paginación */}
       {totalPages > 1 && (
-        <div className="flex justify-between items-center mt-4">
-          <div className="text-sm text-gray-600">
+        <div className="pagination-alt">
+          <button
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="pagination-button"
+          >
+            ← Anterior
+          </button>
+          <span className="pagination-info">
             Página {page} de {totalPages} ({total} total)
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setPage(p => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="btn btn-outline btn-sm"
-            >
-              Anterior
-            </button>
-            <button
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
-              className="btn btn-outline btn-sm"
-            >
-              Siguiente
-            </button>
-          </div>
+          </span>
+          <button
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+            className="pagination-button"
+          >
+            Siguiente →
+          </button>
         </div>
       )}
 

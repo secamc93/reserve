@@ -23,3 +23,4 @@ export { BulkUpdateResidentsUseCase } from './residents/bulk-update-residents.us
 
 // Export individual voting use cases
 export { GetVotingByIdUseCase } from './get-voting-by-id.use-case';
+export { GetUnvotedUnitsUseCase } from './voting/get-unvoted-units.use-case';
