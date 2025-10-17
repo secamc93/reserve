@@ -54,6 +54,7 @@ class _SideMenuState extends State<SideMenu> {
 
   List<MenuItem> _accessibleMenuItems(HomeController home) {
     final requirementsMet = appMenuItems.where((item) {
+      if (item.superAdminOnly && !home.isSuper) return false;
       final requirement = item.access;
       if (requirement == null) return true;
       return home.canAccessResource(

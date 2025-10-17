@@ -25,6 +25,7 @@ class MenuItem {
   final String link;
   final IconData icon;
   final MenuAccessRequirement? access;
+  final bool superAdminOnly;
 
   const MenuItem({
     required this.tittle,
@@ -32,6 +33,7 @@ class MenuItem {
     required this.link,
     required this.icon,
     this.access,
+    this.superAdminOnly = false,
   });
 }
 
@@ -68,5 +70,17 @@ const appMenuItems = <MenuItem>[
       actions: ['Read', 'Manage'],
       requireActive: false,
     ),
+  ),
+  MenuItem(
+    tittle: 'Usuarios y permisos',
+    subTittle: '',
+    link: '/home/0/users-permissions',
+    icon: Icons.admin_panel_settings_outlined,
+    access: MenuAccessRequirement(
+      resource: 'roles_permissions',
+      actions: ['Manage'],
+      requireActive: false,
+    ),
+    superAdminOnly: true,
   ),
 ];

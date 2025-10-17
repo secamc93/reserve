@@ -137,6 +137,22 @@ final appRouter = GoRouter(
           },
         ),
         GoRoute(
+          path: '/home/:page/users-permissions',
+          name: UsersPermissionsScreen.name,
+          builder: (context, state) {
+            final home = Get.isRegistered<HomeController>()
+                ? Get.find<HomeController>()
+                : null;
+            if (home == null || !home.isSuper) {
+              return const Scaffold(
+                body: Center(child: Text('No autorizado')),
+              );
+            }
+            final page = int.parse(state.pathParameters['page']!);
+            return UsersPermissionsScreen(pageIndex: page);
+          },
+        ),
+        GoRoute(
           path: '/home/:page/users/create',
           name: CreateUserView.name,
           builder: (context, state) {

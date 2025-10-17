@@ -107,3 +107,11 @@ class CreateUserBinding {
     }
   }
 }
+
+class RolesPermissionsBinding {
+  static void register() {
+    if (!Get.isRegistered<RolesPermissionsController>()) {
+      Get.put(RolesPermissionsController());
+    }
+  }
+}

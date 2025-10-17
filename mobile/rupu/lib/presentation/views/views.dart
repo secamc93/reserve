@@ -42,3 +42,5 @@ export 'package:rupu/presentation/views/users/users_controller.dart';
 export 'package:rupu/presentation/views/users/users_view.dart';
 export 'package:rupu/presentation/views/users/user_detail_controller.dart';
 export 'package:rupu/presentation/views/users/user_detail_view.dart';
+export 'package:rupu/presentation/views/roles_permissions/roles_permissions_controller.dart';
+export 'package:rupu/presentation/views/roles_permissions/roles_permissions_view.dart';
