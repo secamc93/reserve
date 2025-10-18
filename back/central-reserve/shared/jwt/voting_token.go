@@ -18,11 +18,12 @@ type PublicVotingClaims struct {
 
 // VotingAuthClaims - Claims después de validar residente
 type VotingAuthClaims struct {
-	ResidentID    uint   `json:"resident_id"`
-	VotingID      uint   `json:"voting_id"`
-	VotingGroupID uint   `json:"voting_group_id"`
-	HPID          uint   `json:"hp_id"`
-	Scope         string `json:"scope"` // "voting_auth"
+	ResidentID     uint   `json:"resident_id"`
+	PropertyUnitID uint   `json:"property_unit_id"`
+	VotingID       uint   `json:"voting_id"`
+	VotingGroupID  uint   `json:"voting_group_id"`
+	HPID           uint   `json:"hp_id"`
+	Scope          string `json:"scope"` // "voting_auth"
 	jwt.RegisteredClaims
 }
 
@@ -55,13 +56,14 @@ func (j *JWTService) GeneratePublicVotingToken(votingID, votingGroupID, hpID uin
 }
 
 // GenerateVotingAuthToken genera un token temporal después de validar al residente
-func (j *JWTService) GenerateVotingAuthToken(residentID, votingID, votingGroupID, hpID uint) (string, error) {
+func (j *JWTService) GenerateVotingAuthToken(residentID, propertyUnitID, votingID, votingGroupID, hpID uint) (string, error) {
 	claims := VotingAuthClaims{
-		ResidentID:    residentID,
-		VotingID:      votingID,
-		VotingGroupID: votingGroupID,
-		HPID:          hpID,
-		Scope:         "voting_auth",
+		ResidentID:     residentID,
+		PropertyUnitID: propertyUnitID,
+		VotingID:       votingID,
+		VotingGroupID:  votingGroupID,
+		HPID:           hpID,
+		Scope:          "voting_auth",
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 2)), // 2 horas para votar
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

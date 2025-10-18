@@ -127,7 +127,7 @@ func (h *VotingHandler) ValidateResidentForVoting(c *gin.Context) {
 	fmt.Printf("   Unidad: %s\n\n", resident.PropertyUnitNumber)
 
 	// Generar token temporal de autenticación de votación
-	votingAuthToken, err := jwtService.GenerateVotingAuthToken(resident.ID, votingID, groupID, hpID)
+	votingAuthToken, err := jwtService.GenerateVotingAuthToken(resident.ID, resident.PropertyUnitID, votingID, groupID, hpID)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[ERROR] handlervote/validate-resident-for-voting.go - Error generando token de auth: %v\n", err)
 		h.logger.Error().Err(err).Uint("resident_id", resident.ID).Msg("Error generando token de autenticación de votación")
