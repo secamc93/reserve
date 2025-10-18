@@ -114,7 +114,7 @@ export function PublicVotingProgress({ votingAuthToken }: PublicVotingProgressPr
     // Calcular suma de coeficientes de las unidades que votaron por esta opción
     const coefficientSum = votesForOption.reduce((sum, vote) => {
       // Buscar la unidad correspondiente al voto
-      const unit = units.find(u => u.resident_id === vote.resident_id);
+      const unit = units.find(u => u.property_unit_id === vote.property_unit_id);
       const coefficient = unit?.participation_coefficient || defaultCoefficient;
       return sum + coefficient;
     }, 0);
@@ -141,7 +141,7 @@ export function PublicVotingProgress({ votingAuthToken }: PublicVotingProgressPr
 
   // Calcular estado de votación por unidad
   const unitVoteStatus: UnitVoteStatus[] = units.map(unit => {
-    const unitVote = currentVotes.find(vote => vote.resident_id === unit.resident_id);
+    const unitVote = currentVotes.find(vote => vote.property_unit_id === unit.property_unit_id);
     const hasVoted = !!unitVote;
     
     let votedOption = undefined;
@@ -185,6 +185,7 @@ export function PublicVotingProgress({ votingAuthToken }: PublicVotingProgressPr
       id: index + 1,
       number: unit.unitNumber,
       resident: unit.residentName || 'Sin residente',
+      propertyUnitId: unit.unitId,
       residentId: unit.residentName ? undefined : null,
       hasVoted: unit.hasVoted,
       votedOption: unit.votedOption?.text,

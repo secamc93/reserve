@@ -48,17 +48,15 @@ export default function AttendanceListPage() {
     setError(null);
     
     try {
-      const [listRes, summaryRes, recordsRes] = await Promise.all([
+      const [listRes] = await Promise.all([
         getAttendanceListAction({ token, id: attendanceListId }),
-        getAttendanceListSummaryAction({ token, id: attendanceListId }),
-        getAttendanceListRecordsAction({ token, id: attendanceListId }),
       ]);
 
       if (!listRes.success || !listRes.data) throw new Error(listRes.error || 'No se pudo obtener la lista');
       setAttendanceList(listRes.data);
-    } catch (error) {
+    } catch (err) {
       setError('Error al cargar la lista de asistencia');
-      console.error('Error loading attendance list:', error);
+      console.error('Error loading attendance list:', err);
     } finally {
       setLoading(false);
     }
@@ -95,7 +93,7 @@ export default function AttendanceListPage() {
     return (
       <div className="min-h-screen bg-gray-50">
         <PropertyNavigation
-          businessId={hpId}
+          hpId={hpId}
           currentSection="attendance"
           groupId={groupId}
         />
@@ -110,7 +108,7 @@ export default function AttendanceListPage() {
     return (
       <div className="min-h-screen bg-gray-50">
         <PropertyNavigation
-          businessId={hpId}
+          hpId={hpId}
           currentSection="attendance"
           groupId={groupId}
         />
@@ -136,7 +134,7 @@ export default function AttendanceListPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Navigation */}
       <PropertyNavigation
-        businessId={hpId}
+        hpId={hpId}
         currentSection="attendance"
         groupId={groupId}
       />

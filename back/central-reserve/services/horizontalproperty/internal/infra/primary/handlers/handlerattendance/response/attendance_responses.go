@@ -61,12 +61,15 @@ type AttendanceRecordResponse struct {
 
 // AttendanceSummaryResponse - Response para resumen de asistencia
 type AttendanceSummaryResponse struct {
-	TotalUnits      int     `json:"total_units" example:"100"`
-	AttendedUnits   int     `json:"attended_units" example:"85"`
-	AbsentUnits     int     `json:"absent_units" example:"15"`
-	AttendedAsOwner int     `json:"attended_as_owner" example:"70"`
-	AttendedAsProxy int     `json:"attended_as_proxy" example:"15"`
-	AttendanceRate  float64 `json:"attendance_rate" example:"85.0"`
+	TotalUnits           int     `json:"total_units" example:"100"`
+	AttendedUnits        int     `json:"attended_units" example:"85"`
+	AbsentUnits          int     `json:"absent_units" example:"15"`
+	AttendedAsOwner      int     `json:"attended_as_owner" example:"70"`
+	AttendedAsProxy      int     `json:"attended_as_proxy" example:"15"`
+	AttendanceRate       float64 `json:"attendance_rate" example:"85.0"`
+	AbsenceRate          float64 `json:"absence_rate" example:"15.0"`
+	AttendanceRateByCoef float64 `json:"attendance_rate_by_coef" example:"85.0"`
+	AbsenceRateByCoef    float64 `json:"absence_rate_by_coef" example:"15.0"`
 }
 
 // SuccessResponse - Response genérico de éxito

@@ -63,3 +63,4 @@ export interface VerifyAttendanceDTO {
   verifiedBy: number;
   verificationNotes?: string;
 }
+

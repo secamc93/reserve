@@ -2,8 +2,8 @@
  * Repository Implementation: AttendanceList
  */
 
-import { IAttendanceListRepository, CreateAttendanceListParams, GenerateAttendanceListParams, GetAttendanceListParams, UpdateAttendanceListParams, DeleteAttendanceListParams, ListAttendanceListsParams, GetAttendanceListSummaryParams, GetAttendanceListRecordsParams } from '../../../domain/ports/attendance';
-import { AttendanceList, AttendanceListSummary } from '../../../domain/entities/attendance';
+import { IAttendanceListRepository, CreateAttendanceListParams, GenerateAttendanceListParams, GetAttendanceListParams, UpdateAttendanceListParams, DeleteAttendanceListParams, ListAttendanceListsParams, GetAttendanceListSummaryParams, GetAttendanceListRecordsParams, AttendanceListMeta } from '../../../domain/ports/attendance';
+import { AttendanceList, AttendanceListSummary, AttendanceRecord } from '../../../domain/entities/attendance';
 import { logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
 
 export class AttendanceListRepository implements IAttendanceListRepository {
@@ -249,20 +249,36 @@ export class AttendanceListRepository implements IAttendanceListRepository {
     }
   }
 
-  async getAttendanceListRecords(params: GetAttendanceListRecordsParams): Promise<AttendanceList[]> {
+  async getAttendanceListRecords(params: GetAttendanceListRecordsParams): Promise<{ data: AttendanceRecord[]; meta: AttendanceListMeta }> {
     const startTime = Date.now();
-    const url = `${process.env.API_BASE_URL}/attendance/lists/${params.id}/records`;
+    const urlObj = new URL(`${process.env.API_BASE_URL}/attendance/lists/${params.id}/records`);
+    if (params.page) urlObj.searchParams.append('page', String(params.page));
+    if (params.pageSize) urlObj.searchParams.append('page_size', String(params.pageSize));
+    if (params.unitNumber) urlObj.searchParams.append('unit_number', params.unitNumber);
+    if (typeof params.attended === 'boolean') urlObj.searchParams.append('attended', String(params.attended));
+    const url = urlObj.toString();
+
     logHttpRequest({ method: 'GET', url, token: params.token.substring(0, 20) + '...' });
     try {
       const response = await fetch(url, { headers: { 'Authorization': `Bearer ${params.token}` } });
-      const data = await response.json();
+      const json = await response.json();
       const duration = Date.now() - startTime;
       if (!response.ok) {
-        logHttpError({ status: response.status, statusText: response.statusText, duration, data });
-        throw new Error(data.error || data.message || `Error ${response.status}`);
+        logHttpError({ status: response.status, statusText: response.statusText, duration, data: json });
+        throw new Error(json.error || json.message || `Error ${response.status}`);
       }
-      logHttpSuccess({ status: response.status, statusText: response.statusText, duration, summary: 'Registros obtenidos', data: data.data });
-      return data.data;
+      // Los datos de paginación están en el nivel raíz del response
+      const payload = { 
+        data: json.data, 
+        meta: {
+          total: json.total,
+          page: json.page,
+          page_size: json.page_size,
+          total_pages: json.total_pages
+        }
+      };
+      logHttpSuccess({ status: response.status, statusText: response.statusText, duration, summary: 'Registros obtenidos', data: payload });
+      return payload;
     } catch (error) {
       const duration = Date.now() - startTime;
       logHttpError({ status: 0, statusText: 'Network Error', duration, data: { error: error instanceof Error ? error.message : 'Unknown error' } });

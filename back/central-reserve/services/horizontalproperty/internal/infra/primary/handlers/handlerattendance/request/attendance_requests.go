@@ -24,12 +24,12 @@ type CreateProxyRequest struct {
 	BusinessID      uint       `json:"business_id" binding:"required" example:"1"`
 	PropertyUnitID  uint       `json:"property_unit_id" binding:"required" example:"123"`
 	ProxyName       string     `json:"proxy_name" binding:"required,min=3,max=255" example:"María García López"`
-	ProxyDni        string     `json:"proxy_dni" binding:"required,min=5,max=30" example:"12345678"`
+	ProxyDni        string     `json:"proxy_dni" binding:"omitempty,min=5,max=30" example:"12345678"`
 	ProxyEmail      string     `json:"proxy_email" binding:"omitempty,email,max=255" example:"maria@email.com"`
 	ProxyPhone      string     `json:"proxy_phone" binding:"omitempty,max=20" example:"+57 300 123 4567"`
 	ProxyAddress    string     `json:"proxy_address" binding:"omitempty,max=500" example:"Calle 123 #45-67"`
-	ProxyType       string     `json:"proxy_type" binding:"required,oneof=external resident family" example:"external"`
-	StartDate       time.Time  `json:"start_date" binding:"required" example:"2025-01-15T00:00:00Z"`
+	ProxyType       string     `json:"proxy_type" binding:"omitempty,oneof=external resident family" example:"external"`
+	StartDate       *time.Time `json:"start_date,omitempty" example:"2025-01-15T00:00:00Z"`
 	EndDate         *time.Time `json:"end_date,omitempty" example:"2025-12-31T23:59:59Z"`
 	PowerOfAttorney string     `json:"power_of_attorney" binding:"omitempty,max=1000" example:"Poder para representar en asambleas"`
 	Notes           string     `json:"notes" binding:"omitempty,max=1000" example:"Notas adicionales"`

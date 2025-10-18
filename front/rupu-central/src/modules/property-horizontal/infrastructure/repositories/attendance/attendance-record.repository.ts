@@ -110,4 +110,112 @@ export class AttendanceRecordRepository implements IAttendanceRecordRepository {
     console.log('VerifyAttendance params:', params);
     throw new Error('VerifyAttendance no implementado aún');
   }
+
+  async markAttendanceSimple(params: { token: string; recordId: number }): Promise<AttendanceRecord> {
+    const startTime = Date.now();
+    const url = `${process.env.API_BASE_URL}/attendance/records/${params.recordId}/mark`;
+
+    logHttpRequest({
+      method: 'POST',
+      url,
+      token: params.token.substring(0, 20) + '...',
+      body: null,
+    });
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${params.token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+      const duration = Date.now() - startTime;
+
+      if (!response.ok) {
+        logHttpError({
+          status: response.status,
+          statusText: response.statusText,
+          duration,
+          data,
+        });
+        throw new Error(data.error || data.message || `Error ${response.status}`);
+      }
+
+      logHttpSuccess({
+        status: response.status,
+        statusText: response.statusText,
+        duration,
+        summary: 'Asistencia marcada exitosamente (simple)',
+        data: data.data,
+      });
+
+      return data.data;
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      logHttpError({
+        status: 0,
+        statusText: 'Network Error',
+        duration,
+        data: { error: error instanceof Error ? error.message : 'Unknown error' },
+      });
+      throw error;
+    }
+  }
+
+  async unmarkAttendanceSimple(params: { token: string; recordId: number }): Promise<AttendanceRecord> {
+    const startTime = Date.now();
+    const url = `${process.env.API_BASE_URL}/attendance/records/${params.recordId}/unmark`;
+
+    logHttpRequest({
+      method: 'POST',
+      url,
+      token: params.token.substring(0, 20) + '...',
+      body: null,
+    });
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${params.token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+      const duration = Date.now() - startTime;
+
+      if (!response.ok) {
+        logHttpError({
+          status: response.status,
+          statusText: response.statusText,
+          duration,
+          data,
+        });
+        throw new Error(data.error || data.message || `Error ${response.status}`);
+      }
+
+      logHttpSuccess({
+        status: response.status,
+        statusText: response.statusText,
+        duration,
+        summary: 'Asistencia desmarcada exitosamente (simple)',
+        data: data.data,
+      });
+
+      return data.data;
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      logHttpError({
+        status: 0,
+        statusText: 'Network Error',
+        duration,
+        data: { error: error instanceof Error ? error.message : 'Unknown error' },
+      });
+      throw error;
+    }
+  }
 }

@@ -13,7 +13,7 @@ interface Vote {
   id: number;
   votingId: number;
   votingOptionId: number;
-  residentId: number;
+  propertyUnitId: number;
   votedAt: string;
   ipAddress: string;
   userAgent: string;
@@ -83,7 +83,7 @@ export function VotesDetailModal({
   const columns: TableColumn<Vote>[] = [
     { key: 'id', label: 'ID', width: '80px', align: 'center' },
     {
-      key: 'residentId',
+      key: 'propertyUnitId',
       label: 'Residente',
       width: '120px',
       render: (value) => `Residente #${value}`,

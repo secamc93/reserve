@@ -1,6 +1,10 @@
-import { IResidentsRepository, BulkUpdateResidentsParams } from '../domain/ports';
+import { IResidentsRepository, BulkUpdateResidentsParams } from '../../domain/ports';
 
-export interface BulkUpdateResidentsInput extends BulkUpdateResidentsParams {}
+export interface BulkUpdateResidentsInput extends BulkUpdateResidentsParams {
+  token: string;
+  businessId: number;
+  residents: unknown[];
+}
 
 export interface BulkUpdateResidentsOutput {
   success: boolean;

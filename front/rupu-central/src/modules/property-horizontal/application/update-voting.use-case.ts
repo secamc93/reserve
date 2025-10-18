@@ -6,7 +6,11 @@ import { IVotingsRepository, UpdateVotingParams } from '../domain/ports';
 import { Voting } from '../domain/entities';
 import { validateUpdateVoting } from '../domain/validation/voting-validation';
 
-export interface UpdateVotingInput extends UpdateVotingParams {}
+export interface UpdateVotingInput extends UpdateVotingParams {
+  id: number;
+  token: string;
+  data: Record<string, unknown>;
+}
 
 export interface UpdateVotingOutput {
   voting: Voting;

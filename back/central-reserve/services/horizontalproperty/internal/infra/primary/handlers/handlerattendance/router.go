@@ -30,14 +30,17 @@ func (h *AttendanceHandler) RegisterRoutes(router *gin.RouterGroup) {
 		attendance.GET("/records/:id", h.GetAttendanceRecordByID)
 		attendance.PUT("/records/:id", h.UpdateAttendanceRecord)
 		attendance.DELETE("/records/:id", h.DeleteAttendanceRecord)
-		attendance.POST("/records/mark", h.MarkAttendance)
+		attendance.POST("/records/:id/mark", h.MarkAttendance)
+		attendance.POST("/records/:id/unmark", h.UnmarkAttendance)
 		attendance.POST("/records/:id/verify", h.VerifyAttendance)
 
 		// Exportación
 		attendance.GET("/lists/:id/export-excel", h.ExportAttendanceExcel)
+		attendance.GET("/lists/:id/export-detailed-excel", h.ExportAttendanceExcelDetailed)
 
 		// Resúmenes y estadísticas
 		attendance.GET("/lists/:id/summary", h.GetAttendanceSummary)
 		attendance.GET("/lists/:id/records", h.GetAttendanceRecordsByList)
+
 	}
 }

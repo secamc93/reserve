@@ -15,9 +15,9 @@ export default function LiveVotingPage() {
   const groupId = parseInt(params.groupId as string);
   const votingId = parseInt(params.votingId as string);
 
-  const [voting, setVoting] = useState<any>(null);
-  const [options, setOptions] = useState<any[]>([]);
-  const [votes, setVotes] = useState<any[]>([]);
+  const [voting, setVoting] = useState<unknown>(null);
+  const [options, setOptions] = useState<unknown[]>([]);
+  const [votes, setVotes] = useState<unknown[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -155,11 +155,11 @@ export default function LiveVotingPage() {
                 </h1>
               </div>
               <p className="text-gray-600 mt-2">
-                {voting.title}
+                {(voting as any)?.title || 'Cargando...'}
               </p>
-              {voting.description && (
+              {(voting as any)?.description && (
                 <p className="text-gray-500 text-sm mt-1">
-                  {voting.description}
+                  {(voting as any).description}
                 </p>
               )}
               <div className="mt-3 text-sm text-gray-500">
@@ -170,11 +170,11 @@ export default function LiveVotingPage() {
             </div>
             <div className="flex items-center gap-2">
               <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-                voting.isActive 
+                (voting as any)?.isActive 
                   ? 'bg-green-100 text-green-800' 
                   : 'bg-red-100 text-red-800'
               }`}>
-                {voting.isActive ? '🟢 Activa' : '🔴 Inactiva'}
+                {(voting as any)?.isActive ? '🟢 Activa' : '🔴 Inactiva'}
               </div>
             </div>
           </div>
@@ -183,10 +183,10 @@ export default function LiveVotingPage() {
         {/* Live Voting Modal Component */}
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
           <LiveVotingModal 
-            voting={voting}
+            voting={voting as any}
             hpId={hpId}
-            options={options}
-            votes={votes}
+            options={options as any}
+            votes={votes as any}
             isOpen={true}
             onClose={() => {
               // Redirigir a la lista de votaciones

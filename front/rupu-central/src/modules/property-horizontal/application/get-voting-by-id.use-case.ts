@@ -1,7 +1,10 @@
 import { IVotingsRepository, GetVotingByIdParams } from '../domain/ports';
 import { Voting } from '../domain/entities';
 
-export interface GetVotingByIdInput extends GetVotingByIdParams {}
+export interface GetVotingByIdInput extends GetVotingByIdParams {
+  id: number;
+  token: string;
+}
 
 export interface GetVotingByIdOutput {
   voting: Voting;

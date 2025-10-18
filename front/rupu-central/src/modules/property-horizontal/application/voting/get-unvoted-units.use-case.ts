@@ -1,6 +1,7 @@
 import { getUnvotedUnitsAction, type GetUnvotedUnitsInput, type GetUnvotedUnitsResult } from '@/modules/property-horizontal/infrastructure/actions/voting/get-unvoted-units.action';
 
 export interface GetUnvotedUnitsUseCaseParams {
+  token: string;
   hpId: number;
   groupId: number;
   votingId: number;
@@ -22,6 +23,7 @@ export class GetUnvotedUnitsUseCase {
   async execute(params: GetUnvotedUnitsUseCaseParams): Promise<GetUnvotedUnitsUseCaseResult> {
     try {
       const input: GetUnvotedUnitsInput = {
+        token: params.token,
         hpId: params.hpId,
         groupId: params.groupId,
         votingId: params.votingId,
@@ -58,3 +60,4 @@ export class GetUnvotedUnitsUseCase {
     }
   }
 }
+

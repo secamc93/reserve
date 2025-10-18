@@ -11,21 +11,12 @@ export class ProxyRepository implements IProxyRepository {
     const startTime = Date.now();
     const url = `${process.env.API_BASE_URL}/attendance/proxies`;
 
-    // Mapear camelCase → snake_case según contrato del backend
-    const payload: Record<string, unknown> = {
-      business_id: (params.data as any).businessId,
-      property_unit_id: (params.data as any).propertyUnitId,
-      proxy_name: (params.data as any).proxyName,
-      // DNI opcional
-      ...( (params.data as any).proxyDni ? { proxy_dni: (params.data as any).proxyDni } : {} ),
-      proxy_email: (params.data as any).proxyEmail,
-      proxy_phone: (params.data as any).proxyPhone,
-      proxy_address: (params.data as any).proxyAddress,
-      proxy_type: (params.data as any).proxyType,
-      start_date: (params.data as any).startDate,
-      end_date: (params.data as any).endDate,
-      power_of_attorney: (params.data as any).powerOfAttorney,
-      notes: (params.data as any).notes,
+    // Solo enviar el nombre del apoderado
+    const data = params.data as unknown as Record<string, unknown>;
+    const payload = {
+      business_id: data.businessId,
+      property_unit_id: data.propertyUnitId,
+      proxy_name: data.proxyName,
     };
 
     logHttpRequest({ method: 'POST', url, token: params.token.substring(0, 20) + '...', body: payload });
@@ -100,7 +91,7 @@ export class ProxyRepository implements IProxyRepository {
     const url = `${process.env.API_BASE_URL}/attendance/proxies/${params.id}`;
     // Mapear campos editables a snake_case
     const body: Record<string, unknown> = {};
-    const d: any = params.data || {};
+    const d: Record<string, unknown> = (params.data as unknown as Record<string, unknown>) || {};
     if (d.proxyName != null) body.proxy_name = d.proxyName;
     if (d.proxyDni != null) body.proxy_dni = d.proxyDni;
     if (d.proxyEmail != null) body.proxy_email = d.proxyEmail;

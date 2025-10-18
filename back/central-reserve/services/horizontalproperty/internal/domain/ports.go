@@ -89,6 +89,7 @@ type VotingRepository interface {
 	ListVotesByVoting(ctx context.Context, votingID uint) ([]Vote, error)
 	GetUnvotedUnitsByVoting(ctx context.Context, votingID uint, unitNumberFilter string) ([]UnvotedUnit, error)
 	GetResidentMainUnitID(ctx context.Context, residentID uint) (uint, error)
+	CheckUnitAttendanceForVoting(ctx context.Context, votingID, propertyUnitID uint) (bool, error)
 }
 
 // VotingUseCase - Puerto para casos de uso de votaciones
@@ -126,6 +127,7 @@ type VotingUseCase interface {
 	// Public Voting
 	ValidateResidentForVoting(ctx context.Context, hpID, propertyUnitID uint, dni string) (*ResidentBasicDTO, error)
 	GetUnitsWithResidents(ctx context.Context, hpID uint) ([]UnitWithResidentDTO, error)
+	CheckUnitAttendanceForVoting(ctx context.Context, votingID, propertyUnitID uint) (bool, error)
 }
 
 // ───────────────────────────────────────────
@@ -215,8 +217,12 @@ type AttendanceRepository interface {
 	CreateAttendanceRecord(ctx context.Context, record AttendanceRecord) (*AttendanceRecord, error)
 	GetAttendanceRecordByID(ctx context.Context, id uint) (*AttendanceRecord, error)
 	GetAttendanceRecordsByList(ctx context.Context, attendanceListID uint) ([]AttendanceRecord, error)
+	// Paginado y filtros
+	GetAttendanceRecordsByListPaged(ctx context.Context, attendanceListID uint, unitNumber string, attended *bool, page int, pageSize int) (records []AttendanceRecord, total int64, err error)
 	GetAttendanceRecordByListAndUnit(ctx context.Context, attendanceListID, propertyUnitID uint) (*AttendanceRecord, error)
 	UpdateAttendanceRecord(ctx context.Context, id uint, record AttendanceRecord) (*AttendanceRecord, error)
+	UpdateAttendanceRecordSimple(ctx context.Context, id uint, attendedAsOwner, attendedAsProxy bool) (*AttendanceRecord, error)
+	UpdateAttendanceRecordsByPropertyUnit(ctx context.Context, propertyUnitID uint, proxyID *uint) error
 	DeleteAttendanceRecord(ctx context.Context, id uint) error
 
 	// Bulk operations
@@ -251,13 +257,25 @@ type AttendanceUseCase interface {
 	CreateAttendanceRecord(ctx context.Context, dto CreateAttendanceRecordDTO) (*AttendanceRecordDTO, error)
 	GetAttendanceRecordByID(ctx context.Context, id uint) (*AttendanceRecordDTO, error)
 	GetAttendanceRecordsByList(ctx context.Context, attendanceListID uint) ([]AttendanceRecordDTO, error)
+	// Paginado y filtros
+	GetAttendanceRecordsByListPaged(ctx context.Context, attendanceListID uint, unitNumber string, attended *bool, page int, pageSize int) (*PaginatedAttendanceRecordsDTO, error)
 	GetAttendanceRecordByListAndUnit(ctx context.Context, attendanceListID, propertyUnitID uint) (*AttendanceRecordDTO, error)
 	UpdateAttendanceRecord(ctx context.Context, id uint, dto UpdateAttendanceRecordDTO) (*AttendanceRecordDTO, error)
 	DeleteAttendanceRecord(ctx context.Context, id uint) error
 
 	// Special operations
 	MarkAttendance(ctx context.Context, attendanceListID, propertyUnitID uint, residentID *uint, proxyID *uint, attendedAsOwner, attendedAsProxy bool, signature, signatureMethod string) (*AttendanceRecordDTO, error)
+	MarkAttendanceSimple(ctx context.Context, recordID uint, attended bool) (*AttendanceRecordDTO, error)
 	VerifyAttendance(ctx context.Context, recordID uint, verifiedBy uint, verificationNotes string) (*AttendanceRecordDTO, error)
 	GetAttendanceSummary(ctx context.Context, attendanceListID uint) (*AttendanceSummaryDTO, error)
 	GetVotingGroupTitleByListID(ctx context.Context, attendanceListID uint) (string, error)
+}
+
+// PaginatedAttendanceRecordsDTO - respuesta paginada de registros de asistencia
+type PaginatedAttendanceRecordsDTO struct {
+	Data       []AttendanceRecordDTO
+	Total      int64
+	Page       int
+	PageSize   int
+	TotalPages int
 }

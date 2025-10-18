@@ -94,7 +94,7 @@ export function EditVotingModal({
       const updateData: UpdateVotingDTO = {
         title: title.trim(),
         description: description.trim(),
-        votingType,
+        votingType: votingType as 'simple' | 'multiple' | 'weighted' | 'majority',
         isSecret,
         allowAbstention,
         displayOrder: displayOrderNum,

@@ -51,3 +51,4 @@ export interface IAttendanceRecordRepository {
   listAttendanceRecords(params: ListAttendanceRecordsParams): Promise<AttendanceRecord[]>;
   verifyAttendance(params: VerifyAttendanceParams): Promise<AttendanceRecord>;
 }
+

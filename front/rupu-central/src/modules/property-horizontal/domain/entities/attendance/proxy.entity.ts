@@ -49,3 +49,4 @@ export interface UpdateProxyDTO {
   powerOfAttorney?: string;
   notes?: string;
 }
+

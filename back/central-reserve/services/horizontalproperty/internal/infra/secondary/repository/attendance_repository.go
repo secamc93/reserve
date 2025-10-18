@@ -293,14 +293,23 @@ func (r *Repository) GetAttendanceRecordByID(ctx context.Context, id uint) (*dom
 func (r *Repository) GetAttendanceRecordsByList(ctx context.Context, attendanceListID uint) ([]domain.AttendanceRecord, error) {
 	type row struct {
 		models.AttendanceRecord
-		ResidentName string
-		ProxyName    string
-		UnitNumber   string
+		ResidentName             string
+		ProxyName                string
+		UnitNumber               string
+		ParticipationCoefficient string
 	}
 	var rows []row
 	if err := r.db.Conn(ctx).
 		Table("horizontal_property.attendance_records ar").
-		Select("ar.*, COALESCE(r.name, r2.name, '') as resident_name, COALESCE(p.proxy_name,'') as proxy_name, pu.number as unit_number").
+		Select(`ar.id, ar.created_at, ar.updated_at, ar.deleted_at, 
+			ar.attendance_list_id, ar.property_unit_id, ar.resident_id, ar.proxy_id,
+			ar.attended_as_owner, ar.attended_as_proxy, ar.signature, ar.signature_date, 
+			ar.signature_method, ar.verified_by, ar.verification_date, ar.verification_notes, 
+			ar.notes, ar.is_valid,
+			COALESCE(r.name, r2.name, '') as resident_name, 
+			COALESCE(p.proxy_name,'') as proxy_name, 
+			pu.number as unit_number,
+			COALESCE(CAST(pu.participation_coefficient AS TEXT), '0.000000') as participation_coefficient`).
 		Joins("LEFT JOIN horizontal_property.residents r ON r.id = ar.resident_id").
 		Joins("LEFT JOIN horizontal_property.resident_units ru ON ru.property_unit_id = ar.property_unit_id AND ru.is_main_resident = TRUE").
 		Joins("LEFT JOIN horizontal_property.residents r2 ON r2.id = ru.resident_id").
@@ -315,13 +324,112 @@ func (r *Repository) GetAttendanceRecordsByList(ctx context.Context, attendanceL
 
 	var result []domain.AttendanceRecord
 	for _, item := range rows {
+		// Log simple para debug
+		fmt.Printf("DEBUG REPO: Unidad %s, Coeficiente: %s\n", item.UnitNumber, item.ParticipationCoefficient)
+
 		rec := mapper.MapAttendanceRecordToDomain(&item.AttendanceRecord)
 		rec.ResidentName = item.ResidentName
 		rec.ProxyName = item.ProxyName
 		rec.UnitNumber = item.UnitNumber
+
+		// Asignar coeficiente como string
+		rec.ParticipationCoefficient = item.ParticipationCoefficient
+
+		// Log para verificar que se asignó correctamente
+		fmt.Printf("DEBUG REPO FINAL: Unidad %s, Coeficiente asignado: %s\n", rec.UnitNumber, rec.ParticipationCoefficient)
+
 		result = append(result, *rec)
 	}
 	return result, nil
+}
+
+// GetAttendanceRecordsByListPaged - lista registros con filtros y paginación
+func (r *Repository) GetAttendanceRecordsByListPaged(ctx context.Context, attendanceListID uint, unitNumber string, attended *bool, page int, pageSize int) ([]domain.AttendanceRecord, int64, error) {
+	type row struct {
+		models.AttendanceRecord
+		ResidentName             string
+		ProxyName                string
+		UnitNumber               string
+		ParticipationCoefficient string
+	}
+
+	if page <= 0 {
+		page = 1
+	}
+	if pageSize <= 0 || pageSize > 200 {
+		pageSize = 50
+	}
+	offset := (page - 1) * pageSize
+
+	base := r.db.Conn(ctx).
+		Table("horizontal_property.attendance_records ar").
+		Joins("LEFT JOIN horizontal_property.residents r ON r.id = ar.resident_id").
+		Joins("LEFT JOIN horizontal_property.resident_units ru ON ru.property_unit_id = ar.property_unit_id AND ru.is_main_resident = TRUE").
+		Joins("LEFT JOIN horizontal_property.residents r2 ON r2.id = ru.resident_id").
+		Joins("JOIN horizontal_property.property_units pu ON pu.id = ar.property_unit_id").
+		Joins("LEFT JOIN horizontal_property.proxies p ON p.id = ar.proxy_id").
+		Where("ar.attendance_list_id = ?", attendanceListID)
+
+	if unitNumber != "" {
+		base = base.Where("pu.number ILIKE ?", "%"+unitNumber+"%")
+	}
+	if attended != nil {
+		if *attended {
+			base = base.Where("(ar.attended_as_owner = TRUE OR ar.attended_as_proxy = TRUE)")
+		} else {
+			base = base.Where("(ar.attended_as_owner = FALSE AND ar.attended_as_proxy = FALSE)")
+		}
+	}
+
+	// Conteo total
+	var total int64
+	if err := base.Session(&gorm.Session{}).Count(&total).Error; err != nil {
+		r.logger.Error().Err(err).Uint("attendance_list_id", attendanceListID).Msg("Error contando registros paginados")
+		return nil, 0, fmt.Errorf("error contando registros: %w", err)
+	}
+
+	// Selección paginada - especificar campos explícitamente para evitar problemas de mapeo
+	var rows []row
+	if err := base.
+		Select(`ar.id, ar.created_at, ar.updated_at, ar.deleted_at, 
+			ar.attendance_list_id, ar.property_unit_id, ar.resident_id, ar.proxy_id,
+			ar.attended_as_owner, ar.attended_as_proxy, ar.signature, ar.signature_date, 
+			ar.signature_method, ar.verified_by, ar.verification_date, ar.verification_notes, 
+			ar.notes, ar.is_valid,
+			COALESCE(r.name, r2.name, '') as resident_name, 
+			COALESCE(p.proxy_name,'') as proxy_name, 
+			pu.number as unit_number,
+			COALESCE(CAST(pu.participation_coefficient AS TEXT), '0.000000') as participation_coefficient`).
+		Order("pu.number ASC, ar.id ASC").
+		Offset(offset).Limit(pageSize).
+		Scan(&rows).Error; err != nil {
+		r.logger.Error().Err(err).Uint("attendance_list_id", attendanceListID).Msg("Error listando registros paginados")
+		return nil, 0, fmt.Errorf("error obteniendo registros de asistencia: %w", err)
+	}
+
+	var result []domain.AttendanceRecord
+	for _, item := range rows {
+		// Log para debug del mapeo
+		r.logger.Debug().
+			Uint("id", item.AttendanceRecord.ID).
+			Bool("attended_as_owner", item.AttendanceRecord.AttendedAsOwner).
+			Bool("attended_as_proxy", item.AttendanceRecord.AttendedAsProxy).
+			Bool("is_valid", item.AttendanceRecord.IsValid).
+			Str("resident_name", item.ResidentName).
+			Str("unit_number", item.UnitNumber).
+			Msg("Mapeando registro de asistencia")
+
+		rec := mapper.MapAttendanceRecordToDomain(&item.AttendanceRecord)
+		rec.ResidentName = item.ResidentName
+		rec.ProxyName = item.ProxyName
+		rec.UnitNumber = item.UnitNumber
+
+		// Asignar coeficiente como string
+		rec.ParticipationCoefficient = item.ParticipationCoefficient
+
+		result = append(result, *rec)
+	}
+	return result, total, nil
 }
 
 func (r *Repository) GetAttendanceRecordByListAndUnit(ctx context.Context, attendanceListID, propertyUnitID uint) (*domain.AttendanceRecord, error) {
@@ -369,6 +477,75 @@ func (r *Repository) UpdateAttendanceRecord(ctx context.Context, id uint, record
 		r.logger.Error().Err(err).Uint("id", id).Msg("Error actualizando registro de asistencia")
 		return nil, fmt.Errorf("error actualizando registro de asistencia: %w", err)
 	}
+	return mapper.MapAttendanceRecordToDomain(&m), nil
+}
+
+// UpdateAttendanceRecordSimple - actualiza solo los campos de asistencia de forma simple
+func (r *Repository) UpdateAttendanceRecordSimple(ctx context.Context, id uint, attendedAsOwner, attendedAsProxy bool) (*domain.AttendanceRecord, error) {
+	r.logger.Info().
+		Uint("id", id).
+		Bool("attended_as_owner", attendedAsOwner).
+		Bool("attended_as_proxy", attendedAsProxy).
+		Msg("Iniciando UpdateAttendanceRecordSimple")
+
+	// Verificar primero si el registro existe en la tabla correcta
+	var existingRecord models.AttendanceRecord
+	if err := r.db.Conn(ctx).Table("horizontal_property.attendance_records").First(&existingRecord, id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			r.logger.Error().
+				Uint("id", id).
+				Msg("Registro no encontrado en horizontal_property.attendance_records")
+			return nil, fmt.Errorf("registro de asistencia no encontrado")
+		}
+		r.logger.Error().Err(err).Uint("id", id).Msg("Error verificando existencia del registro")
+		return nil, fmt.Errorf("error verificando registro: %w", err)
+	}
+
+	r.logger.Info().
+		Uint("id", id).
+		Uint("attendance_list_id", existingRecord.AttendanceListID).
+		Uint("property_unit_id", existingRecord.PropertyUnitID).
+		Msg("Registro encontrado, procediendo a actualizar")
+
+	// Actualizar directamente en la tabla correcta
+	result := r.db.Conn(ctx).Table("horizontal_property.attendance_records").
+		Where("id = ?", id).
+		Updates(map[string]interface{}{
+			"attended_as_owner": attendedAsOwner,
+			"attended_as_proxy": attendedAsProxy,
+			"updated_at":        time.Now(),
+		})
+
+	if result.Error != nil {
+		r.logger.Error().Err(result.Error).Uint("id", id).Msg("Error ejecutando UPDATE en base de datos")
+		return nil, fmt.Errorf("error actualizando registro de asistencia: %w", result.Error)
+	}
+
+	r.logger.Info().
+		Uint("id", id).
+		Int64("rows_affected", result.RowsAffected).
+		Msg("UPDATE ejecutado en base de datos")
+
+	if result.RowsAffected == 0 {
+		r.logger.Error().
+			Uint("id", id).
+			Msg("UPDATE no afectó ninguna fila - registro no encontrado")
+		return nil, fmt.Errorf("registro de asistencia no encontrado")
+	}
+
+	// Obtener el registro actualizado para devolverlo
+	var m models.AttendanceRecord
+	if err := r.db.Conn(ctx).Table("horizontal_property.attendance_records").First(&m, id).Error; err != nil {
+		r.logger.Error().Err(err).Uint("id", id).Msg("Error obteniendo registro actualizado después del UPDATE")
+		return nil, fmt.Errorf("error obteniendo registro actualizado: %w", err)
+	}
+
+	r.logger.Info().
+		Uint("id", m.ID).
+		Bool("attended_as_owner", m.AttendedAsOwner).
+		Bool("attended_as_proxy", m.AttendedAsProxy).
+		Msg("Registro actualizado exitosamente")
+
 	return mapper.MapAttendanceRecordToDomain(&m), nil
 }
 
@@ -451,7 +628,7 @@ func (r *Repository) GenerateAttendanceListForVotingGroup(ctx context.Context, v
 			PropertyUnitID:   unit.ID,
 			AttendedAsOwner:  false,
 			AttendedAsProxy:  false,
-			IsValid:          true,
+			IsValid:          false, // La asistencia no está confirmada aún
 		})
 	}
 
@@ -483,35 +660,72 @@ func (r *Repository) GetAttendanceSummary(ctx context.Context, attendanceListID 
 		return nil, fmt.Errorf("error obteniendo resumen de asistencia: %w", err)
 	}
 
-	// Contar asistencias como propietario
+	// Contar asistencias como propietario (proxy_id IS NULL)
 	if err := r.db.Conn(ctx).Model(&models.AttendanceRecord{}).
-		Where("attendance_list_id = ? AND attended_as_owner = ?", attendanceListID, true).
+		Where("attendance_list_id = ? AND (attended_as_owner = ? OR attended_as_proxy = ?) AND proxy_id IS NULL",
+			attendanceListID, true, true).
 		Count(&result.AttendedAsOwner).Error; err != nil {
 		r.logger.Error().Err(err).Uint("attendance_list_id", attendanceListID).Msg("Error contando asistencias como propietario")
 		return nil, fmt.Errorf("error obteniendo resumen de asistencia: %w", err)
 	}
 
-	// Contar asistencias como apoderado
+	// Contar asistencias como apoderado (proxy_id IS NOT NULL)
 	if err := r.db.Conn(ctx).Model(&models.AttendanceRecord{}).
-		Where("attendance_list_id = ? AND attended_as_proxy = ?", attendanceListID, true).
+		Where("attendance_list_id = ? AND (attended_as_owner = ? OR attended_as_proxy = ?) AND proxy_id IS NOT NULL",
+			attendanceListID, true, true).
 		Count(&result.AttendedAsProxy).Error; err != nil {
 		r.logger.Error().Err(err).Uint("attendance_list_id", attendanceListID).Msg("Error contando asistencias como apoderado")
 		return nil, fmt.Errorf("error obteniendo resumen de asistencia: %w", err)
 	}
 
-	// Calcular porcentaje de asistencia
-	var attendanceRate float64
+	// Calcular porcentajes por cantidad de casas
+	var attendanceRate, absenceRate float64
 	if result.TotalUnits > 0 {
 		attendanceRate = float64(result.AttendedUnits) / float64(result.TotalUnits) * 100
+		absenceRate = float64(result.TotalUnits-result.AttendedUnits) / float64(result.TotalUnits) * 100
+	}
+
+	// Calcular porcentajes por coeficiente de participación
+	var totalCoefficient, attendedCoefficient float64
+
+	// Obtener coeficiente total de todas las unidades
+	if err := r.db.Conn(ctx).Model(&models.AttendanceRecord{}).
+		Joins("JOIN horizontal_property.property_units pu ON pu.id = attendance_records.property_unit_id").
+		Where("attendance_records.attendance_list_id = ? AND pu.participation_coefficient IS NOT NULL", attendanceListID).
+		Select("COALESCE(SUM(pu.participation_coefficient), 0)").
+		Scan(&totalCoefficient).Error; err != nil {
+		r.logger.Error().Err(err).Uint("attendance_list_id", attendanceListID).Msg("Error calculando coeficiente total")
+		return nil, fmt.Errorf("error calculando coeficiente total: %w", err)
+	}
+
+	// Obtener coeficiente de unidades que asistieron
+	if err := r.db.Conn(ctx).Model(&models.AttendanceRecord{}).
+		Joins("JOIN horizontal_property.property_units pu ON pu.id = attendance_records.property_unit_id").
+		Where("attendance_records.attendance_list_id = ? AND (attendance_records.attended_as_owner = ? OR attendance_records.attended_as_proxy = ?) AND pu.participation_coefficient IS NOT NULL",
+			attendanceListID, true, true).
+		Select("COALESCE(SUM(pu.participation_coefficient), 0)").
+		Scan(&attendedCoefficient).Error; err != nil {
+		r.logger.Error().Err(err).Uint("attendance_list_id", attendanceListID).Msg("Error calculando coeficiente de asistencia")
+		return nil, fmt.Errorf("error calculando coeficiente de asistencia: %w", err)
+	}
+
+	// Calcular porcentajes por coeficiente
+	var attendanceRateByCoef, absenceRateByCoef float64
+	if totalCoefficient > 0 {
+		attendanceRateByCoef = (attendedCoefficient / totalCoefficient) * 100
+		absenceRateByCoef = ((totalCoefficient - attendedCoefficient) / totalCoefficient) * 100
 	}
 
 	return &domain.AttendanceSummaryDTO{
-		TotalUnits:      int(result.TotalUnits),
-		AttendedUnits:   int(result.AttendedUnits),
-		AbsentUnits:     int(result.TotalUnits - result.AttendedUnits),
-		AttendedAsOwner: int(result.AttendedAsOwner),
-		AttendedAsProxy: int(result.AttendedAsProxy),
-		AttendanceRate:  attendanceRate,
+		TotalUnits:           int(result.TotalUnits),
+		AttendedUnits:        int(result.AttendedUnits),
+		AbsentUnits:          int(result.TotalUnits - result.AttendedUnits),
+		AttendedAsOwner:      int(result.AttendedAsOwner),
+		AttendedAsProxy:      int(result.AttendedAsProxy),
+		AttendanceRate:       attendanceRate,
+		AbsenceRate:          absenceRate,
+		AttendanceRateByCoef: attendanceRateByCoef,
+		AbsenceRateByCoef:    absenceRateByCoef,
 	}, nil
 }
 
@@ -528,4 +742,33 @@ func (r *Repository) GetVotingGroupTitleByListID(ctx context.Context, attendance
 		return "", fmt.Errorf("error obteniendo título del grupo: %w", err)
 	}
 	return title, nil
+}
+
+// UpdateAttendanceRecordsByPropertyUnit - actualiza registros de asistencia para una unidad de propiedad específica
+func (r *Repository) UpdateAttendanceRecordsByPropertyUnit(ctx context.Context, propertyUnitID uint, proxyID *uint) error {
+	r.logger.Info().
+		Uint("property_unit_id", propertyUnitID).
+		Interface("proxy_id", proxyID).
+		Msg("Actualizando registros de asistencia por unidad de propiedad")
+
+	// Actualizar todos los registros de asistencia para esta unidad
+	result := r.db.Conn(ctx).Model(&models.AttendanceRecord{}).
+		Where("property_unit_id = ?", propertyUnitID).
+		Update("proxy_id", proxyID)
+
+	if result.Error != nil {
+		r.logger.Error().Err(result.Error).
+			Uint("property_unit_id", propertyUnitID).
+			Interface("proxy_id", proxyID).
+			Msg("Error actualizando registros de asistencia por unidad")
+		return fmt.Errorf("error actualizando registros de asistencia: %w", result.Error)
+	}
+
+	r.logger.Info().
+		Uint("property_unit_id", propertyUnitID).
+		Interface("proxy_id", proxyID).
+		Int64("rows_affected", result.RowsAffected).
+		Msg("Registros de asistencia actualizados exitosamente")
+
+	return nil
 }

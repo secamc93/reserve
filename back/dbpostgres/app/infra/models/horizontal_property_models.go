@@ -479,8 +479,8 @@ type AttendanceRecord struct {
 	VerificationNotes string     `gorm:"size:500"` // Notas de verificación
 
 	// Información adicional
-	Notes   string `gorm:"size:1000"`    // Notas adicionales
-	IsValid bool   `gorm:"default:true"` // Si el registro es válido
+	Notes   string `gorm:"size:1000"`     // Notas adicionales
+	IsValid bool   `gorm:"default:false"` // Si el registro es válido
 
 	// Relaciones
 	AttendanceList AttendanceList `gorm:"foreignKey:AttendanceListID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`

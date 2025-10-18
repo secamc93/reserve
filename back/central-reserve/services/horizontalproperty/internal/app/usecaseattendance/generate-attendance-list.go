@@ -12,9 +12,14 @@ func (uc *AttendanceUseCase) GenerateAttendanceList(ctx context.Context, votingG
 		Uint("voting_group_id", votingGroupID).
 		Msg("Generando lista de asistencia automática")
 
+	// Verificar primero si el grupo de votación existe
+	// TODO: Implementar verificación de existencia del VotingGroup
+	// Por ahora, asumimos que existe y continuamos
+
 	// Verificar si ya existe una lista para este grupo de votación
 	existingList, err := uc.attendanceRepo.GetAttendanceListByVotingGroup(ctx, votingGroupID)
 	if err != nil {
+		uc.logger.Error().Err(err).Uint("voting_group_id", votingGroupID).Msg("Error verificando lista existente")
 		return nil, err
 	}
 
@@ -53,7 +58,7 @@ func (uc *AttendanceUseCase) GenerateAttendanceList(ctx context.Context, votingG
 				records[i].AttendanceListID = attendanceList.ID
 				records[i].AttendedAsOwner = false
 				records[i].AttendedAsProxy = false
-				records[i].IsValid = true
+				records[i].IsValid = false // La asistencia no está confirmada aún
 			}
 			if err := uc.attendanceRepo.CreateAttendanceRecordsInBatch(ctx, records); err != nil {
 				uc.logger.Error().Err(err).

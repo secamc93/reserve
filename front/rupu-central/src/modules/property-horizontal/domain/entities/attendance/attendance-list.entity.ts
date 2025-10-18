@@ -37,3 +37,4 @@ export interface AttendanceListSummary {
   attendedAsProxy: number;
   attendanceRate: number;
 }
+

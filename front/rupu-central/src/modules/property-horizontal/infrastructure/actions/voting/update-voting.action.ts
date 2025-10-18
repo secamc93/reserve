@@ -28,11 +28,12 @@ export async function updateVotingAction(input: UpdateVotingInput): Promise<Upda
     const useCase = new UpdateVotingUseCase(repository);
 
     const result = await useCase.execute({
+      id: input.votingId,
       token: input.token,
       hpId: input.hpId,
       groupId: input.groupId,
       votingId: input.votingId,
-      data: input.data,
+      data: input.data as Record<string, unknown>,
     });
 
     return {

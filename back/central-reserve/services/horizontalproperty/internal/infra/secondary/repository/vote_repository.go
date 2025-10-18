@@ -786,3 +786,52 @@ func (r *Repository) filterUnvotedUnits(unitsWithResidents map[uint]*models.Resi
 
 	return unvotedUnits
 }
+
+// CheckUnitAttendanceForVoting - Verifica si una unidad tiene asistencia marcada para una votación
+func (r *Repository) CheckUnitAttendanceForVoting(ctx context.Context, votingID, propertyUnitID uint) (bool, error) {
+	// Primero obtener el voting_group_id de la votación
+	var voting models.Voting
+	if err := r.db.Conn(ctx).
+		Select("voting_group_id").
+		Where("id = ?", votingID).
+		First(&voting).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return false, fmt.Errorf("votación no encontrada")
+		}
+		r.logger.Error().Err(err).Uint("voting_id", votingID).Msg("Error obteniendo votación")
+		return false, fmt.Errorf("error obteniendo votación: %w", err)
+	}
+
+	// Buscar si existe una lista de asistencia para este grupo de votación
+	var attendanceList models.AttendanceList
+	if err := r.db.Conn(ctx).
+		Where("voting_group_id = ? AND is_active = ?", voting.VotingGroupID, true).
+		First(&attendanceList).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			// Si no hay lista de asistencia, permitir votar (no hay restricción)
+			return true, nil
+		}
+		r.logger.Error().Err(err).Uint("voting_group_id", voting.VotingGroupID).Msg("Error obteniendo lista de asistencia")
+		return false, fmt.Errorf("error obteniendo lista de asistencia: %w", err)
+	}
+
+	// Verificar si la unidad tiene asistencia marcada en la lista
+	var attendanceRecord models.AttendanceRecord
+	if err := r.db.Conn(ctx).
+		Where("attendance_list_id = ? AND property_unit_id = ? AND (attended_as_owner = ? OR attended_as_proxy = ?)",
+			attendanceList.ID, propertyUnitID, true, true).
+		First(&attendanceRecord).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			// No tiene asistencia marcada
+			return false, nil
+		}
+		r.logger.Error().Err(err).
+			Uint("attendance_list_id", attendanceList.ID).
+			Uint("property_unit_id", propertyUnitID).
+			Msg("Error verificando asistencia de la unidad")
+		return false, fmt.Errorf("error verificando asistencia: %w", err)
+	}
+
+	// Tiene asistencia marcada
+	return true, nil
+}

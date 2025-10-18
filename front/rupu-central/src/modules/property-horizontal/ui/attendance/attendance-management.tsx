@@ -11,6 +11,7 @@ import { createAttendanceListAction, generateAttendanceListAction, listAttendanc
 import { AttendanceList } from '../../domain/entities/attendance';
 import { CreateAttendanceListModal } from './create-attendance-list-modal';
 import { AttendanceListModal } from './attendance-list-modal';
+import { AttendanceSummaryModal } from './attendance-summary-modal';
 
 interface AttendanceManagementProps {
   votingGroupId: number;
@@ -31,6 +32,7 @@ export function AttendanceManagement({
   const [attendanceLists, setAttendanceLists] = useState<AttendanceList[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
+  const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [selectedAttendanceList, setSelectedAttendanceList] = useState<AttendanceList | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +45,7 @@ export function AttendanceManagement({
         if (result.success && result.data) {
           setAttendanceLists(result.data);
         }
-      } catch (e) {
+      } catch {
         // silencioso si no está implementado en backend aún
       }
     };
@@ -211,12 +213,23 @@ export function AttendanceManagement({
                     <span>Creada: {new Date(list.createdAt).toLocaleDateString()}</span>
                   </div>
                 </div>
-                <button
-                  onClick={() => handleOpenAttendanceList(list)}
-                  className="btn btn-outline btn-sm flex items-center gap-2"
-                >
-                  📋 Abrir Lista
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleOpenAttendanceList(list)}
+                    className="btn btn-outline btn-sm flex items-center gap-2"
+                  >
+                    📋 Abrir Lista
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedAttendanceList(list);
+                      setShowSummaryModal(true);
+                    }}
+                    className="btn btn-primary btn-sm flex items-center gap-2"
+                  >
+                    📊 Resumen
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -261,6 +274,15 @@ export function AttendanceManagement({
           attendanceList={selectedAttendanceList}
           token={token}
           businessId={businessId}
+        />
+      )}
+
+      {showSummaryModal && selectedAttendanceList && (
+        <AttendanceSummaryModal
+          isOpen={showSummaryModal}
+          onClose={() => setShowSummaryModal(false)}
+          attendanceListId={selectedAttendanceList.id}
+          token={token}
         />
       )}
     </div>

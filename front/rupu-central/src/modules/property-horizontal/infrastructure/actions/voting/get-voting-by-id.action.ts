@@ -25,6 +25,7 @@ export async function getVotingByIdAction(
     const useCase = new GetVotingByIdUseCase(repository);
 
     const result = await useCase.execute({
+      id: input.votingId,
       token: input.token,
       hpId: input.hpId,
       groupId: input.groupId,

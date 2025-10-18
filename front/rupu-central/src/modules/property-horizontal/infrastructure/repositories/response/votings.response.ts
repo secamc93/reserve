@@ -102,6 +102,7 @@ export interface BackendVote {
   voted_at: string;
   ip_address: string;
   user_agent: string;
+  notes?: string;
 }
 
 export interface BackendGetVotesResponse {

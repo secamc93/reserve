@@ -46,3 +46,4 @@ export interface IProxyRepository {
   listProxies(params: ListProxiesParams): Promise<Proxy[]>;
   getProxiesByPropertyUnit(params: GetProxiesByPropertyUnitParams): Promise<Proxy[]>;
 }
+

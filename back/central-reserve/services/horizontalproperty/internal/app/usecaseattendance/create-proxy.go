@@ -23,6 +23,18 @@ func (uc *AttendanceUseCase) CreateProxy(ctx context.Context, dto domain.CreateP
 		proxyDni = fmt.Sprintf("PX%v", time.Now().UnixNano())
 	}
 
+	// Establecer valores por defecto para campos opcionales
+	proxyType := dto.ProxyType
+	if proxyType == "" {
+		proxyType = "external" // Valor por defecto
+	}
+
+	startDate := dto.StartDate
+	if startDate == nil {
+		now := time.Now()
+		startDate = &now // Fecha actual por defecto
+	}
+
 	// Crear entidad
 	proxy := domain.Proxy{
 		BusinessID:      dto.BusinessID,
@@ -32,9 +44,9 @@ func (uc *AttendanceUseCase) CreateProxy(ctx context.Context, dto domain.CreateP
 		ProxyEmail:      dto.ProxyEmail,
 		ProxyPhone:      dto.ProxyPhone,
 		ProxyAddress:    dto.ProxyAddress,
-		ProxyType:       dto.ProxyType,
+		ProxyType:       proxyType,
 		IsActive:        true,
-		StartDate:       dto.StartDate,
+		StartDate:       *startDate,
 		EndDate:         dto.EndDate,
 		PowerOfAttorney: dto.PowerOfAttorney,
 		Notes:           dto.Notes,
@@ -71,6 +83,17 @@ func (uc *AttendanceUseCase) CreateProxy(ctx context.Context, dto domain.CreateP
 		Notes:           created.Notes,
 		CreatedAt:       created.CreatedAt,
 		UpdatedAt:       created.UpdatedAt,
+	}
+
+	// Actualizar registros de asistencia existentes para esta unidad de propiedad
+	if err := uc.attendanceRepo.UpdateAttendanceRecordsByPropertyUnit(ctx, dto.PropertyUnitID, &created.ID); err != nil {
+		uc.logger.Error().Err(err).
+			Uint("proxy_id", created.ID).
+			Uint("property_unit_id", dto.PropertyUnitID).
+			Str("proxy_name", dto.ProxyName).
+			Msg("Error actualizando registros de asistencia con el nuevo apoderado")
+		// No retornamos error aquí para no fallar la creación del apoderado
+		// Solo logueamos el error
 	}
 
 	uc.logger.Info().

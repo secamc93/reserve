@@ -614,12 +614,12 @@ type CreateProxyDTO struct {
 	BusinessID      uint       `json:"business_id" binding:"required" example:"1"`
 	PropertyUnitID  uint       `json:"property_unit_id" binding:"required" example:"123"`
 	ProxyName       string     `json:"proxy_name" binding:"required,min=3,max=255" example:"María García López"`
-	ProxyDni        string     `json:"proxy_dni" binding:"required,min=5,max=30" example:"12345678"`
+	ProxyDni        string     `json:"proxy_dni" binding:"omitempty,min=5,max=30" example:"12345678"`
 	ProxyEmail      string     `json:"proxy_email" binding:"omitempty,email,max=255" example:"maria@email.com"`
 	ProxyPhone      string     `json:"proxy_phone" binding:"omitempty,max=20" example:"+57 300 123 4567"`
 	ProxyAddress    string     `json:"proxy_address" binding:"omitempty,max=500" example:"Calle 123 #45-67"`
-	ProxyType       string     `json:"proxy_type" binding:"required,oneof=external resident family" example:"external"`
-	StartDate       time.Time  `json:"start_date" binding:"required" example:"2025-01-15T00:00:00Z"`
+	ProxyType       string     `json:"proxy_type" binding:"omitempty,oneof=external resident family" example:"external"`
+	StartDate       *time.Time `json:"start_date,omitempty" example:"2025-01-15T00:00:00Z"`
 	EndDate         *time.Time `json:"end_date,omitempty" example:"2025-12-31T23:59:59Z"`
 	PowerOfAttorney string     `json:"power_of_attorney" binding:"omitempty,max=1000" example:"Poder para representar en asambleas"`
 	Notes           string     `json:"notes" binding:"omitempty,max=1000" example:"Notas adicionales"`
@@ -689,34 +689,38 @@ type UpdateAttendanceRecordDTO struct {
 
 // AttendanceRecordDTO - DTO para respuesta de registro de asistencia
 type AttendanceRecordDTO struct {
-	ID                uint       `json:"id" example:"1"`
-	AttendanceListID  uint       `json:"attendance_list_id" example:"1"`
-	PropertyUnitID    uint       `json:"property_unit_id" example:"123"`
-	ResidentID        *uint      `json:"resident_id,omitempty" example:"456"`
-	ProxyID           *uint      `json:"proxy_id,omitempty" example:"789"`
-	AttendedAsOwner   bool       `json:"attended_as_owner" example:"true"`
-	AttendedAsProxy   bool       `json:"attended_as_proxy" example:"false"`
-	Signature         string     `json:"signature" example:"Firma digital"`
-	SignatureDate     *time.Time `json:"signature_date,omitempty" example:"2025-01-15T14:30:00Z"`
-	SignatureMethod   string     `json:"signature_method" example:"digital"`
-	VerifiedBy        *uint      `json:"verified_by,omitempty" example:"5"`
-	VerificationDate  *time.Time `json:"verification_date,omitempty" example:"2025-01-15T15:00:00Z"`
-	VerificationNotes string     `json:"verification_notes" example:"Verificado por administrador"`
-	Notes             string     `json:"notes" example:"Notas adicionales"`
-	IsValid           bool       `json:"is_valid" example:"true"`
-	CreatedAt         time.Time  `json:"created_at" example:"2025-01-15T10:30:00Z"`
-	UpdatedAt         time.Time  `json:"updated_at" example:"2025-01-15T10:30:00Z"`
-	ResidentName      string     `json:"resident_name" example:"Juan Pérez"`
-	ProxyName         string     `json:"proxy_name" example:"María García"`
-	UnitNumber        string     `json:"unit_number" example:"CASA 126"`
+	ID                       uint       `json:"id" example:"1"`
+	AttendanceListID         uint       `json:"attendance_list_id" example:"1"`
+	PropertyUnitID           uint       `json:"property_unit_id" example:"123"`
+	ResidentID               *uint      `json:"resident_id,omitempty" example:"456"`
+	ProxyID                  *uint      `json:"proxy_id,omitempty" example:"789"`
+	AttendedAsOwner          bool       `json:"attended_as_owner" example:"true"`
+	AttendedAsProxy          bool       `json:"attended_as_proxy" example:"false"`
+	Signature                string     `json:"signature" example:"Firma digital"`
+	SignatureDate            *time.Time `json:"signature_date,omitempty" example:"2025-01-15T14:30:00Z"`
+	SignatureMethod          string     `json:"signature_method" example:"digital"`
+	VerifiedBy               *uint      `json:"verified_by,omitempty" example:"5"`
+	VerificationDate         *time.Time `json:"verification_date,omitempty" example:"2025-01-15T15:00:00Z"`
+	VerificationNotes        string     `json:"verification_notes" example:"Verificado por administrador"`
+	Notes                    string     `json:"notes" example:"Notas adicionales"`
+	IsValid                  bool       `json:"is_valid" example:"true"`
+	CreatedAt                time.Time  `json:"created_at" example:"2025-01-15T10:30:00Z"`
+	UpdatedAt                time.Time  `json:"updated_at" example:"2025-01-15T10:30:00Z"`
+	ResidentName             string     `json:"resident_name" example:"Juan Pérez"`
+	ProxyName                string     `json:"proxy_name" example:"María García"`
+	UnitNumber               string     `json:"unit_number" example:"CASA 126"`
+	ParticipationCoefficient string     `json:"participation_coefficient" example:"0.005234"`
 }
 
 // AttendanceSummaryDTO - DTO para resumen de asistencia
 type AttendanceSummaryDTO struct {
-	TotalUnits      int     `json:"total_units" example:"100"`
-	AttendedUnits   int     `json:"attended_units" example:"85"`
-	AbsentUnits     int     `json:"absent_units" example:"15"`
-	AttendedAsOwner int     `json:"attended_as_owner" example:"70"`
-	AttendedAsProxy int     `json:"attended_as_proxy" example:"15"`
-	AttendanceRate  float64 `json:"attendance_rate" example:"85.0"`
+	TotalUnits           int     `json:"total_units" example:"100"`
+	AttendedUnits        int     `json:"attended_units" example:"85"`
+	AbsentUnits          int     `json:"absent_units" example:"15"`
+	AttendedAsOwner      int     `json:"attended_as_owner" example:"70"`
+	AttendedAsProxy      int     `json:"attended_as_proxy" example:"15"`
+	AttendanceRate       float64 `json:"attendance_rate" example:"85.0"`
+	AbsenceRate          float64 `json:"absence_rate" example:"15.0"`
+	AttendanceRateByCoef float64 `json:"attendance_rate_by_coef" example:"85.0"`
+	AbsenceRateByCoef    float64 `json:"absence_rate_by_coef" example:"15.0"`
 }

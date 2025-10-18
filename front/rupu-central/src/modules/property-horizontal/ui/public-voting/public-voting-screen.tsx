@@ -138,11 +138,9 @@ export function PublicVotingScreen({
 
     try {
       // El backend extrae resident_id, voting_id, hp_id y group_id del token
-      const result = await submitPublicVoteAction({
+      const result =       await submitPublicVoteAction({
         votingAuthToken,
         votingOptionId: selectedOptionId,
-        ipAddress: '192.168.1.100', // En producción se obtendría del servidor
-        userAgent: navigator.userAgent
       });
 
       console.log('📥 [VOTE] Resultado del voto:', result);

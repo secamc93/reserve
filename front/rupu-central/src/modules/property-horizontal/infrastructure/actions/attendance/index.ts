@@ -15,4 +15,6 @@ export * from './get-proxy.action';
 export * from './update-proxy.action';
 export * from './delete-proxy.action';
 export * from './get-proxies-by-unit.action';
+export * from './mark-attendance-simple.action';
+export * from './unmark-attendance-simple.action';
 export * from './list-attendance-lists.action';

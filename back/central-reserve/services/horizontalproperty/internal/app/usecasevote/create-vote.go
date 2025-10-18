@@ -15,6 +15,15 @@ func (u *votingUseCase) CreateVote(ctx context.Context, dto domain.CreateVoteDTO
 		return nil, fmt.Errorf("errores de validación: %w", err)
 	}
 
+	// Verificar que la unidad tenga asistencia marcada para esta votación
+	hasAttendance, err := u.repo.CheckUnitAttendanceForVoting(ctx, dto.VotingID, dto.PropertyUnitID)
+	if err != nil {
+		return nil, err
+	}
+	if !hasAttendance {
+		return nil, fmt.Errorf("unidad no registra asistencia")
+	}
+
 	// Una unidad solo puede votar una vez por votación
 	voted, err := u.repo.HasUnitVoted(ctx, dto.VotingID, dto.PropertyUnitID)
 	if err != nil {

@@ -171,6 +171,62 @@ definitions:
     - number
     - unit_type
     type: object
+  request.CreateProxyRequest:
+    properties:
+      business_id:
+        example: 1
+        type: integer
+      end_date:
+        example: "2025-12-31T23:59:59Z"
+        type: string
+      notes:
+        example: Notas adicionales
+        maxLength: 1000
+        type: string
+      power_of_attorney:
+        example: Poder para representar en asambleas
+        maxLength: 1000
+        type: string
+      property_unit_id:
+        example: 123
+        type: integer
+      proxy_address:
+        example: 'Calle 123 #45-67'
+        maxLength: 500
+        type: string
+      proxy_dni:
+        example: "12345678"
+        maxLength: 30
+        minLength: 5
+        type: string
+      proxy_email:
+        example: maria@email.com
+        maxLength: 255
+        type: string
+      proxy_name:
+        example: María García López
+        maxLength: 255
+        minLength: 3
+        type: string
+      proxy_phone:
+        example: +57 300 123 4567
+        maxLength: 20
+        type: string
+      proxy_type:
+        enum:
+        - external
+        - resident
+        - family
+        example: external
+        type: string
+      start_date:
+        example: "2025-01-15T00:00:00Z"
+        type: string
+    required:
+    - business_id
+    - property_unit_id
+    - proxy_name
+    type: object
   request.CreateResidentRequest:
     properties:
       dni:
@@ -328,45 +384,6 @@ definitions:
     - email
     - password
     type: object
-  request.MarkAttendanceRequest:
-    properties:
-      attendance_list_id:
-        example: 1
-        type: integer
-      attended_as_owner:
-        example: true
-        type: boolean
-      attended_as_proxy:
-        example: false
-        type: boolean
-      notes:
-        example: Notas adicionales
-        maxLength: 1000
-        type: string
-      property_unit_id:
-        example: 123
-        type: integer
-      proxy_id:
-        example: 789
-        type: integer
-      resident_id:
-        example: 456
-        type: integer
-      signature:
-        example: Firma digital
-        maxLength: 500
-        type: string
-      signature_method:
-        enum:
-        - digital
-        - handwritten
-        - electronic
-        example: digital
-        type: string
-    required:
-    - attendance_list_id
-    - property_unit_id
-    type: object
   request.Reservation:
     properties:
       business_id:
@@ -499,6 +516,55 @@ definitions:
         type: number
       unit_type:
         example: apartment
+        type: string
+    type: object
+  request.UpdateProxyRequest:
+    properties:
+      end_date:
+        example: "2025-12-31T23:59:59Z"
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      notes:
+        example: Notas adicionales
+        maxLength: 1000
+        type: string
+      power_of_attorney:
+        example: Poder para representar en asambleas
+        maxLength: 1000
+        type: string
+      proxy_address:
+        example: 'Calle 123 #45-67'
+        maxLength: 500
+        type: string
+      proxy_dni:
+        example: "12345678"
+        maxLength: 30
+        minLength: 5
+        type: string
+      proxy_email:
+        example: maria@email.com
+        maxLength: 255
+        type: string
+      proxy_name:
+        example: María García López
+        maxLength: 255
+        minLength: 3
+        type: string
+      proxy_phone:
+        example: +57 300 123 4567
+        maxLength: 20
+        type: string
+      proxy_type:
+        enum:
+        - external
+        - resident
+        - family
+        example: external
+        type: string
+      start_date:
+        example: "2025-01-15T00:00:00Z"
         type: string
     type: object
   request.UpdateReservation:
@@ -1401,17 +1467,97 @@ paths:
       summary: Eliminar lista de asistencia
       tags:
       - Asistencia
-  /attendance/lists/{id}/records:
+  /attendance/lists/{id}/export-detailed-excel:
     get:
       consumes:
       - application/json
-      description: Obtiene todos los registros de una lista de asistencia
+      description: 'Genera un Excel con columnas: Unidad, Nombre, Coeficiente, Apoderado,
+        Asistencia. Incluye título con fecha de descarga.'
       parameters:
       - description: ID de la lista
         in: path
         name: id
         required: true
         type: integer
+      produces:
+      - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Exportar asistencia detallada a Excel
+      tags:
+      - Asistencia
+  /attendance/lists/{id}/export-excel:
+    get:
+      consumes:
+      - application/json
+      description: 'Genera un Excel horizontal con columnas: Casa (unidad), Propietario,
+        Apoderado, Firma. Incluye título del grupo en la hoja.'
+      parameters:
+      - description: ID de la lista
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Exportar lista de asistencia a Excel
+      tags:
+      - Asistencia
+  /attendance/lists/{id}/records:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene registros de una lista de asistencia con paginación y filtros
+      parameters:
+      - description: ID de la lista
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Página (default 1)
+        in: query
+        name: page
+        type: integer
+      - description: Tamaño de página (default 50)
+        in: query
+        name: page_size
+        type: integer
+      - description: Filtro por número de unidad (CASA)
+        in: query
+        name: unit_number
+        type: string
+      - description: 'Filtro de asistencia: true|false'
+        in: query
+        name: attended
+        type: string
       produces:
       - application/json
       responses:
@@ -1495,18 +1641,59 @@ paths:
       summary: Generar lista de asistencia automáticamente
       tags:
       - Asistencia
-  /attendance/records/mark:
+  /attendance/proxies:
+    get:
+      consumes:
+      - application/json
+      description: Lista todos los apoderados de un business con filtros opcionales
+      parameters:
+      - description: ID del business
+        in: query
+        name: business_id
+        type: integer
+      - description: Filtro por unidad de propiedad
+        in: query
+        name: property_unit_id
+        type: integer
+      - description: Filtro por tipo de apoderado
+        in: query
+        name: proxy_type
+        type: string
+      - description: Filtro por activo
+        in: query
+        name: is_active
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Listar apoderados
+      tags:
+      - Apoderados
     post:
       consumes:
       - application/json
-      description: Marca la asistencia de una unidad en una lista de asistencia
+      description: Crea un nuevo apoderado para una unidad de propiedad
       parameters:
-      - description: Datos de la asistencia
+      - description: Datos del apoderado
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/request.MarkAttendanceRequest'
+          $ref: '#/definitions/request.CreateProxyRequest'
       produces:
       - application/json
       responses:
@@ -1524,7 +1711,210 @@ paths:
             type: object
       security:
       - BearerAuth: []
+      summary: Crear apoderado
+      tags:
+      - Apoderados
+  /attendance/proxies/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Elimina un apoderado por su ID
+      parameters:
+      - description: ID del apoderado
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Eliminar apoderado
+      tags:
+      - Apoderados
+    get:
+      consumes:
+      - application/json
+      description: Obtiene un apoderado específico por su ID
+      parameters:
+      - description: ID del apoderado
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Obtener apoderado por ID
+      tags:
+      - Apoderados
+    put:
+      consumes:
+      - application/json
+      description: Actualiza los datos de un apoderado existente
+      parameters:
+      - description: ID del apoderado
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Datos actualizados del apoderado
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateProxyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Actualizar apoderado
+      tags:
+      - Apoderados
+  /attendance/proxies/unit/{unit_id}:
+    get:
+      consumes:
+      - application/json
+      description: Lista todos los apoderados asociados a una unidad de propiedad
+        específica
+      parameters:
+      - description: ID de la unidad de propiedad
+        in: path
+        name: unit_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Obtener apoderados por unidad de propiedad
+      tags:
+      - Apoderados
+  /attendance/records/{id}/mark:
+    post:
+      consumes:
+      - application/json
+      description: Marca la asistencia de un registro por ID
+      parameters:
+      - description: ID del registro de asistencia
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
       summary: Marcar asistencia
+      tags:
+      - Asistencia
+  /attendance/records/{id}/unmark:
+    post:
+      consumes:
+      - application/json
+      description: Desmarca la asistencia de un registro por ID
+      parameters:
+      - description: ID del registro de asistencia
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Desmarcar asistencia
       tags:
       - Asistencia
   /auth/change-password:

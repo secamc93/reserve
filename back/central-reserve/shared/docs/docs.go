@@ -231,6 +231,104 @@ const docTemplate = `{
                 }
             }
         },
+        "/attendance/lists/{id}/export-detailed-excel": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Genera un Excel con columnas: Unidad, Nombre, Coeficiente, Apoderado, Asistencia. Incluye título con fecha de descarga.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                ],
+                "tags": [
+                    "Asistencia"
+                ],
+                "summary": "Exportar asistencia detallada a Excel",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la lista",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/attendance/lists/{id}/export-excel": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Genera un Excel horizontal con columnas: Casa (unidad), Propietario, Apoderado, Firma. Incluye título del grupo en la hoja.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                ],
+                "tags": [
+                    "Asistencia"
+                ],
+                "summary": "Exportar lista de asistencia a Excel",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la lista",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
         "/attendance/lists/{id}/records": {
             "get": {
                 "security": [
@@ -238,7 +336,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Obtiene todos los registros de una lista de asistencia",
+                "description": "Obtiene registros de una lista de asistencia con paginación y filtros",
                 "consumes": [
                     "application/json"
                 ],
@@ -256,6 +354,30 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Página (default 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Tamaño de página (default 50)",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filtro por número de unidad (CASA)",
+                        "name": "unit_number",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filtro de asistencia: true|false",
+                        "name": "attended",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -329,14 +451,348 @@ const docTemplate = `{
                 }
             }
         },
-        "/attendance/records/mark": {
+        "/attendance/proxies": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Lista todos los apoderados de un business con filtros opcionales",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Apoderados"
+                ],
+                "summary": "Listar apoderados",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del business",
+                        "name": "business_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filtro por unidad de propiedad",
+                        "name": "property_unit_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filtro por tipo de apoderado",
+                        "name": "proxy_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filtro por activo",
+                        "name": "is_active",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Marca la asistencia de una unidad en una lista de asistencia",
+                "description": "Crea un nuevo apoderado para una unidad de propiedad",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Apoderados"
+                ],
+                "summary": "Crear apoderado",
+                "parameters": [
+                    {
+                        "description": "Datos del apoderado",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CreateProxyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/attendance/proxies/unit/{unit_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Lista todos los apoderados asociados a una unidad de propiedad específica",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Apoderados"
+                ],
+                "summary": "Obtener apoderados por unidad de propiedad",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la unidad de propiedad",
+                        "name": "unit_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/attendance/proxies/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene un apoderado específico por su ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Apoderados"
+                ],
+                "summary": "Obtener apoderado por ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del apoderado",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Actualiza los datos de un apoderado existente",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Apoderados"
+                ],
+                "summary": "Actualizar apoderado",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del apoderado",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos actualizados del apoderado",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.UpdateProxyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Elimina un apoderado por su ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Apoderados"
+                ],
+                "summary": "Eliminar apoderado",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del apoderado",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/attendance/records/{id}/mark": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Marca la asistencia de un registro por ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -349,18 +805,65 @@ const docTemplate = `{
                 "summary": "Marcar asistencia",
                 "parameters": [
                     {
-                        "description": "Datos de la asistencia",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/request.MarkAttendanceRequest"
-                        }
+                        "type": "integer",
+                        "description": "ID del registro de asistencia",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "Created",
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/attendance/records/{id}/unmark": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Desmarca la asistencia de un registro por ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Asistencia"
+                ],
+                "summary": "Desmarcar asistencia",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del registro de asistencia",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "type": "object"
                         }
@@ -7914,6 +8417,78 @@ const docTemplate = `{
                 }
             }
         },
+        "request.CreateProxyRequest": {
+            "type": "object",
+            "required": [
+                "business_id",
+                "property_unit_id",
+                "proxy_name"
+            ],
+            "properties": {
+                "business_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "end_date": {
+                    "type": "string",
+                    "example": "2025-12-31T23:59:59Z"
+                },
+                "notes": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "example": "Notas adicionales"
+                },
+                "power_of_attorney": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "example": "Poder para representar en asambleas"
+                },
+                "property_unit_id": {
+                    "type": "integer",
+                    "example": 123
+                },
+                "proxy_address": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "example": "Calle 123 #45-67"
+                },
+                "proxy_dni": {
+                    "type": "string",
+                    "maxLength": 30,
+                    "minLength": 5,
+                    "example": "12345678"
+                },
+                "proxy_email": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "maria@email.com"
+                },
+                "proxy_name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 3,
+                    "example": "María García López"
+                },
+                "proxy_phone": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "example": "+57 300 123 4567"
+                },
+                "proxy_type": {
+                    "type": "string",
+                    "enum": [
+                        "external",
+                        "resident",
+                        "family"
+                    ],
+                    "example": "external"
+                },
+                "start_date": {
+                    "type": "string",
+                    "example": "2025-01-15T00:00:00Z"
+                }
+            }
+        },
         "request.CreateResidentRequest": {
             "type": "object",
             "required": [
@@ -8132,58 +8707,6 @@ const docTemplate = `{
                 }
             }
         },
-        "request.MarkAttendanceRequest": {
-            "type": "object",
-            "required": [
-                "attendance_list_id",
-                "property_unit_id"
-            ],
-            "properties": {
-                "attendance_list_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "attended_as_owner": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "attended_as_proxy": {
-                    "type": "boolean",
-                    "example": false
-                },
-                "notes": {
-                    "type": "string",
-                    "maxLength": 1000,
-                    "example": "Notas adicionales"
-                },
-                "property_unit_id": {
-                    "type": "integer",
-                    "example": 123
-                },
-                "proxy_id": {
-                    "type": "integer",
-                    "example": 789
-                },
-                "resident_id": {
-                    "type": "integer",
-                    "example": 456
-                },
-                "signature": {
-                    "type": "string",
-                    "maxLength": 500,
-                    "example": "Firma digital"
-                },
-                "signature_method": {
-                    "type": "string",
-                    "enum": [
-                        "digital",
-                        "handwritten",
-                        "electronic"
-                    ],
-                    "example": "digital"
-                }
-            }
-        },
         "request.Reservation": {
             "type": "object",
             "required": [
@@ -8370,6 +8893,69 @@ const docTemplate = `{
                 "unit_type": {
                     "type": "string",
                     "example": "apartment"
+                }
+            }
+        },
+        "request.UpdateProxyRequest": {
+            "type": "object",
+            "properties": {
+                "end_date": {
+                    "type": "string",
+                    "example": "2025-12-31T23:59:59Z"
+                },
+                "is_active": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "notes": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "example": "Notas adicionales"
+                },
+                "power_of_attorney": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "example": "Poder para representar en asambleas"
+                },
+                "proxy_address": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "example": "Calle 123 #45-67"
+                },
+                "proxy_dni": {
+                    "type": "string",
+                    "maxLength": 30,
+                    "minLength": 5,
+                    "example": "12345678"
+                },
+                "proxy_email": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "maria@email.com"
+                },
+                "proxy_name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 3,
+                    "example": "María García López"
+                },
+                "proxy_phone": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "example": "+57 300 123 4567"
+                },
+                "proxy_type": {
+                    "type": "string",
+                    "enum": [
+                        "external",
+                        "resident",
+                        "family"
+                    ],
+                    "example": "external"
+                },
+                "start_date": {
+                    "type": "string",
+                    "example": "2025-01-15T00:00:00Z"
                 }
             }
         },

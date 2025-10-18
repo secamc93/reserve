@@ -45,11 +45,11 @@ interface VotingOption {
 interface Vote {
   id: number;
   votingId: number;
-  residentId: number;
+  propertyUnitId: number;
   votingOptionId: number;
   votedAt: string;
-  ipAddress?: string;
-  userAgent?: string;
+  ipAddress: string;
+  userAgent: string;
   notes?: string;
 }
 
@@ -622,7 +622,7 @@ export function VotingsList({ hpId, groupId, groupName }: VotingsListProps) {
                                   </div>
                                   <div className="text-right">
                                     <p className="text-xs text-gray-500">
-                                      Residente #{vote.residentId}
+                                      Unidad #{vote.propertyUnitId}
                                     </p>
                                     {vote.notes && (
                                       <p className="text-xs text-gray-400 truncate max-w-32" title={vote.notes}>
@@ -727,7 +727,7 @@ export function VotingsList({ hpId, groupId, groupName }: VotingsListProps) {
           onSuccess={handleEditSuccess}
           hpId={hpId}
           groupId={groupId}
-          voting={selectedVotingForEdit}
+          voting={selectedVotingForEdit as any}
         />
       )}
 
@@ -739,7 +739,7 @@ export function VotingsList({ hpId, groupId, groupName }: VotingsListProps) {
           onSuccess={handleDeleteSuccess}
           hpId={hpId}
           groupId={groupId}
-          voting={selectedVotingForDelete}
+          voting={selectedVotingForDelete as any}
         />
       )}
     </div>

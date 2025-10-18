@@ -287,7 +287,8 @@ type AttendanceRecord struct {
 	DeletedAt         *time.Time
 
 	// Enriquecimiento para respuestas
-	ResidentName string
-	ProxyName    string
-	UnitNumber   string
+	ResidentName             string
+	ProxyName                string
+	UnitNumber               string
+	ParticipationCoefficient string
 }

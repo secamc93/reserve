@@ -2,7 +2,14 @@
  * Repository Interface: AttendanceList
  */
 
-import { AttendanceList, CreateAttendanceListDTO, UpdateAttendanceListDTO, AttendanceListSummary } from '../../entities/attendance';
+import { AttendanceList, CreateAttendanceListDTO, UpdateAttendanceListDTO, AttendanceListSummary, AttendanceRecord } from '../../entities/attendance';
+
+export interface AttendanceListMeta {
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
 
 export interface CreateAttendanceListParams {
   token: string;
@@ -45,6 +52,10 @@ export interface GetAttendanceListSummaryParams {
 export interface GetAttendanceListRecordsParams {
   token: string;
   id: number;
+  page?: number;
+  pageSize?: number;
+  unitNumber?: string;
+  attended?: boolean;
 }
 
 export interface IAttendanceListRepository {
@@ -55,5 +66,5 @@ export interface IAttendanceListRepository {
   deleteAttendanceList(params: DeleteAttendanceListParams): Promise<void>;
   listAttendanceLists(params: ListAttendanceListsParams): Promise<AttendanceList[]>;
   getAttendanceListSummary(params: GetAttendanceListSummaryParams): Promise<AttendanceListSummary>;
-  getAttendanceListRecords(params: GetAttendanceListRecordsParams): Promise<AttendanceList[]>; // Se definirá cuando implementemos AttendanceRecord
+  getAttendanceListRecords(params: GetAttendanceListRecordsParams): Promise<{ data: AttendanceRecord[]; meta: AttendanceListMeta }>;
 }

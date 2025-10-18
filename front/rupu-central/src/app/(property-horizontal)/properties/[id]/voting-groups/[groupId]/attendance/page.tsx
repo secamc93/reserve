@@ -39,7 +39,7 @@ export default function AttendanceManagementPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Navigation */}
       <PropertyNavigation
-        businessId={hpId}
+        hpId={hpId}
         currentSection="attendance"
         groupId={groupId}
       />
@@ -78,3 +78,4 @@ export default function AttendanceManagementPage() {
     </div>
   );
 }
+
