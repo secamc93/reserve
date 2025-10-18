@@ -32,9 +32,12 @@ interface ScaleConfig {
 interface UnitCardProps {
   unit: ResidentialUnit;
   scale?: ScaleConfig;
+  onVoteClick?: (unit: ResidentialUnit) => void; // ✅ Callback para abrir modal de voto
+  onDeleteVoteClick?: (unit: ResidentialUnit) => void; // ✅ Callback para eliminar voto
+  showVoteButton?: boolean; // ✅ Mostrar botón de votar/eliminar
 }
 
-export function UnitCard({ unit, scale }: UnitCardProps) {
+export function UnitCard({ unit, scale, onVoteClick, onDeleteVoteClick, showVoteButton = false }: UnitCardProps) {
   // Configuración por defecto si no se proporciona escala
   const defaultScale = {
     cardPadding: "p-4",
@@ -133,6 +136,41 @@ export function UnitCard({ unit, scale }: UnitCardProps) {
           {unit.number}
         </div>
         
+        {/* Botones de acción - Esquina superior derecha */}
+        {showVoteButton && (
+          <div className="absolute top-1 right-1">
+            {!unit.hasVoted && onVoteClick ? (
+              // Botón de votar (solo ícono cuadrado)
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onVoteClick(unit);
+                }}
+                className="p-1.5 bg-blue-600 text-white rounded-md transition-all duration-200 hover:bg-blue-700 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 shadow-md"
+                title="Votar"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+              </button>
+            ) : unit.hasVoted && onDeleteVoteClick ? (
+              // Botón de eliminar voto (solo ícono X cuadrado)
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteVoteClick(unit);
+                }}
+                className="p-1.5 bg-red-600 text-white rounded-md transition-all duration-200 hover:bg-red-700 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 shadow-md"
+                title="Eliminar voto"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            ) : null}
+          </div>
+        )}
+        
         {/* Tooltip con detalles - z-index muy alto para aparecer por encima de todo */}
         <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap z-[9999]">
           <div className="font-semibold mb-1">{unit.number}</div>
@@ -152,9 +190,44 @@ export function UnitCard({ unit, scale }: UnitCardProps) {
       className={`${currentScale.cardPadding} rounded-xl border-2 text-center transition-all duration-300 hover:shadow-lg hover:scale-105 cursor-pointer relative group ${colors.bg} ${colors.border}`}
     >
       {/* Solo el número de unidad con color de fondo */}
-      <div className={`w-full px-3 py-3 rounded-lg font-bold text-white shadow-sm ${colors.iconBg}`}>
+      <div className={`w-full px-3 py-3 rounded-lg font-bold shadow-sm ${colors.iconBg} ${unit.hasVoted ? 'text-white' : 'text-gray-900'}`}>
         {unit.number}
       </div>
+      
+      {/* Botones de acción - Esquina superior derecha */}
+      {showVoteButton && (
+        <div className="absolute top-1 right-1">
+          {!unit.hasVoted && onVoteClick ? (
+            // Botón de votar (solo ícono cuadrado)
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onVoteClick(unit);
+              }}
+              className="p-1.5 bg-blue-600 text-white rounded-md transition-all duration-200 hover:bg-blue-700 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 shadow-md"
+              title="Votar"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+            </button>
+          ) : unit.hasVoted && onDeleteVoteClick ? (
+            // Botón de eliminar voto (solo ícono X cuadrado)
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDeleteVoteClick(unit);
+              }}
+              className="p-1.5 bg-red-600 text-white rounded-md transition-all duration-200 hover:bg-red-700 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 shadow-md"
+              title="Eliminar voto"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          ) : null}
+        </div>
+      )}
       
       {/* Tooltip con detalles - z-index muy alto para aparecer por encima de todo */}
       <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap z-[9999]">

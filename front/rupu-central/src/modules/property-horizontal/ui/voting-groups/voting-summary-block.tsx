@@ -1,4 +1,5 @@
 'use client';
+import React, { useState, useEffect } from 'react';
 import { VotingOption } from '../../domain/entities';
 
 interface Voting {
@@ -38,6 +39,100 @@ interface VotingSummaryBlockProps {
 }
 
 export function VotingSummaryBlock({ voting, options, votingDetails }: VotingSummaryBlockProps) {
+  // Estado para mantener estadísticas válidas
+  const [validStats, setValidStats] = useState<{
+    optionStats: Array<{
+      id: number;
+      optionText: string;
+      optionCode: string;
+      coefficientSum: number;
+      percentageByCoefficient: number;
+      votes: number;
+      percentageOfVoted: number;
+      color: string;
+    }>;
+    notVotedCoefficient: number;
+    notVotedCount: number;
+    notVotedPercentage: number;
+  } | null>(null);
+
+  // useEffect para actualizar estadísticas válidas
+  useEffect(() => {
+    console.log('🔍 [VotingSummaryBlock] useEffect ejecutándose');
+    console.log('🔍 [VotingSummaryBlock] votingDetails:', votingDetails);
+    console.log('🔍 [VotingSummaryBlock] options:', options);
+    
+    if (!votingDetails) {
+      console.log('⚠️ [VotingSummaryBlock] No hay votingDetails, saliendo');
+      return;
+    }
+
+    const totalCoefficient = 100;
+    
+    // Calcular estadísticas de opciones
+    const optionStats = options.map(option => {
+      const unitsWithOption = votingDetails.units.filter(unit => 
+        unit.option_text === option.optionText && unit.has_voted
+      );
+      
+      console.log(`🔍 [VotingSummaryBlock] Opción "${option.optionText}": ${unitsWithOption.length} votos`);
+      
+      const coefficientSum = unitsWithOption.reduce((sum, unit) => 
+        sum + unit.participation_coefficient, 0
+      );
+      
+      const percentageByCoefficient = (coefficientSum / totalCoefficient) * 100;
+      const votes = unitsWithOption.length;
+      const percentageOfVoted = votingDetails.total_units > 0 
+        ? (votes / votingDetails.total_units) * 100 
+        : 0;
+      
+      console.log(`✅ [VotingSummaryBlock] Opción "${option.optionText}" - stats:`, {
+        coefficientSum,
+        percentageByCoefficient,
+        votes
+      });
+      
+      return {
+        id: option.id,
+        optionText: option.optionText,
+        optionCode: option.optionCode,
+        coefficientSum,
+        percentageByCoefficient,
+        votes,
+        percentageOfVoted,
+        color: option.color || '#3b82f6'
+      };
+    });
+
+    // Calcular "No Votado"
+    const notVotedUnits = votingDetails.units.filter(unit => !unit.has_voted);
+    const notVotedCoefficient = notVotedUnits.reduce((sum, unit) => 
+      sum + unit.participation_coefficient, 0
+    );
+    const notVotedCount = notVotedUnits.length;
+    const notVotedPercentage = (notVotedCoefficient / totalCoefficient) * 100;
+
+    // Solo actualizar si hay VOTOS REALES (no solo unidades sin votar)
+    const hasRealVotes = optionStats.some(stat => stat.votes > 0);
+    
+    console.log('🔍 [VotingSummaryBlock] hasRealVotes:', hasRealVotes);
+    console.log('🔍 [VotingSummaryBlock] optionStats:', optionStats);
+    
+    if (hasRealVotes) {
+      console.log('✅ [VotingSummaryBlock] Actualizando validStats (hay votos reales)');
+      setValidStats({
+        optionStats,
+        notVotedCoefficient,
+        notVotedCount,
+        notVotedPercentage
+      });
+    } else {
+      console.log('⚠️ [VotingSummaryBlock] No hay votos reales, manteniendo estadísticas anteriores');
+    }
+  }, [votingDetails, options]);
+
+  // Early return después de todos los hooks
   if (!votingDetails) {
     return (
       <div className="mb-6 bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
@@ -48,41 +143,27 @@ export function VotingSummaryBlock({ voting, options, votingDetails }: VotingSum
     );
   }
 
-  // Calcular estadísticas de opciones
-  const totalCoefficient = 100;
-  const optionStats = options.map(option => {
-    const unitsWithOption = votingDetails.units.filter(unit => 
-      unit.option_code === option.optionCode && unit.has_voted
-    );
-    
-    const coefficientSum = unitsWithOption.reduce((sum, unit) => 
-      sum + unit.participation_coefficient, 0
-    );
-    
-    const percentageByCoefficient = (coefficientSum / totalCoefficient) * 100;
-    const votes = unitsWithOption.length;
-    const percentageOfVoted = votingDetails.total_units > 0 
-      ? (votes / votingDetails.total_units) * 100 
-      : 0;
-    
-    return {
+  // Usar estadísticas válidas o calcular nuevas si no hay datos guardados
+  const statsToUse = validStats || {
+    optionStats: options.map(option => ({
       id: option.id,
       optionText: option.optionText,
       optionCode: option.optionCode,
-      coefficientSum,
-      percentageByCoefficient,
-      votes,
-      percentageOfVoted,
+      coefficientSum: 0,
+      percentageByCoefficient: 0,
+      votes: 0,
+      percentageOfVoted: 0,
       color: option.color || '#3b82f6'
-    };
-  });
+    })),
+    notVotedCoefficient: 100,
+    notVotedCount: votingDetails?.total_units || 0,
+    notVotedPercentage: 100
+  };
 
-  // Calcular "No Votado"
-  const notVotedUnits = votingDetails.units.filter(unit => !unit.has_voted);
-  const notVotedCoefficient = notVotedUnits.reduce((sum, unit) => 
-    sum + unit.participation_coefficient, 0
-  );
-  const notVotedPercentage = (notVotedCoefficient / totalCoefficient) * 100;
+  console.log('🎨 [VotingSummaryBlock] Renderizando con validStats:', validStats);
+  console.log('🎨 [VotingSummaryBlock] statsToUse:', statsToUse);
+
+  const { optionStats, notVotedCoefficient, notVotedCount, notVotedPercentage } = statsToUse;
 
   // Combinar todas las estadísticas
   const allStats = [
@@ -93,16 +174,23 @@ export function VotingSummaryBlock({ voting, options, votingDetails }: VotingSum
       optionCode: 'NOT_VOTED',
       coefficientSum: notVotedCoefficient,
       percentageByCoefficient: notVotedPercentage,
-      votes: notVotedUnits.length,
+      votes: notVotedCount,
       percentageOfVoted: notVotedPercentage,
       color: '#6b7280'
     }
   ].sort((a, b) => b.coefficientSum - a.coefficientSum);
 
   // Calcular estadísticas correctas para el resumen
-  const totalVotedUnits = optionStats.reduce((sum, option) => sum + option.votes, 0);
-  const totalPendingUnits = notVotedUnits.length;
-  const totalUnits = totalVotedUnits + totalPendingUnits;
+  const totalVotedUnits = optionStats.reduce((sum: number, option: any) => sum + option.votes, 0);
+  const totalPendingUnits = notVotedCount;
+  const totalUnits = votingDetails?.total_units || 0; // ✅ Usar el total del backend
+  
+  console.log('📊 [VotingSummaryBlock] Resumen:', {
+    totalVotedUnits,
+    totalPendingUnits,
+    totalUnits,
+    fromBackend: votingDetails?.total_units
+  });
   
   const quorumReached = (100 - notVotedPercentage) >= voting.requiredPercentage;
 

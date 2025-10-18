@@ -10,6 +10,7 @@ export interface VotingOption {
   id: number;
   option_text: string;
   option_code: string;
+  color?: string; // ✅ NUEVO: Color de la opción
 }
 
 export interface GetPublicVotingOptionsResult {

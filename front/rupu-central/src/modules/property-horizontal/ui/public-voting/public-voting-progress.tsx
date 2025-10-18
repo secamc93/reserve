@@ -25,6 +25,7 @@ interface VotingOption {
   id: number;
   option_text: string;
   option_code: string;
+  color?: string; // ✅ Color de la opción
 }
 
 interface UnitWithResident {
@@ -146,23 +147,33 @@ export function PublicVotingProgress({ votingAuthToken }: PublicVotingProgressPr
     
     let votedOption = undefined;
     if (hasVoted && unitVote) {
-      // Priorizar datos del SSE si están disponibles
-      if (unitVote.option_text && unitVote.option_code) {
+      // Buscar la opción correspondiente para obtener el color si no viene del SSE
+      const matchedOption = options.find(opt => opt.id === unitVote.voting_option_id);
+      
+      // Validar si los datos del SSE son válidos
+      const sseDataValid = unitVote.option_text && 
+                          unitVote.option_text !== 'undefined' && 
+                          unitVote.option_text !== 'null' &&
+                          unitVote.option_color &&
+                          unitVote.option_color !== 'undefined' &&
+                          unitVote.option_color !== 'null';
+      
+      if (sseDataValid) {
+        // ✅ Usar datos válidos del SSE
         votedOption = {
           id: unitVote.voting_option_id,
-          text: unitVote.option_text,
-          code: unitVote.option_code,
+          text: unitVote.option_text!,
+          code: unitVote.option_code || '',
           color: unitVote.option_color
         };
-      } else {
-        // Fallback a buscar en las opciones
-        const option = options.find(opt => opt.id === unitVote.voting_option_id);
-        votedOption = option ? {
-          id: option.id,
-          text: option.option_text,
-          code: option.option_code,
-          color: undefined
-        } : undefined;
+      } else if (matchedOption) {
+        // ⚠️ Datos del SSE inválidos o sin color, usar opción de la lista
+        votedOption = {
+          id: matchedOption.id,
+          text: matchedOption.option_text,
+          code: matchedOption.option_code,
+          color: matchedOption.color // ✅ Usar el color de la opción cargada
+        };
       }
     }
 

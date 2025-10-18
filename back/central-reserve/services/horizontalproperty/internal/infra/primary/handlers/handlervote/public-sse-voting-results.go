@@ -144,14 +144,14 @@ func (h *VotingHandler) PublicSSEVotingResults(c *gin.Context) {
 			// Heartbeat (mantener conexión viva)
 			c.SSEvent("heartbeat", gin.H{"timestamp": time.Now().Unix()})
 			c.Writer.Flush()
-		case vote, ok := <-voteChan:
+		case voteEvent, ok := <-voteChan:
 			if !ok {
 				// Canal cerrado
 				return
 			}
 
-			// Nuevo voto recibido - enviar voto y resultados actualizados
-			voteResponse := mapper.MapVoteDTOToResponse(&vote)
+			// Evento de voto recibido - enviar voto y resultados actualizados
+			voteResponse := mapper.MapVoteDTOToResponse(&voteEvent.Vote)
 
 			// Obtener resultados actualizados
 			updatedResults, err := h.votingUseCase.GetVotingResults(c.Request.Context(), votingID)
@@ -160,15 +160,23 @@ func (h *VotingHandler) PublicSSEVotingResults(c *gin.Context) {
 				resultsResponse = mapper.MapVotingResultsToResponses(updatedResults)
 			}
 
-			c.SSEvent("new_vote", gin.H{
+			// Determinar el tipo de evento
+			var eventType string
+			if voteEvent.Type == "vote_deleted" {
+				eventType = "vote_deleted"
+			} else {
+				eventType = "new_vote"
+			}
+
+			c.SSEvent(eventType, gin.H{
 				"vote":    voteResponse,
 				"results": resultsResponse,
 			})
 			c.Writer.Flush()
 
-			fmt.Printf("🗳️  [SSE PUBLICO] Nuevo voto transmitido\n")
-			fmt.Printf("   Unidad ID: %d\n", vote.PropertyUnitID)
-			fmt.Printf("   Opción ID: %d\n", vote.VotingOptionID)
+			fmt.Printf("🗳️  [SSE PUBLICO] Evento de voto transmitido: %s\n", eventType)
+			fmt.Printf("   Unidad ID: %d\n", voteEvent.Vote.PropertyUnitID)
+			fmt.Printf("   Opción ID: %d\n", voteEvent.Vote.VotingOptionID)
 			fmt.Printf("   Votación ID: %d\n\n", votingID)
 		}
 	}

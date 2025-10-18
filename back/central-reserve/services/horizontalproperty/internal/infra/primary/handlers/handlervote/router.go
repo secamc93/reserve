@@ -39,6 +39,7 @@ func (h *VotingHandler) RegisterRoutes(router *gin.RouterGroup) {
 			{
 				votes.POST("", middleware.JWT(), h.CreateVote)
 				votes.GET("", middleware.JWT(), h.ListVotes)
+				votes.DELETE("/:vote_id", middleware.JWT(), h.DeleteVoteAdmin) // Eliminar voto (admin)
 			}
 		}
 	}

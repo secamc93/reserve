@@ -130,10 +130,18 @@ export function PublicVotingValidation({
     setShowDropdown(false);
   };
 
+  const handleClearSelection = () => {
+    setSelectedUnitId('');
+    setUnitSearchTerm('');
+    setShowDropdown(false);
+  };
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
+    // Validar que todos los campos estén completos
     if (!selectedUnitId || !dni.trim()) {
       console.warn('⚠️ [VALIDATION] Datos incompletos');
       setError('Por favor, seleccione una unidad e ingrese su DNI');
@@ -265,9 +273,11 @@ export function PublicVotingValidation({
             )}
 
             <div className="relative">
-              <label htmlFor="unit" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="unit" className="block text-sm font-medium text-gray-700 mb-2">
                 Unidad Residencial
               </label>
+              
+              {/* Input con botón de limpiar */}
               <div className="relative">
                 <input
                   id="unit"
@@ -281,10 +291,26 @@ export function PublicVotingValidation({
                     }
                   }}
                   onFocus={() => setShowDropdown(true)}
-                  className="mt-1 block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 bg-white"
+                  className="mt-1 block w-full px-3 py-3 pr-20 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-base text-gray-900 bg-white"
                   placeholder="Busque su apartamento/casa (ej: 101, 202, A-1)"
                   required
                 />
+                
+                {/* Botón de limpiar */}
+                {selectedUnitId && (
+                  <button
+                    type="button"
+                    onClick={handleClearSelection}
+                    className="absolute inset-y-0 right-12 flex items-center pr-2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                    title="Limpiar selección"
+                  >
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+                
+                {/* Icono de búsqueda */}
                 <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                   <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -292,22 +318,27 @@ export function PublicVotingValidation({
                 </div>
               </div>
 
-              {/* Dropdown de resultados */}
+              {/* Dropdown de resultados mejorado para móviles */}
               {showDropdown && filteredUnits.length > 0 && (
-                <div className="unit-dropdown absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                <div className="unit-dropdown absolute z-20 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-xl max-h-60 overflow-auto">
                   {filteredUnits.map((unit, index) => (
                     <button
                       key={unit.id || index}
                       type="button"
                       onClick={() => handleSelectUnit(unit)}
-                      className={`w-full text-left px-4 py-2 hover:bg-blue-50 transition-colors ${
-                        selectedUnitId === (unit.id?.toString() || unit.number) ? 'bg-blue-100 text-blue-900' : 'text-gray-900'
+                      className={`w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0 ${
+                        selectedUnitId === (unit.id?.toString() || unit.number) 
+                          ? 'bg-blue-100 text-blue-900 border-blue-200' 
+                          : 'text-gray-900'
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-medium">{unit.number}</span>
+                        <div className="flex-1">
+                          <span className="font-medium text-base">{unit.number}</span>
+                          <p className="text-sm text-gray-500 mt-1">Unidad residencial</p>
+                        </div>
                         {selectedUnitId === (unit.id?.toString() || unit.number) && (
-                          <svg className="h-5 w-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="h-5 w-5 text-blue-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
                         )}
@@ -319,18 +350,23 @@ export function PublicVotingValidation({
 
               {/* Mensaje cuando no hay resultados */}
               {showDropdown && unitSearchTerm && filteredUnits.length === 0 && (
-                <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg p-4 text-center text-gray-500 text-sm">
-                  No se encontraron unidades que coincidan con &quot;{unitSearchTerm}&quot;
+                <div className="absolute z-20 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg p-4 text-center text-gray-500 text-sm">
+                  <div className="flex items-center justify-center">
+                    <svg className="h-5 w-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.29-1.009-5.824-2.57M15 6H9m0 0l3 3m-3-3l-3 3" />
+                    </svg>
+                    No se encontraron unidades que coincidan con &quot;{unitSearchTerm}&quot;
+                  </div>
                 </div>
               )}
 
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-2 text-xs text-gray-500">
                 Digite el número de su apartamento/casa para buscarlo
               </p>
             </div>
 
             <div>
-              <label htmlFor="dni" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="dni" className="block text-sm font-medium text-gray-700 mb-2">
                 Documento de Identidad (DNI)
               </label>
               <input
@@ -338,7 +374,7 @@ export function PublicVotingValidation({
                 type="text"
                 value={dni}
                 onChange={(e) => setDni(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 bg-white"
+                className="mt-1 block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-base text-gray-900 bg-white"
                 placeholder="Ingrese su número de DNI"
                 required
               />
@@ -351,7 +387,7 @@ export function PublicVotingValidation({
               <button
                 type="submit"
                 disabled={loading || !selectedUnitId || !dni.trim()}
-                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-base font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {loading ? (
                   <>

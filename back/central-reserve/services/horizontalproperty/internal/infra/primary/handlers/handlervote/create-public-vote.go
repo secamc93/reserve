@@ -15,21 +15,24 @@ import (
 
 // CreatePublicVoteRequest - Request para crear voto público
 type CreatePublicVoteRequest struct {
-	VotingOptionID uint `json:"voting_option_id" binding:"required" example:"1"`
+	PropertyUnitID uint   `json:"property_unit_id" binding:"required" example:"1"`
+	Dni            string `json:"dni" binding:"required" example:"123456789"`
+	VotingOptionID uint   `json:"voting_option_id" binding:"required" example:"1"`
 }
 
 // CreatePublicVote godoc
 //
 //	@Summary		Emitir voto (público)
-//	@Description	Permite a un residente validado emitir su voto. Toda la información viene del token de autenticación.
+//	@Description	Permite a un residente emitir su voto validando DNI + unidad. Requiere token de votación pública.
 //	@Tags			Votaciones Públicas
 //	@Accept			json
 //	@Produce		json
-//	@Param			Authorization	header		string					true	"Token de autenticación de votación (Bearer token)"
-//	@Param			request			body		CreatePublicVoteRequest	true	"Datos del voto"
+//	@Param			Authorization	header		string					true	"Token de votación pública (Bearer token)"
+//	@Param			request			body		CreatePublicVoteRequest	true	"Datos del voto (unidad, DNI, opción)"
 //	@Success		201				{object}	object
 //	@Failure		400				{object}	object
 //	@Failure		401				{object}	object
+//	@Failure		404				{object}	object
 //	@Failure		409				{object}	object
 //	@Failure		500				{object}	object
 //	@Router			/public/vote [post]
@@ -53,37 +56,24 @@ func (h *VotingHandler) CreatePublicVote(c *gin.Context) {
 		tokenString = authHeader[7:]
 	}
 
-	// Validar token de autenticación de votación
+	// Validar token de votación pública
 	jwtService := sharedjwt.New(h.jwtSecret)
-	authClaims, err := jwtService.ValidateVotingAuthToken(tokenString)
+	publicClaims, err := jwtService.ValidatePublicVotingToken(tokenString)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[ERROR] handlervote/create-public-vote.go - Token inválido: %v\n", err)
-		h.logger.Error().Err(err).Msg("Token de autenticación de votación inválido")
+		h.logger.Error().Err(err).Msg("Token de votación pública inválido")
 		c.JSON(http.StatusUnauthorized, response.ErrorResponse{
 			Success: false,
-			Message: "Token de autenticación inválido",
+			Message: "Token de votación inválido",
 			Error:   err.Error(),
 		})
 		return
 	}
 
 	// Extraer información del token
-	votingID := authClaims.VotingID
-	residentID := authClaims.ResidentID
-	hpID := authClaims.HPID
-	groupID := authClaims.VotingGroupID
-
-	// Validar que el residentID no sea 0
-	if residentID == 0 {
-		fmt.Fprintf(os.Stderr, "[ERROR] handlervote/create-public-vote.go - Token con resident_id=0 inválido\n")
-		h.logger.Error().Uint("voting_id", votingID).Msg("Token de votación con resident_id=0 inválido")
-		c.JSON(http.StatusUnauthorized, response.ErrorResponse{
-			Success: false,
-			Message: "Token de autenticación inválido",
-			Error:   "El token no contiene un residente válido",
-		})
-		return
-	}
+	votingID := publicClaims.VotingID
+	hpID := publicClaims.HPID
+	groupID := publicClaims.VotingGroupID
 
 	// Validar request
 	var req CreatePublicVoteRequest
@@ -102,22 +92,55 @@ func (h *VotingHandler) CreatePublicVote(c *gin.Context) {
 	fmt.Printf("   HP ID: %d\n", hpID)
 	fmt.Printf("   Grupo de Votación ID: %d\n", groupID)
 	fmt.Printf("   Votación ID: %d\n", votingID)
-	fmt.Printf("   Residente ID: %d\n", residentID)
+	fmt.Printf("   Unidad ID: %d\n", req.PropertyUnitID)
+	fmt.Printf("   DNI: %s\n", req.Dni)
 	fmt.Printf("   Opción seleccionada ID: %d\n", req.VotingOptionID)
 	fmt.Printf("   Token decodificado correctamente\n\n")
 
-	// Obtener la unidad principal del residente
-	propertyUnitID, err := h.votingRepository.GetResidentMainUnitID(c.Request.Context(), residentID)
+	// Validar residente por DNI + unidad
+	fmt.Printf("🔍 [VOTACION PUBLICA - VALIDANDO DNI]\n")
+	fmt.Printf("   HP ID: %d\n", hpID)
+	fmt.Printf("   Unidad ID: %d\n", req.PropertyUnitID)
+	fmt.Printf("   DNI recibido: '%s'\n", req.Dni)
+	fmt.Printf("   Validando...\n\n")
+
+	resident, err := h.votingUseCase.ValidateResidentForVoting(c.Request.Context(), hpID, req.PropertyUnitID, req.Dni)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] handlervote/create-public-vote.go - Error obteniendo unidad principal: %v\n", err)
-		h.logger.Error().Err(err).Uint("voting_id", votingID).Uint("resident_id", residentID).Msg("Error obteniendo unidad principal del residente")
-		c.JSON(http.StatusInternalServerError, response.ErrorResponse{
+		status := http.StatusInternalServerError
+		message := "Error validando residente"
+
+		// Manejar errores específicos
+		errorMsg := err.Error()
+		if errorMsg == "residente no encontrado" {
+			status = http.StatusNotFound
+			message = "Residente no encontrado"
+		} else if errorMsg == "residente inactivo" {
+			status = http.StatusForbidden
+			message = "Residente inactivo"
+		}
+
+		fmt.Fprintf(os.Stderr, "❌ [VOTACION PUBLICA - VALIDACION FALLIDA]\n")
+		fmt.Fprintf(os.Stderr, "   Unidad ID: %d\n", req.PropertyUnitID)
+		fmt.Fprintf(os.Stderr, "   DNI: '%s'\n", req.Dni)
+		fmt.Fprintf(os.Stderr, "   Error: %v\n", err)
+		fmt.Fprintf(os.Stderr, "   Status: %d\n", status)
+		fmt.Fprintf(os.Stderr, "   Message: %s\n\n", message)
+
+		h.logger.Error().Err(err).Uint("property_unit_id", req.PropertyUnitID).Str("dni", req.Dni).Msg("Error validando residente")
+		c.JSON(status, response.ErrorResponse{
 			Success: false,
-			Message: "Error obteniendo unidad principal",
+			Message: message,
 			Error:   err.Error(),
 		})
 		return
 	}
+
+	fmt.Printf("✅ [VOTACION PUBLICA - RESIDENTE VALIDADO]\n")
+	fmt.Printf("   Residente ID: %d\n", resident.ID)
+	fmt.Printf("   Nombre: %s\n", resident.Name)
+	fmt.Printf("   Unidad: %s\n\n", resident.PropertyUnitNumber)
+
+	propertyUnitID := req.PropertyUnitID
 
 	// Verificar si la unidad ya votó
 	hasVoted, err := h.votingUseCase.HasUnitVoted(c.Request.Context(), votingID, propertyUnitID)
@@ -160,7 +183,7 @@ func (h *VotingHandler) CreatePublicVote(c *gin.Context) {
 	created, err := h.votingUseCase.CreateVote(c.Request.Context(), voteDTO)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[ERROR] handlervote/create-public-vote.go - Error creando voto: %v\n", err)
-		h.logger.Error().Err(err).Uint("voting_id", votingID).Uint("resident_id", residentID).Msg("Error creando voto público")
+		h.logger.Error().Err(err).Uint("voting_id", votingID).Uint("resident_id", resident.ID).Msg("Error creando voto público")
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{
 			Success: false,
 			Message: "Error registrando voto",
@@ -191,6 +214,7 @@ func (h *VotingHandler) CreatePublicVote(c *gin.Context) {
 	h.logger.Info().
 		Uint("vote_id", created.ID).
 		Uint("voting_id", votingID).
+		Uint("resident_id", resident.ID).
 		Uint("property_unit_id", propertyUnitID).
 		Uint("voting_option_id", req.VotingOptionID).
 		Str("ip_address", ipAddress).

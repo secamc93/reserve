@@ -22,6 +22,12 @@ interface VoteModalProps {
   allowAbstention: boolean;
   options: Array<{ id: number; optionText: string; optionCode: string; displayOrder: number }>;
   currentVotes?: Array<{ property_unit_id: number; voted_at: string }>; // ✅ NUEVO: Votos actuales para filtrar
+  preselectedUnit?: { // ✅ NUEVO: Unidad preseleccionada desde la tarjeta
+    propertyUnitId: number;
+    residentId?: number | null;
+    unitNumber: string;
+    residentName: string;
+  };
 }
 
 interface ResidentOption {
@@ -44,6 +50,7 @@ export function VoteModal({
   allowAbstention,
   options,
   currentVotes = [], // ✅ NUEVO: Votos actuales para filtrar
+  preselectedUnit, // ✅ NUEVO: Unidad preseleccionada
 }: VoteModalProps) {
   const [loading, setLoading] = useState(false);
   const [loadingResidents, setLoadingResidents] = useState(true);
@@ -51,6 +58,16 @@ export function VoteModal({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [selectedOptionId, setSelectedOptionId] = useState<number | null>(null);
   const [selectedResidentId, setSelectedResidentId] = useState<number | null>(null);
+
+  // useEffect para precargar datos de unidad seleccionada desde la tarjeta
+  useEffect(() => {
+    if (isOpen && preselectedUnit) {
+      console.log('✅ Precargando unidad desde tarjeta:', preselectedUnit);
+      // Precargar el propertyUnitId como selectedResidentId (el sistema usa unit_id)
+      setSelectedResidentId(preselectedUnit.propertyUnitId);
+      setSelectedResidentName(`${preselectedUnit.unitNumber} - ${preselectedUnit.residentName || 'Sin residente'}`);
+    }
+  }, [isOpen, preselectedUnit]);
 
   // Log cuando cambia el selectedResidentId
   useEffect(() => {
@@ -381,12 +398,19 @@ export function VoteModal({
   };
 
   const resetForm = () => {
-    setSelectedOptionId(null);
-    setSelectedResidentId(null);
-    setSelectedResidentName('');
-    setError(null);
-    setSuccessMessage(null); // Limpiar mensaje de éxito
-    setUnitFilter(''); // Limpiar filtro al resetear
+    // No limpiar si hay unidad preseleccionada (solo limpiar la opción)
+    if (preselectedUnit) {
+      setSelectedOptionId(null);
+      setError(null);
+      setSuccessMessage(null);
+    } else {
+      setSelectedOptionId(null);
+      setSelectedResidentId(null);
+      setSelectedResidentName('');
+      setError(null);
+      setSuccessMessage(null);
+      setUnitFilter('');
+    }
   };
 
   const clearUnitFilter = () => {
@@ -434,9 +458,35 @@ export function VoteModal({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Votando como residente *
             </label>
-            <div className="relative resident-search-dropdown">
-              {/* Si hay un residente seleccionado, mostrar solo su nombre (no editable) */}
-              {selectedResidentId && selectedResidentName ? (
+            
+            {/* Si hay unidad preseleccionada desde tarjeta, mostrar info fija */}
+            {preselectedUnit ? (
+              <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4">
+                <div className="flex items-center space-x-3">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold text-lg">🏠</span>
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm font-semibold text-blue-900">
+                      {preselectedUnit.unitNumber}
+                    </div>
+                    <div className="text-sm text-blue-700">
+                      {preselectedUnit.residentName || 'Sin residente registrado'}
+                    </div>
+                  </div>
+                  <div className="flex-shrink-0">
+                    <div className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
+                      Precargado
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="relative resident-search-dropdown">
+                {/* Si hay un residente seleccionado, mostrar solo su nombre (no editable) */}
+                {selectedResidentId && selectedResidentName ? (
                 <div className="relative">
                   <input
                     type="text"
@@ -526,9 +576,10 @@ export function VoteModal({
                   )}
                 </div>
               )}
-            </div>
+              </div>
+            )}
             
-            {selectedResidentId && (
+            {!preselectedUnit && selectedResidentId && (
               <div className="mt-2 bg-green-50 border border-green-200 rounded-lg p-3">
                 <p className="text-sm text-green-800">
                   ✓ <strong>Residente seleccionado:</strong> {residents.find(r => r.id === selectedResidentId)?.name} 

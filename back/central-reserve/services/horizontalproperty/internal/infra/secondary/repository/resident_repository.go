@@ -253,6 +253,12 @@ func (r *Repository) GetResidentByUnitAndDni(ctx context.Context, hpID, property
 		PropertyUnitNumber string
 	}
 	var rw row
+
+	fmt.Printf("🔍 [REPOSITORY] GetResidentByUnitAndDni - Buscando residente\n")
+	fmt.Printf("   HP ID: %d\n", hpID)
+	fmt.Printf("   Property Unit ID: %d\n", propertyUnitID)
+	fmt.Printf("   DNI: '%s'\n", dni)
+
 	err := r.db.Conn(ctx).
 		Table("horizontal_property.residents r").
 		Select("r.id, r.name, pu.id as property_unit_id, pu.number as property_unit_number").
@@ -261,12 +267,33 @@ func (r *Repository) GetResidentByUnitAndDni(ctx context.Context, hpID, property
 		Where("r.business_id = ? AND ru.property_unit_id = ? AND r.dni = ? AND r.is_active = ?", hpID, propertyUnitID, dni, true).
 		Limit(1).Scan(&rw).Error
 
+	fmt.Printf("🔍 [REPOSITORY] GetResidentByUnitAndDni - Resultado de consulta\n")
+	fmt.Printf("   Error: %v\n", err)
+	fmt.Printf("   Row ID: %d\n", rw.ID)
+	fmt.Printf("   Row Name: '%s'\n", rw.Name)
+	fmt.Printf("   Row PropertyUnitID: %d\n", rw.PropertyUnitID)
+	fmt.Printf("   Row PropertyUnitNumber: '%s'\n", rw.PropertyUnitNumber)
+
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
+			fmt.Printf("❌ [REPOSITORY] GetResidentByUnitAndDni - Residente no encontrado\n")
 			return nil, fmt.Errorf("residente no encontrado")
 		}
+		fmt.Printf("❌ [REPOSITORY] GetResidentByUnitAndDni - Error en consulta: %v\n", err)
 		return nil, fmt.Errorf("error buscando residente: %w", err)
 	}
+
+	// Verificar si el resultado tiene ID 0 (puede pasar con Scan)
+	if rw.ID == 0 {
+		fmt.Printf("❌ [REPOSITORY] GetResidentByUnitAndDni - Residente encontrado pero con ID 0\n")
+		return nil, fmt.Errorf("residente no encontrado")
+	}
+
+	fmt.Printf("✅ [REPOSITORY] GetResidentByUnitAndDni - Residente encontrado\n")
+	fmt.Printf("   ID: %d\n", rw.ID)
+	fmt.Printf("   Name: '%s'\n", rw.Name)
+	fmt.Printf("   PropertyUnitID: %d\n", rw.PropertyUnitID)
+	fmt.Printf("   PropertyUnitNumber: '%s'\n", rw.PropertyUnitNumber)
 
 	return &domain.ResidentBasicDTO{ID: rw.ID, Name: rw.Name, PropertyUnitID: rw.PropertyUnitID, PropertyUnitNumber: rw.PropertyUnitNumber}, nil
 }

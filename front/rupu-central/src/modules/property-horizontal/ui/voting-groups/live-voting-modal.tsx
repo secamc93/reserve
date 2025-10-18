@@ -5,7 +5,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Badge, Spinner } from '@shared/ui';
+import { Badge, Spinner, Modal } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
 import { generatePublicUrlAction } from '@/modules/property-horizontal/infrastructure/actions/public-voting';
 import { getVotingDetailsAction } from '@/modules/property-horizontal/infrastructure/actions/voting';
@@ -76,6 +76,10 @@ export function LiveVotingModal({
   onVoteSuccess 
 }: LiveVotingModalProps) {
   const [showVoteModal, setShowVoteModal] = useState(false);
+  const [selectedUnitForVote, setSelectedUnitForVote] = useState<ResidentialUnit | null>(null);
+  const [showDeleteVoteModal, setShowDeleteVoteModal] = useState(false);
+  const [selectedUnitForDelete, setSelectedUnitForDelete] = useState<ResidentialUnit | null>(null);
+  const [deletingVote, setDeletingVote] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
   const [isLive, setIsLive] = useState(true);
   const [useRealTime, setUseRealTime] = useState(true);
@@ -110,7 +114,8 @@ export function LiveVotingModal({
     isConnected: sseConnected, 
     totalVotes: sseTotalVotes, 
     error: sseError, 
-    connectionStatus 
+    connectionStatus,
+    deletedVotes // ✅ NUEVO: Votos eliminados del SSE
   } = useVotingSSE(
     hpId, 
     voting?.votingGroupId || 0, 
@@ -154,8 +159,13 @@ export function LiveVotingModal({
 
   // Estado para trackear los votos ya procesados
   const [processedVoteIds, setProcessedVoteIds] = useState<Set<number>>(new Set());
+  const [processedDeletedVoteIds, setProcessedDeletedVoteIds] = useState<Set<number>>(new Set());
 
   const updateVotingDetailsFromSSE = useCallback(() => {
+    console.log('🔄 [updateVotingDetailsFromSSE] Ejecutándose');
+    console.log('🔄 [updateVotingDetailsFromSSE] votingDetails:', votingDetails);
+    console.log('🔄 [updateVotingDetailsFromSSE] sseVotes.length:', sseVotes.length);
+    
     if (!votingDetails || !sseVotes.length) {
       console.log(`⚠️ No se puede actualizar: votingDetails=${!!votingDetails}, sseVotes.length=${sseVotes.length}`);
       return;
@@ -187,18 +197,44 @@ export function LiveVotingModal({
 
       // Para cada nuevo voto, actualizar la unidad correspondiente
       newVotes.forEach(sseVote => {
-        // ✅ MEJORADO: Usar directamente los datos del SSE (incluye color)
         const unitIndex = updatedUnits.findIndex(unit => unit.property_unit_id === sseVote.property_unit_id);
         
         if (unitIndex !== -1) {
-          // Log de actualización eliminado para reducir ruido
+          const currentUnit = updatedUnits[unitIndex];
+          
+          // ✅ CRÍTICO: Solo actualizar si la unidad NO tiene datos válidos ya
+          const hasValidData = currentUnit.has_voted && 
+                               currentUnit.option_text && 
+                               currentUnit.option_text !== 'undefined' && 
+                               currentUnit.option_text !== 'null' &&
+                               currentUnit.option_color &&
+                               currentUnit.option_color !== 'undefined' &&
+                               currentUnit.option_color !== 'null';
+          
+          if (hasValidData) {
+            console.log(`⏭️ [SSE] Saltando unidad ${currentUnit.property_unit_number} - ya tiene datos válidos`);
+            return; // No sobrescribir datos válidos existentes
+          }
+          
+          // Verificar que los datos del SSE sean válidos antes de actualizar
+          const sseDataValid = sseVote.option_text && 
+                              sseVote.option_text !== 'undefined' &&
+                              sseVote.color &&
+                              sseVote.color !== 'undefined';
+          
+          if (!sseDataValid) {
+            console.log(`⚠️ [SSE] Datos inválidos para unidad ${currentUnit.property_unit_number}, ignorando`);
+            return; // No actualizar con datos inválidos
+          }
+          
+          console.log(`✅ [SSE] Actualizando unidad ${currentUnit.property_unit_number} con voto "${sseVote.option_text}"`);
           
           updatedUnits[unitIndex] = {
             ...updatedUnits[unitIndex],
             has_voted: true,
             option_text: sseVote.option_text,
             option_code: sseVote.option_code,
-            option_color: sseVote.color, // ✅ NUEVO: Usar directamente el color del SSE
+            option_color: sseVote.color,
             voted_at: sseVote.voted_at,
           };
           newUnitsVoted++;
@@ -247,42 +283,176 @@ export function LiveVotingModal({
     }
   }, [sseVotes, updateVotingDetailsFromSSE, votingDetails]); // ✅ CORREGIDO: usar sseVotes en lugar de sseVotes.length
 
+  // Procesar votos eliminados del SSE
+  useEffect(() => {
+    if (deletedVotes.length === 0 || !votingDetails) return;
+
+    // Filtrar solo votos eliminados nuevos (no procesados)
+    const newDeletedVotes = deletedVotes.filter(dv => !processedDeletedVoteIds.has(dv.id));
+    
+    if (newDeletedVotes.length === 0) return;
+
+    console.log('🗑️ Procesando votos eliminados del SSE:', newDeletedVotes);
+
+    // Marcar como procesados
+    setProcessedDeletedVoteIds(prev => {
+      const newSet = new Set(prev);
+      newDeletedVotes.forEach(dv => newSet.add(dv.id));
+      return newSet;
+    });
+    
+    setVotingDetails(prevDetails => {
+      if (!prevDetails) return prevDetails;
+
+      const updatedUnits = prevDetails.units.map(unit => {
+        // Verificar si esta unidad tiene un voto eliminado
+        const wasDeleted = newDeletedVotes.some(dv => dv.property_unit_id === unit.property_unit_id);
+        
+        if (wasDeleted) {
+          console.log(`🔄 Reseteando voto de unidad ${unit.property_unit_number}`);
+          // Resetear el voto de esta unidad
+          return {
+            ...unit,
+            has_voted: false,
+            option_text: null,
+            option_code: null,
+            option_color: null,
+            voted_at: null,
+          };
+        }
+        
+        return unit;
+      });
+
+      // Contar cuántos votos se eliminaron
+      const deletedCount = newDeletedVotes.length;
+
+      return {
+        ...prevDetails,
+        units: updatedUnits,
+        units_voted: Math.max(0, prevDetails.units_voted - deletedCount),
+        units_pending: Math.min(prevDetails.total_units, prevDetails.units_pending + deletedCount),
+      };
+    });
+
+    // Limpiar los votos eliminados del estado validVoteData
+    newDeletedVotes.forEach(dv => {
+      setValidVoteData(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(dv.property_unit_id);
+        return newMap;
+      });
+    });
+  }, [deletedVotes, votingDetails, processedDeletedVoteIds]);
+
+  // Estado para mantener los datos válidos de votos
+  const [validVoteData, setValidVoteData] = useState<Map<number, {
+    votedOption: string;
+    votedOptionId: number;
+    votedOptionColor: string;
+  }>>(new Map());
+
+  // useEffect para actualizar datos válidos cuando cambian los votingDetails
+  useEffect(() => {
+    if (!votingDetails) return;
+
+    setValidVoteData(prevValidData => {
+      const newValidData = new Map(prevValidData);
+      let hasChanges = false;
+
+      votingDetails.units.forEach((unit) => {
+        if (unit.has_voted) {
+          // Verificar si los datos son válidos (no "undefined" como string)
+          const isValidText = unit.option_text && 
+                             unit.option_text !== 'undefined' && 
+                             unit.option_text !== 'null' && 
+                             unit.option_text.trim() !== '';
+          
+          const isValidColor = unit.option_color && 
+                              unit.option_color !== 'undefined' && 
+                              unit.option_color !== 'null' && 
+                              unit.option_color.trim() !== '';
+          
+          if (isValidText && isValidColor) {
+            // Datos válidos del backend - guardarlos solo si no existen o son diferentes
+            const votedOptionId = options.find(opt => opt.optionText === unit.option_text)?.id;
+            if (votedOptionId) {
+              const existing = prevValidData.get(unit.property_unit_id);
+              const newData = {
+                votedOption: unit.option_text || '',
+                votedOptionId: votedOptionId,
+                votedOptionColor: unit.option_color || ''
+              };
+              
+              // Solo actualizar si los datos son diferentes o no existen
+              if (!existing || 
+                  existing.votedOption !== newData.votedOption ||
+                  existing.votedOptionColor !== newData.votedOptionColor) {
+                newValidData.set(unit.property_unit_id, newData);
+                hasChanges = true;
+              }
+            }
+          }
+        }
+      });
+
+      return hasChanges ? newValidData : prevValidData;
+    });
+  }, [votingDetails, options]);
+
   // Función para convertir datos del endpoint al formato de ResidentialUnit
   const convertToResidentialUnits = (): ResidentialUnit[] => {
     if (!votingDetails) return [];
 
-    return votingDetails.units.map((unit, index) => {
-      // Usar el color directo del backend si existe, sino buscar en las opciones
+    return votingDetails.units.map((unit) => {
+      let votedOption: string | undefined;
+      let votedOptionId: number | undefined;
       let votedOptionColor: string | undefined;
       
-      if (unit.has_voted && unit.option_color) {
-        // Usar el color directo del voto del backend (más fuerte)
-        votedOptionColor = unit.option_color;
-      } else if (unit.has_voted) {
-        // Buscar en las opciones configuradas
-        const option = options.find(opt => opt.optionText === unit.option_text);
-        votedOptionColor = option ? getOptionColor(option.id, option.color) : undefined;
+      if (unit.has_voted) {
+        // Verificar si los datos son válidos (no "undefined" como string)
+        const isValidText = unit.option_text && 
+                           unit.option_text !== 'undefined' && 
+                           unit.option_text !== 'null' && 
+                           unit.option_text.trim() !== '';
         
-        // Si no hay color configurado, mostrar error
-        if (!votedOptionColor && option) {
-          console.error(`❌ ERROR: Opción "${option.optionText}" no tiene color configurado`);
+        const isValidColor = unit.option_color && 
+                            unit.option_color !== 'undefined' && 
+                            unit.option_color !== 'null' && 
+                            unit.option_color.trim() !== '';
+        
+        if (isValidText && isValidColor) {
+          // Datos válidos del backend - usarlos
+          votedOption = unit.option_text || undefined;
+          votedOptionId = options.find(opt => opt.optionText === unit.option_text)?.id;
+          votedOptionColor = unit.option_color || undefined;
+        } else {
+          // Datos inválidos - usar datos guardados previamente si existen
+          const savedData = validVoteData.get(unit.property_unit_id);
+          if (savedData) {
+            votedOption = savedData.votedOption;
+            votedOptionId = savedData.votedOptionId;
+            votedOptionColor = savedData.votedOptionColor;
+          } else {
+            votedOption = undefined;
+            votedOptionId = undefined;
+            votedOptionColor = undefined;
+          }
         }
       }
 
       const result = {
-        id: index + 1, // ID temporal basado en índice
+        id: unit.property_unit_id,
         number: unit.property_unit_number,
         resident: unit.resident_name || 'Sin residente',
-        propertyUnitId: unit.property_unit_id, // ✅ ID de la unidad
-        residentId: unit.resident_id, // ID del residente
+        propertyUnitId: unit.property_unit_id,
+        residentId: unit.resident_id,
         hasVoted: unit.has_voted,
-        votedOption: unit.option_text || undefined,
-        votedOptionId: options.find(opt => opt.optionText === unit.option_text)?.id,
+        votedOption: votedOption,
+        votedOptionId: votedOptionId,
         votedOptionColor: votedOptionColor,
         participationCoefficient: unit.participation_coefficient,
       };
-      
-      // Log eliminado para reducir ruido en consola
       
       return result;
     });
@@ -555,10 +725,117 @@ export function LiveVotingModal({
     setShowVoteModal(true);
   };
 
+  // Handler para abrir modal de voto desde la tarjeta de unidad
+  const handleVoteFromCard = (unit: ResidentialUnit) => {
+    console.log('🗳️ Votando desde tarjeta:', unit);
+    setSelectedUnitForVote(unit);
+    setShowVoteModal(true);
+  };
+
+  // Handler para abrir modal de confirmación de eliminar voto
+  const handleDeleteVoteFromCard = (unit: ResidentialUnit) => {
+    setSelectedUnitForDelete(unit);
+    setShowDeleteVoteModal(true);
+  };
+
+  // Handler para confirmar eliminación de voto
+  const handleConfirmDeleteVote = async () => {
+    if (!selectedUnitForDelete) return;
+
+    setDeletingVote(true);
+
+    try {
+      const token = TokenStorage.getToken();
+      if (!token) {
+        alert('No se encontró el token de autenticación');
+        return;
+      }
+
+      // Buscar el voto de esta unidad en los votos del SSE
+      const voteToDelete = sseVotes.find(vote => vote.property_unit_id === selectedUnitForDelete.propertyUnitId);
+      
+      if (!voteToDelete) {
+        alert('No se encontró el voto para eliminar');
+        return;
+      }
+
+      console.log('🗑️ Eliminando voto:', voteToDelete);
+
+      const { deleteVoteAction } = await import('@/modules/property-horizontal/infrastructure/actions/voting');
+      
+      const result = await deleteVoteAction({
+        token,
+        hpId,
+        groupId: voting.votingGroupId,
+        votingId: voting.id,
+        voteId: voteToDelete.id
+      });
+
+      if (result.success) {
+        console.log('✅ Voto eliminado exitosamente');
+        
+        // Actualizar solo la tarjeta específica sin recargar toda la página
+        setVotingDetails(prevDetails => {
+          if (!prevDetails) return prevDetails;
+
+          const updatedUnits = prevDetails.units.map(u => {
+            if (u.property_unit_id === selectedUnitForDelete.propertyUnitId) {
+              // Resetear el voto de esta unidad
+              return {
+                ...u,
+                has_voted: false,
+                option_text: null,
+                option_code: null,
+                option_color: null,
+                voted_at: null,
+              };
+            }
+            return u;
+          });
+
+          return {
+            ...prevDetails,
+            units: updatedUnits,
+            units_voted: prevDetails.units_voted - 1,
+            units_pending: prevDetails.units_pending + 1,
+          };
+        });
+
+        // Remover el voto del estado de processedVoteIds
+        setProcessedVoteIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(voteToDelete.id);
+          return newSet;
+        });
+
+        // Remover el voto del estado de validVoteData
+        setValidVoteData(prev => {
+          const newMap = new Map(prev);
+          newMap.delete(selectedUnitForDelete.propertyUnitId);
+          return newMap;
+        });
+
+        console.log('🔄 Estados actualizados: voto eliminado de processedVoteIds y validVoteData');
+
+        // Cerrar modal de confirmación
+        setShowDeleteVoteModal(false);
+        setSelectedUnitForDelete(null);
+      } else {
+        alert(result.error || 'Error al eliminar el voto');
+      }
+    } catch (error) {
+      console.error('❌ Error eliminando voto:', error);
+      alert('Error al eliminar el voto');
+    } finally {
+      setDeletingVote(false);
+    }
+  };
+
   const handleVoteSuccess = () => {
-    // NO cerrar el modal para permitir votos continuos
-    // El modal permanecerá abierto para el siguiente voto
-    console.log('✅ Voto registrado exitosamente. Modal permanece abierto para votos continuos.');
+    console.log('✅ Voto registrado exitosamente. Cerrando modal.');
+    // Cerrar el modal después de votar
+    setShowVoteModal(false);
+    setSelectedUnitForVote(null);
   };
 
   return (
@@ -678,6 +955,9 @@ export function LiveVotingModal({
                 <VotesByUnitSection 
                   units={residentialUnits}
                   fillAvailableSpace={true}
+                  onVoteClick={handleVoteFromCard}
+                  onDeleteVoteClick={handleDeleteVoteFromCard}
+                  showVoteButton={true}
                 />
               )}
             </div>
@@ -689,7 +969,10 @@ export function LiveVotingModal({
       {voting && (
         <VoteModal
           isOpen={showVoteModal}
-          onClose={() => setShowVoteModal(false)}
+          onClose={() => {
+            setShowVoteModal(false);
+            setSelectedUnitForVote(null); // Limpiar selección al cerrar
+          }}
           onSuccess={handleVoteSuccess}
           hpId={hpId}
           groupId={voting.votingGroupId}
@@ -702,6 +985,12 @@ export function LiveVotingModal({
             property_unit_id: vote.property_unit_id,
             voted_at: vote.voted_at
           }))} // ✅ NUEVO: Pasar votos actuales para filtrar
+          preselectedUnit={selectedUnitForVote ? {
+            propertyUnitId: selectedUnitForVote.propertyUnitId,
+            residentId: selectedUnitForVote.residentId,
+            unitNumber: selectedUnitForVote.number,
+            residentName: selectedUnitForVote.resident
+          } : undefined}
         />
       )}
 
@@ -823,6 +1112,90 @@ export function LiveVotingModal({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal de Confirmación de Eliminar Voto */}
+      {selectedUnitForDelete && (
+        <Modal 
+          isOpen={showDeleteVoteModal} 
+          onClose={() => {
+            if (!deletingVote) {
+              setShowDeleteVoteModal(false);
+              setSelectedUnitForDelete(null);
+            }
+          }} 
+          title="Eliminar Voto" 
+          size="md"
+        >
+          <div className="space-y-6">
+            {/* Advertencia */}
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-center space-x-3">
+                <div className="flex-shrink-0">
+                  <svg className="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-medium text-red-800">
+                    ¿Estás seguro de eliminar este voto?
+                  </h3>
+                  <p className="text-sm text-red-600 mt-1">
+                    Esta acción no se puede deshacer
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Detalles del voto a eliminar */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600 font-medium">Unidad:</span>
+                  <span className="text-gray-900 font-semibold">{selectedUnitForDelete.number}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600 font-medium">Residente:</span>
+                  <span className="text-gray-900">{selectedUnitForDelete.resident}</span>
+                </div>
+                {selectedUnitForDelete.votedOption && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 font-medium">Opción votada:</span>
+                    <span className="text-gray-900 font-semibold">{selectedUnitForDelete.votedOption}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Botones */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteVoteModal(false);
+                  setSelectedUnitForDelete(null);
+                }}
+                disabled={deletingVote}
+                className="flex-1 btn btn-outline"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmDeleteVote}
+                disabled={deletingVote}
+                className="flex-1 btn btn-error"
+              >
+                {deletingVote ? (
+                  <>
+                    <Spinner size="sm" />
+                    <span className="ml-2">Eliminando...</span>
+                  </>
+                ) : (
+                  'Eliminar Voto'
+                )}
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
     </>
   );

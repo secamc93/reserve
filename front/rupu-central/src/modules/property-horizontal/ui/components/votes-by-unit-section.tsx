@@ -15,6 +15,9 @@ interface VotesByUnitSectionProps {
   maxHeight?: string;
   fillAvailableSpace?: boolean;
   showScaleControl?: boolean;
+  onVoteClick?: (unit: ResidentialUnit) => void; // ✅ Callback para abrir modal de voto
+  onDeleteVoteClick?: (unit: ResidentialUnit) => void; // ✅ Callback para eliminar voto
+  showVoteButton?: boolean; // ✅ Mostrar botón de votar/eliminar en cada tarjeta
 }
 
 export function VotesByUnitSection({ 
@@ -23,7 +26,10 @@ export function VotesByUnitSection({
   showPreviewNote = true,
   maxHeight = "max-h-96",
   fillAvailableSpace = false,
-  showScaleControl = true
+  showScaleControl = true,
+  onVoteClick,
+  onDeleteVoteClick,
+  showVoteButton = false
 }: VotesByUnitSectionProps) {
   const [scale, setScale] = useState(5); // 0=extra pequeño, 5=mediano, 10=muy grande
 
@@ -201,7 +207,14 @@ export function VotesByUnitSection({
         <div className={`${scrollContainerHeight} ${fillAvailableSpace ? 'flex-1' : ''} overflow-y-auto border border-gray-200 rounded-lg bg-gray-50 px-4 pt-4`}>
           <div className={`grid ${currentScale.gridCols} gap-4 pb-4`}>
             {units.map((unit) => (
-              <UnitCard key={unit.id} unit={unit} scale={currentScale} />
+              <UnitCard 
+                key={unit.id} 
+                unit={unit} 
+                scale={currentScale}
+                onVoteClick={onVoteClick}
+                onDeleteVoteClick={onDeleteVoteClick}
+                showVoteButton={showVoteButton}
+              />
             ))}
           </div>
         </div>

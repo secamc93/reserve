@@ -81,6 +81,8 @@ type VotingRepository interface {
 
 	// Votes
 	CreateVote(ctx context.Context, vote Vote) (*Vote, error)
+	GetVoteByID(ctx context.Context, voteID uint) (*Vote, error)
+	DeleteVote(ctx context.Context, voteID uint) error
 	HasUnitVoted(ctx context.Context, votingID uint, propertyUnitID uint) (bool, error)
 	GetUnitVote(ctx context.Context, votingID, propertyUnitID uint) (*Vote, error)
 	GetVotingResults(ctx context.Context, votingID uint) ([]VotingResultDTO, error)
@@ -117,6 +119,7 @@ type VotingUseCase interface {
 
 	// Votes
 	CreateVote(ctx context.Context, dto CreateVoteDTO) (*VoteDTO, error)
+	DeleteVote(ctx context.Context, voteID uint) error
 	ListVotesByVoting(ctx context.Context, votingID uint) ([]VoteDTO, error)
 	HasUnitVoted(ctx context.Context, votingID, propertyUnitID uint) (bool, error)
 	GetUnitVote(ctx context.Context, votingID, propertyUnitID uint) (*VoteDTO, error)

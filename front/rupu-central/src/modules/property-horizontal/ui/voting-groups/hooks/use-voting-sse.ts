@@ -33,7 +33,7 @@ interface SSEVote {
 }
 
 interface SSEEvent {
-  type: 'connected' | 'initial_data' | 'new_vote' | 'preload_complete' | 'heartbeat';
+  type: 'connected' | 'initial_data' | 'new_vote' | 'vote_deleted' | 'preload_complete' | 'heartbeat';
   data: unknown;
 }
 
@@ -43,6 +43,7 @@ interface UseVotingSSEReturn {
   totalVotes: number;
   error: string | null;
   connectionStatus: 'connecting' | 'connected' | 'disconnected' | 'error';
+  deletedVotes: Array<{ id: number; property_unit_id: number }>; // ✅ NUEVO: Votos eliminados
 }
 
 export function useVotingSSE(
@@ -56,6 +57,7 @@ export function useVotingSSE(
   const [totalVotes, setTotalVotes] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'error'>('disconnected');
+  const [deletedVotes, setDeletedVotes] = useState<Array<{ id: number; property_unit_id: number }>>([]);
 
   const connectToSSE = useCallback(async () => {
     if (!enabled || !hpId || !groupId || !votingId) {
@@ -153,6 +155,23 @@ export function useVotingSSE(
                   setTotalVotes(prev => prev + 1);
                   break;
 
+                case 'vote_deleted':
+                  console.log('🗑️ SSE: Voto eliminado recibido', data);
+                  // El evento vote_deleted viene con estructura { vote: {...}, results: [...] }
+                  const deletedVoteData = data.vote || data;
+                  console.log('🗑️ Voto a eliminar:', deletedVoteData);
+                  
+                  // Agregar a la lista de votos eliminados
+                  setDeletedVotes(prev => [...prev, {
+                    id: deletedVoteData.id,
+                    property_unit_id: deletedVoteData.property_unit_id
+                  }]);
+                  
+                  // Remover el voto de la lista de votos
+                  setVotes(prev => prev.filter(v => v.id !== deletedVoteData.id));
+                  setTotalVotes(prev => Math.max(0, prev - 1));
+                  break;
+
                 case 'preload_complete':
                   console.log('✅ SSE: Precarga completada', data.total_votes, 'votos');
                   setTotalVotes(data.total_votes || 0);
@@ -188,6 +207,7 @@ export function useVotingSSE(
       setIsConnected(false);
       setVotes([]);
       setTotalVotes(0);
+      setDeletedVotes([]);
       setError(null);
     }
 
@@ -204,6 +224,7 @@ export function useVotingSSE(
     totalVotes,
     error,
     connectionStatus,
+    deletedVotes,
   };
 }
 

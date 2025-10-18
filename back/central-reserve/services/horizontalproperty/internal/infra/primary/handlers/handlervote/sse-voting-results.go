@@ -150,15 +150,15 @@ func (h *VotingHandler) SSEVotingResults(c *gin.Context) {
 			h.logger.Info().Uint("voting_id", uint(votingID)).Msg("Cliente desconectado del SSE")
 			return
 
-		case vote, ok := <-voteChan:
+		case voteEvent, ok := <-voteChan:
 			if !ok {
 				// Canal cerrado
 				h.logger.Info().Uint("voting_id", uint(votingID)).Msg("Canal de votos cerrado")
 				return
 			}
 
-			// Enviar nuevo voto y resultados actualizados
-			responseVote := mapper.MapVoteDTOToResponse(&vote)
+			// Enviar evento de voto y resultados actualizados
+			responseVote := mapper.MapVoteDTOToResponse(&voteEvent.Vote)
 
 			// Obtener resultados actualizados
 			updatedResults, err := h.votingUseCase.GetVotingResults(c.Request.Context(), uint(votingID))
@@ -167,22 +167,30 @@ func (h *VotingHandler) SSEVotingResults(c *gin.Context) {
 				resultsResponse = mapper.MapVotingResultsToResponses(updatedResults)
 			}
 
-			newVoteData := gin.H{
+			voteData := gin.H{
 				"vote":    responseVote,
 				"results": resultsResponse,
 			}
 
-			data, err := json.Marshal(newVoteData)
+			data, err := json.Marshal(voteData)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "[ERROR] handlervote/sse-voting-results.go - Error serializando nuevo voto: %v\n", err)
-				h.logger.Error().Err(err).Uint("voting_id", uint(votingID)).Msg("Error serializando nuevo voto")
+				fmt.Fprintf(os.Stderr, "[ERROR] handlervote/sse-voting-results.go - Error serializando evento de voto: %v\n", err)
+				h.logger.Error().Err(err).Uint("voting_id", uint(votingID)).Msg("Error serializando evento de voto")
 				continue
 			}
 
-			event := fmt.Sprintf("event: new_vote\ndata: %s\n\n", string(data))
+			// Determinar el tipo de evento
+			var eventType string
+			if voteEvent.Type == "vote_deleted" {
+				eventType = "vote_deleted"
+			} else {
+				eventType = "new_vote"
+			}
+
+			event := fmt.Sprintf("event: %s\ndata: %s\n\n", eventType, string(data))
 			if _, err := c.Writer.WriteString(event); err != nil {
-				fmt.Fprintf(os.Stderr, "[ERROR] handlervote/sse-voting-results.go - Error enviando nuevo voto por SSE: %v\n", err)
-				h.logger.Error().Err(err).Uint("voting_id", uint(votingID)).Msg("Error enviando nuevo voto por SSE")
+				fmt.Fprintf(os.Stderr, "[ERROR] handlervote/sse-voting-results.go - Error enviando evento por SSE: %v\n", err)
+				h.logger.Error().Err(err).Uint("voting_id", uint(votingID)).Msg("Error enviando evento por SSE")
 				return
 			}
 			c.Writer.Flush()

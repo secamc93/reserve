@@ -257,6 +257,60 @@ func (r *Repository) CreateVote(ctx context.Context, vote domain.Vote) (*domain.
 	return r.mapVoteToDomain(m), nil
 }
 
+func (r *Repository) GetVoteByID(ctx context.Context, voteID uint) (*domain.Vote, error) {
+	var m models.Vote
+	if err := r.db.Conn(ctx).Preload("VotingOption").First(&m, voteID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("voto no encontrado")
+		}
+		r.logger.Error().Err(err).Uint("vote_id", voteID).Msg("Error obteniendo voto por ID")
+		return nil, fmt.Errorf("error obteniendo voto: %w", err)
+	}
+
+	return r.mapVoteToDomain(&m), nil
+}
+
+func (r *Repository) DeleteVote(ctx context.Context, voteID uint) error {
+	fmt.Printf("🗑️ [REPOSITORY] DeleteVote - Iniciando eliminación\n")
+	fmt.Printf("   Vote ID: %d\n", voteID)
+
+	// Verificar que el voto existe antes de eliminar
+	var existingVote models.Vote
+	if err := r.db.Conn(ctx).First(&existingVote, voteID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			fmt.Printf("❌ [REPOSITORY] DeleteVote - Voto no encontrado: %d\n", voteID)
+			return fmt.Errorf("voto no encontrado")
+		}
+		fmt.Printf("❌ [REPOSITORY] DeleteVote - Error verificando voto: %v\n", err)
+		return fmt.Errorf("error verificando voto: %w", err)
+	}
+
+	fmt.Printf("✅ [REPOSITORY] DeleteVote - Voto encontrado\n")
+	fmt.Printf("   ID: %d\n", existingVote.ID)
+	fmt.Printf("   Voting ID: %d\n", existingVote.VotingID)
+	fmt.Printf("   Property Unit ID: %d\n", existingVote.PropertyUnitID)
+	fmt.Printf("   Eliminando permanentemente...\n")
+
+	// Hard delete - eliminar permanentemente de la base de datos
+	result := r.db.Conn(ctx).Unscoped().Delete(&models.Vote{}, voteID)
+	if result.Error != nil {
+		fmt.Printf("❌ [REPOSITORY] DeleteVote - Error eliminando: %v\n", result.Error)
+		r.logger.Error().Err(result.Error).Uint("vote_id", voteID).Msg("Error eliminando voto")
+		return fmt.Errorf("error eliminando voto: %w", result.Error)
+	}
+
+	if result.RowsAffected == 0 {
+		fmt.Printf("⚠️ [REPOSITORY] DeleteVote - No se eliminó ningún registro\n")
+		return fmt.Errorf("no se eliminó ningún voto")
+	}
+
+	fmt.Printf("✅ [REPOSITORY] DeleteVote - Voto eliminado exitosamente\n")
+	fmt.Printf("   Rows affected: %d\n", result.RowsAffected)
+
+	r.logger.Info().Uint("vote_id", voteID).Int64("rows_affected", result.RowsAffected).Msg("Voto eliminado permanentemente")
+	return nil
+}
+
 func (r *Repository) HasUnitVoted(ctx context.Context, votingID uint, propertyUnitID uint) (bool, error) {
 	var count int64
 	if err := r.db.Conn(ctx).Model(&models.Vote{}).Where("voting_id = ? AND property_unit_id = ?", votingID, propertyUnitID).Count(&count).Error; err != nil {
