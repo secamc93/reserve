@@ -9,12 +9,12 @@ class PermisosRolesMapper {
   static RolesPermisos _fromDataModel(AccessControlDataModel m) =>
       RolesPermisos(
         isSuper: m.isSuper,
-        roles: m.roles.map(_roleFromModel).toList(),
-        permissions: m.permissions.map(_permissionFromModel).toList(),
+        roles: m.roles.map(roleFromModel).toList(),
+        permissions: m.permissions.map(permissionFromModel).toList(),
         resources: m.resources.map(_resourceFromModel).toList(),
       );
 
-  static Role _roleFromModel(RoleModel m) => Role(
+  static Role roleFromModel(RoleModel m) => Role(
         id: m.id,
         name: m.name,
         code: m.code,
@@ -26,7 +26,7 @@ class PermisosRolesMapper {
         isSystem: m.isSystem ?? false,
       );
 
-  static Permission _permissionFromModel(PermissionModel m) => Permission(
+  static Permission permissionFromModel(PermissionModel m) => Permission(
         id: m.id,
         name: m.name,
         code: m.code,
@@ -42,21 +42,7 @@ class PermisosRolesMapper {
       ResourcePermissions(
         resource: m.resource,
         resourceName: m.resourceName,
-        actions: m.actions.map(_permissionFromModel).toList(),
+        actions: m.actions.map(permissionFromModel).toList(),
         isActive: m.active ?? true,
-      );
-
-  static RolesCatalog rolesListToEntity(RolesListResponseModel model) =>
-      RolesCatalog(
-        roles: model.data.map(_roleFromModel).toList(),
-        count: model.count,
-      );
-
-  static PermissionsCatalog permissionsListToEntity(
-    PermissionsListResponseModel model,
-  ) =>
-      PermissionsCatalog(
-        permissions: model.data.map(_permissionFromModel).toList(),
-        count: model.count,
       );
 }

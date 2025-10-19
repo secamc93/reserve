@@ -2,15 +2,30 @@ import 'package:dio/dio.dart';
 import 'package:get/get.dart';
 
 import 'package:rupu/domain/entities/roles_permisos.dart';
+import 'package:rupu/domain/infrastructure/datasources/permissions_datasource_impl.dart';
+import 'package:rupu/domain/infrastructure/datasources/roles_datasource_impl.dart';
+import 'package:rupu/domain/infrastructure/repositories/permissions_repository_impl.dart';
+import 'package:rupu/domain/infrastructure/repositories/roles_repository_impl.dart';
+import 'package:rupu/domain/repositories/permissions_repository.dart';
+import 'package:rupu/domain/repositories/roles_repository.dart';
 import 'package:rupu/presentation/views/home/home_controller.dart';
 
 enum RolesPermissionsTab { roles, permissions }
 
 class RolesPermissionsController extends GetxController {
-  RolesPermissionsController({HomeController? home})
-      : homeController = home ?? Get.find<HomeController>();
+  RolesPermissionsController({
+    HomeController? home,
+    RolesRepository? rolesRepo,
+    PermissionsRepository? permissionsRepo,
+  })  : homeController = home ?? Get.find<HomeController>(),
+        rolesRepository =
+            rolesRepo ?? RolesRepositoryImpl(RolesDatasourceImpl()),
+        permissionsRepository = permissionsRepo ??
+            PermissionsRepositoryImpl(PermissionsDatasourceImpl());
 
   final HomeController homeController;
+  final RolesRepository rolesRepository;
+  final PermissionsRepository permissionsRepository;
 
   final selectedTab = RolesPermissionsTab.roles.obs;
   final roles = <Role>[].obs;
@@ -44,13 +59,8 @@ class RolesPermissionsController extends GetxController {
     errorMessage.value = null;
 
     try {
-      final repo = homeController.repository;
-
-      final rolesFuture = repo.obtenerCatalogoRoles();
-      final permissionsFuture = repo.obtenerCatalogoPermisos();
-
-      final rolesCatalog = await rolesFuture;
-      final permissionsCatalog = await permissionsFuture;
+      final rolesCatalog = await rolesRepository.obtenerRoles();
+      final permissionsCatalog = await permissionsRepository.obtenerPermisos();
 
       roles
         ..clear()

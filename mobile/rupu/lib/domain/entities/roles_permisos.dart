@@ -1,3 +1,9 @@
+import 'permission.dart';
+import 'role.dart';
+
+export 'permission.dart';
+export 'role.dart';
+
 class RolesPermisosResponse {
   final bool success;
   final RolesPermisos data;
@@ -23,56 +29,6 @@ class RolesPermisos {
   });
 }
 
-/// Información del rol disponible para el usuario.
-class Role {
-  final int id;
-  final String name;
-  final String code;
-  final String description;
-  final int level;
-  final int? scopeId;
-  final String? scopeName;
-  final String? scopeCode;
-  final bool isSystem;
-
-  const Role({
-    required this.id,
-    required this.name,
-    required this.code,
-    required this.description,
-    required this.level,
-    this.scopeId,
-    this.scopeName,
-    this.scopeCode,
-    this.isSystem = false,
-  });
-}
-
-/// Información detallada de un permiso individual.
-class Permission {
-  final int id;
-  final String name;
-  final String code;
-  final String description;
-  final String resource;
-  final String action;
-  final int? scopeId;
-  final String? scopeName;
-  final String? scopeCode;
-
-  const Permission({
-    required this.id,
-    required this.name,
-    required this.code,
-    required this.description,
-    required this.resource,
-    required this.action,
-    this.scopeId,
-    this.scopeName,
-    this.scopeCode,
-  });
-}
-
 /// Agrupación de permisos por recurso.
 class ResourcePermissions {
   final String resource;
@@ -85,27 +41,5 @@ class ResourcePermissions {
     required this.actions,
     this.resourceName,
     this.isActive = true,
-  });
-}
-
-/// Catálogo completo de roles expuestos por la API.
-class RolesCatalog {
-  final List<Role> roles;
-  final int count;
-
-  const RolesCatalog({
-    required this.roles,
-    required this.count,
-  });
-}
-
-/// Catálogo completo de permisos expuestos por la API.
-class PermissionsCatalog {
-  final List<Permission> permissions;
-  final int count;
-
-  const PermissionsCatalog({
-    required this.permissions,
-    required this.count,
   });
 }

@@ -172,8 +172,7 @@ class RoleModel {
       level: (json['level'] as num?)?.toInt() ?? 0,
       scope: json['scope']?.toString(),
       scopeId: (json['scope_id'] as num?)?.toInt(),
-      scopeName:
-          json['scope_name']?.toString() ?? json['scope']?.toString(),
+      scopeName: json['scope_name']?.toString() ?? json['scope']?.toString(),
       scopeCode: json['scope_code']?.toString(),
       isSystem: json['is_system'] as bool?,
     );
@@ -231,8 +230,7 @@ class PermissionModel {
       action: json['action']?.toString() ?? '',
       scope: json['scope']?.toString(),
       scopeId: (json['scope_id'] as num?)?.toInt(),
-      scopeName:
-          json['scope_name']?.toString() ?? json['scope']?.toString(),
+      scopeName: json['scope_name']?.toString() ?? json['scope']?.toString(),
       scopeCode: json['scope_code']?.toString(),
     );
   }
@@ -250,69 +248,5 @@ class PermissionModel {
       if (scopeName != null) 'scope_name': scopeName,
       if (scopeCode != null) 'scope_code': scopeCode,
     };
-  }
-}
-
-class RolesListResponseModel {
-  final bool success;
-  final List<RoleModel> data;
-  final int count;
-
-  RolesListResponseModel({
-    required this.success,
-    required this.data,
-    required this.count,
-  });
-
-  factory RolesListResponseModel.fromJson(Map<String, dynamic> json) {
-    final dataJson = json['data'];
-    final roles = <RoleModel>[];
-
-    if (dataJson is List) {
-      for (final item in dataJson) {
-        if (item is Map<String, dynamic>) {
-          roles.add(RoleModel.fromJson(item));
-        }
-      }
-    }
-
-    return RolesListResponseModel(
-      success: json['success'] as bool? ?? false,
-      data: roles,
-      count: (json['count'] as num?)?.toInt() ?? roles.length,
-    );
-  }
-}
-
-class PermissionsListResponseModel {
-  final bool success;
-  final List<PermissionModel> data;
-  final int count;
-
-  PermissionsListResponseModel({
-    required this.success,
-    required this.data,
-    required this.count,
-  });
-
-  factory PermissionsListResponseModel.fromJson(Map<String, dynamic> json) {
-    final dataJson = json['data'];
-    final permissions = <PermissionModel>[];
-
-    if (dataJson is List) {
-      for (final item in dataJson) {
-        if (item is Map<String, dynamic>) {
-          permissions.add(PermissionModel.fromJson(item));
-        }
-      }
-    }
-
-    final total = json['total'] ?? json['count'];
-
-    return PermissionsListResponseModel(
-      success: json['success'] as bool? ?? false,
-      data: permissions,
-      count: (total as num?)?.toInt() ?? permissions.length,
-    );
   }
 }
