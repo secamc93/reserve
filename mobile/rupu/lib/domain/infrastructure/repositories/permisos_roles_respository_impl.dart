@@ -10,4 +10,14 @@ class PermisosRolesRespositoryImpl extends PermisosRolesRepository {
   Future<RolesPermisos> obtenerRolesPermisos({required int businessId}) {
     return datasource.obtenerRolesPermisos(businessId: businessId);
   }
+
+  @override
+  Future<RolesCatalog> obtenerCatalogoRoles() {
+    return datasource.obtenerCatalogoRoles();
+  }
+
+  @override
+  Future<PermissionsCatalog> obtenerCatalogoPermisos() {
+    return datasource.obtenerCatalogoPermisos();
+  }
 }

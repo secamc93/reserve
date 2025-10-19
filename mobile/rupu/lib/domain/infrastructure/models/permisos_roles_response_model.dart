@@ -145,6 +145,9 @@ class RoleModel {
   final String code;
   final int level;
   final String? scope;
+  final int? scopeId;
+  final String? scopeName;
+  final String? scopeCode;
   final bool? isSystem;
 
   RoleModel({
@@ -154,6 +157,9 @@ class RoleModel {
     required this.code,
     required this.level,
     this.scope,
+    this.scopeId,
+    this.scopeName,
+    this.scopeCode,
     this.isSystem,
   });
 
@@ -165,6 +171,10 @@ class RoleModel {
       code: json['code']?.toString() ?? '',
       level: (json['level'] as num?)?.toInt() ?? 0,
       scope: json['scope']?.toString(),
+      scopeId: (json['scope_id'] as num?)?.toInt(),
+      scopeName:
+          json['scope_name']?.toString() ?? json['scope']?.toString(),
+      scopeCode: json['scope_code']?.toString(),
       isSystem: json['is_system'] as bool?,
     );
   }
@@ -177,6 +187,9 @@ class RoleModel {
       'code': code,
       'level': level,
       if (scope != null) 'scope': scope,
+      if (scopeId != null) 'scope_id': scopeId,
+      if (scopeName != null) 'scope_name': scopeName,
+      if (scopeCode != null) 'scope_code': scopeCode,
       if (isSystem != null) 'is_system': isSystem,
     };
   }
@@ -191,6 +204,9 @@ class PermissionModel {
   final String resource;
   final String action;
   final String? scope;
+  final int? scopeId;
+  final String? scopeName;
+  final String? scopeCode;
 
   PermissionModel({
     required this.id,
@@ -200,6 +216,9 @@ class PermissionModel {
     required this.resource,
     required this.action,
     this.scope,
+    this.scopeId,
+    this.scopeName,
+    this.scopeCode,
   });
 
   factory PermissionModel.fromJson(Map<String, dynamic> json) {
@@ -211,6 +230,10 @@ class PermissionModel {
       resource: json['resource']?.toString() ?? '',
       action: json['action']?.toString() ?? '',
       scope: json['scope']?.toString(),
+      scopeId: (json['scope_id'] as num?)?.toInt(),
+      scopeName:
+          json['scope_name']?.toString() ?? json['scope']?.toString(),
+      scopeCode: json['scope_code']?.toString(),
     );
   }
 
@@ -223,6 +246,73 @@ class PermissionModel {
       'resource': resource,
       'action': action,
       if (scope != null) 'scope': scope,
+      if (scopeId != null) 'scope_id': scopeId,
+      if (scopeName != null) 'scope_name': scopeName,
+      if (scopeCode != null) 'scope_code': scopeCode,
     };
+  }
+}
+
+class RolesListResponseModel {
+  final bool success;
+  final List<RoleModel> data;
+  final int count;
+
+  RolesListResponseModel({
+    required this.success,
+    required this.data,
+    required this.count,
+  });
+
+  factory RolesListResponseModel.fromJson(Map<String, dynamic> json) {
+    final dataJson = json['data'];
+    final roles = <RoleModel>[];
+
+    if (dataJson is List) {
+      for (final item in dataJson) {
+        if (item is Map<String, dynamic>) {
+          roles.add(RoleModel.fromJson(item));
+        }
+      }
+    }
+
+    return RolesListResponseModel(
+      success: json['success'] as bool? ?? false,
+      data: roles,
+      count: (json['count'] as num?)?.toInt() ?? roles.length,
+    );
+  }
+}
+
+class PermissionsListResponseModel {
+  final bool success;
+  final List<PermissionModel> data;
+  final int count;
+
+  PermissionsListResponseModel({
+    required this.success,
+    required this.data,
+    required this.count,
+  });
+
+  factory PermissionsListResponseModel.fromJson(Map<String, dynamic> json) {
+    final dataJson = json['data'];
+    final permissions = <PermissionModel>[];
+
+    if (dataJson is List) {
+      for (final item in dataJson) {
+        if (item is Map<String, dynamic>) {
+          permissions.add(PermissionModel.fromJson(item));
+        }
+      }
+    }
+
+    final total = json['total'] ?? json['count'];
+
+    return PermissionsListResponseModel(
+      success: json['success'] as bool? ?? false,
+      data: permissions,
+      count: (total as num?)?.toInt() ?? permissions.length,
+    );
   }
 }

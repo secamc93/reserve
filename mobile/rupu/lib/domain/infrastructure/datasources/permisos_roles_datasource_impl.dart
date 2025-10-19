@@ -35,4 +35,40 @@ class PermisosRolesDatasourceImpl extends PermisosRolesDatasource {
       rethrow;
     }
   }
+
+  @override
+  Future<RolesCatalog> obtenerCatalogoRoles() async {
+    try {
+      final response = await _dio.get('/roles');
+
+      final model = RolesListResponseModel.fromJson(
+        Map<String, dynamic>.from(response.data as Map),
+      );
+
+      return PermisosRolesMapper.rolesListToEntity(model);
+    } on DioException catch (e) {
+      debugPrint(
+        'Error obtener catálogo de roles [${e.response?.statusCode}]: ${e.response?.data ?? e.message}',
+      );
+      rethrow;
+    }
+  }
+
+  @override
+  Future<PermissionsCatalog> obtenerCatalogoPermisos() async {
+    try {
+      final response = await _dio.get('/permissions');
+
+      final model = PermissionsListResponseModel.fromJson(
+        Map<String, dynamic>.from(response.data as Map),
+      );
+
+      return PermisosRolesMapper.permissionsListToEntity(model);
+    } on DioException catch (e) {
+      debugPrint(
+        'Error obtener catálogo de permisos [${e.response?.statusCode}]: ${e.response?.data ?? e.message}',
+      );
+      rethrow;
+    }
+  }
 }

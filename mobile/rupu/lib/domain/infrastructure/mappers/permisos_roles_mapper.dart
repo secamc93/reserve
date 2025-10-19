@@ -20,7 +20,9 @@ class PermisosRolesMapper {
         code: m.code,
         description: m.description,
         level: m.level,
-        scope: m.scope,
+        scopeId: m.scopeId,
+        scopeName: m.scopeName ?? m.scope,
+        scopeCode: m.scopeCode,
         isSystem: m.isSystem ?? false,
       );
 
@@ -31,7 +33,9 @@ class PermisosRolesMapper {
         description: m.description,
         resource: m.resource,
         action: m.action,
-        scope: m.scope,
+        scopeId: m.scopeId,
+        scopeName: m.scopeName ?? m.scope,
+        scopeCode: m.scopeCode,
       );
 
   static ResourcePermissions _resourceFromModel(ResourceModel m) =>
@@ -40,5 +44,19 @@ class PermisosRolesMapper {
         resourceName: m.resourceName,
         actions: m.actions.map(_permissionFromModel).toList(),
         isActive: m.active ?? true,
+      );
+
+  static RolesCatalog rolesListToEntity(RolesListResponseModel model) =>
+      RolesCatalog(
+        roles: model.data.map(_roleFromModel).toList(),
+        count: model.count,
+      );
+
+  static PermissionsCatalog permissionsListToEntity(
+    PermissionsListResponseModel model,
+  ) =>
+      PermissionsCatalog(
+        permissions: model.data.map(_permissionFromModel).toList(),
+        count: model.count,
       );
 }

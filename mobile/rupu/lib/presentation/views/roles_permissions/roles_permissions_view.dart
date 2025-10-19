@@ -36,6 +36,9 @@ class RolesPermissionsView extends GetView<RolesPermissionsController> {
 
             final tab = controller.selectedTab.value;
             final isRoles = tab == RolesPermissionsTab.roles;
+            final total = isRoles
+                ? controller.rolesCount.value
+                : controller.permissionsCount.value;
 
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -45,6 +48,16 @@ class RolesPermissionsView extends GetView<RolesPermissionsController> {
                   onSelect: controller.selectTab,
                 ),
                 const SizedBox(height: 16),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Cantidad: $total',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                ),
+                const SizedBox(height: 12),
                 Expanded(
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 250),
@@ -55,7 +68,8 @@ class RolesPermissionsView extends GetView<RolesPermissionsController> {
                           )
                         : _PermissionsTable(
                             key: const ValueKey('permissions-table'),
-                            permissions: controller.permissions.toList(growable: false),
+                            permissions:
+                                controller.permissions.toList(growable: false),
                           ),
                   ),
                 ),
@@ -196,7 +210,9 @@ class _RolesTable extends StatelessWidget {
   }
 
   DataRow _buildRow(Role role) {
-    final scope = role.scope?.isNotEmpty == true ? role.scope! : '-';
+    final scope = role.scopeName?.isNotEmpty == true
+        ? role.scopeName!
+        : (role.scopeCode?.isNotEmpty == true ? role.scopeCode! : '-');
 
     return DataRow(
       cells: [

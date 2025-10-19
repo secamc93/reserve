@@ -30,7 +30,9 @@ class Role {
   final String code;
   final String description;
   final int level;
-  final String? scope;
+  final int? scopeId;
+  final String? scopeName;
+  final String? scopeCode;
   final bool isSystem;
 
   const Role({
@@ -39,7 +41,9 @@ class Role {
     required this.code,
     required this.description,
     required this.level,
-    this.scope,
+    this.scopeId,
+    this.scopeName,
+    this.scopeCode,
     this.isSystem = false,
   });
 }
@@ -52,7 +56,9 @@ class Permission {
   final String description;
   final String resource;
   final String action;
-  final String? scope;
+  final int? scopeId;
+  final String? scopeName;
+  final String? scopeCode;
 
   const Permission({
     required this.id,
@@ -61,7 +67,9 @@ class Permission {
     required this.description,
     required this.resource,
     required this.action,
-    this.scope,
+    this.scopeId,
+    this.scopeName,
+    this.scopeCode,
   });
 }
 
@@ -77,5 +85,27 @@ class ResourcePermissions {
     required this.actions,
     this.resourceName,
     this.isActive = true,
+  });
+}
+
+/// Catálogo completo de roles expuestos por la API.
+class RolesCatalog {
+  final List<Role> roles;
+  final int count;
+
+  const RolesCatalog({
+    required this.roles,
+    required this.count,
+  });
+}
+
+/// Catálogo completo de permisos expuestos por la API.
+class PermissionsCatalog {
+  final List<Permission> permissions;
+  final int count;
+
+  const PermissionsCatalog({
+    required this.permissions,
+    required this.count,
   });
 }
