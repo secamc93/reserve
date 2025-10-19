@@ -29,13 +29,26 @@ class HomeController extends GetxController {
   Worker? _businessWorker;
 
   /// Verifica si el usuario cuenta con el permiso indicado.
-  /// - Si [resource] es `null`, busca la acción en cualquier recurso activo.
-  /// - Si [resource] tiene valor, delega en [canAccessResource].
+  /// - Si [resource] es `null`, busca la acción en todos los permisos.
+  /// - Si [resource] tiene valor, filtra por recurso y acción.
   bool hasPermission({required String action, String? resource}) {
+    final rp = rolesPermisos.value;
+    if (rp == null) return false;
+    if (rp.isSuper) return true;
+
+    final normalizedAction = action.toLowerCase();
+
     if (resource == null) {
-      return _hasActionInAnyResource(action);
+      return rp.permissions
+          .any((permission) => permission.action.toLowerCase() == normalizedAction);
     }
-    return canAccessResource(resource, actions: [action]);
+
+    final normalizedResource = resource.toLowerCase();
+    return rp.permissions.any(
+      (permission) =>
+          permission.resource.toLowerCase() == normalizedResource &&
+          permission.action.toLowerCase() == normalizedAction,
+    );
   }
 
   /// Permite validar acceso a un recurso en particular considerando:
@@ -52,21 +65,36 @@ class HomeController extends GetxController {
     if (rp == null) return false;
     if (rp.isSuper) return true;
 
-    final res = rp.resources.firstWhereOrNull((r) => r.resource == resource);
-    if (res == null) return false;
-    if (requireActive && !res.isActive) return false;
+    final normalizedResource = resource.toLowerCase();
+    final normalizedActions = actions.map((a) => a.toLowerCase()).toList();
 
-    if (actions.isEmpty) return true;
-    return actions.any(res.actions.contains);
-  }
+    final group = rp.resources.firstWhereOrNull(
+      (r) =>
+          r.resource.toLowerCase() == normalizedResource ||
+          (r.resourceName?.toLowerCase() == normalizedResource),
+    );
 
-  bool _hasActionInAnyResource(String action) {
-    final rp = rolesPermisos.value;
-    if (rp == null) return false;
-    if (rp.isSuper) return true;
+    if (group != null) {
+      if (requireActive && !group.isActive) return false;
+      if (normalizedActions.isEmpty) {
+        return group.actions.isNotEmpty;
+      }
 
-    return rp.resources.any(
-      (resource) => resource.isActive && resource.actions.contains(action),
+      return group.actions.any(
+        (permission) => normalizedActions.contains(permission.action.toLowerCase()),
+      );
+    }
+
+    if (normalizedActions.isEmpty) {
+      return rp.permissions.any(
+        (permission) => permission.resource.toLowerCase() == normalizedResource,
+      );
+    }
+
+    return rp.permissions.any(
+      (permission) =>
+          permission.resource.toLowerCase() == normalizedResource &&
+          normalizedActions.contains(permission.action.toLowerCase()),
     );
   }
 

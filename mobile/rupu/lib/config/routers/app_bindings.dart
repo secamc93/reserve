@@ -110,6 +110,7 @@ class CreateUserBinding {
 
 class RolesPermissionsBinding {
   static void register() {
+    HomeBinding.register();
     if (!Get.isRegistered<RolesPermissionsController>()) {
       Get.put(RolesPermissionsController());
     }

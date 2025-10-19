@@ -1,4 +1,3 @@
-
 class RolesPermisosResponse {
   final bool success;
   final RolesPermisos data;
@@ -9,48 +8,74 @@ class RolesPermisosResponse {
   });
 }
 
-/// Representa el objeto "data" del JSON:
-/// {
-///   "is_super": true,
-///   "roles": [ ... ],
-///   "resources": [ ... ]
-/// }
+/// Representa la respuesta de control de acceso con roles, permisos y recursos.
 class RolesPermisos {
   final bool isSuper;
   final List<Role> roles;
-  final List<Resource> resources;
+  final List<Permission> permissions;
+  final List<ResourcePermissions> resources;
 
   const RolesPermisos({
     required this.isSuper,
     required this.roles,
+    required this.permissions,
     required this.resources,
   });
 }
 
-/// Item de "roles":
-/// { "id": 1, "name": "Super Administrador", "description": "..." }
+/// Información del rol disponible para el usuario.
 class Role {
   final int id;
   final String name;
+  final String code;
   final String description;
+  final int level;
+  final String? scope;
+  final bool isSystem;
 
   const Role({
     required this.id,
     required this.name,
+    required this.code,
     required this.description,
+    required this.level,
+    this.scope,
+    this.isSystem = false,
   });
 }
 
-/// Item de "resources":
-/// { "resource": "business_types", "actions": ["Read", "Manage"] }
-class Resource {
+/// Información detallada de un permiso individual.
+class Permission {
+  final int id;
+  final String name;
+  final String code;
+  final String description;
   final String resource;
-  final List<String> actions;
+  final String action;
+  final String? scope;
+
+  const Permission({
+    required this.id,
+    required this.name,
+    required this.code,
+    required this.description,
+    required this.resource,
+    required this.action,
+    this.scope,
+  });
+}
+
+/// Agrupación de permisos por recurso.
+class ResourcePermissions {
+  final String resource;
+  final String? resourceName;
+  final List<Permission> actions;
   final bool isActive;
 
-  const Resource({
+  const ResourcePermissions({
     required this.resource,
     required this.actions,
-    required this.isActive,
+    this.resourceName,
+    this.isActive = true,
   });
 }
