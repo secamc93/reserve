@@ -1,8 +1,8 @@
+// presentation/views/roles_permissions/roles_permissions_view.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:rupu/domain/entities/roles_permisos.dart';
-
 import 'roles_permissions_controller.dart';
 
 class RolesPermissionsView extends GetView<RolesPermissionsController> {
@@ -13,6 +13,9 @@ class RolesPermissionsView extends GetView<RolesPermissionsController> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Usuarios y permisos'),
@@ -37,39 +40,65 @@ class RolesPermissionsView extends GetView<RolesPermissionsController> {
             final tab = controller.selectedTab.value;
             final isRoles = tab == RolesPermissionsTab.roles;
             final total = isRoles
-                ? controller.rolesCount.value
-                : controller.permissionsCount.value;
+                ? controller.filteredRoles.length
+                : controller.filteredPermissions.length;
 
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // Tabs premium
                 _TabsHeader(
                   selected: tab,
                   onSelect: controller.selectTab,
                 ),
                 const SizedBox(height: 16),
+
+                // Search bar segura
+                TextField(
+                  onChanged: controller.setSearch,
+                  decoration: InputDecoration(
+                    labelText: 'Buscar',
+                    hintText: 'ID, nombre, descripción, recurso, acción…',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: controller.searchText.value.isEmpty
+                        ? null
+                        : IconButton(
+                            tooltip: 'Limpiar',
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              controller.clearSearch();
+                              // Fuerza repaint rápido del TextField
+                              // al limpiar programáticamente (opcional)
+                              // -> usando GetX no es imprescindible.
+                            },
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'Cantidad: $total',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                    'Resultados: $total',
+                    style: tt.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: cs.onSurfaceVariant,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
+
                 Expanded(
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 250),
                     child: isRoles
                         ? _RolesTable(
                             key: const ValueKey('roles-table'),
-                            roles: controller.roles.toList(growable: false),
+                            roles: controller.filteredRoles,
                           )
                         : _PermissionsTable(
                             key: const ValueKey('permissions-table'),
-                            permissions:
-                                controller.permissions.toList(growable: false),
+                            permissions: controller.filteredPermissions,
                           ),
                   ),
                 ),
@@ -81,6 +110,8 @@ class RolesPermissionsView extends GetView<RolesPermissionsController> {
     );
   }
 }
+
+// -------------------- (resto de widgets igual que ya los tienes) --------------------
 
 class _TabsHeader extends StatelessWidget {
   const _TabsHeader({
@@ -178,13 +209,12 @@ class _TabButton extends StatelessWidget {
 
 class _RolesTable extends StatelessWidget {
   const _RolesTable({super.key, required this.roles});
-
   final List<Role> roles;
 
   @override
   Widget build(BuildContext context) {
     if (roles.isEmpty) {
-      return const _EmptyState(message: 'No hay roles asignados.');
+      return const _EmptyState(message: 'No hay roles.');
     }
 
     return Card(
@@ -216,11 +246,11 @@ class _RolesTable extends StatelessWidget {
 
     return DataRow(
       cells: [
-        DataCell(Text(role.id.toString())),
+        DataCell(Text('${role.id}')),
         DataCell(Text(role.name)),
         DataCell(Text(role.description.isNotEmpty ? role.description : '-')),
         DataCell(Text(scope)),
-        DataCell(Text(role.level.toString())),
+        DataCell(Text('${role.level}')),
         DataCell(Icon(
           role.isSystem ? Icons.check_circle : Icons.cancel,
           color: role.isSystem ? Colors.green : Colors.redAccent,
@@ -232,13 +262,12 @@ class _RolesTable extends StatelessWidget {
 
 class _PermissionsTable extends StatelessWidget {
   const _PermissionsTable({super.key, required this.permissions});
-
   final List<Permission> permissions;
 
   @override
   Widget build(BuildContext context) {
     if (permissions.isEmpty) {
-      return const _EmptyState(message: 'No hay permisos configurados.');
+      return const _EmptyState(message: 'No hay permisos.');
     }
 
     return Card(
@@ -261,19 +290,17 @@ class _PermissionsTable extends StatelessWidget {
     );
   }
 
-  DataRow _buildRow(Permission permission) {
+  DataRow _buildRow(Permission p) {
     return DataRow(
       cells: [
-        DataCell(Text(permission.id.toString())),
-        DataCell(Text(permission.resource.isNotEmpty ? permission.resource : '-')),
-        DataCell(Text(permission.action.isNotEmpty ? permission.action : '-')),
+        DataCell(Text('${p.id}')),
+        DataCell(Text(p.resource.isNotEmpty ? p.resource : '-')),
+        DataCell(Text(p.action.isNotEmpty ? p.action : '-')),
         DataCell(
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 280),
             child: Text(
-              permission.description.isNotEmpty
-                  ? permission.description
-                  : '-',
+              p.description.isNotEmpty ? p.description : '-',
               softWrap: true,
             ),
           ),
@@ -285,22 +312,18 @@ class _PermissionsTable extends StatelessWidget {
 
 class _EmptyState extends StatelessWidget {
   const _EmptyState({required this.message});
-
   final String message;
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Center(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.inbox_outlined, size: 48),
+          Icon(Icons.inbox_outlined, size: 48, color: cs.onSurfaceVariant),
           const SizedBox(height: 12),
-          Text(
-            message,
-            style: Theme.of(context).textTheme.titleMedium,
-            textAlign: TextAlign.center,
-          ),
+          Text(message, style: Theme.of(context).textTheme.titleMedium),
         ],
       ),
     );
@@ -309,17 +332,17 @@ class _EmptyState extends StatelessWidget {
 
 class _ErrorState extends StatelessWidget {
   const _ErrorState({required this.message, required this.onRetry});
-
   final String message;
   final Future<void> Function() onRetry;
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.error_outline, size: 48),
+          Icon(Icons.error_outline, size: 48, color: cs.error),
           const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -330,10 +353,7 @@ class _ErrorState extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          FilledButton(
-            onPressed: onRetry,
-            child: const Text('Reintentar'),
-          ),
+          FilledButton(onPressed: onRetry, child: const Text('Reintentar')),
         ],
       ),
     );
