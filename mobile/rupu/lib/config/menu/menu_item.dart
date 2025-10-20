@@ -72,6 +72,13 @@ const appMenuItems = <MenuItem>[
     ),
   ),
   MenuItem(
+    tittle: 'Propiedades',
+    subTittle: '',
+    link: '/home/0/horizontal-properties',
+    icon: Icons.apartment_outlined,
+    superAdminOnly: true,
+  ),
+  MenuItem(
     tittle: 'Usuarios y permisos',
     subTittle: '',
     link: '/home/0/users-permissions',

@@ -84,6 +84,14 @@ class UsersBinding {
   }
 }
 
+class HorizontalPropertiesBinding {
+  static void register() {
+    if (!Get.isRegistered<HorizontalPropertiesController>()) {
+      Get.put(HorizontalPropertiesController());
+    }
+  }
+}
+
 class UserDetailBinding {
   static void register() {
     if (!Get.isRegistered<UserDetailController>()) {
