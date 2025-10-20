@@ -1,13 +1,19 @@
 // presentation/views/roles_permissions/roles_permissions_controller.dart
 import 'package:dio/dio.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:rupu/config/helpers/string_match.dart';
 
+import 'package:rupu/domain/entities/horizontal_properties_page.dart';
+import 'package:rupu/domain/entities/horizontal_property.dart';
 import 'package:rupu/domain/entities/roles_permisos.dart';
+import 'package:rupu/domain/infrastructure/datasources/horizontal_properties_datasource_impl.dart';
 import 'package:rupu/domain/infrastructure/datasources/permissions_datasource_impl.dart';
 import 'package:rupu/domain/infrastructure/datasources/roles_datasource_impl.dart';
+import 'package:rupu/domain/infrastructure/repositories/horizontal_properties_repository_impl.dart';
 import 'package:rupu/domain/infrastructure/repositories/permissions_repository_impl.dart';
 import 'package:rupu/domain/infrastructure/repositories/roles_repository_impl.dart';
+import 'package:rupu/domain/repositories/horizontal_properties_repository.dart';
 import 'package:rupu/domain/repositories/permissions_repository.dart';
 import 'package:rupu/domain/repositories/roles_repository.dart';
 import 'package:rupu/presentation/views/home/home_controller.dart';
@@ -22,28 +28,34 @@ class RolesPermissionsController extends GetxController {
     HomeController? home,
     RolesRepository? rolesRepo,
     PermissionsRepository? permissionsRepo,
-  }) : homeController = home ?? Get.find<HomeController>(),
-       rolesRepository =
-           rolesRepo ?? RolesRepositoryImpl(RolesDatasourceImpl()),
-       permissionsRepository =
-           permissionsRepo ??
-           PermissionsRepositoryImpl(PermissionsDatasourceImpl());
+    HorizontalPropertiesRepository? horizontalRepo,
+  })  : homeController = home ?? Get.find<HomeController>(),
+        rolesRepository = rolesRepo ?? RolesRepositoryImpl(RolesDatasourceImpl()),
+        permissionsRepository =
+            permissionsRepo ?? PermissionsRepositoryImpl(PermissionsDatasourceImpl()),
+        horizontalPropertiesRepository = horizontalRepo ??
+            HorizontalPropertiesRepositoryImpl(HorizontalPropertiesDatasourceImpl());
 
   // ───────────────── deps/repos ─────────────────
   final HomeController homeController;
   final RolesRepository rolesRepository;
   final PermissionsRepository permissionsRepository;
+  final HorizontalPropertiesRepository horizontalPropertiesRepository;
 
   // ───────────────── estado base ─────────────────
   final selectedTab = RolesPermissionsTab.roles.obs;
   final roles = <Role>[].obs;
   final permissions = <Permission>[].obs;
+  final horizontalProperties = <HorizontalProperty>[].obs;
 
   final rolesCount = 0.obs;
   final permissionsCount = 0.obs;
+  final horizontalPropertiesPage = Rxn<HorizontalPropertiesPage>();
 
   final isLoading = false.obs;
   final errorMessage = RxnString();
+  final isLoadingHorizontalProperties = false.obs;
+  final horizontalPropertiesError = RxnString();
 
   // ───────────────── búsqueda segura (sin RegExp) ─────────────────
   /// Texto de búsqueda *único* para ambos tabs.
@@ -87,11 +99,14 @@ class RolesPermissionsController extends GetxController {
 
   bool get isSuperAdmin => homeController.rolesPermisos.value?.isSuper ?? false;
 
+  final DateFormat _dateFormat = DateFormat('dd/MM/yyyy HH:mm');
+
   // ───────────────── lifecycle ─────────────────
   @override
   void onInit() {
     super.onInit();
     _loadCatalogs();
+    fetchHorizontalProperties();
 
     // Opcional: si quieres limpiar búsqueda al cambiar de tab:
     ever<RolesPermissionsTab>(selectedTab, (_) => clearSearch());
@@ -102,7 +117,11 @@ class RolesPermissionsController extends GetxController {
   }
 
   Future<void> refreshData() async {
-    await Future.wait([homeController.loadRolesPermisos(), _loadCatalogs()]);
+    await Future.wait([
+      homeController.loadRolesPermisos(),
+      _loadCatalogs(),
+      fetchHorizontalProperties(),
+    ]);
   }
 
   Future<void> _loadCatalogs() async {
@@ -135,5 +154,46 @@ class RolesPermissionsController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  Future<void> fetchHorizontalProperties({Map<String, dynamic>? query}) async {
+    isLoadingHorizontalProperties.value = true;
+    horizontalPropertiesError.value = null;
+
+    try {
+      final result = await horizontalPropertiesRepository.getHorizontalProperties(
+        query: query ?? const <String, dynamic>{'page': 1, 'page_size': 10},
+      );
+
+      horizontalProperties
+        ..clear()
+        ..addAll(result.properties);
+      horizontalPropertiesPage.value = result;
+    } on DioException catch (e) {
+      horizontalProperties
+        ..clear();
+      horizontalPropertiesPage.value = null;
+      if (e.response?.data is Map) {
+        final data = (e.response!.data as Map).cast<String, dynamic>();
+        horizontalPropertiesError.value =
+            data['message']?.toString() ?? 'Error cargando propiedades horizontales';
+      } else {
+        horizontalPropertiesError.value =
+            'Error cargando propiedades horizontales: ${e.message}';
+      }
+    } catch (e) {
+      horizontalProperties
+        ..clear();
+      horizontalPropertiesPage.value = null;
+      horizontalPropertiesError.value =
+          'Error inesperado cargando propiedades horizontales: $e';
+    } finally {
+      isLoadingHorizontalProperties.value = false;
+    }
+  }
+
+  String formatHorizontalDate(DateTime? value) {
+    if (value == null) return '-';
+    return _dateFormat.format(value.toLocal());
   }
 }
