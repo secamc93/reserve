@@ -46,6 +46,19 @@ class RolesPermissionsView extends GetView<RolesPermissionsController> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Card(
+                  color: cs.secondaryContainer.withOpacity(0.3),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Text(
+                      'Sección exclusiva para la gestión de roles y permisos de propiedad horizontal.',
+                      style: tt.bodyMedium?.copyWith(
+                        color: cs.onSecondaryContainer,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
                 // Tabs premium
                 _TabsHeader(
                   selected: tab,
