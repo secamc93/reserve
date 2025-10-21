@@ -28,7 +28,6 @@ class HomeController extends GetxController {
   final Rxn<MenuItem> defaultMenuItem = Rxn();
 
   bool get isSuper => rolesPermisos.value?.isSuper ?? false;
-  bool _defaultRouteHandled = false;
 
   Worker? _businessWorker;
 
@@ -202,20 +201,11 @@ class HomeController extends GetxController {
     accessibleMenuItems.assignAll(items);
     final selectedDefault = _selectDefaultMenuItem(items);
     defaultMenuItem.value = selectedDefault;
-    _defaultRouteHandled = selectedDefault == null;
   }
 
   void _clearAccessibleMenuItems() {
     accessibleMenuItems.clear();
     defaultMenuItem.value = null;
-    _defaultRouteHandled = true;
-  }
-
-  bool get shouldRedirectToDefault =>
-      !_defaultRouteHandled && defaultMenuItem.value != null;
-
-  void markDefaultRouteHandled() {
-    _defaultRouteHandled = true;
   }
 
   bool get canAccessHorizontalPropertiesMenu {

@@ -1,7 +1,6 @@
 // presentation/views/home/home_view.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:go_router/go_router.dart';
 import 'package:rupu/presentation/widgets/dashboard.dart';
 import 'package:rupu/presentation/widgets/shared/custom_appbar.dart';
 import 'package:rupu/presentation/widgets/widgets.dart';
@@ -37,21 +36,6 @@ class HomeView extends GetView<HomeController> {
           );
         }
 
-        if (controller.shouldRedirectToDefault) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            final menu = controller.defaultMenuItem.value;
-            if (menu == null || !context.mounted) return;
-            final target = _resolveMenuRoute(menu.link, pageIndex);
-            final router = GoRouter.of(context);
-            final current =
-                router.routeInformationProvider.value.uri.toString();
-            if (current != target) {
-              context.go(target);
-            }
-            controller.markDefaultRouteHandled();
-          });
-        }
-
         return Scaffold(
           key: _scaffoldKey,
           appBar: CustomHomeAppBar(
@@ -63,15 +47,5 @@ class HomeView extends GetView<HomeController> {
         );
       }),
     );
-  }
-
-  String _resolveMenuRoute(String link, int pageIndex) {
-    final regex = RegExp(r'^/home/\d+');
-    final prefix = '/home/$pageIndex';
-    if (regex.hasMatch(link)) {
-      return link.replaceFirst(regex, prefix);
-    }
-    final normalized = link.startsWith('/') ? link : '/$link';
-    return '$prefix$normalized';
   }
 }
