@@ -47,7 +47,7 @@ class RolesPermissionsView extends GetView<RolesPermissionsController> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Card(
-                  color: cs.secondaryContainer.withOpacity(0.3),
+                  color: cs.secondaryContainer.withValues(alpha: 0.3),
                   child: Padding(
                     padding: const EdgeInsets.all(12),
                     child: Text(
@@ -60,10 +60,7 @@ class RolesPermissionsView extends GetView<RolesPermissionsController> {
                 ),
                 const SizedBox(height: 12),
                 // Tabs premium
-                _TabsHeader(
-                  selected: tab,
-                  onSelect: controller.selectTab,
-                ),
+                _TabsHeader(selected: tab, onSelect: controller.selectTab),
                 const SizedBox(height: 16),
 
                 // Search bar segura
@@ -127,10 +124,7 @@ class RolesPermissionsView extends GetView<RolesPermissionsController> {
 // -------------------- (resto de widgets igual que ya los tienes) --------------------
 
 class _TabsHeader extends StatelessWidget {
-  const _TabsHeader({
-    required this.selected,
-    required this.onSelect,
-  });
+  const _TabsHeader({required this.selected, required this.onSelect});
 
   final RolesPermissionsTab selected;
   final ValueChanged<RolesPermissionsTab> onSelect;
@@ -178,7 +172,7 @@ class _TabButton extends StatelessWidget {
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
         color: isSelected
-            ? theme.colorScheme.primary.withOpacity(0.12)
+            ? theme.colorScheme.primary.withValues(alpha: 0.12)
             : theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
@@ -264,10 +258,12 @@ class _RolesTable extends StatelessWidget {
         DataCell(Text(role.description.isNotEmpty ? role.description : '-')),
         DataCell(Text(scope)),
         DataCell(Text('${role.level}')),
-        DataCell(Icon(
-          role.isSystem ? Icons.check_circle : Icons.cancel,
-          color: role.isSystem ? Colors.green : Colors.redAccent,
-        )),
+        DataCell(
+          Icon(
+            role.isSystem ? Icons.check_circle : Icons.cancel,
+            color: role.isSystem ? Colors.green : Colors.redAccent,
+          ),
+        ),
       ],
     );
   }

@@ -107,7 +107,7 @@ class SettingsView extends GetView<SettingsController> {
                   subtitle: 'Cambia el tema de la aplicación',
                   trailing: Switch.adaptive(
                     value: isDark,
-                    activeColor: cs.primary,
+                    activeTrackColor: cs.primary,
                     onChanged: (_) => controller.toggleTheme(),
                   ),
                   onTap: controller.toggleTheme,

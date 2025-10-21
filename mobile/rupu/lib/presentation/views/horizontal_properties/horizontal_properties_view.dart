@@ -134,10 +134,11 @@ class HorizontalPropertiesView extends GetView<HorizontalPropertiesController> {
                                       minWidth: 900,
                                     ),
                                     child: DataTable(
-                                      headingRowColor:
-                                          MaterialStateProperty.all(
-                                            theme.colorScheme.surfaceVariant,
-                                          ),
+                                      headingRowColor: WidgetStateProperty.all(
+                                        theme
+                                            .colorScheme
+                                            .surfaceContainerHighest,
+                                      ),
                                       columns: const [
                                         DataColumn(label: Text('ID')),
                                         DataColumn(label: Text('Nombre')),
@@ -152,8 +153,8 @@ class HorizontalPropertiesView extends GetView<HorizontalPropertiesController> {
                                       rows: controller.properties.map((
                                         property,
                                       ) {
-                                        final isDeleting = controller
-                                            .isDeleting(property.id);
+                                        // final isDeleting = controller
+                                        //     .isDeleting(property.id);
                                         return DataRow(
                                           cells: [
                                             DataCell(Text('${property.id}')),

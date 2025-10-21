@@ -17,8 +17,9 @@ class UsersFiltersPanel extends StatelessWidget {
           children: [
             Text(
               'Filtros de búsqueda',
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w600),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 16),
             Row(
@@ -73,19 +74,24 @@ class UsersFiltersPanel extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            Obx(() => DropdownButtonFormField<bool?>(
-                  value: controller.isActive.value,
-                  decoration: const InputDecoration(
-                    labelText: 'Estado',
-                    prefixIcon: Icon(Icons.verified_user_outlined),
+            Obx(
+              () => DropdownButtonFormField<bool?>(
+                initialValue: controller.isActive.value,
+                decoration: const InputDecoration(
+                  labelText: 'Estado',
+                  prefixIcon: Icon(Icons.verified_user_outlined),
+                ),
+                items: const [
+                  DropdownMenuItem<bool?>(value: null, child: Text('Todos')),
+                  DropdownMenuItem<bool?>(value: true, child: Text('Activo')),
+                  DropdownMenuItem<bool?>(
+                    value: false,
+                    child: Text('Inactivo'),
                   ),
-                  items: const [
-                    DropdownMenuItem<bool?>(value: null, child: Text('Todos')),
-                    DropdownMenuItem<bool?>(value: true, child: Text('Activo')),
-                    DropdownMenuItem<bool?>(value: false, child: Text('Inactivo')),
-                  ],
-                  onChanged: (value) => controller.isActive.value = value,
-                )),
+                ],
+                onChanged: (value) => controller.isActive.value = value,
+              ),
+            ),
             const SizedBox(height: 12),
             TextField(
               controller: controller.roleIdCtrl,
@@ -109,8 +115,7 @@ class UsersFiltersPanel extends StatelessWidget {
               controller: controller.createdAtCtrl,
               decoration: const InputDecoration(
                 labelText: 'Fecha de creación',
-                helperText:
-                    'Formato YYYY-MM-DD o rango YYYY-MM-DD,YYYY-MM-DD',
+                helperText: 'Formato YYYY-MM-DD o rango YYYY-MM-DD,YYYY-MM-DD',
                 prefixIcon: Icon(Icons.calendar_today_outlined),
               ),
             ),

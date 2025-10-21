@@ -179,7 +179,7 @@ class _ThemeTogglePill extends StatelessWidget {
               ),
 
               // 🎨 Colores (usar secondary como acento)
-              activeColor: cs.secondary, // Android: thumb / iOS: track
+              activeThumbColor: cs.secondary, // Android: thumb / iOS: track
               activeTrackColor: cs.secondaryContainer.withValues(
                 alpha: 0.6,
               ), // Android: track
