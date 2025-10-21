@@ -34,10 +34,16 @@ class _SideMenuState extends State<SideMenu> {
       } else {
         await TokenStorage().deleteToken();
       }
-      if (Get.isRegistered<HomeController>()) {
-        Get.delete<HomeController>();
+
+      if (context.mounted) {
+        context.go('/login/0');
       }
-      if (context.mounted) context.go('/login/0');
+
+      Future.microtask(() {
+        if (Get.isRegistered<HomeController>()) {
+          Get.delete<HomeController>();
+        }
+      });
     }
 
     widget.scaffoldKey.currentState?.closeDrawer();

@@ -7,6 +7,7 @@ import 'package:rupu/domain/entities/horizontal_property_action_result.dart';
 import 'package:rupu/domain/entities/horizontal_property_create_result.dart';
 import 'package:rupu/domain/infrastructure/repositories/horizontal_properties_repository_impl.dart';
 import 'package:rupu/domain/repositories/horizontal_properties_repository.dart';
+import 'package:rupu/presentation/views/home/home_controller.dart';
 import 'package:rupu/presentation/views/login/login_controller.dart';
 
 class HorizontalPropertiesController extends GetxController {
@@ -16,6 +17,8 @@ class HorizontalPropertiesController extends GetxController {
       : repository = repository ?? HorizontalPropertiesRepositoryImpl();
 
   final LoginController _loginController = Get.find<LoginController>();
+  final HomeController? _homeController =
+      Get.isRegistered<HomeController>() ? Get.find<HomeController>() : null;
   Worker? _businessWorker;
 
   final properties = <HorizontalProperty>[].obs;
@@ -106,8 +109,9 @@ class HorizontalPropertiesController extends GetxController {
     errorMessage.value = null;
 
     try {
+      final isSuperAdmin = _homeController?.isSuper ?? false;
       final businessId = _loginController.selectedBusinessId;
-      if (businessId == null) {
+      if (businessId == null && !isSuperAdmin) {
         properties.clear();
         total.value = 0;
         page.value = 1;
@@ -117,7 +121,9 @@ class HorizontalPropertiesController extends GetxController {
       }
 
       final query = <String, dynamic>{};
-      query['business_id'] = businessId;
+      if (!isSuperAdmin && businessId != null) {
+        query['business_id'] = businessId;
+      }
       final parsedPage = int.tryParse(pageCtrl.text.trim());
       final parsedSize = int.tryParse(pageSizeCtrl.text.trim());
       if (parsedPage != null && parsedPage > 0) {
@@ -157,17 +163,19 @@ class HorizontalPropertiesController extends GetxController {
         return;
       }
 
-      final filtered = result.properties.where((property) {
-        final propertyBusinessId = property.businessId;
-        if (propertyBusinessId != null) {
-          return propertyBusinessId == businessId;
-        }
+      final filtered = isSuperAdmin || businessId == null
+          ? result.properties
+          : result.properties.where((property) {
+              final propertyBusinessId = property.businessId;
+              if (propertyBusinessId != null) {
+                return propertyBusinessId == businessId;
+              }
 
-        return property.id == businessId;
-      }).toList(growable: false);
+              return property.id == businessId;
+            }).toList(growable: false);
 
       properties.assignAll(filtered);
-      total.value = filtered.length;
+      total.value = isSuperAdmin ? result.total : filtered.length;
       page.value = result.page;
       totalPages.value = result.totalPages;
     } catch (error) {
