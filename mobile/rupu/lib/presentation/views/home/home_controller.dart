@@ -200,9 +200,9 @@ class HomeController extends GetxController {
     }
 
     accessibleMenuItems.assignAll(items);
-    final first = items.isNotEmpty ? items.first : null;
-    defaultMenuItem.value = first;
-    _defaultRouteHandled = first == null;
+    final selectedDefault = _selectDefaultMenuItem(items);
+    defaultMenuItem.value = selectedDefault;
+    _defaultRouteHandled = selectedDefault == null;
   }
 
   void _clearAccessibleMenuItems() {
@@ -222,5 +222,21 @@ class HomeController extends GetxController {
     if (isSuper) return true;
     final business = _loginController.selectedBusiness.value;
     return business?.businessTypeId == 11;
+  }
+
+  MenuItem? _selectDefaultMenuItem(List<MenuItem> items) {
+    if (items.isEmpty) return null;
+
+    final business = _loginController.selectedBusiness.value;
+    if (business != null && business.businessTypeId == 11) {
+      final horizontalItem = items.firstWhereOrNull(
+        (item) => item.link.contains('horizontal-properties'),
+      );
+      if (horizontalItem != null) {
+        return horizontalItem;
+      }
+    }
+
+    return items.first;
   }
 }

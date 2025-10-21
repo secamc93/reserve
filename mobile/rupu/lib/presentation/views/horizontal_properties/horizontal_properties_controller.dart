@@ -158,8 +158,12 @@ class HorizontalPropertiesController extends GetxController {
       }
 
       final filtered = result.properties.where((property) {
-        if (property.businessId == null) return true;
-        return property.businessId == businessId;
+        final propertyBusinessId = property.businessId;
+        if (propertyBusinessId != null) {
+          return propertyBusinessId == businessId;
+        }
+
+        return property.id == businessId;
       }).toList(growable: false);
 
       properties.assignAll(filtered);
