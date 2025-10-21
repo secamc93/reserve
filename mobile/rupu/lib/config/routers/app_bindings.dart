@@ -92,6 +92,18 @@ class HorizontalPropertiesBinding {
   }
 }
 
+class HorizontalPropertyDetailBinding {
+  static void register({required int propertyId}) {
+    final tag = HorizontalPropertyDetailController.tagFor(propertyId);
+    if (!Get.isRegistered<HorizontalPropertyDetailController>(tag: tag)) {
+      Get.put(
+        HorizontalPropertyDetailController(propertyId: propertyId),
+        tag: tag,
+      );
+    }
+  }
+}
+
 class UserDetailBinding {
   static void register() {
     if (!Get.isRegistered<UserDetailController>()) {

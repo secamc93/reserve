@@ -145,11 +145,36 @@ final appRouter = GoRouter(
                 : null;
             if (home == null || !home.isSuper) {
               return const Scaffold(
-                body: Center(child: Text('No autorizado')), 
+                body: Center(child: Text('No autorizado')),
               );
             }
             final page = int.parse(state.pathParameters['page']!);
             return HorizontalPropertiesScreen(pageIndex: page);
+          },
+        ),
+        GoRoute(
+          path: '/home/:page/horizontal-properties/:id',
+          name: HorizontalPropertyDetailScreen.name,
+          builder: (context, state) {
+            final home = Get.isRegistered<HomeController>()
+                ? Get.find<HomeController>()
+                : null;
+            if (home == null || !home.isSuper) {
+              return const Scaffold(
+                body: Center(child: Text('No autorizado')),
+              );
+            }
+            final page = int.parse(state.pathParameters['page']!);
+            final id = int.tryParse(state.pathParameters['id'] ?? '');
+            if (id == null) {
+              return const Scaffold(
+                body: Center(child: Text('Propiedad no válida.')),
+              );
+            }
+            return HorizontalPropertyDetailScreen(
+              pageIndex: page,
+              propertyId: id,
+            );
           },
         ),
         GoRoute(
