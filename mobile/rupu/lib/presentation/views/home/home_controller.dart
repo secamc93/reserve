@@ -208,6 +208,15 @@ class HomeController extends GetxController {
     defaultMenuItem.value = null;
   }
 
+  /// Limpia el estado interno cuando el usuario cierra sesión para
+  /// evitar que la siguiente sesión herede permisos o menú previos.
+  void resetForLogout() {
+    rolesPermisos.value = null;
+    accessibleMenuItems.clear();
+    defaultMenuItem.value = null;
+    errorMessage.value = null;
+  }
+
   bool get canAccessHorizontalPropertiesMenu {
     if (isSuper) return true;
     final business = _loginController.selectedBusiness.value;

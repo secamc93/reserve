@@ -31,21 +31,21 @@ class _SideMenuState extends State<SideMenu> {
       context.push(item.link);
     } else {
       HomeBinding.register();
+      final home = Get.isRegistered<HomeController>()
+          ? Get.find<HomeController>()
+          : null;
+
       if (Get.isRegistered<LoginController>()) {
         await Get.find<LoginController>().logout();
       } else {
         await TokenStorage().deleteToken();
       }
 
+      home?.resetForLogout();
+
       if (context.mounted) {
         context.go('/login/0');
       }
-
-      Future.microtask(() {
-        if (Get.isRegistered<HomeController>()) {
-          Get.delete<HomeController>();
-        }
-      });
     }
 
     widget.scaffoldKey.currentState?.closeDrawer();

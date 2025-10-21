@@ -20,6 +20,7 @@ class HorizontalPropertiesController extends GetxController {
   final HomeController? _homeController =
       Get.isRegistered<HomeController>() ? Get.find<HomeController>() : null;
   Worker? _businessWorker;
+  Worker? _rolesWorker;
 
   final properties = <HorizontalProperty>[].obs;
   final isLoading = false.obs;
@@ -73,6 +74,11 @@ class HorizontalPropertiesController extends GetxController {
     _businessWorker = ever(_loginController.selectedBusiness, (_) {
       fetchProperties();
     });
+    if (_homeController != null) {
+      _rolesWorker = ever(_homeController!.rolesPermisos, (_) {
+        fetchProperties();
+      });
+    }
     fetchProperties();
   }
 
@@ -101,6 +107,7 @@ class HorizontalPropertiesController extends GetxController {
     createQuaternaryColorCtrl.dispose();
     createCustomDomainCtrl.dispose();
     _businessWorker?.dispose();
+    _rolesWorker?.dispose();
     super.onClose();
   }
 

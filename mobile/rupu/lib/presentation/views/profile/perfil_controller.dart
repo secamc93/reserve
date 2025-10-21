@@ -86,18 +86,18 @@ class PerfilController extends GetxController {
 
   Future<void> logout(BuildContext context) async {
     HomeBinding.register();
+    final home = Get.isRegistered<HomeController>()
+        ? Get.find<HomeController>()
+        : null;
+
     await _loginCtrl.logout();
+    home?.resetForLogout();
+
     if (context.mounted) {
       GoRouter.of(
         context,
       ).goNamed(LoginScreen.name, pathParameters: {'page': '0'});
     }
-
-    Future.microtask(() {
-      if (Get.isRegistered<HomeController>()) {
-        Get.delete<HomeController>();
-      }
-    });
   }
 
   @override
