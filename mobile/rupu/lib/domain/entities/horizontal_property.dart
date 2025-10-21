@@ -3,6 +3,7 @@ class HorizontalProperty {
   final String name;
   final String code;
   final String? businessTypeName;
+  final int? businessId;
   final String? address;
   final int? totalUnits;
   final bool isActive;
@@ -14,6 +15,7 @@ class HorizontalProperty {
     required this.name,
     required this.code,
     this.businessTypeName,
+    this.businessId,
     this.address,
     this.totalUnits,
     required this.isActive,

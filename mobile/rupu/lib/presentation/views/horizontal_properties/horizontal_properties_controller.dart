@@ -157,8 +157,13 @@ class HorizontalPropertiesController extends GetxController {
         return;
       }
 
-      properties.assignAll(result.properties);
-      total.value = result.total;
+      final filtered = result.properties.where((property) {
+        if (property.businessId == null) return true;
+        return property.businessId == businessId;
+      }).toList(growable: false);
+
+      properties.assignAll(filtered);
+      total.value = filtered.length;
       page.value = result.page;
       totalPages.value = result.totalPages;
     } catch (error) {

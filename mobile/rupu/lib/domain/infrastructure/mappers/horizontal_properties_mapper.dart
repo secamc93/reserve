@@ -29,6 +29,7 @@ class HorizontalPropertiesMapper {
       name: model.name,
       code: model.code,
       businessTypeName: model.businessTypeName,
+      businessId: model.businessId,
       address: model.address,
       totalUnits: model.totalUnits,
       isActive: model.isActive,

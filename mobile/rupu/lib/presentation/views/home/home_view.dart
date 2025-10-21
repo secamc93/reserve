@@ -42,7 +42,9 @@ class HomeView extends GetView<HomeController> {
             final menu = controller.defaultMenuItem.value;
             if (menu == null || !context.mounted) return;
             final target = _resolveMenuRoute(menu.link, pageIndex);
-            final current = GoRouter.of(context).location;
+            final router = GoRouter.of(context);
+            final current =
+                router.routeInformationProvider.value.uri.toString();
             if (current != target) {
               context.go(target);
             }

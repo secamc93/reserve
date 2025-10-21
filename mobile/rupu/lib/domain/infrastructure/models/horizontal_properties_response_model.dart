@@ -59,6 +59,7 @@ class HorizontalPropertyModel {
   final String name;
   final String code;
   final String? businessTypeName;
+  final int? businessId;
   final String? address;
   final int? totalUnits;
   final bool isActive;
@@ -70,6 +71,7 @@ class HorizontalPropertyModel {
     required this.name,
     required this.code,
     required this.businessTypeName,
+    required this.businessId,
     required this.address,
     required this.totalUnits,
     required this.isActive,
@@ -83,6 +85,8 @@ class HorizontalPropertyModel {
       name: json['name'] as String? ?? '',
       code: json['code'] as String? ?? '',
       businessTypeName: json['business_type_name'] as String?,
+      businessId: json['business_id'] as int? ??
+          json['parent_business_id'] as int?,
       address: json['address'] as String?,
       totalUnits: json['total_units'] as int?,
       isActive: json['is_active'] as bool? ?? false,

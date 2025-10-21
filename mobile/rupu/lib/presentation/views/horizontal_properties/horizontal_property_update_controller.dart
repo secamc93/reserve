@@ -1,12 +1,14 @@
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:get/get.dart' hide MultipartFile;
 
 import 'package:rupu/domain/entities/horizontal_property_detail.dart';
 import 'package:rupu/domain/entities/horizontal_property_update_result.dart';
 import 'package:rupu/domain/infrastructure/repositories/horizontal_properties_repository_impl.dart';
 import 'package:rupu/domain/repositories/horizontal_properties_repository.dart';
+
+import 'package:rupu/presentation/views/login/login_controller.dart';
 
 import 'horizontal_properties_controller.dart';
 import 'models/property_file_data.dart';
@@ -58,6 +60,8 @@ class HorizontalPropertyUpdateController extends GetxController {
 
   final property = Rxn<HorizontalPropertyDetail>();
 
+  LoginController get _loginController => Get.find<LoginController>();
+
   @override
   void onInit() {
     super.onInit();
@@ -88,6 +92,16 @@ class HorizontalPropertyUpdateController extends GetxController {
       final detail = await repository.getHorizontalPropertyDetail(id: propertyId);
       if (detail == null) {
         errorMessage.value = 'No se encontró información de la propiedad.';
+        property.value = null;
+        return;
+      }
+
+      final selectedBusinessId = _loginController.selectedBusinessId;
+      if (selectedBusinessId != null &&
+          detail.parentBusinessId != null &&
+          detail.parentBusinessId != selectedBusinessId) {
+        errorMessage.value =
+            'No tienes acceso para administrar esta propiedad horizontal.';
         property.value = null;
         return;
       }
