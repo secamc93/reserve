@@ -14,11 +14,12 @@ class HorizontalPropertiesController extends GetxController {
   final HorizontalPropertiesRepository repository;
 
   HorizontalPropertiesController({HorizontalPropertiesRepository? repository})
-      : repository = repository ?? HorizontalPropertiesRepositoryImpl();
+    : repository = repository ?? HorizontalPropertiesRepositoryImpl();
 
   final LoginController _loginController = Get.find<LoginController>();
-  final HomeController? _homeController =
-      Get.isRegistered<HomeController>() ? Get.find<HomeController>() : null;
+  final HomeController? _homeController = Get.isRegistered<HomeController>()
+      ? Get.find<HomeController>()
+      : null;
   Worker? _businessWorker;
   Worker? _rolesWorker;
 
@@ -75,7 +76,7 @@ class HorizontalPropertiesController extends GetxController {
       fetchProperties();
     });
     if (_homeController != null) {
-      _rolesWorker = ever(_homeController!.rolesPermisos, (_) {
+      _rolesWorker = ever(_homeController.rolesPermisos, (_) {
         fetchProperties();
       });
     }
@@ -155,10 +156,8 @@ class HorizontalPropertiesController extends GetxController {
         query['order_dir'] = orderDirCtrl.text.trim();
       }
 
-      final HorizontalPropertiesPage result =
-          await repository.getHorizontalProperties(
-        query: query.isEmpty ? null : query,
-      );
+      final HorizontalPropertiesPage result = await repository
+          .getHorizontalProperties(query: query.isEmpty ? null : query);
 
       if (!result.success) {
         properties.clear();
@@ -172,14 +171,16 @@ class HorizontalPropertiesController extends GetxController {
 
       final filtered = isSuperAdmin || businessId == null
           ? result.properties
-          : result.properties.where((property) {
-              final propertyBusinessId = property.businessId;
-              if (propertyBusinessId != null) {
-                return propertyBusinessId == businessId;
-              }
+          : result.properties
+                .where((property) {
+                  final propertyBusinessId = property.businessId;
+                  if (propertyBusinessId != null) {
+                    return propertyBusinessId == businessId;
+                  }
 
-              return property.id == businessId;
-            }).toList(growable: false);
+                  return property.id == businessId;
+                })
+                .toList(growable: false);
 
       properties.assignAll(filtered);
       total.value = isSuperAdmin ? result.total : filtered.length;
@@ -374,8 +375,9 @@ class HorizontalPropertiesController extends GetxController {
       if (unitsPerFloor != null) {
         payload['units_per_floor'] = unitsPerFloor;
       }
-      final startUnitNumber =
-          int.tryParse(createStartUnitNumberCtrl.text.trim());
+      final startUnitNumber = int.tryParse(
+        createStartUnitNumberCtrl.text.trim(),
+      );
       if (startUnitNumber != null) {
         payload['start_unit_number'] = startUnitNumber;
       }

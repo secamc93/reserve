@@ -108,8 +108,8 @@ class _HorizontalPropertyUpdateSheetState
                         label: 'Nombre *',
                         validator: (value) =>
                             (value == null || value.trim().isEmpty)
-                                ? 'El nombre es obligatorio'
-                                : null,
+                            ? 'El nombre es obligatorio'
+                            : null,
                       ),
                       const SizedBox(height: 12),
                       _buildTextField(
@@ -122,8 +122,8 @@ class _HorizontalPropertyUpdateSheetState
                         label: 'Dirección',
                         validator: (value) =>
                             (value == null || value.trim().isEmpty)
-                                ? 'La dirección es obligatoria'
-                                : null,
+                            ? 'La dirección es obligatoria'
+                            : null,
                       ),
                       const SizedBox(height: 12),
                       _buildTextField(
@@ -212,7 +212,8 @@ class _HorizontalPropertyUpdateSheetState
                           contentPadding: EdgeInsets.zero,
                           title: const Text('Propiedad activa'),
                           value: _controller.isActive.value,
-                          onChanged: (value) => _controller.isActive.value = value,
+                          onChanged: (value) =>
+                              _controller.isActive.value = value,
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -242,8 +243,9 @@ class _HorizontalPropertyUpdateSheetState
                             child: Obx(() {
                               final saving = _controller.isSaving.value;
                               return OutlinedButton(
-                                onPressed:
-                                    saving ? null : () => Navigator.of(context).pop(),
+                                onPressed: saving
+                                    ? null
+                                    : () => Navigator.of(context).pop(),
                                 child: const Text('Cancelar'),
                               );
                             }),
@@ -256,14 +258,16 @@ class _HorizontalPropertyUpdateSheetState
                                 onPressed: saving
                                     ? null
                                     : () async {
-                                        final result =
-                                            await _controller.submit();
+                                        final result = await _controller
+                                            .submit();
                                         if (!mounted) return;
                                         if (result == null) return;
                                         if (result.success) {
                                           Navigator.of(context).pop(result);
                                         } else if (result.message != null) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
                                             SnackBar(
                                               content: Text(result.message!),
                                             ),
@@ -274,8 +278,9 @@ class _HorizontalPropertyUpdateSheetState
                                     ? const SizedBox(
                                         height: 20,
                                         width: 20,
-                                        child:
-                                            CircularProgressIndicator(strokeWidth: 2),
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
                                       )
                                     : const Text('Actualizar'),
                               );
@@ -329,10 +334,7 @@ class _ErrorPlaceholder extends StatelessWidget {
   final String message;
   final Future<void> Function()? onRetry;
 
-  const _ErrorPlaceholder({
-    required this.message,
-    this.onRetry,
-  });
+  const _ErrorPlaceholder({required this.message, this.onRetry});
 
   @override
   Widget build(BuildContext context) {
@@ -342,16 +344,10 @@ class _ErrorPlaceholder extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              message,
-              textAlign: TextAlign.center,
-            ),
+            Text(message, textAlign: TextAlign.center),
             const SizedBox(height: 16),
             if (onRetry != null)
-              FilledButton(
-                onPressed: onRetry,
-                child: const Text('Reintentar'),
-              ),
+              FilledButton(onPressed: onRetry, child: const Text('Reintentar')),
           ],
         ),
       ),
@@ -417,8 +413,8 @@ class _ColorPaletteFieldState extends State<_ColorPaletteField> {
             for (final hex in widget.palette)
               _ColorCircle(
                 color: _parseColor(hex),
-                isSelected: selectedColor != null &&
-                    selectedColor.value == _parseColor(hex).value,
+                isSelected:
+                    selectedColor != null && selectedColor == _parseColor(hex),
                 onTap: () => widget.controller.text = hex,
               ),
           ],
@@ -508,10 +504,12 @@ class _FilePickerTile extends StatelessWidget {
         subtitle: processing
             ? const Text('Procesando archivo...')
             : fileValue != null
-                ? Text('${fileValue.fileName} • ${formatSize(fileValue.sizeInBytes)}')
-                : currentUrl.value != null
-                    ? Text('Actual: ${currentUrl.value}')
-                    : const Text('Sin archivo seleccionado'),
+            ? Text(
+                '${fileValue.fileName} • ${formatSize(fileValue.sizeInBytes)}',
+              )
+            : currentUrl.value != null
+            ? Text('Actual: ${currentUrl.value}')
+            : const Text('Sin archivo seleccionado'),
         trailing: processing
             ? const SizedBox(
                 width: 20,
@@ -538,4 +536,3 @@ class _FilePickerTile extends StatelessWidget {
     });
   }
 }
-
