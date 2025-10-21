@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:rupu/config/dio/authenticated_dio.dart';
 import 'package:rupu/domain/datasource/horizontal_properties_datasource.dart';
 import 'package:rupu/domain/infrastructure/models/horizontal_properties_response_model.dart';
+import 'package:rupu/domain/infrastructure/models/horizontal_property_detail_response_model.dart';
 import 'package:rupu/domain/infrastructure/models/simple_response_model.dart';
 
 class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource {
@@ -21,6 +22,20 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
       queryParameters: query,
     );
     return HorizontalPropertiesResponseModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<HorizontalPropertyDetailResponseModel> createHorizontalProperty({
+    required Map<String, dynamic> data,
+  }) async {
+    final formData = FormData.fromMap(data);
+    final response = await _dio.post(
+      '/horizontal-properties',
+      data: formData,
+    );
+    return HorizontalPropertyDetailResponseModel.fromJson(
       response.data as Map<String, dynamic>,
     );
   }
