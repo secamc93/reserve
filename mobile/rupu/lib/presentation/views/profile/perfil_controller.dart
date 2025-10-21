@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
+import 'package:rupu/config/routers/app_bindings.dart';
 import 'package:rupu/config/theme/app_theme_controller.dart';
 import 'package:rupu/domain/infrastructure/models/login_response_model.dart';
 
@@ -84,15 +85,19 @@ class PerfilController extends GetxController {
   }
 
   Future<void> logout(BuildContext context) async {
+    HomeBinding.register();
     await _loginCtrl.logout();
-    if (Get.isRegistered<HomeController>()) {
-      Get.delete<HomeController>();
-    }
     if (context.mounted) {
       GoRouter.of(
         context,
       ).goNamed(LoginScreen.name, pathParameters: {'page': '0'});
     }
+
+    Future.microtask(() {
+      if (Get.isRegistered<HomeController>()) {
+        Get.delete<HomeController>();
+      }
+    });
   }
 
   @override

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rupu/config/constants/secure_storage/token_storage.dart';
+import 'package:rupu/config/routers/app_bindings.dart';
 import 'package:rupu/config/menu/menu_item.dart';
 import 'package:rupu/presentation/views/home/home_controller.dart';
 import 'package:rupu/presentation/views/login/login_controller.dart';
@@ -29,6 +30,7 @@ class _SideMenuState extends State<SideMenu> {
       final item = menuItems[index];
       context.push(item.link);
     } else {
+      HomeBinding.register();
       if (Get.isRegistered<LoginController>()) {
         await Get.find<LoginController>().logout();
       } else {
