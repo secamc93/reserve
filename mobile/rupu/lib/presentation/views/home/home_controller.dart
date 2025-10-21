@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 
 import 'package:rupu/config/theme/app_theme.dart';
+import 'package:rupu/config/menu/menu_item.dart';
 import 'package:rupu/presentation/views/login/login_controller.dart';
 
 import 'package:rupu/domain/entities/roles_permisos.dart';
@@ -23,8 +24,11 @@ class HomeController extends GetxController {
   final isLoading = false.obs;
   final errorMessage = RxnString();
   final Rxn<RolesPermisos> rolesPermisos = Rxn();
+  final accessibleMenuItems = <MenuItem>[].obs;
+  final Rxn<MenuItem> defaultMenuItem = Rxn();
 
   bool get isSuper => rolesPermisos.value?.isSuper ?? false;
+  bool _defaultRouteHandled = false;
 
   Worker? _businessWorker;
 
@@ -116,17 +120,23 @@ class HomeController extends GetxController {
       final businessId = _loginController.selectedBusinessId;
       if (businessId == null) {
         errorMessage.value = 'Debes seleccionar un negocio para continuar.';
+        _clearAccessibleMenuItems();
         return;
       }
 
       final rp = await repository.obtenerRolesPermisos(businessId: businessId);
       rolesPermisos.value = rp;
+      _updateAccessibleMenuItems();
     } on DioException catch (e) {
       errorMessage.value = (e.response?.statusCode == 401)
           ? 'No autorizado al obtener permisos.'
           : 'Error cargando permisos: ${e.message}';
+      rolesPermisos.value = null;
+      _clearAccessibleMenuItems();
     } catch (e) {
       errorMessage.value = 'Error inesperado cargando permisos: $e';
+      rolesPermisos.value = null;
+      _clearAccessibleMenuItems();
     } finally {
       isLoading.value = false;
     }
@@ -151,6 +161,66 @@ class HomeController extends GetxController {
   @override
   void onClose() {
     _businessWorker?.dispose();
+    accessibleMenuItems.clear();
+    defaultMenuItem.value = null;
     super.onClose();
+  }
+
+  void _updateAccessibleMenuItems() {
+    final rp = rolesPermisos.value;
+    if (rp == null) {
+      _clearAccessibleMenuItems();
+      return;
+    }
+
+    final allowsHorizontal = canAccessHorizontalPropertiesMenu;
+    final items = <MenuItem>[];
+
+    for (final item in appMenuItems) {
+      if (item.superAdminOnly) {
+        final isHorizontal = item.link.contains('horizontal-properties');
+        if (!isSuper) {
+          if (!(isHorizontal && allowsHorizontal)) {
+            continue;
+          }
+        }
+      }
+
+      final requirement = item.access;
+      if (requirement != null) {
+        final hasAccess = canAccessResource(
+          requirement.resource,
+          actions: requirement.actions,
+          requireActive: requirement.requireActive,
+        );
+        if (!hasAccess) continue;
+      }
+
+      items.add(item);
+    }
+
+    accessibleMenuItems.assignAll(items);
+    final first = items.isNotEmpty ? items.first : null;
+    defaultMenuItem.value = first;
+    _defaultRouteHandled = first == null;
+  }
+
+  void _clearAccessibleMenuItems() {
+    accessibleMenuItems.clear();
+    defaultMenuItem.value = null;
+    _defaultRouteHandled = true;
+  }
+
+  bool get shouldRedirectToDefault =>
+      !_defaultRouteHandled && defaultMenuItem.value != null;
+
+  void markDefaultRouteHandled() {
+    _defaultRouteHandled = true;
+  }
+
+  bool get canAccessHorizontalPropertiesMenu {
+    if (isSuper) return true;
+    final business = _loginController.selectedBusiness.value;
+    return business?.businessTypeId == 11;
   }
 }

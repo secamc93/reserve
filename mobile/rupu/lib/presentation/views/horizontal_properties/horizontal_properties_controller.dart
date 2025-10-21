@@ -7,12 +7,16 @@ import 'package:rupu/domain/entities/horizontal_property_action_result.dart';
 import 'package:rupu/domain/entities/horizontal_property_create_result.dart';
 import 'package:rupu/domain/infrastructure/repositories/horizontal_properties_repository_impl.dart';
 import 'package:rupu/domain/repositories/horizontal_properties_repository.dart';
+import 'package:rupu/presentation/views/login/login_controller.dart';
 
 class HorizontalPropertiesController extends GetxController {
   final HorizontalPropertiesRepository repository;
 
   HorizontalPropertiesController({HorizontalPropertiesRepository? repository})
       : repository = repository ?? HorizontalPropertiesRepositoryImpl();
+
+  final LoginController _loginController = Get.find<LoginController>();
+  Worker? _businessWorker;
 
   final properties = <HorizontalProperty>[].obs;
   final isLoading = false.obs;
@@ -63,6 +67,9 @@ class HorizontalPropertiesController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    _businessWorker = ever(_loginController.selectedBusiness, (_) {
+      fetchProperties();
+    });
     fetchProperties();
   }
 
@@ -90,6 +97,7 @@ class HorizontalPropertiesController extends GetxController {
     createTertiaryColorCtrl.dispose();
     createQuaternaryColorCtrl.dispose();
     createCustomDomainCtrl.dispose();
+    _businessWorker?.dispose();
     super.onClose();
   }
 
@@ -98,7 +106,18 @@ class HorizontalPropertiesController extends GetxController {
     errorMessage.value = null;
 
     try {
+      final businessId = _loginController.selectedBusinessId;
+      if (businessId == null) {
+        properties.clear();
+        total.value = 0;
+        page.value = 1;
+        totalPages.value = 1;
+        errorMessage.value = 'Debes seleccionar un negocio para continuar.';
+        return;
+      }
+
       final query = <String, dynamic>{};
+      query['business_id'] = businessId;
       final parsedPage = int.tryParse(pageCtrl.text.trim());
       final parsedSize = int.tryParse(pageSizeCtrl.text.trim());
       if (parsedPage != null && parsedPage > 0) {

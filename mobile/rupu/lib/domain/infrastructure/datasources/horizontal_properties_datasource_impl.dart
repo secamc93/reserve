@@ -47,4 +47,29 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
       response.data as Map<String, dynamic>,
     );
   }
+
+  @override
+  Future<HorizontalPropertyDetailResponseModel> getHorizontalPropertyDetail({
+    required int id,
+  }) async {
+    final response = await _dio.get('/horizontal-properties/$id');
+    return HorizontalPropertyDetailResponseModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<HorizontalPropertyDetailResponseModel> updateHorizontalProperty({
+    required int id,
+    required Map<String, dynamic> data,
+  }) async {
+    final formData = FormData.fromMap(data);
+    final response = await _dio.put(
+      '/horizontal-properties/$id',
+      data: formData,
+    );
+    return HorizontalPropertyDetailResponseModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
 }

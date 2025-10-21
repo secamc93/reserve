@@ -3,6 +3,7 @@ import 'package:rupu/domain/entities/horizontal_property.dart';
 import 'package:rupu/domain/entities/horizontal_property_action_result.dart';
 import 'package:rupu/domain/entities/horizontal_property_create_result.dart';
 import 'package:rupu/domain/entities/horizontal_property_detail.dart';
+import 'package:rupu/domain/entities/horizontal_property_update_result.dart';
 
 import '../models/horizontal_properties_response_model.dart';
 import '../models/horizontal_property_detail_response_model.dart';
@@ -54,6 +55,23 @@ class HorizontalPropertiesMapper {
       property:
           model.data != null ? detailModelToEntity(model.data!) : null,
     );
+  }
+
+  static HorizontalPropertyUpdateResult detailResponseToUpdateResult(
+    HorizontalPropertyDetailResponseModel model,
+  ) {
+    return HorizontalPropertyUpdateResult(
+      success: model.success,
+      message: model.message.isNotEmpty ? model.message : null,
+      property:
+          model.data != null ? detailModelToEntity(model.data!) : null,
+    );
+  }
+
+  static HorizontalPropertyDetail? detailResponseToDetail(
+    HorizontalPropertyDetailResponseModel model,
+  ) {
+    return model.data != null ? detailModelToEntity(model.data!) : null;
   }
 
   static HorizontalPropertyDetail detailModelToEntity(

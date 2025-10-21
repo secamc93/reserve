@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:rupu/domain/entities/horizontal_property_update_result.dart';
+
 import 'horizontal_properties_controller.dart';
+import 'horizontal_property_update_view.dart';
 
 class HorizontalPropertiesView extends GetView<HorizontalPropertiesController> {
   static const name = 'horizontal-properties';
@@ -321,14 +324,33 @@ class HorizontalPropertiesView extends GetView<HorizontalPropertiesController> {
                                                   ),
                                                   IconButton(
                                                     tooltip: 'Actualizar',
-                                                    onPressed: () {
-                                                      ScaffoldMessenger.of(
-                                                        context,
-                                                      ).showSnackBar(
+                                                    onPressed: () async {
+                                                      final result = await showModalBottomSheet<
+                                                          HorizontalPropertyUpdateResult?>(
+                                                        context: context,
+                                                        isScrollControlled: true,
+                                                        builder: (sheetCtx) {
+                                                          return HorizontalPropertyUpdateSheet(
+                                                            propertyId: property.id,
+                                                          );
+                                                        },
+                                                      );
+
+                                                      if (!context.mounted || result == null) {
+                                                        return;
+                                                      }
+
+                                                      final message = result.message ??
+                                                          (result.success
+                                                              ? 'Propiedad horizontal actualizada correctamente.'
+                                                              : 'No se pudo actualizar la propiedad.');
+
+                                                      ScaffoldMessenger.of(context).showSnackBar(
                                                         SnackBar(
-                                                          content: Text(
-                                                            'Actualizar ${property.name} estará disponible próximamente.',
-                                                          ),
+                                                          content: Text(message),
+                                                          backgroundColor: result.success
+                                                              ? null
+                                                              : theme.colorScheme.error,
                                                         ),
                                                       );
                                                     },

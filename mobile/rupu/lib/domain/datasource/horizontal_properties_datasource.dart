@@ -14,4 +14,13 @@ abstract class HorizontalPropertiesDatasource {
   Future<SimpleResponseModel> deleteHorizontalProperty({
     required int id,
   });
+
+  Future<HorizontalPropertyDetailResponseModel> getHorizontalPropertyDetail({
+    required int id,
+  });
+
+  Future<HorizontalPropertyDetailResponseModel> updateHorizontalProperty({
+    required int id,
+    required Map<String, dynamic> data,
+  });
 }

@@ -143,7 +143,7 @@ final appRouter = GoRouter(
             final home = Get.isRegistered<HomeController>()
                 ? Get.find<HomeController>()
                 : null;
-            if (home == null || !home.isSuper) {
+            if (home == null || !home.canAccessHorizontalPropertiesMenu) {
               return const Scaffold(
                 body: Center(child: Text('No autorizado')),
               );
@@ -159,7 +159,7 @@ final appRouter = GoRouter(
             final home = Get.isRegistered<HomeController>()
                 ? Get.find<HomeController>()
                 : null;
-            if (home == null || !home.isSuper) {
+            if (home == null || !home.canAccessHorizontalPropertiesMenu) {
               return const Scaffold(
                 body: Center(child: Text('No autorizado')),
               );

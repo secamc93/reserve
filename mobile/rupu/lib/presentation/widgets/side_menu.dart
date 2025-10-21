@@ -55,21 +55,6 @@ class _SideMenuState extends State<SideMenu> {
     return (first: first, second: second);
   }
 
-  List<MenuItem> _accessibleMenuItems(HomeController home) {
-    final requirementsMet = appMenuItems.where((item) {
-      if (item.superAdminOnly && !home.isSuper) return false;
-      final requirement = item.access;
-      if (requirement == null) return true;
-      return home.canAccessResource(
-        requirement.resource,
-        actions: requirement.actions,
-        requireActive: requirement.requireActive,
-      );
-    }).toList();
-
-    return requirementsMet;
-  }
-
   Widget _buildMenu(
     BuildContext context,
     List<MenuItem> menuItems,
@@ -131,7 +116,7 @@ class _SideMenuState extends State<SideMenu> {
     return Drawer(
       child: SafeArea(
         child: Obx(() {
-          final menuItems = _accessibleMenuItems(home);
+          final menuItems = home.accessibleMenuItems.toList(growable: false);
           return _buildMenu(context, menuItems);
         }),
       ),
