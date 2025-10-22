@@ -3,7 +3,10 @@ import 'package:rupu/domain/entities/horizontal_properties_page.dart';
 import 'package:rupu/domain/entities/horizontal_property_action_result.dart';
 import 'package:rupu/domain/entities/horizontal_property_create_result.dart';
 import 'package:rupu/domain/entities/horizontal_property_detail.dart';
+import 'package:rupu/domain/entities/horizontal_property_residents_page.dart';
+import 'package:rupu/domain/entities/horizontal_property_units_page.dart';
 import 'package:rupu/domain/entities/horizontal_property_update_result.dart';
+import 'package:rupu/domain/entities/horizontal_property_voting_groups.dart';
 import 'package:rupu/domain/infrastructure/datasources/horizontal_properties_datasource_impl.dart';
 import 'package:rupu/domain/infrastructure/mappers/horizontal_properties_mapper.dart';
 import 'package:rupu/domain/repositories/horizontal_properties_repository.dart';
@@ -56,5 +59,39 @@ class HorizontalPropertiesRepositoryImpl
     final response =
         await datasource.updateHorizontalProperty(id: id, data: data);
     return HorizontalPropertiesMapper.detailResponseToUpdateResult(response);
+  }
+
+  @override
+  Future<HorizontalPropertyUnitsPage> getHorizontalPropertyUnits({
+    required int id,
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await datasource.getHorizontalPropertyUnits(
+      id: id,
+      query: query,
+    );
+    return HorizontalPropertiesMapper.unitsResponseToEntity(response);
+  }
+
+  @override
+  Future<HorizontalPropertyResidentsPage> getHorizontalPropertyResidents({
+    required int id,
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await datasource.getHorizontalPropertyResidents(
+      id: id,
+      query: query,
+    );
+    return HorizontalPropertiesMapper.residentsResponseToEntity(response);
+  }
+
+  @override
+  Future<HorizontalPropertyVotingGroupsResult> getHorizontalPropertyVotingGroups({
+    required int id,
+  }) async {
+    final response = await datasource.getHorizontalPropertyVotingGroups(
+      id: id,
+    );
+    return HorizontalPropertiesMapper.votingGroupsResponseToEntity(response);
   }
 }

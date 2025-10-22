@@ -3,10 +3,16 @@ import 'package:rupu/domain/entities/horizontal_property.dart';
 import 'package:rupu/domain/entities/horizontal_property_action_result.dart';
 import 'package:rupu/domain/entities/horizontal_property_create_result.dart';
 import 'package:rupu/domain/entities/horizontal_property_detail.dart';
+import 'package:rupu/domain/entities/horizontal_property_residents_page.dart';
+import 'package:rupu/domain/entities/horizontal_property_units_page.dart';
 import 'package:rupu/domain/entities/horizontal_property_update_result.dart';
+import 'package:rupu/domain/entities/horizontal_property_voting_groups.dart';
 
 import '../models/horizontal_properties_response_model.dart';
 import '../models/horizontal_property_detail_response_model.dart';
+import '../models/horizontal_property_residents_response_model.dart';
+import '../models/horizontal_property_units_response_model.dart';
+import '../models/horizontal_property_voting_groups_response_model.dart';
 import '../models/simple_response_model.dart';
 
 class HorizontalPropertiesMapper {
@@ -142,6 +148,96 @@ class HorizontalPropertiesMapper {
       description: model.description,
       unitType: model.unitType,
       isActive: model.isActive,
+    );
+  }
+
+  static HorizontalPropertyUnitsPage unitsResponseToEntity(
+    HorizontalPropertyUnitsResponseModel model,
+  ) {
+    return HorizontalPropertyUnitsPage(
+      success: model.success,
+      message: model.message.isNotEmpty ? model.message : null,
+      units:
+          model.data.units.map(unitItemModelToEntity).toList(growable: false),
+      total: model.data.total,
+      page: model.data.page,
+      pageSize: model.data.pageSize,
+      totalPages: model.data.totalPages,
+    );
+  }
+
+  static HorizontalPropertyUnitItem unitItemModelToEntity(
+    HorizontalPropertyUnitItemModel model,
+  ) {
+    return HorizontalPropertyUnitItem(
+      id: model.id,
+      number: model.number,
+      block: model.block,
+      unitType: model.unitType,
+      participationCoefficient: model.participationCoefficient,
+      isActive: model.isActive,
+    );
+  }
+
+  static HorizontalPropertyResidentsPage residentsResponseToEntity(
+    HorizontalPropertyResidentsResponseModel model,
+  ) {
+    return HorizontalPropertyResidentsPage(
+      success: model.success,
+      message: model.message.isNotEmpty ? model.message : null,
+      residents: model.data.residents
+          .map(residentItemModelToEntity)
+          .toList(growable: false),
+      total: model.data.total,
+      page: model.data.page,
+      pageSize: model.data.pageSize,
+      totalPages: model.data.totalPages,
+    );
+  }
+
+  static HorizontalPropertyResidentItem residentItemModelToEntity(
+    HorizontalPropertyResidentItemModel model,
+  ) {
+    return HorizontalPropertyResidentItem(
+      id: model.id,
+      propertyUnitNumber: model.propertyUnitNumber,
+      residentTypeName: model.residentTypeName,
+      name: model.name,
+      email: model.email,
+      phone: model.phone,
+      isMainResident: model.isMainResident,
+      isActive: model.isActive,
+    );
+  }
+
+  static HorizontalPropertyVotingGroupsResult votingGroupsResponseToEntity(
+    HorizontalPropertyVotingGroupsResponseModel model,
+  ) {
+    return HorizontalPropertyVotingGroupsResult(
+      success: model.success,
+      message: model.message.isNotEmpty ? model.message : null,
+      groups: model.data
+          .map(votingGroupModelToEntity)
+          .toList(growable: false),
+    );
+  }
+
+  static HorizontalPropertyVotingGroup votingGroupModelToEntity(
+    HorizontalPropertyVotingGroupModel model,
+  ) {
+    return HorizontalPropertyVotingGroup(
+      id: model.id,
+      businessId: model.businessId,
+      name: model.name,
+      description: model.description,
+      votingStartDate: model.votingStartDate,
+      votingEndDate: model.votingEndDate,
+      isActive: model.isActive,
+      requiresQuorum: model.requiresQuorum,
+      quorumPercentage: model.quorumPercentage,
+      createdByUserId: model.createdByUserId,
+      createdAt: model.createdAt,
+      updatedAt: model.updatedAt,
     );
   }
 }

@@ -2,7 +2,10 @@ import 'package:rupu/domain/entities/horizontal_properties_page.dart';
 import 'package:rupu/domain/entities/horizontal_property_action_result.dart';
 import 'package:rupu/domain/entities/horizontal_property_create_result.dart';
 import 'package:rupu/domain/entities/horizontal_property_detail.dart';
+import 'package:rupu/domain/entities/horizontal_property_residents_page.dart';
+import 'package:rupu/domain/entities/horizontal_property_units_page.dart';
 import 'package:rupu/domain/entities/horizontal_property_update_result.dart';
+import 'package:rupu/domain/entities/horizontal_property_voting_groups.dart';
 
 abstract class HorizontalPropertiesRepository {
   Future<HorizontalPropertiesPage> getHorizontalProperties({
@@ -24,5 +27,19 @@ abstract class HorizontalPropertiesRepository {
   Future<HorizontalPropertyUpdateResult> updateHorizontalProperty({
     required int id,
     required Map<String, dynamic> data,
+  });
+
+  Future<HorizontalPropertyUnitsPage> getHorizontalPropertyUnits({
+    required int id,
+    Map<String, dynamic>? query,
+  });
+
+  Future<HorizontalPropertyResidentsPage> getHorizontalPropertyResidents({
+    required int id,
+    Map<String, dynamic>? query,
+  });
+
+  Future<HorizontalPropertyVotingGroupsResult> getHorizontalPropertyVotingGroups({
+    required int id,
   });
 }

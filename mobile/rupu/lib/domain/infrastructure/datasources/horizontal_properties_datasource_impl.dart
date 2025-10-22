@@ -3,6 +3,9 @@ import 'package:rupu/config/dio/authenticated_dio.dart';
 import 'package:rupu/domain/datasource/horizontal_properties_datasource.dart';
 import 'package:rupu/domain/infrastructure/models/horizontal_properties_response_model.dart';
 import 'package:rupu/domain/infrastructure/models/horizontal_property_detail_response_model.dart';
+import 'package:rupu/domain/infrastructure/models/horizontal_property_residents_response_model.dart';
+import 'package:rupu/domain/infrastructure/models/horizontal_property_units_response_model.dart';
+import 'package:rupu/domain/infrastructure/models/horizontal_property_voting_groups_response_model.dart';
 import 'package:rupu/domain/infrastructure/models/simple_response_model.dart';
 
 class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource {
@@ -69,6 +72,48 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
       data: formData,
     );
     return HorizontalPropertyDetailResponseModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<HorizontalPropertyUnitsResponseModel> getHorizontalPropertyUnits({
+    required int id,
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await _dio.get(
+      '/horizontal-properties/$id/property-units',
+      queryParameters: query,
+    );
+    return HorizontalPropertyUnitsResponseModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<HorizontalPropertyResidentsResponseModel>
+      getHorizontalPropertyResidents({
+    required int id,
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await _dio.get(
+      '/horizontal-properties/$id/residents',
+      queryParameters: query,
+    );
+    return HorizontalPropertyResidentsResponseModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<HorizontalPropertyVotingGroupsResponseModel>
+      getHorizontalPropertyVotingGroups({
+    required int id,
+  }) async {
+    final response = await _dio.get(
+      '/horizontal-properties/$id/voting-groups',
+    );
+    return HorizontalPropertyVotingGroupsResponseModel.fromJson(
       response.data as Map<String, dynamic>,
     );
   }
