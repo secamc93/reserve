@@ -17,7 +17,6 @@ class HorizontalPropertiesView extends GetView<HorizontalPropertiesController> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
-    // final tt = theme.textTheme;
 
     return Scaffold(
       appBar: AppBar(
@@ -45,6 +44,8 @@ class HorizontalPropertiesView extends GetView<HorizontalPropertiesController> {
             child: LayoutBuilder(
               builder: (context, c) {
                 final width = c.maxWidth;
+
+                // Grid responsivo
                 final cross = width >= 1200
                     ? 4
                     : width >= 900
@@ -53,11 +54,19 @@ class HorizontalPropertiesView extends GetView<HorizontalPropertiesController> {
                     ? 2
                     : 1;
 
+                // Clearance para que el FAB no tape
+                const fabClearance = 88.0;
+
+                // Card aspect ratio adaptativo
+                final cardAspect = cross == 1
+                    ? 0.86
+                    : (cross == 2 ? 0.9 : 0.92);
+
                 return CustomScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   slivers: [
                     SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(24, 10, 24, 55),
+                      padding: const EdgeInsets.fromLTRB(24, 10, 24, 12),
                       sliver: SliverToBoxAdapter(
                         child: _Header(
                           onCreate: () => _showCreatePropertyDialog(context),
@@ -80,7 +89,7 @@ class HorizontalPropertiesView extends GetView<HorizontalPropertiesController> {
                     ],
 
                     if (controller.properties.isEmpty && error == null) ...[
-                      SliverFillRemaining(
+                      const SliverFillRemaining(
                         hasScrollBody: false,
                         child: _EmptyState(
                           icon: Icons.apartment_outlined,
@@ -91,14 +100,19 @@ class HorizontalPropertiesView extends GetView<HorizontalPropertiesController> {
                       ),
                     ] else ...[
                       SliverPadding(
-                        padding: const EdgeInsets.fromLTRB(24, 8, 24, 55),
+                        padding: const EdgeInsets.fromLTRB(
+                          24,
+                          8,
+                          24,
+                          fabClearance,
+                        ),
                         sliver: SliverGrid(
                           gridDelegate:
                               SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: cross,
                                 mainAxisSpacing: 16,
                                 crossAxisSpacing: 16,
-                                childAspectRatio: 0.92,
+                                childAspectRatio: cardAspect,
                               ),
                           delegate: SliverChildBuilderDelegate((context, i) {
                             final p = controller.properties[i];
@@ -111,8 +125,7 @@ class HorizontalPropertiesView extends GetView<HorizontalPropertiesController> {
                               units: p.totalUnits ?? 0,
                               isActive: p.isActive,
                               createdAt: controller.formatDate(p.createdAt),
-                              // Preparado para imagen: usa p.coverUrl / p.logoUrl si existe
-                              imageUrl: null,
+                              imageUrl: null, // listo para network
                               onView: () {
                                 final path =
                                     '/home/$pageIndex/horizontal-properties/${p.id}';
@@ -130,7 +143,9 @@ class HorizontalPropertiesView extends GetView<HorizontalPropertiesController> {
                                             propertyId: p.id,
                                           ),
                                     );
+
                                 if (!context.mounted || result == null) return;
+
                                 final msg =
                                     result.message ??
                                     (result.success
@@ -144,8 +159,9 @@ class HorizontalPropertiesView extends GetView<HorizontalPropertiesController> {
                                         : cs.error,
                                   ),
                                 );
-                                if (result.success)
+                                if (result.success) {
                                   controller.fetchProperties();
+                                }
                               },
                               onDelete: () async {
                                 if (controller.isDeleting(p.id)) return;
@@ -188,7 +204,9 @@ class HorizontalPropertiesView extends GetView<HorizontalPropertiesController> {
                                         : cs.error,
                                   ),
                                 );
-                                if (res.success) controller.fetchProperties();
+                                if (res.success) {
+                                  controller.fetchProperties();
+                                }
                               },
                               isDeleting: controller.isDeleting(p.id),
                             );
@@ -228,6 +246,7 @@ class HorizontalPropertiesView extends GetView<HorizontalPropertiesController> {
                       'Información básica',
                       style: dialogTheme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
+                        height: 1.15,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -290,7 +309,7 @@ class HorizontalPropertiesView extends GetView<HorizontalPropertiesController> {
                           messenger.showSnackBar(
                             SnackBar(
                               content: Text(
-                                result.message?.isNotEmpty == true
+                                (result.message?.isNotEmpty ?? false)
                                     ? result.message!
                                     : 'No se pudo crear la propiedad horizontal.',
                               ),
@@ -338,33 +357,38 @@ class _Header extends StatelessWidget {
       children: [
         Text(
           'Gestión de propiedades Horizontales',
-          style: tt.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+          style: tt.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w800,
+            height: 1.1,
+          ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 6),
-        Text(
-          'Propiedades horizontales: $total',
-          style: tt.titleMedium?.copyWith(
-            color: cs.onSurfaceVariant,
-            fontWeight: FontWeight.w600,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Propiedades horizontales: $total',
+                style: tt.titleMedium?.copyWith(
+                  color: cs.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                  height: 1.15,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (trailingProgress) ...[
+              const SizedBox(width: 12),
+              const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ],
+          ],
         ),
-        // Row(
-        //   children: [
-        //     FilledButton.icon(
-        //       onPressed: onCreate,
-        //       icon: const Icon(Icons.add_home_work_outlined),
-        //       label: const Text('Agregar Propiedad'),
-        //     ),
-        //     if (trailingProgress) ...[
-        //       const SizedBox(width: 14),
-        //       const SizedBox(
-        //         width: 22,
-        //         height: 22,
-        //         child: CircularProgressIndicator(strokeWidth: 2),
-        //       ),
-        //     ],
-        //   ],
-        // ),
       ],
     );
   }
@@ -423,15 +447,14 @@ class _PropertyCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         child: LayoutBuilder(
           builder: (ctx, constraints) {
-            // Altura de media adaptable y acotada para evitar overflow:
             final w = constraints.maxWidth;
-            final desired = w * 9 / 16; // proporción 16:9
-            final mediaH = desired.clamp(120.0, 180.0); // límites seguros
+            final desired = w * 9 / 16;
+            final mediaH = desired.clamp(120.0, 180.0);
 
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // --- Cabecera visual (limpia, sin badges) ---
+                // Header visual
                 SizedBox(
                   height: mediaH,
                   width: double.infinity,
@@ -439,7 +462,6 @@ class _PropertyCard extends StatelessWidget {
                     fit: StackFit.expand,
                     children: [
                       if (imageUrl == null || imageUrl!.isEmpty)
-                        // Placeholder premium preparado para NetworkImage
                         Container(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
@@ -456,7 +478,6 @@ class _PropertyCard extends StatelessWidget {
                           errorBuilder: (_, __, ___) =>
                               Container(color: cs.surfaceContainerHighest),
                         ),
-                      // Degradado inferior para legibilidad si más adelante pones texto sobre imagen
                       Positioned.fill(
                         child: DecoratedBox(
                           decoration: BoxDecoration(
@@ -471,7 +492,6 @@ class _PropertyCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      // Menú / acceso rápido
                       Positioned(
                         right: 4,
                         top: 4,
@@ -485,13 +505,12 @@ class _PropertyCard extends StatelessWidget {
                   ),
                 ),
 
-                // --- Cuerpo ---
+                // Cuerpo
                 Padding(
                   padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Estado + Creada el … (en la misma línea; usa Wrap por si no alcanza)
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
@@ -516,6 +535,7 @@ class _PropertyCard extends StatelessWidget {
                                 color: fgChip,
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: .2,
+                                height: 1.0,
                               ),
                             ),
                           ),
@@ -533,6 +553,7 @@ class _PropertyCard extends StatelessWidget {
                                 style: tt.labelMedium?.copyWith(
                                   color: cs.onSurfaceVariant,
                                   fontWeight: FontWeight.w700,
+                                  height: 1.0,
                                 ),
                               ),
                             ],
@@ -541,18 +562,17 @@ class _PropertyCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
 
-                      // Título
                       Text(
                         name,
                         style: tt.titleLarge?.copyWith(
                           fontWeight: FontWeight.w800,
+                          height: 1.12,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 10),
 
-                      // Info
                       _InfoLine(icon: Icons.place_outlined, text: address),
                       const SizedBox(height: 4),
                       _InfoLine(
@@ -562,40 +582,12 @@ class _PropertyCard extends StatelessWidget {
 
                       const SizedBox(height: 12),
 
-                      // Acciones
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: onView,
-                              icon: const Icon(Icons.visibility_outlined),
-                              label: const Text('Ver'),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: FilledButton.tonalIcon(
-                              onPressed: onEdit,
-                              icon: const Icon(Icons.edit_outlined),
-                              label: const Text('Editar'),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: FilledButton(
-                              onPressed: isDeleting ? null : onDelete,
-                              child: isDeleting
-                                  ? const SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Text('Eliminar'),
-                            ),
-                          ),
-                        ],
+                      // 🎯 NUEVO: barra de acciones con mejor jerarquía visual
+                      _ActionsBar(
+                        isDeleting: isDeleting,
+                        onView: onView,
+                        onEdit: onEdit,
+                        onDelete: onDelete,
                       ),
                     ],
                   ),
@@ -605,6 +597,104 @@ class _PropertyCard extends StatelessWidget {
           },
         ),
       ),
+    );
+  }
+}
+
+class _ActionsBar extends StatelessWidget {
+  const _ActionsBar({
+    required this.isDeleting,
+    required this.onView,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  final bool isDeleting;
+  final VoidCallback onView;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  // ButtonStyle _pillOutlined(BuildContext context) {
+  //   return OutlinedButton.styleFrom(
+  //     minimumSize: const Size(0, 44),
+  //     shape: const StadiumBorder(),
+  //     visualDensity: VisualDensity.compact,
+  //   );
+  // }
+
+  ButtonStyle _pillTonal(BuildContext context) {
+    return FilledButton.styleFrom(
+      minimumSize: const Size(0, 44),
+      shape: const StadiumBorder(),
+      visualDensity: VisualDensity.compact,
+    );
+  }
+
+  ButtonStyle _pillFilled(BuildContext context) {
+    return FilledButton.styleFrom(
+      minimumSize: const Size(0, 44),
+      shape: const StadiumBorder(),
+      visualDensity: VisualDensity.compact,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return LayoutBuilder(
+      builder: (context, c) {
+        // Dos botones principales en fila siempre (se adaptan con Expanded).
+        // Eliminar como link de peligro debajo, a la derecha.
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.tonalIcon(
+                    style: _pillTonal(context),
+                    onPressed: onView,
+                    icon: const Icon(Icons.visibility_outlined),
+                    label: const Text('Ver', overflow: TextOverflow.ellipsis),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: FilledButton.icon(
+                    style: _pillFilled(context),
+                    onPressed: onEdit,
+                    icon: const Icon(Icons.edit_outlined),
+                    label: const Text(
+                      'Editar',
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: isDeleting ? null : onDelete,
+                icon: isDeleting
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.delete_outline),
+                label: const Text('Eliminar', overflow: TextOverflow.ellipsis),
+                style: TextButton.styleFrom(
+                  foregroundColor: cs.error,
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -628,9 +718,11 @@ class _InfoLine extends StatelessWidget {
             style: tt.bodyMedium?.copyWith(
               color: cs.onSurfaceVariant,
               fontWeight: FontWeight.w600,
+              height: 1.15,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
+            softWrap: false,
           ),
         ),
       ],
@@ -662,7 +754,10 @@ class _InlineError extends StatelessWidget {
           Expanded(
             child: Text(
               message,
-              style: tt.bodyMedium?.copyWith(color: cs.onErrorContainer),
+              style: tt.bodyMedium?.copyWith(
+                color: cs.onErrorContainer,
+                height: 1.2,
+              ),
             ),
           ),
           TextButton.icon(
@@ -700,13 +795,20 @@ class _EmptyState extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               title,
-              style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+              style: tt.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+                height: 1.15,
+              ),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 6),
             Text(
               subtitle,
               textAlign: TextAlign.center,
-              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+              style: tt.bodyMedium?.copyWith(
+                color: cs.onSurfaceVariant,
+                height: 1.2,
+              ),
             ),
           ],
         ),
