@@ -39,9 +39,9 @@ export function Table<T = Record<string, unknown>>({
   };
 
   return (
-    <div className="card overflow-hidden p-0">
-      <div className="overflow-x-auto">
-        <table className="table">
+    <div className="card overflow-hidden p-0 w-full">
+      <div className="overflow-x-auto w-full">
+        <table className="table w-full">
           {/* Header */}
           <thead>
             <tr>

@@ -8,7 +8,7 @@
 import { useState, FormEvent } from 'react';
 import { Modal, Input, Alert } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
-import { createResourceAction } from '../../infrastructure/actions/create-resource.action';
+import { createResourceAction } from '../../infrastructure/actions/resources/create-resource.action';
 
 interface CreateResourceModalProps {
   isOpen: boolean;

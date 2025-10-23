@@ -8,8 +8,8 @@
 import { useState, useEffect } from 'react';
 import { Table, ConfirmModal, type TableColumn } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
-import { getResourcesAction } from '../../infrastructure/actions/get-resources.action';
-import { deleteResourceAction } from '../../infrastructure/actions/delete-resource.action';
+import { getResourcesAction } from '../../infrastructure/actions/resources/get-resources.action';
+import { deleteResourceAction } from '../../infrastructure/actions/resources/delete-resource.action';
 import { CreateResourceModal } from './create-resource-modal';
 import { EditResourceModal } from './edit-resource-modal';
 

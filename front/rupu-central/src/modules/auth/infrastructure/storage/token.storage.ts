@@ -37,7 +37,9 @@ export class TokenStorage {
   static setToken(token: string): void {
     if (typeof window === 'undefined') return;
     try {
+      console.log('🔐 TokenStorage.setToken - Guardando token:', token.substring(0, 50) + '...');
       localStorage.setItem(TOKEN_KEY, token);
+      console.log('✅ TokenStorage.setToken - Token guardado exitosamente');
     } catch (error) {
       console.error('Error guardando token:', error);
     }
@@ -49,7 +51,9 @@ export class TokenStorage {
   static getToken(): string | null {
     if (typeof window === 'undefined') return null;
     try {
-      return localStorage.getItem(TOKEN_KEY);
+      const token = localStorage.getItem(TOKEN_KEY);
+      console.log('🔍 TokenStorage.getToken - Token obtenido:', token ? token.substring(0, 50) + '...' : 'null');
+      return token;
     } catch (error) {
       console.error('Error obteniendo token:', error);
       return null;
@@ -73,6 +77,31 @@ export class TokenStorage {
    */
   static hasToken(): boolean {
     return !!this.getToken();
+  }
+
+  /**
+   * Verifica si el token está expirado
+   */
+  static isTokenExpired(): boolean {
+    const token = this.getToken();
+    if (!token) return true;
+
+    try {
+      // Decodificar el payload del JWT
+      const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+      const now = Math.floor(Date.now() / 1000);
+      return payload.exp < now;
+    } catch (error) {
+      console.error('Error verificando expiración del token:', error);
+      return true; // Si no se puede decodificar, considerarlo expirado
+    }
+  }
+
+  /**
+   * Verifica si el token es válido (existe y no está expirado)
+   */
+  static isTokenValid(): boolean {
+    return this.hasToken() && !this.isTokenExpired();
   }
 
   /**

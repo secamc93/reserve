@@ -8,7 +8,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from './hooks';
-import type { LoginActionResult } from '../infrastructure/actions/login.action';
+import type { LoginActionResult } from '../infrastructure/actions/users/login.action';
 
 interface LoginFormProps {
   onLogin: (data: { email: string; password: string }) => Promise<LoginActionResult>;

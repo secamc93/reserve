@@ -153,14 +153,14 @@ export function Sidebar({ user }: SidebarProps) {
                   href="/iam"
                   className={`
                     flex items-center gap-3 p-3 rounded-lg transition-all duration-300
-                    ${isActive('/iam') 
+                    ${isActive('/iam') || pathname.startsWith('/iam') 
                       ? 'bg-white/20 text-white shadow-lg scale-105' 
                       : 'text-white/80 hover:bg-white/10 hover:text-white hover:scale-105'
                     }
                   `}
                 >
                   {/* Indicador activo (barra lateral) */}
-                  {isActive('/iam') && (
+                  {(isActive('/iam') || pathname.startsWith('/iam')) && (
                     <div 
                       className="absolute left-0 w-1 h-8 rounded-r-full"
                       style={{ backgroundColor: 'var(--color-tertiary)' }}
@@ -172,10 +172,11 @@ export function Sidebar({ user }: SidebarProps) {
                   </svg>
                   {sidebarExpanded && (
                     <span className="text-sm font-medium transition-opacity duration-300">
-                      Usuarios & Permisos
+                      IAM
                     </span>
                   )}
                 </Link>
+                
               </li>
             </ul>
           </nav>

@@ -8,7 +8,7 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { Modal, Input, Alert } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
-import { updateResourceAction } from '../../infrastructure/actions/update-resource.action';
+import { updateResourceAction } from '../../infrastructure/actions/resources/update-resource.action';
 
 interface EditResourceModalProps {
   isOpen: boolean;

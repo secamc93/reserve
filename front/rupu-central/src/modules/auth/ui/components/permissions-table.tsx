@@ -8,7 +8,7 @@
 import { useState, useEffect } from 'react';
 import { Table, Badge, type TableColumn } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
-import { getPermissionsListAction } from '../../infrastructure/actions/get-permissions-list.action';
+import { getPermissionsListAction } from '../../infrastructure/actions/permissions/get-permissions-list.action';
 
 interface Permission {
   id: number;

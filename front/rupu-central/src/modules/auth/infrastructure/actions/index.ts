@@ -1,14 +1,34 @@
 /**
- * Barrel de actions de Auth
+ * Infrastructure Layer - Auth Actions
  * IMPORTANTE: No importar en Client Components
  */
 
-export * from './login.action';
-export * from './get-permissions.action';
-export * from './get-permissions-list.action';
-// export * from './get-roles.action';
-export * from './get-resources.action';
-export * from './create-resource.action';
-export * from './update-resource.action';
-export * from './delete-resource.action';
+import { UsersActions, UsersActionsInput } from './users';
+import { AuthUseCases, AuthUseCasesInput } from '../../application';
+
+// Interfaz para el constructor principal de Auth Actions
+export interface AuthActionsInput {
+  users: UsersActionsInput;
+}
+
+// Constructor centralizado para todos los actions de Auth
+export class AuthActions implements AuthActionsInput {
+  public users: UsersActions;
+
+  constructor(authUseCases: AuthUseCasesInput) {
+    this.users = new UsersActions(authUseCases);
+  }
+
+  // Método estático para crear instancia con dependencias resueltas
+  static create(): AuthActions {
+    const authUseCases = new AuthUseCases();
+    return new AuthActions(authUseCases);
+  }
+}
+
+// Exportar módulos individuales
+export * from './permissions';
+export * from './roles';
+export * from './users';
+export * from './resources';
 

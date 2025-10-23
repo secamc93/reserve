@@ -14,6 +14,7 @@
     "reset": "rm -rf .next node_modules/.cache && npm cache clean --force && npm run dev"
   },
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
     "@types/qrcode": "^1.5.5",
     "next": "15.5.4",
     "qrcode": "^1.5.4",

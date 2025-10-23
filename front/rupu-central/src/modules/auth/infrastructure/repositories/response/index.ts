@@ -7,4 +7,5 @@ export * from './permissions.response';
 export * from './permissions-list.response';
 export * from './roles.response';
 export * from './resources.response';
+export * from './users.response';
 

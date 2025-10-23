@@ -5,18 +5,21 @@
 
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, HTMLAttributes } from 'react';
 
-type BadgeType = 'primary' | 'success' | 'error' | 'warning';
+type BadgeType = 'primary' | 'success' | 'error' | 'warning' | 'secondary';
 
-interface BadgeProps {
+interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   type?: BadgeType;
   children: ReactNode;
+  className?: string;
 }
 
-export function Badge({ type = 'primary', children }: BadgeProps) {
+export function Badge({ type = 'primary', children, className = '', ...props }: BadgeProps) {
+  const baseClass = type ? `badge badge-${type}` : 'badge';
+  
   return (
-    <span className={`badge badge-${type}`}>
+    <span className={`${baseClass} ${className}`} {...props}>
       {children}
     </span>
   );

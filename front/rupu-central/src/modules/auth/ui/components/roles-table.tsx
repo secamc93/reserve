@@ -8,7 +8,7 @@
 import { useState, useEffect } from 'react';
 import { Table, Badge, type TableColumn } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
-import { getRolesAction } from '../../infrastructure/actions/get-roles.action';
+import { getRolesAction } from '../../infrastructure/actions/roles/get-roles.action';
 
 interface Role {
   id: number;

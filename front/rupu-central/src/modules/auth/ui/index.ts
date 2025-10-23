@@ -1,10 +1,19 @@
 /**
- * Barrel de UI de Auth
+ * UI Layer - Auth Components
  */
 
+// Auth components
 export * from './login-form';
-export * from './user-card';
-export * from './user-info-modal';
-export * from './hooks';
-export * from './components';
 
+// IAM components
+export * from './iam-nav';
+export * from './iam-navigation';
+export * from './roles-table';
+export * from './permissions-table';
+export * from './resources-table';
+
+// Users module (reorganized)
+export * from './users';
+
+// Hooks
+export * from './hooks';
