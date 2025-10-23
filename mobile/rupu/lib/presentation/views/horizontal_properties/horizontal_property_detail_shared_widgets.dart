@@ -1,0 +1,509 @@
+part of 'horizontal_property_detail_view.dart';
+
+class MetricItem {
+  final IconData icon;
+  final String title;
+  final double value;
+  final Color accent;
+  final String? suffix;
+  MetricItem({
+    required this.icon,
+    required this.title,
+    required this.value,
+    required this.accent,
+    this.suffix,
+  });
+}
+
+class _MetricsGrid extends StatelessWidget {
+  const _MetricsGrid({required this.items});
+  final List<MetricItem> items;
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final crossAxis = width >= 1000
+        ? 4
+        : width >= 700
+            ? 3
+            : width >= 480
+                ? 2
+                : 1;
+
+    return GridView.builder(
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      itemCount: items.length,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxis,
+        crossAxisSpacing: 14,
+        mainAxisSpacing: 14,
+        childAspectRatio: 2.4,
+      ),
+      itemBuilder: (_, i) => _MetricCard(item: items[i]),
+    );
+  }
+}
+
+class _MetricCard extends StatelessWidget {
+  const _MetricCard({required this.item});
+  final MetricItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: cs.outlineVariant),
+        gradient: LinearGradient(
+          colors: [item.accent.withValues(alpha: .14), cs.surface],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: .04),
+            blurRadius: 14,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+        child: Row(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: item.accent.withValues(alpha: .18),
+                shape: BoxShape.circle,
+                border: Border.all(color: item.accent.withValues(alpha: .25)),
+              ),
+              alignment: Alignment.center,
+              child: Icon(item.icon, color: item.accent),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _AnimatedMetric(
+                value: item.value,
+                title: item.title,
+                suffix: item.suffix,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AnimatedMetric extends StatelessWidget {
+  const _AnimatedMetric({
+    required this.value,
+    required this.title,
+    this.suffix,
+  });
+  final double value;
+  final String title;
+  final String? suffix;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: tt.titleMedium!.copyWith(fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 2),
+        TweenAnimationBuilder<double>(
+          tween: Tween<double>(begin: 0, end: value),
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeOutCubic,
+          builder: (_, v, __) => Text(
+            suffix ?? v.toStringAsFixed(0),
+            style: tt.headlineSmall!.copyWith(
+              fontWeight: FontWeight.w900,
+              color: cs.onSurface,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SectionCard extends StatelessWidget {
+  const _SectionCard({required this.title, required this.child});
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: cs.outlineVariant),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: .04),
+            blurRadius: 14,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: tt.titleMedium!.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 10),
+            child,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoTile extends StatelessWidget {
+  const _InfoTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: cs.primary.withValues(alpha: .08),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: cs.primary.withValues(alpha: .18)),
+            ),
+            alignment: Alignment.center,
+            child: Icon(icon, color: cs.primary),
+          ),
+          const SizedBox(width: 10),
+          SizedBox(
+            width: 170,
+            child: Text(
+              label,
+              style: tt.bodyMedium!.copyWith(
+                fontWeight: FontWeight.w800,
+                color: cs.onSurface,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              value.isEmpty ? '—' : value,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: tt.bodyMedium!.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InlineError extends StatelessWidget {
+  const _InlineError({required this.message});
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: cs.errorContainer,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: cs.error.withValues(alpha: .25)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.error_outline, color: cs.onErrorContainer),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: tt.bodyMedium!.copyWith(color: cs.onErrorContainer),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Column(
+      children: [
+        Icon(icon, size: 56, color: cs.onSurfaceVariant),
+        const SizedBox(height: 12),
+        Text(
+          title,
+          style: tt.titleMedium!.copyWith(fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          subtitle,
+          textAlign: TextAlign.center,
+          style: tt.bodyMedium!.copyWith(color: cs.onSurfaceVariant),
+        ),
+      ],
+    );
+  }
+}
+
+class _SummaryHeader extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final bool showProgress;
+  final VoidCallback onRefresh;
+
+  const _SummaryHeader({
+    required this.title,
+    required this.subtitle,
+    required this.showProgress,
+    required this.onRefresh,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+              ),
+            ],
+          ),
+        ),
+        if (showProgress)
+          const SizedBox(
+            width: 26,
+            height: 26,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+        else
+          IconButton(
+            tooltip: 'Actualizar',
+            onPressed: onRefresh,
+            icon: const Icon(Icons.refresh_outlined),
+          ),
+      ],
+    );
+  }
+}
+
+class _FilterTextField extends StatelessWidget {
+  final String label;
+  final TextEditingController controller;
+  final double width;
+  final TextInputType? keyboardType;
+  final TextInputAction? textInputAction;
+  final ValueChanged<String>? onSubmitted;
+
+  const _FilterTextField({
+    required this.label,
+    required this.controller,
+    this.width = 200,
+    this.keyboardType,
+    this.textInputAction,
+    this.onSubmitted,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: width,
+      child: TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        textInputAction: textInputAction ?? TextInputAction.next,
+        onSubmitted: onSubmitted,
+        decoration: _filterDecoration(context, label),
+      ),
+    );
+  }
+}
+
+InputDecoration _filterDecoration(BuildContext context, String label,
+    {String? hint}) {
+  final cs = Theme.of(context).colorScheme;
+  return InputDecoration(
+    labelText: label,
+    hintText: hint,
+    isDense: true,
+    filled: true,
+    fillColor: cs.surfaceContainerHighest,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: cs.outlineVariant),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: cs.primary),
+    ),
+  );
+}
+
+class _StatusChip extends StatelessWidget {
+  final String label;
+  final Color background;
+  final Color foreground;
+
+  const _StatusChip({
+    required this.label,
+    required this.background,
+    required this.foreground,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: ShapeDecoration(
+        color: background,
+        shape: StadiumBorder(
+          side: BorderSide(color: foreground.withValues(alpha: .25)),
+        ),
+      ),
+      child: Text(
+        label,
+        style: tt.labelSmall?.copyWith(
+          color: foreground,
+          fontWeight: FontWeight.w900,
+          letterSpacing: .3,
+        ),
+      ),
+    );
+  }
+}
+
+class _CardActions extends StatelessWidget {
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  const _CardActions({required this.onEdit, required this.onDelete});
+
+  ButtonStyle _tonalStyle(BuildContext context) {
+    return FilledButton.styleFrom(
+      minimumSize: const Size(0, 36),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+    );
+  }
+
+  ButtonStyle _dangerStyle(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return TextButton.styleFrom(
+      minimumSize: const Size(0, 36),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      foregroundColor: cs.error,
+      visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        FilledButton.tonalIcon(
+          style: _tonalStyle(context),
+          onPressed: onEdit,
+          icon: const Icon(Icons.edit_outlined, size: 18),
+          label: const Text('Editar'),
+        ),
+        TextButton.icon(
+          style: _dangerStyle(context),
+          onPressed: onDelete,
+          icon: const Icon(Icons.delete_outline, size: 18),
+          label: const Text('Eliminar'),
+        ),
+      ],
+    );
+  }
+}
+
+void _showActionFeedback(String title, String message) {
+  if (Get.isSnackbarOpen) {
+    Get.closeCurrentSnackbar();
+  }
+  Get.snackbar(
+    title,
+    message,
+    snackPosition: SnackPosition.BOTTOM,
+    duration: const Duration(seconds: 3),
+    margin: const EdgeInsets.all(16),
+  );
+}

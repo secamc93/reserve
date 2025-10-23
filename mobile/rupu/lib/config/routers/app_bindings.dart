@@ -101,6 +101,59 @@ class HorizontalPropertyDetailBinding {
         tag: tag,
       );
     }
+    final detailController =
+        Get.find<HorizontalPropertyDetailController>(tag: tag);
+
+    final unitsTag = HorizontalPropertyUnitsController.tagFor(propertyId);
+    if (!Get.isRegistered<HorizontalPropertyUnitsController>(tag: unitsTag)) {
+      Get.put(
+        HorizontalPropertyUnitsController(
+          propertyId: propertyId,
+          repository: detailController.repository,
+        ),
+        tag: unitsTag,
+      );
+    }
+
+    final residentsTag =
+        HorizontalPropertyResidentsController.tagFor(propertyId);
+    if (!Get.isRegistered<HorizontalPropertyResidentsController>(
+        tag: residentsTag)) {
+      Get.put(
+        HorizontalPropertyResidentsController(
+          propertyId: propertyId,
+          repository: detailController.repository,
+        ),
+        tag: residentsTag,
+      );
+    }
+
+    final votingTag = HorizontalPropertyVotingController.tagFor(propertyId);
+    if (!Get.isRegistered<HorizontalPropertyVotingController>(tag: votingTag)) {
+      Get.put(
+        HorizontalPropertyVotingController(
+          propertyId: propertyId,
+          repository: detailController.repository,
+        ),
+        tag: votingTag,
+      );
+    }
+
+    final dashboardTag =
+        HorizontalPropertyDashboardController.tagFor(propertyId);
+    if (!Get.isRegistered<HorizontalPropertyDashboardController>(
+        tag: dashboardTag)) {
+      Get.put(
+        HorizontalPropertyDashboardController(
+          propertyId: propertyId,
+          detailTag: tag,
+          unitsTag: unitsTag,
+          residentsTag: residentsTag,
+          votingTag: votingTag,
+        ),
+        tag: dashboardTag,
+      );
+    }
   }
 }
 

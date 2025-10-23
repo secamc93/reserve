@@ -48,3 +48,7 @@ export 'package:rupu/presentation/views/horizontal_properties/horizontal_propert
 export 'package:rupu/presentation/views/horizontal_properties/horizontal_properties_view.dart';
 export 'package:rupu/presentation/views/horizontal_properties/horizontal_property_detail_controller.dart';
 export 'package:rupu/presentation/views/horizontal_properties/horizontal_property_detail_view.dart';
+export 'package:rupu/presentation/views/horizontal_properties/controllers/horizontal_property_units_controller.dart';
+export 'package:rupu/presentation/views/horizontal_properties/controllers/horizontal_property_residents_controller.dart';
+export 'package:rupu/presentation/views/horizontal_properties/controllers/horizontal_property_voting_controller.dart';
+export 'package:rupu/presentation/views/horizontal_properties/controllers/horizontal_property_dashboard_controller.dart';

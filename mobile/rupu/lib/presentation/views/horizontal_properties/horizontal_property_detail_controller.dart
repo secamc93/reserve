@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:rupu/domain/entities/horizontal_property_detail.dart';
-import 'package:rupu/domain/entities/horizontal_property_residents_page.dart';
-import 'package:rupu/domain/entities/horizontal_property_units_page.dart';
-import 'package:rupu/domain/entities/horizontal_property_voting_groups.dart';
 import 'package:rupu/domain/infrastructure/repositories/horizontal_properties_repository_impl.dart';
 import 'package:rupu/domain/repositories/horizontal_properties_repository.dart';
+
+import 'controllers/horizontal_property_residents_controller.dart';
+import 'controllers/horizontal_property_units_controller.dart';
+import 'controllers/horizontal_property_voting_controller.dart';
 
 class HorizontalPropertyDetailController extends GetxController {
   final int propertyId;
@@ -19,63 +19,24 @@ class HorizontalPropertyDetailController extends GetxController {
   static String tagFor(int id) => 'horizontal-property-detail-$id';
 
   final detail = Rxn<HorizontalPropertyDetail>();
-  final unitsPage = Rxn<HorizontalPropertyUnitsPage>();
-  final residentsPage = Rxn<HorizontalPropertyResidentsPage>();
-  final unitsItems = <HorizontalPropertyUnitItem>[].obs;
-  final residentsItems = <HorizontalPropertyResidentItem>[].obs;
-  final votingGroups = <HorizontalPropertyVotingGroup>[].obs;
-
   final isLoading = false.obs;
   final errorMessage = RxnString();
-  final unitsErrorMessage = RxnString();
-  final residentsErrorMessage = RxnString();
-  final unitsLoading = false.obs;
-  final residentsLoading = false.obs;
-  final unitsLoadingMore = false.obs;
-  final residentsLoadingMore = false.obs;
-
-  // Units filters
-  final unitsPageCtrl = TextEditingController(text: '1');
-  final unitsPageSizeCtrl = TextEditingController(text: '12');
-  final unitsNumberCtrl = TextEditingController();
-  final unitsBlockCtrl = TextEditingController();
-  final unitsTypeCtrl = TextEditingController();
-  final unitsSearchCtrl = TextEditingController();
-  final unitsIsActive = RxnBool();
-
-  // Residents filters
-  final residentsPageCtrl = TextEditingController(text: '1');
-  final residentsPageSizeCtrl = TextEditingController(text: '12');
-  final residentsNameCtrl = TextEditingController();
-  final residentsEmailCtrl = TextEditingController();
-  final residentsPhoneCtrl = TextEditingController();
-  final residentsUnitNumberCtrl = TextEditingController();
-  final residentsTypeCtrl = TextEditingController();
-  final residentsSearchCtrl = TextEditingController();
-  final residentsIsMain = RxnBool();
-  final residentsIsActive = RxnBool();
 
   String get propertyName => detail.value?.name ?? 'Detalle propiedad';
-  int? get unitsTotal => unitsPage.value?.total;
-  int? get residentsTotal => residentsPage.value?.total;
-  int? get firstVotingGroupId =>
-      votingGroups.isNotEmpty ? votingGroups.first.id : null;
-  bool get canLoadMoreUnits {
-    final page = unitsPage.value?.page ?? 0;
-    final totalPages = unitsPage.value?.totalPages ?? 0;
-    return page < totalPages;
-  }
-
-  bool get canLoadMoreResidents {
-    final page = residentsPage.value?.page ?? 0;
-    final totalPages = residentsPage.value?.totalPages ?? 0;
-    return page < totalPages;
-  }
 
   @override
   void onReady() {
     super.onReady();
-    loadAll();
+    loadDetailOnly();
+  }
+
+  Future<void> loadDetailOnly() async {
+    isLoading.value = true;
+    errorMessage.value = null;
+
+    await _loadDetail();
+
+    isLoading.value = false;
   }
 
   Future<void> loadAll() async {
@@ -83,112 +44,14 @@ class HorizontalPropertyDetailController extends GetxController {
     errorMessage.value = null;
 
     await _loadDetail();
+
     await Future.wait([
-      _loadUnits(),
-      _loadResidents(),
-      _loadVotingGroups(),
+      _refreshUnitsController(),
+      _refreshResidentsController(),
+      _refreshVotingController(),
     ]);
 
     isLoading.value = false;
-  }
-
-  Future<void> loadUnits() => _loadUnits();
-
-  Future<void> loadMoreUnits() => _loadUnits(append: true);
-
-  Future<void> loadResidents() => _loadResidents();
-
-  Future<void> loadMoreResidents() => _loadResidents(append: true);
-
-  Map<String, dynamic> _buildUnitsQuery({int? pageOverride}) {
-    final query = <String, dynamic>{};
-    final page = pageOverride ?? int.tryParse(unitsPageCtrl.text.trim());
-    final pageSize = int.tryParse(unitsPageSizeCtrl.text.trim());
-    if (page != null && page > 0) query['page'] = page;
-    if (pageSize != null && pageSize > 0) query['page_size'] = pageSize;
-    if (unitsNumberCtrl.text.trim().isNotEmpty) {
-      query['number'] = unitsNumberCtrl.text.trim();
-    }
-    if (unitsBlockCtrl.text.trim().isNotEmpty) {
-      query['block'] = unitsBlockCtrl.text.trim();
-    }
-    if (unitsTypeCtrl.text.trim().isNotEmpty) {
-      query['unit_type'] = unitsTypeCtrl.text.trim();
-    }
-    if (unitsSearchCtrl.text.trim().isNotEmpty) {
-      query['search'] = unitsSearchCtrl.text.trim();
-    }
-    final status = unitsIsActive.value;
-    if (status != null) {
-      query['is_active'] = status;
-    }
-    return query;
-  }
-
-  Map<String, dynamic> _buildResidentsQuery({int? pageOverride}) {
-    final query = <String, dynamic>{};
-    final page = pageOverride ?? int.tryParse(residentsPageCtrl.text.trim());
-    final pageSize = int.tryParse(residentsPageSizeCtrl.text.trim());
-    if (page != null && page > 0) query['page'] = page;
-    if (pageSize != null && pageSize > 0) query['page_size'] = pageSize;
-    if (residentsNameCtrl.text.trim().isNotEmpty) {
-      query['name'] = residentsNameCtrl.text.trim();
-    }
-    if (residentsEmailCtrl.text.trim().isNotEmpty) {
-      query['email'] = residentsEmailCtrl.text.trim();
-    }
-    if (residentsPhoneCtrl.text.trim().isNotEmpty) {
-      query['phone'] = residentsPhoneCtrl.text.trim();
-    }
-    if (residentsUnitNumberCtrl.text.trim().isNotEmpty) {
-      query['property_unit_number'] = residentsUnitNumberCtrl.text.trim();
-    }
-    if (residentsTypeCtrl.text.trim().isNotEmpty) {
-      query['resident_type'] = residentsTypeCtrl.text.trim();
-    }
-    if (residentsSearchCtrl.text.trim().isNotEmpty) {
-      query['search'] = residentsSearchCtrl.text.trim();
-    }
-    final isMain = residentsIsMain.value;
-    if (isMain != null) {
-      query['is_main_resident'] = isMain;
-    }
-    final isActive = residentsIsActive.value;
-    if (isActive != null) {
-      query['is_active'] = isActive;
-    }
-    return query;
-  }
-
-  Future<void> applyUnitsFilters() async {
-    await _loadUnits();
-  }
-
-  Future<void> applyResidentsFilters() async {
-    await _loadResidents();
-  }
-
-  void clearUnitsFilters() {
-    unitsPageCtrl.text = '1';
-    unitsPageSizeCtrl.text = '12';
-    unitsNumberCtrl.clear();
-    unitsBlockCtrl.clear();
-    unitsTypeCtrl.clear();
-    unitsSearchCtrl.clear();
-    unitsIsActive.value = null;
-  }
-
-  void clearResidentsFilters() {
-    residentsPageCtrl.text = '1';
-    residentsPageSizeCtrl.text = '12';
-    residentsNameCtrl.clear();
-    residentsEmailCtrl.clear();
-    residentsPhoneCtrl.clear();
-    residentsUnitNumberCtrl.clear();
-    residentsTypeCtrl.clear();
-    residentsSearchCtrl.clear();
-    residentsIsMain.value = null;
-    residentsIsActive.value = null;
   }
 
   Future<void> _loadDetail() async {
@@ -207,143 +70,25 @@ class HorizontalPropertyDetailController extends GetxController {
     }
   }
 
-  Future<void> _loadUnits({bool append = false}) async {
-    if (append) {
-      if (unitsLoading.value || unitsLoadingMore.value) {
-        return;
-      }
-      if (!canLoadMoreUnits && unitsItems.isNotEmpty) {
-        return;
-      }
-      unitsLoadingMore.value = true;
-    } else {
-      unitsLoading.value = true;
-      unitsErrorMessage.value = null;
-      unitsItems.clear();
-    }
-    try {
-      final basePage = append
-          ? (unitsPage.value?.page ??
-              int.tryParse(unitsPageCtrl.text.trim()) ??
-              1)
-          : int.tryParse(unitsPageCtrl.text.trim()) ?? 1;
-      final pageToRequest = basePage < 1 ? 1 : basePage;
-      final query = _buildUnitsQuery(
-        pageOverride: append ? pageToRequest + 1 : pageToRequest,
-      );
-      final result = await repository.getHorizontalPropertyUnits(
-        id: propertyId,
-        query: query.isEmpty ? null : query,
-      );
-      if (append) {
-        unitsItems.addAll(result.units);
-      } else {
-        unitsItems.assignAll(result.units);
-      }
-      unitsPage.value = result;
-      unitsPageCtrl.text = result.page.toString();
-      if (!result.success) {
-        unitsErrorMessage.value =
-            result.message ?? 'No se pudieron cargar las unidades.';
-      }
-    } catch (_) {
-      unitsPage.value = null;
-      errorMessage.value ??=
-          'No se pudo cargar la información de unidades de la propiedad.';
-      unitsErrorMessage.value =
-          'No se pudo cargar la información de unidades de la propiedad.';
-    } finally {
-      if (append) {
-        unitsLoadingMore.value = false;
-      } else {
-        unitsLoading.value = false;
-      }
+  Future<void> _refreshUnitsController() async {
+    final tag = HorizontalPropertyUnitsController.tagFor(propertyId);
+    if (Get.isRegistered<HorizontalPropertyUnitsController>(tag: tag)) {
+      await Get.find<HorizontalPropertyUnitsController>(tag: tag).refresh();
     }
   }
 
-  Future<void> _loadResidents({bool append = false}) async {
-    if (append) {
-      if (residentsLoading.value || residentsLoadingMore.value) {
-        return;
-      }
-      if (!canLoadMoreResidents && residentsItems.isNotEmpty) {
-        return;
-      }
-      residentsLoadingMore.value = true;
-    } else {
-      residentsLoading.value = true;
-      residentsErrorMessage.value = null;
-      residentsItems.clear();
-    }
-    try {
-      final basePage = append
-          ? (residentsPage.value?.page ??
-              int.tryParse(residentsPageCtrl.text.trim()) ??
-              1)
-          : int.tryParse(residentsPageCtrl.text.trim()) ?? 1;
-      final pageToRequest = basePage < 1 ? 1 : basePage;
-      final query = _buildResidentsQuery(
-        pageOverride: append ? pageToRequest + 1 : pageToRequest,
-      );
-      final result = await repository.getHorizontalPropertyResidents(
-        id: propertyId,
-        query: query.isEmpty ? null : query,
-      );
-      if (append) {
-        residentsItems.addAll(result.residents);
-      } else {
-        residentsItems.assignAll(result.residents);
-      }
-      residentsPage.value = result;
-      residentsPageCtrl.text = result.page.toString();
-      if (!result.success) {
-        residentsErrorMessage.value =
-            result.message ?? 'No se pudieron cargar los residentes.';
-      }
-    } catch (_) {
-      residentsPage.value = null;
-      errorMessage.value ??=
-          'No se pudo cargar la información de residentes de la propiedad.';
-      residentsErrorMessage.value =
-          'No se pudo cargar la información de residentes de la propiedad.';
-    } finally {
-      if (append) {
-        residentsLoadingMore.value = false;
-      } else {
-        residentsLoading.value = false;
-      }
+  Future<void> _refreshResidentsController() async {
+    final tag = HorizontalPropertyResidentsController.tagFor(propertyId);
+    if (Get.isRegistered<HorizontalPropertyResidentsController>(tag: tag)) {
+      await Get.find<HorizontalPropertyResidentsController>(tag: tag)
+          .refresh();
     }
   }
 
-  Future<void> _loadVotingGroups() async {
-    try {
-      final result = await repository.getHorizontalPropertyVotingGroups(
-        id: propertyId,
-      );
-      votingGroups.assignAll(result.groups);
-    } catch (_) {
-      votingGroups.clear();
-      errorMessage.value ??=
-          'No se pudo cargar la información de votaciones de la propiedad.';
+  Future<void> _refreshVotingController() async {
+    final tag = HorizontalPropertyVotingController.tagFor(propertyId);
+    if (Get.isRegistered<HorizontalPropertyVotingController>(tag: tag)) {
+      await Get.find<HorizontalPropertyVotingController>(tag: tag).refresh();
     }
-  }
-
-  @override
-  void onClose() {
-    unitsPageCtrl.dispose();
-    unitsPageSizeCtrl.dispose();
-    unitsNumberCtrl.dispose();
-    unitsBlockCtrl.dispose();
-    unitsTypeCtrl.dispose();
-    unitsSearchCtrl.dispose();
-    residentsPageCtrl.dispose();
-    residentsPageSizeCtrl.dispose();
-    residentsNameCtrl.dispose();
-    residentsEmailCtrl.dispose();
-    residentsPhoneCtrl.dispose();
-    residentsUnitNumberCtrl.dispose();
-    residentsTypeCtrl.dispose();
-    residentsSearchCtrl.dispose();
-    super.onClose();
   }
 }
