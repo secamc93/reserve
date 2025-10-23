@@ -276,8 +276,9 @@ class _UnitsTab extends GetWidget<HorizontalPropertyDetailController> {
     return Obx(() {
       final unitsPage = controller.unitsPage.value;
       final isLoading = controller.unitsLoading.value;
+      final isLoadingMore = controller.unitsLoadingMore.value;
       final error = controller.unitsErrorMessage.value;
-      final units = unitsPage?.units ?? const <HorizontalPropertyUnitItem>[];
+      final units = List<HorizontalPropertyUnitItem>.of(controller.unitsItems);
       final total = unitsPage?.total ?? 0;
       final page = unitsPage?.page ?? 1;
       final totalPages = unitsPage?.totalPages ?? 1;
@@ -294,66 +295,100 @@ class _UnitsTab extends GetWidget<HorizontalPropertyDetailController> {
 
           return RefreshIndicator(
             onRefresh: controller.loadUnits,
-            child: CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-                  sliver: SliverToBoxAdapter(
-                    child: _SectionCard(
-                      title: 'Filtros de unidades',
-                      child: _UnitsFiltersContent(controllerTag: controllerTag),
-                    ),
-                  ),
-                ),
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                  sliver: SliverToBoxAdapter(
-                    child: _SummaryHeader(
-                      title: 'Unidades encontradas: $total',
-                      subtitle: 'Página $page de $totalPages',
-                      showProgress: isLoading,
-                      onRefresh: () {
-                        controller.loadUnits();
-                      },
-                    ),
-                  ),
-                ),
-                if (error != null)
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (notification) {
+                if (notification is ScrollUpdateNotification &&
+                    notification.metrics.pixels >=
+                        notification.metrics.maxScrollExtent - 200 &&
+                    !isLoading &&
+                    !isLoadingMore &&
+                    units.isNotEmpty &&
+                    controller.canLoadMoreUnits) {
+                  controller.loadMoreUnits();
+                }
+                return false;
+              },
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
                   SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
                     sliver: SliverToBoxAdapter(
-                      child: _InlineError(message: error),
+                      child: _SectionCard(
+                        title: 'Filtros de unidades',
+                        child: _UnitsFiltersContent(controllerTag: controllerTag),
+                      ),
                     ),
                   ),
-                if (!isLoading && units.isEmpty)
-                  const SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: _EmptyState(
-                      icon: Icons.apartment_outlined,
-                      title: 'No se encontraron unidades.',
-                      subtitle:
-                          'Ajusta los filtros o actualiza para intentar nuevamente.',
-                    ),
-                  )
-                else
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                    sliver: SliverGrid(
-                      gridDelegate:
-                          SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: crossAxis,
-                        mainAxisSpacing: 16,
-                        crossAxisSpacing: 16,
-                        childAspectRatio: aspect,
-                      ),
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) => _UnitCard(unit: units[index]),
-                        childCount: units.length,
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    sliver: SliverToBoxAdapter(
+                      child: _SummaryHeader(
+                        title: 'Unidades encontradas: $total',
+                        subtitle: 'Página $page de $totalPages',
+                        showProgress: isLoading,
+                        onRefresh: () {
+                          controller.loadUnits();
+                        },
                       ),
                     ),
                   ),
-              ],
+                  if (error != null)
+                    SliverPadding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      sliver: SliverToBoxAdapter(
+                        child: _InlineError(message: error),
+                      ),
+                    ),
+                  if (!isLoading && units.isEmpty)
+                    const SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: _EmptyState(
+                        icon: Icons.apartment_outlined,
+                        title: 'No se encontraron unidades.',
+                        subtitle:
+                            'Ajusta los filtros o actualiza para intentar nuevamente.',
+                      ),
+                    )
+                  else ...[
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                      sliver: SliverGrid(
+                        gridDelegate:
+                            SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: crossAxis,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          childAspectRatio: aspect,
+                        ),
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) => _UnitCard(unit: units[index]),
+                          childCount: units.length,
+                        ),
+                      ),
+                    ),
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 32),
+                        child: Center(
+                          child: isLoadingMore
+                              ? const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 16),
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2.6),
+                                )
+                              : (!controller.canLoadMoreUnits &&
+                                      units.isNotEmpty
+                                  ? const Text(
+                                      'No hay más unidades para cargar.',
+                                    )
+                                  : const SizedBox.shrink()),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
           );
         },
@@ -374,9 +409,10 @@ class _ResidentsTab extends GetWidget<HorizontalPropertyDetailController> {
     return Obx(() {
       final residentsPage = controller.residentsPage.value;
       final isLoading = controller.residentsLoading.value;
+      final isLoadingMore = controller.residentsLoadingMore.value;
       final error = controller.residentsErrorMessage.value;
       final residents =
-          residentsPage?.residents ?? const <HorizontalPropertyResidentItem>[];
+          List<HorizontalPropertyResidentItem>.of(controller.residentsItems);
       final total = residentsPage?.total ?? 0;
       final page = residentsPage?.page ?? 1;
       final totalPages = residentsPage?.totalPages ?? 1;
@@ -393,69 +429,103 @@ class _ResidentsTab extends GetWidget<HorizontalPropertyDetailController> {
 
           return RefreshIndicator(
             onRefresh: controller.loadResidents,
-            child: CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-                  sliver: SliverToBoxAdapter(
-                    child: _SectionCard(
-                      title: 'Filtros de residentes',
-                      child: _ResidentsFiltersContent(
-                        controllerTag: controllerTag,
-                      ),
-                    ),
-                  ),
-                ),
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                  sliver: SliverToBoxAdapter(
-                    child: _SummaryHeader(
-                      title: 'Residentes encontrados: $total',
-                      subtitle: 'Página $page de $totalPages',
-                      showProgress: isLoading,
-                      onRefresh: () {
-                        controller.loadResidents();
-                      },
-                    ),
-                  ),
-                ),
-                if (error != null)
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (notification) {
+                if (notification is ScrollUpdateNotification &&
+                    notification.metrics.pixels >=
+                        notification.metrics.maxScrollExtent - 200 &&
+                    !isLoading &&
+                    !isLoadingMore &&
+                    residents.isNotEmpty &&
+                    controller.canLoadMoreResidents) {
+                  controller.loadMoreResidents();
+                }
+                return false;
+              },
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
                   SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
                     sliver: SliverToBoxAdapter(
-                      child: _InlineError(message: error),
+                      child: _SectionCard(
+                        title: 'Filtros de residentes',
+                        child: _ResidentsFiltersContent(
+                          controllerTag: controllerTag,
+                        ),
+                      ),
                     ),
                   ),
-                if (!isLoading && residents.isEmpty)
-                  const SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: _EmptyState(
-                      icon: Icons.group_outlined,
-                      title: 'No se encontraron residentes.',
-                      subtitle:
-                          'Modifica los filtros o actualiza para intentarlo nuevamente.',
-                    ),
-                  )
-                else
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                    sliver: SliverGrid(
-                      gridDelegate:
-                          SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: crossAxis,
-                        mainAxisSpacing: 16,
-                        crossAxisSpacing: 16,
-                        childAspectRatio: aspect,
-                      ),
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) =>
-                            _ResidentCard(resident: residents[index]),
-                        childCount: residents.length,
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    sliver: SliverToBoxAdapter(
+                      child: _SummaryHeader(
+                        title: 'Residentes encontrados: $total',
+                        subtitle: 'Página $page de $totalPages',
+                        showProgress: isLoading,
+                        onRefresh: () {
+                          controller.loadResidents();
+                        },
                       ),
                     ),
                   ),
-              ],
+                  if (error != null)
+                    SliverPadding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      sliver: SliverToBoxAdapter(
+                        child: _InlineError(message: error),
+                      ),
+                    ),
+                  if (!isLoading && residents.isEmpty)
+                    const SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: _EmptyState(
+                        icon: Icons.group_outlined,
+                        title: 'No se encontraron residentes.',
+                        subtitle:
+                            'Modifica los filtros o actualiza para intentarlo nuevamente.',
+                      ),
+                    )
+                  else ...[
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                      sliver: SliverGrid(
+                        gridDelegate:
+                            SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: crossAxis,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          childAspectRatio: aspect,
+                        ),
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) =>
+                              _ResidentCard(resident: residents[index]),
+                          childCount: residents.length,
+                        ),
+                      ),
+                    ),
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 32),
+                        child: Center(
+                          child: isLoadingMore
+                              ? const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 16),
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2.6),
+                                )
+                              : (!controller.canLoadMoreResidents &&
+                                      residents.isNotEmpty
+                                  ? const Text(
+                                      'No hay más residentes para cargar.',
+                                    )
+                                  : const SizedBox.shrink()),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
           );
         },
@@ -1006,6 +1076,17 @@ class _UnitCard extends StatelessWidget {
                     label: 'Coeficiente',
                     value: _formatCoefficient(unit.participationCoefficient),
                   ),
+                  const Spacer(),
+                  _CardActions(
+                    onEdit: () => _showActionFeedback(
+                      'Editar unidad',
+                      'Funcionalidad disponible próximamente.',
+                    ),
+                    onDelete: () => _showActionFeedback(
+                      'Eliminar unidad',
+                      'Contacta al administrador para continuar con la acción.',
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -1144,6 +1225,19 @@ class _ResidentCard extends StatelessWidget {
                         ? 'Sin teléfono'
                         : resident.phone,
                   ),
+                  const SizedBox(height: 8),
+                  _MainResidenceIndicator(isMain: resident.isMainResident),
+                  const Spacer(),
+                  _CardActions(
+                    onEdit: () => _showActionFeedback(
+                      'Editar residente',
+                      'Funcionalidad disponible próximamente.',
+                    ),
+                    onDelete: () => _showActionFeedback(
+                      'Eliminar residente',
+                      'Contacta al administrador para continuar con la acción.',
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -1152,6 +1246,98 @@ class _ResidentCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _MainResidenceIndicator extends StatelessWidget {
+  final bool isMain;
+  const _MainResidenceIndicator({required this.isMain});
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final valueStyle = tt.bodyMedium?.copyWith(
+      fontWeight: FontWeight.w800,
+      color: isMain ? Colors.green : cs.error,
+    );
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Icon(Icons.house_outlined, size: 18, color: cs.onSurfaceVariant),
+        const SizedBox(width: 8),
+        Text(
+          'Casa principal:',
+          style: tt.bodyMedium?.copyWith(
+            color: cs.onSurfaceVariant,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(isMain ? 'Sí' : 'No', style: valueStyle),
+      ],
+    );
+  }
+}
+
+class _CardActions extends StatelessWidget {
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  const _CardActions({required this.onEdit, required this.onDelete});
+
+  ButtonStyle _tonalStyle(BuildContext context) {
+    return FilledButton.styleFrom(
+      minimumSize: const Size(0, 36),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+    );
+  }
+
+  ButtonStyle _dangerStyle(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return TextButton.styleFrom(
+      minimumSize: const Size(0, 36),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      foregroundColor: cs.error,
+      visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        FilledButton.tonalIcon(
+          style: _tonalStyle(context),
+          onPressed: onEdit,
+          icon: const Icon(Icons.edit_outlined, size: 18),
+          label: const Text('Editar'),
+        ),
+        TextButton.icon(
+          style: _dangerStyle(context),
+          onPressed: onDelete,
+          icon: const Icon(Icons.delete_outline, size: 18),
+          label: const Text('Eliminar'),
+        ),
+      ],
+    );
+  }
+}
+
+void _showActionFeedback(String title, String message) {
+  if (Get.isSnackbarOpen) {
+    Get.closeCurrentSnackbar();
+  }
+  Get.snackbar(
+    title,
+    message,
+    snackPosition: SnackPosition.BOTTOM,
+    duration: const Duration(seconds: 3),
+    margin: const EdgeInsets.all(16),
+  );
 }
 
 class MetricItem {

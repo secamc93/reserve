@@ -21,6 +21,8 @@ class HorizontalPropertyDetailController extends GetxController {
   final detail = Rxn<HorizontalPropertyDetail>();
   final unitsPage = Rxn<HorizontalPropertyUnitsPage>();
   final residentsPage = Rxn<HorizontalPropertyResidentsPage>();
+  final unitsItems = <HorizontalPropertyUnitItem>[].obs;
+  final residentsItems = <HorizontalPropertyResidentItem>[].obs;
   final votingGroups = <HorizontalPropertyVotingGroup>[].obs;
 
   final isLoading = false.obs;
@@ -29,6 +31,8 @@ class HorizontalPropertyDetailController extends GetxController {
   final residentsErrorMessage = RxnString();
   final unitsLoading = false.obs;
   final residentsLoading = false.obs;
+  final unitsLoadingMore = false.obs;
+  final residentsLoadingMore = false.obs;
 
   // Units filters
   final unitsPageCtrl = TextEditingController(text: '1');
@@ -56,6 +60,17 @@ class HorizontalPropertyDetailController extends GetxController {
   int? get residentsTotal => residentsPage.value?.total;
   int? get firstVotingGroupId =>
       votingGroups.isNotEmpty ? votingGroups.first.id : null;
+  bool get canLoadMoreUnits {
+    final page = unitsPage.value?.page ?? 0;
+    final totalPages = unitsPage.value?.totalPages ?? 0;
+    return page < totalPages;
+  }
+
+  bool get canLoadMoreResidents {
+    final page = residentsPage.value?.page ?? 0;
+    final totalPages = residentsPage.value?.totalPages ?? 0;
+    return page < totalPages;
+  }
 
   @override
   void onReady() {
@@ -79,11 +94,15 @@ class HorizontalPropertyDetailController extends GetxController {
 
   Future<void> loadUnits() => _loadUnits();
 
+  Future<void> loadMoreUnits() => _loadUnits(append: true);
+
   Future<void> loadResidents() => _loadResidents();
 
-  Map<String, dynamic> _buildUnitsQuery() {
+  Future<void> loadMoreResidents() => _loadResidents(append: true);
+
+  Map<String, dynamic> _buildUnitsQuery({int? pageOverride}) {
     final query = <String, dynamic>{};
-    final page = int.tryParse(unitsPageCtrl.text.trim());
+    final page = pageOverride ?? int.tryParse(unitsPageCtrl.text.trim());
     final pageSize = int.tryParse(unitsPageSizeCtrl.text.trim());
     if (page != null && page > 0) query['page'] = page;
     if (pageSize != null && pageSize > 0) query['page_size'] = pageSize;
@@ -106,9 +125,9 @@ class HorizontalPropertyDetailController extends GetxController {
     return query;
   }
 
-  Map<String, dynamic> _buildResidentsQuery() {
+  Map<String, dynamic> _buildResidentsQuery({int? pageOverride}) {
     final query = <String, dynamic>{};
-    final page = int.tryParse(residentsPageCtrl.text.trim());
+    final page = pageOverride ?? int.tryParse(residentsPageCtrl.text.trim());
     final pageSize = int.tryParse(residentsPageSizeCtrl.text.trim());
     if (page != null && page > 0) query['page'] = page;
     if (pageSize != null && pageSize > 0) query['page_size'] = pageSize;
@@ -188,16 +207,41 @@ class HorizontalPropertyDetailController extends GetxController {
     }
   }
 
-  Future<void> _loadUnits() async {
-    unitsLoading.value = true;
-    unitsErrorMessage.value = null;
+  Future<void> _loadUnits({bool append = false}) async {
+    if (append) {
+      if (unitsLoading.value || unitsLoadingMore.value) {
+        return;
+      }
+      if (!canLoadMoreUnits && unitsItems.isNotEmpty) {
+        return;
+      }
+      unitsLoadingMore.value = true;
+    } else {
+      unitsLoading.value = true;
+      unitsErrorMessage.value = null;
+      unitsItems.clear();
+    }
     try {
-      final query = _buildUnitsQuery();
+      final basePage = append
+          ? (unitsPage.value?.page ??
+              int.tryParse(unitsPageCtrl.text.trim()) ??
+              1)
+          : int.tryParse(unitsPageCtrl.text.trim()) ?? 1;
+      final pageToRequest = basePage < 1 ? 1 : basePage;
+      final query = _buildUnitsQuery(
+        pageOverride: append ? pageToRequest + 1 : pageToRequest,
+      );
       final result = await repository.getHorizontalPropertyUnits(
         id: propertyId,
         query: query.isEmpty ? null : query,
       );
+      if (append) {
+        unitsItems.addAll(result.units);
+      } else {
+        unitsItems.assignAll(result.units);
+      }
       unitsPage.value = result;
+      unitsPageCtrl.text = result.page.toString();
       if (!result.success) {
         unitsErrorMessage.value =
             result.message ?? 'No se pudieron cargar las unidades.';
@@ -209,20 +253,49 @@ class HorizontalPropertyDetailController extends GetxController {
       unitsErrorMessage.value =
           'No se pudo cargar la información de unidades de la propiedad.';
     } finally {
-      unitsLoading.value = false;
+      if (append) {
+        unitsLoadingMore.value = false;
+      } else {
+        unitsLoading.value = false;
+      }
     }
   }
 
-  Future<void> _loadResidents() async {
-    residentsLoading.value = true;
-    residentsErrorMessage.value = null;
+  Future<void> _loadResidents({bool append = false}) async {
+    if (append) {
+      if (residentsLoading.value || residentsLoadingMore.value) {
+        return;
+      }
+      if (!canLoadMoreResidents && residentsItems.isNotEmpty) {
+        return;
+      }
+      residentsLoadingMore.value = true;
+    } else {
+      residentsLoading.value = true;
+      residentsErrorMessage.value = null;
+      residentsItems.clear();
+    }
     try {
-      final query = _buildResidentsQuery();
+      final basePage = append
+          ? (residentsPage.value?.page ??
+              int.tryParse(residentsPageCtrl.text.trim()) ??
+              1)
+          : int.tryParse(residentsPageCtrl.text.trim()) ?? 1;
+      final pageToRequest = basePage < 1 ? 1 : basePage;
+      final query = _buildResidentsQuery(
+        pageOverride: append ? pageToRequest + 1 : pageToRequest,
+      );
       final result = await repository.getHorizontalPropertyResidents(
         id: propertyId,
         query: query.isEmpty ? null : query,
       );
+      if (append) {
+        residentsItems.addAll(result.residents);
+      } else {
+        residentsItems.assignAll(result.residents);
+      }
       residentsPage.value = result;
+      residentsPageCtrl.text = result.page.toString();
       if (!result.success) {
         residentsErrorMessage.value =
             result.message ?? 'No se pudieron cargar los residentes.';
@@ -234,7 +307,11 @@ class HorizontalPropertyDetailController extends GetxController {
       residentsErrorMessage.value =
           'No se pudo cargar la información de residentes de la propiedad.';
     } finally {
-      residentsLoading.value = false;
+      if (append) {
+        residentsLoadingMore.value = false;
+      } else {
+        residentsLoading.value = false;
+      }
     }
   }
 
