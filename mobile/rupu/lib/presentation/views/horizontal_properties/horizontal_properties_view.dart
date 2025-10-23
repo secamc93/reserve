@@ -57,9 +57,9 @@ class HorizontalPropertiesView extends GetView<HorizontalPropertiesController> {
                 // Clearance para que el FAB no tape
                 const fabClearance = 88.0;
 
-                // Card aspect ratio adaptativo
+                // Ratio de tarjeta: un poco más alta en 1 columna
                 final cardAspect = cross == 1
-                    ? 0.86
+                    ? 0.84
                     : (cross == 2 ? 0.9 : 0.92);
 
                 return CustomScrollView(
@@ -112,6 +112,7 @@ class HorizontalPropertiesView extends GetView<HorizontalPropertiesController> {
                                 crossAxisCount: cross,
                                 mainAxisSpacing: 16,
                                 crossAxisSpacing: 16,
+                                // ✅ Sin altura fija: evita huecos grandes
                                 childAspectRatio: cardAspect,
                               ),
                           delegate: SliverChildBuilderDelegate((context, i) {
@@ -451,148 +452,159 @@ class _PropertyCard extends StatelessWidget {
             final desired = w * 9 / 16;
             final mediaH = desired.clamp(120.0, 180.0);
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header visual
-                SizedBox(
-                  height: mediaH,
-                  width: double.infinity,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      if (imageUrl == null || imageUrl!.isEmpty)
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [cs.surfaceContainerHighest, cs.surface],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                          ),
-                        )
-                      else
-                        Image.network(
-                          imageUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) =>
-                              Container(color: cs.surfaceContainerHighest),
-                        ),
-                      Positioned.fill(
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.bottomCenter,
-                              end: Alignment.center,
-                              colors: [
-                                Colors.black.withValues(alpha: .22),
-                                Colors.transparent,
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        right: 4,
-                        top: 4,
-                        child: IconButton.filledTonal(
-                          onPressed: onView,
-                          icon: const Icon(Icons.more_horiz),
-                          tooltip: 'Abrir',
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+            // Clamp local para que todo quepa
+            final mq = MediaQuery.of(context);
+            final clampedMQ = mq.copyWith(
+              textScaler: mq.textScaler.clamp(maxScaleFactor: 1.2),
+            );
 
-                // Cuerpo
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
+            return MediaQuery(
+              data: clampedMQ,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header visual
+                  SizedBox(
+                    height: mediaH,
+                    width: double.infinity,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        if (imageUrl == null || imageUrl!.isEmpty)
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  cs.surfaceContainerHighest,
+                                  cs.surface,
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
                             ),
-                            decoration: ShapeDecoration(
-                              color: bgChip,
-                              shape: StadiumBorder(
-                                side: BorderSide(
-                                  color: fgChip.withValues(alpha: .20),
+                          )
+                        else
+                          Image.network(
+                            imageUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) =>
+                                Container(color: cs.surfaceContainerHighest),
+                          ),
+                        Positioned.fill(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.bottomCenter,
+                                end: Alignment.center,
+                                colors: [
+                                  Colors.black.withValues(alpha: .22),
+                                  Colors.transparent,
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          right: 4,
+                          top: 4,
+                          child: IconButton.filledTonal(
+                            onPressed: onView,
+                            icon: const Icon(Icons.more_horiz),
+                            tooltip: 'Abrir',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Cuerpo (ocupa el resto) y acciones al fondo
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Estado + fecha
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: ShapeDecoration(
+                                  color: bgChip,
+                                  shape: StadiumBorder(
+                                    side: BorderSide(
+                                      color: fgChip.withValues(alpha: .20),
+                                    ),
+                                  ),
+                                ),
+                                child: Text(
+                                  labelChip,
+                                  style: tt.labelSmall?.copyWith(
+                                    color: fgChip,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: .2,
+                                    // height: 1.0,
+                                  ),
                                 ),
                               ),
-                            ),
-                            child: Text(
-                              labelChip,
-                              style: tt.labelSmall?.copyWith(
-                                color: fgChip,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: .2,
-                                height: 1.0,
-                              ),
-                            ),
-                          ),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.event_outlined,
-                                size: 16,
-                                color: cs.onSurfaceVariant,
-                              ),
+                              const SizedBox(width: 10),
+                              const Icon(Icons.event_outlined, size: 16),
                               const SizedBox(width: 6),
-                              Text(
-                                'Creada $createdAt',
-                                style: tt.labelMedium?.copyWith(
-                                  color: cs.onSurfaceVariant,
-                                  fontWeight: FontWeight.w700,
-                                  height: 1.0,
+                              Expanded(
+                                child: Text(
+                                  'Creada $createdAt',
+                                  style: tt.labelMedium?.copyWith(
+                                    color: cs.onSurfaceVariant,
+                                    fontWeight: FontWeight.w700,
+                                    // height: 1.0,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
                               ),
                             ],
                           ),
+                          const SizedBox(height: 8),
+
+                          // Título
+                          Text(
+                            name,
+                            style: tt.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              // height: 1.12,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 8),
+
+                          // Info
+                          _InfoLine(icon: Icons.place_outlined, text: address),
+                          const SizedBox(height: 4),
+                          _InfoLine(
+                            icon: Icons.view_module_outlined,
+                            text: 'Unidades: $units',
+                          ),
+
+                          // Empuja las acciones hacia abajo
+                          const Spacer(),
+
+                          // Botones minimalistas en el fondo
+                          _MiniActions(
+                            isDeleting: isDeleting,
+                            onView: onView,
+                            onEdit: onEdit,
+                            onDelete: onDelete,
+                          ),
                         ],
                       ),
-                      const SizedBox(height: 8),
-
-                      Text(
-                        name,
-                        style: tt.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          height: 1.12,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 10),
-
-                      _InfoLine(icon: Icons.place_outlined, text: address),
-                      const SizedBox(height: 4),
-                      _InfoLine(
-                        icon: Icons.view_module_outlined,
-                        text: 'Unidades: $units',
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      // 🎯 NUEVO: barra de acciones con mejor jerarquía visual
-                      _ActionsBar(
-                        isDeleting: isDeleting,
-                        onView: onView,
-                        onEdit: onEdit,
-                        onDelete: onDelete,
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             );
           },
         ),
@@ -601,8 +613,8 @@ class _PropertyCard extends StatelessWidget {
   }
 }
 
-class _ActionsBar extends StatelessWidget {
-  const _ActionsBar({
+class _MiniActions extends StatelessWidget {
+  const _MiniActions({
     required this.isDeleting,
     required this.onView,
     required this.onEdit,
@@ -614,87 +626,68 @@ class _ActionsBar extends StatelessWidget {
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
-  // ButtonStyle _pillOutlined(BuildContext context) {
-  //   return OutlinedButton.styleFrom(
-  //     minimumSize: const Size(0, 44),
-  //     shape: const StadiumBorder(),
-  //     visualDensity: VisualDensity.compact,
-  //   );
-  // }
-
-  ButtonStyle _pillTonal(BuildContext context) {
+  ButtonStyle _tinyTonal(BuildContext context) {
     return FilledButton.styleFrom(
-      minimumSize: const Size(0, 44),
+      minimumSize: const Size(0, 36),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       shape: const StadiumBorder(),
-      visualDensity: VisualDensity.compact,
+      visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
     );
   }
 
-  ButtonStyle _pillFilled(BuildContext context) {
+  ButtonStyle _tinyFilled(BuildContext context) {
     return FilledButton.styleFrom(
-      minimumSize: const Size(0, 44),
+      minimumSize: const Size(0, 36),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       shape: const StadiumBorder(),
-      visualDensity: VisualDensity.compact,
+      visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+    );
+  }
+
+  ButtonStyle _tinyTextDanger(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return TextButton.styleFrom(
+      minimumSize: const Size(0, 36),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      foregroundColor: cs.error,
+      visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
-    return LayoutBuilder(
-      builder: (context, c) {
-        // Dos botones principales en fila siempre (se adaptan con Expanded).
-        // Eliminar como link de peligro debajo, a la derecha.
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: FilledButton.tonalIcon(
-                    style: _pillTonal(context),
-                    onPressed: onView,
-                    icon: const Icon(Icons.visibility_outlined),
-                    label: const Text('Ver', overflow: TextOverflow.ellipsis),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: FilledButton.icon(
-                    style: _pillFilled(context),
-                    onPressed: onEdit,
-                    icon: const Icon(Icons.edit_outlined),
-                    label: const Text(
-                      'Editar',
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                onPressed: isDeleting ? null : onDelete,
-                icon: isDeleting
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.delete_outline),
-                label: const Text('Eliminar', overflow: TextOverflow.ellipsis),
-                style: TextButton.styleFrom(
-                  foregroundColor: cs.error,
-                  visualDensity: VisualDensity.compact,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        FilledButton.tonalIcon(
+          style: _tinyTonal(context),
+          onPressed: onView,
+          icon: const Icon(Icons.visibility_outlined, size: 18),
+          label: const Text('Ver', overflow: TextOverflow.ellipsis),
+        ),
+        FilledButton.icon(
+          style: _tinyFilled(context),
+          onPressed: onEdit,
+          icon: const Icon(Icons.edit_outlined, size: 18),
+          label: const Text('Editar', overflow: TextOverflow.ellipsis),
+        ),
+        TextButton.icon(
+          style: _tinyTextDanger(context),
+          onPressed: isDeleting ? null : onDelete,
+          icon: isDeleting
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.delete_outline, size: 18),
+          label: const Text('Eliminar', overflow: TextOverflow.ellipsis),
+        ),
+      ],
     );
   }
 }
@@ -745,7 +738,7 @@ class _InlineError extends StatelessWidget {
       decoration: BoxDecoration(
         color: cs.errorContainer,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: cs.error.withValues(alpha: .25)),
+        border: Border.all(color: cs.error.withValues(alpha: 25)),
       ),
       child: Row(
         children: [

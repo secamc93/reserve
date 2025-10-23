@@ -88,7 +88,7 @@ class _PremiumAppBar extends GetWidget<HorizontalPropertyDetailController> {
         return Text(
           name,
           style: tt.titleLarge!.copyWith(
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.normal,
             color: cs.onSurface, // asegura contraste del título
           ),
         );
