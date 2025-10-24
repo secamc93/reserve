@@ -23,6 +23,7 @@ class HorizontalPropertyResidentsController extends GetxController {
   final residentsLoading = false.obs;
   final residentsLoadingMore = false.obs;
   final residentsErrorMessage = RxnString();
+  final filtersRevision = 0.obs;
 
   // Filters
   final residentsPageCtrl = TextEditingController(text: '1');
@@ -35,11 +36,34 @@ class HorizontalPropertyResidentsController extends GetxController {
   final residentsSearchCtrl = TextEditingController();
   final residentsIsMain = RxnBool();
   final residentsIsActive = RxnBool();
+  late final VoidCallback _filtersListener;
+  Worker? _mainWorker;
+  Worker? _statusWorker;
 
   bool get canLoadMoreResidents {
     final page = residentsPage.value?.page ?? 0;
     final totalPages = residentsPage.value?.totalPages ?? 0;
     return page < totalPages;
+  }
+
+  @override
+  void onInit() {
+    super.onInit();
+    _filtersListener = () => filtersRevision.value++;
+    for (final controller in [
+      residentsPageCtrl,
+      residentsPageSizeCtrl,
+      residentsNameCtrl,
+      residentsEmailCtrl,
+      residentsPhoneCtrl,
+      residentsUnitNumberCtrl,
+      residentsTypeCtrl,
+      residentsSearchCtrl,
+    ]) {
+      controller.addListener(_filtersListener);
+    }
+    _mainWorker = ever(residentsIsMain, (_) => filtersRevision.value++);
+    _statusWorker = ever(residentsIsActive, (_) => filtersRevision.value++);
   }
 
   @override
@@ -159,6 +183,20 @@ class HorizontalPropertyResidentsController extends GetxController {
 
   @override
   void onClose() {
+    for (final controller in [
+      residentsPageCtrl,
+      residentsPageSizeCtrl,
+      residentsNameCtrl,
+      residentsEmailCtrl,
+      residentsPhoneCtrl,
+      residentsUnitNumberCtrl,
+      residentsTypeCtrl,
+      residentsSearchCtrl,
+    ]) {
+      controller.removeListener(_filtersListener);
+    }
+    _mainWorker?.dispose();
+    _statusWorker?.dispose();
     residentsPageCtrl.dispose();
     residentsPageSizeCtrl.dispose();
     residentsNameCtrl.dispose();

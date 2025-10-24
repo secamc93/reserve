@@ -150,20 +150,16 @@ class _ResidentsFiltersContent
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
+        _ResponsiveFormGrid(
           children: [
             _FilterTextField(
               label: 'Página',
               controller: controller.residentsPageCtrl,
-              width: 120,
               keyboardType: TextInputType.number,
             ),
             _FilterTextField(
               label: 'Tamaño de página',
               controller: controller.residentsPageSizeCtrl,
-              width: 160,
               keyboardType: TextInputType.number,
             ),
             _FilterTextField(
@@ -195,86 +191,214 @@ class _ResidentsFiltersContent
               onSubmitted: (_) => controller.applyResidentsFilters(),
             ),
             Obx(
-              () => SizedBox(
-                width: 220,
-                child: DropdownButtonFormField<bool?>(
-                  value: controller.residentsIsMain.value,
-                  decoration:
-                      _filterDecoration(context, 'Es residente principal'),
-                  items: const [
-                    DropdownMenuItem<bool?>(
-                      value: null,
-                      child: Text('Todos'),
-                    ),
-                    DropdownMenuItem<bool?>(
-                      value: true,
-                      child: Text('Sí'),
-                    ),
-                    DropdownMenuItem<bool?>(
-                      value: false,
-                      child: Text('No'),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    controller.residentsIsMain.value = value;
-                  },
-                ),
+              () => DropdownButtonFormField<bool?>(
+                value: controller.residentsIsMain.value,
+                decoration:
+                    _filterDecoration(context, 'Es residente principal'),
+                items: const [
+                  DropdownMenuItem<bool?>(
+                    value: null,
+                    child: Text('Todos'),
+                  ),
+                  DropdownMenuItem<bool?>(
+                    value: true,
+                    child: Text('Sí'),
+                  ),
+                  DropdownMenuItem<bool?>(
+                    value: false,
+                    child: Text('No'),
+                  ),
+                ],
+                onChanged: (value) {
+                  controller.residentsIsMain.value = value;
+                },
               ),
             ),
             Obx(
-              () => SizedBox(
-                width: 200,
-                child: DropdownButtonFormField<bool?>(
-                  value: controller.residentsIsActive.value,
-                  decoration: _filterDecoration(context, 'Estado'),
-                  items: const [
-                    DropdownMenuItem<bool?>(
-                      value: null,
-                      child: Text('Todos'),
-                    ),
-                    DropdownMenuItem<bool?>(
-                      value: true,
-                      child: Text('Activos'),
-                    ),
-                    DropdownMenuItem<bool?>(
-                      value: false,
-                      child: Text('Inactivos'),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    controller.residentsIsActive.value = value;
-                  },
-                ),
+              () => DropdownButtonFormField<bool?>(
+                value: controller.residentsIsActive.value,
+                decoration: _filterDecoration(context, 'Estado'),
+                items: const [
+                  DropdownMenuItem<bool?>(
+                    value: null,
+                    child: Text('Todos'),
+                  ),
+                  DropdownMenuItem<bool?>(
+                    value: true,
+                    child: Text('Activos'),
+                  ),
+                  DropdownMenuItem<bool?>(
+                    value: false,
+                    child: Text('Inactivos'),
+                  ),
+                ],
+                onChanged: (value) {
+                  controller.residentsIsActive.value = value;
+                },
               ),
             ),
           ],
         ),
+        const SizedBox(height: 12),
+        Obx(() {
+          final _ = controller.filtersRevision.value;
+          final chips = _buildActiveFilters();
+          return AnimatedSwitcher(
+            duration: const Duration(milliseconds: 250),
+            child: chips.isEmpty
+                ? const SizedBox.shrink()
+                : Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: _ActiveFiltersBar(
+                      filters: chips,
+                      onClearAll: () {
+                        controller.clearResidentsFilters();
+                        controller.applyResidentsFilters();
+                      },
+                    ),
+                  ),
+          );
+        }),
         const SizedBox(height: 16),
-        Align(
-          alignment: Alignment.centerRight,
-          child: Wrap(
-            spacing: 12,
-            runSpacing: 8,
-            alignment: WrapAlignment.end,
-            children: [
-              TextButton.icon(
-                onPressed: () {
-                  controller.clearResidentsFilters();
-                  controller.applyResidentsFilters();
-                },
-                icon: const Icon(Icons.cleaning_services_outlined),
-                label: const Text('Limpiar filtros'),
-              ),
-              FilledButton.icon(
-                onPressed: controller.applyResidentsFilters,
-                icon: const Icon(Icons.filter_alt_outlined),
-                label: const Text('Aplicar filtros'),
-              ),
-            ],
-          ),
-        ),
+        Obx(() {
+          final busy = controller.residentsLoading.value ||
+              controller.residentsLoadingMore.value;
+          return _FilterActionsRow(
+            onClear: () {
+              controller.clearResidentsFilters();
+              controller.applyResidentsFilters();
+            },
+            onApply: () => controller.applyResidentsFilters(),
+            isBusy: busy,
+          );
+        }),
       ],
     );
+  }
+
+  List<_ActiveFilterChipData> _buildActiveFilters() {
+    final filters = <_ActiveFilterChipData>[];
+    final page = controller.residentsPageCtrl.text.trim();
+    if (page.isNotEmpty && page != '1') {
+      filters.add(
+        _ActiveFilterChipData(
+          label: 'Página $page',
+          onRemove: () {
+            controller.residentsPageCtrl.text = '1';
+            controller.applyResidentsFilters();
+          },
+        ),
+      );
+    }
+    final pageSize = controller.residentsPageSizeCtrl.text.trim();
+    if (pageSize.isNotEmpty && pageSize != '12') {
+      filters.add(
+        _ActiveFilterChipData(
+          label: 'Tamaño $pageSize',
+          onRemove: () {
+            controller.residentsPageSizeCtrl.text = '12';
+            controller.applyResidentsFilters();
+          },
+        ),
+      );
+    }
+    final name = controller.residentsNameCtrl.text.trim();
+    if (name.isNotEmpty) {
+      filters.add(
+        _ActiveFilterChipData(
+          label: 'Nombre "$name"',
+          onRemove: () {
+            controller.residentsNameCtrl.clear();
+            controller.applyResidentsFilters();
+          },
+        ),
+      );
+    }
+    final email = controller.residentsEmailCtrl.text.trim();
+    if (email.isNotEmpty) {
+      filters.add(
+        _ActiveFilterChipData(
+          label: 'Correo $email',
+          onRemove: () {
+            controller.residentsEmailCtrl.clear();
+            controller.applyResidentsFilters();
+          },
+        ),
+      );
+    }
+    final phone = controller.residentsPhoneCtrl.text.trim();
+    if (phone.isNotEmpty) {
+      filters.add(
+        _ActiveFilterChipData(
+          label: 'Teléfono $phone',
+          onRemove: () {
+            controller.residentsPhoneCtrl.clear();
+            controller.applyResidentsFilters();
+          },
+        ),
+      );
+    }
+    final unit = controller.residentsUnitNumberCtrl.text.trim();
+    if (unit.isNotEmpty) {
+      filters.add(
+        _ActiveFilterChipData(
+          label: 'Unidad $unit',
+          onRemove: () {
+            controller.residentsUnitNumberCtrl.clear();
+            controller.applyResidentsFilters();
+          },
+        ),
+      );
+    }
+    final type = controller.residentsTypeCtrl.text.trim();
+    if (type.isNotEmpty) {
+      filters.add(
+        _ActiveFilterChipData(
+          label: 'Tipo $type',
+          onRemove: () {
+            controller.residentsTypeCtrl.clear();
+            controller.applyResidentsFilters();
+          },
+        ),
+      );
+    }
+    final search = controller.residentsSearchCtrl.text.trim();
+    if (search.isNotEmpty) {
+      filters.add(
+        _ActiveFilterChipData(
+          label: 'Busca "$search"',
+          onRemove: () {
+            controller.residentsSearchCtrl.clear();
+            controller.applyResidentsFilters();
+          },
+        ),
+      );
+    }
+    final isMain = controller.residentsIsMain.value;
+    if (isMain != null) {
+      filters.add(
+        _ActiveFilterChipData(
+          label: isMain ? 'Casa principal' : 'No principal',
+          onRemove: () {
+            controller.residentsIsMain.value = null;
+            controller.applyResidentsFilters();
+          },
+        ),
+      );
+    }
+    final status = controller.residentsIsActive.value;
+    if (status != null) {
+      filters.add(
+        _ActiveFilterChipData(
+          label: status ? 'Activos' : 'Inactivos',
+          onRemove: () {
+            controller.residentsIsActive.value = null;
+            controller.applyResidentsFilters();
+          },
+        ),
+      );
+    }
+    return filters;
   }
 }
 

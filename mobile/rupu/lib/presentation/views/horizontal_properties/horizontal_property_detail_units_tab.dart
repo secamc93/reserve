@@ -145,20 +145,16 @@ class _UnitsFiltersContent extends GetWidget<HorizontalPropertyUnitsController> 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
+        _ResponsiveFormGrid(
           children: [
             _FilterTextField(
               label: 'Página',
               controller: controller.unitsPageCtrl,
-              width: 120,
               keyboardType: TextInputType.number,
             ),
             _FilterTextField(
               label: 'Tamaño de página',
               controller: controller.unitsPageSizeCtrl,
-              width: 160,
               keyboardType: TextInputType.number,
             ),
             _FilterTextField(
@@ -180,59 +176,154 @@ class _UnitsFiltersContent extends GetWidget<HorizontalPropertyUnitsController> 
               onSubmitted: (_) => controller.applyUnitsFilters(),
             ),
             Obx(
-              () => SizedBox(
-                width: 200,
-                child: DropdownButtonFormField<bool?>(
-                  value: controller.unitsIsActive.value,
-                  decoration: _filterDecoration(context, 'Estado'),
-                  items: const [
-                    DropdownMenuItem<bool?>(
-                      value: null,
-                      child: Text('Todos'),
-                    ),
-                    DropdownMenuItem<bool?>(
-                      value: true,
-                      child: Text('Activos'),
-                    ),
-                    DropdownMenuItem<bool?>(
-                      value: false,
-                      child: Text('Inactivos'),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    controller.unitsIsActive.value = value;
-                  },
-                ),
+              () => DropdownButtonFormField<bool?>(
+                value: controller.unitsIsActive.value,
+                decoration: _filterDecoration(context, 'Estado'),
+                items: const [
+                  DropdownMenuItem<bool?>(
+                    value: null,
+                    child: Text('Todos'),
+                  ),
+                  DropdownMenuItem<bool?>(
+                    value: true,
+                    child: Text('Activos'),
+                  ),
+                  DropdownMenuItem<bool?>(
+                    value: false,
+                    child: Text('Inactivos'),
+                  ),
+                ],
+                onChanged: (value) {
+                  controller.unitsIsActive.value = value;
+                },
               ),
             ),
           ],
         ),
+        const SizedBox(height: 12),
+        Obx(() {
+          final _ = controller.filtersRevision.value;
+          final chips = _buildActiveFilters();
+          return AnimatedSwitcher(
+            duration: const Duration(milliseconds: 250),
+            child: chips.isEmpty
+                ? const SizedBox.shrink()
+                : Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: _ActiveFiltersBar(
+                      filters: chips,
+                      onClearAll: () {
+                        controller.clearUnitsFilters();
+                        controller.applyUnitsFilters();
+                      },
+                    ),
+                  ),
+          );
+        }),
         const SizedBox(height: 16),
-        Align(
-          alignment: Alignment.centerRight,
-          child: Wrap(
-            spacing: 12,
-            runSpacing: 8,
-            alignment: WrapAlignment.end,
-            children: [
-              TextButton.icon(
-                onPressed: () {
-                  controller.clearUnitsFilters();
-                  controller.applyUnitsFilters();
-                },
-                icon: const Icon(Icons.cleaning_services_outlined),
-                label: const Text('Limpiar filtros'),
-              ),
-              FilledButton.icon(
-                onPressed: controller.applyUnitsFilters,
-                icon: const Icon(Icons.filter_alt_outlined),
-                label: const Text('Aplicar filtros'),
-              ),
-            ],
-          ),
-        ),
+        Obx(() {
+          final busy =
+              controller.unitsLoading.value || controller.unitsLoadingMore.value;
+          return _FilterActionsRow(
+            onClear: () {
+              controller.clearUnitsFilters();
+              controller.applyUnitsFilters();
+            },
+            onApply: () => controller.applyUnitsFilters(),
+            isBusy: busy,
+          );
+        }),
       ],
     );
+  }
+
+  List<_ActiveFilterChipData> _buildActiveFilters() {
+    final filters = <_ActiveFilterChipData>[];
+    final page = controller.unitsPageCtrl.text.trim();
+    if (page.isNotEmpty && page != '1') {
+      filters.add(
+        _ActiveFilterChipData(
+          label: 'Página $page',
+          onRemove: () {
+            controller.unitsPageCtrl.text = '1';
+            controller.applyUnitsFilters();
+          },
+        ),
+      );
+    }
+    final pageSize = controller.unitsPageSizeCtrl.text.trim();
+    if (pageSize.isNotEmpty && pageSize != '12') {
+      filters.add(
+        _ActiveFilterChipData(
+          label: 'Tamaño $pageSize',
+          onRemove: () {
+            controller.unitsPageSizeCtrl.text = '12';
+            controller.applyUnitsFilters();
+          },
+        ),
+      );
+    }
+    final number = controller.unitsNumberCtrl.text.trim();
+    if (number.isNotEmpty) {
+      filters.add(
+        _ActiveFilterChipData(
+          label: 'Unidad $number',
+          onRemove: () {
+            controller.unitsNumberCtrl.clear();
+            controller.applyUnitsFilters();
+          },
+        ),
+      );
+    }
+    final block = controller.unitsBlockCtrl.text.trim();
+    if (block.isNotEmpty) {
+      filters.add(
+        _ActiveFilterChipData(
+          label: 'Bloque $block',
+          onRemove: () {
+            controller.unitsBlockCtrl.clear();
+            controller.applyUnitsFilters();
+          },
+        ),
+      );
+    }
+    final unitType = controller.unitsTypeCtrl.text.trim();
+    if (unitType.isNotEmpty) {
+      filters.add(
+        _ActiveFilterChipData(
+          label: 'Tipo $unitType',
+          onRemove: () {
+            controller.unitsTypeCtrl.clear();
+            controller.applyUnitsFilters();
+          },
+        ),
+      );
+    }
+    final search = controller.unitsSearchCtrl.text.trim();
+    if (search.isNotEmpty) {
+      filters.add(
+        _ActiveFilterChipData(
+          label: 'Busca "$search"',
+          onRemove: () {
+            controller.unitsSearchCtrl.clear();
+            controller.applyUnitsFilters();
+          },
+        ),
+      );
+    }
+    final status = controller.unitsIsActive.value;
+    if (status != null) {
+      filters.add(
+        _ActiveFilterChipData(
+          label: status ? 'Activas' : 'Inactivas',
+          onRemove: () {
+            controller.unitsIsActive.value = null;
+            controller.applyUnitsFilters();
+          },
+        ),
+      );
+    }
+    return filters;
   }
 }
 

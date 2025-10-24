@@ -23,6 +23,7 @@ class HorizontalPropertyUnitsController extends GetxController {
   final unitsLoading = false.obs;
   final unitsLoadingMore = false.obs;
   final unitsErrorMessage = RxnString();
+  final filtersRevision = 0.obs;
 
   // Filters
   final unitsPageCtrl = TextEditingController(text: '1');
@@ -32,11 +33,30 @@ class HorizontalPropertyUnitsController extends GetxController {
   final unitsTypeCtrl = TextEditingController();
   final unitsSearchCtrl = TextEditingController();
   final unitsIsActive = RxnBool();
+  late final VoidCallback _filtersListener;
+  Worker? _statusWorker;
 
   bool get canLoadMoreUnits {
     final page = unitsPage.value?.page ?? 0;
     final totalPages = unitsPage.value?.totalPages ?? 0;
     return page < totalPages;
+  }
+
+  @override
+  void onInit() {
+    super.onInit();
+    _filtersListener = () => filtersRevision.value++;
+    for (final controller in [
+      unitsPageCtrl,
+      unitsPageSizeCtrl,
+      unitsNumberCtrl,
+      unitsBlockCtrl,
+      unitsTypeCtrl,
+      unitsSearchCtrl,
+    ]) {
+      controller.addListener(_filtersListener);
+    }
+    _statusWorker = ever(unitsIsActive, (_) => filtersRevision.value++);
   }
 
   @override
@@ -142,6 +162,17 @@ class HorizontalPropertyUnitsController extends GetxController {
 
   @override
   void onClose() {
+    for (final controller in [
+      unitsPageCtrl,
+      unitsPageSizeCtrl,
+      unitsNumberCtrl,
+      unitsBlockCtrl,
+      unitsTypeCtrl,
+      unitsSearchCtrl,
+    ]) {
+      controller.removeListener(_filtersListener);
+    }
+    _statusWorker?.dispose();
     unitsPageCtrl.dispose();
     unitsPageSizeCtrl.dispose();
     unitsNumberCtrl.dispose();

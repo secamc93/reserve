@@ -360,7 +360,6 @@ class _SummaryHeader extends StatelessWidget {
 class _FilterTextField extends StatelessWidget {
   final String label;
   final TextEditingController controller;
-  final double width;
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
   final ValueChanged<String>? onSubmitted;
@@ -368,7 +367,6 @@ class _FilterTextField extends StatelessWidget {
   const _FilterTextField({
     required this.label,
     required this.controller,
-    this.width = 200,
     this.keyboardType,
     this.textInputAction,
     this.onSubmitted,
@@ -376,14 +374,214 @@ class _FilterTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: width,
-      child: TextField(
-        controller: controller,
-        keyboardType: keyboardType,
-        textInputAction: textInputAction ?? TextInputAction.next,
-        onSubmitted: onSubmitted,
-        decoration: _filterDecoration(context, label),
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      textInputAction: textInputAction ?? TextInputAction.next,
+      onSubmitted: onSubmitted,
+      maxLines: 1,
+      decoration: _filterDecoration(context, label),
+    );
+  }
+}
+
+class _ResponsiveFormGrid extends StatelessWidget {
+  final List<Widget> children;
+  final double minChildWidth;
+
+  const _ResponsiveFormGrid({
+    required this.children,
+    this.minChildWidth = 220,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (children.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        var maxWidth = constraints.maxWidth;
+        if (!maxWidth.isFinite) {
+          maxWidth = MediaQuery.of(context).size.width;
+        }
+        int columns;
+        if (maxWidth >= 1200) {
+          columns = 4;
+        } else if (maxWidth >= 900) {
+          columns = 3;
+        } else if (maxWidth >= 620) {
+          columns = 2;
+        } else {
+          columns = 1;
+        }
+        columns = columns.clamp(1, children.length) as int;
+        final spacing = 12.0;
+        final totalSpacing = spacing * (columns - 1);
+        final availableWidth = maxWidth - totalSpacing;
+        double childWidth;
+        if (columns == 1) {
+          childWidth = maxWidth;
+        } else {
+          childWidth = availableWidth / columns;
+          if (childWidth < minChildWidth) {
+            childWidth = minChildWidth;
+          }
+          if (childWidth > maxWidth) {
+            childWidth = maxWidth;
+          }
+        }
+        return Wrap(
+          spacing: spacing,
+          runSpacing: 12,
+          children: children
+              .map(
+                (child) => SizedBox(
+                  width: columns == 1 ? maxWidth : childWidth,
+                  child: child,
+                ),
+              )
+              .toList(),
+        );
+      },
+    );
+  }
+}
+
+class _FilterActionsRow extends StatelessWidget {
+  final VoidCallback onClear;
+  final VoidCallback onApply;
+  final bool isBusy;
+
+  const _FilterActionsRow({
+    required this.onClear,
+    required this.onApply,
+    this.isBusy = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 520;
+        final clearButton = TextButton.icon(
+          onPressed: isBusy ? null : onClear,
+          icon: const Icon(Icons.cleaning_services_outlined),
+          label: const Text('Limpiar filtros'),
+        );
+        final applyButton = FilledButton.icon(
+          onPressed: isBusy ? null : onApply,
+          icon: const Icon(Icons.filter_alt_outlined),
+          label: const Text('Aplicar filtros'),
+        );
+        if (isCompact) {
+          final width = constraints.maxWidth == double.infinity
+              ? MediaQuery.of(context).size.width
+              : constraints.maxWidth;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                height: 44,
+                width: width,
+                child: clearButton,
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 44,
+                width: width,
+                child: applyButton,
+              ),
+            ],
+          );
+        }
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            SizedBox(height: 44, child: clearButton),
+            const SizedBox(width: 12),
+            SizedBox(height: 44, child: applyButton),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _ActiveFilterChipData {
+  final String label;
+  final VoidCallback onRemove;
+
+  const _ActiveFilterChipData({
+    required this.label,
+    required this.onRemove,
+  });
+}
+
+class _ActiveFiltersBar extends StatelessWidget {
+  final List<_ActiveFilterChipData> filters;
+  final VoidCallback? onClearAll;
+
+  const _ActiveFiltersBar({
+    required this.filters,
+    this.onClearAll,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (filters.isEmpty) return const SizedBox.shrink();
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: cs.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.tune, size: 18, color: cs.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Filtros activos (${filters.length})',
+                  style: tt.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
+              if (onClearAll != null)
+                TextButton(
+                  onPressed: onClearAll,
+                  child: const Text('Limpiar todo'),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: filters
+                .map(
+                  (filter) => InputChip(
+                    label: Text(filter.label),
+                    onDeleted: filter.onRemove,
+                    deleteIcon: const Icon(Icons.close, size: 16),
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    labelStyle: tt.bodyMedium,
+                    backgroundColor: cs.surface,
+                    shape: StadiumBorder(
+                      side: BorderSide(color: cs.outlineVariant),
+                    ),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                )
+                .toList(),
+          ),
+        ],
       ),
     );
   }
