@@ -48,8 +48,8 @@ class _DashboardTab extends GetWidget<HorizontalPropertyDashboardController> {
                   MetricItem(
                     icon: Icons.apartment_outlined,
                     title: 'Unidades',
-                    value:
-                        (unitsController.unitsPage.value?.total ?? 0).toDouble(),
+                    value: (unitsController.unitsPage.value?.total ?? 0)
+                        .toDouble(),
                     accent: cs.primary,
                   ),
                   MetricItem(
@@ -63,8 +63,9 @@ class _DashboardTab extends GetWidget<HorizontalPropertyDashboardController> {
                     icon: Icons.how_to_vote_outlined,
                     title: 'Grupos votación',
                     value: votingController.firstVotingGroupId?.toDouble() ?? 0,
-                    suffix:
-                        votingController.firstVotingGroupId == null ? '--' : null,
+                    suffix: votingController.firstVotingGroupId == null
+                        ? '--'
+                        : null,
                     accent: cs.tertiary,
                   ),
                   MetricItem(
@@ -79,7 +80,7 @@ class _DashboardTab extends GetWidget<HorizontalPropertyDashboardController> {
 
               const SizedBox(height: 22),
 
-              _SectionCard(
+              SectionCard(
                 title: 'Información general',
                 child: Column(
                   children: [

@@ -20,7 +20,7 @@ class _VotingTab extends GetWidget<HorizontalPropertyVotingController> {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
           children: [
-            _SummaryHeader(
+            SummaryHeader(
               title: 'Grupos de votación',
               subtitle: groups.isEmpty
                   ? 'Sin grupos registrados'
@@ -42,10 +42,12 @@ class _VotingTab extends GetWidget<HorizontalPropertyVotingController> {
               )
             else ...[
               ...groups
-                  .map((group) => Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: _VotingGroupCard(group: group),
-                      ))
+                  .map(
+                    (group) => Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: _VotingGroupCard(group: group),
+                    ),
+                  )
                   .toList(),
             ],
           ],

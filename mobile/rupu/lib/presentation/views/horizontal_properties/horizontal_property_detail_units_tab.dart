@@ -25,8 +25,8 @@ class _UnitsTab extends GetWidget<HorizontalPropertyUnitsController> {
           final crossAxis = width >= 1200
               ? 3
               : width >= 900
-                  ? 2
-                  : 1;
+              ? 2
+              : 1;
           final aspect = crossAxis == 1 ? 1.18 : 1.05;
 
           return RefreshIndicator(
@@ -50,16 +50,18 @@ class _UnitsTab extends GetWidget<HorizontalPropertyUnitsController> {
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
                     sliver: SliverToBoxAdapter(
-                      child: _SectionCard(
+                      child: SectionCard(
                         title: 'Filtros de unidades',
-                        child: _UnitsFiltersContent(controllerTag: controllerTag),
+                        child: _UnitsFiltersContent(
+                          controllerTag: controllerTag,
+                        ),
                       ),
                     ),
                   ),
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                     sliver: SliverToBoxAdapter(
-                      child: _SummaryHeader(
+                      child: SummaryHeader(
                         title: 'Unidades encontradas: $total',
                         subtitle: 'Página $page de $totalPages',
                         showProgress: isLoading,
@@ -90,8 +92,7 @@ class _UnitsTab extends GetWidget<HorizontalPropertyUnitsController> {
                     SliverPadding(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                       sliver: SliverGrid(
-                        gridDelegate:
-                            SliverGridDelegateWithFixedCrossAxisCount(
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: crossAxis,
                           mainAxisSpacing: 16,
                           crossAxisSpacing: 16,
@@ -110,15 +111,16 @@ class _UnitsTab extends GetWidget<HorizontalPropertyUnitsController> {
                           child: isLoadingMore
                               ? const Padding(
                                   padding: EdgeInsets.symmetric(vertical: 16),
-                                  child:
-                                      CircularProgressIndicator(strokeWidth: 2.6),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.6,
+                                  ),
                                 )
                               : (!controller.canLoadMoreUnits &&
-                                      units.isNotEmpty
-                                  ? const Text(
-                                      'No hay más unidades para cargar.',
-                                    )
-                                  : const SizedBox.shrink()),
+                                        units.isNotEmpty
+                                    ? const Text(
+                                        'No hay más unidades para cargar.',
+                                      )
+                                    : const SizedBox.shrink()),
                         ),
                       ),
                     ),
@@ -133,7 +135,8 @@ class _UnitsTab extends GetWidget<HorizontalPropertyUnitsController> {
   }
 }
 
-class _UnitsFiltersContent extends GetWidget<HorizontalPropertyUnitsController> {
+class _UnitsFiltersContent
+    extends GetWidget<HorizontalPropertyUnitsController> {
   final String controllerTag;
   const _UnitsFiltersContent({required this.controllerTag});
 
@@ -145,31 +148,31 @@ class _UnitsFiltersContent extends GetWidget<HorizontalPropertyUnitsController> 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _ResponsiveFormGrid(
+        ResponsiveFormGrid(
           children: [
-            _FilterTextField(
+            FilterTextField(
               label: 'Página',
               controller: controller.unitsPageCtrl,
               keyboardType: TextInputType.number,
             ),
-            _FilterTextField(
+            FilterTextField(
               label: 'Tamaño de página',
               controller: controller.unitsPageSizeCtrl,
               keyboardType: TextInputType.number,
             ),
-            _FilterTextField(
+            FilterTextField(
               label: 'Número de unidad',
               controller: controller.unitsNumberCtrl,
             ),
-            _FilterTextField(
+            FilterTextField(
               label: 'Bloque',
               controller: controller.unitsBlockCtrl,
             ),
-            _FilterTextField(
+            FilterTextField(
               label: 'Tipo de unidad',
               controller: controller.unitsTypeCtrl,
             ),
-            _FilterTextField(
+            FilterTextField(
               label: 'Buscar',
               controller: controller.unitsSearchCtrl,
               textInputAction: TextInputAction.search,
@@ -177,17 +180,11 @@ class _UnitsFiltersContent extends GetWidget<HorizontalPropertyUnitsController> 
             ),
             Obx(
               () => DropdownButtonFormField<bool?>(
-                value: controller.unitsIsActive.value,
+                initialValue: controller.unitsIsActive.value,
                 decoration: _filterDecoration(context, 'Estado'),
                 items: const [
-                  DropdownMenuItem<bool?>(
-                    value: null,
-                    child: Text('Todos'),
-                  ),
-                  DropdownMenuItem<bool?>(
-                    value: true,
-                    child: Text('Activos'),
-                  ),
+                  DropdownMenuItem<bool?>(value: null, child: Text('Todos')),
+                  DropdownMenuItem<bool?>(value: true, child: Text('Activos')),
                   DropdownMenuItem<bool?>(
                     value: false,
                     child: Text('Inactivos'),
@@ -223,7 +220,8 @@ class _UnitsFiltersContent extends GetWidget<HorizontalPropertyUnitsController> 
         const SizedBox(height: 16),
         Obx(() {
           final busy =
-              controller.unitsLoading.value || controller.unitsLoadingMore.value;
+              controller.unitsLoading.value ||
+              controller.unitsLoadingMore.value;
           return _FilterActionsRow(
             onClear: () {
               controller.clearUnitsFilters();
@@ -361,10 +359,7 @@ class _UnitCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  cs.primary.withValues(alpha: .14),
-                  cs.surface,
-                ],
+                colors: [cs.primary.withValues(alpha: .14), cs.surface],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -493,9 +488,7 @@ class _DetailLine extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   value.isEmpty ? '—' : value,
-                  style: tt.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                 ),
               ],
             ),

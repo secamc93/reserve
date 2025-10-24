@@ -25,10 +25,10 @@ class _MetricsGrid extends StatelessWidget {
     final crossAxis = width >= 1000
         ? 4
         : width >= 700
-            ? 3
-            : width >= 480
-                ? 2
-                : 1;
+        ? 3
+        : width >= 480
+        ? 2
+        : 1;
 
     return GridView.builder(
       physics: const NeverScrollableScrollPhysics(),
@@ -140,10 +140,51 @@ class _AnimatedMetric extends StatelessWidget {
   }
 }
 
-class _SectionCard extends StatelessWidget {
-  const _SectionCard({required this.title, required this.child});
+// ─────────────────────────────────────────────────────────────
+// SECTION CARD PREMIUM (con header, acciones, colapsable y grid)
+// ─────────────────────────────────────────────────────────────
+class SectionCard extends StatefulWidget {
+  const SectionCard({
+    required this.title,
+    this.child, // Compatibilidad: si lo pasas, se muestra tal cual
+    this.subtitle,
+    this.leadingIcon,
+    this.headerActions,
+    this.gridFields, // Si lo pasas, se renderiza como grid responsivo
+    this.footer, // Ideal para acciones: aplicar/limpiar
+    this.collapsible = false, // Header clicable para colapsar/expandir
+    this.initiallyExpanded = true,
+    this.contentPadding = const EdgeInsets.fromLTRB(16, 14, 16, 14),
+    this.gap = 12,
+  });
+
   final String title;
-  final Widget child;
+  final String? subtitle;
+  final IconData? leadingIcon;
+  final List<Widget>? headerActions;
+
+  // Layout del body: usa uno u otro
+  final Widget? child; // layout libre (compat)
+  final List<Widget>? gridFields; // layout premium (grid responsivo)
+
+  final Widget? footer; // zona inferior (botones, tags, etc.)
+  final bool collapsible;
+  final bool initiallyExpanded;
+  final EdgeInsets contentPadding;
+  final double gap;
+
+  @override
+  State<SectionCard> createState() => _SectionCardState();
+}
+
+class _SectionCardState extends State<SectionCard> {
+  late bool _expanded;
+
+  @override
+  void initState() {
+    super.initState();
+    _expanded = widget.initiallyExpanded;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -163,20 +204,144 @@ class _SectionCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: tt.titleMedium!.copyWith(fontWeight: FontWeight.w800),
+      child: Column(
+        children: [
+          // Header
+          InkWell(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            onTap: widget.collapsible
+                ? () => setState(() => _expanded = !_expanded)
+                : null,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+              child: Row(
+                children: [
+                  if (widget.leadingIcon != null) ...[
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: cs.primary.withValues(alpha: .08),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: cs.primary.withValues(alpha: .18),
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(widget.leadingIcon, color: cs.primary),
+                    ),
+                    const SizedBox(width: 10),
+                  ],
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.title,
+                          style: tt.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: cs.onSurface,
+                          ),
+                        ),
+                        if (widget.subtitle?.isNotEmpty == true) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            widget.subtitle!,
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  if (widget.headerActions?.isNotEmpty == true) ...[
+                    ...widget.headerActions!,
+                    const SizedBox(width: 4),
+                  ],
+                  if (widget.collapsible)
+                    Icon(
+                      _expanded
+                          ? Icons.expand_less_rounded
+                          : Icons.expand_more_rounded,
+                      color: cs.onSurfaceVariant,
+                    ),
+                ],
+              ),
             ),
-            const SizedBox(height: 10),
-            child,
-          ],
-        ),
+          ),
+
+          // Divider sutil
+          Divider(height: 1, thickness: 1, color: cs.outlineVariant),
+
+          // Body (animado)
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: Padding(
+              padding: widget.contentPadding,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (widget.gridFields?.isNotEmpty == true) ...[
+                    ResponsiveFormGrid(children: widget.gridFields!),
+                  ] else if (widget.child != null) ...[
+                    widget.child!,
+                  ],
+
+                  if (widget.footer != null) ...[
+                    SizedBox(height: widget.gap),
+                    widget.footer!,
+                  ],
+                ],
+              ),
+            ),
+            crossFadeState: _expanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 200),
+          ),
+        ],
       ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// INPUTS PREMIUM DE FILTRO (TextField y Dropdown)
+// ─────────────────────────────────────────────────────────────
+
+class FilterTextField extends StatelessWidget {
+  final String label;
+  final TextEditingController controller;
+  final TextInputType? keyboardType;
+  final TextInputAction? textInputAction;
+  final ValueChanged<String>? onSubmitted;
+  final IconData? prefixIcon;
+  final String? hint;
+
+  const FilterTextField({
+    required this.label,
+    required this.controller,
+    this.keyboardType,
+    this.textInputAction,
+    this.onSubmitted,
+    this.prefixIcon,
+    this.hint,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final deco = _filterDecoration(context, label, hint: hint);
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      textInputAction: textInputAction ?? TextInputAction.next,
+      onSubmitted: onSubmitted,
+      maxLines: 1,
+      decoration: prefixIcon == null
+          ? deco
+          : deco.copyWith(prefixIcon: Icon(prefixIcon)),
     );
   }
 }
@@ -304,13 +469,13 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-class _SummaryHeader extends StatelessWidget {
+class SummaryHeader extends StatelessWidget {
   final String title;
   final String subtitle;
   final bool showProgress;
   final VoidCallback onRefresh;
 
-  const _SummaryHeader({
+  const SummaryHeader({
     required this.title,
     required this.subtitle,
     required this.showProgress,
@@ -357,42 +522,39 @@ class _SummaryHeader extends StatelessWidget {
   }
 }
 
-class _FilterTextField extends StatelessWidget {
-  final String label;
-  final TextEditingController controller;
-  final TextInputType? keyboardType;
-  final TextInputAction? textInputAction;
-  final ValueChanged<String>? onSubmitted;
+// class _FilterTextField extends StatelessWidget {
+//   final String label;
+//   final TextEditingController controller;
+//   final TextInputType? keyboardType;
+//   final TextInputAction? textInputAction;
+//   final ValueChanged<String>? onSubmitted;
 
-  const _FilterTextField({
-    required this.label,
-    required this.controller,
-    this.keyboardType,
-    this.textInputAction,
-    this.onSubmitted,
-  });
+//   const _FilterTextField({
+//     required this.label,
+//     required this.controller,
+//     this.keyboardType,
+//     this.textInputAction,
+//     this.onSubmitted,
+//   });
 
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      keyboardType: keyboardType,
-      textInputAction: textInputAction ?? TextInputAction.next,
-      onSubmitted: onSubmitted,
-      maxLines: 1,
-      decoration: _filterDecoration(context, label),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return TextField(
+//       controller: controller,
+//       keyboardType: keyboardType,
+//       textInputAction: textInputAction ?? TextInputAction.next,
+//       onSubmitted: onSubmitted,
+//       maxLines: 1,
+//       decoration: _filterDecoration(context, label),
+//     );
+//   }
+// }
 
-class _ResponsiveFormGrid extends StatelessWidget {
+class ResponsiveFormGrid extends StatelessWidget {
   final List<Widget> children;
   final double minChildWidth;
 
-  const _ResponsiveFormGrid({
-    required this.children,
-    this.minChildWidth = 220,
-  });
+  const ResponsiveFormGrid({required this.children, this.minChildWidth = 220});
 
   @override
   Widget build(BuildContext context) {
@@ -415,7 +577,7 @@ class _ResponsiveFormGrid extends StatelessWidget {
         } else {
           columns = 1;
         }
-        columns = columns.clamp(1, children.length) as int;
+        columns = columns.clamp(1, children.length);
         final spacing = 12.0;
         final totalSpacing = spacing * (columns - 1);
         final availableWidth = maxWidth - totalSpacing;
@@ -481,17 +643,9 @@ class _FilterActionsRow extends StatelessWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              SizedBox(
-                height: 44,
-                width: width,
-                child: clearButton,
-              ),
+              SizedBox(height: 44, width: width, child: clearButton),
               const SizedBox(height: 8),
-              SizedBox(
-                height: 44,
-                width: width,
-                child: applyButton,
-              ),
+              SizedBox(height: 44, width: width, child: applyButton),
             ],
           );
         }
@@ -512,20 +666,14 @@ class _ActiveFilterChipData {
   final String label;
   final VoidCallback onRemove;
 
-  const _ActiveFilterChipData({
-    required this.label,
-    required this.onRemove,
-  });
+  const _ActiveFilterChipData({required this.label, required this.onRemove});
 }
 
 class _ActiveFiltersBar extends StatelessWidget {
   final List<_ActiveFilterChipData> filters;
   final VoidCallback? onClearAll;
 
-  const _ActiveFiltersBar({
-    required this.filters,
-    this.onClearAll,
-  });
+  const _ActiveFiltersBar({required this.filters, this.onClearAll});
 
   @override
   Widget build(BuildContext context) {
@@ -587,8 +735,11 @@ class _ActiveFiltersBar extends StatelessWidget {
   }
 }
 
-InputDecoration _filterDecoration(BuildContext context, String label,
-    {String? hint}) {
+InputDecoration _filterDecoration(
+  BuildContext context,
+  String label, {
+  String? hint,
+}) {
   final cs = Theme.of(context).colorScheme;
   return InputDecoration(
     labelText: label,
@@ -597,9 +748,7 @@ InputDecoration _filterDecoration(BuildContext context, String label,
     filled: true,
     fillColor: cs.surfaceContainerHighest,
     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-    ),
+    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
       borderSide: BorderSide(color: cs.outlineVariant),
