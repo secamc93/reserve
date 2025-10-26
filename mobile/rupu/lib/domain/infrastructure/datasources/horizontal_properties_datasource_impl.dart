@@ -1,4 +1,9 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:mime/mime.dart';
+import 'package:path/path.dart' as p;
 import 'package:rupu/config/dio/authenticated_dio.dart';
 import 'package:rupu/domain/datasource/horizontal_properties_datasource.dart';
 import 'package:rupu/domain/infrastructure/models/horizontal_properties_response_model.dart';
@@ -65,8 +70,18 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
   Future<HorizontalPropertyDetailResponseModel> updateHorizontalProperty({
     required int id,
     required Map<String, dynamic> data,
+    String? logoFilePath,
+    String? logoFileName,
+    String? navbarImagePath,
+    String? navbarImageFileName,
   }) async {
-    final formData = FormData.fromMap(data);
+    final formData = await _buildFormData(
+      map: data,
+      logoFilePath: logoFilePath,
+      logoFileName: logoFileName,
+      navbarImagePath: navbarImagePath,
+      navbarImageFileName: navbarImageFileName,
+    );
     final response = await _dio.put(
       '/horizontal-properties/$id',
       data: formData,
@@ -74,6 +89,55 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
     return HorizontalPropertyDetailResponseModel.fromJson(
       response.data as Map<String, dynamic>,
     );
+  }
+
+  Future<FormData> _buildFormData({
+    required Map<String, dynamic> map,
+    String? logoFilePath,
+    String? logoFileName,
+    String? navbarImagePath,
+    String? navbarImageFileName,
+  }) async {
+    final payload = Map<String, dynamic>.from(map);
+
+    Future<void> attachFile({
+      required String field,
+      String? path,
+      String? preferredName,
+    }) async {
+      if (path == null || path.isEmpty) return;
+      final file = File(path);
+      if (!await file.exists()) return;
+
+      final bytes = await file.readAsBytes();
+      final mimeType = lookupMimeType(path, headerBytes: bytes) ?? 'image/jpeg';
+      final mediaType = MediaType.parse(mimeType);
+
+      final fileName = (preferredName?.isNotEmpty ?? false)
+          ? preferredName!
+          : p.basename(path);
+
+      payload[field] = MultipartFile.fromBytes(
+        bytes,
+        filename: fileName,
+        contentType: mediaType,
+      );
+    }
+
+    await attachFile(
+      field: 'logoFile',
+      path: logoFilePath,
+      preferredName: logoFileName,
+    );
+
+    await attachFile(
+      field: 'navbarImageFile',
+      path: navbarImagePath,
+      preferredName: navbarImageFileName,
+    );
+
+    payload.removeWhere((key, value) => value == null);
+    return FormData.fromMap(payload);
   }
 
   @override

@@ -1,9 +1,6 @@
-import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart' hide MultipartFile;
-import 'package:http_parser/http_parser.dart';
-import 'package:mime/mime.dart';
+import 'package:get/get.dart';
 
 import 'package:rupu/domain/entities/horizontal_property_detail.dart';
 import 'package:rupu/domain/entities/horizontal_property_update_result.dart';
@@ -229,10 +226,16 @@ class HorizontalPropertyUpdateController extends GetxController {
     isSaving.value = true;
     errorMessage.value = null;
     try {
-      final payload = await _buildPayload();
+      final payload = _buildPayload();
+      final logo = logoFile.value;
+      final navbar = navbarImageFile.value;
       final result = await repository.updateHorizontalProperty(
         id: propertyId,
         data: payload,
+        logoFilePath: logo?.path,
+        logoFileName: logo?.fileName,
+        navbarImagePath: navbar?.path,
+        navbarImageFileName: navbar?.fileName,
       );
 
       if (!result.success) {
@@ -271,7 +274,7 @@ class HorizontalPropertyUpdateController extends GetxController {
     }
   }
 
-  Future<Map<String, dynamic>> _buildPayload() async {
+  Map<String, dynamic> _buildPayload() {
     final map = <String, dynamic>{
       'name': nameCtrl.text.trim(),
       'address': addressCtrl.text.trim(),
@@ -303,28 +306,7 @@ class HorizontalPropertyUpdateController extends GetxController {
     final totalFloors = int.tryParse(totalFloorsCtrl.text.trim());
     if (totalFloors != null) map['total_floors'] = totalFloors;
 
-    final logo = logoFile.value;
-    if (logo != null) {
-      map['logo_file'] = await _buildMultipartFile(logo);
-    }
-
-    final navbar = navbarImageFile.value;
-    if (navbar != null) {
-      map['navbar_image_file'] = await _buildMultipartFile(navbar);
-    }
-
     return map;
-  }
-
-  Future<MultipartFile> _buildMultipartFile(PropertyFileData data) async {
-    final mimeType = lookupMimeType(data.path) ?? 'image/jpeg';
-    final mediaType = MediaType.parse(mimeType);
-
-    return MultipartFile.fromFile(
-      data.path,
-      filename: data.fileName,
-      contentType: mediaType,
-    );
   }
 }
 
