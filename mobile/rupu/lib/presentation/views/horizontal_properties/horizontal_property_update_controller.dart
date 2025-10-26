@@ -271,8 +271,15 @@ class HorizontalPropertyUpdateController extends GetxController {
 
     isSaving.value = true;
     errorMessage.value = null;
+    final shouldClearLogo = clearLogo.value && logoFile.value == null;
+    final shouldClearNavbar =
+        clearNavbarImage.value && navbarImageFile.value == null;
+
     try {
-      final payload = _buildPayload();
+      final payload = _buildPayload(
+        clearLogoFlag: shouldClearLogo,
+        clearNavbarFlag: shouldClearNavbar,
+      );
       final logo = logoFile.value;
       final navbar = navbarImageFile.value;
       final result = await repository.updateHorizontalProperty(
@@ -292,8 +299,16 @@ class HorizontalPropertyUpdateController extends GetxController {
 
       final detail = result.property;
       if (detail != null) {
-        property.value = detail;
-        _populate(detail);
+        var normalizedDetail = detail;
+        if (shouldClearLogo) {
+          normalizedDetail = normalizedDetail.copyWith(logoUrl: null);
+        }
+        if (shouldClearNavbar) {
+          normalizedDetail = normalizedDetail.copyWith(navbarImageUrl: null);
+        }
+
+        property.value = normalizedDetail;
+        _populate(normalizedDetail);
         if (Get.isRegistered<HorizontalPropertiesController>()) {
           await Get.find<HorizontalPropertiesController>().fetchProperties();
         }
@@ -322,7 +337,10 @@ class HorizontalPropertyUpdateController extends GetxController {
     }
   }
 
-  Map<String, dynamic> _buildPayload() {
+  Map<String, dynamic> _buildPayload({
+    bool clearLogoFlag = false,
+    bool clearNavbarFlag = false,
+  }) {
     final map = <String, dynamic>{
       'name': nameCtrl.text.trim(),
       'address': addressCtrl.text.trim(),
@@ -354,8 +372,9 @@ class HorizontalPropertyUpdateController extends GetxController {
     final totalFloors = int.tryParse(totalFloorsCtrl.text.trim());
     if (totalFloors != null) map['total_floors'] = totalFloors;
 
-    if (clearLogo.value) {
+    if (clearLogoFlag) {
       map['logo_url'] = '';
+      map['clear_logo'] = '1';
     } else if (logoFile.value == null) {
       final currentLogoUrl = logoUrl.value?.trim();
       if (currentLogoUrl != null && currentLogoUrl.isNotEmpty) {
@@ -363,8 +382,9 @@ class HorizontalPropertyUpdateController extends GetxController {
       }
     }
 
-    if (clearNavbarImage.value) {
+    if (clearNavbarFlag) {
       map['navbar_image_url'] = '';
+      map['clear_navbar_image'] = '1';
     } else if (navbarImageFile.value == null) {
       final currentNavbarUrl = navbarUrl.value?.trim();
       if (currentNavbarUrl != null && currentNavbarUrl.isNotEmpty) {
