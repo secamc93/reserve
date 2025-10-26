@@ -57,6 +57,8 @@ class HorizontalPropertyUpdateController extends GetxController {
   final navbarProcessing = false.obs;
   final logoUrl = RxnString();
   final navbarUrl = RxnString();
+  final clearLogo = false.obs;
+  final clearNavbarImage = false.obs;
 
   final property = Rxn<HorizontalPropertyDetail>();
 
@@ -146,6 +148,8 @@ class HorizontalPropertyUpdateController extends GetxController {
 
     logoFile.value = null;
     navbarImageFile.value = null;
+    clearLogo.value = false;
+    clearNavbarImage.value = false;
   }
 
   Future<void> pickLogo() async {
@@ -163,6 +167,7 @@ class HorizontalPropertyUpdateController extends GetxController {
       }
       logoFile.value = processed;
       logoUrl.value = null;
+      clearLogo.value = false;
     } catch (e) {
       errorMessage.value = 'Error procesando el logo: $e';
       logoFile.value = null;
@@ -187,6 +192,7 @@ class HorizontalPropertyUpdateController extends GetxController {
       }
       navbarImageFile.value = processed;
       navbarUrl.value = null;
+      clearNavbarImage.value = false;
     } catch (e) {
       errorMessage.value = 'Error procesando la imagen del navbar: $e';
       navbarImageFile.value = null;
@@ -197,10 +203,48 @@ class HorizontalPropertyUpdateController extends GetxController {
 
   void removeLogoFile() {
     logoFile.value = null;
+    clearLogo.value = false;
+    final current = property.value?.logoUrl;
+    if (current != null && current.isNotEmpty) {
+      logoUrl.value = current;
+    }
   }
 
   void removeNavbarImageFile() {
     navbarImageFile.value = null;
+    clearNavbarImage.value = false;
+    final current = property.value?.navbarImageUrl;
+    if (current != null && current.isNotEmpty) {
+      navbarUrl.value = current;
+    }
+  }
+
+  void clearExistingLogo() {
+    logoFile.value = null;
+    logoUrl.value = null;
+    clearLogo.value = true;
+  }
+
+  void clearExistingNavbarImage() {
+    navbarImageFile.value = null;
+    navbarUrl.value = null;
+    clearNavbarImage.value = true;
+  }
+
+  void restoreExistingLogo() {
+    clearLogo.value = false;
+    final current = property.value?.logoUrl;
+    if (current != null && current.isNotEmpty) {
+      logoUrl.value = current;
+    }
+  }
+
+  void restoreExistingNavbarImage() {
+    clearNavbarImage.value = false;
+    final current = property.value?.navbarImageUrl;
+    if (current != null && current.isNotEmpty) {
+      navbarUrl.value = current;
+    }
   }
 
   String formatFileSize(int bytes) {
@@ -310,14 +354,22 @@ class HorizontalPropertyUpdateController extends GetxController {
     final totalFloors = int.tryParse(totalFloorsCtrl.text.trim());
     if (totalFloors != null) map['total_floors'] = totalFloors;
 
-    final currentLogoUrl = logoUrl.value?.trim();
-    if (logoFile.value == null && currentLogoUrl != null && currentLogoUrl.isNotEmpty) {
-      map['logo_url'] = currentLogoUrl;
+    if (clearLogo.value) {
+      map['logo_url'] = '';
+    } else if (logoFile.value == null) {
+      final currentLogoUrl = logoUrl.value?.trim();
+      if (currentLogoUrl != null && currentLogoUrl.isNotEmpty) {
+        map['logo_url'] = currentLogoUrl;
+      }
     }
 
-    final currentNavbarUrl = navbarUrl.value?.trim();
-    if (navbarImageFile.value == null && currentNavbarUrl != null && currentNavbarUrl.isNotEmpty) {
-      map['navbar_image_url'] = currentNavbarUrl;
+    if (clearNavbarImage.value) {
+      map['navbar_image_url'] = '';
+    } else if (navbarImageFile.value == null) {
+      final currentNavbarUrl = navbarUrl.value?.trim();
+      if (currentNavbarUrl != null && currentNavbarUrl.isNotEmpty) {
+        map['navbar_image_url'] = currentNavbarUrl;
+      }
     }
 
     return map;
