@@ -33,3 +33,4 @@ export interface GetUserByIdResponse {
     business_type_name: string;
   }>;
 }
+

@@ -18,3 +18,4 @@ export interface GetPermissionByIdResponse {
   scope_name: string;
   scope_code: string;
 }
+

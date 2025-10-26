@@ -39,3 +39,4 @@ export interface UpdateUserResponse {
     business_type_name: string;
   }>;
 }
+

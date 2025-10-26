@@ -9,3 +9,4 @@ export interface UpdateUserActionResult {
   data?: UpdateUserResponse;
   error?: string;
 }
+

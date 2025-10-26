@@ -17,3 +17,4 @@ export interface UpdatePermissionResponse {
   success: boolean;
   message: string;
 }
+

@@ -37,3 +37,4 @@ export interface CreateUserResponse {
     business_type_name: string;
   }>;
 }
+
