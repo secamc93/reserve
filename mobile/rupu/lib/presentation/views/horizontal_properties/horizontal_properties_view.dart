@@ -500,15 +500,15 @@ class _PropertyCard extends StatelessWidget {
                             ),
                           ),
                         ),
-                        Positioned(
-                          right: 4,
-                          top: 4,
-                          child: IconButton.filledTonal(
-                            onPressed: onView,
-                            icon: const Icon(Icons.more_horiz),
-                            tooltip: 'Abrir',
-                          ),
-                        ),
+                        // Positioned(
+                        //   right: 4,
+                        //   top: 4,
+                        //   child: IconButton.filledTonal(
+                        //     onPressed: onView,
+                        //     icon: const Icon(Icons.more_horiz),
+                        //     tooltip: 'Abrir',
+                        //   ),
+                        // ),
                       ],
                     ),
                   ),
