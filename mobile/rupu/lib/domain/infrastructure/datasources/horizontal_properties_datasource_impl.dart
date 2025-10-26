@@ -232,13 +232,6 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
     }
 
     if (ext == '.webp') {
-      const qualities = [90, 80, 70, 60, 50];
-      for (final quality in qualities) {
-        final encoded = img.encodeWebp(image, quality: quality);
-        if (encoded.length <= _maxUploadBytes) {
-          return _EncodedImage(bytes: encoded, extension: '.webp');
-        }
-      }
       return _encodeWithinLimit(image, '.jpg');
     }
 
