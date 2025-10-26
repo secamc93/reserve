@@ -125,7 +125,7 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
       preferredName: logoFileName,
     );
     if (logoMultipart != null) {
-      payload['logoFile'] = logoMultipart;
+      payload['logo_file'] = logoMultipart;
     }
 
     final navbarMultipart = await _createMultipartFile(
@@ -133,7 +133,7 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
       preferredName: navbarImageFileName,
     );
     if (navbarMultipart != null) {
-      payload['navbarImageFile'] = navbarMultipart;
+      payload['navbar_image_file'] = navbarMultipart;
     }
 
     return FormData.fromMap(payload);
