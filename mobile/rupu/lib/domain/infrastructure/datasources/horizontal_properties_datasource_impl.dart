@@ -142,7 +142,16 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
     String path,
     String? preferredName,
   ) async {
-    final allowed = <String>{'.jpg', '.jpeg', '.png', '.gif', '.webp'};
+    final allowed = <String>{
+      '.jpg',
+      '.jpeg',
+      '.png',
+      '.gif',
+      '.webp',
+      '.bmp',
+      '.heic',
+      '.heif',
+    };
     final ext = p.extension(path).toLowerCase();
 
     if (allowed.contains(ext)) {
