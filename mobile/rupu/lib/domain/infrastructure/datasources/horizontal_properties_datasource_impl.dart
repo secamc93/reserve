@@ -105,40 +105,61 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
     String? navbarImagePath,
     String? navbarImageFileName,
   }) async {
-    final payload = Map<String, dynamic>.from(map);
+    final formData = FormData();
+
+    void addField(String key, dynamic value) {
+      if (value == null) return;
+      if (value is Iterable) {
+        for (final item in value) {
+          if (item != null) {
+            formData.fields.add(MapEntry(key, item.toString()));
+          }
+        }
+        return;
+      }
+      formData.fields.add(MapEntry(key, value.toString()));
+    }
+
+    map.forEach(addField);
 
     Future<void> attachFile({
-      required String field,
+      required List<String> fieldNames,
       String? path,
       String? preferredName,
     }) async {
       if (path == null || path.isEmpty) return;
       final ensured = await _ensureAllowedImage(path, preferredName);
-      final bytes = await File(ensured.path).readAsBytes();
-      final mimeType = lookupMimeType(ensured.path, headerBytes: bytes) ?? 'image/jpeg';
+      final fileBytes = await File(ensured.path).readAsBytes();
+      final mimeType = lookupMimeType(ensured.path, headerBytes: fileBytes) ?? 'image/jpeg';
       final mediaType = MediaType.parse(mimeType);
 
-      payload[field] = await MultipartFile.fromFile(
-        ensured.path,
-        filename: ensured.fileName,
-        contentType: mediaType,
-      );
+      for (final field in fieldNames) {
+        formData.files.add(
+          MapEntry(
+            field,
+            MultipartFile.fromBytes(
+              fileBytes,
+              filename: ensured.fileName,
+              contentType: mediaType,
+            ),
+          ),
+        );
+      }
     }
 
     await attachFile(
-      field: 'logoFile',
+      fieldNames: const ['logoFile', 'logo_file'],
       path: logoFilePath,
       preferredName: logoFileName,
     );
 
     await attachFile(
-      field: 'navbarImageFile',
+      fieldNames: const ['navbarImageFile', 'navbar_image_file'],
       path: navbarImagePath,
       preferredName: navbarImageFileName,
     );
 
-    payload.removeWhere((key, value) => value == null);
-    return FormData.fromMap(payload);
+    return formData;
   }
 
   /// Ensures the provided [path] points to an allowed image extension.

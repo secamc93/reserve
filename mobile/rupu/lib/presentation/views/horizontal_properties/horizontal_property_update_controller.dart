@@ -306,6 +306,16 @@ class HorizontalPropertyUpdateController extends GetxController {
     final totalFloors = int.tryParse(totalFloorsCtrl.text.trim());
     if (totalFloors != null) map['total_floors'] = totalFloors;
 
+    final currentLogoUrl = logoUrl.value?.trim();
+    if (logoFile.value == null && currentLogoUrl != null && currentLogoUrl.isNotEmpty) {
+      map['logo_url'] = currentLogoUrl;
+    }
+
+    final currentNavbarUrl = navbarUrl.value?.trim();
+    if (navbarImageFile.value == null && currentNavbarUrl != null && currentNavbarUrl.isNotEmpty) {
+      map['navbar_image_url'] = currentNavbarUrl;
+    }
+
     return map;
   }
 }
