@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:http_parser/http_parser.dart';
+import 'package:image/image.dart' as img;
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
 import 'package:rupu/config/dio/authenticated_dio.dart';
@@ -106,20 +107,14 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
       String? preferredName,
     }) async {
       if (path == null || path.isEmpty) return;
-      final file = File(path);
-      if (!await file.exists()) return;
-
-      final bytes = await file.readAsBytes();
-      final mimeType = lookupMimeType(path, headerBytes: bytes) ?? 'image/jpeg';
+      final ensured = await _ensureAllowedImage(path, preferredName);
+      final bytes = await File(ensured.path).readAsBytes();
+      final mimeType = lookupMimeType(ensured.path, headerBytes: bytes) ?? 'image/jpeg';
       final mediaType = MediaType.parse(mimeType);
 
-      final fileName = (preferredName?.isNotEmpty ?? false)
-          ? preferredName!
-          : p.basename(path);
-
-      payload[field] = MultipartFile.fromBytes(
-        bytes,
-        filename: fileName,
+      payload[field] = await MultipartFile.fromFile(
+        ensured.path,
+        filename: ensured.fileName,
         contentType: mediaType,
       );
     }
@@ -138,6 +133,47 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
 
     payload.removeWhere((key, value) => value == null);
     return FormData.fromMap(payload);
+  }
+
+  /// Ensures the provided [path] points to an allowed image extension.
+  /// If the extension is unsupported it re-encodes the image as JPEG,
+  /// mirroring the behaviour used for user avatar uploads.
+  Future<_EnsuredImage> _ensureAllowedImage(
+    String path,
+    String? preferredName,
+  ) async {
+    final allowed = <String>{'.jpg', '.jpeg', '.png', '.gif', '.webp'};
+    final ext = p.extension(path).toLowerCase();
+
+    if (allowed.contains(ext)) {
+      final fileName = (preferredName?.isNotEmpty ?? false)
+          ? preferredName!
+          : p.basename(path);
+      return _EnsuredImage(path: path, fileName: fileName);
+    }
+
+    final sourceFile = File(path);
+    if (!await sourceFile.exists()) {
+      throw Exception('El archivo seleccionado no existe.');
+    }
+
+    final bytes = await sourceFile.readAsBytes();
+    final decoded = img.decodeImage(bytes);
+    if (decoded == null) {
+      throw Exception('No se pudo procesar la imagen seleccionada.');
+    }
+
+    final encoded = img.encodeJpg(decoded, quality: 90);
+    final tempDir = Directory.systemTemp.path;
+    final preferredBaseName =
+        (preferredName?.isNotEmpty ?? false) ? preferredName! : p.basename(path);
+    final newName = p.setExtension(preferredBaseName, '.jpg');
+    final newPath = p.join(tempDir, newName);
+
+    final file = File(newPath);
+    await file.writeAsBytes(encoded, flush: true);
+
+    return _EnsuredImage(path: file.path, fileName: p.basename(newPath));
   }
 
   @override
@@ -181,4 +217,11 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
       response.data as Map<String, dynamic>,
     );
   }
+}
+
+class _EnsuredImage {
+  final String path;
+  final String fileName;
+
+  _EnsuredImage({required this.path, required this.fileName});
 }
