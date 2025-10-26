@@ -9,6 +9,28 @@ double? _tryParseDouble(dynamic value) {
   return double.tryParse(value.toString());
 }
 
+int? _tryParseInt(dynamic value) {
+  if (value == null) return null;
+  if (value is int) return value;
+  if (value is double) return value.round();
+  return int.tryParse(value.toString());
+}
+
+bool? _tryParseBool(dynamic value) {
+  if (value == null) return null;
+  if (value is bool) return value;
+  if (value is num) return value != 0;
+  final normalized = value.toString().trim().toLowerCase();
+  if (normalized.isEmpty) return null;
+  if (normalized == 'true' || normalized == '1' || normalized == 'yes') {
+    return true;
+  }
+  if (normalized == 'false' || normalized == '0' || normalized == 'no') {
+    return false;
+  }
+  return null;
+}
+
 class HorizontalPropertyDetailResponseModel {
   final bool success;
   final String message;
@@ -22,7 +44,8 @@ class HorizontalPropertyDetailResponseModel {
 
   factory HorizontalPropertyDetailResponseModel.fromJson(
       Map<String, dynamic> json) {
-    final dataJson = json['data'] as Map<String, dynamic>?;
+    final rawData = json['data'];
+    final dataJson = rawData is Map<String, dynamic> ? rawData : null;
     return HorizontalPropertyDetailResponseModel(
       success: json['success'] as bool? ?? false,
       message: json['message'] as String? ?? '',
@@ -102,19 +125,19 @@ class HorizontalPropertyDetailModel {
       description: json['description'] as String?,
       address: json['address'] as String?,
       timezone: json['timezone'] as String?,
-      businessTypeId: json['business_type_id'] as int?,
+      businessTypeId: _tryParseInt(json['business_type_id']),
       businessTypeName: json['business_type_name'] as String?,
-      parentBusinessId: json['parent_business_id'] as int?,
-      isActive: json['is_active'] as bool?,
+      parentBusinessId: _tryParseInt(json['parent_business_id']),
+      isActive: _tryParseBool(json['is_active']),
       createdAt: _tryParseDate(json['created_at'] as String?),
       updatedAt: _tryParseDate(json['updated_at'] as String?),
-      totalUnits: json['total_units'] as int?,
-      totalFloors: json['total_floors'] as int?,
-      hasElevator: json['has_elevator'] as bool?,
-      hasParking: json['has_parking'] as bool?,
-      hasPool: json['has_pool'] as bool?,
-      hasGym: json['has_gym'] as bool?,
-      hasSocialArea: json['has_social_area'] as bool?,
+      totalUnits: _tryParseInt(json['total_units']),
+      totalFloors: _tryParseInt(json['total_floors']),
+      hasElevator: _tryParseBool(json['has_elevator']),
+      hasParking: _tryParseBool(json['has_parking']),
+      hasPool: _tryParseBool(json['has_pool']),
+      hasGym: _tryParseBool(json['has_gym']),
+      hasSocialArea: _tryParseBool(json['has_social_area']),
       logoUrl: json['logo_url'] as String?,
       navbarImageUrl: json['navbar_image_url'] as String?,
       customDomain: json['custom_domain'] as String?,
@@ -203,13 +226,13 @@ class HorizontalPropertyUnitModel {
       id: json['id'] as int? ?? 0,
       number: json['number'] as String?,
       block: json['block'] as String?,
-      floor: json['floor'] as int?,
+      floor: _tryParseInt(json['floor']),
       area: _tryParseDouble(json['area']),
-      bedrooms: json['bedrooms'] as int?,
-      bathrooms: json['bathrooms'] as int?,
+      bedrooms: _tryParseInt(json['bedrooms']),
+      bathrooms: _tryParseInt(json['bathrooms']),
       description: json['description'] as String?,
       unitType: json['unit_type'] as String?,
-      isActive: json['is_active'] as bool?,
+      isActive: _tryParseBool(json['is_active']),
     );
   }
 }
