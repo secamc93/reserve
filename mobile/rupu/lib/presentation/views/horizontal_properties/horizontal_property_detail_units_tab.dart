@@ -91,19 +91,33 @@ class _UnitsTab extends GetWidget<HorizontalPropertyUnitsController> {
                   else ...[
                     SliverPadding(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                      sliver: SliverGrid(
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: crossAxis,
-                          mainAxisSpacing: 16,
-                          crossAxisSpacing: 16,
-                          childAspectRatio: aspect,
-                        ),
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) => _UnitCard(unit: units[index]),
-                          childCount: units.length,
-                        ),
-                      ),
+                      sliver: crossAxis == 1
+                          // 1 columna: altura libre -> imposible overflow
+                          ? SliverList.builder(
+                              itemCount: units.length,
+                              itemBuilder: (context, index) => Padding(
+                                padding: const EdgeInsets.only(bottom: 16),
+                                child: _UnitCard(unit: units[index]),
+                              ),
+                            )
+                          // 2–3 columnas: fija una altura amplia por ítem
+                          : SliverGrid(
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: crossAxis,
+                                    mainAxisSpacing: 16,
+                                    crossAxisSpacing: 16,
+                                    mainAxisExtent:
+                                        320, // súbela a 340–360 si aún ves justo
+                                  ),
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) =>
+                                    _UnitCard(unit: units[index]),
+                                childCount: units.length,
+                              ),
+                            ),
                     ),
+
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 32),
@@ -352,12 +366,17 @@ class _UnitCard extends StatelessWidget {
         ],
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
             decoration: BoxDecoration(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(18),
+                topRight: Radius.circular(18),
+              ),
               gradient: LinearGradient(
                 colors: [cs.primary.withValues(alpha: .14), cs.surface],
                 begin: Alignment.topLeft,
@@ -395,40 +414,38 @@ class _UnitCard extends StatelessWidget {
               ],
             ),
           ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _DetailLine(
-                    icon: Icons.location_city_outlined,
-                    label: 'Bloque',
-                    value: unit.block.isEmpty ? 'Sin bloque' : unit.block,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _DetailLine(
+                  icon: Icons.location_city_outlined,
+                  label: 'Bloque',
+                  value: unit.block.isEmpty ? 'Sin bloque' : unit.block,
+                ),
+                _DetailLine(
+                  icon: Icons.category_outlined,
+                  label: 'Tipo de unidad',
+                  value: unit.unitType.isEmpty ? 'Sin tipo' : unit.unitType,
+                ),
+                _DetailLine(
+                  icon: Icons.straighten_outlined,
+                  label: 'CoeficieXnte',
+                  value: _formatCoefficient(unit.participationCoefficient),
+                ),
+                // const Spacer(),
+                _CardActions(
+                  onEdit: () => _showActionFeedback(
+                    'Editar unidad',
+                    'Funcionalidad disponible próximamente.',
                   ),
-                  _DetailLine(
-                    icon: Icons.category_outlined,
-                    label: 'Tipo de unidad',
-                    value: unit.unitType.isEmpty ? 'Sin tipo' : unit.unitType,
+                  onDelete: () => _showActionFeedback(
+                    'Eliminar unidad',
+                    'Contacta al administrador para continuar con la acción.',
                   ),
-                  _DetailLine(
-                    icon: Icons.straighten_outlined,
-                    label: 'Coeficiente',
-                    value: _formatCoefficient(unit.participationCoefficient),
-                  ),
-                  const Spacer(),
-                  _CardActions(
-                    onEdit: () => _showActionFeedback(
-                      'Editar unidad',
-                      'Funcionalidad disponible próximamente.',
-                    ),
-                    onDelete: () => _showActionFeedback(
-                      'Eliminar unidad',
-                      'Contacta al administrador para continuar con la acción.',
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],
