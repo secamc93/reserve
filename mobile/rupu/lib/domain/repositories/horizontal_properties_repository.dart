@@ -27,6 +27,10 @@ abstract class HorizontalPropertiesRepository {
   Future<HorizontalPropertyUpdateResult> updateHorizontalProperty({
     required int id,
     required Map<String, dynamic> data,
+    String? logoFilePath,
+    String? logoFileName,
+    String? navbarImagePath,
+    String? navbarImageFileName,
   });
 
   Future<HorizontalPropertyUnitsPage> getHorizontalPropertyUnits({

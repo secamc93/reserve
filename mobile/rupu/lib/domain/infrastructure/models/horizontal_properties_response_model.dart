@@ -65,6 +65,7 @@ class HorizontalPropertyModel {
   final bool isActive;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final String? logoUrl;
 
   HorizontalPropertyModel({
     required this.id,
@@ -77,6 +78,7 @@ class HorizontalPropertyModel {
     required this.isActive,
     required this.createdAt,
     required this.updatedAt,
+    required this.logoUrl,
   });
 
   factory HorizontalPropertyModel.fromJson(Map<String, dynamic> json) {
@@ -92,6 +94,7 @@ class HorizontalPropertyModel {
       isActive: json['is_active'] as bool? ?? false,
       createdAt: _tryParseDate(json['created_at'] as String?),
       updatedAt: _tryParseDate(json['updated_at'] as String?),
+      logoUrl: json['logo_url'] as String?,
     );
   }
 }

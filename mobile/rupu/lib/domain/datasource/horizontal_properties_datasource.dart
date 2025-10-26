@@ -25,6 +25,10 @@ abstract class HorizontalPropertiesDatasource {
   Future<HorizontalPropertyDetailResponseModel> updateHorizontalProperty({
     required int id,
     required Map<String, dynamic> data,
+    String? logoFilePath,
+    String? logoFileName,
+    String? navbarImagePath,
+    String? navbarImageFileName,
   });
 
   Future<HorizontalPropertyUnitsResponseModel> getHorizontalPropertyUnits({

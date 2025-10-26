@@ -41,6 +41,7 @@ class HorizontalPropertiesMapper {
       isActive: model.isActive,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
+      logoUrl: model.logoUrl,
     );
   }
 

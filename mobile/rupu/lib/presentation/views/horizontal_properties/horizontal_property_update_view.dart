@@ -207,20 +207,26 @@ class _HorizontalPropertyUpdateSheetState
                       _FilePickerTile(
                         title: 'Logo',
                         currentUrl: _c.logoUrl,
+                        isClearing: _c.clearLogo,
                         file: _c.logoFile,
                         isProcessing: _c.logoProcessing,
                         onPick: _c.pickLogo,
-                        onRemove: _c.removeLogoFile,
+                        onRemoveFile: _c.removeLogoFile,
+                        onClearExisting: _c.clearExistingLogo,
+                        onRestoreExisting: _c.restoreExistingLogo,
                         formatSize: _c.formatFileSize,
                       ),
                       const SizedBox(height: 12),
                       _FilePickerTile(
                         title: 'Imagen del navbar',
                         currentUrl: _c.navbarUrl,
+                        isClearing: _c.clearNavbarImage,
                         file: _c.navbarImageFile,
                         isProcessing: _c.navbarProcessing,
                         onPick: _c.pickNavbarImage,
-                        onRemove: _c.removeNavbarImageFile,
+                        onRemoveFile: _c.removeNavbarImageFile,
+                        onClearExisting: _c.clearExistingNavbarImage,
+                        onRestoreExisting: _c.restoreExistingNavbarImage,
                         formatSize: _c.formatFileSize,
                       ),
 
@@ -538,19 +544,25 @@ class _ErrorPlaceholder extends StatelessWidget {
 class _FilePickerTile extends StatelessWidget {
   final String title;
   final RxnString currentUrl;
+  final RxBool isClearing;
   final Rxn<PropertyFileData> file;
   final RxBool isProcessing;
   final Future<void> Function() onPick;
-  final VoidCallback onRemove;
+  final VoidCallback onRemoveFile;
+  final VoidCallback onClearExisting;
+  final VoidCallback onRestoreExisting;
   final String Function(int) formatSize;
 
   const _FilePickerTile({
     required this.title,
     required this.currentUrl,
+    required this.isClearing,
     required this.file,
     required this.isProcessing,
     required this.onPick,
-    required this.onRemove,
+    required this.onRemoveFile,
+    required this.onClearExisting,
+    required this.onRestoreExisting,
     required this.formatSize,
   });
 
@@ -560,6 +572,9 @@ class _FilePickerTile extends StatelessWidget {
     return Obx(() {
       final processing = isProcessing.value;
       final fileValue = file.value;
+      final urlValue = currentUrl.value;
+      final hasUrl = urlValue != null && urlValue.isNotEmpty;
+      final clearing = isClearing.value;
 
       return Container(
         margin: const EdgeInsets.only(top: 4),
@@ -583,8 +598,10 @@ class _FilePickerTile extends StatelessWidget {
                     Text(
                       '${fileValue.fileName} • ${formatSize(fileValue.sizeInBytes)}',
                     )
-                  else if (currentUrl.value != null)
-                    Text('Actual: ${currentUrl.value}')
+                  else if (clearing)
+                    const Text('Se eliminará la imagen actual')
+                  else if (hasUrl)
+                    Text('Actual: $urlValue')
                   else
                     const Text('Sin archivo seleccionado'),
                 ],
@@ -601,8 +618,20 @@ class _FilePickerTile extends StatelessWidget {
               if (fileValue != null)
                 IconButton(
                   tooltip: 'Quitar archivo',
-                  onPressed: onRemove,
+                  onPressed: onRemoveFile,
                   icon: const Icon(Icons.close),
+                ),
+              if (hasUrl && !clearing && fileValue == null)
+                IconButton(
+                  tooltip: 'Limpiar imagen',
+                  onPressed: onClearExisting,
+                  icon: const Icon(Icons.delete_outline),
+                ),
+              if (clearing)
+                IconButton(
+                  tooltip: 'Deshacer limpieza',
+                  onPressed: onRestoreExisting,
+                  icon: const Icon(Icons.undo),
                 ),
               IconButton(
                 tooltip: 'Seleccionar archivo',

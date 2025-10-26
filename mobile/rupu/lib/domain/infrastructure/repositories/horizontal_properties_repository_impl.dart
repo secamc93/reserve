@@ -55,9 +55,19 @@ class HorizontalPropertiesRepositoryImpl
   Future<HorizontalPropertyUpdateResult> updateHorizontalProperty({
     required int id,
     required Map<String, dynamic> data,
+    String? logoFilePath,
+    String? logoFileName,
+    String? navbarImagePath,
+    String? navbarImageFileName,
   }) async {
-    final response =
-        await datasource.updateHorizontalProperty(id: id, data: data);
+    final response = await datasource.updateHorizontalProperty(
+      id: id,
+      data: data,
+      logoFilePath: logoFilePath,
+      logoFileName: logoFileName,
+      navbarImagePath: navbarImagePath,
+      navbarImageFileName: navbarImageFileName,
+    );
     return HorizontalPropertiesMapper.detailResponseToUpdateResult(response);
   }
 

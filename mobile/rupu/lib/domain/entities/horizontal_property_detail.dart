@@ -1,3 +1,5 @@
+const _unset = Object();
+
 class HorizontalPropertyDetail {
   final int id;
   final String name;
@@ -58,6 +60,109 @@ class HorizontalPropertyDetail {
     this.committees = const [],
     this.propertyUnits = const [],
   });
+
+  HorizontalPropertyDetail copyWith({
+    Object? id = _unset,
+    Object? name = _unset,
+    Object? code = _unset,
+    Object? description = _unset,
+    Object? address = _unset,
+    Object? timezone = _unset,
+    Object? businessTypeId = _unset,
+    Object? businessTypeName = _unset,
+    Object? parentBusinessId = _unset,
+    Object? isActive = _unset,
+    Object? createdAt = _unset,
+    Object? updatedAt = _unset,
+    Object? totalUnits = _unset,
+    Object? totalFloors = _unset,
+    Object? hasElevator = _unset,
+    Object? hasParking = _unset,
+    Object? hasPool = _unset,
+    Object? hasGym = _unset,
+    Object? hasSocialArea = _unset,
+    Object? logoUrl = _unset,
+    Object? navbarImageUrl = _unset,
+    Object? customDomain = _unset,
+    Object? primaryColor = _unset,
+    Object? secondaryColor = _unset,
+    Object? tertiaryColor = _unset,
+    Object? quaternaryColor = _unset,
+    Object? committees = _unset,
+    Object? propertyUnits = _unset,
+  }) {
+    return HorizontalPropertyDetail(
+      id: identical(id, _unset) ? this.id : id as int,
+      name: identical(name, _unset) ? this.name : name as String,
+      code: identical(code, _unset) ? this.code : code as String?,
+      description: identical(description, _unset)
+          ? this.description
+          : description as String?,
+      address:
+          identical(address, _unset) ? this.address : address as String?,
+      timezone:
+          identical(timezone, _unset) ? this.timezone : timezone as String?,
+      businessTypeId: identical(businessTypeId, _unset)
+          ? this.businessTypeId
+          : businessTypeId as int?,
+      businessTypeName: identical(businessTypeName, _unset)
+          ? this.businessTypeName
+          : businessTypeName as String?,
+      parentBusinessId: identical(parentBusinessId, _unset)
+          ? this.parentBusinessId
+          : parentBusinessId as int?,
+      isActive: identical(isActive, _unset) ? this.isActive : isActive as bool?,
+      createdAt: identical(createdAt, _unset)
+          ? this.createdAt
+          : createdAt as DateTime?,
+      updatedAt: identical(updatedAt, _unset)
+          ? this.updatedAt
+          : updatedAt as DateTime?,
+      totalUnits: identical(totalUnits, _unset)
+          ? this.totalUnits
+          : totalUnits as int?,
+      totalFloors: identical(totalFloors, _unset)
+          ? this.totalFloors
+          : totalFloors as int?,
+      hasElevator: identical(hasElevator, _unset)
+          ? this.hasElevator
+          : hasElevator as bool?,
+      hasParking: identical(hasParking, _unset)
+          ? this.hasParking
+          : hasParking as bool?,
+      hasPool: identical(hasPool, _unset) ? this.hasPool : hasPool as bool?,
+      hasGym: identical(hasGym, _unset) ? this.hasGym : hasGym as bool?,
+      hasSocialArea: identical(hasSocialArea, _unset)
+          ? this.hasSocialArea
+          : hasSocialArea as bool?,
+      logoUrl:
+          identical(logoUrl, _unset) ? this.logoUrl : logoUrl as String?,
+      navbarImageUrl: identical(navbarImageUrl, _unset)
+          ? this.navbarImageUrl
+          : navbarImageUrl as String?,
+      customDomain: identical(customDomain, _unset)
+          ? this.customDomain
+          : customDomain as String?,
+      primaryColor: identical(primaryColor, _unset)
+          ? this.primaryColor
+          : primaryColor as String?,
+      secondaryColor: identical(secondaryColor, _unset)
+          ? this.secondaryColor
+          : secondaryColor as String?,
+      tertiaryColor: identical(tertiaryColor, _unset)
+          ? this.tertiaryColor
+          : tertiaryColor as String?,
+      quaternaryColor: identical(quaternaryColor, _unset)
+          ? this.quaternaryColor
+          : quaternaryColor as String?,
+      committees: identical(committees, _unset)
+          ? this.committees
+          : committees as List<HorizontalPropertyCommittee>,
+      propertyUnits: identical(propertyUnits, _unset)
+          ? this.propertyUnits
+          : propertyUnits as List<HorizontalPropertyUnit>,
+    );
+  }
 }
 
 class HorizontalPropertyCommittee {
