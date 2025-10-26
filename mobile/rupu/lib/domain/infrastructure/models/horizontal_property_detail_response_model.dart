@@ -54,6 +54,26 @@ class HorizontalPropertyDetailResponseModel {
           : HorizontalPropertyDetailModel.fromJson(dataJson),
     );
   }
+
+  static HorizontalPropertyDetailResponseModel fromResponse(dynamic json) {
+    if (json is Map<String, dynamic>) {
+      return HorizontalPropertyDetailResponseModel.fromJson(json);
+    }
+
+    final message = () {
+      if (json is Map && json['message'] is String) {
+        return json['message'] as String;
+      }
+      if (json is String) return json;
+      return '';
+    }();
+
+    return HorizontalPropertyDetailResponseModel(
+      success: false,
+      message: message,
+      data: null,
+    );
+  }
 }
 
 class HorizontalPropertyDetailModel {

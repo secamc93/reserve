@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -107,8 +108,9 @@ class HorizontalPropertyUpdateController extends GetxController {
       property.value = detail;
       _populate(detail);
     } on DioException catch (e) {
-      errorMessage.value = e.response?.data?['message']?.toString() ??
-          'No se pudo cargar la propiedad. (${e.message})';
+      final fallback =
+          'No se pudo cargar la propiedad.${e.message != null ? ' (${e.message})' : ''}';
+      errorMessage.value = _extractDioMessage(e, fallback);
       property.value = null;
     } catch (e) {
       errorMessage.value = 'Ocurrió un error al cargar la propiedad: $e';
@@ -257,11 +259,13 @@ class HorizontalPropertyUpdateController extends GetxController {
 
       return result;
     } on DioException catch (e) {
-      errorMessage.value = e.response?.data?['message']?.toString() ??
-          'No se pudo actualizar la propiedad. (${e.message})';
-      return const HorizontalPropertyUpdateResult(
+      final fallback =
+          'No se pudo actualizar la propiedad.${e.message != null ? ' (${e.message})' : ''}';
+      final message = _extractDioMessage(e, fallback);
+      errorMessage.value = message;
+      return HorizontalPropertyUpdateResult(
         success: false,
-        message: 'No se pudo actualizar la propiedad.',
+        message: message,
       );
     } catch (e) {
       errorMessage.value = 'Error al actualizar la propiedad: $e';
@@ -317,6 +321,21 @@ class HorizontalPropertyUpdateController extends GetxController {
     }
 
     return map;
+  }
+
+  String _extractDioMessage(DioException exception, String fallback) {
+    final data = exception.response?.data;
+    if (data is Map && data['message'] != null) {
+      final value = data['message'];
+      if (value is String && value.trim().isNotEmpty) {
+        return value.trim();
+      }
+      return value?.toString() ?? fallback;
+    }
+    if (data is String && data.trim().isNotEmpty) {
+      return data.trim();
+    }
+    return fallback;
   }
 }
 

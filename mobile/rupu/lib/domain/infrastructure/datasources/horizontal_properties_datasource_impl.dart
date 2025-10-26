@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:dio/dio.dart';
 import 'package:http_parser/http_parser.dart';
@@ -16,6 +17,10 @@ import 'package:rupu/domain/infrastructure/models/simple_response_model.dart';
 
 class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource {
   final Dio _dio;
+
+  static const _maxUploadBytes = 2 * 1024 * 1024; // 2 MB
+  static const _maxImageDimension = 1600;
+  static const _minResizeDimension = 640;
 
   HorizontalPropertiesDatasourceImpl({String? baseUrl})
       : _dio = AuthenticatedDio(
@@ -47,9 +52,7 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
         contentType: 'multipart/form-data',
       ),
     );
-    return HorizontalPropertyDetailResponseModel.fromJson(
-      response.data as Map<String, dynamic>,
-    );
+    return HorizontalPropertyDetailResponseModel.fromResponse(response.data);
   }
 
   @override
@@ -65,9 +68,7 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
     required int id,
   }) async {
     final response = await _dio.get('/horizontal-properties/$id');
-    return HorizontalPropertyDetailResponseModel.fromJson(
-      response.data as Map<String, dynamic>,
-    );
+    return HorizontalPropertyDetailResponseModel.fromResponse(response.data);
   }
 
   @override
@@ -93,9 +94,7 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
         contentType: 'multipart/form-data',
       ),
     );
-    return HorizontalPropertyDetailResponseModel.fromJson(
-      response.data as Map<String, dynamic>,
-    );
+    return HorizontalPropertyDetailResponseModel.fromResponse(response.data);
   }
 
   Future<FormData> _buildFormData({
@@ -105,66 +104,60 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
     String? navbarImagePath,
     String? navbarImageFileName,
   }) async {
-    final formData = FormData();
+    final payload = <String, dynamic>{};
 
-    void addField(String key, dynamic value) {
+    map.forEach((key, value) {
       if (value == null) return;
       if (value is Iterable) {
-        for (final item in value) {
-          if (item != null) {
-            formData.fields.add(MapEntry(key, item.toString()));
-          }
-        }
+        final normalized = value
+            .where((element) => element != null)
+            .map((element) => element.toString())
+            .toList();
+        if (normalized.isEmpty) return;
+        payload[key] = normalized;
         return;
       }
-      formData.fields.add(MapEntry(key, value.toString()));
-    }
+      payload[key] = value;
+    });
 
-    map.forEach(addField);
-
-    Future<void> attachFile({
-      required List<String> fieldNames,
-      String? path,
-      String? preferredName,
-    }) async {
-      if (path == null || path.isEmpty) return;
-      final ensured = await _ensureAllowedImage(path, preferredName);
-      final fileBytes = await File(ensured.path).readAsBytes();
-      final mimeType = lookupMimeType(ensured.path, headerBytes: fileBytes) ?? 'image/jpeg';
-      final mediaType = MediaType.parse(mimeType);
-
-      for (final field in fieldNames) {
-        formData.files.add(
-          MapEntry(
-            field,
-            MultipartFile.fromBytes(
-              fileBytes,
-              filename: ensured.fileName,
-              contentType: mediaType,
-            ),
-          ),
-        );
-      }
-    }
-
-    await attachFile(
-      fieldNames: const ['logoFile', 'logo_file'],
+    final logoMultipart = await _createMultipartFile(
       path: logoFilePath,
       preferredName: logoFileName,
     );
+    if (logoMultipart != null) {
+      payload['logoFile'] = logoMultipart;
+    }
 
-    await attachFile(
-      fieldNames: const ['navbarImageFile', 'navbar_image_file'],
+    final navbarMultipart = await _createMultipartFile(
       path: navbarImagePath,
       preferredName: navbarImageFileName,
     );
+    if (navbarMultipart != null) {
+      payload['navbarImageFile'] = navbarMultipart;
+    }
 
-    return formData;
+    return FormData.fromMap(payload);
   }
 
-  /// Ensures the provided [path] points to an allowed image extension.
-  /// If the extension is unsupported it re-encodes the image as JPEG,
-  /// mirroring the behaviour used for user avatar uploads.
+  Future<MultipartFile?> _createMultipartFile({
+    String? path,
+    String? preferredName,
+  }) async {
+    if (path == null || path.isEmpty) return null;
+    final ensured = await _ensureAllowedImage(path, preferredName);
+    final mimeType = lookupMimeType(ensured.path) ?? 'image/jpeg';
+    final mediaType = MediaType.parse(mimeType);
+
+    return MultipartFile.fromFile(
+      ensured.path,
+      filename: ensured.fileName,
+      contentType: mediaType,
+    );
+  }
+
+  /// Ensures the provided image fits within the backend limits. Allowed formats
+  /// are kept intact when possible; unsupported or oversized files are
+  /// downscaled and recompressed to keep the payload under control.
   Future<_EnsuredImage> _ensureAllowedImage(
     String path,
     String? preferredName,
@@ -180,17 +173,22 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
       '.heif',
     };
     final ext = p.extension(path).toLowerCase();
-
-    if (allowed.contains(ext)) {
-      final fileName = (preferredName?.isNotEmpty ?? false)
-          ? preferredName!
-          : p.basename(path);
-      return _EnsuredImage(path: path, fileName: fileName);
-    }
-
     final sourceFile = File(path);
     if (!await sourceFile.exists()) {
       throw Exception('El archivo seleccionado no existe.');
+    }
+
+    final originalName = (preferredName?.isNotEmpty ?? false)
+        ? preferredName!
+        : p.basename(path);
+    final sanitizedName =
+        originalName.isNotEmpty ? originalName : 'property_image$ext';
+
+    final fileSize = await sourceFile.length();
+    final keepOriginal = allowed.contains(ext) && fileSize <= _maxUploadBytes;
+
+    if (keepOriginal) {
+      return _EnsuredImage(path: path, fileName: sanitizedName);
     }
 
     final bytes = await sourceFile.readAsBytes();
@@ -199,17 +197,97 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
       throw Exception('No se pudo procesar la imagen seleccionada.');
     }
 
-    final encoded = img.encodeJpg(decoded, quality: 90);
-    final tempDir = Directory.systemTemp.path;
-    final preferredBaseName =
-        (preferredName?.isNotEmpty ?? false) ? preferredName! : p.basename(path);
-    final newName = p.setExtension(preferredBaseName, '.jpg');
-    final newPath = p.join(tempDir, newName);
+    final oriented = img.bakeOrientation(decoded);
+    final resized = _resizeToFit(oriented, _maxImageDimension);
 
-    final file = File(newPath);
-    await file.writeAsBytes(encoded, flush: true);
+    final preferredExt =
+        allowed.contains(ext) && !{'.bmp', '.heic', '.heif'}.contains(ext)
+            ? ext
+            : '.jpg';
+    final encoded = await _encodeWithinLimit(resized, preferredExt);
 
-    return _EnsuredImage(path: file.path, fileName: p.basename(newPath));
+    final finalName = p.setExtension(
+      p.basenameWithoutExtension(sanitizedName),
+      encoded.extension,
+    );
+    final tempPath = p.join(Directory.systemTemp.path, finalName);
+    final tempFile = File(tempPath);
+    await tempFile.writeAsBytes(encoded.bytes, flush: true);
+
+    return _EnsuredImage(path: tempFile.path, fileName: p.basename(tempPath));
+  }
+
+  Future<_EncodedImage> _encodeWithinLimit(
+    img.Image image,
+    String preferredExt,
+  ) async {
+    final ext = preferredExt.toLowerCase();
+
+    if (ext == '.png') {
+      final encoded = img.encodePng(image, level: 6);
+      if (encoded.length <= _maxUploadBytes) {
+        return _EncodedImage(bytes: encoded, extension: '.png');
+      }
+      return _encodeWithinLimit(image, '.jpg');
+    }
+
+    if (ext == '.webp') {
+      const qualities = [90, 80, 70, 60, 50];
+      for (final quality in qualities) {
+        final encoded = img.encodeWebp(image, quality: quality);
+        if (encoded.length <= _maxUploadBytes) {
+          return _EncodedImage(bytes: encoded, extension: '.webp');
+        }
+      }
+      return _encodeWithinLimit(image, '.jpg');
+    }
+
+    if (ext == '.gif') {
+      final encoded = img.encodeGif(image);
+      if (encoded.length <= _maxUploadBytes) {
+        return _EncodedImage(bytes: encoded, extension: '.gif');
+      }
+      return _encodeWithinLimit(image, '.jpg');
+    }
+
+    img.Image current = image;
+    const qualities = [85, 75, 65, 55, 45, 40];
+
+    for (var attempt = 0; attempt < 4; attempt++) {
+      for (final quality in qualities) {
+        final encoded = img.encodeJpg(current, quality: quality);
+        if (encoded.length <= _maxUploadBytes) {
+          return _EncodedImage(bytes: encoded, extension: '.jpg');
+        }
+      }
+
+      final maxSide = math.max(current.width, current.height);
+      if (maxSide <= _minResizeDimension) {
+        break;
+      }
+
+      final nextMaxSide = (maxSide * 0.8).round();
+      current = _resizeToFit(current, nextMaxSide);
+    }
+
+    final fallback = img.encodeJpg(current, quality: 35);
+    return _EncodedImage(bytes: fallback, extension: '.jpg');
+  }
+
+  img.Image _resizeToFit(img.Image image, int maxSide) {
+    final currentMax = math.max(image.width, image.height);
+    if (currentMax <= maxSide) return image;
+
+    final ratio = maxSide / currentMax;
+    final width = (image.width * ratio).round();
+    final height = (image.height * ratio).round();
+
+    return img.copyResize(
+      image,
+      width: width > 0 ? width : 1,
+      height: height > 0 ? height : 1,
+      interpolation: img.Interpolation.average,
+    );
   }
 
   @override
@@ -260,4 +338,11 @@ class _EnsuredImage {
   final String fileName;
 
   _EnsuredImage({required this.path, required this.fileName});
+}
+
+class _EncodedImage {
+  final List<int> bytes;
+  final String extension;
+
+  const _EncodedImage({required this.bytes, required this.extension});
 }
