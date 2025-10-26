@@ -141,12 +141,29 @@ func ToUserResponse(dto domain.UserDTO) response.UserResponse {
 
 	businesses := make([]response.BusinessInfo, len(dto.Businesses))
 	for i, business := range dto.Businesses {
+		var roleInfo *response.RoleInfoDetailed
+		if business.Role != nil {
+			roleInfo = &response.RoleInfoDetailed{
+				ID:               business.Role.ID,
+				Name:             business.Role.Name,
+				Description:      business.Role.Description,
+				Level:            business.Role.Level,
+				IsSystem:         business.Role.IsSystem,
+				ScopeID:          business.Role.ScopeID,
+				ScopeName:        business.Role.ScopeName,
+				ScopeCode:        business.Role.ScopeCode,
+				BusinessTypeID:   business.Role.BusinessTypeID,
+				BusinessTypeName: business.Role.BusinessTypeName,
+			}
+		}
+
 		businesses[i] = response.BusinessInfo{
 			ID:               business.ID,
 			Name:             business.Name,
 			LogoURL:          business.LogoURL,
 			BusinessTypeID:   business.BusinessTypeID,
 			BusinessTypeName: business.BusinessTypeName,
+			Role:             roleInfo,
 		}
 	}
 

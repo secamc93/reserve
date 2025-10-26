@@ -17,21 +17,6 @@ type UsersEntity struct {
 	DeletedAt   *time.Time
 }
 
-// Role representa un rol del sistema
-type Role struct {
-	ID          uint
-	Name        string
-	Description string
-	Level       int
-	IsSystem    bool
-	ScopeID     uint
-	ScopeName   string // Nombre del scope para mostrar
-	ScopeCode   string // Código del scope para mostrar
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	DeletedAt   *time.Time
-}
-
 // Permission representa un permiso del sistema
 type Permission struct {
 	ID          uint

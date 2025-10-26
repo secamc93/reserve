@@ -12,13 +12,28 @@ type RoleInfo struct {
 	ScopeID     uint   `json:"scope_id"`
 }
 
-// BusinessInfo representa información simplificada de un business en la respuesta de usuario
-type BusinessInfo struct {
+// RoleInfoDetailed representa información completa de un rol con información de tipo de business
+type RoleInfoDetailed struct {
 	ID               uint   `json:"id"`
 	Name             string `json:"name"`
-	LogoURL          string `json:"logo_url"`
-	BusinessTypeID   uint   `json:"business_type_id"`
-	BusinessTypeName string `json:"business_type_name"`
+	Description      string `json:"description"`
+	Level            int    `json:"level"`
+	IsSystem         bool   `json:"is_system"`
+	ScopeID          uint   `json:"scope_id"`
+	ScopeName        string `json:"scope_name,omitempty"`
+	ScopeCode        string `json:"scope_code,omitempty"`
+	BusinessTypeID   uint   `json:"business_type_id,omitempty"`
+	BusinessTypeName string `json:"business_type_name,omitempty"`
+}
+
+// BusinessInfo representa información simplificada de un business en la respuesta de usuario
+type BusinessInfo struct {
+	ID               uint              `json:"id"`
+	Name             string            `json:"name"`
+	LogoURL          string            `json:"logo_url"`
+	BusinessTypeID   uint              `json:"business_type_id"`
+	BusinessTypeName string            `json:"business_type_name"`
+	Role             *RoleInfoDetailed `json:"role,omitempty"` // Rol del usuario en este business
 }
 
 // UserResponse representa la respuesta de un usuario

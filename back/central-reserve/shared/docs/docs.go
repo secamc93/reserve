@@ -5116,6 +5116,88 @@ const docTemplate = `{
                 }
             }
         },
+        "/horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/votes/{vote_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Elimina un voto específico. Solo para administradores autenticados.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones"
+                ],
+                "summary": "Eliminar voto (admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la propiedad horizontal",
+                        "name": "hp_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID del grupo de votación",
+                        "name": "group_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la votación",
+                        "name": "voting_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID del voto a eliminar",
+                        "name": "vote_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
         "/horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/voting-details": {
             "get": {
                 "security": [
@@ -5750,7 +5832,7 @@ const docTemplate = `{
         },
         "/public/vote": {
             "post": {
-                "description": "Permite a un residente validado emitir su voto. Toda la información viene del token de autenticación.",
+                "description": "Permite a un residente emitir su voto. Requiere token de autenticación de votación (VOTING_AUTH_TOKEN) obtenido después de validar el residente.",
                 "consumes": [
                     "application/json"
                 ],
@@ -5764,13 +5846,13 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Token de autenticación de votación (Bearer token)",
+                        "description": "Token de autenticación de votación (VOTING_AUTH_TOKEN - Bearer token)",
                         "name": "Authorization",
                         "in": "header",
                         "required": true
                     },
                     {
-                        "description": "Datos del voto",
+                        "description": "Datos del voto (opción requerida, DNI y unidad opcionales - vienen del token)",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -5794,6 +5876,12 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "type": "object"
                         }
@@ -6827,6 +6915,14 @@ const docTemplate = `{
                     "Roles"
                 ],
                 "summary": "Obtener todos los roles",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Filtrar por tipo de propiedad",
+                        "name": "business_type_id",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Roles obtenidos exitosamente",
@@ -6844,6 +6940,57 @@ const docTemplate = `{
                         "description": "Error interno del servidor",
                         "schema": {
                             "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Crea un nuevo rol en el sistema con todos los campos obligatorios",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Crear un nuevo rol",
+                "parameters": [
+                    {
+                        "description": "Datos del rol a crear",
+                        "name": "role",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CreateRoleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/response.CreateRoleResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Datos de entrada inválidos",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -8187,6 +8334,14 @@ const docTemplate = `{
                 "voting_option_id"
             ],
             "properties": {
+                "dni": {
+                    "description": "Opcional - viene del token",
+                    "type": "string"
+                },
+                "property_unit_id": {
+                    "description": "Opcional - viene del token",
+                    "type": "integer"
+                },
                 "voting_option_id": {
                     "type": "integer",
                     "example": 1
@@ -8563,6 +8718,44 @@ const docTemplate = `{
                 "name": {
                     "type": "string",
                     "example": "users"
+                }
+            }
+        },
+        "request.CreateRoleRequest": {
+            "type": "object",
+            "required": [
+                "business_type_id",
+                "description",
+                "level",
+                "name",
+                "scope_id"
+            ],
+            "properties": {
+                "business_type_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Rol de administrador del sistema"
+                },
+                "is_system": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "level": {
+                    "type": "integer",
+                    "maximum": 10,
+                    "minimum": 1,
+                    "example": 2
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Administrador"
+                },
+                "scope_id": {
+                    "type": "integer",
+                    "example": 1
                 }
             }
         },
@@ -9272,6 +9465,22 @@ const docTemplate = `{
                 }
             }
         },
+        "response.CreateRoleResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.RoleData"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Rol creado exitosamente"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
         "response.GetBusinessByIDResponse": {
             "type": "object",
             "properties": {
@@ -9325,6 +9534,10 @@ const docTemplate = `{
                 "is_active": {
                     "type": "boolean",
                     "example": true
+                },
+                "logo_url": {
+                    "type": "string",
+                    "example": "https://example.com/logos/los-pinos.png"
                 },
                 "name": {
                     "type": "string",
@@ -9711,12 +9924,88 @@ const docTemplate = `{
                 }
             }
         },
+        "response.RoleData": {
+            "type": "object",
+            "properties": {
+                "business_type_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Rol de administrador del sistema"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_system": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "level": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Administrador"
+                },
+                "scope_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                }
+            }
+        },
         "response.RoleErrorResponse": {
             "type": "object",
             "properties": {
                 "error": {
                     "type": "string",
                     "example": "Error interno del servidor"
+                }
+            }
+        },
+        "response.RoleInfoDetailed": {
+            "type": "object",
+            "properties": {
+                "business_type_id": {
+                    "type": "integer"
+                },
+                "business_type_name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_system": {
+                    "type": "boolean"
+                },
+                "level": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "scope_code": {
+                    "type": "string"
+                },
+                "scope_id": {
+                    "type": "integer"
+                },
+                "scope_name": {
+                    "type": "string"
                 }
             }
         },
@@ -9742,6 +10031,14 @@ const docTemplate = `{
         "response.RoleResponse": {
             "type": "object",
             "properties": {
+                "business_type_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "business_type_name": {
+                    "type": "string",
+                    "example": "Propiedad Horizontal"
+                },
                 "code": {
                     "type": "string",
                     "example": "admin"
@@ -9901,6 +10198,18 @@ const docTemplate = `{
         "response.UserRolesPermissionsResponse": {
             "type": "object",
             "properties": {
+                "business_id": {
+                    "type": "integer"
+                },
+                "business_name": {
+                    "type": "string"
+                },
+                "business_type_id": {
+                    "type": "integer"
+                },
+                "business_type_name": {
+                    "type": "string"
+                },
                 "is_super": {
                     "type": "boolean"
                 },
@@ -9910,11 +10219,8 @@ const docTemplate = `{
                         "$ref": "#/definitions/response.ResourcePermissions"
                     }
                 },
-                "roles": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/services_auth_internal_infra_primary_controllers_authhandler_response.RoleInfo"
-                    }
+                "role": {
+                    "$ref": "#/definitions/services_auth_internal_infra_primary_controllers_authhandler_response.RoleInfo"
                 }
             }
         },
@@ -10033,6 +10339,14 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "role": {
+                    "description": "Rol del usuario en este business",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.RoleInfoDetailed"
+                        }
+                    ]
                 }
             }
         },

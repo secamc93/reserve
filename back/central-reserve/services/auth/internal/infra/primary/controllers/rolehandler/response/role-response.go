@@ -2,15 +2,17 @@ package response
 
 // RoleResponse representa la respuesta de un rol
 type RoleResponse struct {
-	ID          uint   `json:"id" example:"1"`
-	Name        string `json:"name" example:"Administrador"`
-	Code        string `json:"code" example:"admin"`
-	Description string `json:"description" example:"Rol de administrador del sistema"`
-	Level       int    `json:"level" example:"2"`
-	IsSystem    bool   `json:"is_system" example:"true"`
-	ScopeID     uint   `json:"scope_id" example:"1"`
-	ScopeName   string `json:"scope_name" example:"Sistema"`
-	ScopeCode   string `json:"scope_code" example:"system"`
+	ID               uint   `json:"id" example:"1"`
+	Name             string `json:"name" example:"Administrador"`
+	Code             string `json:"code" example:"admin"`
+	Description      string `json:"description" example:"Rol de administrador del sistema"`
+	Level            int    `json:"level" example:"2"`
+	IsSystem         bool   `json:"is_system" example:"true"`
+	ScopeID          uint   `json:"scope_id" example:"1"`
+	ScopeName        string `json:"scope_name" example:"Sistema"`
+	ScopeCode        string `json:"scope_code" example:"system"`
+	BusinessTypeID   uint   `json:"business_type_id" example:"1"`
+	BusinessTypeName string `json:"business_type_name" example:"Propiedad Horizontal"`
 }
 
 // RoleListResponse representa la respuesta de una lista de roles

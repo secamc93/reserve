@@ -22,6 +22,9 @@ type BusinessType struct {
 	// Relación con negocios
 	Businesses                     []Business
 	BusinessTypeResourcesPermitted []BusinessTypeResourcePermitted `gorm:"foreignKey:BusinessTypeID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+
+	// Relación con roles (un tipo de business puede tener múltiples roles)
+	Roles []Role `gorm:"foreignKey:BusinessTypeID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
 }
 
 // ───────────────────────────────────────────
@@ -180,6 +183,10 @@ type Role struct {
 	ScopeID uint  `gorm:"not null;index"`
 	Scope   Scope `gorm:"foreignKey:ScopeID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
 
+	// Relación con tipo de business (un rol solo puede estar en un tipo de business)
+	BusinessTypeID *uint         `gorm:"index"` // Temporalmente opcional para migración
+	BusinessType   *BusinessType `gorm:"foreignKey:BusinessTypeID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
+
 	Permissions []Permission `gorm:"many2many:role_permissions;"`
 	Users       []User       `gorm:"many2many:user_roles;"`
 }
@@ -195,10 +202,11 @@ type Permission struct {
 	ActionID   uint `gorm:"not null;index"`
 	ScopeID    uint `gorm:"not null;index"`
 
-	Scope    Scope    `gorm:"foreignKey:ScopeID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
-	Roles    []Role   `gorm:"many2many:role_permissions;"`
-	Resource Resource `gorm:"foreignKey:ResourceID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
-	Action   Action   `gorm:"foreignKey:ActionID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
+	Scope          Scope    `gorm:"foreignKey:ScopeID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
+	Roles          []Role   `gorm:"many2many:role_permissions;"`
+	Resource       Resource `gorm:"foreignKey:ResourceID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
+	Action         Action   `gorm:"foreignKey:ActionID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
+	BusinessTypeID uint     `gorm:"foreignKey:BusinessTypeID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
 }
 
 // ───────────────────────────────────────────

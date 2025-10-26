@@ -12,7 +12,9 @@ func (h *RoleHandler) RegisterRoutes(router *gin.RouterGroup, handler IRoleHandl
 	rolesGroup := router.Group("/roles")
 	{
 		rolesGroup.GET("", middleware.JWT(), handler.GetRolesHandler)
+		rolesGroup.POST("", middleware.JWT(), handler.CreateRole)
 		rolesGroup.GET("/:id", middleware.JWT(), handler.GetRoleByIDHandler)
+		rolesGroup.PUT("/:id", middleware.JWT(), handler.UpdateRole)
 		rolesGroup.GET("/scope/:scope_id", middleware.JWT(), handler.GetRolesByScopeHandler)
 		rolesGroup.GET("/level/:level", middleware.JWT(), handler.GetRolesByLevelHandler)
 		rolesGroup.GET("/system", middleware.JWT(), handler.GetSystemRolesHandler)

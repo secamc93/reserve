@@ -91,6 +91,7 @@ export class HorizontalPropertiesRepository implements IHorizontalPropertiesRepo
         totalUnits: p.total_units,
         isActive: p.is_active,
         createdAt: p.created_at,
+        logoUrl: p.logo_url,
       }));
 
       return {

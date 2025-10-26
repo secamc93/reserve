@@ -101,6 +101,42 @@ func (uc *UserUseCase) GetUserByID(ctx context.Context, id uint) (*domain.UserDT
 					navbarURL = fmt.Sprintf("%s/%s", base, strings.TrimLeft(navbarURL, "/"))
 				}
 			}
+
+			// Obtener el rol del usuario en este business desde business_staff
+			var role *domain.RoleDTO
+			uc.log.Info().
+				Uint("user_id", user.ID).
+				Uint("business_id", business.ID).
+				Msg("Obteniendo rol por business")
+
+			businessRole, err := uc.repository.GetUserRoleByBusiness(ctx, user.ID, business.ID)
+			if err == nil && businessRole != nil {
+				uc.log.Info().
+					Uint("user_id", user.ID).
+					Uint("business_id", business.ID).
+					Uint("role_id", businessRole.ID).
+					Str("role_name", businessRole.Name).
+					Msg("Rol encontrado para business")
+				role = &domain.RoleDTO{
+					ID:               businessRole.ID,
+					Name:             businessRole.Name,
+					Description:      businessRole.Description,
+					Level:            businessRole.Level,
+					IsSystem:         businessRole.IsSystem,
+					ScopeID:          businessRole.ScopeID,
+					ScopeName:        businessRole.ScopeName,
+					ScopeCode:        businessRole.ScopeCode,
+					BusinessTypeID:   businessRole.BusinessTypeID,
+					BusinessTypeName: businessRole.BusinessTypeName,
+				}
+			} else {
+				uc.log.Warn().
+					Uint("user_id", user.ID).
+					Uint("business_id", business.ID).
+					Err(err).
+					Msg("No se encontró rol para business")
+			}
+
 			userDTO.Businesses[i] = domain.BusinessDTO{
 				ID:                 business.ID,
 				Name:               business.Name,
@@ -122,6 +158,7 @@ func (uc *UserUseCase) GetUserByID(ctx context.Context, id uint) (*domain.UserDT
 				EnableReservations: business.EnableReservations,
 				BusinessTypeName:   business.BusinessTypeName,
 				BusinessTypeCode:   business.BusinessTypeCode,
+				Role:               role,
 			}
 		}
 	}

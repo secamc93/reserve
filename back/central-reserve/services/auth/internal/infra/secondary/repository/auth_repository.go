@@ -51,12 +51,97 @@ func (r *Repository) GetUserRoles(ctx context.Context, userID uint) ([]domain.Ro
 			Level:       role.Level,
 			IsSystem:    role.IsSystem,
 			ScopeID:     role.ScopeID,
+			ScopeName:   role.Scope.Name,
+			ScopeCode:   role.Scope.Code,
 			CreatedAt:   role.Model.CreatedAt,
 			UpdatedAt:   role.Model.UpdatedAt,
 		})
 	}
 
 	return roles, nil
+}
+
+// GetUserRoleByBusiness obtiene el rol de un usuario para un business específico desde user_roles
+// Valida que el rol coincida con el tipo de business
+func (r *Repository) GetUserRoleByBusiness(ctx context.Context, userID uint, businessID uint) (*domain.Role, error) {
+	// Obtener el business para conocer su tipo
+	var business models.Business
+	if err := r.database.Conn(ctx).
+		Preload("BusinessType").
+		Where("id = ?", businessID).
+		First(&business).Error; err != nil {
+		r.logger.Error().
+			Uint("business_id", businessID).
+			Err(err).
+			Msg("Error al obtener business para validar tipo")
+		return nil, err
+	}
+
+	// Buscar roles del usuario que coincidan con el tipo de business
+	var userRoles []models.Role
+	err := r.database.Conn(ctx).
+		Preload("Scope").
+		Preload("BusinessType").
+		Joins("JOIN user_roles ON user_roles.role_id = role.id").
+		Where("user_roles.user_id = ? AND (role.business_type_id = ? OR role.business_type_id IS NULL)", userID, business.BusinessTypeID).
+		Find(&userRoles).Error
+
+	if err != nil {
+		r.logger.Error().
+			Uint("user_id", userID).
+			Uint("business_id", businessID).
+			Err(err).
+			Msg("Error al obtener roles del usuario desde user_roles")
+		return nil, err
+	}
+
+	if len(userRoles) == 0 {
+		return nil, nil // No tiene roles válidos para este tipo de business
+	}
+
+	// Tomar el primer rol válido (priorizar roles específicos del tipo de business)
+	var selectedRole models.Role
+	for _, role := range userRoles {
+		if role.BusinessTypeID != nil && *role.BusinessTypeID == business.BusinessTypeID {
+			selectedRole = role
+			break
+		}
+	}
+
+	// Si no hay rol específico, tomar el primero
+	if selectedRole.ID == 0 && len(userRoles) > 0 {
+		selectedRole = userRoles[0]
+	}
+
+	if selectedRole.ID == 0 {
+		return nil, nil
+	}
+
+	businessTypeID := uint(0)
+	businessTypeName := ""
+	if selectedRole.BusinessTypeID != nil {
+		businessTypeID = *selectedRole.BusinessTypeID
+	}
+	if selectedRole.BusinessType != nil {
+		businessTypeName = selectedRole.BusinessType.Name
+	}
+
+	role := &domain.Role{
+		ID:               selectedRole.ID,
+		Name:             selectedRole.Name,
+		Description:      selectedRole.Description,
+		Level:            selectedRole.Level,
+		IsSystem:         selectedRole.IsSystem,
+		ScopeID:          selectedRole.ScopeID,
+		ScopeName:        selectedRole.Scope.Name,
+		ScopeCode:        selectedRole.Scope.Code,
+		BusinessTypeID:   businessTypeID,
+		BusinessTypeName: businessTypeName,
+		CreatedAt:        selectedRole.CreatedAt,
+		UpdatedAt:        selectedRole.UpdatedAt,
+	}
+
+	return role, nil
 }
 
 func (r *Repository) GetRolePermissions(ctx context.Context, roleID uint) ([]domain.Permission, error) {
@@ -274,47 +359,129 @@ func (r *Repository) DeleteUser(ctx context.Context, id uint) (string, error) {
 }
 
 func (r *Repository) AssignRolesToUser(ctx context.Context, userID uint, roleIDs []uint) error {
-	var user models.User
-	var roles []models.Role
+	db := r.database.Conn(ctx)
 
-	if err := r.database.Conn(ctx).Model(&models.User{}).Where("id = ?", userID).First(&user).Error; err != nil {
+	// Verificar que el usuario existe
+	var user models.User
+	if err := db.Where("id = ?", userID).First(&user).Error; err != nil {
 		r.logger.Error().Uint("user_id", userID).Err(err).Msg("Error al encontrar usuario")
 		return err
 	}
 
-	if err := r.database.Conn(ctx).Model(&models.Role{}).Where("id IN ?", roleIDs).Find(&roles).Error; err != nil {
-		r.logger.Error().Uint("user_id", userID).Err(err).Msg("Error al encontrar roles")
-		return err
+	// Verificar que los roles existen
+	if len(roleIDs) > 0 {
+		var count int64
+		if err := db.Model(&models.Role{}).Where("id IN ?", roleIDs).Count(&count).Error; err != nil {
+			r.logger.Error().Uint("user_id", userID).Err(err).Msg("Error al verificar roles")
+			return err
+		}
+		if count != int64(len(roleIDs)) {
+			r.logger.Error().
+				Uint("user_id", userID).
+				Int64("expected", int64(len(roleIDs))).
+				Int64("found", count).
+				Msg("Algunos roles no existen")
+			return fmt.Errorf("algunos roles no existen")
+		}
 	}
 
-	if err := r.database.Conn(ctx).Model(&user).Association("Roles").Replace(roles); err != nil {
-		r.logger.Error().Uint("user_id", userID).Err(err).Msg("Error al asignar roles a usuario")
-		return err
-	}
+	// Iniciar transacción
+	return db.Transaction(func(tx *gorm.DB) error {
+		// Eliminar todos los roles existentes
+		if err := tx.Table("user_roles").Where("user_id = ?", userID).Delete(nil).Error; err != nil {
+			r.logger.Error().Uint("user_id", userID).Err(err).Msg("Error al eliminar roles existentes")
+			return err
+		}
 
-	return nil
+		// Insertar los nuevos roles si hay alguno
+		if len(roleIDs) > 0 {
+			values := make([]map[string]interface{}, len(roleIDs))
+			for i, roleID := range roleIDs {
+				values[i] = map[string]interface{}{
+					"user_id": userID,
+					"role_id": roleID,
+				}
+			}
+
+			if err := tx.Table("user_roles").CreateInBatches(values, 100).Error; err != nil {
+				r.logger.Error().
+					Uint("user_id", userID).
+					Err(err).
+					Msg("Error al insertar roles")
+				return err
+			}
+		}
+
+		r.logger.Info().
+			Uint("user_id", userID).
+			Int("role_count", len(roleIDs)).
+			Msg("Roles asignados exitosamente")
+
+		return nil
+	})
 }
 
 func (r *Repository) AssignBusinessesToUser(ctx context.Context, userID uint, businessIDs []uint) error {
-	var user models.User
-	var businesses []models.Business
+	db := r.database.Conn(ctx)
 
-	if err := r.database.Conn(ctx).Model(&models.User{}).Where("id = ?", userID).First(&user).Error; err != nil {
+	// Verificar que el usuario existe
+	var user models.User
+	if err := db.Where("id = ?", userID).First(&user).Error; err != nil {
 		r.logger.Error().Uint("user_id", userID).Err(err).Msg("Error al encontrar usuario")
 		return err
 	}
 
-	if err := r.database.Conn(ctx).Model(&models.Business{}).Where("id IN ?", businessIDs).Find(&businesses).Error; err != nil {
-		r.logger.Error().Uint("user_id", userID).Err(err).Msg("Error al encontrar negocios")
-		return err
+	// Verificar que los businesses existen
+	if len(businessIDs) > 0 {
+		var count int64
+		if err := db.Model(&models.Business{}).Where("id IN ?", businessIDs).Count(&count).Error; err != nil {
+			r.logger.Error().Uint("user_id", userID).Err(err).Msg("Error al verificar businesses")
+			return err
+		}
+		if count != int64(len(businessIDs)) {
+			r.logger.Error().
+				Uint("user_id", userID).
+				Int64("expected", int64(len(businessIDs))).
+				Int64("found", count).
+				Msg("Algunos businesses no existen")
+			return fmt.Errorf("algunos businesses no existen")
+		}
 	}
 
-	if err := r.database.Conn(ctx).Model(&user).Association("Businesses").Replace(businesses); err != nil {
-		r.logger.Error().Uint("user_id", userID).Err(err).Msg("Error al asignar negocios a usuario")
-		return err
-	}
+	// Iniciar transacción
+	return db.Transaction(func(tx *gorm.DB) error {
+		// Eliminar todos los businesses existentes
+		if err := tx.Table("user_businesses").Where("user_id = ?", userID).Delete(nil).Error; err != nil {
+			r.logger.Error().Uint("user_id", userID).Err(err).Msg("Error al eliminar businesses existentes")
+			return err
+		}
 
-	return nil
+		// Insertar los nuevos businesses si hay alguno
+		if len(businessIDs) > 0 {
+			values := make([]map[string]interface{}, len(businessIDs))
+			for i, businessID := range businessIDs {
+				values[i] = map[string]interface{}{
+					"user_id":     userID,
+					"business_id": businessID,
+				}
+			}
+
+			if err := tx.Table("user_businesses").CreateInBatches(values, 100).Error; err != nil {
+				r.logger.Error().
+					Uint("user_id", userID).
+					Err(err).
+					Msg("Error al insertar businesses")
+				return err
+			}
+		}
+
+		r.logger.Info().
+			Uint("user_id", userID).
+			Int("business_count", len(businessIDs)).
+			Msg("Businesses asignados exitosamente")
+
+		return nil
+	})
 }
 
 func (r *Repository) GetUserByEmail(ctx context.Context, email string) (*domain.UserAuthInfo, error) {

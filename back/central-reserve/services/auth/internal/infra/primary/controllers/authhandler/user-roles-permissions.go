@@ -93,7 +93,6 @@ func (h *AuthHandler) GetUserRolesPermissionsHandler(c *gin.Context) {
 	h.logger.Info().
 		Uint("user_id", uint(userID)).
 		Bool("is_super", rolesPermissions.IsSuper).
-		Int("roles_count", len(rolesPermissions.Roles)).
 		Int("permissions_count", len(rolesPermissions.Permissions)).
 		Msg("Roles y permisos obtenidos exitosamente")
 

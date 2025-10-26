@@ -135,6 +135,25 @@ func (uc *UserUseCase) GetUsers(ctx context.Context, filters domain.UserFilters)
 						navbarURL = fmt.Sprintf("%s/%s", base, strings.TrimLeft(navbarURL, "/"))
 					}
 				}
+
+				// Obtener el rol del usuario en este business desde business_staff
+				var role *domain.RoleDTO
+				businessRole, err := uc.repository.GetUserRoleByBusiness(ctx, user.ID, business.ID)
+				if err == nil && businessRole != nil {
+					role = &domain.RoleDTO{
+						ID:               businessRole.ID,
+						Name:             businessRole.Name,
+						Description:      businessRole.Description,
+						Level:            businessRole.Level,
+						IsSystem:         businessRole.IsSystem,
+						ScopeID:          businessRole.ScopeID,
+						ScopeName:        businessRole.ScopeName,
+						ScopeCode:        businessRole.ScopeCode,
+						BusinessTypeID:   businessRole.BusinessTypeID,
+						BusinessTypeName: businessRole.BusinessTypeName,
+					}
+				}
+
 				userDTOs[i].Businesses[j] = domain.BusinessDTO{
 					ID:                 business.ID,
 					Name:               business.Name,
@@ -156,6 +175,7 @@ func (uc *UserUseCase) GetUsers(ctx context.Context, filters domain.UserFilters)
 					EnableReservations: business.EnableReservations,
 					BusinessTypeName:   business.BusinessTypeName,
 					BusinessTypeCode:   business.BusinessTypeCode,
+					Role:               role,
 				}
 			}
 		}

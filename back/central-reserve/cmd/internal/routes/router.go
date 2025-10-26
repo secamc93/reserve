@@ -5,6 +5,8 @@ import (
 	"central_reserve/shared/env"
 	"central_reserve/shared/log"
 	"context"
+	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -23,6 +25,22 @@ func BuildRouter(ctx context.Context, logger log.ILogger, environment env.IConfi
 
 	// Recovery
 	r.Use(gin.Recovery())
+
+	// Health check endpoint
+	logger.Info().Msg("Registrando endpoint /health")
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"status":    "healthy",
+			"timestamp": time.Now().Format(time.RFC3339),
+			"service":   "central-reserve",
+			"version":   "1.0.0",
+		})
+	})
+
+	// Test endpoint
+	r.GET("/test", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"message": "test"})
+	})
 
 	// 404 JSON explícito + log WARN
 	r.NoRoute(func(c *gin.Context) {

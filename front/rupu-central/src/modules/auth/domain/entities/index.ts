@@ -15,3 +15,8 @@ export * from './get-user-by-id.entity';
 export * from './get-permission-by-id.entity';
 export * from './delete-permission.entity';
 export * from './update-permission.entity';
+export * from './create-role.entity';
+export * from './business-type.entity';
+export * from './create-business-type.entity';
+export * from './update-business-type.entity';
+export * from './delete-business-type.entity';

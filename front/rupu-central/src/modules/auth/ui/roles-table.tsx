@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { getRolesAction } from '@modules/auth/infrastructure/actions';
 import { Table, TableColumn, Spinner, Badge, Button } from '@shared/ui';
 import { PencilIcon, TrashIcon, EyeIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
+import { CreateRoleModal } from './roles/create-role-modal';
 
 interface RolesTableProps {
   token: string;
@@ -25,6 +26,16 @@ export function RolesTable({ token }: RolesTableProps) {
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  const handleCreateRole = () => {
+    setShowCreateModal(true);
+  };
+
+  const handleCreateSuccess = () => {
+    setShowCreateModal(false);
+    loadRoles(); // Recargar la lista
+  };
 
   const loadRoles = async () => {
     setLoading(true);
@@ -162,7 +173,7 @@ export function RolesTable({ token }: RolesTableProps) {
         <div className="card-body">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">Roles del Sistema</h3>
-            <Button className="btn-primary">
+            <Button className="btn-primary" onClick={handleCreateRole}>
               <ShieldCheckIcon className="w-4 h-4 mr-2" />
               Crear Rol
             </Button>
@@ -177,6 +188,13 @@ export function RolesTable({ token }: RolesTableProps) {
         loading={loading}
         keyExtractor={(role) => role.id}
         emptyMessage="No hay roles disponibles. Comienza creando tu primer rol del sistema."
+      />
+
+      {/* Modal para crear rol */}
+      <CreateRoleModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={handleCreateSuccess}
       />
     </div>
   );

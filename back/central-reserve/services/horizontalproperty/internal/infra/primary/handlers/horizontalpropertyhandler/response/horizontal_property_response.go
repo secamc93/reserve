@@ -75,6 +75,7 @@ type HorizontalPropertyListResponse struct {
 	Code             string    `json:"code" example:"los-pinos"`
 	BusinessTypeName string    `json:"business_type_name" example:"Propiedad Horizontal"`
 	Address          string    `json:"address" example:"Carrera 15 #45-67, Bogotá"`
+	LogoURL          string    `json:"logo_url" example:"https://example.com/logos/los-pinos.png"`
 	TotalUnits       int       `json:"total_units" example:"120"`
 	IsActive         bool      `json:"is_active" example:"true"`
 	CreatedAt        time.Time `json:"created_at" example:"2024-01-15T10:30:00Z"`

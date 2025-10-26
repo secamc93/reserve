@@ -17,6 +17,7 @@ interface HorizontalProperty {
   address: string;
   totalUnits: number;
   isActive: boolean;
+  logoUrl?: string;
   createdAt: string;
 }
 
@@ -112,6 +113,30 @@ export function HorizontalPropertiesTable() {
       label: 'ID', 
       width: '80px', 
       align: 'center' 
+    },
+    {
+      key: 'logo',
+      label: 'Logo',
+      width: '80px',
+      align: 'center',
+      render: (value, row) => (
+        <div className="flex justify-center">
+          {row.logoUrl ? (
+            <img 
+              src={row.logoUrl} 
+              alt={`Logo de ${row.name}`}
+              className="w-10 h-10 rounded-lg object-cover border border-gray-200"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+              }}
+            />
+          ) : null}
+          <div className={`w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 text-xs font-medium ${row.logoUrl ? 'hidden' : ''}`}>
+            {row.name.charAt(0).toUpperCase()}
+          </div>
+        </div>
+      )
     },
     { 
       key: 'name', 
@@ -212,6 +237,116 @@ export function HorizontalPropertiesTable() {
     loadProperties();
   };
 
+  // Renderizar tarjetas de propiedades en lugar de tabla tradicional
+  const renderPropertyCards = () => {
+    console.log('🔍 Propiedades para renderizar:', properties);
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {properties.map((property) => {
+          console.log(`🏢 Propiedad ${property.name}:`, {
+            id: property.id,
+            name: property.name,
+            logoUrl: property.logoUrl
+          });
+          return (
+          <div 
+            key={property.id}
+            className="relative bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-shadow duration-300"
+          >
+            {/* Logo como fondo */}
+            <div className="relative h-32 bg-gradient-to-br from-blue-500 to-purple-600">
+              {property.logoUrl ? (
+                <>
+                  <img 
+                    src={property.logoUrl} 
+                    alt={`Logo de ${property.name}`}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    onError={(e) => {
+                      console.log('❌ Error cargando imagen:', property.logoUrl);
+                      e.currentTarget.style.display = 'none';
+                    }}
+                    onLoad={() => {
+                      console.log('✅ Imagen cargada correctamente:', property.logoUrl);
+                    }}
+                  />
+                  {/* Overlay sutil solo para el badge */}
+                  <div className="absolute top-0 right-0 w-20 h-8 bg-black bg-opacity-30 rounded-bl-lg"></div>
+                </>
+              ) : (
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                  <div className="text-center">
+                    <span className="text-white text-5xl font-bold block mb-2">
+                      {property.name.charAt(0).toUpperCase()}
+                    </span>
+                    <span className="text-white text-xs opacity-80">
+                      {property.name}
+                    </span>
+                  </div>
+                </div>
+              )}
+              
+              {/* Estado activo/inactivo */}
+              <div className="absolute top-3 right-3 z-10">
+                <Badge type={property.isActive ? 'success' : 'error'}>
+                  {property.isActive ? 'Activo' : 'Inactivo'}
+                </Badge>
+              </div>
+            </div>
+
+            {/* Contenido de la tarjeta */}
+            <div className="p-6">
+              <div className="mb-4">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  {property.name}
+                </h3>
+                <p className="text-sm text-gray-600 mb-3">
+                  {property.address}
+                </p>
+                <div className="flex items-center gap-4 text-sm text-gray-500">
+                  <span className="flex items-center gap-1">
+                    <span className="font-semibold">{property.totalUnits}</span>
+                    unidades
+                  </span>
+                  <span>
+                    ID: {property.id}
+                  </span>
+                </div>
+              </div>
+
+              {/* Fecha de creación */}
+              <div className="mb-4">
+                <p className="text-xs text-gray-500">
+                  Creado: {new Date(property.createdAt).toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                  })}
+                </p>
+              </div>
+
+              {/* Acciones */}
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => router.push(`/properties/${property.id}`)}
+                  className="flex-1 btn btn-sm btn-outline"
+                >
+                  Ver Detalles
+                </button>
+                <button 
+                  onClick={() => handleDeleteClick(property)}
+                  className="btn btn-sm btn-error"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-8">
@@ -234,13 +369,25 @@ export function HorizontalPropertiesTable() {
         </button>
       </div>
 
-      <Table
-        columns={columns}
-        data={properties}
-        loading={loading}
-        emptyMessage="No hay propiedades disponibles"
-        keyExtractor={(row) => row.id}
-      />
+      {properties.length > 0 ? (
+        renderPropertyCards()
+      ) : (
+        <div className="text-center py-12">
+          <div className="text-gray-400 mb-4">
+            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No hay propiedades disponibles</h3>
+          <p className="text-gray-500 mb-4">Comienza agregando tu primera propiedad horizontal</p>
+          <button 
+            onClick={handleCreateProperty}
+            className="btn btn-primary"
+          >
+            + Agregar Primera Propiedad
+          </button>
+        </div>
+      )}
 
       {/* Paginación */}
       {totalPages > 1 && (

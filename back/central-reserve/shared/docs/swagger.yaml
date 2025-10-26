@@ -2,6 +2,12 @@ basePath: /api/v1
 definitions:
   handlervote.CreatePublicVoteRequest:
     properties:
+      dni:
+        description: Opcional - viene del token
+        type: string
+      property_unit_id:
+        description: Opcional - viene del token
+        type: integer
       voting_option_id:
         example: 1
         type: integer
@@ -283,6 +289,35 @@ definitions:
         type: string
     required:
     - name
+    type: object
+  request.CreateRoleRequest:
+    properties:
+      business_type_id:
+        example: 1
+        type: integer
+      description:
+        example: Rol de administrador del sistema
+        type: string
+      is_system:
+        example: false
+        type: boolean
+      level:
+        example: 2
+        maximum: 10
+        minimum: 1
+        type: integer
+      name:
+        example: Administrador
+        type: string
+      scope_id:
+        example: 1
+        type: integer
+    required:
+    - business_type_id
+    - description
+    - level
+    - name
+    - scope_id
     type: object
   request.CreateVoteRequest:
     properties:
@@ -782,6 +817,17 @@ definitions:
         example: Consejo de Administración
         type: string
     type: object
+  response.CreateRoleResponse:
+    properties:
+      data:
+        $ref: '#/definitions/response.RoleData'
+      message:
+        example: Rol creado exitosamente
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
   response.GetBusinessByIDResponse:
     properties:
       data:
@@ -820,6 +866,9 @@ definitions:
       is_active:
         example: true
         type: boolean
+      logo_url:
+        example: https://example.com/logos/los-pinos.png
+        type: string
       name:
         example: Conjunto Residencial Los Pinos
         type: string
@@ -1089,10 +1138,63 @@ definitions:
       resource:
         type: string
     type: object
+  response.RoleData:
+    properties:
+      business_type_id:
+        example: 1
+        type: integer
+      created_at:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      description:
+        example: Rol de administrador del sistema
+        type: string
+      id:
+        example: 1
+        type: integer
+      is_system:
+        example: false
+        type: boolean
+      level:
+        example: 2
+        type: integer
+      name:
+        example: Administrador
+        type: string
+      scope_id:
+        example: 1
+        type: integer
+      updated_at:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+    type: object
   response.RoleErrorResponse:
     properties:
       error:
         example: Error interno del servidor
+        type: string
+    type: object
+  response.RoleInfoDetailed:
+    properties:
+      business_type_id:
+        type: integer
+      business_type_name:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      is_system:
+        type: boolean
+      level:
+        type: integer
+      name:
+        type: string
+      scope_code:
+        type: string
+      scope_id:
+        type: integer
+      scope_name:
         type: string
     type: object
   response.RoleListResponse:
@@ -1110,6 +1212,12 @@ definitions:
     type: object
   response.RoleResponse:
     properties:
+      business_type_id:
+        example: 1
+        type: integer
+      business_type_name:
+        example: Propiedad Horizontal
+        type: string
       code:
         example: admin
         type: string
@@ -1217,16 +1325,22 @@ definitions:
     type: object
   response.UserRolesPermissionsResponse:
     properties:
+      business_id:
+        type: integer
+      business_name:
+        type: string
+      business_type_id:
+        type: integer
+      business_type_name:
+        type: string
       is_super:
         type: boolean
       resources:
         items:
           $ref: '#/definitions/response.ResourcePermissions'
         type: array
-      roles:
-        items:
-          $ref: '#/definitions/services_auth_internal_infra_primary_controllers_authhandler_response.RoleInfo'
-        type: array
+      role:
+        $ref: '#/definitions/services_auth_internal_infra_primary_controllers_authhandler_response.RoleInfo'
     type: object
   response.UserRolesPermissionsSuccessResponse:
     properties:
@@ -1304,6 +1418,10 @@ definitions:
         type: string
       name:
         type: string
+      role:
+        allOf:
+        - $ref: '#/definitions/response.RoleInfoDetailed'
+        description: Rol del usuario en este business
     type: object
   services_auth_internal_infra_primary_controllers_userhandler_response.RoleInfo:
     properties:
@@ -4727,6 +4845,60 @@ paths:
       summary: Registrar un voto
       tags:
       - Votaciones
+  /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/votes/{vote_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Elimina un voto específico. Solo para administradores autenticados.
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: hp_id
+        required: true
+        type: integer
+      - description: ID del grupo de votación
+        in: path
+        name: group_id
+        required: true
+        type: integer
+      - description: ID de la votación
+        in: path
+        name: voting_id
+        required: true
+        type: integer
+      - description: ID del voto a eliminar
+        in: path
+        name: vote_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Eliminar voto (admin)
+      tags:
+      - Votaciones
   /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/voting-details:
     get:
       consumes:
@@ -5146,15 +5318,17 @@ paths:
     post:
       consumes:
       - application/json
-      description: Permite a un residente validado emitir su voto. Toda la información
-        viene del token de autenticación.
+      description: Permite a un residente emitir su voto. Requiere token de autenticación
+        de votación (VOTING_AUTH_TOKEN) obtenido después de validar el residente.
       parameters:
-      - description: Token de autenticación de votación (Bearer token)
+      - description: Token de autenticación de votación (VOTING_AUTH_TOKEN - Bearer
+          token)
         in: header
         name: Authorization
         required: true
         type: string
-      - description: Datos del voto
+      - description: Datos del voto (opción requerida, DNI y unidad opcionales - vienen
+          del token)
         in: body
         name: request
         required: true
@@ -5173,6 +5347,10 @@ paths:
             type: object
         "401":
           description: Unauthorized
+          schema:
+            type: object
+        "404":
+          description: Not Found
           schema:
             type: object
         "409":
@@ -5864,6 +6042,11 @@ paths:
       consumes:
       - application/json
       description: Obtiene la lista completa de roles del sistema
+      parameters:
+      - description: Filtrar por tipo de propiedad
+        in: query
+        name: business_type_id
+        type: integer
       produces:
       - application/json
       responses:
@@ -5882,6 +6065,39 @@ paths:
       security:
       - BearerAuth: []
       summary: Obtener todos los roles
+      tags:
+      - Roles
+    post:
+      consumes:
+      - application/json
+      description: Crea un nuevo rol en el sistema con todos los campos obligatorios
+      parameters:
+      - description: Datos del rol a crear
+        in: body
+        name: role
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.CreateRoleResponse'
+        "400":
+          description: Datos de entrada inválidos
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Crear un nuevo rol
       tags:
       - Roles
   /roles/{id}:

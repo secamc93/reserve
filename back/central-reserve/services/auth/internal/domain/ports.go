@@ -33,12 +33,16 @@ type IAuthRepository interface {
 	UpdateLastLogin(ctx context.Context, userID uint) error
 	ChangePassword(ctx context.Context, userID uint, newPassword string) error
 	GetUserBusinesses(ctx context.Context, userID uint) ([]BusinessInfoEntity, error)
+	GetUserRoleByBusiness(ctx context.Context, userID uint, businessID uint) (*Role, error)
 	CreateAPIKey(ctx context.Context, apiKey APIKey, keyHash string) (uint, error)
 	ValidateAPIKey(ctx context.Context, apiKey string) (*APIKey, error)
 	UpdateAPIKeyLastUsed(ctx context.Context, apiKeyID uint) error
 	GetAPIKeysByUser(ctx context.Context, userID uint) ([]APIKeyInfo, error)
 	RevokeAPIKey(ctx context.Context, apiKeyID uint) error
 	GetBusinessConfiguredResourcesIDs(ctx context.Context, businessID uint) ([]uint, error)
+	GetBusinessByID(ctx context.Context, businessID uint) (*BusinessInfo, error)
+	GetBusinessTypeByID(ctx context.Context, businessTypeID uint) (*BusinessTypeInfo, error)
+	CreateRole(ctx context.Context, role CreateRoleDTO) (*Role, error)
 	GetPermissions(ctx context.Context) ([]Permission, error)
 	GetPermissionByID(ctx context.Context, id uint) (*Permission, error)
 	GetPermissionsByScopeID(ctx context.Context, scopeID uint) ([]Permission, error)
@@ -57,6 +61,7 @@ type IAuthRepository interface {
 	GetRolesByScopeID(ctx context.Context, scopeID uint) ([]Role, error)
 	GetRolesByLevel(ctx context.Context, level int) ([]Role, error)
 	GetSystemRoles(ctx context.Context) ([]Role, error)
+	UpdateRole(ctx context.Context, id uint, role UpdateRoleDTO) (*Role, error)
 	GetUsers(ctx context.Context, filters UserFilters) ([]UserQueryDTO, int64, error)
 	CreateUser(ctx context.Context, user UsersEntity) (uint, error)
 	UpdateUser(ctx context.Context, id uint, user UsersEntity) (string, error)

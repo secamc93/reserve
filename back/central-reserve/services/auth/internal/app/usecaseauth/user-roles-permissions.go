@@ -57,6 +57,30 @@ func (uc *AuthUseCase) GetUserRolesPermissions(ctx context.Context, userID uint,
 		return nil, fmt.Errorf("error interno del servidor")
 	}
 
+	// Obtener información del business
+	business, err := uc.repository.GetBusinessByID(ctx, businessID)
+	if err != nil {
+		uc.log.Error().Err(err).Uint("business_id", businessID).Msg("Error al obtener información del business")
+		return nil, fmt.Errorf("error interno del servidor")
+	}
+
+	if business == nil {
+		uc.log.Error().Uint("business_id", businessID).Msg("Business no encontrado")
+		return nil, fmt.Errorf("business no encontrado")
+	}
+
+	// Obtener información del tipo de business
+	businessType, err := uc.repository.GetBusinessTypeByID(ctx, business.BusinessTypeID)
+	if err != nil {
+		uc.log.Error().Err(err).Uint("business_type_id", business.BusinessTypeID).Msg("Error al obtener información del tipo de business")
+		return nil, fmt.Errorf("error interno del servidor")
+	}
+
+	if businessType == nil {
+		uc.log.Error().Uint("business_type_id", business.BusinessTypeID).Msg("Tipo de business no encontrado")
+		return nil, fmt.Errorf("tipo de business no encontrado")
+	}
+
 	// Obtener recursos configurados para el business
 	businessResourcesIDs, err := uc.repository.GetBusinessConfiguredResourcesIDs(ctx, businessID)
 	if err != nil {
@@ -92,24 +116,28 @@ func (uc *AuthUseCase) GetUserRolesPermissions(ctx context.Context, userID uint,
 
 	// Construir respuesta
 	response := &domain.UserRolesPermissionsResponse{
-		Success:     true,
-		Message:     "Roles y permisos obtenidos exitosamente",
-		UserID:      userID,
-		Email:       user.Email,
-		IsSuper:     isSuper,
-		Roles:       make([]domain.RoleInfo, len(roles)),
-		Permissions: make([]domain.PermissionInfo, 0),
+		Success:          true,
+		Message:          "Roles y permisos obtenidos exitosamente",
+		UserID:           userID,
+		Email:            user.Email,
+		IsSuper:          isSuper,
+		BusinessID:       business.ID,
+		BusinessName:     business.Name,
+		BusinessTypeID:   businessType.ID,
+		BusinessTypeName: businessType.Name,
+		Role:             domain.RoleInfo{}, // Se llenará después
+		Permissions:      make([]domain.PermissionInfo, 0),
 	}
 
-	// Mapear roles
-	for i, role := range roles {
-		response.Roles[i] = domain.RoleInfo{
-			ID:          role.ID,
-			Name:        role.Name,
-			Description: role.Description,
-			Level:       role.Level,
-			IsSystem:    role.IsSystem,
-			Scope:       role.ScopeName, // Usar ScopeName en lugar de Scope
+	// Mapear el primer rol (ya que ahora solo hay uno por business)
+	if len(roles) > 0 {
+		response.Role = domain.RoleInfo{
+			ID:          roles[0].ID,
+			Name:        roles[0].Name,
+			Description: roles[0].Description,
+			Level:       roles[0].Level,
+			IsSystem:    roles[0].IsSystem,
+			Scope:       roles[0].ScopeName,
 		}
 	}
 

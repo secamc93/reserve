@@ -100,6 +100,33 @@ func MapCreateRequestToDTO(req *request.CreateHorizontalPropertyRequest) domain.
 
 // MapUpdateRequestToDTO mapea request de actualización a DTO de dominio
 func MapUpdateRequestToDTO(req *request.UpdateHorizontalPropertyRequest) domain.UpdateHorizontalPropertyDTO {
+	// Convertir strings vacíos a nil para campos de color
+	primaryColor := req.PrimaryColor
+	if primaryColor != nil && *primaryColor == "" {
+		primaryColor = nil
+	}
+
+	secondaryColor := req.SecondaryColor
+	if secondaryColor != nil && *secondaryColor == "" {
+		secondaryColor = nil
+	}
+
+	tertiaryColor := req.TertiaryColor
+	if tertiaryColor != nil && *tertiaryColor == "" {
+		tertiaryColor = nil
+	}
+
+	quaternaryColor := req.QuaternaryColor
+	if quaternaryColor != nil && *quaternaryColor == "" {
+		quaternaryColor = nil
+	}
+
+	// Convertir strings vacíos a nil para otros campos opcionales
+	customDomain := req.CustomDomain
+	if customDomain != nil && *customDomain == "" {
+		customDomain = nil
+	}
+
 	return domain.UpdateHorizontalPropertyDTO{
 		Name:             req.Name,
 		Code:             req.Code,
@@ -109,11 +136,11 @@ func MapUpdateRequestToDTO(req *request.UpdateHorizontalPropertyRequest) domain.
 		Description:      req.Description,
 		LogoFile:         req.LogoFile,
 		NavbarImageFile:  req.NavbarImageFile,
-		PrimaryColor:     req.PrimaryColor,
-		SecondaryColor:   req.SecondaryColor,
-		TertiaryColor:    req.TertiaryColor,
-		QuaternaryColor:  req.QuaternaryColor,
-		CustomDomain:     req.CustomDomain,
+		PrimaryColor:     primaryColor,
+		SecondaryColor:   secondaryColor,
+		TertiaryColor:    tertiaryColor,
+		QuaternaryColor:  quaternaryColor,
+		CustomDomain:     customDomain,
 		TotalUnits:       req.TotalUnits,
 		TotalFloors:      req.TotalFloors,
 		HasElevator:      req.HasElevator,
@@ -223,6 +250,7 @@ func MapPaginatedDTOToResponse(dto *domain.PaginatedHorizontalPropertyDTO) *resp
 			Code:             item.Code,
 			BusinessTypeName: item.BusinessTypeName,
 			Address:          item.Address,
+			LogoURL:          item.LogoURL,
 			TotalUnits:       item.TotalUnits,
 			IsActive:         item.IsActive,
 			CreatedAt:        item.CreatedAt,

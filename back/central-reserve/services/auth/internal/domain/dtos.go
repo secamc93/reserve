@@ -74,13 +74,17 @@ type BusinessTypeInfo struct {
 }
 
 type UserRolesPermissionsResponse struct {
-	Success     bool
-	Message     string
-	UserID      uint
-	Email       string
-	IsSuper     bool
-	Roles       []RoleInfo
-	Permissions []PermissionInfo
+	Success          bool
+	Message          string
+	UserID           uint
+	Email            string
+	IsSuper          bool
+	BusinessID       uint
+	BusinessName     string
+	BusinessTypeID   uint
+	BusinessTypeName string
+	Role             RoleInfo
+	Permissions      []PermissionInfo
 }
 
 type RoleInfo struct {
@@ -146,20 +150,42 @@ type ValidateAPIKeyResponse struct {
 
 // RoleDTO representa un rol para casos de uso
 type RoleDTO struct {
-	ID          uint
-	Name        string
-	Code        string
-	Description string
-	Level       int
-	IsSystem    bool
-	ScopeID     uint
-	ScopeName   string // Nombre del scope para mostrar
-	ScopeCode   string // Código del scope para mostrar
+	ID               uint
+	Name             string
+	Code             string
+	Description      string
+	Level            int
+	IsSystem         bool
+	ScopeID          uint
+	ScopeName        string // Nombre del scope para mostrar
+	ScopeCode        string // Código del scope para mostrar
+	BusinessTypeID   uint   // ID del tipo de business
+	BusinessTypeName string // Nombre del tipo de business
 }
 
 // RoleFilters representa los filtros para la consulta de roles
 type RoleFilters struct {
 	Level int
+}
+
+// CreateRoleDTO representa los datos para crear un nuevo rol
+type CreateRoleDTO struct {
+	Name           string
+	Description    string
+	Level          int
+	IsSystem       bool
+	ScopeID        uint
+	BusinessTypeID uint
+}
+
+// UpdateRoleDTO representa los datos para actualizar un rol existente
+type UpdateRoleDTO struct {
+	Name           *string
+	Description    *string
+	Level          *int
+	IsSystem       *bool
+	ScopeID        *uint
+	BusinessTypeID *uint
 }
 
 // PermissionDTO representa un permiso para casos de uso
@@ -310,6 +336,7 @@ type BusinessDTO struct {
 	EnableReservations bool
 	BusinessTypeName   string
 	BusinessTypeCode   string
+	Role               *RoleDTO // Rol del usuario en este business (desde business_staff)
 }
 
 // UserListDTO representa una lista paginada de usuarios
@@ -372,6 +399,22 @@ type ResourceListDTO struct {
 	Page       int
 	PageSize   int
 	TotalPages int
+}
+
+// Role representa la entidad de rol en el dominio
+type Role struct {
+	ID               uint
+	Name             string
+	Description      string
+	Level            int
+	IsSystem         bool
+	ScopeID          uint
+	ScopeName        string
+	ScopeCode        string
+	BusinessTypeID   uint
+	BusinessTypeName string
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
 }
 
 // ResourceFilters representa los filtros para la consulta de recursos

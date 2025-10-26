@@ -16,15 +16,17 @@ func ToRoleFilters(req request.GetRolesByLevelRequest) domain.RoleFilters {
 // ToRoleResponse convierte RoleDTO a RoleResponse
 func ToRoleResponse(dto domain.RoleDTO) response.RoleResponse {
 	return response.RoleResponse{
-		ID:          dto.ID,
-		Name:        dto.Name,
-		Code:        dto.Code,
-		Description: dto.Description,
-		Level:       dto.Level,
-		IsSystem:    dto.IsSystem,
-		ScopeID:     dto.ScopeID,
-		ScopeName:   dto.ScopeName,
-		ScopeCode:   dto.ScopeCode,
+		ID:               dto.ID,
+		Name:             dto.Name,
+		Code:             dto.Code,
+		Description:      dto.Description,
+		Level:            dto.Level,
+		IsSystem:         dto.IsSystem,
+		ScopeID:          dto.ScopeID,
+		ScopeName:        dto.ScopeName,
+		ScopeCode:        dto.ScopeCode,
+		BusinessTypeID:   dto.BusinessTypeID,
+		BusinessTypeName: dto.BusinessTypeName,
 	}
 }
 

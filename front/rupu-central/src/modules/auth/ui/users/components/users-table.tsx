@@ -157,7 +157,6 @@ export function UsersTable({
                   </div>
                 </th>
                 <th className="px-6 py-4 text-left">Roles</th>
-                <th className="px-6 py-4 text-left">Negocios</th>
                 <th className="px-6 py-4 text-left">Estado</th>
                 <th className="px-6 py-4 text-left">
                   <div className="flex items-center gap-2">
@@ -171,7 +170,7 @@ export function UsersTable({
             <tbody>
               {!users || users.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
                     <UserIcon className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                     <p className="text-lg font-medium">No hay usuarios</p>
                     <p className="text-sm">Los usuarios aparecerán aquí cuando se agreguen</p>
@@ -214,26 +213,63 @@ export function UsersTable({
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex flex-wrap gap-1">
-                        {user.roles.map((role) => (
-                          <Badge key={role.id} variant="secondary" className="text-xs">
-                            {role.name}
-                          </Badge>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-wrap gap-1">
-                        {user.businesses.map((business) => (
-                          <Badge key={business.id} variant="outline" className="text-xs">
-                            {business.name}
-                          </Badge>
-                        ))}
+                      <div className="flex flex-wrap gap-2">
+                        {(() => {
+                          // Lógica de roles: mostrar rol global para usuarios de plataforma (scope_id: 1)
+                          // o rol específico del business para usuarios de negocio
+                          const platformRoles = user.roles.filter(role => role.scope_id === 1);
+                          const businessRoles = user.roles.filter(role => role.scope_id !== 1);
+                          
+                          if (platformRoles.length > 0) {
+                            // Usuario de plataforma: mostrar rol global
+                            return platformRoles.map((role) => (
+                              <Badge key={role.id} type="secondary" className="text-xs bg-blue-100 text-blue-800">
+                                {role.name}
+                              </Badge>
+                            ));
+                          } else if (user.businesses.length > 0) {
+                            // Usuario de negocio: mostrar business y rol como un solo elemento
+                            return user.businesses.map((business) => {
+                              const businessRole = businessRoles.find(role => 
+                                // Aquí necesitaríamos mapear el role del business, pero por ahora mostramos el business
+                                true
+                              );
+                              return (
+                                <div key={business.id} className={`inline-flex items-center rounded-full px-3 py-1 text-xs ${
+                                  businessRole ? 'bg-green-100' : 'bg-gray-100'
+                                }`}>
+                                  <span className={`font-medium ${
+                                    businessRole ? 'text-green-800' : 'text-gray-700'
+                                  }`}>
+                                    {business.name}
+                                  </span>
+                                  <span className={`mx-1 ${
+                                    businessRole ? 'text-green-600' : 'text-gray-500'
+                                  }`}>
+                                    :
+                                  </span>
+                                  <span className={`${
+                                    businessRole ? 'text-green-700' : 'text-gray-600'
+                                  }`}>
+                                    {businessRole ? businessRole.name : 'Sin rol'}
+                                  </span>
+                                </div>
+                              );
+                            });
+                          } else {
+                            // Sin roles asignados
+                            return (
+                              <Badge type="secondary" className="text-xs bg-gray-100 text-gray-600">
+                                Sin rol asignado
+                              </Badge>
+                            );
+                          }
+                        })()}
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <Badge 
-                        variant={user.is_active ? "success" : "error"}
+                        type={user.is_active ? "success" : "error"}
                         className="text-xs"
                       >
                         {user.is_active ? 'Activo' : 'Inactivo'}
@@ -253,7 +289,7 @@ export function UsersTable({
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-center gap-2">
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
                           onClick={() => onViewUser?.(user)}
                           className="p-2 hover:bg-blue-50 hover:text-blue-600"
@@ -261,7 +297,7 @@ export function UsersTable({
                           <EyeIcon className="w-4 h-4" />
                         </Button>
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
                           onClick={() => onEditUser?.(user)}
                           className="p-2 hover:bg-green-50 hover:text-green-600"
@@ -269,7 +305,7 @@ export function UsersTable({
                           <PencilIcon className="w-4 h-4" />
                         </Button>
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
                           onClick={() => onDeleteUser?.(user)}
                           className="p-2 hover:bg-red-50 hover:text-red-600"
@@ -295,7 +331,6 @@ export function UsersTable({
         message={`¿Estás seguro de que quieres eliminar al usuario "${selectedUser?.name}"? Esta acción no se puede deshacer.`}
         confirmText="Eliminar"
         cancelText="Cancelar"
-        variant="danger"
         loading={crudLoading && deletingId === selectedUser?.id}
       />
 

@@ -38,6 +38,8 @@ export class GetUsersRepository {
     if (is_active !== undefined) queryParams.append('is_active', is_active.toString());
     if (role_id) queryParams.append('role_id', role_id.toString());
     if (business_id) queryParams.append('business_id', business_id.toString());
+    if (sort_by) queryParams.append('sort_by', sort_by);
+    if (sort_order) queryParams.append('sort_order', sort_order);
     // Removed created_at_start and created_at_end as they don't exist in GetUsersParams
     if (sort_by) queryParams.append('sort_by', sort_by);
     if (sort_order) queryParams.append('sort_order', sort_order);

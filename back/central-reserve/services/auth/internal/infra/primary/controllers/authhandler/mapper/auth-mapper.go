@@ -68,9 +68,22 @@ func ToUserRolesPermissionsResponse(domainResponse *domain.UserRolesPermissionsR
 	resources := groupPermissionsByResource(domainResponse.Permissions)
 
 	return response.UserRolesPermissionsResponse{
-		IsSuper:   domainResponse.IsSuper,
-		Roles:     toRoleInfoSlice(domainResponse.Roles),
-		Resources: resources, // Nuevo: permisos agrupados por recurso
+		IsSuper:          domainResponse.IsSuper,
+		BusinessID:       domainResponse.BusinessID,
+		BusinessName:     domainResponse.BusinessName,
+		BusinessTypeID:   domainResponse.BusinessTypeID,
+		BusinessTypeName: domainResponse.BusinessTypeName,
+		Role:             toRoleInfo(domainResponse.Role),
+		Resources:        resources,
+	}
+}
+
+// toRoleInfo convierte un dto.RoleInfo a response.RoleInfo
+func toRoleInfo(domainRole domain.RoleInfo) response.RoleInfo {
+	return response.RoleInfo{
+		ID:          domainRole.ID,
+		Name:        domainRole.Name,
+		Description: domainRole.Description,
 	}
 }
 

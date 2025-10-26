@@ -4,14 +4,17 @@ import (
 	"central_reserve/services/auth/internal/domain"
 	"central_reserve/shared/log"
 	"context"
+	"fmt"
 )
 
 type IUseCaseRole interface {
-	GetRoles(ctx context.Context) ([]domain.RoleDTO, error)
+	GetRoles(ctx context.Context, businessTypeID string) ([]domain.RoleDTO, error)
 	GetRoleByID(ctx context.Context, id uint) (*domain.RoleDTO, error)
 	GetRolesByLevel(ctx context.Context, filters domain.RoleFilters) ([]domain.RoleDTO, error)
 	GetRolesByScopeID(ctx context.Context, scopeID uint) ([]domain.RoleDTO, error)
 	GetSystemRoles(ctx context.Context) ([]domain.RoleDTO, error)
+	CreateRole(ctx context.Context, roleDTO domain.CreateRoleDTO) (*domain.Role, error)
+	UpdateRole(ctx context.Context, id uint, roleDTO domain.UpdateRoleDTO) (*domain.Role, error)
 }
 
 // RoleUseCase implementa los casos de uso para roles
@@ -26,4 +29,71 @@ func New(repository domain.IAuthRepository, log log.ILogger) IUseCaseRole {
 		repository: repository,
 		log:        log,
 	}
+}
+
+// CreateRole crea un nuevo rol
+func (uc *RoleUseCase) CreateRole(ctx context.Context, roleDTO domain.CreateRoleDTO) (*domain.Role, error) {
+	uc.log.Info().
+		Str("name", roleDTO.Name).
+		Uint("scope_id", roleDTO.ScopeID).
+		Uint("business_type_id", roleDTO.BusinessTypeID).
+		Msg("Creando nuevo rol")
+
+	// Crear el rol usando el repositorio
+	role, err := uc.repository.CreateRole(ctx, roleDTO)
+	if err != nil {
+		uc.log.Error().
+			Err(err).
+			Str("name", roleDTO.Name).
+			Msg("Error al crear rol")
+		return nil, err
+	}
+
+	uc.log.Info().
+		Uint("role_id", role.ID).
+		Str("name", role.Name).
+		Msg("Rol creado exitosamente")
+
+	return role, nil
+}
+
+// UpdateRole actualiza un rol existente
+func (uc *RoleUseCase) UpdateRole(ctx context.Context, id uint, roleDTO domain.UpdateRoleDTO) (*domain.Role, error) {
+	uc.log.Info().
+		Uint("role_id", id).
+		Msg("Actualizando rol")
+
+	// Verificar que el rol existe
+	existingRole, err := uc.repository.GetRoleByID(ctx, id)
+	if err != nil {
+		uc.log.Error().
+			Err(err).
+			Uint("role_id", id).
+			Msg("Error al verificar existencia del rol")
+		return nil, err
+	}
+
+	if existingRole == nil {
+		uc.log.Error().
+			Uint("role_id", id).
+			Msg("Rol no encontrado")
+		return nil, fmt.Errorf("rol no encontrado")
+	}
+
+	// Actualizar el rol usando el repositorio
+	role, err := uc.repository.UpdateRole(ctx, id, roleDTO)
+	if err != nil {
+		uc.log.Error().
+			Err(err).
+			Uint("role_id", id).
+			Msg("Error al actualizar rol")
+		return nil, err
+	}
+
+	uc.log.Info().
+		Uint("role_id", role.ID).
+		Str("name", role.Name).
+		Msg("Rol actualizado exitosamente")
+
+	return role, nil
 }

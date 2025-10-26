@@ -16,14 +16,18 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Success		200	{object}	response.RoleListResponse	"Roles obtenidos exitosamente"
-//	@Failure		401	{object}	response.RoleErrorResponse	"Token de acceso requerido"
-//	@Failure		500	{object}	response.RoleErrorResponse	"Error interno del servidor"
+//	@Param			business_type_id	query		int		false	"Filtrar por tipo de propiedad"
+//	@Success		200				{object}	response.RoleListResponse	"Roles obtenidos exitosamente"
+//	@Failure		401				{object}	response.RoleErrorResponse		"Token de acceso requerido"
+//	@Failure		500				{object}	response.RoleErrorResponse		"Error interno del servidor"
 //	@Router			/roles [get]
 func (h *RoleHandler) GetRolesHandler(c *gin.Context) {
 	h.logger.Info().Msg("Iniciando solicitud para obtener todos los roles")
 
-	roles, err := h.usecase.GetRoles(c.Request.Context())
+	// Obtener query parameter para filtrar por business_type_id
+	businessTypeIDStr := c.Query("business_type_id")
+
+	roles, err := h.usecase.GetRoles(c.Request.Context(), businessTypeIDStr)
 	if err != nil {
 		h.logger.Error().Err(err).Msg("Error al obtener roles desde el caso de uso")
 		c.JSON(http.StatusInternalServerError, response.RoleErrorResponse{
