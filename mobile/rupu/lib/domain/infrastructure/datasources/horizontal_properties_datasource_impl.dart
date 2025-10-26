@@ -43,6 +43,9 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
     final response = await _dio.post(
       '/horizontal-properties',
       data: formData,
+      options: Options(
+        contentType: 'multipart/form-data',
+      ),
     );
     return HorizontalPropertyDetailResponseModel.fromJson(
       response.data as Map<String, dynamic>,
@@ -86,6 +89,9 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
     final response = await _dio.put(
       '/horizontal-properties/$id',
       data: formData,
+      options: Options(
+        contentType: 'multipart/form-data',
+      ),
     );
     return HorizontalPropertyDetailResponseModel.fromJson(
       response.data as Map<String, dynamic>,
