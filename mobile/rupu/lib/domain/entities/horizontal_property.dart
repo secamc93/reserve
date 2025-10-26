@@ -9,6 +9,7 @@ class HorizontalProperty {
   final bool isActive;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final String? logoUrl;
 
   const HorizontalProperty({
     required this.id,
@@ -21,5 +22,6 @@ class HorizontalProperty {
     required this.isActive,
     this.createdAt,
     this.updatedAt,
+    this.logoUrl,
   });
 }

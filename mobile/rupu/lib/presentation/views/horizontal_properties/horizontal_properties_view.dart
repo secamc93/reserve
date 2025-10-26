@@ -126,7 +126,7 @@ class HorizontalPropertiesView extends GetView<HorizontalPropertiesController> {
                               units: p.totalUnits ?? 0,
                               isActive: p.isActive,
                               createdAt: controller.formatDate(p.createdAt),
-                              imageUrl: null, // listo para network
+                              imageUrl: p.logoUrl,
                               onView: () {
                                 final path =
                                     '/home/$pageIndex/horizontal-properties/${p.id}';
@@ -426,6 +426,8 @@ class _PropertyCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final trimmedUrl = imageUrl?.trim();
+    final hasImage = trimmedUrl != null && trimmedUrl.isNotEmpty;
 
     final (bgChip, fgChip, labelChip) = isActive
         ? (cs.secondaryContainer, cs.onSecondaryContainer, 'ACTIVO')
@@ -470,25 +472,19 @@ class _PropertyCard extends StatelessWidget {
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
-                        if (imageUrl == null || imageUrl!.isEmpty)
-                          Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  cs.surfaceContainerHighest,
-                                  cs.surface,
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                            ),
+                        if (!hasImage)
+                          Image.asset(
+                            'assets/images/logorufu.png',
+                            fit: BoxFit.cover,
                           )
                         else
                           Image.network(
-                            imageUrl!,
+                            trimmedUrl!,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) =>
-                                Container(color: cs.surfaceContainerHighest),
+                            errorBuilder: (_, __, ___) => Image.asset(
+                              'assets/images/logorufu.png',
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         Positioned.fill(
                           child: DecoratedBox(
