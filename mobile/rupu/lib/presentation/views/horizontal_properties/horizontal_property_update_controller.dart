@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart' hide MultipartFile;
+import 'package:http_parser/http_parser.dart';
+import 'package:mime/mime.dart';
 
 import 'package:rupu/domain/entities/horizontal_property_detail.dart';
 import 'package:rupu/domain/entities/horizontal_property_update_result.dart';
@@ -303,21 +305,26 @@ class HorizontalPropertyUpdateController extends GetxController {
 
     final logo = logoFile.value;
     if (logo != null) {
-      map['logo_file'] = await MultipartFile.fromFile(
-        logo.path,
-        filename: logo.fileName,
-      );
+      map['logo_file'] = await _buildMultipartFile(logo);
     }
 
     final navbar = navbarImageFile.value;
     if (navbar != null) {
-      map['navbar_image_file'] = await MultipartFile.fromFile(
-        navbar.path,
-        filename: navbar.fileName,
-      );
+      map['navbar_image_file'] = await _buildMultipartFile(navbar);
     }
 
     return map;
+  }
+
+  Future<MultipartFile> _buildMultipartFile(PropertyFileData data) async {
+    final mimeType = lookupMimeType(data.path) ?? 'image/jpeg';
+    final mediaType = MediaType.parse(mimeType);
+
+    return MultipartFile.fromFile(
+      data.path,
+      filename: data.fileName,
+      contentType: mediaType,
+    );
   }
 }
 
