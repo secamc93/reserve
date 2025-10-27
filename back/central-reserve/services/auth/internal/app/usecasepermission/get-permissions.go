@@ -5,11 +5,11 @@ import (
 	"context"
 )
 
-// GetPermissions obtiene todos los permisos
-func (uc *PermissionUseCase) GetPermissions(ctx context.Context) ([]domain.PermissionDTO, error) {
+// GetPermissions obtiene todos los permisos con filtros opcionales
+func (uc *PermissionUseCase) GetPermissions(ctx context.Context, businessTypeID *uint, name *string, scopeID *uint) ([]domain.PermissionDTO, error) {
 	uc.logger.Info().Msg("Obteniendo todos los permisos")
 
-	permissions, err := uc.repository.GetPermissions(ctx)
+	permissions, err := uc.repository.GetPermissions(ctx, businessTypeID, name, scopeID)
 	if err != nil {
 		uc.logger.Error().Err(err).Msg("Error al obtener permisos desde el repositorio")
 		return nil, err
@@ -28,9 +28,11 @@ func (uc *PermissionUseCase) GetPermissions(ctx context.Context) ([]domain.Permi
 // entityToPermissionDTO convierte una entidad Permission a PermissionDTO
 func entityToPermissionDTO(permission domain.Permission) domain.PermissionDTO {
 	return domain.PermissionDTO{
-		ID:          permission.ID,
-		Description: permission.Description,
-		Resource:    permission.Resource,
-		Action:      permission.Action,
+		ID:               permission.ID,
+		Description:      permission.Description,
+		Resource:         permission.Resource,
+		Action:           permission.Action,
+		BusinessTypeID:   permission.BusinessTypeID,
+		BusinessTypeName: permission.BusinessTypeName,
 	}
 }

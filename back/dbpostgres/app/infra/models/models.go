@@ -25,6 +25,12 @@ type BusinessType struct {
 
 	// Relación con roles (un tipo de business puede tener múltiples roles)
 	Roles []Role `gorm:"foreignKey:BusinessTypeID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+
+	// Relación con recursos (un tipo de business puede tener múltiples recursos)
+	Resources []Resource `gorm:"foreignKey:BusinessTypeID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+
+	// Relación con permisos (un tipo de business puede tener múltiples permisos)
+	Permissions []Permission `gorm:"foreignKey:BusinessTypeID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
 }
 
 // ───────────────────────────────────────────
@@ -139,6 +145,10 @@ type Resource struct {
 	Name        string `gorm:"size:100;not null;unique"`
 	Description string `gorm:"size:500"`
 
+	// Relación con tipo de business (opcional para recursos genéricos)
+	BusinessTypeID *uint         `gorm:"index"`                                                                   // Tipo de business (null = genérico, aplica a todos)
+	BusinessType   *BusinessType `gorm:"foreignKey:BusinessTypeID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"` // Relación con tipo de business
+
 	// Relaciones
 	BusinessResourcesPermitted []BusinessTypeResourcePermitted `gorm:"foreignKey:ResourceID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
@@ -202,11 +212,14 @@ type Permission struct {
 	ActionID   uint `gorm:"not null;index"`
 	ScopeID    uint `gorm:"not null;index"`
 
-	Scope          Scope    `gorm:"foreignKey:ScopeID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
-	Roles          []Role   `gorm:"many2many:role_permissions;"`
-	Resource       Resource `gorm:"foreignKey:ResourceID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
-	Action         Action   `gorm:"foreignKey:ActionID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
-	BusinessTypeID uint     `gorm:"foreignKey:BusinessTypeID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
+	// Relación con tipo de business (opcional para permisos genéricos)
+	BusinessTypeID *uint         `gorm:"index"`                                                                   // Tipo de business (null = genérico, aplica a todos)
+	BusinessType   *BusinessType `gorm:"foreignKey:BusinessTypeID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"` // Relación con tipo de business
+
+	Scope    Scope    `gorm:"foreignKey:ScopeID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
+	Roles    []Role   `gorm:"many2many:role_permissions;"`
+	Resource Resource `gorm:"foreignKey:ResourceID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
+	Action   Action   `gorm:"foreignKey:ActionID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
 }
 
 // ───────────────────────────────────────────

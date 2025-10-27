@@ -8,13 +8,16 @@ import (
 )
 
 type IUseCaseRole interface {
-	GetRoles(ctx context.Context, businessTypeID string) ([]domain.RoleDTO, error)
+	GetRoles(ctx context.Context, filters domain.RoleFilters) ([]domain.RoleDTO, error)
 	GetRoleByID(ctx context.Context, id uint) (*domain.RoleDTO, error)
 	GetRolesByLevel(ctx context.Context, filters domain.RoleFilters) ([]domain.RoleDTO, error)
 	GetRolesByScopeID(ctx context.Context, scopeID uint) ([]domain.RoleDTO, error)
 	GetSystemRoles(ctx context.Context) ([]domain.RoleDTO, error)
 	CreateRole(ctx context.Context, roleDTO domain.CreateRoleDTO) (*domain.Role, error)
 	UpdateRole(ctx context.Context, id uint, roleDTO domain.UpdateRoleDTO) (*domain.Role, error)
+	AssignPermissionsToRole(ctx context.Context, roleID uint, permissionIDs []uint) error
+	RemovePermissionFromRole(ctx context.Context, roleID uint, permissionID uint) error
+	GetRolePermissions(ctx context.Context, roleID uint) ([]domain.Permission, error)
 }
 
 // RoleUseCase implementa los casos de uso para roles

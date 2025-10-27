@@ -63,11 +63,13 @@ func (h *ResourceHandler) GetResourceByIDHandler(c *gin.Context) {
 
 	// Convertir a respuesta HTTP
 	resourceResponse := response.ResourceResponse{
-		ID:          result.ID,
-		Name:        result.Name,
-		Description: result.Description,
-		CreatedAt:   result.CreatedAt,
-		UpdatedAt:   result.UpdatedAt,
+		ID:               result.ID,
+		Name:             result.Name,
+		Description:      result.Description,
+		BusinessTypeID:   result.BusinessTypeID,
+		BusinessTypeName: result.BusinessTypeName,
+		CreatedAt:        result.CreatedAt,
+		UpdatedAt:        result.UpdatedAt,
 	}
 
 	h.logger.Info().

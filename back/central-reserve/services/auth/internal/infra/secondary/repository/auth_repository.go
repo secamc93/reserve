@@ -636,3 +636,156 @@ func (r *Repository) GetBusinessConfiguredResourcesIDs(ctx context.Context, busi
 
 	return actualResourceIDs, nil
 }
+
+// AssignPermissionsToRole asigna permisos a un rol
+func (r *Repository) AssignPermissionsToRole(ctx context.Context, roleID uint, permissionIDs []uint) error {
+	db := r.database.Conn(ctx)
+
+	// Verificar que el rol existe y obtener su business_type_id
+	var role models.Role
+	err := db.Where("id = ?", roleID).First(&role).Error
+	if err != nil {
+		r.logger.Error().Uint("role_id", roleID).Err(err).Msg("Error al encontrar rol")
+		return fmt.Errorf("rol no encontrado")
+	}
+
+	// Si el rol tiene business_type_id, validar que los permisos pertenezcan al mismo business_type
+	if role.BusinessTypeID != nil && len(permissionIDs) > 0 {
+		var permissions []models.Permission
+		err := db.Where("id IN ?", permissionIDs).Find(&permissions).Error
+		if err != nil {
+			r.logger.Error().Uint("role_id", roleID).Err(err).Msg("Error al verificar permisos")
+			return fmt.Errorf("error al verificar permisos")
+		}
+
+		// Validar que todos los permisos pertenezcan al mismo business_type o sean genéricos
+		for _, permission := range permissions {
+			// Si el permiso tiene business_type_id, debe coincidir con el del rol
+			if permission.BusinessTypeID != nil {
+				if *permission.BusinessTypeID != *role.BusinessTypeID {
+					roleBTID := uint(0)
+					if role.BusinessTypeID != nil {
+						roleBTID = *role.BusinessTypeID
+					}
+
+					r.logger.Error().
+						Uint("role_id", roleID).
+						Uint("permission_id", permission.ID).
+						Uint("role_business_type", roleBTID).
+						Uint("permission_business_type", *permission.BusinessTypeID).
+						Msg("El permiso no pertenece al mismo business_type que el rol")
+					return fmt.Errorf("el permiso con ID %d no pertenece al mismo business_type que el rol", permission.ID)
+				}
+			}
+			// Si es NULL, es genérico y se puede asignar a cualquier tipo
+		}
+	}
+
+	// Iniciar transacción
+	return db.Transaction(func(tx *gorm.DB) error {
+		// Eliminar todos los permisos existentes del rol
+		if err := tx.Table("role_permissions").Where("role_id = ?", roleID).Delete(nil).Error; err != nil {
+			r.logger.Error().Uint("role_id", roleID).Err(err).Msg("Error al eliminar permisos existentes")
+			return err
+		}
+
+		// Insertar los nuevos permisos si hay alguno
+		if len(permissionIDs) > 0 {
+			values := make([]map[string]interface{}, len(permissionIDs))
+			for i, permissionID := range permissionIDs {
+				values[i] = map[string]interface{}{
+					"role_id":       roleID,
+					"permission_id": permissionID,
+					"created_at":    time.Now(),
+				}
+			}
+
+			if err := tx.Table("role_permissions").CreateInBatches(values, 100).Error; err != nil {
+				r.logger.Error().
+					Uint("role_id", roleID).
+					Err(err).
+					Msg("Error al insertar permisos")
+				return err
+			}
+		}
+
+		r.logger.Info().
+			Uint("role_id", roleID).
+			Int("permission_count", len(permissionIDs)).
+			Msg("Permisos asignados exitosamente al rol")
+
+		return nil
+	})
+}
+
+// RemovePermissionFromRole elimina un permiso específico de un rol
+func (r *Repository) RemovePermissionFromRole(ctx context.Context, roleID uint, permissionID uint) error {
+	db := r.database.Conn(ctx)
+
+	// Verificar que el rol existe
+	var role models.Role
+	err := db.Where("id = ?", roleID).First(&role).Error
+	if err != nil {
+		r.logger.Error().Uint("role_id", roleID).Err(err).Msg("Error al encontrar rol")
+		return fmt.Errorf("rol no encontrado")
+	}
+
+	// Verificar que el permiso existe
+	var permission models.Permission
+	err = db.Where("id = ?", permissionID).First(&permission).Error
+	if err != nil {
+		r.logger.Error().Uint("permission_id", permissionID).Err(err).Msg("Error al encontrar permiso")
+		return fmt.Errorf("permiso no encontrado")
+	}
+
+	// Eliminar la relación
+	err = db.Table("role_permissions").
+		Where("role_id = ? AND permission_id = ?", roleID, permissionID).
+		Delete(nil).Error
+
+	if err != nil {
+		r.logger.Error().
+			Uint("role_id", roleID).
+			Uint("permission_id", permissionID).
+			Err(err).
+			Msg("Error al eliminar permiso del rol")
+		return err
+	}
+
+	r.logger.Info().
+		Uint("role_id", roleID).
+		Uint("permission_id", permissionID).
+		Msg("Permiso eliminado exitosamente del rol")
+
+	return nil
+}
+
+// GetRolePermissionsIDs obtiene los IDs de los permisos asignados a un rol
+func (r *Repository) GetRolePermissionsIDs(ctx context.Context, roleID uint) ([]uint, error) {
+	db := r.database.Conn(ctx)
+
+	// Verificar que el rol existe
+	var role models.Role
+	err := db.Where("id = ?", roleID).First(&role).Error
+	if err != nil {
+		r.logger.Error().Uint("role_id", roleID).Err(err).Msg("Error al encontrar rol")
+		return nil, fmt.Errorf("rol no encontrado")
+	}
+
+	var permissionIDs []uint
+	err = db.Table("role_permissions").
+		Where("role_id = ?", roleID).
+		Pluck("permission_id", &permissionIDs).Error
+
+	if err != nil {
+		r.logger.Error().Uint("role_id", roleID).Err(err).Msg("Error al obtener permisos del rol")
+		return nil, err
+	}
+
+	r.logger.Info().
+		Uint("role_id", roleID).
+		Int("permission_count", len(permissionIDs)).
+		Msg("IDs de permisos del rol obtenidos exitosamente")
+
+	return permissionIDs, nil
+}

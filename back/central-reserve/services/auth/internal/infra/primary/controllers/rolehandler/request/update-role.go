@@ -9,3 +9,4 @@ type UpdateRoleRequest struct {
 	ScopeID        *uint   `json:"scope_id" example:"1"`
 	BusinessTypeID *uint   `json:"business_type_id" example:"1"`
 }
+

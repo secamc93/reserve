@@ -13,6 +13,8 @@ import { GetPermissionsListRepository } from './get-permissions-list.repository'
 import { GetPermissionByIdRepository } from './get-permission-by-id.repository';
 import { DeletePermissionRepository } from './delete-permission.repository';
 import { UpdatePermissionRepository } from './update-permission.repository';
+import { CreatePermissionRepository } from './create-permission.repository';
+import { CreatePermissionInput, CreatePermissionResult } from '../../../domain/entities/create-permission.entity';
 
 // Repositorio Principal de Permisos con delegación
 export class PermissionsRepository implements IPermissionsRepository {
@@ -21,6 +23,7 @@ export class PermissionsRepository implements IPermissionsRepository {
   private getPermissionByIdRepository: GetPermissionByIdRepository;
   private deletePermissionRepository: DeletePermissionRepository;
   private updatePermissionRepository: UpdatePermissionRepository;
+  private createPermissionRepository: CreatePermissionRepository;
 
   constructor() {
     this.getRolesAndPermissionsRepository = new GetRolesAndPermissionsRepository();
@@ -28,14 +31,15 @@ export class PermissionsRepository implements IPermissionsRepository {
     this.getPermissionByIdRepository = new GetPermissionByIdRepository();
     this.deletePermissionRepository = new DeletePermissionRepository();
     this.updatePermissionRepository = new UpdatePermissionRepository();
+    this.createPermissionRepository = new CreatePermissionRepository();
   }
 
   async getRolesAndPermissions(businessId: number, token: string): Promise<UserPermissions> {
     return this.getRolesAndPermissionsRepository.getRolesAndPermissions(businessId, token);
   }
 
-  async getPermissions(token: string): Promise<PermissionsList> {
-    return this.getPermissionsListRepository.getPermissions(token);
+  async getPermissions(token: string, params?: { business_type_id?: number }): Promise<PermissionsList> {
+    return this.getPermissionsListRepository.getPermissions(token, params);
   }
 
   async getPermissionById(params: GetPermissionByIdParams): Promise<GetPermissionByIdResponse> {
@@ -49,6 +53,10 @@ export class PermissionsRepository implements IPermissionsRepository {
   async updatePermission(params: UpdatePermissionParams): Promise<UpdatePermissionResponse> {
     return this.updatePermissionRepository.updatePermission(params);
   }
+
+  async createPermission(input: CreatePermissionInput, token: string): Promise<CreatePermissionResult> {
+    return this.createPermissionRepository.createPermission(input, token);
+  }
 }
 
 // Exportar repositorios específicos
@@ -57,6 +65,7 @@ export * from './get-permissions-list.repository';
 export * from './get-permission-by-id.repository';
 export * from './delete-permission.repository';
 export * from './update-permission.repository';
+export * from './create-permission.repository';
 
 // Exportar interfaces de response y request
 export * from './response';

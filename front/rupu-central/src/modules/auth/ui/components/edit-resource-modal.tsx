@@ -6,9 +6,11 @@
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
-import { Modal, Input, Alert } from '@shared/ui';
+import { Modal, Input, Alert, Button, Select } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
 import { updateResourceAction } from '../../infrastructure/actions/resources/update-resource.action';
+import { XMarkIcon } from '@heroicons/react/24/outline';
+import { useBusinessTypes } from '../hooks/use-business-types';
 
 interface EditResourceModalProps {
   isOpen: boolean;
@@ -18,20 +20,34 @@ interface EditResourceModalProps {
     id: number;
     name: string;
     description: string;
+    business_type_id?: number;
   } | null;
 }
 
 export function EditResourceModal({ isOpen, onClose, onSuccess, resource }: EditResourceModalProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [business_type_id, setBusinessTypeId] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Obtener tipos de negocio
+  const { businessTypes } = useBusinessTypes();
+
+  const businessTypeOptions = [
+    { value: '', label: 'Genérico' },
+    ...(businessTypes?.map((bt) => ({
+      value: bt.id.toString(),
+      label: `${bt.icon} ${bt.name}`
+    })) || []),
+  ];
 
   // Cargar datos del recurso cuando se abre el modal
   useEffect(() => {
     if (resource && isOpen) {
       setName(resource.name);
       setDescription(resource.description);
+      setBusinessTypeId(resource.business_type_id?.toString() || '');
       setError(null);
     }
   }, [resource, isOpen]);
@@ -52,10 +68,20 @@ export function EditResourceModal({ isOpen, onClose, onSuccess, resource }: Edit
         return;
       }
 
+      // Convertir business_type_id a número solo si tiene un valor válido
+      let businessTypeIdValue: number | null = null;
+      if (business_type_id && business_type_id.trim() !== '') {
+        const parsedId = parseInt(business_type_id);
+        if (!isNaN(parsedId)) {
+          businessTypeIdValue = parsedId;
+        }
+      }
+
       const result = await updateResourceAction({
         id: resource.id,
         name: name.trim(),
         description: description.trim(),
+        business_type_id: businessTypeIdValue,
         token,
       });
 
@@ -83,8 +109,8 @@ export function EditResourceModal({ isOpen, onClose, onSuccess, resource }: Edit
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Editar Módulo"
-      size="md"
+      title="Editar Recurso"
+      size="lg"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Error Alert */}
@@ -105,34 +131,51 @@ export function EditResourceModal({ isOpen, onClose, onSuccess, resource }: Edit
           disabled={loading}
         />
 
-        {/* Campo Descripción */}
-        <Input
-          label="Descripción"
-          type="text"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Ej: Gestión de reservas del sistema"
-          required
+        {/* Tipo de Negocio */}
+        <Select
+          label="Tipo de Negocio (Opcional)"
+          name="business_type_id"
+          value={business_type_id}
+          onChange={(e) => setBusinessTypeId(e.target.value)}
+          options={businessTypeOptions}
           disabled={loading}
         />
 
+        {/* Campo Descripción */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Descripción
+          </label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Ej: Gestión de reservas del sistema"
+            rows={3}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white resize-none"
+            required
+            disabled={loading}
+          />
+        </div>
+
         {/* Botones */}
-        <div className="flex justify-end gap-3 pt-4">
-          <button
+        <div className="flex gap-3 justify-end pt-4 border-t">
+          <Button
             type="button"
+            variant="outline"
             onClick={handleClose}
             disabled={loading}
-            className="btn btn-outline"
           >
+            <XMarkIcon className="w-4 h-4 mr-2" />
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
+            variant="primary"
+            loading={loading}
             disabled={loading}
-            className="btn btn-primary"
           >
             {loading ? 'Guardando...' : 'Guardar Cambios'}
-          </button>
+          </Button>
         </div>
       </form>
     </Modal>

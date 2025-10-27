@@ -94,14 +94,6 @@ export function useUserModals() {
     setSelectedUser(null);
   }, []);
 
-  console.log('🔧 useUserModals - Estado actual:', {
-    isCreateModalOpen,
-    isEditModalOpen,
-    isDeleteModalOpen,
-    isViewModalOpen,
-    selectedUser
-  });
-
   return {
     // Estado de modales
     isCreateModalOpen,

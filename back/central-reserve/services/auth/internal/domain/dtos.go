@@ -165,7 +165,11 @@ type RoleDTO struct {
 
 // RoleFilters representa los filtros para la consulta de roles
 type RoleFilters struct {
-	Level int
+	BusinessTypeID *uint
+	ScopeID        *uint
+	IsSystem       *bool
+	Name           *string
+	Level          *int
 }
 
 // CreateRoleDTO representa los datos para crear un nuevo rol
@@ -190,35 +194,39 @@ type UpdateRoleDTO struct {
 
 // PermissionDTO representa un permiso para casos de uso
 type PermissionDTO struct {
-	ID          uint
-	Name        string
-	Code        string
-	Description string
-	Resource    string
-	Action      string
-	ScopeID     uint
-	ScopeName   string // Nombre del scope para mostrar
-	ScopeCode   string // Código del scope para mostrar
+	ID               uint
+	Name             string
+	Code             string
+	Description      string
+	Resource         string
+	Action           string
+	ScopeID          uint
+	ScopeName        string // Nombre del scope para mostrar
+	ScopeCode        string // Código del scope para mostrar
+	BusinessTypeID   uint   // ID del tipo de business
+	BusinessTypeName string // Nombre del tipo de business
 }
 
 // CreatePermissionDTO representa los datos para crear un permiso
 type CreatePermissionDTO struct {
-	Name        string
-	Code        string
-	Description string
-	Resource    string
-	Action      string
-	ScopeID     uint
+	Name           string
+	Code           string // Opcional, se genera automáticamente si no se proporciona
+	Description    string
+	ResourceID     uint // ID del resource
+	ActionID       uint // ID de la action
+	ScopeID        uint
+	BusinessTypeID *uint // Opcional, nil = genérico
 }
 
 // UpdatePermissionDTO representa los datos para actualizar un permiso
 type UpdatePermissionDTO struct {
-	Name        string
-	Code        string
-	Description string
-	Resource    string
-	Action      string
-	ScopeID     uint
+	Name           string
+	Code           string
+	Description    string
+	ResourceID     uint // ID del resource
+	ActionID       uint // ID de la action
+	ScopeID        uint
+	BusinessTypeID *uint // Opcional, nil = genérico
 }
 
 // PermissionListDTO representa una lista de permisos
@@ -373,23 +381,27 @@ type JWTClaims struct {
 
 // ResourceDTO representa un recurso para casos de uso
 type ResourceDTO struct {
-	ID          uint
-	Name        string
-	Description string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID               uint
+	Name             string
+	Description      string
+	BusinessTypeID   uint
+	BusinessTypeName string
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
 }
 
 // CreateResourceDTO representa los datos para crear un recurso
 type CreateResourceDTO struct {
-	Name        string
-	Description string
+	Name           string
+	Description    string
+	BusinessTypeID *uint // Opcional, nil = genérico
 }
 
 // UpdateResourceDTO representa los datos para actualizar un recurso
 type UpdateResourceDTO struct {
-	Name        string
-	Description string
+	Name           string
+	Description    string
+	BusinessTypeID *uint // Opcional, nil = genérico
 }
 
 // ResourceListDTO representa una lista paginada de recursos
@@ -419,10 +431,25 @@ type Role struct {
 
 // ResourceFilters representa los filtros para la consulta de recursos
 type ResourceFilters struct {
-	Page        int
-	PageSize    int
-	Name        string
-	Description string
-	SortBy      string // "name", "created_at", etc.
-	SortOrder   string // "asc" o "desc"
+	Page           int
+	PageSize       int
+	Name           string
+	Description    string
+	BusinessTypeID *uint  // Filtrar por tipo de business (null = genérico, aplica a todos)
+	SortBy         string // "name", "created_at", etc.
+	SortOrder      string // "asc" o "desc"
+}
+
+// AssignPermissionsToRoleDTO representa los datos para asignar permisos a un rol
+type AssignPermissionsToRoleDTO struct {
+	PermissionIDs []uint
+}
+
+// GetRolePermissionsResponse representa la respuesta con los permisos de un rol
+type GetRolePermissionsResponse struct {
+	Success     bool
+	Message     string
+	RoleID      uint
+	RoleName    string
+	Permissions []PermissionDTO
 }

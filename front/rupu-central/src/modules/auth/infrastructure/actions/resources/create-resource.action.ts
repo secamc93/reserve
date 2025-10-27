@@ -12,6 +12,7 @@ import { ResourcesRepository } from '../../repositories/resources/resources.repo
 export interface CreateResourceInput {
   name: string;
   description: string;
+  business_type_id?: number;
   token: string;
 }
 

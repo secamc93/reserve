@@ -6,11 +6,13 @@ import "time"
 //
 //	@Description	Información completa de un recurso
 type ResourceResponse struct {
-	ID          uint      `json:"id" example:"1" description:"ID único del recurso"`
-	Name        string    `json:"name" example:"users" description:"Nombre del recurso"`
-	Description string    `json:"description" example:"Gestión de usuarios del sistema" description:"Descripción del recurso"`
-	CreatedAt   time.Time `json:"created_at" example:"2024-01-01T00:00:00Z" description:"Fecha de creación"`
-	UpdatedAt   time.Time `json:"updated_at" example:"2024-01-01T00:00:00Z" description:"Fecha de última actualización"`
+	ID               uint      `json:"id" example:"1" description:"ID único del recurso"`
+	Name             string    `json:"name" example:"users" description:"Nombre del recurso"`
+	Description      string    `json:"description" example:"Gestión de usuarios del sistema" description:"Descripción del recurso"`
+	BusinessTypeID   uint      `json:"business_type_id" example:"11" description:"ID del tipo de business"`
+	BusinessTypeName string    `json:"business_type_name" example:"Propiedad Horizontal" description:"Nombre del tipo de business"`
+	CreatedAt        time.Time `json:"created_at" example:"2024-01-01T00:00:00Z" description:"Fecha de creación"`
+	UpdatedAt        time.Time `json:"updated_at" example:"2024-01-01T00:00:00Z" description:"Fecha de última actualización"`
 }
 
 // ResourceListResponse representa la respuesta de lista paginada de recursos

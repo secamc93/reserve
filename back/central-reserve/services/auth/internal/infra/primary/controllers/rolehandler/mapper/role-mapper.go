@@ -8,8 +8,9 @@ import (
 
 // ToRoleFilters convierte GetRolesByLevelRequest a filtros del dominio
 func ToRoleFilters(req request.GetRolesByLevelRequest) domain.RoleFilters {
+	level := req.Level
 	return domain.RoleFilters{
-		Level: req.Level,
+		Level: &level,
 	}
 }
 
@@ -41,5 +42,63 @@ func ToRoleListResponse(roles []domain.RoleDTO) response.RoleListResponse {
 		Success: true,
 		Data:    roleResponses,
 		Count:   len(roleResponses),
+	}
+}
+
+// ToAssignPermissionsToRoleResponse construye la respuesta para asignar permisos a un rol
+func ToAssignPermissionsToRoleResponse(roleID uint, permissionIDs []uint) response.AssignPermissionsToRoleResponse {
+	return response.AssignPermissionsToRoleResponse{
+		Success:       true,
+		Message:       "Permisos asignados exitosamente al rol",
+		RoleID:        roleID,
+		PermissionIDs: permissionIDs,
+	}
+}
+
+// ToGetRolePermissionsResponse construye la respuesta con los permisos de un rol
+func ToGetRolePermissionsResponse(roleID uint, permissions []PermissionDTO) response.GetRolePermissionsResponse {
+	permissionResponses := make([]response.PermissionResponse, len(permissions))
+	for i, perm := range permissions {
+		permissionResponses[i] = response.PermissionResponse{
+			ID:          perm.ID,
+			Resource:    perm.Resource,
+			Action:      perm.Action,
+			Description: perm.Description,
+			ScopeID:     perm.ScopeID,
+			ScopeName:   perm.ScopeName,
+			ScopeCode:   perm.ScopeCode,
+		}
+	}
+
+	return response.GetRolePermissionsResponse{
+		Success:     true,
+		Message:     "Permisos del rol obtenidos exitosamente",
+		RoleID:      roleID,
+		Permissions: permissionResponses,
+		Count:       len(permissionResponses),
+	}
+}
+
+// PermissionDTO representa un permiso para mapeo
+type PermissionDTO struct {
+	ID          uint
+	Resource    string
+	Action      string
+	Description string
+	ScopeID     uint
+	ScopeName   string
+	ScopeCode   string
+}
+
+// PermissionToDTO convierte un permiso del dominio a PermissionDTO
+func PermissionToDTO(perm domain.Permission) PermissionDTO {
+	return PermissionDTO{
+		ID:          perm.ID,
+		Resource:    perm.Resource,
+		Action:      perm.Action,
+		Description: perm.Description,
+		ScopeID:     perm.ResourceID,
+		ScopeName:   "", // Se puede obtener de la relación Scope si está disponible
+		ScopeCode:   "", // Se puede obtener de la relación Scope si está disponible
 	}
 }

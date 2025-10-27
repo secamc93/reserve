@@ -18,5 +18,10 @@ func (h *RoleHandler) RegisterRoutes(router *gin.RouterGroup, handler IRoleHandl
 		rolesGroup.GET("/scope/:scope_id", middleware.JWT(), handler.GetRolesByScopeHandler)
 		rolesGroup.GET("/level/:level", middleware.JWT(), handler.GetRolesByLevelHandler)
 		rolesGroup.GET("/system", middleware.JWT(), handler.GetSystemRolesHandler)
+
+		// Rutas para gestionar permisos de roles
+		rolesGroup.POST("/:id/permissions", middleware.JWT(), handler.AssignPermissionsToRole)
+		rolesGroup.GET("/:id/permissions", middleware.JWT(), handler.GetRolePermissions)
+		rolesGroup.DELETE("/:id/permissions/:permission_id", middleware.JWT(), handler.RemovePermissionFromRole)
 	}
 }

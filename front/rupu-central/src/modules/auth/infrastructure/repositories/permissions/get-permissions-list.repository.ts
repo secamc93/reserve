@@ -9,18 +9,24 @@ import { env, logHttpRequest, logHttpSuccess, logHttpError } from '@shared/confi
 import { BackendPermissionsListResponse } from '../response';
 
 export class GetPermissionsListRepository {
-  async getPermissions(token: string): Promise<PermissionsList> {
-    const url = `${env.API_BASE_URL}/permissions`;
+  async getPermissions(token: string, params?: { business_type_id?: number }): Promise<PermissionsList> {
+    // Construir URL con query params
+    const url = new URL(`${env.API_BASE_URL}/permissions`);
+    
+    if (params?.business_type_id) {
+      url.searchParams.append('business_type_id', params.business_type_id.toString());
+    }
+    
     const startTime = Date.now();
 
     logHttpRequest({
       method: 'GET',
-      url,
+      url: url.toString(),
       token,
     });
-
+    
     try {
-      const response = await fetch(url, {
+      const response = await fetch(url.toString(), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -65,6 +71,8 @@ export class GetPermissionsListRepository {
         scopeId: permission.scope_id,
         scopeName: permission.scope_name,
         scopeCode: permission.scope_code,
+        businessTypeId: permission.business_type_id,
+        businessTypeName: permission.business_type_name,
       }));
 
       return {

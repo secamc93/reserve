@@ -11,7 +11,7 @@ import { BackendResourcesResponse, BackendCreateResourceResponse, BackendUpdateR
 
 export class ResourcesRepository implements IResourcesRepository {
   async getResources(params: GetResourcesParams): Promise<ResourcesList> {
-    const { page = 1, pageSize = 10, name, description, sortBy, sortOrder, token } = params;
+    const { page = 1, pageSize = 10, name, description, business_type_id, sortBy, sortOrder, token } = params;
     
     // Construir query params
     const queryParams = new URLSearchParams({
@@ -21,6 +21,7 @@ export class ResourcesRepository implements IResourcesRepository {
     
     if (name) queryParams.append('name', name);
     if (description) queryParams.append('description', description);
+    if (business_type_id) queryParams.append('business_type_id', business_type_id.toString());
     if (sortBy) queryParams.append('sort_by', sortBy);
     if (sortOrder) queryParams.append('sort_order', sortOrder);
     
@@ -70,10 +71,12 @@ export class ResourcesRepository implements IResourcesRepository {
       }
 
       // Mapear recursos del backend a entidad del dominio
-      const resources: Resource[] = backendResponse.data.resources.map(resource => ({
+      const resources: Resource[] = (backendResponse.data.resources || []).map((resource: any) => ({
         id: resource.id,
         name: resource.name,
         description: resource.description,
+        business_type_id: resource.business_type_id,
+        business_type_name: resource.business_type_name,
         createdAt: new Date(resource.created_at),
         updatedAt: new Date(resource.updated_at),
       }));
@@ -94,11 +97,14 @@ export class ResourcesRepository implements IResourcesRepository {
   }
 
   async createResource(params: CreateResourceParams): Promise<Resource> {
-    const { name, description, token } = params;
+    const { name, description, business_type_id, token } = params;
     const url = `${env.API_BASE_URL}/resources`;
     const startTime = Date.now();
     
-    const body = { name, description };
+    const body: any = { name, description };
+    if (business_type_id) {
+      body.business_type_id = business_type_id;
+    }
     
     logHttpRequest({
       method: 'POST',
@@ -147,6 +153,8 @@ export class ResourcesRepository implements IResourcesRepository {
         id: backendResponse.data.id,
         name: backendResponse.data.name,
         description: backendResponse.data.description,
+        business_type_id: backendResponse.data.business_type_id,
+        business_type_name: backendResponse.data.business_type_name,
         createdAt: new Date(backendResponse.data.created_at),
         updatedAt: new Date(backendResponse.data.updated_at),
       };
@@ -159,11 +167,15 @@ export class ResourcesRepository implements IResourcesRepository {
   }
 
   async updateResource(params: UpdateResourceParams): Promise<Resource> {
-    const { id, name, description, token } = params;
+    const { id, name, description, business_type_id, token } = params;
     const url = `${env.API_BASE_URL}/resources/${id}`;
     const startTime = Date.now();
     
-    const body = { name, description };
+    const body: any = { name, description };
+    // Incluir business_type_id solo si tiene un valor válido
+    if (business_type_id !== undefined && business_type_id !== null) {
+      body.business_type_id = business_type_id;
+    }
     
     logHttpRequest({
       method: 'PUT',
@@ -212,6 +224,8 @@ export class ResourcesRepository implements IResourcesRepository {
         id: backendResponse.data.id,
         name: backendResponse.data.name,
         description: backendResponse.data.description,
+        business_type_id: backendResponse.data.business_type_id,
+        business_type_name: backendResponse.data.business_type_name,
         createdAt: new Date(backendResponse.data.created_at),
         updatedAt: new Date(backendResponse.data.updated_at),
       };

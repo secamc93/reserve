@@ -66,11 +66,17 @@ func (r *Repository) GetRoleByID(ctx context.Context, roleID uint) (*domain.Role
 
 	businessTypeID := uint(0)
 	businessTypeName := ""
+	scopeName := ""
+	scopeCode := ""
 	if role.BusinessTypeID != nil {
 		businessTypeID = *role.BusinessTypeID
 	}
 	if role.BusinessType != nil {
 		businessTypeName = role.BusinessType.Name
+	}
+	if role.ScopeID > 0 && role.Scope.Name != "" {
+		scopeName = role.Scope.Name
+		scopeCode = role.Scope.Code
 	}
 
 	domainRole := &domain.Role{
@@ -80,6 +86,8 @@ func (r *Repository) GetRoleByID(ctx context.Context, roleID uint) (*domain.Role
 		Level:            role.Level,
 		IsSystem:         role.IsSystem,
 		ScopeID:          role.ScopeID,
+		ScopeName:        scopeName,
+		ScopeCode:        scopeCode,
 		BusinessTypeID:   businessTypeID,
 		BusinessTypeName: businessTypeName,
 		CreatedAt:        role.CreatedAt,
@@ -94,6 +102,7 @@ func (r *Repository) GetRoles(ctx context.Context) ([]domain.Role, error) {
 	var roles []models.Role
 
 	err := r.database.Conn(ctx).
+		Preload("Scope").
 		Preload("BusinessType").
 		Find(&roles).Error
 
@@ -106,12 +115,19 @@ func (r *Repository) GetRoles(ctx context.Context) ([]domain.Role, error) {
 	for i, role := range roles {
 		businessTypeID := uint(0)
 		businessTypeName := ""
+		scopeName := ""
+		scopeCode := ""
 
 		if role.BusinessTypeID != nil {
 			businessTypeID = *role.BusinessTypeID
 			if role.BusinessType != nil {
 				businessTypeName = role.BusinessType.Name
 			}
+		}
+
+		if role.ScopeID > 0 && role.Scope.Name != "" {
+			scopeName = role.Scope.Name
+			scopeCode = role.Scope.Code
 		}
 
 		domainRoles[i] = domain.Role{
@@ -121,6 +137,8 @@ func (r *Repository) GetRoles(ctx context.Context) ([]domain.Role, error) {
 			Level:            role.Level,
 			IsSystem:         role.IsSystem,
 			ScopeID:          role.ScopeID,
+			ScopeName:        scopeName,
+			ScopeCode:        scopeCode,
 			BusinessTypeID:   businessTypeID,
 			BusinessTypeName: businessTypeName,
 			CreatedAt:        role.CreatedAt,
@@ -136,6 +154,7 @@ func (r *Repository) GetRolesByLevel(ctx context.Context, level int) ([]domain.R
 	var roles []models.Role
 
 	err := r.database.Conn(ctx).
+		Preload("Scope").
 		Preload("BusinessType").
 		Where("level = ?", level).
 		Find(&roles).Error
@@ -149,11 +168,17 @@ func (r *Repository) GetRolesByLevel(ctx context.Context, level int) ([]domain.R
 	for i, role := range roles {
 		businessTypeID := uint(0)
 		businessTypeName := ""
+		scopeName := ""
+		scopeCode := ""
 		if role.BusinessTypeID != nil {
 			businessTypeID = *role.BusinessTypeID
 		}
 		if role.BusinessType != nil {
 			businessTypeName = role.BusinessType.Name
+		}
+		if role.ScopeID > 0 && role.Scope.Name != "" {
+			scopeName = role.Scope.Name
+			scopeCode = role.Scope.Code
 		}
 
 		domainRoles[i] = domain.Role{
@@ -163,6 +188,8 @@ func (r *Repository) GetRolesByLevel(ctx context.Context, level int) ([]domain.R
 			Level:            role.Level,
 			IsSystem:         role.IsSystem,
 			ScopeID:          role.ScopeID,
+			ScopeName:        scopeName,
+			ScopeCode:        scopeCode,
 			BusinessTypeID:   businessTypeID,
 			BusinessTypeName: businessTypeName,
 			CreatedAt:        role.CreatedAt,
@@ -178,6 +205,7 @@ func (r *Repository) GetRolesByScopeID(ctx context.Context, scopeID uint) ([]dom
 	var roles []models.Role
 
 	err := r.database.Conn(ctx).
+		Preload("Scope").
 		Preload("BusinessType").
 		Where("scope_id = ?", scopeID).
 		Find(&roles).Error
@@ -191,11 +219,17 @@ func (r *Repository) GetRolesByScopeID(ctx context.Context, scopeID uint) ([]dom
 	for i, role := range roles {
 		businessTypeID := uint(0)
 		businessTypeName := ""
+		scopeName := ""
+		scopeCode := ""
 		if role.BusinessTypeID != nil {
 			businessTypeID = *role.BusinessTypeID
 		}
 		if role.BusinessType != nil {
 			businessTypeName = role.BusinessType.Name
+		}
+		if role.ScopeID > 0 && role.Scope.Name != "" {
+			scopeName = role.Scope.Name
+			scopeCode = role.Scope.Code
 		}
 
 		domainRoles[i] = domain.Role{
@@ -205,6 +239,8 @@ func (r *Repository) GetRolesByScopeID(ctx context.Context, scopeID uint) ([]dom
 			Level:            role.Level,
 			IsSystem:         role.IsSystem,
 			ScopeID:          role.ScopeID,
+			ScopeName:        scopeName,
+			ScopeCode:        scopeCode,
 			BusinessTypeID:   businessTypeID,
 			BusinessTypeName: businessTypeName,
 			CreatedAt:        role.CreatedAt,
@@ -220,6 +256,7 @@ func (r *Repository) GetSystemRoles(ctx context.Context) ([]domain.Role, error) 
 	var roles []models.Role
 
 	err := r.database.Conn(ctx).
+		Preload("Scope").
 		Preload("BusinessType").
 		Where("is_system = ?", true).
 		Find(&roles).Error
@@ -233,11 +270,17 @@ func (r *Repository) GetSystemRoles(ctx context.Context) ([]domain.Role, error) 
 	for i, role := range roles {
 		businessTypeID := uint(0)
 		businessTypeName := ""
+		scopeName := ""
+		scopeCode := ""
 		if role.BusinessTypeID != nil {
 			businessTypeID = *role.BusinessTypeID
 		}
 		if role.BusinessType != nil {
 			businessTypeName = role.BusinessType.Name
+		}
+		if role.ScopeID > 0 && role.Scope.Name != "" {
+			scopeName = role.Scope.Name
+			scopeCode = role.Scope.Code
 		}
 
 		domainRoles[i] = domain.Role{
@@ -247,6 +290,8 @@ func (r *Repository) GetSystemRoles(ctx context.Context) ([]domain.Role, error) 
 			Level:            role.Level,
 			IsSystem:         role.IsSystem,
 			ScopeID:          role.ScopeID,
+			ScopeName:        scopeName,
+			ScopeCode:        scopeCode,
 			BusinessTypeID:   businessTypeID,
 			BusinessTypeName: businessTypeName,
 			CreatedAt:        role.CreatedAt,
@@ -300,6 +345,8 @@ func (r *Repository) UpdateRole(ctx context.Context, id uint, roleDTO domain.Upd
 
 		// Convertir a entidad de dominio
 		businessTypeID := uint(0)
+		scopeName := ""
+		scopeCode := ""
 		if existingRole.BusinessTypeID != nil {
 			businessTypeID = *existingRole.BusinessTypeID
 		}
@@ -311,6 +358,8 @@ func (r *Repository) UpdateRole(ctx context.Context, id uint, roleDTO domain.Upd
 			Level:          existingRole.Level,
 			IsSystem:       existingRole.IsSystem,
 			ScopeID:        existingRole.ScopeID,
+			ScopeName:      scopeName,
+			ScopeCode:      scopeCode,
 			BusinessTypeID: businessTypeID,
 			CreatedAt:      existingRole.CreatedAt,
 			UpdatedAt:      existingRole.UpdatedAt,
@@ -345,11 +394,17 @@ func (r *Repository) UpdateRole(ctx context.Context, id uint, roleDTO domain.Upd
 	// Convertir a entidad de dominio
 	businessTypeID := uint(0)
 	businessTypeName := ""
+	scopeName := ""
+	scopeCode := ""
 	if updatedRole.BusinessTypeID != nil {
 		businessTypeID = *updatedRole.BusinessTypeID
 	}
 	if updatedRole.BusinessType != nil {
 		businessTypeName = updatedRole.BusinessType.Name
+	}
+	if updatedRole.ScopeID > 0 && updatedRole.Scope.Name != "" {
+		scopeName = updatedRole.Scope.Name
+		scopeCode = updatedRole.Scope.Code
 	}
 
 	domainRole := &domain.Role{
@@ -359,6 +414,8 @@ func (r *Repository) UpdateRole(ctx context.Context, id uint, roleDTO domain.Upd
 		Level:            updatedRole.Level,
 		IsSystem:         updatedRole.IsSystem,
 		ScopeID:          updatedRole.ScopeID,
+		ScopeName:        scopeName,
+		ScopeCode:        scopeCode,
 		BusinessTypeID:   businessTypeID,
 		BusinessTypeName: businessTypeName,
 		CreatedAt:        updatedRole.CreatedAt,

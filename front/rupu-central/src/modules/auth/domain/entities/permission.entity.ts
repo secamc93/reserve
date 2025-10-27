@@ -12,6 +12,8 @@ export interface Permission {
   scopeId: number;
   scopeName: string;
   scopeCode: string;
+  businessTypeId?: number;
+  businessTypeName?: string;
 }
 
 export interface PermissionsList {

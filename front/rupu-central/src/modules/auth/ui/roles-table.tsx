@@ -1,10 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getRolesAction } from '@modules/auth/infrastructure/actions';
-import { Table, TableColumn, Spinner, Badge, Button } from '@shared/ui';
-import { PencilIcon, TrashIcon, EyeIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
+import { getRolesAction, GetRolesActionParams, assignRolePermissionsAction, removeRolePermissionAction } from '@modules/auth/infrastructure/actions';
+import { Table, TableColumn, Spinner, Badge, Button, Filters, FilterField } from '@shared/ui';
+import { PencilIcon, TrashIcon, EyeIcon, ShieldCheckIcon, KeyIcon } from '@heroicons/react/24/outline';
 import { CreateRoleModal } from './roles/create-role-modal';
+import { UpdateRoleModal } from './roles/update-role-modal';
+import { AssignPermissionsModal } from './roles/assign-permissions-modal';
+import { updateRoleAction } from '@modules/auth/infrastructure/actions';
+import { useBusinessTypes } from '@modules/auth/ui/hooks/use-business-types';
+import { TokenStorage } from '@shared/config';
 
 interface RolesTableProps {
   token: string;
@@ -20,6 +25,8 @@ interface Role {
   scopeId: number;
   scopeName: string;
   scopeCode: string;
+  businessTypeId?: number;
+  businessTypeName?: string;
 }
 
 export function RolesTable({ token }: RolesTableProps) {
@@ -27,6 +34,71 @@ export function RolesTable({ token }: RolesTableProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [showAssignPermissionsModal, setShowAssignPermissionsModal] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const [updateLoading, setUpdateLoading] = useState(false);
+  const [assignLoading, setAssignLoading] = useState(false);
+  
+  // Obtener tipos de negocio para el filtro
+  const { businessTypes } = useBusinessTypes();
+  
+  // Filtros
+  const [filters, setFilters] = useState<GetRolesActionParams>({});
+  
+  // Definir campos de filtros
+  const filterFields: FilterField[] = [
+    {
+      key: 'name',
+      label: 'Buscar por nombre',
+      type: 'text',
+      placeholder: 'Nombre del rol',
+    },
+    {
+      key: 'scope_id',
+      label: 'Scope',
+      type: 'select',
+      options: [
+        { value: '', label: 'Todos' },
+        { value: '1', label: 'Plataforma' },
+        { value: '2', label: 'Negocio' },
+      ],
+      advanced: true,
+    },
+    {
+      key: 'is_system',
+      label: 'Tipo',
+      type: 'boolean',
+      options: [
+        { value: '', label: 'Todos' },
+        { value: 'true', label: 'Sistema' },
+        { value: 'false', label: 'Personalizado' },
+      ],
+      advanced: true,
+    },
+    {
+      key: 'level',
+      label: 'Nivel',
+      type: 'number',
+      placeholder: '1-10',
+      min: 1,
+      max: 10,
+      advanced: true,
+    },
+    {
+      key: 'business_type_id',
+      label: 'Tipo de Negocio',
+      type: 'select',
+      options: [
+        { value: '', label: 'Todos' },
+        ...(businessTypes?.map((bt: { id: number; name: string; icon: string }) => ({
+          value: bt.id.toString(),
+          label: `${bt.icon} ${bt.name}`
+        })) || [])
+      ],
+      advanced: true,
+    },
+  ];
 
   const handleCreateRole = () => {
     setShowCreateModal(true);
@@ -37,12 +109,77 @@ export function RolesTable({ token }: RolesTableProps) {
     loadRoles(); // Recargar la lista
   };
 
-  const loadRoles = async () => {
+  const handleEditRole = (role: Role) => {
+    setSelectedRole(role);
+    setShowUpdateModal(true);
+  };
+
+  const handleUpdateRole = async (formData: any) => {
+    setUpdateLoading(true);
+    try {
+      const result = await updateRoleAction(formData, token);
+      
+      if (result.success) {
+        setShowUpdateModal(false);
+        setSelectedRole(null);
+        loadRoles(); // Recargar la lista
+      } else {
+        console.error('Error actualizando rol:', result.error);
+        alert(`Error al actualizar el rol: ${result.error}`);
+      }
+    } catch (err) {
+      console.error('Error actualizando rol:', err);
+      alert('Error inesperado al actualizar el rol');
+    } finally {
+      setUpdateLoading(false);
+    }
+  };
+
+  const handleCloseUpdateModal = () => {
+    setShowUpdateModal(false);
+    setSelectedRole(null);
+  };
+  
+  const handleOpenAssignPermissionsModal = (role: Role) => {
+    setSelectedRole(role);
+    setShowAssignPermissionsModal(true);
+  };
+  
+  const handleCloseAssignPermissionsModal = () => {
+    setShowAssignPermissionsModal(false);
+    setSelectedRole(null);
+  };
+  
+  const handleAssignPermissions = async (roleId: number, permissionIds: number[]) => {
+    setAssignLoading(true);
+    try {
+      const result = await assignRolePermissionsAction(
+        { role_id: roleId, permission_ids: permissionIds },
+        token
+      );
+      
+      if (result.success) {
+        setShowAssignPermissionsModal(false);
+        setSelectedRole(null);
+        loadRoles(filters); // Recargar la lista
+      } else {
+        console.error('Error asignando permisos:', result.error);
+        alert(`Error al asignar permisos: ${result.error}`);
+      }
+    } catch (err) {
+      console.error('Error asignando permisos:', err);
+      alert('Error inesperado al asignar permisos');
+    } finally {
+      setAssignLoading(false);
+    }
+  };
+
+  const loadRoles = async (params?: GetRolesActionParams) => {
     setLoading(true);
     setError(null);
     
     try {
-      const result = await getRolesAction(token);
+      const result = await getRolesAction(token, params);
       
       if (result.success && result.data) {
         setRoles(result.data.roles);
@@ -58,8 +195,24 @@ export function RolesTable({ token }: RolesTableProps) {
   };
 
   useEffect(() => {
-    loadRoles();
-  }, [token]);
+    loadRoles(filters);
+  }, [token, filters]);
+  
+  const handleFiltersChange = (newFilters: any) => {
+    // Convertir filtros del componente Filters al formato esperado por la acción
+    const convertedFilters: GetRolesActionParams = {
+      name: newFilters.name,
+      scope_id: newFilters.scope_id ? parseInt(newFilters.scope_id) : undefined,
+      is_system: newFilters.is_system !== undefined ? newFilters.is_system : undefined,
+      level: newFilters.level ? parseInt(newFilters.level) : undefined,
+      business_type_id: newFilters.business_type_id ? parseInt(newFilters.business_type_id) : undefined,
+    };
+    setFilters(convertedFilters);
+  };
+  
+  const clearFilters = () => {
+    setFilters({});
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-ES', {
@@ -132,14 +285,23 @@ export function RolesTable({ token }: RolesTableProps) {
       ),
     },
     {
+      key: 'businessTypeName',
+      label: 'Tipo de Negocio',
+      render: (_, role) => (
+        <div className="text-sm text-gray-900">
+          {role.businessTypeName || '-'}
+        </div>
+      ),
+    },
+    {
       key: 'actions',
       label: 'Acciones',
       render: (_, role) => (
         <div className="flex gap-2">
-          <Button className="btn-outline btn-sm">
-            <EyeIcon className="w-4 h-4" />
+          <Button className="btn-outline btn-sm" onClick={() => handleOpenAssignPermissionsModal(role)}>
+            <KeyIcon className="w-4 h-4" />
           </Button>
-          <Button className="btn-outline btn-sm">
+          <Button className="btn-outline btn-sm" onClick={() => handleEditRole(role)}>
             <PencilIcon className="w-4 h-4" />
           </Button>
           {!role.isSystem && (
@@ -168,18 +330,13 @@ export function RolesTable({ token }: RolesTableProps) {
 
   return (
     <div className="space-y-6 w-full">
-      {/* Header con botón crear */}
-      <div className="card w-full">
-        <div className="card-body">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">Roles del Sistema</h3>
-            <Button className="btn-primary" onClick={handleCreateRole}>
-              <ShieldCheckIcon className="w-4 h-4 mr-2" />
-              Crear Rol
-            </Button>
-          </div>
-        </div>
-      </div>
+      {/* Filtros */}
+      <Filters
+        fields={filterFields}
+        filters={filters}
+        onFiltersChange={handleFiltersChange}
+        onClearFilters={clearFilters}
+      />
 
       {/* Tabla de roles */}
       <Table
@@ -195,6 +352,53 @@ export function RolesTable({ token }: RolesTableProps) {
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onSuccess={handleCreateSuccess}
+      />
+
+      {/* Modal para editar rol */}
+      <UpdateRoleModal
+        isOpen={showUpdateModal}
+        onClose={handleCloseUpdateModal}
+        role={selectedRole}
+        onSubmit={handleUpdateRole}
+        loading={updateLoading}
+      />
+
+      {/* Modal para asignar permisos */}
+      <AssignPermissionsModal
+        isOpen={showAssignPermissionsModal}
+        onClose={handleCloseAssignPermissionsModal}
+        roleId={selectedRole?.id || null}
+        roleName={selectedRole?.name}
+        onAssign={handleAssignPermissions}
+        onRemove={async (roleId: number, permissionId: number) => {
+          setAssignLoading(true);
+          try {
+            const token = TokenStorage.getToken();
+            if (!token) {
+              console.error('No hay token disponible');
+              return;
+            }
+
+            const result = await removeRolePermissionAction(
+              { role_id: roleId, permission_id: permissionId },
+              token
+            );
+            
+            if (result.success) {
+              // Recargar los permisos del rol para actualizar la vista
+              console.log('Permiso removido exitosamente');
+            } else {
+              console.error('Error removiendo permiso:', result.error);
+              alert(`Error al remover permiso: ${result.error}`);
+            }
+          } catch (err) {
+            console.error('Error removiendo permiso:', err);
+            alert('Error inesperado al remover permiso');
+          } finally {
+            setAssignLoading(false);
+          }
+        }}
+        loading={assignLoading}
       />
     </div>
   );

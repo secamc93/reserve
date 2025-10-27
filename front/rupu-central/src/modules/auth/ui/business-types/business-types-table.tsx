@@ -390,7 +390,6 @@ export function BusinessTypesTable({
         message={`¿Estás seguro de que quieres eliminar el tipo de negocio "${selectedBusinessType?.name}"? Esta acción no se puede deshacer.`}
         confirmText="Eliminar"
         cancelText="Cancelar"
-        loading={crudLoading}
       />
     </>
   );

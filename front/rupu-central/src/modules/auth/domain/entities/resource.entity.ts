@@ -6,6 +6,8 @@ export interface Resource {
   id: number;
   name: string;
   description: string;
+  business_type_id?: number;
+  business_type_name?: string;
   createdAt: Date;
   updatedAt: Date;
 }

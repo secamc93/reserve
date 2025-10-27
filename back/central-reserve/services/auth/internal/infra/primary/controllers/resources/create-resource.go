@@ -43,8 +43,9 @@ func (h *ResourceHandler) CreateResourceHandler(c *gin.Context) {
 
 	// Convertir a DTO de dominio
 	createDTO := domain.CreateResourceDTO{
-		Name:        req.Name,
-		Description: req.Description,
+		Name:           req.Name,
+		Description:    req.Description,
+		BusinessTypeID: req.BusinessTypeID,
 	}
 
 	// Llamar al caso de uso
@@ -76,11 +77,13 @@ func (h *ResourceHandler) CreateResourceHandler(c *gin.Context) {
 
 	// Convertir a respuesta HTTP
 	resourceResponse := response.ResourceResponse{
-		ID:          result.ID,
-		Name:        result.Name,
-		Description: result.Description,
-		CreatedAt:   result.CreatedAt,
-		UpdatedAt:   result.UpdatedAt,
+		ID:               result.ID,
+		Name:             result.Name,
+		Description:      result.Description,
+		BusinessTypeID:   result.BusinessTypeID,
+		BusinessTypeName: result.BusinessTypeName,
+		CreatedAt:        result.CreatedAt,
+		UpdatedAt:        result.UpdatedAt,
 	}
 
 	h.logger.Info().

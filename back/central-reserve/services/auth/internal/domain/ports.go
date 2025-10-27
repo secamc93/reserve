@@ -43,7 +43,7 @@ type IAuthRepository interface {
 	GetBusinessByID(ctx context.Context, businessID uint) (*BusinessInfo, error)
 	GetBusinessTypeByID(ctx context.Context, businessTypeID uint) (*BusinessTypeInfo, error)
 	CreateRole(ctx context.Context, role CreateRoleDTO) (*Role, error)
-	GetPermissions(ctx context.Context) ([]Permission, error)
+	GetPermissions(ctx context.Context, businessTypeID *uint, name *string, scopeID *uint) ([]Permission, error)
 	GetPermissionByID(ctx context.Context, id uint) (*Permission, error)
 	GetPermissionsByScopeID(ctx context.Context, scopeID uint) ([]Permission, error)
 	GetPermissionsByResource(ctx context.Context, resource string) ([]Permission, error)
@@ -76,6 +76,11 @@ type IAuthRepository interface {
 	CreateResource(ctx context.Context, resource Resource) (uint, error)
 	UpdateResource(ctx context.Context, id uint, resource Resource) (string, error)
 	DeleteResource(ctx context.Context, id uint) (string, error)
+
+	// Métodos para gestionar permisos de roles
+	AssignPermissionsToRole(ctx context.Context, roleID uint, permissionIDs []uint) error
+	RemovePermissionFromRole(ctx context.Context, roleID uint, permissionID uint) error
+	GetRolePermissionsIDs(ctx context.Context, roleID uint) ([]uint, error)
 }
 
 // IS3Service define las operaciones de almacenamiento en S3

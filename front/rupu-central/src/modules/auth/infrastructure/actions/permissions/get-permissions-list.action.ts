@@ -30,14 +30,18 @@ export interface GetPermissionsListResult {
   error?: string;
 }
 
-export async function getPermissionsListAction(token: string): Promise<GetPermissionsListResult> {
+export async function getPermissionsListAction(
+  token: string,
+  params?: { business_type_id?: number }
+): Promise<GetPermissionsListResult> {
   try {
     console.log('🔑 getPermissionsListAction - Token recibido:', token ? 'Sí' : 'No');
+    console.log('🔍 getPermissionsListAction - Params:', params);
     
     const permissionsRepository = new PermissionsRepository();
     const getPermissionsListUseCase = new GetPermissionsListUseCase(permissionsRepository);
     
-    const result = await getPermissionsListUseCase.execute({ token });
+    const result = await getPermissionsListUseCase.execute({ token, params });
 
     console.log('✅ Permisos obtenidos del backend:', result.permissions.total);
 

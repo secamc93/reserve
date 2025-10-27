@@ -34,6 +34,17 @@ func (r *Repository) GetResources(ctx context.Context, filters domain.ResourceFi
 		query = query.Where("description ILIKE ?", "%"+filters.Description+"%")
 	}
 
+	// Filtrar por business_type_id
+	// Si es nil, solo muestra recursos genéricos (business_type_id IS NULL)
+	// Si tiene valor, muestra recursos de ese tipo o genéricos
+	if filters.BusinessTypeID != nil {
+		query = query.Where("business_type_id = ? OR business_type_id IS NULL", *filters.BusinessTypeID)
+	} else {
+		// Si no se especifica business_type_id, mostrar todos los recursos
+		// (tanto genéricos como específicos por tipo)
+		// No aplicar ningún filtro adicional
+	}
+
 	// Contar total antes de aplicar paginación
 	var total int64
 	if err := query.Count(&total).Error; err != nil {
@@ -61,9 +72,9 @@ func (r *Repository) GetResources(ctx context.Context, filters domain.ResourceFi
 		}
 	}
 
-	// Aplicar paginación y ordenamiento
+	// Aplicar paginación y ordenamiento con preload de BusinessType
 	var resources []models.Resource
-	if err := query.Order(orderBy).Offset(offset).Limit(filters.PageSize).Find(&resources).Error; err != nil {
+	if err := query.Preload("BusinessType").Order(orderBy).Offset(offset).Limit(filters.PageSize).Find(&resources).Error; err != nil {
 		r.logger.Error().Err(err).Msg("Error al obtener recursos")
 		return nil, 0, err
 	}
@@ -76,13 +87,24 @@ func (r *Repository) GetResources(ctx context.Context, filters domain.ResourceFi
 			deletedAt = &resource.DeletedAt.Time
 		}
 
+		businessTypeID := uint(0)
+		businessTypeName := ""
+		if resource.BusinessTypeID != nil {
+			businessTypeID = *resource.BusinessTypeID
+			if resource.BusinessType != nil {
+				businessTypeName = resource.BusinessType.Name
+			}
+		}
+
 		domainResources = append(domainResources, domain.Resource{
-			ID:          resource.ID,
-			Name:        resource.Name,
-			Description: resource.Description,
-			CreatedAt:   resource.CreatedAt,
-			UpdatedAt:   resource.UpdatedAt,
-			DeletedAt:   deletedAt,
+			ID:               resource.ID,
+			Name:             resource.Name,
+			Description:      resource.Description,
+			BusinessTypeID:   businessTypeID,
+			BusinessTypeName: businessTypeName,
+			CreatedAt:        resource.CreatedAt,
+			UpdatedAt:        resource.UpdatedAt,
+			DeletedAt:        deletedAt,
 		})
 	}
 
@@ -111,13 +133,24 @@ func (r *Repository) GetResourceByID(ctx context.Context, id uint) (*domain.Reso
 		deletedAt = &resource.DeletedAt.Time
 	}
 
+	businessTypeID := uint(0)
+	businessTypeName := ""
+	if resource.BusinessTypeID != nil {
+		businessTypeID = *resource.BusinessTypeID
+		if resource.BusinessType != nil {
+			businessTypeName = resource.BusinessType.Name
+		}
+	}
+
 	domainResource := &domain.Resource{
-		ID:          resource.ID,
-		Name:        resource.Name,
-		Description: resource.Description,
-		CreatedAt:   resource.CreatedAt,
-		UpdatedAt:   resource.UpdatedAt,
-		DeletedAt:   deletedAt,
+		ID:               resource.ID,
+		Name:             resource.Name,
+		Description:      resource.Description,
+		BusinessTypeID:   businessTypeID,
+		BusinessTypeName: businessTypeName,
+		CreatedAt:        resource.CreatedAt,
+		UpdatedAt:        resource.UpdatedAt,
+		DeletedAt:        deletedAt,
 	}
 
 	r.logger.Info().Uint("resource_id", id).Str("name", resource.Name).Msg("Recurso obtenido exitosamente")
@@ -139,13 +172,24 @@ func (r *Repository) GetResourceByName(ctx context.Context, name string) (*domai
 		deletedAt = &resource.DeletedAt.Time
 	}
 
+	businessTypeID := uint(0)
+	businessTypeName := ""
+	if resource.BusinessTypeID != nil {
+		businessTypeID = *resource.BusinessTypeID
+		if resource.BusinessType != nil {
+			businessTypeName = resource.BusinessType.Name
+		}
+	}
+
 	domainResource := &domain.Resource{
-		ID:          resource.ID,
-		Name:        resource.Name,
-		Description: resource.Description,
-		CreatedAt:   resource.CreatedAt,
-		UpdatedAt:   resource.UpdatedAt,
-		DeletedAt:   deletedAt,
+		ID:               resource.ID,
+		Name:             resource.Name,
+		Description:      resource.Description,
+		BusinessTypeID:   businessTypeID,
+		BusinessTypeName: businessTypeName,
+		CreatedAt:        resource.CreatedAt,
+		UpdatedAt:        resource.UpdatedAt,
+		DeletedAt:        deletedAt,
 	}
 
 	r.logger.Info().Uint("resource_id", resource.ID).Str("name", name).Msg("Recurso obtenido exitosamente por nombre")
@@ -159,6 +203,12 @@ func (r *Repository) CreateResource(ctx context.Context, resource domain.Resourc
 	modelResource := models.Resource{
 		Name:        resource.Name,
 		Description: resource.Description,
+	}
+
+	// Agregar business_type_id si está presente
+	if resource.BusinessTypeID > 0 {
+		btID := resource.BusinessTypeID
+		modelResource.BusinessTypeID = &btID
 	}
 
 	if err := r.database.Conn(ctx).Create(&modelResource).Error; err != nil {
@@ -181,6 +231,12 @@ func (r *Repository) UpdateResource(ctx context.Context, id uint, resource domai
 	updateData := map[string]interface{}{
 		"name":        resource.Name,
 		"description": resource.Description,
+	}
+
+	// Agregar business_type_id si está presente
+	if resource.BusinessTypeID > 0 {
+		btID := resource.BusinessTypeID
+		updateData["business_type_id"] = &btID
 	}
 
 	result := r.database.Conn(ctx).Model(&models.Resource{}).Where("id = ?", id).Updates(updateData)

@@ -19,6 +19,8 @@ interface Permission {
   scopeId: number;
   scopeName: string;
   scopeCode: string;
+  businessTypeId?: number;
+  businessTypeName?: string;
 }
 
 export function PermissionsTable({ token }: PermissionsTableProps) {
@@ -113,6 +115,15 @@ export function PermissionsTable({ token }: PermissionsTableProps) {
       ),
     },
     {
+      key: 'businessTypeName',
+      label: 'Tipo de Negocio',
+      render: (_, permission) => (
+        <div className="text-sm text-gray-900">
+          {permission.businessTypeName || '-'}
+        </div>
+      ),
+    },
+    {
       key: 'actions',
       label: 'Acciones',
       render: () => (
@@ -152,10 +163,6 @@ export function PermissionsTable({ token }: PermissionsTableProps) {
         <div className="card-body">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold">Filtros de Búsqueda</h3>
-            <Button className="btn-primary">
-              <KeyIcon className="w-4 h-4 mr-2" />
-              Crear Permiso
-            </Button>
           </div>
           <div className="flex gap-4">
             <div className="flex-1">

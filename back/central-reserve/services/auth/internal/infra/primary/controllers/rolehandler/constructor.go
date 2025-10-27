@@ -16,6 +16,9 @@ type IRoleHandler interface {
 	GetSystemRolesHandler(c *gin.Context)
 	CreateRole(c *gin.Context)
 	UpdateRole(c *gin.Context)
+	AssignPermissionsToRole(c *gin.Context)
+	RemovePermissionFromRole(c *gin.Context)
+	GetRolePermissions(c *gin.Context)
 	RegisterRoutes(router *gin.RouterGroup, handler IRoleHandler, logger log.ILogger)
 }
 

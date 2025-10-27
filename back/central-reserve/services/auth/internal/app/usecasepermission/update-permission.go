@@ -49,11 +49,11 @@ func validateUpdatePermission(permission domain.UpdatePermissionDTO) error {
 	if permission.Code == "" {
 		return fmt.Errorf("el código del permiso es requerido")
 	}
-	if permission.Resource == "" {
-		return fmt.Errorf("el recurso del permiso es requerido")
+	if permission.ResourceID == 0 {
+		return fmt.Errorf("el resource ID del permiso es requerido")
 	}
-	if permission.Action == "" {
-		return fmt.Errorf("la acción del permiso es requerida")
+	if permission.ActionID == 0 {
+		return fmt.Errorf("la action ID del permiso es requerida")
 	}
 	if permission.ScopeID == 0 {
 		return fmt.Errorf("el scope ID del permiso es requerido")
@@ -66,7 +66,7 @@ func updatePermissionFields(existing domain.Permission, updateDTO domain.UpdateP
 	return domain.Permission{
 		ID:          existing.ID,
 		Description: updateDTO.Description,
-		Resource:    updateDTO.Resource,
-		Action:      updateDTO.Action,
+		ResourceID:  updateDTO.ResourceID,
+		ActionID:    updateDTO.ActionID,
 	}
 }

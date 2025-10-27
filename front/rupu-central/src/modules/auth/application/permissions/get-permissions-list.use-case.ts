@@ -7,6 +7,7 @@ import { PermissionsList } from '../../domain/entities/permission.entity';
 
 export interface GetPermissionsListInput {
   token: string;
+  params?: { business_type_id?: number };
 }
 
 export interface GetPermissionsListOutput {
@@ -17,7 +18,7 @@ export class GetPermissionsListUseCase {
   constructor(private readonly permissionsRepository: IPermissionsRepository) {}
 
   async execute(input: GetPermissionsListInput): Promise<GetPermissionsListOutput> {
-    const permissions = await this.permissionsRepository.getPermissions(input.token);
+    const permissions = await this.permissionsRepository.getPermissions(input.token, input.params);
     return {
       permissions,
     };

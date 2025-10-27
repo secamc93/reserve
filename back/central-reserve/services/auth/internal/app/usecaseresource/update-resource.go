@@ -40,9 +40,15 @@ func (uc *ResourceUseCase) UpdateResource(ctx context.Context, id uint, updateDT
 
 	// Crear entidad de dominio con los datos actualizados
 	resource := domain.Resource{
-		ID:          id,
-		Name:        strings.TrimSpace(updateDTO.Name),
-		Description: strings.TrimSpace(updateDTO.Description),
+		ID:             id,
+		Name:           strings.TrimSpace(updateDTO.Name),
+		Description:    strings.TrimSpace(updateDTO.Description),
+		BusinessTypeID: existingResource.BusinessTypeID, // Mantener el existente por defecto
+	}
+
+	// Actualizar business_type_id si se proporciona
+	if updateDTO.BusinessTypeID != nil {
+		resource.BusinessTypeID = *updateDTO.BusinessTypeID
 	}
 
 	// Actualizar recurso en el repositorio
@@ -61,11 +67,13 @@ func (uc *ResourceUseCase) UpdateResource(ctx context.Context, id uint, updateDT
 
 	// Convertir a DTO
 	resourceDTO := &domain.ResourceDTO{
-		ID:          updatedResource.ID,
-		Name:        updatedResource.Name,
-		Description: updatedResource.Description,
-		CreatedAt:   updatedResource.CreatedAt,
-		UpdatedAt:   updatedResource.UpdatedAt,
+		ID:               updatedResource.ID,
+		Name:             updatedResource.Name,
+		Description:      updatedResource.Description,
+		BusinessTypeID:   updatedResource.BusinessTypeID,
+		BusinessTypeName: updatedResource.BusinessTypeName,
+		CreatedAt:        updatedResource.CreatedAt,
+		UpdatedAt:        updatedResource.UpdatedAt,
 	}
 
 	uc.logger.Info().

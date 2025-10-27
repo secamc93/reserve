@@ -5,6 +5,7 @@
 export * from './alert';
 export * from './badge';
 export * from './button';
+export * from './filters';
 export * from './confirm-modal';
 export * from './file-input';
 export * from './form-modal';

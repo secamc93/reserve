@@ -12,6 +12,8 @@ export interface BackendPermission {
   scope_id: number;
   scope_name: string;
   scope_code: string;
+  business_type_id?: number;
+  business_type_name?: string;
 }
 
 export interface BackendPermissionsListResponse {

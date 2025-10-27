@@ -30,6 +30,11 @@ func (uc *ResourceUseCase) CreateResource(ctx context.Context, createDTO domain.
 		Description: strings.TrimSpace(createDTO.Description),
 	}
 
+	// Agregar business_type_id si está presente
+	if createDTO.BusinessTypeID != nil {
+		resource.BusinessTypeID = *createDTO.BusinessTypeID
+	}
+
 	// Crear recurso en el repositorio
 	resourceID, err := uc.repository.CreateResource(ctx, resource)
 	if err != nil {
@@ -46,11 +51,13 @@ func (uc *ResourceUseCase) CreateResource(ctx context.Context, createDTO domain.
 
 	// Convertir a DTO
 	resourceDTO := &domain.ResourceDTO{
-		ID:          createdResource.ID,
-		Name:        createdResource.Name,
-		Description: createdResource.Description,
-		CreatedAt:   createdResource.CreatedAt,
-		UpdatedAt:   createdResource.UpdatedAt,
+		ID:               createdResource.ID,
+		Name:             createdResource.Name,
+		Description:      createdResource.Description,
+		BusinessTypeID:   createdResource.BusinessTypeID,
+		BusinessTypeName: createdResource.BusinessTypeName,
+		CreatedAt:        createdResource.CreatedAt,
+		UpdatedAt:        createdResource.UpdatedAt,
 	}
 
 	uc.logger.Info().

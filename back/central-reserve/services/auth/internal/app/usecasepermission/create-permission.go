@@ -4,6 +4,7 @@ import (
 	"central_reserve/services/auth/internal/domain"
 	"context"
 	"fmt"
+	"strings"
 )
 
 // CreatePermission crea un nuevo permiso
@@ -11,14 +12,25 @@ func (uc *PermissionUseCase) CreatePermission(ctx context.Context, permissionDTO
 	uc.logger.Info().
 		Str("name", permissionDTO.Name).
 		Str("code", permissionDTO.Code).
-		Str("resource", permissionDTO.Resource).
-		Str("action", permissionDTO.Action).
+		Uint("resource_id", permissionDTO.ResourceID).
+		Uint("action_id", permissionDTO.ActionID).
 		Msg("Creando nuevo permiso")
 
 	// Validar datos de entrada
 	if err := validateCreatePermission(permissionDTO); err != nil {
 		uc.logger.Error().Err(err).Msg("Error de validación al crear permiso")
 		return "", err
+	}
+
+	// Generar código automáticamente si no se proporciona
+	if permissionDTO.Code == "" {
+		generatedCode, err := uc.generatePermissionCode(ctx, permissionDTO)
+		if err != nil {
+			uc.logger.Error().Err(err).Msg("Error al generar código de permiso")
+			return "", fmt.Errorf("error al generar código de permiso: %w", err)
+		}
+		permissionDTO.Code = generatedCode
+		uc.logger.Info().Str("generated_code", generatedCode).Msg("Código generado automáticamente")
 	}
 
 	// Convertir DTO a entidad
@@ -40,14 +52,12 @@ func validateCreatePermission(permission domain.CreatePermissionDTO) error {
 	if permission.Name == "" {
 		return fmt.Errorf("el nombre del permiso es requerido")
 	}
-	if permission.Code == "" {
-		return fmt.Errorf("el código del permiso es requerido")
+	// El código ya no es obligatorio, se genera automáticamente
+	if permission.ResourceID == 0 {
+		return fmt.Errorf("el resource ID del permiso es requerido")
 	}
-	if permission.Resource == "" {
-		return fmt.Errorf("el recurso del permiso es requerido")
-	}
-	if permission.Action == "" {
-		return fmt.Errorf("la acción del permiso es requerida")
+	if permission.ActionID == 0 {
+		return fmt.Errorf("la action ID del permiso es requerida")
 	}
 	if permission.ScopeID == 0 {
 		return fmt.Errorf("el scope ID del permiso es requerido")
@@ -55,11 +65,45 @@ func validateCreatePermission(permission domain.CreatePermissionDTO) error {
 	return nil
 }
 
+// generatePermissionCode genera un código automáticamente basado en el nombre del tipo de business y el nombre del permiso
+func (uc *PermissionUseCase) generatePermissionCode(ctx context.Context, permissionDTO domain.CreatePermissionDTO) (string, error) {
+	// Si tiene business_type_id, obtener el nombre del tipo de business
+	businessTypePrefix := "generic" // Por defecto para permisos genéricos
+
+	if permissionDTO.BusinessTypeID != nil && *permissionDTO.BusinessTypeID > 0 {
+		businessType, err := uc.repository.GetBusinessTypeByID(ctx, *permissionDTO.BusinessTypeID)
+		if err != nil {
+			uc.logger.Warn().Err(err).Msg("No se pudo obtener el tipo de business, usando genérico")
+		} else if businessType != nil {
+			businessTypePrefix = strings.ToLower(businessType.Name)
+			// Normalizar el nombre: reemplazar espacios con guiones bajos
+			businessTypePrefix = strings.ReplaceAll(businessTypePrefix, " ", "_")
+		}
+	}
+
+	// Normalizar el nombre del permiso: lowercase y reemplazar espacios con guiones bajos
+	permissionName := strings.ToLower(permissionDTO.Name)
+	permissionName = strings.ReplaceAll(permissionName, " ", "_")
+
+	// Combinar: business_type_name_permission_name
+	generatedCode := fmt.Sprintf("%s_%s", businessTypePrefix, permissionName)
+
+	return generatedCode, nil
+}
+
 // dtosToPermissionEntity convierte un CreatePermissionDTO a entidad Permission
 func dtosToPermissionEntity(permissionDTO domain.CreatePermissionDTO) domain.Permission {
+	businessTypeID := uint(0)
+	if permissionDTO.BusinessTypeID != nil {
+		businessTypeID = *permissionDTO.BusinessTypeID
+	}
+
 	return domain.Permission{
-		Description: permissionDTO.Description,
-		Resource:    permissionDTO.Resource,
-		Action:      permissionDTO.Action,
+		Description:      permissionDTO.Description,
+		ResourceID:       permissionDTO.ResourceID,
+		ActionID:         permissionDTO.ActionID,
+		ScopeID:          permissionDTO.ScopeID,
+		BusinessTypeID:   businessTypeID,
+		BusinessTypeName: "", // Se establecerá desde el modelo
 	}
 }

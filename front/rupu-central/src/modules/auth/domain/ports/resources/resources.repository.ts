@@ -9,6 +9,7 @@ export interface GetResourcesParams {
   pageSize?: number;
   name?: string;
   description?: string;
+  business_type_id?: number;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
   token: string;
@@ -17,6 +18,7 @@ export interface GetResourcesParams {
 export interface CreateResourceParams {
   name: string;
   description: string;
+  business_type_id?: number;
   token: string;
 }
 
@@ -29,6 +31,7 @@ export interface UpdateResourceParams {
   id: number;
   name: string;
   description: string;
+  business_type_id?: number | null;
   token: string;
 }
 

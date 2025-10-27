@@ -7,11 +7,16 @@ import (
 
 // GetRolesByLevel obtiene roles por nivel
 func (uc *RoleUseCase) GetRolesByLevel(ctx context.Context, filters domain.RoleFilters) ([]domain.RoleDTO, error) {
-	uc.log.Info().Int("level", filters.Level).Msg("Iniciando caso de uso: obtener roles por nivel")
+	level := 0
+	if filters.Level != nil {
+		level = *filters.Level
+	}
 
-	roles, err := uc.repository.GetRolesByLevel(ctx, filters.Level)
+	uc.log.Info().Int("level", level).Msg("Iniciando caso de uso: obtener roles por nivel")
+
+	roles, err := uc.repository.GetRolesByLevel(ctx, level)
 	if err != nil {
-		uc.log.Error().Int("level", filters.Level).Err(err).Msg("Error al obtener roles por nivel desde el repositorio")
+		uc.log.Error().Int("level", level).Err(err).Msg("Error al obtener roles por nivel desde el repositorio")
 		return nil, err
 	}
 
@@ -21,6 +26,6 @@ func (uc *RoleUseCase) GetRolesByLevel(ctx context.Context, filters domain.RoleF
 		roleDTOs[i] = entityToRoleDTO(role)
 	}
 
-	uc.log.Info().Int("level", filters.Level).Int("count", len(roleDTOs)).Msg("Roles por nivel obtenidos exitosamente")
+	uc.log.Info().Int("level", level).Int("count", len(roleDTOs)).Msg("Roles por nivel obtenidos exitosamente")
 	return roleDTOs, nil
 }

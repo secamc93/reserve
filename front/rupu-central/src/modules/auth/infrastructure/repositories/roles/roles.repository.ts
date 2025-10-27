@@ -10,19 +10,43 @@ import { env, logHttpRequest, logHttpSuccess, logHttpError } from '@shared/confi
 import { BackendRolesResponse } from '../response';
 
 export class RolesRepository implements IRolesRepository {
-  async getRoles(token: string): Promise<RolesList> {
-    const url = `${env.API_BASE_URL}/roles`;
+  async getRoles(token: string, params?: {
+    business_type_id?: number;
+    scope_id?: number;
+    is_system?: boolean;
+    name?: string;
+    level?: number;
+  }): Promise<RolesList> {
+    // Construir URL con query params
+    const url = new URL(`${env.API_BASE_URL}/roles`);
+    
+    if (params?.business_type_id) {
+      url.searchParams.append('business_type_id', params.business_type_id.toString());
+    }
+    if (params?.scope_id) {
+      url.searchParams.append('scope_id', params.scope_id.toString());
+    }
+    if (params?.is_system !== undefined) {
+      url.searchParams.append('is_system', params.is_system.toString());
+    }
+    if (params?.name) {
+      url.searchParams.append('name', params.name);
+    }
+    if (params?.level) {
+      url.searchParams.append('level', params.level.toString());
+    }
+    
     const startTime = Date.now();
     
     logHttpRequest({
       method: 'GET',
-      url,
+      url: url.toString(),
       token,
     });
     
     try {
       // Llamada al backend para obtener roles
-      const response = await fetch(url, {
+      const response = await fetch(url.toString(), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -70,6 +94,8 @@ export class RolesRepository implements IRolesRepository {
         scopeId: role.scope_id,
         scopeName: role.scope_name,
         scopeCode: role.scope_code,
+        businessTypeId: role.business_type_id,
+        businessTypeName: role.business_type_name,
       }));
 
       return {

@@ -22,6 +22,7 @@ export interface GetResourcesInput {
   pageSize?: number;
   name?: string;
   description?: string;
+  business_type_id?: number;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
   token: string;
@@ -57,15 +58,15 @@ export async function getResourcesAction(input: GetResourcesInput): Promise<GetR
     return {
       success: true,
       data: {
-        resources: result.resources.resources.map((r: any) => ({
+        resources: (result.resources.resources || []).map((r: any) => ({
           ...r,
           createdAt: r.createdAt.toISOString(),
           updatedAt: r.updatedAt.toISOString(),
         })),
-        total: result.resources.total,
-        page: result.resources.page,
-        pageSize: result.resources.pageSize,
-        totalPages: result.resources.totalPages,
+        total: result.resources.total || 0,
+        page: result.resources.page || 1,
+        pageSize: result.resources.pageSize || 10,
+        totalPages: result.resources.totalPages || 0,
       },
     };
   } catch (error) {

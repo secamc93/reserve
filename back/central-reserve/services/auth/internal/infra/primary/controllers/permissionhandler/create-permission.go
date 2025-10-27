@@ -37,8 +37,8 @@ func (h *PermissionHandler) CreatePermissionHandler(c *gin.Context) {
 	h.logger.Info().
 		Str("name", req.Name).
 		Str("code", req.Code).
-		Str("resource", req.Resource).
-		Str("action", req.Action).
+		Uint("resource_id", req.ResourceID).
+		Uint("action_id", req.ActionID).
 		Msg("Iniciando solicitud para crear nuevo permiso")
 
 	permissionDTO := mapper.ToCreatePermissionDTO(req)

@@ -3,11 +3,11 @@ package usecaserole
 import (
 	"central_reserve/services/auth/internal/domain"
 	"context"
-	"strconv"
+	"strings"
 )
 
 // GetRoles obtiene todos los roles
-func (uc *RoleUseCase) GetRoles(ctx context.Context, businessTypeIDStr string) ([]domain.RoleDTO, error) {
+func (uc *RoleUseCase) GetRoles(ctx context.Context, filters domain.RoleFilters) ([]domain.RoleDTO, error) {
 	uc.log.Info().Msg("Iniciando caso de uso: obtener todos los roles")
 
 	roles, err := uc.repository.GetRoles(ctx)
@@ -16,26 +16,42 @@ func (uc *RoleUseCase) GetRoles(ctx context.Context, businessTypeIDStr string) (
 		return nil, err
 	}
 
-	// Filtrar por business_type_id si se proporciona
-	if businessTypeIDStr != "" {
-		businessTypeID, err := strconv.ParseUint(businessTypeIDStr, 10, 32)
-		if err != nil {
-			uc.log.Warn().Str("business_type_id", businessTypeIDStr).Msg("business_type_id inválido")
-			return []domain.RoleDTO{}, nil
+	// Aplicar filtros
+	filteredRoles := []domain.Role{}
+	for _, role := range roles {
+		// Filtrar por BusinessTypeID
+		if filters.BusinessTypeID != nil && role.BusinessTypeID != *filters.BusinessTypeID {
+			continue
 		}
 
-		filteredRoles := []domain.Role{}
-		for _, role := range roles {
-			if role.BusinessTypeID == uint(businessTypeID) {
-				filteredRoles = append(filteredRoles, role)
+		// Filtrar por ScopeID
+		if filters.ScopeID != nil && role.ScopeID != *filters.ScopeID {
+			continue
+		}
+
+		// Filtrar por IsSystem
+		if filters.IsSystem != nil && role.IsSystem != *filters.IsSystem {
+			continue
+		}
+
+		// Filtrar por Name (búsqueda parcial case-insensitive)
+		if filters.Name != nil && *filters.Name != "" {
+			if !strings.Contains(strings.ToLower(role.Name), strings.ToLower(*filters.Name)) {
+				continue
 			}
 		}
-		roles = filteredRoles
+
+		// Filtrar por Level
+		if filters.Level != nil && role.Level != *filters.Level {
+			continue
+		}
+
+		filteredRoles = append(filteredRoles, role)
 	}
 
 	// Convertir entidades a DTOs
-	roleDTOs := make([]domain.RoleDTO, len(roles))
-	for i, role := range roles {
+	roleDTOs := make([]domain.RoleDTO, len(filteredRoles))
+	for i, role := range filteredRoles {
 		roleDTOs[i] = entityToRoleDTO(role)
 	}
 

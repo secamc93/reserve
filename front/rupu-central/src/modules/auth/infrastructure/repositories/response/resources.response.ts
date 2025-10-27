@@ -6,6 +6,8 @@ export interface BackendResource {
   id: number;
   name: string;
   description: string;
+  business_type_id?: number;
+  business_type_name?: string;
   created_at: string;
   updated_at: string;
 }

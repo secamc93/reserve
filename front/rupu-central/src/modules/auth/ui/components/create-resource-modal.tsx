@@ -6,9 +6,11 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
-import { Modal, Input, Alert } from '@shared/ui';
+import { Modal, Input, Alert, Button, Select } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
 import { createResourceAction } from '../../infrastructure/actions/resources/create-resource.action';
+import { XMarkIcon } from '@heroicons/react/24/outline';
+import { useBusinessTypes } from '../hooks/use-business-types';
 
 interface CreateResourceModalProps {
   isOpen: boolean;
@@ -19,8 +21,20 @@ interface CreateResourceModalProps {
 export function CreateResourceModal({ isOpen, onClose, onSuccess }: CreateResourceModalProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [business_type_id, setBusinessTypeId] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Obtener tipos de negocio
+  const { businessTypes } = useBusinessTypes();
+
+  const businessTypeOptions = [
+    { value: '', label: 'Genérico' },
+    ...(businessTypes?.map((bt) => ({
+      value: bt.id.toString(),
+      label: `${bt.icon} ${bt.name}`
+    })) || []),
+  ];
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -39,6 +53,7 @@ export function CreateResourceModal({ isOpen, onClose, onSuccess }: CreateResour
       const result = await createResourceAction({
         name: name.trim(),
         description: description.trim(),
+        business_type_id: business_type_id ? parseInt(business_type_id) : undefined,
         token,
       });
 
@@ -46,6 +61,7 @@ export function CreateResourceModal({ isOpen, onClose, onSuccess }: CreateResour
         // Limpiar formulario
         setName('');
         setDescription('');
+        setBusinessTypeId('');
         onSuccess(); // Recargar lista
         onClose(); // Cerrar modal
       } else {
@@ -62,6 +78,7 @@ export function CreateResourceModal({ isOpen, onClose, onSuccess }: CreateResour
     if (!loading) {
       setName('');
       setDescription('');
+      setBusinessTypeId('');
       setError(null);
       onClose();
     }
@@ -71,8 +88,8 @@ export function CreateResourceModal({ isOpen, onClose, onSuccess }: CreateResour
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Agregar Nuevo Módulo"
-      size="md"
+      title="Crear Recurso"
+      size="lg"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Error Alert */}
@@ -93,34 +110,51 @@ export function CreateResourceModal({ isOpen, onClose, onSuccess }: CreateResour
           disabled={loading}
         />
 
-        {/* Campo Descripción */}
-        <Input
-          label="Descripción"
-          type="text"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Ej: Gestión de reservas del sistema"
-          required
+        {/* Tipo de Negocio */}
+        <Select
+          label="Tipo de Negocio (Opcional)"
+          name="business_type_id"
+          value={business_type_id}
+          onChange={(value) => setBusinessTypeId(value)}
+          options={businessTypeOptions}
           disabled={loading}
         />
 
+        {/* Campo Descripción */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Descripción
+          </label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Ej: Gestión de reservas del sistema"
+            rows={3}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white resize-none"
+            required
+            disabled={loading}
+          />
+        </div>
+
         {/* Botones */}
-        <div className="flex justify-end gap-3 pt-4">
-          <button
+        <div className="flex gap-3 justify-end pt-4 border-t">
+          <Button
             type="button"
+            variant="outline"
             onClick={handleClose}
             disabled={loading}
-            className="btn btn-outline"
           >
+            <XMarkIcon className="w-4 h-4 mr-2" />
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
+            variant="primary"
+            loading={loading}
             disabled={loading}
-            className="btn btn-primary"
           >
-            {loading ? 'Creando...' : 'Crear Módulo'}
-          </button>
+            {loading ? 'Creando...' : 'Crear Recurso'}
+          </Button>
         </div>
       </form>
     </Modal>

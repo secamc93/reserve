@@ -19,11 +19,15 @@ type UsersEntity struct {
 
 // Permission representa un permiso del sistema
 type Permission struct {
-	ID          uint
-	Description string
-	Resource    string
-	Action      string
-	ResourceID  uint
+	ID               uint
+	Description      string
+	Resource         string
+	Action           string
+	ResourceID       uint
+	ActionID         uint // ID de la acción
+	ScopeID          uint
+	BusinessTypeID   uint
+	BusinessTypeName string
 }
 
 // UserRole representa la relación many-to-many entre usuarios y roles
@@ -124,10 +128,12 @@ type APIKeyInfo struct {
 
 // Resource representa un recurso del sistema
 type Resource struct {
-	ID          uint
-	Name        string
-	Description string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	DeletedAt   *time.Time
+	ID               uint
+	Name             string
+	Description      string
+	BusinessTypeID   uint
+	BusinessTypeName string
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+	DeletedAt        *time.Time
 }

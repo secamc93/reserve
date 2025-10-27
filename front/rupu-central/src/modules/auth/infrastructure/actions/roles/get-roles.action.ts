@@ -30,14 +30,26 @@ export interface GetRolesResult {
   error?: string;
 }
 
-export async function getRolesAction(token: string): Promise<GetRolesResult> {
+export interface GetRolesActionParams {
+  business_type_id?: number;
+  scope_id?: number;
+  is_system?: boolean;
+  name?: string;
+  level?: number;
+}
+
+export async function getRolesAction(
+  token: string,
+  params?: GetRolesActionParams
+): Promise<GetRolesResult> {
   try {
     console.log('🔑 getRolesAction - Token recibido:', token ? 'Sí' : 'No');
+    console.log('🔍 getRolesAction - Params:', params);
     
     const rolesRepository = new RolesRepository();
     const getRolesUseCase = new GetRolesUseCase(rolesRepository);
     
-    const result = await getRolesUseCase.execute({ token });
+    const result = await getRolesUseCase.execute({ token, params });
 
     console.log('✅ Roles obtenidos del backend:', result.roles.count);
 

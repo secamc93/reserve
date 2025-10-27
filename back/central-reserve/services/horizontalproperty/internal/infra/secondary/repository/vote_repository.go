@@ -467,18 +467,18 @@ func (r *Repository) GetVotingDetailsByUnit(ctx context.Context, votingID, hpID 
 
 		// Verificar si la unidad ha votado
 		if vote, hasVoted := voteByUnit[unit.ID]; hasVoted {
-			dto.HasVoted = true
-			dto.VotingOptionID = &vote.VotingOptionID
+				dto.HasVoted = true
+				dto.VotingOptionID = &vote.VotingOptionID
 
-			if vote.VotingOption.ID != 0 {
-				dto.OptionText = &vote.VotingOption.OptionText
-				dto.OptionCode = &vote.VotingOption.OptionCode
-				dto.OptionColor = &vote.VotingOption.Color
+				if vote.VotingOption.ID != 0 {
+					dto.OptionText = &vote.VotingOption.OptionText
+					dto.OptionCode = &vote.VotingOption.OptionCode
+					dto.OptionColor = &vote.VotingOption.Color
+				}
+
+				votedAtStr := vote.VotedAt.Format("2006-01-02T15:04:05Z07:00")
+				dto.VotedAt = &votedAtStr
 			}
-
-			votedAtStr := vote.VotedAt.Format("2006-01-02T15:04:05Z07:00")
-			dto.VotedAt = &votedAtStr
-		}
 
 		// Agregar info del residente si existe
 		if infos, hasResident := residentByUnit[unit.ID]; hasResident && len(infos) > 0 {

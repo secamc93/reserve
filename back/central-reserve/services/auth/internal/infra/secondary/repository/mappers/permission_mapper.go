@@ -7,12 +7,24 @@ import (
 
 // ToPermissionEntity convierte models.Permission a entities.Permission
 func ToPermissionEntity(model models.Permission) domain.Permission {
+	businessTypeID := uint(0)
+	businessTypeName := ""
+	if model.BusinessTypeID != nil {
+		businessTypeID = *model.BusinessTypeID
+	}
+	if model.BusinessType != nil {
+		businessTypeName = model.BusinessType.Name
+	}
+
 	return domain.Permission{
-		ID:          model.Model.ID,
-		Description: model.Action.Description,
-		Resource:    model.Resource.Name,
-		Action:      model.Action.Name,
-		ResourceID:  model.ResourceID,
+		ID:               model.Model.ID,
+		Description:      model.Action.Description,
+		Resource:         model.Resource.Name,
+		Action:           model.Action.Name,
+		ResourceID:       model.ResourceID,
+		ScopeID:          model.ScopeID,
+		BusinessTypeID:   businessTypeID,
+		BusinessTypeName: businessTypeName,
 	}
 }
 

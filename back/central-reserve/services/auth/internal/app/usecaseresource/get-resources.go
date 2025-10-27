@@ -29,11 +29,13 @@ func (uc *ResourceUseCase) GetResources(ctx context.Context, filters domain.Reso
 	var resourceDTOs []domain.ResourceDTO
 	for _, resource := range resources {
 		resourceDTOs = append(resourceDTOs, domain.ResourceDTO{
-			ID:          resource.ID,
-			Name:        resource.Name,
-			Description: resource.Description,
-			CreatedAt:   resource.CreatedAt,
-			UpdatedAt:   resource.UpdatedAt,
+			ID:               resource.ID,
+			Name:             resource.Name,
+			Description:      resource.Description,
+			BusinessTypeID:   resource.BusinessTypeID,
+			BusinessTypeName: resource.BusinessTypeName,
+			CreatedAt:        resource.CreatedAt,
+			UpdatedAt:        resource.UpdatedAt,
 		})
 	}
 

@@ -5268,7 +5268,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Obtiene la lista completa de permisos del sistema",
+                "description": "Obtiene la lista completa de permisos del sistema con filtros opcionales por tipo de business, nombre y scope",
                 "consumes": [
                     "application/json"
                 ],
@@ -5279,6 +5279,26 @@ const docTemplate = `{
                     "Permissions"
                 ],
                 "summary": "Obtener todos los permisos",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Filtrar por tipo de business (incluye genéricos)",
+                        "name": "business_type_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filtrar por nombre de permiso (búsqueda parcial)",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filtrar por ID de scope",
+                        "name": "scope_id",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Lista de permisos obtenida exitosamente",
@@ -6565,6 +6585,12 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "integer",
+                        "description": "Filtrar por tipo de business (incluye genéricos)",
+                        "name": "business_type_id",
+                        "in": "query"
+                    },
+                    {
                         "enum": [
                             "name",
                             "created_at",
@@ -6904,7 +6930,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Obtiene la lista completa de roles del sistema",
+                "description": "Obtiene la lista completa de roles del sistema con opciones de filtrado",
                 "consumes": [
                     "application/json"
                 ],
@@ -6918,8 +6944,32 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Filtrar por tipo de propiedad",
+                        "description": "Filtrar por tipo de business",
                         "name": "business_type_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filtrar por ID de scope",
+                        "name": "scope_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filtrar por rol de sistema (true/false)",
+                        "name": "is_system",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Buscar en el nombre del rol (búsqueda parcial)",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filtrar por nivel del rol",
+                        "name": "level",
                         "in": "query"
                     }
                 ],
@@ -7198,6 +7248,250 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Rol no encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Actualiza un rol existente en el sistema (actualización parcial)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Actualizar un rol",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del rol a actualizar",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos del rol a actualizar",
+                        "name": "role",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.UpdateRoleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.UpdateRoleResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Datos de entrada inválidos",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Rol no encontrado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/roles/{id}/permissions": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene la lista de permisos asignados a un rol",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Obtener permisos de un rol",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del rol",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.GetRolePermissionsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "ID de rol inválido",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Rol no encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Asigna permisos a un rol. Solo se pueden asignar permisos que pertenezcan al mismo business_type que el rol",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Asignar permisos a un rol",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del rol",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "IDs de permisos a asignar",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.AssignPermissionsToRoleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.AssignPermissionsToRoleResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Datos de entrada inválidos",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Rol no encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/roles/{id}/permissions/{permission_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Elimina un permiso específico de un rol",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Eliminar permiso de un rol",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del rol",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID del permiso",
+                        "name": "permission_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Datos de entrada inválidos",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Rol o permiso no encontrado",
                         "schema": {
                             "$ref": "#/definitions/response.RoleErrorResponse"
                         }
@@ -8380,6 +8674,20 @@ const docTemplate = `{
                 }
             }
         },
+        "request.AssignPermissionsToRoleRequest": {
+            "type": "object",
+            "required": [
+                "permission_ids"
+            ],
+            "properties": {
+                "permission_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
         "request.BusinessTypeRequest": {
             "type": "object",
             "required": [
@@ -8495,7 +8803,6 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "action",
-                "code",
                 "name",
                 "resource",
                 "scope_id"
@@ -8505,9 +8812,14 @@ const docTemplate = `{
                     "type": "string",
                     "example": "create"
                 },
+                "business_type_id": {
+                    "type": "integer",
+                    "example": 11
+                },
                 "code": {
+                    "description": "Opcional, se genera automáticamente si no se proporciona",
                     "type": "string",
-                    "example": "users:create"
+                    "example": "horizontalproperty_createuser"
                 },
                 "description": {
                     "type": "string",
@@ -8515,7 +8827,7 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string",
-                    "example": "Crear usuarios"
+                    "example": "Crear usuario"
                 },
                 "resource": {
                     "type": "string",
@@ -8711,6 +9023,10 @@ const docTemplate = `{
                 "name"
             ],
             "properties": {
+                "business_type_id": {
+                    "type": "integer",
+                    "example": 11
+                },
                 "description": {
                     "type": "string",
                     "example": "Gestión de usuarios del sistema"
@@ -9022,6 +9338,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "create"
                 },
+                "business_type_id": {
+                    "type": "integer",
+                    "example": 11
+                },
                 "code": {
                     "type": "string",
                     "example": "users:create"
@@ -9240,6 +9560,10 @@ const docTemplate = `{
                 "name"
             ],
             "properties": {
+                "business_type_id": {
+                    "type": "integer",
+                    "example": 11
+                },
                 "description": {
                     "type": "string",
                     "example": "Gestión de usuarios del sistema"
@@ -9247,6 +9571,37 @@ const docTemplate = `{
                 "name": {
                     "type": "string",
                     "example": "users"
+                }
+            }
+        },
+        "request.UpdateRoleRequest": {
+            "type": "object",
+            "properties": {
+                "business_type_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Rol de administrador actualizado"
+                },
+                "is_system": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "level": {
+                    "type": "integer",
+                    "maximum": 10,
+                    "minimum": 1,
+                    "example": 3
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Administrador Actualizado"
+                },
+                "scope_id": {
+                    "type": "integer",
+                    "example": 1
                 }
             }
         },
@@ -9296,6 +9651,29 @@ const docTemplate = `{
                 },
                 "number": {
                     "type": "integer"
+                }
+            }
+        },
+        "response.AssignPermissionsToRoleResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Permisos asignados exitosamente al rol"
+                },
+                "permission_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "role_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
                 }
             }
         },
@@ -9492,6 +9870,37 @@ const docTemplate = `{
                 },
                 "success": {
                     "type": "boolean"
+                }
+            }
+        },
+        "response.GetRolePermissionsResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer",
+                    "example": 3
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Permisos del rol obtenidos exitosamente"
+                },
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/services_auth_internal_infra_primary_controllers_rolehandler_response.PermissionResponse"
+                    }
+                },
+                "role_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "role_name": {
+                    "type": "string",
+                    "example": "Administrador"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
                 }
             }
         },
@@ -9799,7 +10208,7 @@ const docTemplate = `{
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/response.PermissionResponse"
+                        "$ref": "#/definitions/services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionResponse"
                     }
                 },
                 "success": {
@@ -9825,52 +10234,11 @@ const docTemplate = `{
                 }
             }
         },
-        "response.PermissionResponse": {
-            "type": "object",
-            "properties": {
-                "action": {
-                    "type": "string",
-                    "example": "create"
-                },
-                "code": {
-                    "type": "string",
-                    "example": "users:create"
-                },
-                "description": {
-                    "type": "string",
-                    "example": "Permite crear nuevos usuarios en el sistema"
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "name": {
-                    "type": "string",
-                    "example": "Crear usuarios"
-                },
-                "resource": {
-                    "type": "string",
-                    "example": "users"
-                },
-                "scope_code": {
-                    "type": "string",
-                    "example": "system"
-                },
-                "scope_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "scope_name": {
-                    "type": "string",
-                    "example": "Sistema"
-                }
-            }
-        },
         "response.PermissionSuccessResponse": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/response.PermissionResponse"
+                    "$ref": "#/definitions/services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionResponse"
                 },
                 "success": {
                     "type": "boolean",
@@ -10082,6 +10450,22 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/response.RoleResponse"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "response.UpdateRoleResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.RoleData"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Rol actualizado exitosamente"
                 },
                 "success": {
                     "type": "boolean",
@@ -10319,6 +10703,88 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                }
+            }
+        },
+        "services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionResponse": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "example": "create"
+                },
+                "business_type_id": {
+                    "type": "integer",
+                    "example": 11
+                },
+                "business_type_name": {
+                    "type": "string",
+                    "example": "Propiedad Horizontal"
+                },
+                "code": {
+                    "type": "string",
+                    "example": "users:create"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Permite crear nuevos usuarios en el sistema"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Crear usuarios"
+                },
+                "resource": {
+                    "type": "string",
+                    "example": "users"
+                },
+                "scope_code": {
+                    "type": "string",
+                    "example": "system"
+                },
+                "scope_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "scope_name": {
+                    "type": "string",
+                    "example": "Sistema"
+                }
+            }
+        },
+        "services_auth_internal_infra_primary_controllers_rolehandler_response.PermissionResponse": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "example": "create"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Crear usuarios"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "resource": {
+                    "type": "string",
+                    "example": "users"
+                },
+                "scope_code": {
+                    "type": "string",
+                    "example": "system"
+                },
+                "scope_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "scope_name": {
+                    "type": "string",
+                    "example": "Sistema"
                 }
             }
         },

@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { getResourcesAction, deleteResourceAction } from '@modules/auth/infrastructure/actions';
-import { Table, TableColumn, Spinner, Badge, Button, Input, ConfirmModal } from '@shared/ui';
+import { Table, TableColumn, Spinner, Badge, Button, Input, ConfirmModal, Filters, FilterField } from '@shared/ui';
 import { PencilIcon, TrashIcon, EyeIcon, CubeTransparentIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { useBusinessTypes } from '@modules/auth/ui/hooks/use-business-types';
+import { EditResourceModal } from './components/edit-resource-modal';
 
 interface ResourcesTableProps {
   token: string;
@@ -13,6 +15,8 @@ interface Resource {
   id: number;
   name: string;
   description: string;
+  business_type_id?: number;
+  business_type_name?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -21,20 +25,39 @@ export function ResourcesTable({ token }: ResourcesTableProps) {
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [resourceToDelete, setResourceToDelete] = useState<Resource | null>(null);
+  const [editResource, setEditResource] = useState<Resource | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [filters, setFilters] = useState<Record<string, any>>({});
+
+  // Obtener tipos de negocio para el filtro
+  const { businessTypes } = useBusinessTypes();
 
   const loadResources = async () => {
     setLoading(true);
     setError(null);
     
     try {
-      const result = await getResourcesAction({ token });
+      const result = await getResourcesAction({ 
+        token,
+        page,
+        pageSize,
+        name: filters.name || undefined,
+        description: filters.description || undefined,
+        business_type_id: filters.business_type_id ? parseInt(filters.business_type_id) : undefined,
+        sortBy: filters.sortBy || 'created_at',
+        sortOrder: filters.sortOrder || 'desc',
+      });
       
       if (result.success && result.data) {
         setResources(result.data.resources);
+        setTotal(result.data.total);
+        setTotalPages(result.data.totalPages);
       } else {
         setError(result.error || 'Error al cargar recursos');
       }
@@ -46,9 +69,79 @@ export function ResourcesTable({ token }: ResourcesTableProps) {
     }
   };
 
+  // Definir campos de filtros
+  const filterFields: FilterField[] = [
+    {
+      key: 'name',
+      label: 'Buscar por nombre',
+      type: 'text',
+      placeholder: 'Nombre del recurso',
+    },
+    {
+      key: 'description',
+      label: 'Buscar por descripción',
+      type: 'text',
+      placeholder: 'Descripción del recurso',
+      advanced: true,
+    },
+    {
+      key: 'business_type_id',
+      label: 'Tipo de Negocio',
+      type: 'select',
+      options: [
+        { value: '', label: 'Todos' },
+        ...(businessTypes?.map((bt) => ({
+          value: bt.id.toString(),
+          label: `${bt.icon} ${bt.name}`
+        })) || [])
+      ],
+      advanced: true,
+    },
+    {
+      key: 'sortBy',
+      label: 'Ordenar por',
+      type: 'select',
+      options: [
+        { value: 'created_at', label: 'Fecha de creación' },
+        { value: 'updated_at', label: 'Fecha de actualización' },
+        { value: 'name', label: 'Nombre' },
+      ],
+      advanced: true,
+    },
+    {
+      key: 'sortOrder',
+      label: 'Orden',
+      type: 'select',
+      options: [
+        { value: 'desc', label: 'Descendente' },
+        { value: 'asc', label: 'Ascendente' },
+      ],
+      advanced: true,
+    },
+  ];
+
+  const handleFiltersChange = (newFilters: Record<string, any>) => {
+    setFilters(newFilters);
+    setPage(1); // Reset a la primera página cuando cambian los filtros
+  };
+
+  const handleClearFilters = () => {
+    setFilters({});
+    setPage(1);
+  };
+
   useEffect(() => {
     loadResources();
-  }, [token]);
+  }, [token, page, filters]);
+
+  const handleEditClick = (resource: Resource) => {
+    setEditResource(resource);
+  };
+
+  const handleEditSuccess = () => {
+    setEditResource(null);
+    loadResources();
+  };
 
   const handleDeleteClick = (resource: Resource) => {
     setResourceToDelete(resource);
@@ -83,10 +176,8 @@ export function ResourcesTable({ token }: ResourcesTableProps) {
     setResourceToDelete(null);
   };
 
-  const filteredResources = resources.filter(resource =>
-    resource.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    resource.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Ya no filtramos en el frontend, el backend se encarga
+  const filteredResources = resources;
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-ES', {
@@ -123,6 +214,15 @@ export function ResourcesTable({ token }: ResourcesTableProps) {
       ),
     },
     {
+      key: 'business_type_name',
+      label: 'Tipo de Negocio',
+      render: (_, resource) => (
+        <div className="text-sm text-gray-900">
+          {resource.business_type_name || '-'}
+        </div>
+      ),
+    },
+    {
       key: 'createdAt',
       label: 'Creado',
       render: (createdAt) => (
@@ -145,10 +245,10 @@ export function ResourcesTable({ token }: ResourcesTableProps) {
       label: 'Acciones',
       render: (_, resource) => (
         <div className="flex gap-2">
-          <Button className="btn-outline btn-sm">
-            <EyeIcon className="w-4 h-4" />
-          </Button>
-          <Button className="btn-outline btn-sm">
+          <Button 
+            className="btn-outline btn-sm"
+            onClick={() => handleEditClick(resource)}
+          >
             <PencilIcon className="w-4 h-4" />
           </Button>
           <Button 
@@ -181,32 +281,13 @@ export function ResourcesTable({ token }: ResourcesTableProps) {
   return (
     <div className="space-y-6 w-full">
       {/* Filtros */}
-      <div className="card w-full">
-        <div className="card-body">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">Filtros de Búsqueda</h3>
-            <Button className="btn-primary">
-              <PlusIcon className="w-4 h-4 mr-2" />
-              Crear Recurso
-            </Button>
-          </div>
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <Input
-                placeholder="Buscar por nombre o descripción..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <Button onClick={() => setSearchTerm('')} className="btn-outline">
-              Limpiar
-            </Button>
-          </div>
-          <div className="mt-2 text-sm text-gray-600">
-            Mostrando {filteredResources.length} de {resources.length} recursos
-          </div>
-        </div>
-      </div>
+      <Filters
+        fields={filterFields}
+        filters={filters}
+        onFiltersChange={handleFiltersChange}
+        onClearFilters={handleClearFilters}
+      />
+
 
       {/* Tabla de recursos */}
       <Table
@@ -214,7 +295,43 @@ export function ResourcesTable({ token }: ResourcesTableProps) {
         data={filteredResources}
         loading={loading}
         keyExtractor={(resource) => resource.id}
-        emptyMessage={searchTerm ? "No se encontraron recursos con los criterios de búsqueda." : "No hay recursos disponibles. Comienza creando tu primer recurso del sistema."}
+        emptyMessage={filters.name || filters.description ? "No se encontraron recursos con los criterios de búsqueda." : "No hay recursos disponibles. Comienza creando tu primer recurso del sistema."}
+      />
+
+      {/* Paginación */}
+      {totalPages > 1 && (
+        <div className="flex justify-between items-center p-4 bg-white rounded-lg border border-gray-200">
+          <div className="text-sm text-gray-600">
+            Mostrando {(page - 1) * pageSize + 1} - {Math.min(page * pageSize, total)} de {total} recursos
+          </div>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setPage(page - 1)}
+              disabled={page === 1}
+              className="btn-outline btn-sm"
+            >
+              ← Anterior
+            </Button>
+            <span className="px-4 py-2 text-sm text-gray-700">
+              Página {page} de {totalPages}
+            </span>
+            <Button
+              onClick={() => setPage(page + 1)}
+              disabled={page === totalPages}
+              className="btn-outline btn-sm"
+            >
+              Siguiente →
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de edición */}
+      <EditResourceModal
+        isOpen={!!editResource}
+        onClose={() => setEditResource(null)}
+        onSuccess={handleEditSuccess}
+        resource={editResource}
       />
 
       {/* Modal de confirmación de eliminación */}

@@ -74,3 +74,4 @@ func (h *RoleHandler) UpdateRole(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response)
 }
+

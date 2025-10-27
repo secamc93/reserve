@@ -13,6 +13,7 @@ export interface UpdateResourceInput {
   id: number;
   name: string;
   description: string;
+  business_type_id?: number | null;
   token: string;
 }
 
