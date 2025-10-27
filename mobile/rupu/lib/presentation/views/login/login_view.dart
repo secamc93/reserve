@@ -1,170 +1,189 @@
+// presentation/views/login/login_view.dart
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:go_router/go_router.dart';
+import 'package:rupu/presentation/views/login/login_controller.dart';
 
-/// Pantalla de login estilizada con campos validados y UI responsive.
-class LoginView extends StatefulWidget {
-  const LoginView({super.key});
+import '../../screens/screens.dart';
+import '../../widgets/widgets.dart';
 
-  @override
-  State<LoginView> createState() => _LoginViewState();
-}
-
-class _LoginViewState extends State<LoginView> {
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
+class LoginView extends GetView<LoginController> {
+  final int pageIndex;
+  const LoginView({super.key, required this.pageIndex});
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(
-            horizontal: size.width * 0.1,
-            vertical: size.height * 0.05,
+    final cs = Theme.of(context).colorScheme;
+    final surface = cs.surface;
+
+    BoxDecoration neu([double r = 22]) {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      // Sombras adaptadas al tema para un look “soft”
+      final darkShadow = isDark
+          ? Colors.black.withValues(alpha: .45)
+          : const Color(0x33000000);
+      final lightShadow = isDark
+          ? Colors.white.withValues(alpha: .08)
+          : const Color(0x33FFFFFF);
+
+      return BoxDecoration(
+        color: surface,
+        borderRadius: BorderRadius.circular(r),
+        boxShadow: [
+          BoxShadow(
+            offset: const Offset(8, 8),
+            blurRadius: 24,
+            color: darkShadow,
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              LogoPlaceholder(height: size.height * 0.2),
-              const SizedBox(height: 32),
-              LoginForm(
-                formKey: _formKey,
-                emailController: _emailController,
-                passwordController: _passwordController,
-                onSubmit: () {
-                  if (_formKey.currentState!.validate()) {
-                    // TODO: Implementar lógica de login
-                  }
-                },
-              ),
-            ],
+          BoxShadow(
+            offset: const Offset(-8, -8),
+            blurRadius: 24,
+            color: lightShadow,
           ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Placeholder para el logo de la aplicación.
-class LogoPlaceholder extends StatelessWidget {
-  final double height;
-  const LogoPlaceholder({super.key, required this.height});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: height,
-      alignment: Alignment.center,
-      child: const Placeholder(fallbackHeight: 80, fallbackWidth: 80),
-    );
-  }
-}
-
-/// Formulario de login separado en widget para mayor mantenibilidad.
-class LoginForm extends StatelessWidget {
-  final GlobalKey<FormState> formKey;
-  final TextEditingController emailController;
-  final TextEditingController passwordController;
-  final VoidCallback onSubmit;
-
-  const LoginForm({
-    super.key,
-    required this.formKey,
-    required this.emailController,
-    required this.passwordController,
-    required this.onSubmit,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Form(
-      key: formKey,
-      child: Column(
-        children: [
-          EmailField(controller: emailController),
-          const SizedBox(height: 16),
-          PasswordField(controller: passwordController),
-          const SizedBox(height: 24),
-          LoginButton(onPressed: onSubmit),
         ],
-      ),
-    );
-  }
-}
+        // Borde sutil para más definición
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: .4)),
+      );
+    }
 
-/// Campo de texto para email con validación de formato.
-class EmailField extends StatelessWidget {
-  final TextEditingController controller;
-  const EmailField({super.key, required this.controller});
+    return Scaffold(
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(22),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: Container(
+                decoration: neu(22),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 28,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Títulos de marca
+                    const Text(
+                      "Bienvenidos a Rupü",
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      "Iniciar sesión",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: cs.onSurface,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 10),
 
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: 'Email',
-        hintText: 'ejemplo@dominio.com',
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-      keyboardType: TextInputType.emailAddress,
-      validator: (value) {
-        if (value == null || value.isEmpty) return 'El email es requerido';
-        final regex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+\$');
-        if (!regex.hasMatch(value)) return 'Ingresa un email válido';
-        return null;
-      },
-    );
-  }
-}
+                    // Logo
+                    CustomLogo(
+                      height: 110,
+                      imagePath: "assets/images/logorufu.png",
+                    ),
+                    const SizedBox(height: 12),
 
-/// Campo de texto para contraseña con validación de longitud mínima.
-class PasswordField extends StatelessWidget {
-  final TextEditingController controller;
-  const PasswordField({super.key, required this.controller});
+                    // Formulario (mantiene tu lógica y controladores)
+                    Form(
+                      key: controller.formKey,
+                      child: Column(
+                        children: [
+                          CustomEmailField(
+                            controller: controller.emailController,
+                            labelText: "Email",
+                            hintText: "ejemplo@dominio.com",
+                          ),
+                          const SizedBox(height: 16),
+                          CustomPasswordField(
+                            controller: controller.passwordController,
+                            labelText: "Contraseña",
+                            hintText: "Ingresa tu contraseña",
+                          ),
+                          const SizedBox(height: 10),
 
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: 'Contraseña',
-        hintText: 'Ingresa tu contraseña',
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-      obscureText: true,
-      validator: (value) {
-        if (value == null || value.isEmpty) return 'La contraseña es requerida';
-        if (value.length < 6) return 'Mínimo 6 caracteres';
-        return null;
-      },
-    );
-  }
-}
+                          Row(
+                            children: [
+                              const Spacer(),
+                              TextButton(
+                                onPressed:
+                                    () {}, // hook para recuperar contraseña
+                                child: const Text("¿Olvidaste contraseña?"),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
 
-/// Botón de login con estilo y bordes redondeados.
-class LoginButton extends StatelessWidget {
-  final VoidCallback onPressed;
-  const LoginButton({super.key, required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          // Botón enviar con estado de carga y manejo de error
+                          Obx(() {
+                            return controller.isLoading.value
+                                ? const Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 8),
+                                    child: CircularProgressIndicator(),
+                                  )
+                                : CustomButton(
+                                    onPressed: () async {
+                                      final ok = await controller.submit();
+                                      if (!context.mounted) return;
+                                      if (ok) {
+                                        final businesses = controller.businesses;
+                                        if (businesses.length == 1) {
+                                          controller.selectBusiness(
+                                            businesses.first,
+                                          );
+                                          GoRouter.of(context).goNamed(
+                                            HomeScreen.name,
+                                            pathParameters: {
+                                              'page': '$pageIndex',
+                                            },
+                                          );
+                                        } else {
+                                          GoRouter.of(context).goNamed(
+                                            BusinessSelectorScreen.name,
+                                          );
+                                        }
+                                      } else if (controller
+                                              .errorMessage
+                                              .value !=
+                                          null) {
+                                        showDialog(
+                                          context: context,
+                                          builder: (_) => AlertDialog(
+                                            title: const Text('Error'),
+                                            content: Text(
+                                              controller.errorMessage.value!,
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () =>
+                                                    Navigator.of(context).pop(),
+                                                child: const Text('OK'),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    textButton: 'Iniciar sesión',
+                                  );
+                          }),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
-        child: const Text('Iniciar sesión'),
       ),
     );
   }
