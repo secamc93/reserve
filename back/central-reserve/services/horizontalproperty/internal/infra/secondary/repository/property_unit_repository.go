@@ -44,7 +44,12 @@ func (r *Repository) GetPropertyUnitByID(ctx context.Context, id uint) (*domain.
 func (r *Repository) ListPropertyUnits(ctx context.Context, filters domain.PropertyUnitFiltersDTO) (*domain.PaginatedPropertyUnitsDTO, error) {
 	var ms []models.PropertyUnit
 	var total int64
-	query := r.db.Conn(ctx).Model(&models.PropertyUnit{}).Where("business_id = ?", filters.BusinessID)
+	query := r.db.Conn(ctx).Model(&models.PropertyUnit{})
+
+	// Si business_id es 0, no filtrar (super admin ve todo)
+	if filters.BusinessID != 0 {
+		query = query.Where("business_id = ?", filters.BusinessID)
+	}
 	if filters.Number != "" {
 		query = query.Where("number ILIKE ?", "%"+filters.Number+"%")
 	}

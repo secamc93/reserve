@@ -44,10 +44,9 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "ID del business",
+                        "description": "ID del business (opcional para super admin)",
                         "name": "business_id",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "string",
@@ -472,7 +471,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "ID del business",
+                        "description": "ID del business (opcional para super admin)",
                         "name": "business_id",
                         "in": "query"
                     },
@@ -878,6 +877,69 @@ const docTemplate = `{
                         "description": "Internal Server Error",
                         "schema": {
                             "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/business-token": {
+            "post": {
+                "security": [
+                    {
+                        "BusinessTokenAuth": []
+                    }
+                ],
+                "description": "Genera un token específico para un business basado en el token principal del usuario. Para super admins (scope platform), usar business_id = 0",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Generar token de business",
+                "parameters": [
+                    {
+                        "description": "Datos del business (business_id = 0 para super admin)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.GenerateBusinessTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Token generado exitosamente",
+                        "schema": {
+                            "$ref": "#/definitions/response.GenerateBusinessTokenSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Datos de entrada inválidos",
+                        "schema": {
+                            "$ref": "#/definitions/response.GenerateBusinessTokenErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "$ref": "#/definitions/response.GenerateBusinessTokenErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Business no encontrado o sin acceso",
+                        "schema": {
+                            "$ref": "#/definitions/response.GenerateBusinessTokenErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/response.GenerateBusinessTokenErrorResponse"
                         }
                     }
                 }
@@ -8802,15 +8864,16 @@ const docTemplate = `{
         "request.CreatePermissionRequest": {
             "type": "object",
             "required": [
-                "action",
+                "action_id",
                 "name",
-                "resource",
+                "resource_id",
                 "scope_id"
             ],
             "properties": {
-                "action": {
-                    "type": "string",
-                    "example": "create"
+                "action_id": {
+                    "description": "ID de la action",
+                    "type": "integer",
+                    "example": 1
                 },
                 "business_type_id": {
                     "type": "integer",
@@ -8829,9 +8892,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Crear usuario"
                 },
-                "resource": {
-                    "type": "string",
-                    "example": "users"
+                "resource_id": {
+                    "description": "ID del resource",
+                    "type": "integer",
+                    "example": 1
                 },
                 "scope_id": {
                     "type": "integer",
@@ -9201,6 +9265,15 @@ const docTemplate = `{
                 }
             }
         },
+        "request.GenerateBusinessTokenRequest": {
+            "type": "object",
+            "properties": {
+                "business_id": {
+                    "description": "0 para super admin, \u003e0 para usuarios normales",
+                    "type": "integer"
+                }
+            }
+        },
         "request.LoginRequest": {
             "type": "object",
             "required": [
@@ -9327,16 +9400,17 @@ const docTemplate = `{
         "request.UpdatePermissionRequest": {
             "type": "object",
             "required": [
-                "action",
+                "action_id",
                 "code",
                 "name",
-                "resource",
+                "resource_id",
                 "scope_id"
             ],
             "properties": {
-                "action": {
-                    "type": "string",
-                    "example": "create"
+                "action_id": {
+                    "description": "ID de la action",
+                    "type": "integer",
+                    "example": 1
                 },
                 "business_type_id": {
                     "type": "integer",
@@ -9354,9 +9428,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Crear usuarios"
                 },
-                "resource": {
-                    "type": "string",
-                    "example": "users"
+                "resource_id": {
+                    "description": "ID del resource",
+                    "type": "integer",
+                    "example": 1
                 },
                 "scope_id": {
                     "type": "integer",
@@ -9742,6 +9817,14 @@ const docTemplate = `{
                 }
             }
         },
+        "response.BusinessTokenResponse": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
         "response.BusinessTypeDetailResponse": {
             "type": "object",
             "properties": {
@@ -9856,6 +9939,28 @@ const docTemplate = `{
                 "success": {
                     "type": "boolean",
                     "example": true
+                }
+            }
+        },
+        "response.GenerateBusinessTokenErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.GenerateBusinessTokenSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.BusinessTokenResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
                 }
             }
         },
@@ -10887,7 +10992,13 @@ const docTemplate = `{
     },
     "securityDefinitions": {
         "BearerAuth": {
-            "description": "Ingrese su token JWT con el prefijo **Bearer**",
+            "description": "Token de business JWT con el prefijo **Bearer** (para todos los endpoints)",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        },
+        "BusinessTokenAuth": {
+            "description": "Token principal JWT con el prefijo **Bearer** (solo para /auth/business-token)",
             "type": "apiKey",
             "name": "Authorization",
             "in": "header"

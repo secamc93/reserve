@@ -373,10 +373,17 @@ type UserFilters struct {
 }
 
 type JWTClaims struct {
-	UserID     uint
-	Email      string
-	Roles      []string
-	BusinessID uint
+	UserID    uint
+	TokenType string
+}
+
+// BusinessTokenClaims representa los claims del token de business
+type BusinessTokenClaims struct {
+	UserID         uint
+	BusinessID     uint
+	BusinessTypeID uint
+	RoleID         uint
+	TokenType      string
 }
 
 // ResourceDTO representa un recurso para casos de uso

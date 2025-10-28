@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlerattendance/response"
 
 	"github.com/gin-gonic/gin"
@@ -17,7 +18,7 @@ import (
 //	@Security		BearerAuth
 //	@Accept			json
 //	@Produce		json
-//	@Param			business_id	query	uint	true	"ID del business"
+//	@Param			business_id	query	uint	false	"ID del business (opcional para super admin)"
 //	@Param			title		query	string	false	"Filtro por título"
 //	@Param			is_active	query	bool	false	"Filtro por activo"
 //	@Success		200			{object}	object
@@ -25,11 +26,30 @@ import (
 //	@Failure		500			{object}	object
 //	@Router			/attendance/lists [get]
 func (h *AttendanceHandler) ListAttendanceLists(c *gin.Context) {
-	businessIDStr := c.Query("business_id")
-	if businessIDStr == "" {
-		c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "business_id requerido", Error: "business_id es obligatorio"})
-		return
+	// Verificar si es super admin
+	isSuperAdmin := middleware.IsSuperAdmin(c)
+
+	var businessID uint
+	if isSuperAdmin {
+		// Super admin: query params opcionales, si no hay business_id ve todo
+		businessIDStr := c.Query("business_id")
+		if businessIDStr != "" {
+			businessID = parseUint(businessIDStr)
+		}
+		// Si businessIDStr está vacío, businessID = 0 significa "ver todo"
+	} else {
+		// Usuario normal: usar business_id del token
+		var exists bool
+		businessID, exists = middleware.GetBusinessID(c)
+		if !exists {
+			c.JSON(http.StatusUnauthorized, response.ErrorResponse{
+				Success: false,
+				Error:   "business_id no disponible en el token",
+			})
+			return
+		}
 	}
+
 	filters := map[string]interface{}{}
 	if v := c.Query("title"); v != "" {
 		filters["title"] = v
@@ -37,7 +57,7 @@ func (h *AttendanceHandler) ListAttendanceLists(c *gin.Context) {
 	if v := c.Query("is_active"); v != "" {
 		filters["is_active"] = (v == "true")
 	}
-	lists, err := h.attendanceUseCase.ListAttendanceLists(c.Request.Context(), parseUint(businessIDStr), filters)
+	lists, err := h.attendanceUseCase.ListAttendanceLists(c.Request.Context(), businessID, filters)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Success: false, Message: "Error listando listas de asistencia", Error: err.Error()})
 		return

@@ -8,9 +8,13 @@ import (
 
 // IJWTService define las operaciones de JWT
 type IJWTService interface {
-	GenerateToken(userID uint, email string, roles []string, businessID uint) (string, error)
+	GenerateToken(userID uint) (string, error)
 	ValidateToken(tokenString string) (*JWTClaims, error)
 	RefreshToken(tokenString string) (string, error)
+
+	// Tokens para business
+	GenerateBusinessToken(userID, businessID, businessTypeID, roleID uint) (string, error)
+	ValidateBusinessToken(tokenString string) (*BusinessTokenClaims, error)
 }
 
 // IAuthService define las operaciones de autenticación (métodos de repositorio)
@@ -20,7 +24,7 @@ type IAuthService interface {
 	GetUserRoles(ctx context.Context, userID uint) ([]Role, error)
 	GetRolePermissions(ctx context.Context, roleID uint) ([]Permission, error)
 	ValidatePassword(hashedPassword, password string) error
-	GenerateToken(userID uint, email string, roles []string, businessID uint) (string, error)
+	GenerateToken(userID uint) (string, error)
 	UpdateLastLogin(ctx context.Context, userID uint) error
 }
 

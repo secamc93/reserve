@@ -207,7 +207,7 @@ func (uc *AuthUseCase) Login(ctx context.Context, request domain.LoginRequest) (
 		}
 	}
 
-	token, err := uc.jwtService.GenerateToken(userAuth.ID, userAuth.Email, roleNames, businessID)
+	token, err := uc.jwtService.GenerateToken(userAuth.ID)
 	if err != nil {
 		uc.log.Error().Err(err).Uint("user_id", userAuth.ID).Msg("Error al generar token JWT")
 		return nil, fmt.Errorf("error interno del servidor")

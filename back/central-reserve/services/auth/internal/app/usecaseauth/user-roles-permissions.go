@@ -33,7 +33,7 @@ func (uc *AuthUseCase) GetUserRolesPermissions(ctx context.Context, userID uint,
 	}
 
 	// Obtener usuario para verificar que existe
-	user, err := uc.repository.GetUserByEmail(ctx, claims.Email)
+	user, err := uc.repository.GetUserByID(ctx, claims.UserID)
 	if err != nil {
 		uc.log.Error().Err(err).Uint("user_id", userID).Msg("Error al obtener usuario")
 		return nil, fmt.Errorf("usuario no encontrado")

@@ -17,7 +17,12 @@
 // @securityDefinitions.apikey	BearerAuth
 // @in							header
 // @name						Authorization
-// @description				Ingrese su token JWT con el prefijo **Bearer**
+// @description				Token de business JWT con el prefijo **Bearer** (para todos los endpoints)
+//
+// @securityDefinitions.apikey	BusinessTokenAuth
+// @in							header
+// @name						Authorization
+// @description				Token principal JWT con el prefijo **Bearer** (solo para /auth/business-token)
 package main
 
 import (

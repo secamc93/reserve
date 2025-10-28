@@ -128,9 +128,10 @@ definitions:
     type: object
   request.CreatePermissionRequest:
     properties:
-      action:
-        example: create
-        type: string
+      action_id:
+        description: ID de la action
+        example: 1
+        type: integer
       business_type_id:
         example: 11
         type: integer
@@ -144,16 +145,17 @@ definitions:
       name:
         example: Crear usuario
         type: string
-      resource:
-        example: users
-        type: string
+      resource_id:
+        description: ID del resource
+        example: 1
+        type: integer
       scope_id:
         example: 1
         type: integer
     required:
-    - action
+    - action_id
     - name
-    - resource
+    - resource_id
     - scope_id
     type: object
   request.CreatePropertyUnitRequest:
@@ -424,6 +426,12 @@ definitions:
     - title
     - voting_type
     type: object
+  request.GenerateBusinessTokenRequest:
+    properties:
+      business_id:
+        description: 0 para super admin, >0 para usuarios normales
+        type: integer
+    type: object
   request.LoginRequest:
     properties:
       email:
@@ -510,9 +518,10 @@ definitions:
     type: object
   request.UpdatePermissionRequest:
     properties:
-      action:
-        example: create
-        type: string
+      action_id:
+        description: ID de la action
+        example: 1
+        type: integer
       business_type_id:
         example: 11
         type: integer
@@ -525,17 +534,18 @@ definitions:
       name:
         example: Crear usuarios
         type: string
-      resource:
-        example: users
-        type: string
+      resource_id:
+        description: ID del resource
+        example: 1
+        type: integer
       scope_id:
         example: 1
         type: integer
     required:
-    - action
+    - action_id
     - code
     - name
-    - resource
+    - resource_id
     - scope_id
     type: object
   request.UpdatePropertyUnitRequest:
@@ -808,6 +818,11 @@ definitions:
       updated_at:
         type: string
     type: object
+  response.BusinessTokenResponse:
+    properties:
+      token:
+        type: string
+    type: object
   response.BusinessTypeDetailResponse:
     properties:
       code:
@@ -886,6 +901,20 @@ definitions:
         type: string
       success:
         example: true
+        type: boolean
+    type: object
+  response.GenerateBusinessTokenErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  response.GenerateBusinessTokenSuccessResponse:
+    properties:
+      data:
+        $ref: '#/definitions/response.BusinessTokenResponse'
+      message:
+        type: string
+      success:
         type: boolean
     type: object
   response.GetBusinessByIDResponse:
@@ -1613,10 +1642,9 @@ paths:
       - application/json
       description: Lista todas las listas de asistencia por business con filtros opcionales
       parameters:
-      - description: ID del business
+      - description: ID del business (opcional para super admin)
         in: query
         name: business_id
-        required: true
         type: integer
       - description: Filtro por título
         in: query
@@ -1888,7 +1916,7 @@ paths:
       - application/json
       description: Lista todos los apoderados de un business con filtros opcionales
       parameters:
-      - description: ID del business
+      - description: ID del business (opcional para super admin)
         in: query
         name: business_id
         type: integer
@@ -2158,6 +2186,48 @@ paths:
       summary: Desmarcar asistencia
       tags:
       - Asistencia
+  /auth/business-token:
+    post:
+      consumes:
+      - application/json
+      description: Genera un token específico para un business basado en el token
+        principal del usuario. Para super admins (scope platform), usar business_id
+        = 0
+      parameters:
+      - description: Datos del business (business_id = 0 para super admin)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.GenerateBusinessTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token generado exitosamente
+          schema:
+            $ref: '#/definitions/response.GenerateBusinessTokenSuccessResponse'
+        "400":
+          description: Datos de entrada inválidos
+          schema:
+            $ref: '#/definitions/response.GenerateBusinessTokenErrorResponse'
+        "401":
+          description: No autorizado
+          schema:
+            $ref: '#/definitions/response.GenerateBusinessTokenErrorResponse'
+        "404":
+          description: Business no encontrado o sin acceso
+          schema:
+            $ref: '#/definitions/response.GenerateBusinessTokenErrorResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/response.GenerateBusinessTokenErrorResponse'
+      security:
+      - BusinessTokenAuth: []
+      summary: Generar token de business
+      tags:
+      - Auth
   /auth/change-password:
     post:
       consumes:
@@ -7305,7 +7375,12 @@ paths:
       - Users
 securityDefinitions:
   BearerAuth:
-    description: Ingrese su token JWT con el prefijo **Bearer**
+    description: Token de business JWT con el prefijo **Bearer** (para todos los endpoints)
+    in: header
+    name: Authorization
+    type: apiKey
+  BusinessTokenAuth:
+    description: Token principal JWT con el prefijo **Bearer** (solo para /auth/business-token)
     in: header
     name: Authorization
     type: apiKey

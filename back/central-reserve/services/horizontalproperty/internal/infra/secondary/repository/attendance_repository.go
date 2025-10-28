@@ -186,7 +186,14 @@ func (r *Repository) GetActiveProxiesByPropertyUnit(ctx context.Context, propert
 func (r *Repository) ListProxies(ctx context.Context, businessID uint, filters map[string]interface{}) ([]domain.Proxy, error) {
 	var m []models.Proxy
 
-	query := r.db.Conn(ctx).Where("business_id = ?", businessID)
+	query := r.db.Conn(ctx)
+	
+	// Filtrar por business_id solo si existe en filters o si businessID es válido
+	if businessID, ok := filters["business_id"].(uint); ok && businessID != 0 {
+		query = query.Where("business_id = ?", businessID)
+	} else if businessID != 0 {
+		query = query.Where("business_id = ?", businessID)
+	}
 
 	// Aplicar filtros
 	if propertyUnitID, ok := filters["property_unit_id"].(uint); ok {

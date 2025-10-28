@@ -3,6 +3,7 @@ package handlerattendance
 import (
 	"net/http"
 
+	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/internal/domain"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlerattendance/request"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlerattendance/response"
@@ -29,8 +30,28 @@ func (h *AttendanceHandler) CreateProxy(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "Datos inválidos", Error: err.Error()})
 		return
 	}
+
+	// Obtener business_id del token (no del request)
+	isSuperAdmin := middleware.IsSuperAdmin(c)
+	var businessID uint
+	var exists bool
+	businessID, exists = middleware.GetBusinessID(c)
+
+	if !exists && !isSuperAdmin {
+		c.JSON(http.StatusUnauthorized, response.ErrorResponse{
+			Success: false,
+			Error:   "business_id no disponible en el token",
+		})
+		return
+	}
+
+	// Si es super admin y no hay business_id en el token, usar el del request (opcional)
+	if isSuperAdmin && businessID == 0 {
+		businessID = req.BusinessID
+	}
+
 	dto := domain.CreateProxyDTO{
-		BusinessID:      req.BusinessID,
+		BusinessID:      businessID, // Usar business_id del token
 		PropertyUnitID:  req.PropertyUnitID,
 		ProxyName:       req.ProxyName,
 		ProxyDni:        req.ProxyDni,
