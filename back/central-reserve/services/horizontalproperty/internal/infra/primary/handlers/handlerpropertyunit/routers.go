@@ -7,15 +7,18 @@ import (
 )
 
 func (h *PropertyUnitHandler) RegisterRoutes(router *gin.RouterGroup) {
-	units := router.Group("/horizontal-properties/:hp_id/property-units")
+	// Ruta principal: listado con business_id opcional (query)
+	router.GET("/horizontal-properties/property-units", middleware.JWT(), h.ListPropertyUnits)
+
+	// Rutas de creación e importación (sin business_id en path)
+	router.POST("/horizontal-properties/property-units", middleware.JWT(), h.CreatePropertyUnit)
+	router.POST("/horizontal-properties/property-units/import-excel", middleware.JWT(), h.ImportPropertyUnitsExcel)
+
+	// Rutas específicas por unit_id (solo para operaciones individuales)
+	units := router.Group("/horizontal-properties/property-units")
 	{
-		units.POST("", middleware.JWT(), h.CreatePropertyUnit)
-		units.POST("/import-excel", middleware.JWT(), h.ImportPropertyUnitsExcel) // Importar desde Excel
 		units.GET("/:unit_id", middleware.JWT(), h.GetPropertyUnitByID)
 		units.PUT("/:unit_id", middleware.JWT(), h.UpdatePropertyUnit)
 		units.DELETE("/:unit_id", middleware.JWT(), h.DeletePropertyUnit)
 	}
-
-	// Nueva ruta: listado con hp_id opcional (query)
-	router.GET("/horizontal-properties/property-units", middleware.JWT(), h.ListPropertyUnitsQuery)
 }

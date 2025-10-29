@@ -19,6 +19,7 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
+//	@Param			business_id	query	int		false	"ID del business (opcional para super admin)"
 //	@Param			name		query		string	false	"Filtro por nombre (búsqueda parcial)"
 //	@Param			code		query		string	false	"Filtro por código (búsqueda parcial)"
 //	@Param			is_active	query		bool	false	"Filtro por estado activo"

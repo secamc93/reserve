@@ -5,20 +5,24 @@ import (
 	"fmt"
 
 	"central_reserve/services/horizontalproperty/internal/domain"
+	"central_reserve/shared/log"
 )
 
 // GetVotingByID obtiene una votación por su ID con opciones
 func (uc *votingUseCase) GetVotingByID(ctx context.Context, hpID, groupID, votingID uint) (*domain.VotingDTO, error) {
+	// Configurar contexto de logging
+	ctx = log.WithFunctionCtx(ctx, "GetVotingByID")
+
 	// Obtener votación de base de datos
 	voting, err := uc.repo.GetVotingByID(ctx, votingID)
 	if err != nil {
-		uc.logger.Error().Err(err).Uint("voting_id", votingID).Msg("Error obteniendo votación")
+		uc.logger.Error(ctx).Err(err).Uint("voting_id", votingID).Msg("Error obteniendo votación desde repositorio")
 		return nil, fmt.Errorf("votación no encontrada")
 	}
 
 	// Validar que la votación pertenezca al grupo correcto
 	if voting.VotingGroupID != groupID {
-		uc.logger.Warn().Uint("voting_id", votingID).
+		uc.logger.Warn(ctx).Uint("voting_id", votingID).
 			Uint("expected_group", groupID).Uint("actual_group", voting.VotingGroupID).
 			Msg("La votación no pertenece al grupo especificado")
 		return nil, fmt.Errorf("votación no encontrada")
@@ -27,7 +31,7 @@ func (uc *votingUseCase) GetVotingByID(ctx context.Context, hpID, groupID, votin
 	// Obtener opciones de votación
 	options, err := uc.repo.ListVotingOptionsByVoting(ctx, votingID)
 	if err != nil {
-		uc.logger.Error().Err(err).Uint("voting_id", votingID).Msg("Error obteniendo opciones de votación")
+		uc.logger.Error(ctx).Err(err).Uint("voting_id", votingID).Msg("Error obteniendo opciones de votación desde repositorio")
 		return nil, fmt.Errorf("error obteniendo opciones de votación")
 	}
 
@@ -63,6 +67,3 @@ func (uc *votingUseCase) GetVotingByID(ctx context.Context, hpID, groupID, votin
 
 	return dto, nil
 }
-
-
-

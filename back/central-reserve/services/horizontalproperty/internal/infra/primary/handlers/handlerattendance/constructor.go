@@ -14,12 +14,10 @@ type AttendanceHandler struct {
 }
 
 // NewAttendanceHandler - Constructor del handler de asistencia
-func NewAttendanceHandler(
-	attendanceUseCase domain.AttendanceUseCase,
-	logger log.ILogger,
-) *AttendanceHandler {
+func NewAttendanceHandler(attendanceUseCase domain.AttendanceUseCase, logger log.ILogger) *AttendanceHandler {
+	contextualLogger := logger.WithModule("asistencia")
 	return &AttendanceHandler{
 		attendanceUseCase: attendanceUseCase,
-		logger:            logger,
+		logger:            contextualLogger,
 	}
 }

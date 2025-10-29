@@ -7,6 +7,9 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"central_reserve/services/auth/middleware"
+	"central_reserve/shared/log"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -18,34 +21,66 @@ import (
 //	@Accept			multipart/form-data
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			hp_id	path		int		true	"ID de la propiedad horizontal"
+//	@Param			business_id	formData	int		false	"ID del business (opcional para super admin)"
 //	@Param			file	formData	file	true	"Archivo Excel (.xlsx)"
 //	@Success		200		{object}	object
 //	@Failure		400		{object}	object
 //	@Failure		500		{object}	object
-//	@Router			/horizontal-properties/{hp_id}/residents/import-excel [post]
+//	@Router			/horizontal-properties/residents/import-excel [post]
 func (h *ResidentHandler) ImportResidentsExcel(c *gin.Context) {
-	fmt.Printf("\n\n")
-	fmt.Printf("═══════════════════════════════════════════════════════════════════\n")
-	fmt.Printf("  🚀 ENDPOINT: IMPORTAR RESIDENTES DESDE EXCEL\n")
-	fmt.Printf("═══════════════════════════════════════════════════════════════════\n\n")
+	// Configurar contexto de logging
+	ctx := c.Request.Context()
+	ctx = log.WithFunctionCtx(ctx, "ImportResidentsExcel")
 
-	// Parsear hp_id
-	hpIDParam := c.Param("hp_id")
-	fmt.Printf("📋 [VALIDACION] HP ID: '%s'\n", hpIDParam)
+	// Determinar business_id según token y rol (super admin)
+	isSuperAdmin := middleware.IsSuperAdmin(c)
+	tokenBusinessID, exists := middleware.GetBusinessID(c)
 
-	hpID, err := strconv.ParseUint(hpIDParam, 10, 32)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] ImportResidentsExcel - Error parseando HP ID: %v\n", err)
-		h.logger.Error().Err(err).Str("hp_id", hpIDParam).Msg("Error parseando ID")
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "ID de propiedad horizontal inválido",
-			"error":   "Debe ser numérico",
-		})
-		return
+	var businessID uint
+	if isSuperAdmin {
+		// Super admin: puede usar el business_id del form o del token
+		businessIDParam := c.PostForm("business_id")
+		if businessIDParam != "" {
+			businessIDFromForm, err := strconv.ParseUint(businessIDParam, 10, 32)
+			if err != nil {
+				h.logger.Error(ctx).Err(err).Str("business_id", businessIDParam).Msg("Error parseando business_id del form")
+				c.JSON(http.StatusBadRequest, gin.H{
+					"success": false,
+					"message": "business_id inválido",
+					"error":   "Debe ser numérico",
+				})
+				return
+			}
+			businessID = uint(businessIDFromForm)
+		} else if exists && tokenBusinessID != 0 {
+			businessID = tokenBusinessID
+		} else {
+			h.logger.Error(ctx).Msg("business_id requerido para super admin")
+			c.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "business_id requerido",
+				"error":   "Debe especificar business_id en el form o tenerlo en el token",
+			})
+			return
+		}
+	} else {
+		// Usuario normal: business_id siempre del token
+		if !exists {
+			h.logger.Error(ctx).Msg("business_id no disponible en el token")
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"success": false,
+				"message": "Token inválido",
+				"error":   "business_id no disponible en el token",
+			})
+			return
+		}
+		businessID = tokenBusinessID
 	}
-	fmt.Printf("   ✅ HP ID parseado: %d\n\n", hpID)
+
+	// Agregar business_id al contexto para logging
+	ctx = log.WithBusinessIDCtx(ctx, businessID)
+
+	h.logger.Info(ctx).Bool("is_super_admin", isSuperAdmin).Msg("Importando residentes desde Excel")
 
 	// Obtener archivo
 	fmt.Printf("📂 [VALIDACION] Obteniendo archivo...\n")
@@ -88,14 +123,11 @@ func (h *ResidentHandler) ImportResidentsExcel(c *gin.Context) {
 	}
 
 	// Guardar archivo temporal
-	fmt.Printf("💾 [GUARDANDO] Archivo temporal...\n")
 	tempDir := os.TempDir()
-	tempFile := filepath.Join(tempDir, fmt.Sprintf("import_residents_%d_%s", hpID, file.Filename))
-	fmt.Printf("   Ruta: %s\n", tempFile)
+	tempFile := filepath.Join(tempDir, fmt.Sprintf("import_residents_%d_%s", businessID, file.Filename))
 
 	if err := c.SaveUploadedFile(file, tempFile); err != nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] ImportResidentsExcel - Error guardando temporal: %v\n", err)
-		h.logger.Error().Err(err).Msg("Error guardando archivo temporal")
+		h.logger.Error(ctx).Err(err).Msg("Error guardando archivo temporal")
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
 			"message": "Error procesando el archivo",
@@ -103,7 +135,6 @@ func (h *ResidentHandler) ImportResidentsExcel(c *gin.Context) {
 		})
 		return
 	}
-	fmt.Printf("   ✅ Guardado\n\n")
 
 	// Eliminar archivo temporal al finalizar
 	defer func() {
@@ -113,10 +144,9 @@ func (h *ResidentHandler) ImportResidentsExcel(c *gin.Context) {
 	}()
 
 	// Llamar al use case
-	result, err := h.useCase.ImportResidentsFromExcel(c.Request.Context(), uint(hpID), tempFile)
+	result, err := h.useCase.ImportResidentsFromExcel(ctx, businessID, tempFile)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] ImportResidentsExcel - Error procesando: %v\n", err)
-		h.logger.Error().Err(err).Uint("hp_id", uint(hpID)).Msg("Error importando residentes")
+		h.logger.Error(ctx).Err(err).Msg("Error importando residentes")
 		var details []string
 		if result != nil {
 			details = result.Errors
@@ -132,12 +162,13 @@ func (h *ResidentHandler) ImportResidentsExcel(c *gin.Context) {
 		return
 	}
 
+	h.logger.Info(ctx).Int("created", result.Created).Int("total_errors", len(result.Errors)).Msg("Residentes importados desde Excel exitosamente")
+
 	fmt.Printf("✅ [IMPORTACION EXITOSA]\n")
 	fmt.Printf("   Total: %d\n", result.Total)
 	fmt.Printf("   Creados: %d\n\n", result.Created)
 
-	h.logger.Info().
-		Uint("hp_id", uint(hpID)).
+	h.logger.Info(ctx).
 		Int("total", result.Total).
 		Int("created", result.Created).
 		Msg("✅ Residentes importados exitosamente")

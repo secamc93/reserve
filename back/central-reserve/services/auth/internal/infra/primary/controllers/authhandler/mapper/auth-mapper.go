@@ -56,6 +56,8 @@ func ToLoginResponse(domainResponse *domain.LoginResponse) *response.LoginRespon
 		Token:                 domainResponse.Token,
 		RequirePasswordChange: domainResponse.RequirePasswordChange,
 		Businesses:            businesses,
+		Scope:                 domainResponse.Scope,
+		IsSuperAdmin:          domainResponse.IsSuperAdmin,
 	}
 }
 

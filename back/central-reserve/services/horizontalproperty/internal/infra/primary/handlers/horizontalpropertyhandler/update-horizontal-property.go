@@ -20,7 +20,6 @@ import (
 //	@Accept			multipart/form-data
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			hp_id				path		int		true	"ID de la propiedad horizontal"
 //	@Param			name				formData	string	false	"Nombre de la propiedad"
 //	@Param			code				formData	string	false	"Código único"
 //	@Param			address				formData	string	false	"Dirección"
@@ -46,10 +45,10 @@ import (
 //	@Failure		404					{object}	object
 //	@Failure		409					{object}	object
 //	@Failure		500					{object}	object
-//	@Router			/horizontal-properties/{hp_id} [put]
+//	@Router			/horizontal-properties/{business_id} [put]
 func (h *HorizontalPropertyHandler) UpdateHorizontalProperty(c *gin.Context) {
 	// Get ID from path parameter
-	idParam := c.Param("hp_id")
+	idParam := c.Param("business_id")
 	id, err := strconv.ParseUint(idParam, 10, 32)
 	if err != nil {
 		h.logger.Error().Err(err).Str("id_param", idParam).Msg("Error parsing ID parameter")

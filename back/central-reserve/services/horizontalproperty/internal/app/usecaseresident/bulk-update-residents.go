@@ -6,9 +6,14 @@ import (
 	"strings"
 
 	"central_reserve/services/horizontalproperty/internal/domain"
+	"central_reserve/shared/log"
 )
 
 func (uc *residentUseCase) BulkUpdateResidents(ctx context.Context, businessID uint, request domain.BulkUpdateResidentsRequest) (*domain.BulkUpdateResidentsResult, error) {
+	// Configurar contexto de logging
+	ctx = log.WithFunctionCtx(ctx, "BulkUpdateResidents")
+	ctx = log.WithBusinessIDCtx(ctx, businessID)
+
 	result := &domain.BulkUpdateResidentsResult{
 		TotalProcessed: len(request.Residents),
 		Updated:        0,
@@ -24,7 +29,7 @@ func (uc *residentUseCase) BulkUpdateResidents(ctx context.Context, businessID u
 
 	unitMap, err := uc.repo.GetPropertyUnitsByNumbers(ctx, businessID, unitNumbers)
 	if err != nil {
-		uc.logger.Error().Err(err).Msg("Error obteniendo unidades de propiedad")
+		uc.logger.Error(ctx).Err(err).Int("total_units", len(unitNumbers)).Msg("Error obteniendo unidades de propiedad")
 		return nil, fmt.Errorf("error obteniendo unidades de propiedad: %w", err)
 	}
 

@@ -8,6 +8,8 @@ type LoginResponse struct {
 	Token                 string         `json:"token"`
 	RequirePasswordChange bool           `json:"require_password_change"`
 	Businesses            []BusinessInfo `json:"businesses"`
+	Scope                 string         `json:"scope"`          // Scope del usuario (platform, business, etc.)
+	IsSuperAdmin          bool           `json:"is_super_admin"` // Indica si es super admin (scope platform o scope_id 1)
 }
 
 // UserInfo representa la información del usuario en la respuesta

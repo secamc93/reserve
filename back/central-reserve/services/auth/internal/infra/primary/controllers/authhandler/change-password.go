@@ -4,6 +4,7 @@ import (
 	"central_reserve/services/auth/internal/domain"
 	"central_reserve/services/auth/internal/infra/primary/controllers/authhandler/request"
 	"central_reserve/services/auth/internal/infra/primary/controllers/authhandler/response"
+	"central_reserve/shared/log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -25,11 +26,13 @@ import (
 //	@Failure		500			{object}	response.LoginErrorResponse		"Error interno del servidor"
 //	@Router			/auth/change-password [post]
 func (h *AuthHandler) ChangePasswordHandler(c *gin.Context) {
+	ctx := log.WithFunctionCtx(c.Request.Context(), "ChangePasswordHandler")
+
 	var changePasswordRequest request.ChangePasswordRequest
 
 	// Validar y bindear el request
 	if err := c.ShouldBindJSON(&changePasswordRequest); err != nil {
-		h.logger.Error().Err(err).Msg("Error al validar request de cambio de contraseña")
+		h.logger.Error(ctx).Err(err).Msg("Error al validar request de cambio de contraseña")
 		c.JSON(http.StatusBadRequest, response.LoginErrorResponse{
 			Error: "Datos de entrada inválidos: " + err.Error(),
 		})
@@ -39,7 +42,7 @@ func (h *AuthHandler) ChangePasswordHandler(c *gin.Context) {
 	// Obtener userID del token JWT (asumiendo que está en el contexto del middleware de auth)
 	userID, exists := c.Get("user_id")
 	if !exists {
-		h.logger.Error().Msg("UserID no encontrado en el contexto")
+		h.logger.Error(ctx).Msg("UserID no encontrado en el contexto")
 		c.JSON(http.StatusUnauthorized, response.LoginErrorResponse{
 			Error: "Token de acceso inválido",
 		})
@@ -49,14 +52,14 @@ func (h *AuthHandler) ChangePasswordHandler(c *gin.Context) {
 	// Convertir userID a uint
 	userIDUint, ok := userID.(uint)
 	if !ok {
-		h.logger.Error().Msg("UserID en contexto no es del tipo correcto")
+		h.logger.Error(ctx).Msg("UserID en contexto no es del tipo correcto")
 		c.JSON(http.StatusUnauthorized, response.LoginErrorResponse{
 			Error: "Token de acceso inválido",
 		})
 		return
 	}
 
-	h.logger.Info().Uint("user_id", userIDUint).Msg("Iniciando cambio de contraseña")
+	h.logger.Info(ctx).Uint("user_id", userIDUint).Msg("Iniciando cambio de contraseña")
 
 	// Convertir request a dominio
 	domainRequest := domain.ChangePasswordRequest{
@@ -66,9 +69,9 @@ func (h *AuthHandler) ChangePasswordHandler(c *gin.Context) {
 	}
 
 	// Ejecutar caso de uso
-	domainResponse, err := h.usecase.ChangePassword(c.Request.Context(), domainRequest)
+	domainResponse, err := h.usecase.ChangePassword(ctx, domainRequest)
 	if err != nil {
-		h.logger.Error().Err(err).Uint("user_id", userIDUint).Msg("Error en proceso de cambio de contraseña")
+		h.logger.Error(ctx).Err(err).Uint("user_id", userIDUint).Msg("Error en proceso de cambio de contraseña")
 
 		// Determinar el código de estado HTTP apropiado
 		statusCode := http.StatusInternalServerError
@@ -94,7 +97,7 @@ func (h *AuthHandler) ChangePasswordHandler(c *gin.Context) {
 		return
 	}
 
-	h.logger.Info().Uint("user_id", userIDUint).Msg("Contraseña cambiada exitosamente")
+	h.logger.Info(ctx).Uint("user_id", userIDUint).Msg("Contraseña cambiada exitosamente")
 
 	// Retornar respuesta exitosa
 	c.JSON(http.StatusOK, response.ChangePasswordResponse{

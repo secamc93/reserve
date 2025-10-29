@@ -11,8 +11,12 @@ type PropertyUnitHandler struct {
 }
 
 func New(useCase domain.PropertyUnitUseCase, logger log.ILogger) *PropertyUnitHandler {
+	// El logger ya viene con service="horizontalproperty" desde el bundle
+	// Solo agregamos el módulo específico
+	contextualLogger := logger.WithModule("unidades residenciales")
+
 	return &PropertyUnitHandler{
 		useCase: useCase,
-		logger:  logger,
+		logger:  contextualLogger,
 	}
 }

@@ -155,13 +155,14 @@ func MapUpdateRequestToDTO(req *request.UpdateHorizontalPropertyRequest) domain.
 // MapListRequestToDTO mapea request de lista a DTO de filtros
 func MapListRequestToDTO(req *request.ListHorizontalPropertiesRequest) domain.HorizontalPropertyFiltersDTO {
 	return domain.HorizontalPropertyFiltersDTO{
-		Name:     req.Name,
-		Code:     req.Code,
-		IsActive: req.IsActive,
-		Page:     req.Page,
-		PageSize: req.PageSize,
-		OrderBy:  req.OrderBy,
-		OrderDir: req.OrderDir,
+		Name:       req.Name,
+		Code:       req.Code,
+		IsActive:   req.IsActive,
+		BusinessID: req.BusinessID,
+		Page:       req.Page,
+		PageSize:   req.PageSize,
+		OrderBy:    req.OrderBy,
+		OrderDir:   req.OrderDir,
 	}
 }
 

@@ -5,6 +5,7 @@ import (
 	"central_reserve/services/auth/internal/infra/primary/controllers/authhandler/mapper"
 	"central_reserve/services/auth/internal/infra/primary/controllers/authhandler/request"
 	"central_reserve/services/auth/internal/infra/primary/controllers/authhandler/response"
+	"central_reserve/shared/log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -25,11 +26,13 @@ import (
 //	@Failure		500		{object}	response.LoginErrorResponse			"Error interno del servidor"
 //	@Router			/auth/login [post]
 func (h *AuthHandler) LoginHandler(c *gin.Context) {
+	ctx := log.WithFunctionCtx(c.Request.Context(), "LoginHandler")
+
 	var loginRequest request.LoginRequest
 
 	// Validar y bindear el request
 	if err := c.ShouldBindJSON(&loginRequest); err != nil {
-		h.logger.Error().Err(err).Msg("Error al validar request de login")
+		h.logger.Error(ctx).Err(err).Msg("Error al validar request de login")
 		c.JSON(http.StatusBadRequest, response.LoginBadRequestResponse{
 			Error:   "Datos de entrada inválidos",
 			Details: err.Error(),
@@ -44,9 +47,9 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 	}
 
 	// Ejecutar caso de uso
-	domainResponse, err := h.usecase.Login(c.Request.Context(), domainRequest)
+	domainResponse, err := h.usecase.Login(ctx, domainRequest)
 	if err != nil {
-		h.logger.Error().Err(err).Str("email", loginRequest.Email).Msg("Error en proceso de login")
+		h.logger.Error(ctx).Err(err).Str("email", loginRequest.Email).Msg("Error en proceso de login")
 
 		// Determinar el código de estado HTTP apropiado
 		statusCode := http.StatusInternalServerError
@@ -72,9 +75,11 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 	// Convertir respuesta de dominio a response
 	loginResponse := *mapper.ToLoginResponse(domainResponse)
 
-	h.logger.Info().
+	h.logger.Info(ctx).
 		Str("email", loginRequest.Email).
 		Uint("user_id", domainResponse.User.ID).
+		Str("scope", domainResponse.Scope).
+		Bool("is_super_admin", domainResponse.IsSuperAdmin).
 		Msg("Login exitoso")
 
 	// Retornar respuesta exitosa

@@ -7,6 +7,10 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"central_reserve/services/auth/middleware"
+	"central_reserve/services/horizontalproperty/internal/domain"
+	"central_reserve/shared/log"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -18,42 +22,79 @@ import (
 //	@Accept			multipart/form-data
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			hp_id	path		int		true	"ID de la propiedad horizontal"
+//	@Param			business_id	formData	int		false	"ID del business (opcional para super admin)"
 //	@Param			file	formData	file	true	"Archivo Excel (.xlsx)"
 //	@Success		200		{object}	object
 //	@Failure		400		{object}	object
 //	@Failure		500		{object}	object
-//	@Router			/horizontal-properties/{hp_id}/property-units/import-excel [post]
+//	@Router			/horizontal-properties/property-units/import-excel [post]
 func (h *PropertyUnitHandler) ImportPropertyUnitsExcel(c *gin.Context) {
+	// Configurar contexto de logging una sola vez para toda la función
+	ctx := c.Request.Context()
+	ctx = log.WithFunctionCtx(ctx, "ImportPropertyUnitsExcel")
+
 	fmt.Printf("\n\n")
 	fmt.Printf("═══════════════════════════════════════════════════════════════════\n")
 	fmt.Printf("  🚀 ENDPOINT: IMPORTAR UNIDADES DESDE EXCEL\n")
 	fmt.Printf("═══════════════════════════════════════════════════════════════════\n\n")
 
-	// Parsear hp_id del path
-	hpIDParam := c.Param("hp_id")
-	fmt.Printf("📋 [VALIDACION] Parseando HP ID del path...\n")
-	fmt.Printf("   HP ID (string): '%s'\n", hpIDParam)
+	// Determinar business_id según token y rol (super admin)
+	isSuperAdmin := middleware.IsSuperAdmin(c)
+	tokenBusinessID, exists := middleware.GetBusinessID(c)
 
-	hpID, err := strconv.ParseUint(hpIDParam, 10, 32)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] ImportPropertyUnitsExcel - Error parseando ID: hp_id=%s, error=%v\n", hpIDParam, err)
-		h.logger.Error().Err(err).Str("hp_id", hpIDParam).Msg("Error parseando ID de propiedad horizontal")
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "ID de propiedad horizontal inválido",
-			"error":   "Debe ser numérico",
-		})
-		return
+	var businessID uint
+	if isSuperAdmin {
+		// Super admin: puede usar el business_id del form o del token
+		businessIDParam := c.PostForm("business_id")
+		if businessIDParam != "" {
+			businessIDFromForm, err := strconv.ParseUint(businessIDParam, 10, 32)
+			if err != nil {
+				h.logger.Error(ctx).Err(err).Str("business_id", businessIDParam).Msg("Error parseando business_id del form")
+				c.JSON(http.StatusBadRequest, gin.H{
+					"success": false,
+					"message": "business_id inválido",
+					"error":   "Debe ser numérico",
+				})
+				return
+			}
+			businessID = uint(businessIDFromForm)
+		} else if exists && tokenBusinessID != 0 {
+			businessID = tokenBusinessID
+		} else {
+			h.logger.Error(ctx).Msg("business_id requerido para super admin")
+			c.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "business_id requerido",
+				"error":   "Debe especificar business_id en el form o tenerlo en el token",
+			})
+			return
+		}
+	} else {
+		// Usuario normal: business_id siempre del token
+		if !exists {
+			h.logger.Error(ctx).Msg("business_id no disponible en el token")
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"success": false,
+				"message": "Token inválido",
+				"error":   "business_id no disponible en el token",
+			})
+			return
+		}
+		businessID = tokenBusinessID
 	}
-	fmt.Printf("   ✅ HP ID parseado: %d\n\n", hpID)
+
+	// Agregar business_id al contexto
+	ctx = log.WithBusinessIDCtx(ctx, businessID)
+
+	fmt.Printf("📋 [VALIDACION] Business ID determinado: %d\n", businessID)
+	fmt.Printf("   Es super admin: %t\n\n", isSuperAdmin)
 
 	// Obtener archivo del form
 	fmt.Printf("📂 [VALIDACION] Obteniendo archivo del formulario...\n")
 	file, err := c.FormFile("file")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[ERROR] ImportPropertyUnitsExcel - Error obteniendo archivo: error=%v\n", err)
-		h.logger.Error().Err(err).Msg("Error obteniendo archivo Excel")
+		h.logger.Error(ctx).Err(err).Msg("Error obteniendo archivo Excel")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
 			"message": "No se proporcionó el archivo Excel",
@@ -71,7 +112,7 @@ func (h *PropertyUnitHandler) ImportPropertyUnitsExcel(c *gin.Context) {
 
 	if ext != ".xlsx" && ext != ".xls" {
 		fmt.Fprintf(os.Stderr, "[ERROR] ImportPropertyUnitsExcel - Extensión inválida: %s (solo .xlsx o .xls permitidos)\n", ext)
-		h.logger.Error().Str("extension", ext).Msg("Extensión de archivo no permitida")
+		h.logger.Error(ctx).Str("extension", ext).Msg("Extensión de archivo no permitida")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
 			"message": "Formato de archivo no válido",
@@ -89,7 +130,7 @@ func (h *PropertyUnitHandler) ImportPropertyUnitsExcel(c *gin.Context) {
 
 	if file.Size > maxSize {
 		fmt.Fprintf(os.Stderr, "[ERROR] ImportPropertyUnitsExcel - Archivo muy grande: %d bytes (max: %d bytes)\n", file.Size, maxSize)
-		h.logger.Error().Int64("size", file.Size).Int64("max_size", maxSize).Msg("Archivo Excel muy grande")
+		h.logger.Error(ctx).Int64("size", file.Size).Int64("max_size", maxSize).Msg("Archivo Excel muy grande")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
 			"message": "El archivo es muy grande",
@@ -102,7 +143,7 @@ func (h *PropertyUnitHandler) ImportPropertyUnitsExcel(c *gin.Context) {
 	// Guardar archivo temporal
 	fmt.Printf("💾 [GUARDANDO] Archivo temporal...\n")
 	tempDir := os.TempDir()
-	tempFileName := fmt.Sprintf("import_units_%d_%s", hpID, file.Filename)
+	tempFileName := fmt.Sprintf("import_units_%d_%s", businessID, file.Filename)
 	tempFile := filepath.Join(tempDir, tempFileName)
 
 	fmt.Printf("   Directorio temporal: %s\n", tempDir)
@@ -111,7 +152,7 @@ func (h *PropertyUnitHandler) ImportPropertyUnitsExcel(c *gin.Context) {
 
 	if err := c.SaveUploadedFile(file, tempFile); err != nil {
 		fmt.Fprintf(os.Stderr, "[ERROR] ImportPropertyUnitsExcel - Error guardando archivo temporal: error=%v\n", err)
-		h.logger.Error().Err(err).Str("temp_file", tempFile).Msg("Error guardando archivo temporal")
+		h.logger.Error(ctx).Err(err).Str("temp_file", tempFile).Msg("Error guardando archivo temporal")
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
 			"message": "Error procesando el archivo",
@@ -133,13 +174,35 @@ func (h *PropertyUnitHandler) ImportPropertyUnitsExcel(c *gin.Context) {
 	}()
 
 	// Llamar al use case para procesar el Excel
-	result, err := h.useCase.ImportPropertyUnitsFromExcel(c.Request.Context(), uint(hpID), tempFile)
+	result, err := h.useCase.ImportPropertyUnitsFromExcel(ctx, businessID, tempFile)
 	if err != nil {
+		status := http.StatusInternalServerError
+		message := "Error procesando el archivo Excel"
+
+		// Mapear errores específicos del caso de uso
+		switch err {
+		case domain.ErrPropertyUnitNotFound:
+			status = http.StatusNotFound
+			message = "Unidad de propiedad no encontrada"
+		case domain.ErrPropertyUnitNumberExists:
+			status = http.StatusConflict
+			message = "Ya existe una unidad con este número"
+		case domain.ErrPropertyUnitNumberRequired:
+			status = http.StatusBadRequest
+			message = "El número de unidad es requerido"
+		case domain.ErrPropertyUnitHasResidents:
+			status = http.StatusConflict
+			message = "No se puede eliminar una unidad que tiene residentes"
+		case domain.ErrPropertyUnitRequired:
+			status = http.StatusBadRequest
+			message = "La unidad de propiedad es requerida"
+		}
+
 		fmt.Fprintf(os.Stderr, "[ERROR] ImportPropertyUnitsExcel - Error procesando Excel: error=%v\n", err)
-		h.logger.Error().Err(err).Uint("hp_id", uint(hpID)).Msg("Error importando unidades desde Excel")
-		c.JSON(http.StatusInternalServerError, gin.H{
+		h.logger.Error(ctx).Err(err).Uint("business_id", businessID).Msg("Error importando unidades desde Excel")
+		c.JSON(status, gin.H{
 			"success": false,
-			"message": "Error procesando el archivo Excel",
+			"message": message,
 			"error":   err.Error(),
 		})
 		return
@@ -159,13 +222,13 @@ func (h *PropertyUnitHandler) ImportPropertyUnitsExcel(c *gin.Context) {
 		fmt.Printf("\n")
 	}
 
-	h.logger.Info().
-		Uint("hp_id", uint(hpID)).
-		Int("total", result.Total).
+	h.logger.Info(ctx).
+		Uint("business_id", businessID).
+		Int("total_rows", result.Total).
 		Int("created", result.Created).
 		Int("skipped", result.Skipped).
-		Int("errors", len(result.Errors)).
-		Msg("✅ Unidades importadas desde Excel")
+		Int("errors_count", len(result.Errors)).
+		Msg("Importación de unidades desde Excel completada exitosamente")
 
 	// Retornar resultado
 	c.JSON(http.StatusOK, gin.H{

@@ -16,8 +16,9 @@ func NewAttendanceUseCase(
 	attendanceRepo domain.AttendanceRepository,
 	logger log.ILogger,
 ) *AttendanceUseCase {
+	contextualLogger := logger.WithModule("asistencia")
 	return &AttendanceUseCase{
 		attendanceRepo: attendanceRepo,
-		logger:         logger,
+		logger:         contextualLogger,
 	}
 }

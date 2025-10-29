@@ -19,7 +19,6 @@ import (
 //	@Security		BearerAuth
 //	@Accept			json
 //	@Produce		json
-//	@Param			hp_id		path		int	true	"ID de la propiedad horizontal"
 //	@Param			group_id	path		int	true	"ID del grupo de votación"
 //	@Param			voting_id	path		int	true	"ID de la votación"
 //	@Param			vote_id		path		int	true	"ID del voto a eliminar"
@@ -28,7 +27,7 @@ import (
 //	@Failure		401			{object}	object
 //	@Failure		404			{object}	object
 //	@Failure		500			{object}	object
-//	@Router			/horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/votes/{vote_id} [delete]
+//	@Router			/horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/votes/{vote_id} [delete]
 func (h *VotingHandler) DeleteVoteAdmin(c *gin.Context) {
 	// Extraer vote_id del path
 	voteIDParam := c.Param("vote_id")

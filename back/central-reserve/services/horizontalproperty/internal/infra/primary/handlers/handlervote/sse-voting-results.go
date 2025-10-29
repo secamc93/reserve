@@ -22,13 +22,12 @@ import (
 //	@Accept			json
 //	@Produce		text/event-stream
 //	@Security		BearerAuth
-//	@Param			hp_id		path		int		true	"ID de la propiedad horizontal"
 //	@Param			group_id	path		int		true	"ID del grupo de votación"
 //	@Param			voting_id	path		int		true	"ID de la votación"
 //	@Success		200			{string}	string	"Event stream"
 //	@Failure		400			{object}	object
 //	@Failure		500			{object}	object
-//	@Router			/horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/stream [get]
+//	@Router			/horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/stream [get]
 func (h *VotingHandler) SSEVotingResults(c *gin.Context) {
 	votingIDParam := c.Param("voting_id")
 	votingID, err := strconv.ParseUint(votingIDParam, 10, 32)

@@ -7,7 +7,7 @@ import (
 )
 
 func (h *ResidentHandler) RegisterRoutes(router *gin.RouterGroup) {
-	residents := router.Group("/horizontal-properties/:hp_id/residents")
+	residents := router.Group("/horizontal-properties/residents")
 	{
 		residents.POST("", middleware.JWT(), h.CreateResident)
 		residents.POST("/import-excel", middleware.JWT(), h.ImportResidentsExcel) // Importar residentes desde Excel

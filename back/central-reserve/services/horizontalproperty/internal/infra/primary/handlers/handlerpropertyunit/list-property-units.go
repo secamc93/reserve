@@ -1,15 +1,15 @@
 package handlerpropertyunit
 
 import (
-	"fmt"
 	"net/http"
-	"os"
 	"strconv"
 
 	"central_reserve/services/auth/middleware"
+	"central_reserve/services/horizontalproperty/internal/domain"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlerpropertyunit/mapper"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlerpropertyunit/request"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlerpropertyunit/response"
+	"central_reserve/shared/log"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,81 +17,126 @@ import (
 // ListPropertyUnits godoc
 //
 //	@Summary		Listar unidades de propiedad
-//	@Description	Obtiene lista paginada de unidades de una propiedad horizontal con filtros opcionales
+//	@Description	Obtiene lista paginada de unidades; si el usuario es super admin y no envía business_id, verá todas
 //	@Tags			Property Units
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			hp_id		path		int		true	"ID de la propiedad horizontal"
-//	@Param			number		query		string	false	"Filtrar por número de unidad (búsqueda parcial)"
-//	@Param			unit_type	query		string	false	"Tipo de unidad (apartment, house, office)"
-//	@Param			floor		query		int		false	"Número de piso"
-//	@Param			block		query		string	false	"Bloque/Torre"
-//	@Param			is_active	query		bool	false	"Estado activo"
-//	@Param			page		query		int		false	"Página"			default(1)
-//	@Param			page_size	query		int		false	"Tamaño de página"	default(10)
+//	@Param			business_id	query	int	false	"ID del business (opcional; si se omite y es super admin, ve todo)"
+//	@Param			number		query	string	false	"Filtrar por número de unidad (búsqueda parcial)"
+//	@Param			unit_type	query	string	false	"Tipo de unidad (apartment, house, office)"
+//	@Param			floor		query	int	false	"Número de piso"
+//	@Param			block		query	string	false	"Bloque/Torre"
+//	@Param			is_active	query	bool	false	"Estado activo"
+//	@Param			page		query	int	false	"Página"			default(1)
+//	@Param			page_size	query	int	false	"Tamaño de página"	default(10)
 //	@Success		200			{object}	object
 //	@Failure		400			{object}	object
 //	@Failure		500			{object}	object
-//	@Router			/horizontal-properties/{hp_id}/property-units [get]
+//	@Router			/horizontal-properties/property-units [get]
 func (h *PropertyUnitHandler) ListPropertyUnits(c *gin.Context) {
-	hpIDParam := c.Param("hp_id")
-	hpID, err := strconv.ParseUint(hpIDParam, 10, 32)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] handlerpropertyunit/list-property-units.go - Error en handler: %v\n", err)
-		h.logger.Error().Err(err).Str("hp_id", hpIDParam).Msg("Error parseando ID de propiedad horizontal")
-		c.JSON(http.StatusBadRequest, response.ErrorResponse{
-			Success: false,
-			Message: "ID de propiedad horizontal inválido",
-			Error:   "Debe ser numérico",
-		})
-		return
-	}
+	// Configurar contexto de logging una sola vez para toda la función
+	ctx := c.Request.Context()
+	ctx = log.WithFunctionCtx(ctx, "ListPropertyUnits")
 
-	var req request.PropertyUnitFiltersRequest
-	if err := c.ShouldBindQuery(&req); err != nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] handlerpropertyunit/list-property-units.go - Error en handler: %v\n", err)
-		h.logger.Error().Err(err).Msg("Error validando parámetros de búsqueda")
-		c.JSON(http.StatusBadRequest, response.ErrorResponse{
-			Success: false,
-			Message: "Parámetros de búsqueda inválidos",
-			Error:   err.Error(),
-		})
-		return
-	}
+	// business_id como query opcional
+	businessIDParam := c.Query("business_id")
 
-	// Verificar si es super admin para manejar business_id
-	isSuperAdmin := middleware.IsSuperAdmin(c)
-
-	// Para super admin, hp_id puede ser 0 para ver todas las properties
-	// Para usuarios normales, usa solo el hp_id del path o del token
-	var businessID uint = uint(hpID)
-
-	if !isSuperAdmin {
-		// Usuario normal: verificar que tenga acceso a este business
-		tokenBusinessID, exists := middleware.GetBusinessID(c)
-		if exists && tokenBusinessID != uint(hpID) {
-			c.JSON(http.StatusForbidden, response.ErrorResponse{
-				Success: false,
-				Message: "No tiene acceso a este business",
-				Error:   "El business_id del token no coincide con el hp_id solicitado",
+	var businessIDFromQuery uint64
+	var err error
+	if businessIDParam != "" {
+		businessIDFromQuery, err = strconv.ParseUint(businessIDParam, 10, 32)
+		if err != nil {
+			h.logger.Error(ctx).Err(err).Str("business_id", businessIDParam).Msg("Error parseando business_id (query)")
+			c.JSON(http.StatusBadRequest, response.ErrorResponse{
+				Success: false, Message: "business_id inválido",
+				Error: "Debe ser numérico",
 			})
 			return
 		}
 	}
 
+	var req request.PropertyUnitFiltersRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		h.logger.Error(ctx).Err(err).Msg("Error validando parámetros de búsqueda")
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{
+			Success: false, Message: "Parámetros de búsqueda inválidos",
+			Error: err.Error(),
+		})
+		return
+	}
+
+	// Verificar super admin y decidir businessID (business_id)
+	isSuperAdmin := middleware.IsSuperAdmin(c)
+
+	var businessID uint
+	if isSuperAdmin {
+		// Si no envía business_id, ver todo (business_id = 0)
+		businessID = uint(businessIDFromQuery)
+	} else {
+		// Usuario normal: usar business_id del token y opcionalmente validar si manda business_id distinto
+		tokenBusinessID, exists := middleware.GetBusinessID(c)
+		if !exists {
+			h.logger.Error(ctx).Msg("business_id no disponible en el token")
+			c.JSON(http.StatusUnauthorized, response.ErrorResponse{
+				Success: false, Message: "Token inválido",
+				Error: "business_id no disponible",
+			})
+			return
+		}
+		if businessIDParam != "" && uint(businessIDFromQuery) != tokenBusinessID {
+			h.logger.Warn(ctx).Uint("token_business_id", tokenBusinessID).Uint("requested_business_id", uint(businessIDFromQuery)).Msg("Acceso denegado: business_id no coincide")
+			c.JSON(http.StatusForbidden, response.ErrorResponse{
+				Success: false, Message: "No tiene acceso a este business",
+				Error: "El business_id del token no coincide con el business_id solicitado",
+			})
+			return
+		}
+		businessID = tokenBusinessID
+	}
+
+	// Agregar business_id al contexto
+	ctx = log.WithBusinessIDCtx(ctx, businessID)
+
+	// Log de inicio de operación
+	h.logger.Info(ctx).Bool("is_super_admin", isSuperAdmin).Str("number", req.Number).Str("unit_type", req.UnitType).Msg("Iniciando listado de unidades de propiedad")
+
 	filters := mapper.MapFiltersRequestToDTO(req, businessID)
-	result, err := h.useCase.ListPropertyUnits(c.Request.Context(), filters)
+	result, err := h.useCase.ListPropertyUnits(ctx, filters)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] handlerpropertyunit/list-property-units.go - Error en handler: %v\n", err)
-		h.logger.Error().Err(err).Uint("hp_id", uint(hpID)).Interface("filters", filters).Msg("Error listando unidades")
-		c.JSON(http.StatusInternalServerError, response.ErrorResponse{
+		status := http.StatusInternalServerError
+		message := "Error listando unidades"
+
+		// Mapear errores específicos del caso de uso
+		switch err {
+		case domain.ErrPropertyUnitNotFound:
+			status = http.StatusNotFound
+			message = "Unidad de propiedad no encontrada"
+		case domain.ErrPropertyUnitNumberExists:
+			status = http.StatusConflict
+			message = "Ya existe una unidad con este número"
+		case domain.ErrPropertyUnitNumberRequired:
+			status = http.StatusBadRequest
+			message = "El número de unidad es requerido"
+		case domain.ErrPropertyUnitHasResidents:
+			status = http.StatusConflict
+			message = "No se puede eliminar una unidad que tiene residentes"
+		case domain.ErrPropertyUnitRequired:
+			status = http.StatusBadRequest
+			message = "La unidad de propiedad es requerida"
+		}
+
+		h.logger.Error(ctx).Err(err).Uint("business_id", businessID).Interface("filters", filters).Msg("Error listando unidades")
+		c.JSON(status, response.ErrorResponse{
 			Success: false,
-			Message: "Error listando unidades",
+			Message: message,
 			Error:   err.Error(),
 		})
 		return
 	}
+
+	// Log de éxito
+	h.logger.Info(ctx).Int64("total_units", result.Total).Int("page", result.Page).Int("page_size", result.PageSize).Msg("Unidades de propiedad listadas exitosamente")
 
 	responseData := mapper.MapPaginatedDTOToResponse(result)
 	c.JSON(http.StatusOK, response.PropertyUnitsSuccess{
@@ -99,79 +144,4 @@ func (h *PropertyUnitHandler) ListPropertyUnits(c *gin.Context) {
 		Message: "Unidades obtenidas exitosamente",
 		Data:    responseData,
 	})
-}
-
-// ListPropertyUnitsQuery godoc
-//
-//	@Summary		Listar unidades de propiedad (hp_id opcional)
-//	@Description	Obtiene lista paginada de unidades; si el usuario es super admin y no envía hp_id, verá todas
-//	@Tags			Property Units
-//	@Accept			json
-//	@Produce		json
-//	@Security		BearerAuth
-//	@Param			hp_id		query	int	false	"ID de la propiedad horizontal (opcional; si se omite y es super admin, ve todo)"
-//	@Param			number		query	string	false	"Filtrar por número de unidad (búsqueda parcial)"
-//	@Param			unit_type	query	string	false	"Tipo de unidad (apartment, house, office)"
-//	@Param			floor		query	int	false	"Número de piso"
-//	@Param			block		query	string	false	"Bloque/Torre"
-//	@Param			is_active	query	bool	false	"Estado activo"
-//	@Param			page		query	int	false	"Página"\t\t\tdefault(1)
-//	@Param			page_size	query	int	false	"Tamaño de página"\tdefault(10)
-//	@Success		200			{object}	object
-//	@Failure		400			{object}	object
-//	@Failure		500			{object}	object
-//	@Router			/horizontal-properties/property-units [get]
-func (h *PropertyUnitHandler) ListPropertyUnitsQuery(c *gin.Context) {
-	// hp_id como query opcional
-	hpIDParam := c.Query("hp_id")
-
-	var hpID uint64
-	var err error
-	if hpIDParam != "" {
-		hpID, err = strconv.ParseUint(hpIDParam, 10, 32)
-		if err != nil {
-			h.logger.Error().Err(err).Str("hp_id", hpIDParam).Msg("Error parseando hp_id (query)")
-			c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "hp_id inválido", Error: "Debe ser numérico"})
-			return
-		}
-	}
-
-	var req request.PropertyUnitFiltersRequest
-	if err := c.ShouldBindQuery(&req); err != nil {
-		h.logger.Error().Err(err).Msg("Error validando parámetros de búsqueda")
-		c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "Parámetros de búsqueda inválidos", Error: err.Error()})
-		return
-	}
-
-	// Verificar super admin y decidir businessID (hp_id)
-	isSuperAdmin := middleware.IsSuperAdmin(c)
-
-	var businessID uint
-	if isSuperAdmin {
-		// Si no envía hp_id, ver todo (business_id = 0)
-		businessID = uint(hpID)
-	} else {
-		// Usuario normal: usar business_id del token y opcionalmente validar si manda hp_id distinto
-		tokenBusinessID, exists := middleware.GetBusinessID(c)
-		if !exists {
-			c.JSON(http.StatusUnauthorized, response.ErrorResponse{Success: false, Message: "Token inválido", Error: "business_id no disponible"})
-			return
-		}
-		if hpIDParam != "" && uint(hpID) != tokenBusinessID {
-			c.JSON(http.StatusForbidden, response.ErrorResponse{Success: false, Message: "No tiene acceso a este business", Error: "El business_id del token no coincide con el hp_id solicitado"})
-			return
-		}
-		businessID = tokenBusinessID
-	}
-
-	filters := mapper.MapFiltersRequestToDTO(req, businessID)
-	result, err := h.useCase.ListPropertyUnits(c.Request.Context(), filters)
-	if err != nil {
-		h.logger.Error().Err(err).Uint("business_id", businessID).Interface("filters", filters).Msg("Error listando unidades")
-		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Success: false, Message: "Error listando unidades", Error: err.Error()})
-		return
-	}
-
-	responseData := mapper.MapPaginatedDTOToResponse(result)
-	c.JSON(http.StatusOK, response.PropertyUnitsSuccess{Success: true, Message: "Unidades obtenidas exitosamente", Data: responseData})
 }

@@ -8,7 +8,7 @@ import (
 
 func (h *VotingHandler) RegisterRoutes(router *gin.RouterGroup) {
 	// Rutas privadas (requieren autenticación admin)
-	groups := router.Group("/horizontal-properties/:hp_id/voting-groups")
+	groups := router.Group("/horizontal-properties/voting-groups")
 	{
 		groups.POST("", middleware.JWT(), h.CreateVotingGroup)
 		groups.GET("", middleware.JWT(), h.ListVotingGroups)

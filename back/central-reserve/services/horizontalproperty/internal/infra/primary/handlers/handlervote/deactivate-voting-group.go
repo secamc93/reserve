@@ -19,13 +19,12 @@ import (
 //	@Security		BearerAuth
 //	@Accept			json
 //	@Produce		json
-//	@Param			hp_id		path		int	true	"ID de la propiedad horizontal"
 //	@Param			group_id	path		int	true	"ID del grupo de votación"
 //	@Success		200			{object}	object
 //	@Failure		400			{object}	object
 //	@Failure		404			{object}	object
 //	@Failure		500			{object}	object
-//	@Router			/horizontal-properties/{hp_id}/voting-groups/{group_id} [delete]
+//	@Router			/horizontal-properties/voting-groups/{group_id} [delete]
 func (h *VotingHandler) DeactivateVotingGroup(c *gin.Context) {
 	idParam := c.Param("group_id")
 	id64, err := strconv.ParseUint(idParam, 10, 32)

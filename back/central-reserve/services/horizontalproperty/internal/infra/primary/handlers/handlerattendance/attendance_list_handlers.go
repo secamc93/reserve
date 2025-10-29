@@ -6,6 +6,7 @@ import (
 
 	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlerattendance/response"
+	"central_reserve/shared/log"
 
 	"github.com/gin-gonic/gin"
 )
@@ -50,6 +51,13 @@ func (h *AttendanceHandler) ListAttendanceLists(c *gin.Context) {
 		}
 	}
 
+	// Crear contexto con business_id para logging estructurado
+	ctx := c.Request.Context()
+	ctx = log.WithBusinessIDCtx(ctx, businessID)
+
+	// Log de información con contexto estructurado
+	h.logger.Info(ctx).Uint("business_id", businessID).Bool("is_super_admin", isSuperAdmin).Msg("Listando listas de asistencia")
+
 	filters := map[string]interface{}{}
 	if v := c.Query("title"); v != "" {
 		filters["title"] = v
@@ -57,7 +65,7 @@ func (h *AttendanceHandler) ListAttendanceLists(c *gin.Context) {
 	if v := c.Query("is_active"); v != "" {
 		filters["is_active"] = (v == "true")
 	}
-	lists, err := h.attendanceUseCase.ListAttendanceLists(c.Request.Context(), businessID, filters)
+	lists, err := h.attendanceUseCase.ListAttendanceLists(ctx, businessID, filters)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Success: false, Message: "Error listando listas de asistencia", Error: err.Error()})
 		return

@@ -23,30 +23,33 @@ import (
 
 // New inicializa el servicio de propiedades horizontales con todas sus dependencias
 func New(db db.IDatabase, logger log.ILogger, s3 storage.IS3Service, envConfig env.IConfig, v1Group *gin.RouterGroup) {
+	// Crear logger contextual para todo el servicio horizontalproperty
+	serviceLogger := logger.WithService("Propiedades horizontales")
+
 	// Crear repositorio consolidado
-	repo := repository.New(db, logger)
+	repo := repository.New(db, serviceLogger)
 	// Necesitamos el tipo concreto para satisfacer ambos puertos (HorizontalPropertyRepository y VotingRepository)
 	repoConcrete := repo.(*repository.Repository)
 
 	// Crear casos de uso
 	horizontalPropertyUseCase := usecasehorizontalproperty.NewHorizontalPropertyUseCase(
 		repo,
-		logger,
+		serviceLogger,
 		s3,
 		envConfig,
 	)
 
 	// Voting use case (necesita acceso a voting y resident repos)
-	votingUseCase := usecasevote.NewVotingUseCase(repoConcrete, repoConcrete, logger)
+	votingUseCase := usecasevote.NewVotingUseCase(repoConcrete, repoConcrete, serviceLogger)
 
 	// Property Unit use case
-	propertyUnitUseCase := usecasepropertyunit.New(repoConcrete, logger)
+	propertyUnitUseCase := usecasepropertyunit.New(repoConcrete, serviceLogger)
 
 	// Resident use case
-	residentUseCase := usecaseresident.New(repoConcrete, logger)
+	residentUseCase := usecaseresident.New(repoConcrete, serviceLogger)
 
 	// Attendance use case
-	attendanceUseCase := usecaseattendance.NewAttendanceUseCase(repoConcrete, logger)
+	attendanceUseCase := usecaseattendance.NewAttendanceUseCase(repoConcrete, serviceLogger)
 
 	// Crear cache de votaciones para SSE en tiempo real
 	votingCache := domain.NewVotingCache()
@@ -54,7 +57,7 @@ func New(db db.IDatabase, logger log.ILogger, s3 storage.IS3Service, envConfig e
 	// Crear handlers
 	horizontalPropertyHandler := horizontalpropertyhandler.NewHorizontalPropertyHandler(
 		horizontalPropertyUseCase,
-		logger,
+		serviceLogger,
 	)
 	// Obtener JWT secret del env
 	jwtSecret := envConfig.Get("JWT_SECRET")
@@ -66,11 +69,11 @@ func New(db db.IDatabase, logger log.ILogger, s3 storage.IS3Service, envConfig e
 		horizontalPropertyUseCase,
 		votingCache,
 		jwtSecret,
-		logger,
+		serviceLogger,
 	)
-	propertyUnitHandler := handlerpropertyunit.New(propertyUnitUseCase, logger)
-	residentHandler := handlerresident.New(residentUseCase, logger)
-	attendanceHandler := handlerattendance.NewAttendanceHandler(attendanceUseCase, logger)
+	propertyUnitHandler := handlerpropertyunit.New(propertyUnitUseCase, serviceLogger)
+	residentHandler := handlerresident.New(residentUseCase, serviceLogger)
+	attendanceHandler := handlerattendance.NewAttendanceHandler(attendanceUseCase, serviceLogger)
 
 	// Registrar rutas
 	horizontalPropertyHandler.RegisterRoutes(v1Group)

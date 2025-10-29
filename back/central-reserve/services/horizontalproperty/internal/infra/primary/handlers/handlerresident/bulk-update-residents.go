@@ -7,7 +7,9 @@ import (
 	"strconv"
 	"strings"
 
+	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlerresident/response"
+	"central_reserve/shared/log"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,28 +22,76 @@ import (
 //	@Security		BearerAuth
 //	@Accept			multipart/form-data
 //	@Produce		json
-//	@Param			hp_id		path		int		true	"ID de la propiedad horizontal"
+//	@Param			business_id	formData	int		false	"ID del business (opcional para super admin)"
 //	@Param			file		formData	file	true	"Archivo Excel con residentes a actualizar"
 //	@Success		200			{object}	object
 //	@Failure		400			{object}	object
 //	@Failure		500			{object}	object
-//	@Router			/horizontal-properties/{hp_id}/residents/bulk-update [put]
+//	@Router			/horizontal-properties/residents/bulk-update [put]
 func (h *ResidentHandler) BulkUpdateResidents(c *gin.Context) {
-	hpIDParam := c.Param("hp_id")
-	hpID, err := strconv.ParseUint(hpIDParam, 10, 32)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] handlerresident/bulk-update-residents.go - Error en handler: %v\n", err)
-		h.logger.Error().Err(err).Str("hp_id", hpIDParam).Msg("Error parseando ID de propiedad horizontal")
-		c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "ID inválido", Error: "Debe ser numérico"})
-		return
+	// Configurar contexto de logging
+	ctx := c.Request.Context()
+	ctx = log.WithFunctionCtx(ctx, "BulkUpdateResidents")
+
+	// Determinar business_id según token y rol (super admin)
+	isSuperAdmin := middleware.IsSuperAdmin(c)
+	tokenBusinessID, exists := middleware.GetBusinessID(c)
+
+	var businessID uint
+	if isSuperAdmin {
+		// Super admin: puede usar el business_id del form o del token
+		businessIDParam := c.PostForm("business_id")
+		if businessIDParam != "" {
+			businessIDFromForm, err := strconv.ParseUint(businessIDParam, 10, 32)
+			if err != nil {
+				h.logger.Error(ctx).Err(err).Str("business_id", businessIDParam).Msg("Error parseando business_id del form")
+				c.JSON(http.StatusBadRequest, response.ErrorResponse{
+					Success: false,
+					Message: "business_id inválido",
+					Error:   "Debe ser numérico",
+				})
+				return
+			}
+			businessID = uint(businessIDFromForm)
+		} else if exists && tokenBusinessID != 0 {
+			businessID = tokenBusinessID
+		} else {
+			h.logger.Error(ctx).Msg("business_id requerido para super admin")
+			c.JSON(http.StatusBadRequest, response.ErrorResponse{
+				Success: false,
+				Message: "business_id requerido",
+				Error:   "Debe especificar business_id en el form o tenerlo en el token",
+			})
+			return
+		}
+	} else {
+		// Usuario normal: business_id siempre del token
+		if !exists {
+			h.logger.Error(ctx).Msg("business_id no disponible en el token")
+			c.JSON(http.StatusUnauthorized, response.ErrorResponse{
+				Success: false,
+				Message: "Token inválido",
+				Error:   "business_id no disponible en el token",
+			})
+			return
+		}
+		businessID = tokenBusinessID
 	}
+
+	// Agregar business_id al contexto para logging
+	ctx = log.WithBusinessIDCtx(ctx, businessID)
+
+	h.logger.Info(ctx).Bool("is_super_admin", isSuperAdmin).Msg("Iniciando edición masiva de residentes")
 
 	// Obtener archivo Excel del formulario
 	file, err := c.FormFile("file")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] handlerresident/bulk-update-residents.go - Error obteniendo archivo: %v\n", err)
-		h.logger.Error().Err(err).Uint("hp_id", uint(hpID)).Msg("Error obteniendo archivo Excel")
-		c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "Archivo requerido", Error: "Debe proporcionar un archivo Excel"})
+		h.logger.Error(ctx).Err(err).Msg("Error obteniendo archivo Excel")
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{
+			Success: false,
+			Message: "Archivo requerido",
+			Error:   "Debe proporcionar un archivo Excel",
+		})
 		return
 	}
 
@@ -73,31 +123,19 @@ func (h *ResidentHandler) BulkUpdateResidents(c *gin.Context) {
 		return
 	}
 
-	fmt.Printf("\n📝 [EDICION MASIVA RESIDENTES POR EXCEL]\n")
-	fmt.Printf("   Propiedad Horizontal ID: %d\n", uint(hpID))
-	fmt.Printf("   Archivo: %s\n\n", file.Filename)
-
 	// Ejecutar edición masiva desde Excel
-	result, err := h.useCase.BulkUpdateResidentsFromExcel(c.Request.Context(), uint(hpID), tempFile.Name())
+	result, err := h.useCase.BulkUpdateResidentsFromExcel(ctx, businessID, tempFile.Name())
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] handlerresident/bulk-update-residents.go - Error en handler: %v\n", err)
-		h.logger.Error().Err(err).Uint("hp_id", uint(hpID)).Str("filename", file.Filename).Msg("Error ejecutando edición masiva desde Excel")
-		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Success: false, Message: "Error procesando archivo Excel", Error: err.Error()})
+		h.logger.Error(ctx).Err(err).Str("filename", file.Filename).Msg("Error ejecutando edición masiva desde Excel")
+		c.JSON(http.StatusInternalServerError, response.ErrorResponse{
+			Success: false,
+			Message: "Error procesando archivo Excel",
+			Error:   err.Error(),
+		})
 		return
 	}
 
-	fmt.Printf("✅ [EDICION MASIVA RESIDENTES COMPLETADA]\n")
-	fmt.Printf("   Total procesados: %d\n", result.TotalProcessed)
-	fmt.Printf("   Actualizados: %d\n", result.Updated)
-	fmt.Printf("   Errores: %d\n\n", result.Errors)
-
-	h.logger.Info().
-		Uint("hp_id", uint(hpID)).
-		Str("filename", file.Filename).
-		Int("total_processed", result.TotalProcessed).
-		Int("updated", result.Updated).
-		Int("errors", result.Errors).
-		Msg("Edición masiva de residentes desde Excel completada")
+	h.logger.Info(ctx).Int("total_processed", result.TotalProcessed).Int("updated", result.Updated).Int("errors", result.Errors).Msg("Edición masiva de residentes completada exitosamente")
 
 	// Mapear resultado a response
 	errorDetails := make([]response.BulkUpdateErrorDetailResult, len(result.ErrorDetails))

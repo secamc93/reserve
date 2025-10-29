@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 
+	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlervote/response"
 
 	"github.com/gin-gonic/gin"
@@ -17,7 +18,6 @@ import (
 // @Tags			Voting
 // @Accept			json
 // @Produce		json
-// @Param			hp_id		path		uint	true	"ID de la propiedad horizontal"
 // @Param			group_id	path		uint	true	"ID del grupo de votación"
 // @Param			voting_id	path		uint	true	"ID de la votación"
 // @Param			unit_number	query		string	false	"Filtrar por número de unidad (ej: '15' encuentra todas las unidades con 15, 'casa 15' encuentra CASA 15, CASA 150, etc.)"
@@ -26,20 +26,20 @@ import (
 // @Failure		404			{object}	object
 // @Failure		500			{object}	object
 // @Security		BearerAuth
-// @Router			/horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/unvoted-units [get]
+// @Router			/horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/unvoted-units [get]
 func (h *VotingHandler) GetUnvotedUnitsByVoting(c *gin.Context) {
-	// Obtener parámetros de la URL
-	hpIDParam := c.Param("hp_id")
-	hpID, err := strconv.ParseUint(hpIDParam, 10, 32)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] handlervote/get-unvoted-units-by-voting.go - Error parseando hp_id: %v\n", err)
-		c.JSON(http.StatusBadRequest, response.ErrorResponse{
+	// Obtener business_id del token
+	businessID, exists := middleware.GetBusinessID(c)
+	if !exists {
+		c.JSON(http.StatusUnauthorized, response.ErrorResponse{
 			Success: false,
-			Message: "ID de propiedad horizontal inválido",
-			Error:   "Debe ser numérico",
+			Message: "Token inválido",
+			Error:   "business_id no disponible en el token",
 		})
 		return
 	}
+
+	// Obtener otros parámetros de la URL
 
 	groupIDParam := c.Param("group_id")
 	groupID, err := strconv.ParseUint(groupIDParam, 10, 32)
@@ -69,7 +69,7 @@ func (h *VotingHandler) GetUnvotedUnitsByVoting(c *gin.Context) {
 	unitNumberFilter := c.Query("unit_number")
 
 	fmt.Printf("\n📋 [UNIDADES SIN VOTAR] Consultando unidades disponibles\n")
-	fmt.Printf("   HP ID: %d\n", hpID)
+	fmt.Printf("   Business ID: %d\n", businessID)
 	fmt.Printf("   Grupo ID: %d\n", groupID)
 	fmt.Printf("   Votación ID: %d\n", votingID)
 	if unitNumberFilter != "" {
@@ -78,7 +78,7 @@ func (h *VotingHandler) GetUnvotedUnitsByVoting(c *gin.Context) {
 	fmt.Printf("\n")
 
 	// Verificar que la votación existe y pertenece al grupo
-	voting, err := h.votingUseCase.GetVotingByID(c.Request.Context(), uint(hpID), uint(groupID), uint(votingID))
+	voting, err := h.votingUseCase.GetVotingByID(c.Request.Context(), uint(businessID), uint(groupID), uint(votingID))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[ERROR] handlervote/get-unvoted-units-by-voting.go - Error obteniendo votación: %v\n", err)
 		c.JSON(http.StatusNotFound, response.ErrorResponse{

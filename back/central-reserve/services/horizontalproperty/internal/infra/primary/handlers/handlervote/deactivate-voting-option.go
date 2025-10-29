@@ -19,7 +19,6 @@ import (
 //	@Security		BearerAuth
 //	@Accept			json
 //	@Produce		json
-//	@Param			hp_id		path		int	true	"ID de la propiedad horizontal"
 //	@Param			group_id	path		int	true	"ID del grupo de votación"
 //	@Param			voting_id	path		int	true	"ID de la votación"
 //	@Param			option_id	path		int	true	"ID de la opción de votación"
@@ -27,7 +26,7 @@ import (
 //	@Failure		400			{object}	object
 //	@Failure		404			{object}	object
 //	@Failure		500			{object}	object
-//	@Router			/horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/options/{option_id} [delete]
+//	@Router			/horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/options/{option_id} [delete]
 func (h *VotingHandler) DeactivateVotingOption(c *gin.Context) {
 	idParam := c.Param("option_id")
 	id64, err := strconv.ParseUint(idParam, 10, 32)

@@ -1120,8 +1120,14 @@ definitions:
         items:
           $ref: '#/definitions/services_auth_internal_infra_primary_controllers_authhandler_response.BusinessInfo'
         type: array
+      is_super_admin:
+        description: Indica si es super admin (scope platform o scope_id 1)
+        type: boolean
       require_password_change:
         type: boolean
+      scope:
+        description: Scope del usuario (platform, business, etc.)
+        type: string
       token:
         type: string
       user:
@@ -2311,14 +2317,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Obtiene los roles y permisos del usuario autenticado validados
-        contra recursos configurados del business
-      parameters:
-      - description: ID del business para validar recursos activos
-        in: query
-        name: business_id
-        required: true
-        type: integer
+      description: Obtiene los roles y permisos del usuario autenticado desde el token
       produces:
       - application/json
       responses:
@@ -2326,10 +2325,6 @@ paths:
           description: Roles y permisos obtenidos exitosamente
           schema:
             $ref: '#/definitions/response.UserRolesPermissionsSuccessResponse'
-        "400":
-          description: Business ID requerido o inválido
-          schema:
-            $ref: '#/definitions/response.LoginErrorResponse'
         "401":
           description: Token de acceso requerido
           schema:
@@ -3286,6 +3281,10 @@ paths:
       description: Obtiene una lista paginada de propiedades horizontales con filtros
         opcionales (incluye URLs de imágenes)
       parameters:
+      - description: ID del business (opcional para super admin)
+        in: query
+        name: business_id
+        type: integer
       - description: Filtro por nombre (búsqueda parcial)
         in: query
         name: name
@@ -3502,18 +3501,12 @@ paths:
       summary: Crear una nueva propiedad horizontal
       tags:
       - Propiedades Horizontales
-  /horizontal-properties/{hp_id}:
+  /horizontal-properties/{business_id}:
     delete:
       consumes:
       - application/json
       description: Elimina una propiedad horizontal (soft delete) y sus imágenes de
         S3
-      parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -3547,12 +3540,6 @@ paths:
       - application/json
       description: Obtiene una propiedad horizontal con información detallada (incluye
         unidades y comités)
-      parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -3583,11 +3570,6 @@ paths:
       description: Actualiza una propiedad horizontal existente (actualización parcial,
         soporta cambio de imágenes)
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
-        type: integer
       - description: Nombre de la propiedad
         in: formData
         name: name
@@ -3696,17 +3678,16 @@ paths:
       summary: Actualizar propiedad horizontal
       tags:
       - Propiedades Horizontales
-  /horizontal-properties/{hp_id}/property-units:
+  /horizontal-properties/property-units:
     get:
       consumes:
       - application/json
-      description: Obtiene lista paginada de unidades de una propiedad horizontal
-        con filtros opcionales
+      description: Obtiene lista paginada de unidades; si el usuario es super admin
+        y no envía business_id, verá todas
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
+      - description: ID del business (opcional; si se omite y es super admin, ve todo)
+        in: query
+        name: business_id
         type: integer
       - description: Filtrar por número de unidad (búsqueda parcial)
         in: query
@@ -3764,11 +3745,6 @@ paths:
       description: Crea una nueva unidad de propiedad (apartamento/casa) en una propiedad
         horizontal
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
-        type: integer
       - description: Datos de la unidad
         in: body
         name: unit
@@ -3799,17 +3775,12 @@ paths:
       summary: Crear unidad de propiedad
       tags:
       - Property Units
-  /horizontal-properties/{hp_id}/property-units/{unit_id}:
+  /horizontal-properties/property-units/{unit_id}:
     delete:
       consumes:
       - application/json
       description: Elimina (soft delete) una unidad de propiedad
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
-        type: integer
       - description: ID de la unidad
         in: path
         name: unit_id
@@ -3840,11 +3811,6 @@ paths:
       - application/json
       description: Obtiene los detalles de una unidad de propiedad específica
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
-        type: integer
       - description: ID de la unidad
         in: path
         name: unit_id
@@ -3875,11 +3841,6 @@ paths:
       - application/json
       description: Actualiza los datos de una unidad de propiedad existente
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
-        type: integer
       - description: ID de la unidad
         in: path
         name: unit_id
@@ -3919,17 +3880,16 @@ paths:
       summary: Actualizar unidad de propiedad
       tags:
       - Property Units
-  /horizontal-properties/{hp_id}/property-units/import-excel:
+  /horizontal-properties/property-units/import-excel:
     post:
       consumes:
       - multipart/form-data
       description: 'Importa múltiples unidades de propiedad desde un archivo Excel.
         El Excel debe tener 2 columnas: ''Número de Unidad'' y ''Coeficiente de Participación'''
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
+      - description: ID del business (opcional para super admin)
+        in: formData
+        name: business_id
         type: integer
       - description: Archivo Excel (.xlsx)
         in: formData
@@ -3956,16 +3916,15 @@ paths:
       summary: Importar unidades desde Excel
       tags:
       - Unidades de Propiedad
-  /horizontal-properties/{hp_id}/residents:
+  /horizontal-properties/residents:
     get:
       consumes:
       - application/json
       description: Obtiene lista paginada de residentes de una propiedad horizontal
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
+      - description: ID del business (opcional para super admin)
+        in: query
+        name: business_id
         type: integer
       - description: Filtrar por número de unidad (búsqueda parcial)
         in: query
@@ -4026,11 +3985,6 @@ paths:
       - application/json
       description: Crea un nuevo residente en una propiedad horizontal
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
-        type: integer
       - description: Datos del residente
         in: body
         name: resident
@@ -4061,17 +4015,12 @@ paths:
       summary: Crear residente
       tags:
       - Residents
-  /horizontal-properties/{hp_id}/residents/{resident_id}:
+  /horizontal-properties/residents/{resident_id}:
     delete:
       consumes:
       - application/json
       description: Elimina (soft delete) un residente
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
-        type: integer
       - description: ID del residente
         in: path
         name: resident_id
@@ -4102,11 +4051,6 @@ paths:
       - application/json
       description: Obtiene los detalles de un residente específico
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
-        type: integer
       - description: ID del residente
         in: path
         name: resident_id
@@ -4137,11 +4081,6 @@ paths:
       - application/json
       description: Actualiza los datos de un residente existente
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
-        type: integer
       - description: ID del residente
         in: path
         name: resident_id
@@ -4181,7 +4120,7 @@ paths:
       summary: Actualizar residente
       tags:
       - Residents
-  /horizontal-properties/{hp_id}/residents/bulk-update:
+  /horizontal-properties/residents/bulk-update:
     put:
       consumes:
       - multipart/form-data
@@ -4189,10 +4128,9 @@ paths:
         principal es 'unidad' para identificar el residente. Solo se pueden actualizar
         nombre y DNI.
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
+      - description: ID del business (opcional para super admin)
+        in: formData
+        name: business_id
         type: integer
       - description: Archivo Excel con residentes a actualizar
         in: formData
@@ -4219,7 +4157,7 @@ paths:
       summary: Edición masiva de residentes por Excel
       tags:
       - Residentes
-  /horizontal-properties/{hp_id}/residents/import-excel:
+  /horizontal-properties/residents/import-excel:
     post:
       consumes:
       - multipart/form-data
@@ -4227,10 +4165,9 @@ paths:
         TODO O NADA: Si UNA unidad no existe, NO se crea NADA. El Excel debe tener
         3 columnas: ''Número de Unidad'', ''Nombre Propietario'', ''DNI'''
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
+      - description: ID del business (opcional para super admin)
+        in: formData
+        name: business_id
         type: integer
       - description: Archivo Excel (.xlsx)
         in: formData
@@ -4257,17 +4194,11 @@ paths:
       summary: Importar residentes desde Excel
       tags:
       - Residentes
-  /horizontal-properties/{hp_id}/voting-groups:
+  /horizontal-properties/voting-groups:
     get:
       consumes:
       - application/json
       description: Obtiene la lista de grupos de votación de una propiedad horizontal
-      parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -4293,11 +4224,6 @@ paths:
       - application/json
       description: Crea un nuevo grupo de votación para una propiedad horizontal
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
-        type: integer
       - description: Datos del grupo de votación
         in: body
         name: voting_group
@@ -4324,17 +4250,12 @@ paths:
       summary: Crear un nuevo grupo de votación
       tags:
       - Votaciones
-  /horizontal-properties/{hp_id}/voting-groups/{group_id}:
+  /horizontal-properties/voting-groups/{group_id}:
     delete:
       consumes:
       - application/json
       description: Desactiva un grupo de votación existente
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
-        type: integer
       - description: ID del grupo de votación
         in: path
         name: group_id
@@ -4369,11 +4290,6 @@ paths:
       - application/json
       description: Actualiza los datos de un grupo de votación existente
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
-        type: integer
       - description: ID del grupo de votación
         in: path
         name: group_id
@@ -4409,17 +4325,12 @@ paths:
       summary: Actualizar un grupo de votación
       tags:
       - Votaciones
-  /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings:
+  /horizontal-properties/voting-groups/{group_id}/votings:
     get:
       consumes:
       - application/json
       description: Obtiene la lista de votaciones de un grupo de votación específico
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
-        type: integer
       - description: ID del grupo de votación
         in: path
         name: group_id
@@ -4450,11 +4361,6 @@ paths:
       - application/json
       description: Crea una nueva votación dentro de un grupo de votación
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
-        type: integer
       - description: ID del grupo de votación
         in: path
         name: group_id
@@ -4486,17 +4392,12 @@ paths:
       summary: Crear una nueva votación
       tags:
       - Votaciones
-  /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}:
+  /horizontal-properties/voting-groups/{group_id}/votings/{voting_id}:
     delete:
       consumes:
       - application/json
       description: Elimina permanentemente una votación usando soft delete (gorm.DeletedAt)
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
-        type: integer
       - description: ID del grupo de votación
         in: path
         name: group_id
@@ -4536,11 +4437,6 @@ paths:
       - application/json
       description: Actualiza los datos de una votación existente
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
-        type: integer
       - description: ID del grupo de votación
         in: path
         name: group_id
@@ -4581,17 +4477,12 @@ paths:
       summary: Actualizar una votación
       tags:
       - Votaciones
-  /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/activate:
+  /horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/activate:
     patch:
       consumes:
       - application/json
       description: Activa una votación existente (is_active = true)
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
-        type: integer
       - description: ID del grupo de votación
         in: path
         name: group_id
@@ -4626,17 +4517,12 @@ paths:
       summary: Activar una votación
       tags:
       - Votaciones
-  /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/deactivate:
+  /horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/deactivate:
     patch:
       consumes:
       - application/json
       description: Desactiva una votación existente (is_active = false)
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
-        type: integer
       - description: ID del grupo de votación
         in: path
         name: group_id
@@ -4671,7 +4557,7 @@ paths:
       summary: Desactivar una votación
       tags:
       - Votaciones
-  /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/generate-public-url:
+  /horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/generate-public-url:
     post:
       consumes:
       - application/json
@@ -4679,11 +4565,6 @@ paths:
         votación pública. La URL se construye usando: 1) frontend_url del request,
         o 2) URL_BASE_SWAGGER + /public/vote'
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
-        type: integer
       - description: ID del grupo de votación
         in: path
         name: group_id
@@ -4720,17 +4601,12 @@ paths:
       summary: Generar URL pública para votación con QR
       tags:
       - Votaciones
-  /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/options:
+  /horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/options:
     get:
       consumes:
       - application/json
       description: Obtiene la lista de opciones de una votación específica
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
-        type: integer
       - description: ID del grupo de votación
         in: path
         name: group_id
@@ -4766,11 +4642,6 @@ paths:
       - application/json
       description: Crea una nueva opción para una votación específica
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
-        type: integer
       - description: ID del grupo de votación
         in: path
         name: group_id
@@ -4807,17 +4678,12 @@ paths:
       summary: Crear una opción de votación
       tags:
       - Votaciones
-  /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/options/{option_id}:
+  /horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/options/{option_id}:
     delete:
       consumes:
       - application/json
       description: Desactiva una opción de votación existente
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
-        type: integer
       - description: ID del grupo de votación
         in: path
         name: group_id
@@ -4857,18 +4723,13 @@ paths:
       summary: Desactivar una opción de votación
       tags:
       - Votaciones
-  /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/stream:
+  /horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/stream:
     get:
       consumes:
       - application/json
       description: Establece una conexión SSE para recibir votos en tiempo real de
         una votación específica
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
-        type: integer
       - description: ID del grupo de votación
         in: path
         name: group_id
@@ -4899,7 +4760,7 @@ paths:
       summary: Stream de resultados de votación en tiempo real (SSE)
       tags:
       - Votaciones
-  /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/unvoted-units:
+  /horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/unvoted-units:
     get:
       consumes:
       - application/json
@@ -4907,11 +4768,6 @@ paths:
         específica, útil para formularios de votación. Permite filtrar por número
         de unidad.
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
-        type: integer
       - description: ID del grupo de votación
         in: path
         name: group_id
@@ -4951,17 +4807,12 @@ paths:
       summary: Obtener unidades sin votar
       tags:
       - Voting
-  /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/votes:
+  /horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/votes:
     get:
       consumes:
       - application/json
       description: Obtiene la lista de votos registrados en una votación específica
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
-        type: integer
       - description: ID del grupo de votación
         in: path
         name: group_id
@@ -4997,11 +4848,6 @@ paths:
       - application/json
       description: Registra el voto de un residente para una votación específica
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
-        type: integer
       - description: ID del grupo de votación
         in: path
         name: group_id
@@ -5038,17 +4884,12 @@ paths:
       summary: Registrar un voto
       tags:
       - Votaciones
-  /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/votes/{vote_id}:
+  /horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/votes/{vote_id}:
     delete:
       consumes:
       - application/json
       description: Elimina un voto específico. Solo para administradores autenticados.
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
-        type: integer
       - description: ID del grupo de votación
         in: path
         name: group_id
@@ -5092,7 +4933,7 @@ paths:
       summary: Eliminar voto (admin)
       tags:
       - Votaciones
-  /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/voting-details:
+  /horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/voting-details:
     get:
       consumes:
       - application/json
@@ -5100,11 +4941,6 @@ paths:
         de participación, y estado de votación (si votó, qué opción eligió, cuándo
         votó)
       parameters:
-      - description: ID de la propiedad horizontal
-        in: path
-        name: hp_id
-        required: true
-        type: integer
       - description: ID del grupo de votación
         in: path
         name: group_id

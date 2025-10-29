@@ -164,13 +164,14 @@ type HorizontalPropertyListDTO struct {
 
 // HorizontalPropertyFiltersDTO - DTO para filtros de búsqueda
 type HorizontalPropertyFiltersDTO struct {
-	Name     *string
-	Code     *string
-	IsActive *bool
-	Page     int
-	PageSize int
-	OrderBy  string
-	OrderDir string
+	Name       *string
+	Code       *string
+	IsActive   *bool
+	BusinessID *uint
+	Page       int
+	PageSize   int
+	OrderBy    string
+	OrderDir   string
 }
 
 // PaginatedHorizontalPropertyDTO - DTO para respuesta paginada

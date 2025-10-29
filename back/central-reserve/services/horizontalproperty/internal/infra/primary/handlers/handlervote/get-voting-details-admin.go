@@ -20,18 +20,17 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			hp_id		path		int	true	"ID de la propiedad horizontal"
 //	@Param			group_id	path		int	true	"ID del grupo de votación"
 //	@Param			voting_id	path		int	true	"ID de la votación"
 //	@Success		200			{object}	object
 //	@Failure		400			{object}	object
 //	@Failure		500			{object}	object
-//	@Router			/horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/voting-details [get]
+//	@Router			/horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/voting-details [get]
 func (h *VotingHandler) GetVotingDetailsAdmin(c *gin.Context) {
 	fmt.Printf("\n📊 [ADMIN - DETALLES DE VOTACION POR UNIDAD]\n")
 
 	// Parsear IDs
-	hpIDParam := c.Param("hp_id")
+	hpIDParam := c.Param("business_id")
 	hpID, err := strconv.ParseUint(hpIDParam, 10, 32)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[ERROR] GetVotingDetailsAdmin - Error parseando HP ID: %v\n", err)

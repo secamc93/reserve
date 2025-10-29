@@ -302,6 +302,20 @@ func (uc *AuthUseCase) Login(ctx context.Context, request domain.LoginRequest) (
 			Msg("Usuario sin businesses asignados")
 	}
 
+	// Determinar scope y si es super admin
+	userScope := "business" // Por defecto
+	isSuperAdmin := isSuperAdmin(roles)
+	if isSuperAdmin {
+		userScope = "platform"
+	}
+
+	// Log de información de scope
+	uc.log.Info().
+		Uint("user_id", userAuth.ID).
+		Str("user_scope", userScope).
+		Bool("is_super_admin", isSuperAdmin).
+		Msg("Información de scope del usuario")
+
 	// Construir respuesta simplificada
 	response := &domain.LoginResponse{
 		User: domain.UserInfo{
@@ -316,6 +330,8 @@ func (uc *AuthUseCase) Login(ctx context.Context, request domain.LoginRequest) (
 		Token:                 token,
 		RequirePasswordChange: isFirstLogin,
 		Businesses:            businessesList,
+		Scope:                 userScope,
+		IsSuperAdmin:          isSuperAdmin,
 	}
 
 	uc.log.Info().

@@ -133,6 +133,9 @@ func (r *Repository) ListHorizontalProperties(ctx context.Context, filters domai
 		Where("business_type_id = ?", businessType.ID)
 
 	// Aplicar filtros
+	if filters.BusinessID != nil && *filters.BusinessID > 0 {
+		query = query.Where("id = ?", *filters.BusinessID)
+	}
 	if filters.Name != nil && strings.TrimSpace(*filters.Name) != "" {
 		query = query.Where("name ILIKE ?", "%"+*filters.Name+"%")
 	}

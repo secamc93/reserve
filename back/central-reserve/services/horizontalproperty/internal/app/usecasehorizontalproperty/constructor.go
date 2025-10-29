@@ -25,9 +25,10 @@ func NewHorizontalPropertyUseCase(
 	s3 storage.IS3Service,
 	envConfig env.IConfig,
 ) domain.HorizontalPropertyUseCase {
+	contextualLogger := logger.WithModule("propiedad horizontal")
 	return &HorizontalPropertyUseCase{
 		repo:   repo,
-		logger: logger,
+		logger: contextualLogger,
 		s3:     s3,
 		env:    envConfig,
 	}

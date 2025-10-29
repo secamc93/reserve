@@ -4,6 +4,7 @@ import (
 	"central_reserve/services/auth/internal/infra/primary/controllers/authhandler/request"
 	"central_reserve/services/auth/internal/infra/primary/controllers/authhandler/response"
 	"central_reserve/services/auth/middleware"
+	"central_reserve/shared/log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -25,10 +26,12 @@ import (
 //	@Failure		500		{object}	response.GenerateBusinessTokenErrorResponse				"Error interno del servidor"
 //	@Router			/auth/business-token [post]
 func (h *AuthHandler) GenerateBusinessTokenHandler(c *gin.Context) {
+	ctx := log.WithFunctionCtx(c.Request.Context(), "GenerateBusinessTokenHandler")
+
 	// Obtener el userID del contexto (ya validado por el middleware JWT)
 	userID, exists := middleware.GetUserID(c)
 	if !exists || userID == 0 {
-		h.logger.Error().Msg("No se pudo obtener el user_id del contexto")
+		h.logger.Error(ctx).Msg("No se pudo obtener el user_id del contexto")
 		c.JSON(http.StatusUnauthorized, response.GenerateBusinessTokenErrorResponse{
 			Error: "Token inválido o no autorizado",
 		})
@@ -38,7 +41,7 @@ func (h *AuthHandler) GenerateBusinessTokenHandler(c *gin.Context) {
 	// Parsear el body
 	var businessTokenRequest request.GenerateBusinessTokenRequest
 	if err := c.ShouldBindJSON(&businessTokenRequest); err != nil {
-		h.logger.Error().Err(err).Msg("Error al validar request")
+		h.logger.Error(ctx).Err(err).Msg("Error al validar request")
 		c.JSON(http.StatusBadRequest, response.GenerateBusinessTokenErrorResponse{
 			Error: "Datos de entrada inválidos: " + err.Error(),
 		})
@@ -48,11 +51,11 @@ func (h *AuthHandler) GenerateBusinessTokenHandler(c *gin.Context) {
 	// Para super admins, permitir business_id = 0
 	// Para usuarios normales, validar que business_id sea válido
 	if businessTokenRequest.BusinessID == 0 {
-		h.logger.Info().
+		h.logger.Info(ctx).
 			Uint("user_id", userID).
 			Msg("Solicitud de token con business_id = 0 (posible super admin)")
 	} else {
-		h.logger.Info().
+		h.logger.Info(ctx).
 			Uint("user_id", userID).
 			Uint("business_id", businessTokenRequest.BusinessID).
 			Msg("Solicitud de token para business específico")
@@ -60,13 +63,13 @@ func (h *AuthHandler) GenerateBusinessTokenHandler(c *gin.Context) {
 
 	// Ejecutar el caso de uso
 	businessToken, err := h.usecase.GenerateBusinessToken(
-		c.Request.Context(),
+		ctx,
 		userID,
 		businessTokenRequest.BusinessID,
 	)
 
 	if err != nil {
-		h.logger.Error().Err(err).
+		h.logger.Error(ctx).Err(err).
 			Uint("user_id", userID).
 			Uint("business_id", businessTokenRequest.BusinessID).
 			Msg("Error al generar business token")
@@ -87,7 +90,7 @@ func (h *AuthHandler) GenerateBusinessTokenHandler(c *gin.Context) {
 		return
 	}
 
-	h.logger.Info().
+	h.logger.Info(ctx).
 		Uint("user_id", userID).
 		Uint("business_id", businessTokenRequest.BusinessID).
 		Msg("Business token generado exitosamente")

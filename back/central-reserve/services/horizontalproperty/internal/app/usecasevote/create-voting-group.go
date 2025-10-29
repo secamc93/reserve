@@ -5,18 +5,24 @@ import (
 	"fmt"
 
 	"central_reserve/services/horizontalproperty/internal/domain"
+	"central_reserve/shared/log"
 
 	"github.com/go-playground/validator/v10"
 )
 
 func (u *votingUseCase) CreateVotingGroup(ctx context.Context, dto domain.CreateVotingGroupDTO) (*domain.VotingGroupDTO, error) {
+	// Configurar contexto de logging
+	ctx = log.WithFunctionCtx(ctx, "CreateVotingGroup")
+	ctx = log.WithBusinessIDCtx(ctx, dto.BusinessID)
+
 	validate := validator.New()
 	if err := validate.Struct(dto); err != nil {
-		u.logger.Error().Err(err).Msg("Errores de validación en CreateVotingGroup")
+		u.logger.Error(ctx).Err(err).Str("name", dto.Name).Msg("Errores de validación en CreateVotingGroup")
 		return nil, fmt.Errorf("errores de validación: %w", err)
 	}
 
 	if dto.RequiresQuorum && (dto.QuorumPercentage == nil) {
+		u.logger.Error(ctx).Str("name", dto.Name).Msg("Quorum requerido pero no se especificó quorum_percentage")
 		return nil, fmt.Errorf("debe especificar quorum_percentage cuando requires_quorum es true")
 	}
 
@@ -34,6 +40,7 @@ func (u *votingUseCase) CreateVotingGroup(ctx context.Context, dto domain.Create
 
 	created, err := u.repo.CreateVotingGroup(ctx, entity)
 	if err != nil {
+		u.logger.Error(ctx).Err(err).Str("name", dto.Name).Msg("Error creando grupo de votación en repositorio")
 		return nil, err
 	}
 

@@ -17,6 +17,8 @@ type LoginResponse struct {
 	Token                 string
 	RequirePasswordChange bool
 	Businesses            []BusinessInfo
+	Scope                 string // Scope del usuario (platform, business, etc.)
+	IsSuperAdmin          bool   // Indica si es super admin (scope platform o scope_id 1)
 }
 
 type UserInfo struct {

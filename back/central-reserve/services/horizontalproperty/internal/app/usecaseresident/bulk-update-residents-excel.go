@@ -7,12 +7,17 @@ import (
 	"strings"
 
 	"central_reserve/services/horizontalproperty/internal/domain"
+	"central_reserve/shared/log"
 
 	"github.com/xuri/excelize/v2"
 )
 
 // BulkUpdateResidentsFromExcel procesa edición masiva de residentes desde un archivo Excel
 func (uc *residentUseCase) BulkUpdateResidentsFromExcel(ctx context.Context, businessID uint, filePath string) (*domain.BulkUpdateResidentsResult, error) {
+	// Configurar contexto de logging
+	ctx = log.WithFunctionCtx(ctx, "BulkUpdateResidentsFromExcel")
+	ctx = log.WithBusinessIDCtx(ctx, businessID)
+
 	fmt.Printf("\n📊 [USE CASE - EDICION MASIVA RESIDENTES EXCEL]\n")
 	fmt.Printf("   Business ID: %d\n", businessID)
 	fmt.Printf("   Archivo: %s\n\n", filePath)
@@ -24,7 +29,7 @@ func (uc *residentUseCase) BulkUpdateResidentsFromExcel(ctx context.Context, bus
 	f, err := excelize.OpenFile(filePath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[ERROR] usecaseresident/bulk-update-excel - Error abriendo Excel: %v\n", err)
-		uc.logger.Error().Err(err).Str("file_path", filePath).Msg("Error abriendo archivo Excel")
+		uc.logger.Error(ctx).Err(err).Str("file_path", filePath).Msg("Error abriendo archivo Excel")
 		return nil, fmt.Errorf("error abriendo archivo Excel: %w", err)
 	}
 	defer f.Close()
@@ -45,7 +50,7 @@ func (uc *residentUseCase) BulkUpdateResidentsFromExcel(ctx context.Context, bus
 	rows, err := f.GetRows(sheetName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[ERROR] usecaseresident/bulk-update-excel - Error leyendo filas: %v\n", err)
-		uc.logger.Error().Err(err).Str("sheet", sheetName).Msg("Error leyendo filas del Excel")
+		uc.logger.Error(ctx).Err(err).Str("sheet", sheetName).Msg("Error leyendo filas del Excel")
 		return nil, fmt.Errorf("error leyendo filas del Excel: %w", err)
 	}
 

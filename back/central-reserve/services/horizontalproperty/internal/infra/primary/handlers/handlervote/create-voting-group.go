@@ -22,12 +22,11 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			hp_id			path		int									true	"ID de la propiedad horizontal"
 //	@Param			voting_group	body		request.CreateVotingGroupRequest	true	"Datos del grupo de votación"
 //	@Success		201				{object}	object
 //	@Failure		400				{object}	object
 //	@Failure		500				{object}	object
-//	@Router			/horizontal-properties/{hp_id}/voting-groups [post]
+//	@Router			/horizontal-properties/voting-groups [post]
 func (h *VotingHandler) CreateVotingGroup(c *gin.Context) {
 	var req request.CreateVotingGroupRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

@@ -5,6 +5,7 @@ import (
 
 	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlerattendance/response"
+	"central_reserve/shared/log"
 
 	"github.com/gin-gonic/gin"
 )
@@ -26,6 +27,12 @@ import (
 //	@Failure		500				{object}	object
 //	@Router			/attendance/proxies [get]
 func (h *AttendanceHandler) ListProxies(c *gin.Context) {
+	// Configurar contexto de logging una sola vez para toda la función
+	ctx := c.Request.Context()
+
+	// Agregar función específica al contexto (una sola vez)
+	ctx = log.WithFunctionCtx(ctx, "ListProxies")
+
 	// Verificar si es super admin
 	isSuperAdmin := middleware.IsSuperAdmin(c)
 
@@ -46,6 +53,7 @@ func (h *AttendanceHandler) ListProxies(c *gin.Context) {
 		var exists bool
 		businessID, exists = middleware.GetBusinessID(c)
 		if !exists {
+			h.logger.Error(ctx).Msg("business_id no disponible en el token")
 			c.JSON(http.StatusUnauthorized, response.ErrorResponse{
 				Success: false,
 				Error:   "business_id no disponible en el token",
@@ -53,6 +61,12 @@ func (h *AttendanceHandler) ListProxies(c *gin.Context) {
 			return
 		}
 	}
+
+	// Agregar business_id al contexto
+	ctx = log.WithBusinessIDCtx(ctx, businessID)
+
+	// Log de inicio de operación
+	h.logger.Info(ctx).Bool("is_super_admin", isSuperAdmin).Msg("Iniciando listado de apoderados")
 
 	filters := map[string]interface{}{}
 	if useBusinessFilter {
@@ -67,11 +81,17 @@ func (h *AttendanceHandler) ListProxies(c *gin.Context) {
 	if v := c.Query("is_active"); v != "" {
 		filters["is_active"] = (v == "true")
 	}
-	list, err := h.attendanceUseCase.ListProxies(c.Request.Context(), businessID, filters)
+
+	list, err := h.attendanceUseCase.ListProxies(ctx, businessID, filters)
 	if err != nil {
+		h.logger.Error(ctx).Err(err).Msg("Error listando apoderados")
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Success: false, Message: "Error listando apoderados", Error: err.Error()})
 		return
 	}
+
+	// Log de éxito
+	h.logger.Info(ctx).Int("total_proxies", len(list)).Msg("Apoderados listados exitosamente")
+
 	out := make([]response.ProxyResponse, len(list))
 	for i, p := range list {
 		out[i] = response.ProxyResponse(p)

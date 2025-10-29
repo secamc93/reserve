@@ -17,16 +17,15 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			hp_id	path		int	true	"ID de la propiedad horizontal"
 //	@Success		200		{object}	response.HorizontalPropertyDeleteSuccessResponse
 //	@Failure		400		{object}	object
 //	@Failure		404		{object}	object
 //	@Failure		409		{object}	object
 //	@Failure		500		{object}	object
-//	@Router			/horizontal-properties/{hp_id} [delete]
+//	@Router			/horizontal-properties/{business_id} [delete]
 func (h *HorizontalPropertyHandler) DeleteHorizontalProperty(c *gin.Context) {
 	// Get ID from path parameter
-	idParam := c.Param("hp_id")
+	idParam := c.Param("business_id")
 	id, err := strconv.ParseUint(idParam, 10, 32)
 	if err != nil {
 		h.logger.Error().Err(err).Str("id_param", idParam).Msg("Error parsing ID parameter")

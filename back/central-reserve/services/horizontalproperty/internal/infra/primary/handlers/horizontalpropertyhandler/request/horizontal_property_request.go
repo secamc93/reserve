@@ -71,11 +71,12 @@ type UpdateHorizontalPropertyRequest struct {
 
 // ListHorizontalPropertiesRequest - Request para listar propiedades horizontales
 type ListHorizontalPropertiesRequest struct {
-	Name     *string `json:"name,omitempty" form:"name" example:"Los Pinos"`
-	Code     *string `json:"code,omitempty" form:"code" example:"los-pinos"`
-	IsActive *bool   `json:"is_active,omitempty" form:"is_active" example:"true"`
-	Page     int     `json:"page" form:"page" validate:"min=1" example:"1"`
-	PageSize int     `json:"page_size" form:"page_size" validate:"min=1,max=100" example:"10"`
-	OrderBy  string  `json:"order_by" form:"order_by" validate:"omitempty,oneof=name code created_at updated_at" example:"created_at"`
-	OrderDir string  `json:"order_dir" form:"order_dir" validate:"omitempty,oneof=asc desc" example:"desc"`
+	Name       *string `json:"name,omitempty" form:"name" example:"Los Pinos"`
+	Code       *string `json:"code,omitempty" form:"code" example:"los-pinos"`
+	IsActive   *bool   `json:"is_active,omitempty" form:"is_active" example:"true"`
+	BusinessID *uint   `json:"business_id,omitempty" form:"business_id" example:"18"`
+	Page       int     `json:"page" form:"page" validate:"min=1" example:"1"`
+	PageSize   int     `json:"page_size" form:"page_size" validate:"min=1,max=100" example:"10"`
+	OrderBy    string  `json:"order_by" form:"order_by" validate:"omitempty,oneof=name code created_at updated_at" example:"created_at"`
+	OrderDir   string  `json:"order_dir" form:"order_dir" validate:"omitempty,oneof=asc desc" example:"desc"`
 }

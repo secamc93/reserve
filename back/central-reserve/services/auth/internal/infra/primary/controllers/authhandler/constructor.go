@@ -26,8 +26,9 @@ type AuthHandler struct {
 
 // New crea una nueva instancia del handler de autenticación
 func New(usecase usecaseauth.IUseCaseAuth, logger log.ILogger) IAuthHandler {
+	contextualLogger := logger.WithModule("autenticación")
 	return &AuthHandler{
 		usecase: usecase,
-		logger:  logger,
+		logger:  contextualLogger,
 	}
 }

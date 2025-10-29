@@ -23,6 +23,928 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/attendance/lists": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Lista todas las listas de asistencia por business con filtros opcionales",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Asistencia"
+                ],
+                "summary": "Listar listas de asistencia",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del business (opcional para super admin)",
+                        "name": "business_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filtro por título",
+                        "name": "title",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filtro por activo",
+                        "name": "is_active",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Crea una nueva lista de asistencia para un grupo de votación",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Asistencia"
+                ],
+                "summary": "Crear lista de asistencia",
+                "parameters": [
+                    {
+                        "description": "Datos de la lista de asistencia",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CreateAttendanceListRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/attendance/lists/generate": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Genera una lista de asistencia automáticamente para un grupo de votación con todas las unidades",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Asistencia"
+                ],
+                "summary": "Generar lista de asistencia automáticamente",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del grupo de votación",
+                        "name": "voting_group_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/attendance/lists/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Elimina una lista de asistencia por ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Asistencia"
+                ],
+                "summary": "Eliminar lista de asistencia",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la lista",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/attendance/lists/{id}/export-detailed-excel": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Genera un Excel con columnas: Unidad, Nombre, Coeficiente, Apoderado, Asistencia. Incluye título con fecha de descarga.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                ],
+                "tags": [
+                    "Asistencia"
+                ],
+                "summary": "Exportar asistencia detallada a Excel",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la lista",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/attendance/lists/{id}/export-excel": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Genera un Excel horizontal con columnas: Casa (unidad), Propietario, Apoderado, Firma. Incluye título del grupo en la hoja.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                ],
+                "tags": [
+                    "Asistencia"
+                ],
+                "summary": "Exportar lista de asistencia a Excel",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la lista",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/attendance/lists/{id}/records": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene registros de una lista de asistencia con paginación y filtros",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Asistencia"
+                ],
+                "summary": "Listar registros de asistencia de una lista",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la lista",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Página (default 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Tamaño de página (default 50)",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filtro por número de unidad (CASA)",
+                        "name": "unit_number",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filtro de asistencia: true|false",
+                        "name": "attended",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/attendance/lists/{id}/summary": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene el resumen estadístico de una lista",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Asistencia"
+                ],
+                "summary": "Resumen de asistencia",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la lista",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/attendance/proxies": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Lista todos los apoderados de un business con filtros opcionales",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Apoderados"
+                ],
+                "summary": "Listar apoderados",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del business (opcional para super admin)",
+                        "name": "business_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filtro por unidad de propiedad",
+                        "name": "property_unit_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filtro por tipo de apoderado",
+                        "name": "proxy_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filtro por activo",
+                        "name": "is_active",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Crea un nuevo apoderado para una unidad de propiedad",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Apoderados"
+                ],
+                "summary": "Crear apoderado",
+                "parameters": [
+                    {
+                        "description": "Datos del apoderado",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CreateProxyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/attendance/proxies/unit/{unit_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Lista todos los apoderados asociados a una unidad de propiedad específica",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Apoderados"
+                ],
+                "summary": "Obtener apoderados por unidad de propiedad",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la unidad de propiedad",
+                        "name": "unit_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/attendance/proxies/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene un apoderado específico por su ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Apoderados"
+                ],
+                "summary": "Obtener apoderado por ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del apoderado",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Actualiza los datos de un apoderado existente",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Apoderados"
+                ],
+                "summary": "Actualizar apoderado",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del apoderado",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos actualizados del apoderado",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.UpdateProxyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Elimina un apoderado por su ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Apoderados"
+                ],
+                "summary": "Eliminar apoderado",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del apoderado",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/attendance/records/{id}/mark": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Marca la asistencia de un registro por ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Asistencia"
+                ],
+                "summary": "Marcar asistencia",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del registro de asistencia",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/attendance/records/{id}/unmark": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Desmarca la asistencia de un registro por ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Asistencia"
+                ],
+                "summary": "Desmarcar asistencia",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del registro de asistencia",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/business-token": {
+            "post": {
+                "security": [
+                    {
+                        "BusinessTokenAuth": []
+                    }
+                ],
+                "description": "Genera un token específico para un business basado en el token principal del usuario. Para super admins (scope platform), usar business_id = 0",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Generar token de business",
+                "parameters": [
+                    {
+                        "description": "Datos del business (business_id = 0 para super admin)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.GenerateBusinessTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Token generado exitosamente",
+                        "schema": {
+                            "$ref": "#/definitions/response.GenerateBusinessTokenSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Datos de entrada inválidos",
+                        "schema": {
+                            "$ref": "#/definitions/response.GenerateBusinessTokenErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "$ref": "#/definitions/response.GenerateBusinessTokenErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Business no encontrado o sin acceso",
+                        "schema": {
+                            "$ref": "#/definitions/response.GenerateBusinessTokenErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/response.GenerateBusinessTokenErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/change-password": {
             "post": {
                 "security": [
@@ -151,7 +1073,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Obtiene los roles y permisos del usuario autenticado validados contra recursos configurados del business",
+                "description": "Obtiene los roles y permisos del usuario autenticado desde el token",
                 "consumes": [
                     "application/json"
                 ],
@@ -162,26 +1084,11 @@ const docTemplate = `{
                     "Auth"
                 ],
                 "summary": "Obtener roles y permisos del usuario",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "ID del business para validar recursos activos",
-                        "name": "business_id",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "Roles y permisos obtenidos exitosamente",
                         "schema": {
                             "$ref": "#/definitions/response.UserRolesPermissionsSuccessResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Business ID requerido o inválido",
-                        "schema": {
-                            "$ref": "#/definitions/response.LoginErrorResponse"
                         }
                     },
                     "401": {
@@ -1602,7 +2509,12 @@ const docTemplate = `{
         },
         "/horizontal-properties": {
             "get": {
-                "description": "Obtiene una lista paginada de propiedades horizontales con filtros opcionales",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene una lista paginada de propiedades horizontales con filtros opcionales (incluye URLs de imágenes)",
                 "consumes": [
                     "application/json"
                 ],
@@ -1615,14 +2527,20 @@ const docTemplate = `{
                 "summary": "Listar propiedades horizontales",
                 "parameters": [
                     {
+                        "type": "integer",
+                        "description": "ID del business (opcional para super admin)",
+                        "name": "business_id",
+                        "in": "query"
+                    },
+                    {
                         "type": "string",
-                        "description": "Filtro por nombre",
+                        "description": "Filtro por nombre (búsqueda parcial)",
                         "name": "name",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "Filtro por código",
+                        "description": "Filtro por código (búsqueda parcial)",
                         "name": "code",
                         "in": "query"
                     },
@@ -1635,14 +2553,14 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "default": 1,
-                        "description": "Número de página",
+                        "description": "Número de página (mínimo 1)",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
                         "default": 10,
-                        "description": "Tamaño de página",
+                        "description": "Tamaño de página (1-100)",
                         "name": "page_size",
                         "in": "query"
                     },
@@ -1654,6 +2572,7 @@ const docTemplate = `{
                             "updated_at"
                         ],
                         "type": "string",
+                        "default": "created_at",
                         "description": "Campo de ordenamiento",
                         "name": "order_by",
                         "in": "query"
@@ -1664,6 +2583,7 @@ const docTemplate = `{
                             "desc"
                         ],
                         "type": "string",
+                        "default": "desc",
                         "description": "Dirección de ordenamiento",
                         "name": "order_dir",
                         "in": "query"
@@ -1691,7 +2611,12 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Crea una nueva propiedad horizontal con la información proporcionada (soporta carga de imágenes)",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Crea una nueva propiedad horizontal. IMPORTANTE: Los datos se envían como FormData (multipart/form-data), NO como JSON, porque incluye carga de archivos de imagen",
                 "consumes": [
                     "multipart/form-data"
                 ],
@@ -1705,49 +2630,177 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Nombre de la propiedad",
+                        "default": "\"Conjunto Residencial Los Pinos\"",
+                        "description": "Nombre",
                         "name": "name",
                         "in": "formData",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "Código único",
+                        "default": "\"conjunto-residencial-los-pinos\"",
+                        "description": "Código único (opcional, se genera del nombre)",
                         "name": "code",
-                        "in": "formData",
-                        "required": true
+                        "in": "formData"
                     },
                     {
                         "type": "string",
-                        "description": "Zona horaria",
+                        "default": "\"America/Bogota\"",
+                        "description": "Zona horaria (opcional, default: America/Bogota)",
                         "name": "timezone",
-                        "in": "formData",
-                        "required": true
+                        "in": "formData"
                     },
                     {
                         "type": "string",
+                        "default": "\"Carrera 15 #45-67\"",
                         "description": "Dirección",
                         "name": "address",
                         "in": "formData",
                         "required": true
                     },
                     {
+                        "type": "string",
+                        "default": "\"Conjunto residencial familiar\"",
+                        "description": "Descripción",
+                        "name": "description",
+                        "in": "formData"
+                    },
+                    {
                         "type": "integer",
-                        "description": "Total de unidades",
+                        "default": 0,
+                        "description": "Total de unidades (opcional, default: 0)",
                         "name": "total_units",
-                        "in": "formData",
-                        "required": true
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Total de pisos (opcional)",
+                        "name": "total_floors",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Tiene ascensor",
+                        "name": "has_elevator",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Tiene parqueadero",
+                        "name": "has_parking",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Tiene piscina",
+                        "name": "has_pool",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Tiene gimnasio",
+                        "name": "has_gym",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Tiene área social",
+                        "name": "has_social_area",
+                        "in": "formData"
                     },
                     {
                         "type": "file",
-                        "description": "Logo de la propiedad",
+                        "description": "Logo (PNG/JPG, max 10MB)",
                         "name": "logo_file",
                         "in": "formData"
                     },
                     {
                         "type": "file",
-                        "description": "Imagen del navbar",
+                        "description": "Imagen navbar (PNG/JPG, max 10MB)",
                         "name": "navbar_image_file",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "default": "\"#1f2937\"",
+                        "description": "Color primario",
+                        "name": "primary_color",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "default": "\"#3b82f6\"",
+                        "description": "Color secundario",
+                        "name": "secondary_color",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "default": "\"#10b981\"",
+                        "description": "Color terciario",
+                        "name": "tertiary_color",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "default": "\"#fbbf24\"",
+                        "description": "Color cuaternario",
+                        "name": "quaternary_color",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "default": "\"lospinos.com\"",
+                        "description": "Dominio personalizado",
+                        "name": "custom_domain",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Crear unidades automáticamente",
+                        "name": "create_units",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "default": "\"Apto\"",
+                        "description": "Prefijo unidades",
+                        "name": "unit_prefix",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "default": "\"apartment\"",
+                        "description": "Tipo unidad",
+                        "name": "unit_type",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 12,
+                        "description": "Unidades por piso",
+                        "name": "units_per_floor",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 101,
+                        "description": "Número inicial",
+                        "name": "start_unit_number",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Crear comités requeridos",
+                        "name": "create_required_committees",
                         "in": "formData"
                     }
                 ],
@@ -1779,9 +2832,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/horizontal-properties/{hp_id}": {
+        "/horizontal-properties/property-units": {
             "get": {
-                "description": "Obtiene una propiedad horizontal específica por su ID",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene lista paginada de unidades; si el usuario es super admin y no envía business_id, verá todas",
                 "consumes": [
                     "application/json"
                 ],
@@ -1789,15 +2847,168 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Propiedades Horizontales"
+                    "Property Units"
                 ],
-                "summary": "Obtener propiedad horizontal por ID",
+                "summary": "Listar unidades de propiedad",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "ID de la propiedad horizontal",
-                        "name": "hp_id",
-                        "in": "path",
+                        "description": "ID del business (opcional; si se omite y es super admin, ve todo)",
+                        "name": "business_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filtrar por número de unidad (búsqueda parcial)",
+                        "name": "number",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Tipo de unidad (apartment, house, office)",
+                        "name": "unit_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Número de piso",
+                        "name": "floor",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Bloque/Torre",
+                        "name": "block",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Estado activo",
+                        "name": "is_active",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Página",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Tamaño de página",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Crea una nueva unidad de propiedad (apartamento/casa) en una propiedad horizontal",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Property Units"
+                ],
+                "summary": "Crear unidad de propiedad",
+                "parameters": [
+                    {
+                        "description": "Datos de la unidad",
+                        "name": "unit",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CreatePropertyUnitRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/property-units/import-excel": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Importa múltiples unidades de propiedad desde un archivo Excel. El Excel debe tener 2 columnas: 'Número de Unidad' y 'Coeficiente de Participación'",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Unidades de Propiedad"
+                ],
+                "summary": "Importar unidades desde Excel",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del business (opcional para super admin)",
+                        "name": "business_id",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Archivo Excel (.xlsx)",
+                        "name": "file",
+                        "in": "formData",
                         "required": true
                     }
                 ],
@@ -1805,11 +3016,54 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.HorizontalPropertySuccessResponse"
+                            "type": "object"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/property-units/{unit_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene los detalles de una unidad de propiedad específica",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Property Units"
+                ],
+                "summary": "Obtener unidad por ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la unidad",
+                        "name": "unit_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "type": "object"
                         }
@@ -1829,49 +3083,45 @@ const docTemplate = `{
                 }
             },
             "put": {
-                "description": "Actualiza una propiedad horizontal existente (soporta carga de imágenes)",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Actualiza los datos de una unidad de propiedad existente",
                 "consumes": [
-                    "multipart/form-data"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Propiedades Horizontales"
+                    "Property Units"
                 ],
-                "summary": "Actualizar propiedad horizontal",
+                "summary": "Actualizar unidad de propiedad",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "ID de la propiedad horizontal",
-                        "name": "hp_id",
+                        "description": "ID de la unidad",
+                        "name": "unit_id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "description": "Nombre de la propiedad",
-                        "name": "name",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "file",
-                        "description": "Nuevo logo",
-                        "name": "logo_file",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "file",
-                        "description": "Nueva imagen del navbar",
-                        "name": "navbar_image_file",
-                        "in": "formData"
+                        "description": "Datos actualizados",
+                        "name": "unit",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.UpdatePropertyUnitRequest"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.HorizontalPropertySuccessResponse"
+                            "type": "object"
                         }
                     },
                     "400": {
@@ -1901,7 +3151,12 @@ const docTemplate = `{
                 }
             },
             "delete": {
-                "description": "Elimina una propiedad horizontal existente",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Elimina (soft delete) una unidad de propiedad",
                 "consumes": [
                     "application/json"
                 ],
@@ -1909,14 +3164,14 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Propiedades Horizontales"
+                    "Property Units"
                 ],
-                "summary": "Eliminar propiedad horizontal",
+                "summary": "Eliminar unidad de propiedad",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "ID de la propiedad horizontal",
-                        "name": "hp_id",
+                        "description": "ID de la unidad",
+                        "name": "unit_id",
                         "in": "path",
                         "required": true
                     }
@@ -1925,7 +3180,375 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.HorizontalPropertyDeleteSuccessResponse"
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/residents": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene lista paginada de residentes de una propiedad horizontal",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Residents"
+                ],
+                "summary": "Listar residentes",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del business (opcional para super admin)",
+                        "name": "business_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filtrar por número de unidad (búsqueda parcial)",
+                        "name": "property_unit_number",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filtrar por nombre del residente (búsqueda parcial)",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filtrar por ID de unidad",
+                        "name": "property_unit_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filtrar por tipo de residente",
+                        "name": "resident_type_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filtrar por estado activo",
+                        "name": "is_active",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filtrar por residente principal",
+                        "name": "is_main_resident",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Página",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Tamaño de página",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Crea un nuevo residente en una propiedad horizontal",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Residents"
+                ],
+                "summary": "Crear residente",
+                "parameters": [
+                    {
+                        "description": "Datos del residente",
+                        "name": "resident",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CreateResidentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/residents/bulk-update": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Actualiza múltiples residentes usando un archivo Excel. La columna principal es 'unidad' para identificar el residente. Solo se pueden actualizar nombre y DNI.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Residentes"
+                ],
+                "summary": "Edición masiva de residentes por Excel",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del business (opcional para super admin)",
+                        "name": "business_id",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Archivo Excel con residentes a actualizar",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/residents/import-excel": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Importa múltiples residentes desde un archivo Excel. VALIDACION TODO O NADA: Si UNA unidad no existe, NO se crea NADA. El Excel debe tener 3 columnas: 'Número de Unidad', 'Nombre Propietario', 'DNI'",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Residentes"
+                ],
+                "summary": "Importar residentes desde Excel",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del business (opcional para super admin)",
+                        "name": "business_id",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Archivo Excel (.xlsx)",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/residents/{resident_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene los detalles de un residente específico",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Residents"
+                ],
+                "summary": "Obtener residente por ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del residente",
+                        "name": "resident_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Actualiza los datos de un residente existente",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Residents"
+                ],
+                "summary": "Actualizar residente",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del residente",
+                        "name": "resident_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos actualizados",
+                        "name": "resident",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.UpdateResidentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
                         }
                     },
                     "400": {
@@ -1953,10 +3576,62 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Elimina (soft delete) un residente",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Residents"
+                ],
+                "summary": "Eliminar residente",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del residente",
+                        "name": "resident_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
             }
         },
-        "/horizontal-properties/{hp_id}/voting-groups": {
+        "/horizontal-properties/voting-groups": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Obtiene la lista de grupos de votación de una propiedad horizontal",
                 "consumes": [
                     "application/json"
@@ -1968,15 +3643,6 @@ const docTemplate = `{
                     "Votaciones"
                 ],
                 "summary": "Listar grupos de votación",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "ID de la propiedad horizontal",
-                        "name": "hp_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1999,6 +3665,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Crea un nuevo grupo de votación para una propiedad horizontal",
                 "consumes": [
                     "application/json"
@@ -2011,13 +3682,6 @@ const docTemplate = `{
                 ],
                 "summary": "Crear un nuevo grupo de votación",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "ID de la propiedad horizontal",
-                        "name": "hp_id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "description": "Datos del grupo de votación",
                         "name": "voting_group",
@@ -2050,8 +3714,13 @@ const docTemplate = `{
                 }
             }
         },
-        "/horizontal-properties/{hp_id}/voting-groups/{group_id}": {
+        "/horizontal-properties/voting-groups/{group_id}": {
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Actualiza los datos de un grupo de votación existente",
                 "consumes": [
                     "application/json"
@@ -2064,13 +3733,6 @@ const docTemplate = `{
                 ],
                 "summary": "Actualizar un grupo de votación",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "ID de la propiedad horizontal",
-                        "name": "hp_id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "type": "integer",
                         "description": "ID del grupo de votación",
@@ -2116,6 +3778,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Desactiva un grupo de votación existente",
                 "consumes": [
                     "application/json"
@@ -2128,13 +3795,6 @@ const docTemplate = `{
                 ],
                 "summary": "Desactivar un grupo de votación",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "ID de la propiedad horizontal",
-                        "name": "hp_id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "type": "integer",
                         "description": "ID del grupo de votación",
@@ -2171,8 +3831,13 @@ const docTemplate = `{
                 }
             }
         },
-        "/horizontal-properties/{hp_id}/voting-groups/{group_id}/votings": {
+        "/horizontal-properties/voting-groups/{group_id}/votings": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Obtiene la lista de votaciones de un grupo de votación específico",
                 "consumes": [
                     "application/json"
@@ -2185,13 +3850,6 @@ const docTemplate = `{
                 ],
                 "summary": "Listar votaciones de un grupo",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "ID de la propiedad horizontal",
-                        "name": "hp_id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "type": "integer",
                         "description": "ID del grupo de votación",
@@ -2222,6 +3880,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Crea una nueva votación dentro de un grupo de votación",
                 "consumes": [
                     "application/json"
@@ -2234,13 +3897,6 @@ const docTemplate = `{
                 ],
                 "summary": "Crear una nueva votación",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "ID de la propiedad horizontal",
-                        "name": "hp_id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "type": "integer",
                         "description": "ID del grupo de votación",
@@ -2280,8 +3936,13 @@ const docTemplate = `{
                 }
             }
         },
-        "/horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}": {
+        "/horizontal-properties/voting-groups/{group_id}/votings/{voting_id}": {
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Actualiza los datos de una votación existente",
                 "consumes": [
                     "application/json"
@@ -2294,13 +3955,6 @@ const docTemplate = `{
                 ],
                 "summary": "Actualizar una votación",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "ID de la propiedad horizontal",
-                        "name": "hp_id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "type": "integer",
                         "description": "ID del grupo de votación",
@@ -2353,7 +4007,12 @@ const docTemplate = `{
                 }
             },
             "delete": {
-                "description": "Desactiva una votación existente",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Elimina permanentemente una votación usando soft delete (gorm.DeletedAt)",
                 "consumes": [
                     "application/json"
                 ],
@@ -2363,15 +4022,8 @@ const docTemplate = `{
                 "tags": [
                     "Votaciones"
                 ],
-                "summary": "Desactivar una votación",
+                "summary": "Eliminar una votación",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "ID de la propiedad horizontal",
-                        "name": "hp_id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "type": "integer",
                         "description": "ID del grupo de votación",
@@ -2415,8 +4067,202 @@ const docTemplate = `{
                 }
             }
         },
-        "/horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/options": {
+        "/horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/activate": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Activa una votación existente (is_active = true)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones"
+                ],
+                "summary": "Activar una votación",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del grupo de votación",
+                        "name": "group_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la votación",
+                        "name": "voting_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/deactivate": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Desactiva una votación existente (is_active = false)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones"
+                ],
+                "summary": "Desactivar una votación",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del grupo de votación",
+                        "name": "group_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la votación",
+                        "name": "voting_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/generate-public-url": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Genera una URL con token especial para compartir vía QR y permitir votación pública. La URL se construye usando: 1) frontend_url del request, o 2) URL_BASE_SWAGGER + /public/vote",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones"
+                ],
+                "summary": "Generar URL pública para votación con QR",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del grupo de votación",
+                        "name": "group_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la votación",
+                        "name": "voting_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Configuración de la URL",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlervote.GeneratePublicVotingURLRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/options": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Obtiene la lista de opciones de una votación específica",
                 "consumes": [
                     "application/json"
@@ -2429,13 +4275,6 @@ const docTemplate = `{
                 ],
                 "summary": "Listar opciones de votación",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "ID de la propiedad horizontal",
-                        "name": "hp_id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "type": "integer",
                         "description": "ID del grupo de votación",
@@ -2473,6 +4312,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Crea una nueva opción para una votación específica",
                 "consumes": [
                     "application/json"
@@ -2485,13 +4329,6 @@ const docTemplate = `{
                 ],
                 "summary": "Crear una opción de votación",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "ID de la propiedad horizontal",
-                        "name": "hp_id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "type": "integer",
                         "description": "ID del grupo de votación",
@@ -2538,8 +4375,13 @@ const docTemplate = `{
                 }
             }
         },
-        "/horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/options/{option_id}": {
+        "/horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/options/{option_id}": {
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Desactiva una opción de votación existente",
                 "consumes": [
                     "application/json"
@@ -2552,13 +4394,6 @@ const docTemplate = `{
                 ],
                 "summary": "Desactivar una opción de votación",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "ID de la propiedad horizontal",
-                        "name": "hp_id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "type": "integer",
                         "description": "ID del grupo de votación",
@@ -2609,8 +4444,191 @@ const docTemplate = `{
                 }
             }
         },
-        "/horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/votes": {
+        "/horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/stream": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Establece una conexión SSE para recibir votos en tiempo real de una votación específica",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/event-stream"
+                ],
+                "tags": [
+                    "Votaciones"
+                ],
+                "summary": "Stream de resultados de votación en tiempo real (SSE)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del grupo de votación",
+                        "name": "group_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la votación",
+                        "name": "voting_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Event stream",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/unvoted-units": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene la lista de unidades que no han votado en una votación específica, útil para formularios de votación. Permite filtrar por número de unidad.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Voting"
+                ],
+                "summary": "Obtener unidades sin votar",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del grupo de votación",
+                        "name": "group_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la votación",
+                        "name": "voting_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filtrar por número de unidad (ej: '15' encuentra todas las unidades con 15, 'casa 15' encuentra CASA 15, CASA 150, etc.)",
+                        "name": "unit_number",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/votes": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene la lista de votos registrados en una votación específica",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones"
+                ],
+                "summary": "Listar votos de una votación",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del grupo de votación",
+                        "name": "group_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la votación",
+                        "name": "voting_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Registra el voto de un residente para una votación específica",
                 "consumes": [
                     "application/json"
@@ -2623,13 +4641,6 @@ const docTemplate = `{
                 ],
                 "summary": "Registrar un voto",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "ID de la propiedad horizontal",
-                        "name": "hp_id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "type": "integer",
                         "description": "ID del grupo de votación",
@@ -2676,6 +4687,405 @@ const docTemplate = `{
                 }
             }
         },
+        "/horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/votes/{vote_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Elimina un voto específico. Solo para administradores autenticados.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones"
+                ],
+                "summary": "Eliminar voto (admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del grupo de votación",
+                        "name": "group_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la votación",
+                        "name": "voting_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID del voto a eliminar",
+                        "name": "vote_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/voting-details": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene TODAS las unidades con número, residente principal, coeficiente de participación, y estado de votación (si votó, qué opción eligió, cuándo votó)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones"
+                ],
+                "summary": "Obtener detalles completos de votación (Admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del grupo de votación",
+                        "name": "group_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la votación",
+                        "name": "voting_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/{business_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene una propiedad horizontal con información detallada (incluye unidades y comités)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Propiedades Horizontales"
+                ],
+                "summary": "Obtener propiedad horizontal por ID",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.HorizontalPropertySuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Actualiza una propiedad horizontal existente (actualización parcial, soporta cambio de imágenes)",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Propiedades Horizontales"
+                ],
+                "summary": "Actualizar propiedad horizontal",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Nombre de la propiedad",
+                        "name": "name",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Código único",
+                        "name": "code",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Dirección",
+                        "name": "address",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Descripción",
+                        "name": "description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Zona horaria",
+                        "name": "timezone",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Total de unidades",
+                        "name": "total_units",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Total de pisos",
+                        "name": "total_floors",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "¿Tiene ascensor?",
+                        "name": "has_elevator",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "¿Tiene parqueadero?",
+                        "name": "has_parking",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "¿Tiene piscina?",
+                        "name": "has_pool",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "¿Tiene gimnasio?",
+                        "name": "has_gym",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "¿Tiene área social?",
+                        "name": "has_social_area",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Nuevo logo (reemplaza el anterior)",
+                        "name": "logo_file",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Nueva imagen del navbar (reemplaza la anterior)",
+                        "name": "navbar_image_file",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Color primario (hex)",
+                        "name": "primary_color",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Color secundario (hex)",
+                        "name": "secondary_color",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Color terciario (hex)",
+                        "name": "tertiary_color",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Color cuaternario (hex)",
+                        "name": "quaternary_color",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Dominio personalizado",
+                        "name": "custom_domain",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Estado activo",
+                        "name": "is_active",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.HorizontalPropertySuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Elimina una propiedad horizontal (soft delete) y sus imágenes de S3",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Propiedades Horizontales"
+                ],
+                "summary": "Eliminar propiedad horizontal",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.HorizontalPropertyDeleteSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
         "/permissions": {
             "get": {
                 "security": [
@@ -2683,7 +5093,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Obtiene la lista completa de permisos del sistema",
+                "description": "Obtiene la lista completa de permisos del sistema con filtros opcionales por tipo de business, nombre y scope",
                 "consumes": [
                     "application/json"
                 ],
@@ -2694,6 +5104,26 @@ const docTemplate = `{
                     "Permissions"
                 ],
                 "summary": "Obtener todos los permisos",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Filtrar por tipo de business (incluye genéricos)",
+                        "name": "business_type_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filtrar por nombre de permiso (búsqueda parcial)",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filtrar por ID de scope",
+                        "name": "scope_id",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Lista de permisos obtenida exitosamente",
@@ -3086,6 +5516,468 @@ const docTemplate = `{
                 }
             }
         },
+        "/public/property-units": {
+            "get": {
+                "description": "Obtiene las unidades de propiedad usando el token de votación pública. El HP ID viene en el token. Permite filtrar por número de unidad.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones Públicas"
+                ],
+                "summary": "Obtener unidades de propiedad (público)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Token de votación pública (Bearer token)",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filtrar por número de unidad (ej: 101, Apto 202)",
+                        "name": "number",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/public/units-with-residents": {
+            "get": {
+                "description": "Lista todas las unidades activas con su residente principal. Para cruzar con votos en el frontend.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones Públicas"
+                ],
+                "summary": "Listar unidades con residentes (público)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Token de autenticación de votación (Bearer token)",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/public/validate-resident": {
+            "post": {
+                "description": "Valida que un residente pertenezca a una unidad usando su DNI y retorna token temporal para votar. TODA la información viene del token.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones Públicas"
+                ],
+                "summary": "Validar residente para votación pública",
+                "parameters": [
+                    {
+                        "description": "Datos de validación",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlervote.ValidateResidentRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "Token de votación pública (Bearer token)",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/public/vote": {
+            "post": {
+                "description": "Permite a un residente emitir su voto. Requiere token de autenticación de votación (VOTING_AUTH_TOKEN) obtenido después de validar el residente.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones Públicas"
+                ],
+                "summary": "Emitir voto (público)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Token de autenticación de votación (VOTING_AUTH_TOKEN - Bearer token)",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos del voto (opción requerida, DNI y unidad opcionales - vienen del token)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlervote.CreatePublicVoteRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/public/votes": {
+            "get": {
+                "description": "Lista todos los votos emitidos. El frontend cruza con opciones y unidades.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones Públicas"
+                ],
+                "summary": "Listar votos de la votación (público)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Token de autenticación de votación (Bearer token)",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/public/voting-context": {
+            "get": {
+                "description": "Obtiene el nombre de la votación y la propiedad horizontal usando el token público. Se muestra antes de la validación del residente.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones Públicas"
+                ],
+                "summary": "Obtener contexto de votación pública",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Token de votación pública (Bearer token)",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/public/voting-info": {
+            "get": {
+                "description": "Obtiene toda la información de la votación usando solo el VOTING_AUTH_TOKEN. Incluye título, descripción, opciones, etc.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones Públicas"
+                ],
+                "summary": "Obtener información de votación (pública)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Token de autenticación de votación (Bearer token)",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/public/voting-stats": {
+            "get": {
+                "description": "Obtiene las estadísticas completas de la votación: resultados por opción, total de votos, porcentajes. Toda la información viene del token.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones Públicas"
+                ],
+                "summary": "Obtener estadísticas de votación (público)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Token de autenticación de votación (Bearer token)",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/public/voting-stream": {
+            "get": {
+                "description": "Establece una conexión SSE para recibir votos en tiempo real. Toda la información viene del token.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/event-stream"
+                ],
+                "tags": [
+                    "Votaciones Públicas"
+                ],
+                "summary": "Stream público de resultados de votación en tiempo real (SSE)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Token de autenticación de votación (Bearer token)",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Event stream",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
         "/reserves": {
             "get": {
                 "security": [
@@ -3140,7 +6032,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Lista de reservas obtenida exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/response.ReserveListSuccessResponse"
+                            "type": "object"
                         }
                     },
                     "400": {
@@ -3198,7 +6090,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Reserva creada exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/response.ReserveSuccessResponse"
+                            "type": "object"
                         }
                     },
                     "400": {
@@ -3288,7 +6180,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Reserva obtenida exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/response.ReserveSuccessResponse"
+                            "type": "object"
                         }
                     },
                     "400": {
@@ -3515,6 +6407,12 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Filtrar por descripción (búsqueda parcial)",
                         "name": "description",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filtrar por tipo de business (incluye genéricos)",
+                        "name": "business_type_id",
                         "in": "query"
                     },
                     {
@@ -3857,7 +6755,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Obtiene la lista completa de roles del sistema",
+                "description": "Obtiene la lista completa de roles del sistema con opciones de filtrado",
                 "consumes": [
                     "application/json"
                 ],
@@ -3868,6 +6766,38 @@ const docTemplate = `{
                     "Roles"
                 ],
                 "summary": "Obtener todos los roles",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Filtrar por tipo de business",
+                        "name": "business_type_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filtrar por ID de scope",
+                        "name": "scope_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filtrar por rol de sistema (true/false)",
+                        "name": "is_system",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Buscar en el nombre del rol (búsqueda parcial)",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filtrar por nivel del rol",
+                        "name": "level",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Roles obtenidos exitosamente",
@@ -3885,6 +6815,57 @@ const docTemplate = `{
                         "description": "Error interno del servidor",
                         "schema": {
                             "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Crea un nuevo rol en el sistema con todos los campos obligatorios",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Crear un nuevo rol",
+                "parameters": [
+                    {
+                        "description": "Datos del rol a crear",
+                        "name": "role",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CreateRoleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/response.CreateRoleResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Datos de entrada inválidos",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -4092,6 +7073,250 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Rol no encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Actualiza un rol existente en el sistema (actualización parcial)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Actualizar un rol",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del rol a actualizar",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos del rol a actualizar",
+                        "name": "role",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.UpdateRoleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.UpdateRoleResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Datos de entrada inválidos",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Rol no encontrado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/roles/{id}/permissions": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene la lista de permisos asignados a un rol",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Obtener permisos de un rol",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del rol",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.GetRolePermissionsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "ID de rol inválido",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Rol no encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Asigna permisos a un rol. Solo se pueden asignar permisos que pertenezcan al mismo business_type que el rol",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Asignar permisos a un rol",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del rol",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "IDs de permisos a asignar",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.AssignPermissionsToRoleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.AssignPermissionsToRoleResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Datos de entrada inválidos",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Rol no encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/roles/{id}/permissions/{permission_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Elimina un permiso específico de un rol",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Eliminar permiso de un rol",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del rol",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID del permiso",
+                        "name": "permission_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Datos de entrada inválidos",
+                        "schema": {
+                            "$ref": "#/definitions/response.RoleErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Rol o permiso no encontrado",
                         "schema": {
                             "$ref": "#/definitions/response.RoleErrorResponse"
                         }
@@ -5222,6 +8447,72 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "handlervote.CreatePublicVoteRequest": {
+            "type": "object",
+            "required": [
+                "voting_option_id"
+            ],
+            "properties": {
+                "dni": {
+                    "description": "Opcional - viene del token",
+                    "type": "string"
+                },
+                "property_unit_id": {
+                    "description": "Opcional - viene del token",
+                    "type": "integer"
+                },
+                "voting_option_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "handlervote.GeneratePublicVotingURLRequest": {
+            "type": "object",
+            "properties": {
+                "duration_hours": {
+                    "description": "Duración del token en horas",
+                    "type": "integer",
+                    "example": 24
+                },
+                "frontend_url": {
+                    "description": "URL base del frontend (opcional, usa URL_BASE_SWAGGER + /public/vote si está vacío)",
+                    "type": "string",
+                    "example": "https://votacion.miconjunto.com/vote"
+                }
+            }
+        },
+        "handlervote.ValidateResidentRequest": {
+            "type": "object",
+            "required": [
+                "dni",
+                "property_unit_id"
+            ],
+            "properties": {
+                "dni": {
+                    "type": "string",
+                    "example": "123456789"
+                },
+                "property_unit_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "request.AssignPermissionsToRoleRequest": {
+            "type": "object",
+            "required": [
+                "permission_ids"
+            ],
+            "properties": {
+                "permission_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
         "request.BusinessTypeRequest": {
             "type": "object",
             "required": [
@@ -5300,23 +8591,61 @@ const docTemplate = `{
                 }
             }
         },
+        "request.CreateAttendanceListRequest": {
+            "type": "object",
+            "required": [
+                "title",
+                "voting_group_id"
+            ],
+            "properties": {
+                "created_by_user_id": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "example": "Lista de asistencia para la asamblea ordinaria"
+                },
+                "notes": {
+                    "type": "string",
+                    "maxLength": 2000,
+                    "example": "Notas adicionales"
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 3,
+                    "example": "Asistencia Asamblea Ordinaria 2024"
+                },
+                "voting_group_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
         "request.CreatePermissionRequest": {
             "type": "object",
             "required": [
-                "action",
-                "code",
+                "action_id",
                 "name",
-                "resource",
+                "resource_id",
                 "scope_id"
             ],
             "properties": {
-                "action": {
-                    "type": "string",
-                    "example": "create"
+                "action_id": {
+                    "description": "ID de la action",
+                    "type": "integer",
+                    "example": 1
+                },
+                "business_type_id": {
+                    "type": "integer",
+                    "example": 11
                 },
                 "code": {
+                    "description": "Opcional, se genera automáticamente si no se proporciona",
                     "type": "string",
-                    "example": "users:create"
+                    "example": "horizontalproperty_createuser"
                 },
                 "description": {
                     "type": "string",
@@ -5324,13 +8653,191 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string",
-                    "example": "Crear usuarios"
+                    "example": "Crear usuario"
                 },
-                "resource": {
-                    "type": "string",
-                    "example": "users"
+                "resource_id": {
+                    "description": "ID del resource",
+                    "type": "integer",
+                    "example": 1
                 },
                 "scope_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "request.CreatePropertyUnitRequest": {
+            "type": "object",
+            "required": [
+                "number",
+                "unit_type"
+            ],
+            "properties": {
+                "area": {
+                    "type": "number",
+                    "example": 85.5
+                },
+                "bathrooms": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "bedrooms": {
+                    "type": "integer",
+                    "example": 3
+                },
+                "block": {
+                    "type": "string",
+                    "example": "A"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Apartamento esquinero con vista"
+                },
+                "floor": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "number": {
+                    "type": "string",
+                    "example": "101"
+                },
+                "participation_coefficient": {
+                    "type": "number",
+                    "example": 0.008333
+                },
+                "unit_type": {
+                    "type": "string",
+                    "example": "apartment"
+                }
+            }
+        },
+        "request.CreateProxyRequest": {
+            "type": "object",
+            "required": [
+                "business_id",
+                "property_unit_id",
+                "proxy_name"
+            ],
+            "properties": {
+                "business_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "end_date": {
+                    "type": "string",
+                    "example": "2025-12-31T23:59:59Z"
+                },
+                "notes": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "example": "Notas adicionales"
+                },
+                "power_of_attorney": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "example": "Poder para representar en asambleas"
+                },
+                "property_unit_id": {
+                    "type": "integer",
+                    "example": 123
+                },
+                "proxy_address": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "example": "Calle 123 #45-67"
+                },
+                "proxy_dni": {
+                    "type": "string",
+                    "maxLength": 30,
+                    "minLength": 5,
+                    "example": "12345678"
+                },
+                "proxy_email": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "maria@email.com"
+                },
+                "proxy_name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 3,
+                    "example": "María García López"
+                },
+                "proxy_phone": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "example": "+57 300 123 4567"
+                },
+                "proxy_type": {
+                    "type": "string",
+                    "enum": [
+                        "external",
+                        "resident",
+                        "family"
+                    ],
+                    "example": "external"
+                },
+                "start_date": {
+                    "type": "string",
+                    "example": "2025-01-15T00:00:00Z"
+                }
+            }
+        },
+        "request.CreateResidentRequest": {
+            "type": "object",
+            "required": [
+                "dni",
+                "email",
+                "name",
+                "property_unit_id",
+                "resident_type_id"
+            ],
+            "properties": {
+                "dni": {
+                    "type": "string",
+                    "example": "123456789"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "juan@email.com"
+                },
+                "emergency_contact": {
+                    "type": "string",
+                    "example": "María Pérez - 3009876543"
+                },
+                "is_main_resident": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "lease_end_date": {
+                    "type": "string",
+                    "example": "2024-12-31T23:59:59Z"
+                },
+                "lease_start_date": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "monthly_rent": {
+                    "type": "number",
+                    "example": 1500000
+                },
+                "move_in_date": {
+                    "type": "string",
+                    "example": "2024-01-15T00:00:00Z"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Juan Pérez"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+573001234567"
+                },
+                "property_unit_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "resident_type_id": {
                     "type": "integer",
                     "example": 1
                 }
@@ -5343,6 +8850,10 @@ const docTemplate = `{
                 "name"
             ],
             "properties": {
+                "business_type_id": {
+                    "type": "integer",
+                    "example": 11
+                },
                 "description": {
                     "type": "string",
                     "example": "Gestión de usuarios del sistema"
@@ -5353,20 +8864,55 @@ const docTemplate = `{
                 }
             }
         },
+        "request.CreateRoleRequest": {
+            "type": "object",
+            "required": [
+                "business_type_id",
+                "description",
+                "level",
+                "name",
+                "scope_id"
+            ],
+            "properties": {
+                "business_type_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Rol de administrador del sistema"
+                },
+                "is_system": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "level": {
+                    "type": "integer",
+                    "maximum": 10,
+                    "minimum": 1,
+                    "example": 2
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Administrador"
+                },
+                "scope_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
         "request.CreateVoteRequest": {
             "type": "object",
             "required": [
-                "resident_id",
+                "property_unit_id",
                 "voting_option_id"
             ],
             "properties": {
                 "ip_address": {
                     "type": "string"
                 },
-                "notes": {
-                    "type": "string"
-                },
-                "resident_id": {
+                "property_unit_id": {
                     "type": "integer"
                 },
                 "user_agent": {
@@ -5418,10 +8964,14 @@ const docTemplate = `{
         "request.CreateVotingOptionRequest": {
             "type": "object",
             "required": [
+                "color",
                 "option_code",
                 "option_text"
             ],
             "properties": {
+                "color": {
+                    "type": "string"
+                },
                 "display_order": {
                     "type": "integer",
                     "minimum": 1
@@ -5475,6 +9025,15 @@ const docTemplate = `{
                         "majority",
                         "unanimity"
                     ]
+                }
+            }
+        },
+        "request.GenerateBusinessTokenRequest": {
+            "type": "object",
+            "properties": {
+                "business_id": {
+                    "description": "0 para super admin, \u003e0 para usuarios normales",
+                    "type": "integer"
                 }
             }
         },
@@ -5604,16 +9163,21 @@ const docTemplate = `{
         "request.UpdatePermissionRequest": {
             "type": "object",
             "required": [
-                "action",
+                "action_id",
                 "code",
                 "name",
-                "resource",
+                "resource_id",
                 "scope_id"
             ],
             "properties": {
-                "action": {
-                    "type": "string",
-                    "example": "create"
+                "action_id": {
+                    "description": "ID de la action",
+                    "type": "integer",
+                    "example": 1
+                },
+                "business_type_id": {
+                    "type": "integer",
+                    "example": 11
                 },
                 "code": {
                     "type": "string",
@@ -5627,13 +9191,122 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Crear usuarios"
                 },
-                "resource": {
-                    "type": "string",
-                    "example": "users"
+                "resource_id": {
+                    "description": "ID del resource",
+                    "type": "integer",
+                    "example": 1
                 },
                 "scope_id": {
                     "type": "integer",
                     "example": 1
+                }
+            }
+        },
+        "request.UpdatePropertyUnitRequest": {
+            "type": "object",
+            "properties": {
+                "area": {
+                    "type": "number",
+                    "example": 85.5
+                },
+                "bathrooms": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "bedrooms": {
+                    "type": "integer",
+                    "example": 3
+                },
+                "block": {
+                    "type": "string",
+                    "example": "A"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Apartamento esquinero con vista"
+                },
+                "floor": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_active": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "number": {
+                    "type": "string",
+                    "example": "101"
+                },
+                "participation_coefficient": {
+                    "type": "number",
+                    "example": 0.008333
+                },
+                "unit_type": {
+                    "type": "string",
+                    "example": "apartment"
+                }
+            }
+        },
+        "request.UpdateProxyRequest": {
+            "type": "object",
+            "properties": {
+                "end_date": {
+                    "type": "string",
+                    "example": "2025-12-31T23:59:59Z"
+                },
+                "is_active": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "notes": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "example": "Notas adicionales"
+                },
+                "power_of_attorney": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "example": "Poder para representar en asambleas"
+                },
+                "proxy_address": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "example": "Calle 123 #45-67"
+                },
+                "proxy_dni": {
+                    "type": "string",
+                    "maxLength": 30,
+                    "minLength": 5,
+                    "example": "12345678"
+                },
+                "proxy_email": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "maria@email.com"
+                },
+                "proxy_name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 3,
+                    "example": "María García López"
+                },
+                "proxy_phone": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "example": "+57 300 123 4567"
+                },
+                "proxy_type": {
+                    "type": "string",
+                    "enum": [
+                        "external",
+                        "resident",
+                        "family"
+                    ],
+                    "example": "external"
+                },
+                "start_date": {
+                    "type": "string",
+                    "example": "2025-01-15T00:00:00Z"
                 }
             }
         },
@@ -5657,6 +9330,67 @@ const docTemplate = `{
                 }
             }
         },
+        "request.UpdateResidentRequest": {
+            "type": "object",
+            "properties": {
+                "dni": {
+                    "type": "string",
+                    "example": "123456789"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "juan@email.com"
+                },
+                "emergency_contact": {
+                    "type": "string",
+                    "example": "María Pérez - 3009876543"
+                },
+                "is_active": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "is_main_resident": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "lease_end_date": {
+                    "type": "string",
+                    "example": "2024-12-31T23:59:59Z"
+                },
+                "lease_start_date": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "monthly_rent": {
+                    "type": "number",
+                    "example": 1500000
+                },
+                "move_in_date": {
+                    "type": "string",
+                    "example": "2024-01-15T00:00:00Z"
+                },
+                "move_out_date": {
+                    "type": "string",
+                    "example": "2025-01-15T00:00:00Z"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Juan Pérez"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+573001234567"
+                },
+                "property_unit_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "resident_type_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
         "request.UpdateResourceRequest": {
             "description": "Solicitud para actualizar un recurso existente",
             "type": "object",
@@ -5664,6 +9398,10 @@ const docTemplate = `{
                 "name"
             ],
             "properties": {
+                "business_type_id": {
+                    "type": "integer",
+                    "example": 11
+                },
                 "description": {
                     "type": "string",
                     "example": "Gestión de usuarios del sistema"
@@ -5671,6 +9409,37 @@ const docTemplate = `{
                 "name": {
                     "type": "string",
                     "example": "users"
+                }
+            }
+        },
+        "request.UpdateRoleRequest": {
+            "type": "object",
+            "properties": {
+                "business_type_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Rol de administrador actualizado"
+                },
+                "is_system": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "level": {
+                    "type": "integer",
+                    "maximum": 10,
+                    "minimum": 1,
+                    "example": 3
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Administrador Actualizado"
+                },
+                "scope_id": {
+                    "type": "integer",
+                    "example": 1
                 }
             }
         },
@@ -5720,6 +9489,29 @@ const docTemplate = `{
                 },
                 "number": {
                     "type": "integer"
+                }
+            }
+        },
+        "response.AssignPermissionsToRoleResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Permisos asignados exitosamente al rol"
+                },
+                "permission_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "role_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
                 }
             }
         },
@@ -5788,6 +9580,14 @@ const docTemplate = `{
                 }
             }
         },
+        "response.BusinessTokenResponse": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
         "response.BusinessTypeDetailResponse": {
             "type": "object",
             "properties": {
@@ -5848,6 +9648,85 @@ const docTemplate = `{
                 }
             }
         },
+        "response.CommitteeResponse": {
+            "type": "object",
+            "properties": {
+                "committee_type_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "end_date": {
+                    "type": "string",
+                    "example": "2026-12-31T23:59:59Z"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_active": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Consejo de Administración 2025"
+                },
+                "notes": {
+                    "type": "string",
+                    "example": "Comité creado automáticamente"
+                },
+                "start_date": {
+                    "type": "string",
+                    "example": "2025-01-01T00:00:00Z"
+                },
+                "type_code": {
+                    "type": "string",
+                    "example": "admin_council"
+                },
+                "type_name": {
+                    "type": "string",
+                    "example": "Consejo de Administración"
+                }
+            }
+        },
+        "response.CreateRoleResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.RoleData"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Rol creado exitosamente"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "response.GenerateBusinessTokenErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.GenerateBusinessTokenSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.BusinessTokenResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "response.GetBusinessByIDResponse": {
             "type": "object",
             "properties": {
@@ -5859,6 +9738,37 @@ const docTemplate = `{
                 },
                 "success": {
                     "type": "boolean"
+                }
+            }
+        },
+        "response.GetRolePermissionsResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer",
+                    "example": 3
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Permisos del rol obtenidos exitosamente"
+                },
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/services_auth_internal_infra_primary_controllers_rolehandler_response.PermissionResponse"
+                    }
+                },
+                "role_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "role_name": {
+                    "type": "string",
+                    "example": "Administrador"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
                 }
             }
         },
@@ -5901,6 +9811,10 @@ const docTemplate = `{
                 "is_active": {
                     "type": "boolean",
                     "example": true
+                },
+                "logo_url": {
+                    "type": "string",
+                    "example": "https://example.com/logos/los-pinos.png"
                 },
                 "name": {
                     "type": "string",
@@ -5946,6 +9860,12 @@ const docTemplate = `{
                 "code": {
                     "type": "string",
                     "example": "los-pinos"
+                },
+                "committees": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.CommitteeResponse"
+                    }
                 },
                 "created_at": {
                     "type": "string",
@@ -6006,6 +9926,13 @@ const docTemplate = `{
                 "primary_color": {
                     "type": "string",
                     "example": "#1f2937"
+                },
+                "property_units": {
+                    "description": "Información detallada (solo en GET by ID)",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.PropertyUnitResponse"
+                    }
                 },
                 "quaternary_color": {
                     "type": "string",
@@ -6085,8 +10012,16 @@ const docTemplate = `{
                         "$ref": "#/definitions/services_auth_internal_infra_primary_controllers_authhandler_response.BusinessInfo"
                     }
                 },
+                "is_super_admin": {
+                    "description": "Indica si es super admin (scope platform o scope_id 1)",
+                    "type": "boolean"
+                },
                 "require_password_change": {
                     "type": "boolean"
+                },
+                "scope": {
+                    "description": "Scope del usuario (platform, business, etc.)",
+                    "type": "string"
                 },
                 "token": {
                     "type": "string"
@@ -6149,7 +10084,7 @@ const docTemplate = `{
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/response.PermissionResponse"
+                        "$ref": "#/definitions/services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionResponse"
                     }
                 },
                 "success": {
@@ -6175,52 +10110,11 @@ const docTemplate = `{
                 }
             }
         },
-        "response.PermissionResponse": {
-            "type": "object",
-            "properties": {
-                "action": {
-                    "type": "string",
-                    "example": "create"
-                },
-                "code": {
-                    "type": "string",
-                    "example": "users:create"
-                },
-                "description": {
-                    "type": "string",
-                    "example": "Permite crear nuevos usuarios en el sistema"
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "name": {
-                    "type": "string",
-                    "example": "Crear usuarios"
-                },
-                "resource": {
-                    "type": "string",
-                    "example": "users"
-                },
-                "scope_code": {
-                    "type": "string",
-                    "example": "system"
-                },
-                "scope_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "scope_name": {
-                    "type": "string",
-                    "example": "Sistema"
-                }
-            }
-        },
         "response.PermissionSuccessResponse": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/response.PermissionResponse"
+                    "$ref": "#/definitions/services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionResponse"
                 },
                 "success": {
                     "type": "boolean",
@@ -6256,117 +10150,6 @@ const docTemplate = `{
                 }
             }
         },
-        "response.ReserveDetail": {
-            "type": "object",
-            "properties": {
-                "cliente_dni": {
-                    "type": "string"
-                },
-                "cliente_email": {
-                    "type": "string"
-                },
-                "cliente_id": {
-                    "description": "Cliente",
-                    "type": "integer"
-                },
-                "cliente_nombre": {
-                    "type": "string"
-                },
-                "cliente_telefono": {
-                    "type": "string"
-                },
-                "end_at": {
-                    "type": "string"
-                },
-                "estado_codigo": {
-                    "type": "string"
-                },
-                "estado_id": {
-                    "description": "Estado",
-                    "type": "integer"
-                },
-                "estado_nombre": {
-                    "type": "string"
-                },
-                "mesa_capacidad": {
-                    "type": "integer"
-                },
-                "mesa_id": {
-                    "description": "Mesa",
-                    "type": "integer"
-                },
-                "mesa_numero": {
-                    "type": "integer"
-                },
-                "negocio_codigo": {
-                    "type": "string"
-                },
-                "negocio_direccion": {
-                    "type": "string"
-                },
-                "negocio_id": {
-                    "description": "Negocio (cambiado de Restaurante)",
-                    "type": "integer"
-                },
-                "negocio_nombre": {
-                    "type": "string"
-                },
-                "number_of_guests": {
-                    "type": "integer"
-                },
-                "reserva_actualizada": {
-                    "type": "string"
-                },
-                "reserva_creada": {
-                    "type": "string"
-                },
-                "reserva_id": {
-                    "description": "Reserva",
-                    "type": "integer"
-                },
-                "start_at": {
-                    "type": "string"
-                },
-                "usuario_email": {
-                    "type": "string"
-                },
-                "usuario_id": {
-                    "description": "Usuario",
-                    "type": "integer"
-                },
-                "usuario_nombre": {
-                    "type": "string"
-                }
-            }
-        },
-        "response.ReserveListSuccessResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/response.ReserveDetail"
-                    }
-                },
-                "success": {
-                    "type": "boolean"
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "response.ReserveSuccessResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/response.ReserveDetail"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "response.ResourcePermissions": {
             "type": "object",
             "properties": {
@@ -6385,12 +10168,88 @@ const docTemplate = `{
                 }
             }
         },
+        "response.RoleData": {
+            "type": "object",
+            "properties": {
+                "business_type_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Rol de administrador del sistema"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_system": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "level": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Administrador"
+                },
+                "scope_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                }
+            }
+        },
         "response.RoleErrorResponse": {
             "type": "object",
             "properties": {
                 "error": {
                     "type": "string",
                     "example": "Error interno del servidor"
+                }
+            }
+        },
+        "response.RoleInfoDetailed": {
+            "type": "object",
+            "properties": {
+                "business_type_id": {
+                    "type": "integer"
+                },
+                "business_type_name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_system": {
+                    "type": "boolean"
+                },
+                "level": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "scope_code": {
+                    "type": "string"
+                },
+                "scope_id": {
+                    "type": "integer"
+                },
+                "scope_name": {
+                    "type": "string"
                 }
             }
         },
@@ -6416,6 +10275,14 @@ const docTemplate = `{
         "response.RoleResponse": {
             "type": "object",
             "properties": {
+                "business_type_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "business_type_name": {
+                    "type": "string",
+                    "example": "Propiedad Horizontal"
+                },
                 "code": {
                     "type": "string",
                     "example": "admin"
@@ -6459,6 +10326,22 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/response.RoleResponse"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "response.UpdateRoleResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.RoleData"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Rol actualizado exitosamente"
                 },
                 "success": {
                     "type": "boolean",
@@ -6575,6 +10458,18 @@ const docTemplate = `{
         "response.UserRolesPermissionsResponse": {
             "type": "object",
             "properties": {
+                "business_id": {
+                    "type": "integer"
+                },
+                "business_name": {
+                    "type": "string"
+                },
+                "business_type_id": {
+                    "type": "integer"
+                },
+                "business_type_name": {
+                    "type": "string"
+                },
                 "is_super": {
                     "type": "boolean"
                 },
@@ -6584,11 +10479,8 @@ const docTemplate = `{
                         "$ref": "#/definitions/response.ResourcePermissions"
                     }
                 },
-                "roles": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/services_auth_internal_infra_primary_controllers_authhandler_response.RoleInfo"
-                    }
+                "role": {
+                    "$ref": "#/definitions/services_auth_internal_infra_primary_controllers_authhandler_response.RoleInfo"
                 }
             }
         },
@@ -6690,6 +10582,88 @@ const docTemplate = `{
                 }
             }
         },
+        "services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionResponse": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "example": "create"
+                },
+                "business_type_id": {
+                    "type": "integer",
+                    "example": 11
+                },
+                "business_type_name": {
+                    "type": "string",
+                    "example": "Propiedad Horizontal"
+                },
+                "code": {
+                    "type": "string",
+                    "example": "users:create"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Permite crear nuevos usuarios en el sistema"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Crear usuarios"
+                },
+                "resource": {
+                    "type": "string",
+                    "example": "users"
+                },
+                "scope_code": {
+                    "type": "string",
+                    "example": "system"
+                },
+                "scope_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "scope_name": {
+                    "type": "string",
+                    "example": "Sistema"
+                }
+            }
+        },
+        "services_auth_internal_infra_primary_controllers_rolehandler_response.PermissionResponse": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "example": "create"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Crear usuarios"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "resource": {
+                    "type": "string",
+                    "example": "users"
+                },
+                "scope_code": {
+                    "type": "string",
+                    "example": "system"
+                },
+                "scope_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "scope_name": {
+                    "type": "string",
+                    "example": "Sistema"
+                }
+            }
+        },
         "services_auth_internal_infra_primary_controllers_userhandler_response.BusinessInfo": {
             "type": "object",
             "properties": {
@@ -6707,6 +10681,14 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "role": {
+                    "description": "Rol del usuario en este business",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.RoleInfoDetailed"
+                        }
+                    ]
                 }
             }
         },
@@ -6732,11 +10714,62 @@ const docTemplate = `{
                     "type": "integer"
                 }
             }
+        },
+        "services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.PropertyUnitResponse": {
+            "type": "object",
+            "properties": {
+                "area": {
+                    "type": "number",
+                    "example": 85.5
+                },
+                "bathrooms": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "bedrooms": {
+                    "type": "integer",
+                    "example": 3
+                },
+                "block": {
+                    "type": "string",
+                    "example": "A"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Apto 101 - Piso 1"
+                },
+                "floor": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_active": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "number": {
+                    "type": "string",
+                    "example": "101"
+                },
+                "unit_type": {
+                    "type": "string",
+                    "example": "apartment"
+                }
+            }
         }
     },
     "securityDefinitions": {
         "BearerAuth": {
-            "description": "Ingrese su token JWT con el prefijo **Bearer**",
+            "description": "Token de business JWT con el prefijo **Bearer** (para todos los endpoints)",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        },
+        "BusinessTokenAuth": {
+            "description": "Token principal JWT con el prefijo **Bearer** (solo para /auth/business-token)",
             "type": "apiKey",
             "name": "Authorization",
             "in": "header"

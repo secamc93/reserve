@@ -1,12 +1,12 @@
 package handlerresident
 
 import (
+	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlerresident/mapper"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlerresident/request"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlerresident/response"
-	"fmt"
+	"central_reserve/shared/log"
 	"net/http"
-	"os"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -20,7 +20,7 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			hp_id					path		int		true	"ID de la propiedad horizontal"
+//	@Param			business_id				query		int		false	"ID del business (opcional para super admin)"
 //	@Param			property_unit_number	query		string	false	"Filtrar por número de unidad (búsqueda parcial)"
 //	@Param			name					query		string	false	"Filtrar por nombre del residente (búsqueda parcial)"
 //	@Param			property_unit_id		query		int		false	"Filtrar por ID de unidad"
@@ -32,31 +32,83 @@ import (
 //	@Success		200						{object}	object
 //	@Failure		400						{object}	object
 //	@Failure		500						{object}	object
-//	@Router			/horizontal-properties/{hp_id}/residents [get]
+//	@Router			/horizontal-properties/residents [get]
 func (h *ResidentHandler) ListResidents(c *gin.Context) {
-	hpIDParam := c.Param("hp_id")
-	hpID, err := strconv.ParseUint(hpIDParam, 10, 32)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] handlerresident/list-residents.go - Error en handler: %v\n", err)
-		h.logger.Error().Err(err).Str("hp_id", hpIDParam).Msg("Error parseando ID de propiedad horizontal")
-		c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "ID inválido", Error: "Debe ser numérico"})
-		return
-	}
+	// Configurar contexto de logging
+	ctx := c.Request.Context()
+	ctx = log.WithFunctionCtx(ctx, "ListResidents")
+
 	var req request.ResidentFiltersRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] handlerresident/list-residents.go - Error en handler: %v\n", err)
-		h.logger.Error().Err(err).Msg("Error validando parámetros de búsqueda")
-		c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "Parámetros inválidos", Error: err.Error()})
+		h.logger.Error(ctx).Err(err).Msg("Error validando parámetros de búsqueda")
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{
+			Success: false,
+			Message: "Parámetros inválidos",
+			Error:   err.Error(),
+		})
 		return
 	}
-	filters := mapper.MapFiltersRequestToDTO(req, uint(hpID))
-	result, err := h.useCase.ListResidents(c.Request.Context(), filters)
+
+	// Verificar super admin y decidir businessID
+	isSuperAdmin := middleware.IsSuperAdmin(c)
+	var businessID uint
+
+	if isSuperAdmin {
+		// Super admin: puede usar business_id del query param o ver todo (0)
+		businessIDParam := c.Query("business_id")
+		if businessIDParam != "" {
+			businessIDFromQuery, err := strconv.ParseUint(businessIDParam, 10, 32)
+			if err != nil {
+				h.logger.Error(ctx).Err(err).Str("business_id", businessIDParam).Msg("Error parseando business_id del query")
+				c.JSON(http.StatusBadRequest, response.ErrorResponse{
+					Success: false,
+					Message: "business_id inválido",
+					Error:   "Debe ser numérico",
+				})
+				return
+			}
+			businessID = uint(businessIDFromQuery)
+		} else {
+			// Si no envía business_id, ver todo (business_id = 0)
+			businessID = 0
+		}
+	} else {
+		// Usuario normal: usar business_id del token
+		tokenBusinessID, exists := middleware.GetBusinessID(c)
+		if !exists {
+			h.logger.Error(ctx).Msg("business_id no disponible en el token")
+			c.JSON(http.StatusUnauthorized, response.ErrorResponse{
+				Success: false,
+				Message: "Token inválido",
+				Error:   "business_id no disponible en el token",
+			})
+			return
+		}
+		businessID = tokenBusinessID
+	}
+
+	// Agregar business_id al contexto para logging
+	ctx = log.WithBusinessIDCtx(ctx, businessID)
+
+	h.logger.Info(ctx).Bool("is_super_admin", isSuperAdmin).Interface("filters", req).Msg("Listando residentes")
+
+	filters := mapper.MapFiltersRequestToDTO(req, businessID)
+	result, err := h.useCase.ListResidents(ctx, filters)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] handlerresident/list-residents.go - Error en handler: %v\n", err)
-		h.logger.Error().Err(err).Uint("hp_id", uint(hpID)).Interface("filters", filters).Msg("Error listando residentes")
-		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Success: false, Message: "Error listando residentes", Error: err.Error()})
+		h.logger.Error(ctx).Err(err).Interface("filters", filters).Msg("Error listando residentes")
+		c.JSON(http.StatusInternalServerError, response.ErrorResponse{
+			Success: false,
+			Message: "Error listando residentes",
+			Error:   err.Error(),
+		})
 		return
 	}
+
+	h.logger.Info(ctx).Int64("total_residents", result.Total).Int("page", result.Page).Int("page_size", result.PageSize).Msg("Residentes listados exitosamente")
 	responseData := mapper.MapPaginatedDTOToResponse(result)
-	c.JSON(http.StatusOK, response.ResidentsSuccess{Success: true, Message: "Residentes obtenidos exitosamente", Data: responseData})
+	c.JSON(http.StatusOK, response.ResidentsSuccess{
+		Success: true,
+		Message: "Residentes obtenidos exitosamente",
+		Data:    responseData,
+	})
 }

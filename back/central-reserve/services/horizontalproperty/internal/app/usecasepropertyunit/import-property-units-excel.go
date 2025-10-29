@@ -8,12 +8,17 @@ import (
 	"strings"
 
 	"central_reserve/services/horizontalproperty/internal/domain"
+	"central_reserve/shared/log"
 
 	"github.com/xuri/excelize/v2"
 )
 
 // ImportPropertyUnitsFromExcel importa unidades desde un archivo Excel
 func (uc *propertyUnitUseCase) ImportPropertyUnitsFromExcel(ctx context.Context, businessID uint, filePath string) (*domain.ImportPropertyUnitsResult, error) {
+	// Configurar contexto de logging
+	ctx = log.WithFunctionCtx(ctx, "ImportPropertyUnitsFromExcel")
+	ctx = log.WithBusinessIDCtx(ctx, businessID)
+
 	fmt.Printf("\n📊 [USE CASE - INICIAR IMPORTACION EXCEL]\n")
 	fmt.Printf("   Business ID: %d\n", businessID)
 	fmt.Printf("   Archivo: %s\n\n", filePath)
@@ -27,7 +32,7 @@ func (uc *propertyUnitUseCase) ImportPropertyUnitsFromExcel(ctx context.Context,
 	f, err := excelize.OpenFile(filePath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[ERROR] usecasepropertyunit/import - Error abriendo Excel: %v\n", err)
-		uc.logger.Error().Err(err).Str("file_path", filePath).Msg("Error abriendo archivo Excel")
+		uc.logger.Error(ctx).Err(err).Str("file_path", filePath).Msg("Error abriendo archivo Excel")
 		return nil, fmt.Errorf("error abriendo archivo Excel: %w", err)
 	}
 	defer f.Close()
@@ -49,7 +54,7 @@ func (uc *propertyUnitUseCase) ImportPropertyUnitsFromExcel(ctx context.Context,
 	rows, err := f.GetRows(sheetName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[ERROR] usecasepropertyunit/import - Error leyendo filas: sheet=%s, error=%v\n", sheetName, err)
-		uc.logger.Error().Err(err).Str("sheet", sheetName).Msg("Error leyendo filas del Excel")
+		uc.logger.Error(ctx).Err(err).Str("sheet", sheetName).Msg("Error leyendo filas del Excel")
 		return nil, fmt.Errorf("error leyendo filas del Excel: %w", err)
 	}
 
@@ -61,9 +66,8 @@ func (uc *propertyUnitUseCase) ImportPropertyUnitsFromExcel(ctx context.Context,
 	fmt.Printf("   ✅ Total de filas leídas: %d (incluyendo encabezado)\n", len(rows))
 	fmt.Printf("   Filas de datos: %d\n\n", len(rows)-1)
 
-	uc.logger.Info().
+	uc.logger.Info(ctx).
 		Str("file_path", filePath).
-		Uint("business_id", businessID).
 		Int("total_rows", len(rows)-1).
 		Msg("Iniciando importación de unidades desde Excel")
 
@@ -184,14 +188,14 @@ func (uc *propertyUnitUseCase) ImportPropertyUnitsFromExcel(ctx context.Context,
 			fmt.Fprintf(os.Stderr, "[ERROR] usecasepropertyunit/import - %s\n", errMsg)
 			result.Errors = append(result.Errors, errMsg)
 			result.Skipped++
-			uc.logger.Error().Err(err).Str("number", number).Msg("Error creando unidad desde Excel")
+			uc.logger.Error(ctx).Err(err).Str("number", number).Msg("Error creando unidad desde Excel")
 			fmt.Printf("   ❌ OMITIDA: Error creando en BD\n\n")
 			continue
 		}
 
 		result.Created++
 		fmt.Printf("   ✅ CREADA: ID=%d, Número=%s, Coef=%f\n\n", created.ID, number, coefficient)
-		uc.logger.Debug().
+		uc.logger.Debug(ctx).
 			Uint("id", created.ID).
 			Str("number", number).
 			Float64("coefficient", coefficient).
@@ -215,8 +219,7 @@ func (uc *propertyUnitUseCase) ImportPropertyUnitsFromExcel(ctx context.Context,
 		fmt.Printf("\n")
 	}
 
-	uc.logger.Info().
-		Uint("business_id", businessID).
+	uc.logger.Info(ctx).
 		Int("total", result.Total).
 		Int("created", result.Created).
 		Int("skipped", result.Skipped).

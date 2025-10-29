@@ -2,6 +2,7 @@ package authhandler
 
 import (
 	"central_reserve/services/auth/middleware"
+	"central_reserve/shared/log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -9,12 +10,14 @@ import (
 
 // VerifyHandler verifica la autenticación del usuario
 func (h *AuthHandler) VerifyHandler(c *gin.Context) {
-	h.logger.Info().Msg("Verificación de autenticación solicitada")
+	ctx := log.WithFunctionCtx(c.Request.Context(), "VerifyHandler")
+
+	h.logger.Info(ctx).Msg("Verificación de autenticación solicitada")
 
 	// Obtener información de autenticación desde el middleware
 	authInfo, exists := middleware.GetAuthInfo(c)
 	if !exists {
-		h.logger.Error().Msg("Información de autenticación no encontrada en contexto")
+		h.logger.Error(ctx).Msg("Información de autenticación no encontrada en contexto")
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error": "No autorizado",
 		})
@@ -23,7 +26,7 @@ func (h *AuthHandler) VerifyHandler(c *gin.Context) {
 
 	// Verificar que el tipo de autenticación sea JWT
 	if authInfo.Type != middleware.AuthTypeJWT {
-		h.logger.Error().Str("auth_type", string(authInfo.Type)).Msg("Tipo de autenticación no válido")
+		h.logger.Error(ctx).Str("auth_type", string(authInfo.Type)).Msg("Tipo de autenticación no válido")
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error": "Tipo de autenticación no válido",
 		})
@@ -31,7 +34,7 @@ func (h *AuthHandler) VerifyHandler(c *gin.Context) {
 	}
 
 	// Log de información de autenticación
-	h.logger.Info().
+	h.logger.Info(ctx).
 		Uint("user_id", authInfo.UserID).
 		Str("user_email", authInfo.Email).
 		Strs("user_roles", authInfo.Roles).

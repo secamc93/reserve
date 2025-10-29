@@ -4,13 +4,17 @@ import (
 	"context"
 
 	"central_reserve/services/horizontalproperty/internal/domain"
+	"central_reserve/shared/log"
 )
 
 // GetVotingGroupByID obtiene un grupo de votación por su ID
 func (uc *votingUseCase) GetVotingGroupByID(ctx context.Context, id uint) (*domain.VotingGroupDTO, error) {
+	// Configurar contexto de logging
+	ctx = log.WithFunctionCtx(ctx, "GetVotingGroupByID")
+
 	group, err := uc.repo.GetVotingGroupByID(ctx, id)
 	if err != nil {
-		uc.logger.Error().Err(err).Uint("group_id", id).Msg("Error obteniendo grupo de votación")
+		uc.logger.Error(ctx).Err(err).Uint("group_id", id).Msg("Error obteniendo grupo de votación desde repositorio")
 		return nil, err
 	}
 

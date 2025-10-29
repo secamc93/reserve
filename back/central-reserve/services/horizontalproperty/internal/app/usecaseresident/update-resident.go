@@ -4,16 +4,21 @@ import (
 	"context"
 
 	"central_reserve/services/horizontalproperty/internal/domain"
+	"central_reserve/shared/log"
 )
 
 func (uc *residentUseCase) UpdateResident(ctx context.Context, id uint, dto domain.UpdateResidentDTO) (*domain.ResidentDetailDTO, error) {
+	// Configurar contexto de logging
+	ctx = log.WithFunctionCtx(ctx, "UpdateResident")
+
 	// Verificar que el residente existe
 	existing, err := uc.repo.GetResidentByID(ctx, id)
 	if err != nil {
-		uc.logger.Error().Err(err).Uint("id", id).Msg("Error obteniendo residente")
+		uc.logger.Error(ctx).Err(err).Uint("resident_id", id).Msg("Error obteniendo residente desde repositorio")
 		return nil, err
 	}
 	if existing == nil {
+		uc.logger.Warn(ctx).Uint("resident_id", id).Msg("Residente no encontrado para actualizar")
 		return nil, domain.ErrResidentNotFound
 	}
 
@@ -21,10 +26,11 @@ func (uc *residentUseCase) UpdateResident(ctx context.Context, id uint, dto doma
 	if dto.Email != nil && *dto.Email != existing.Email {
 		emailExists, err := uc.repo.ExistsResidentByEmail(ctx, existing.BusinessID, *dto.Email, id)
 		if err != nil {
-			uc.logger.Error().Err(err).Msg("Error verificando email existente")
+			uc.logger.Error(ctx).Err(err).Uint("resident_id", id).Uint("business_id", existing.BusinessID).Str("new_email", *dto.Email).Msg("Error verificando email existente")
 			return nil, err
 		}
 		if emailExists {
+			uc.logger.Warn(ctx).Uint("resident_id", id).Uint("business_id", existing.BusinessID).Str("new_email", *dto.Email).Msg("Email de residente ya existe")
 			return nil, domain.ErrResidentEmailExists
 		}
 	}
@@ -33,10 +39,11 @@ func (uc *residentUseCase) UpdateResident(ctx context.Context, id uint, dto doma
 	if dto.Dni != nil && *dto.Dni != existing.Dni {
 		dniExists, err := uc.repo.ExistsResidentByDni(ctx, existing.BusinessID, *dto.Dni, id)
 		if err != nil {
-			uc.logger.Error().Err(err).Msg("Error verificando DNI existente")
+			uc.logger.Error(ctx).Err(err).Uint("resident_id", id).Uint("business_id", existing.BusinessID).Str("new_dni", *dto.Dni).Msg("Error verificando DNI existente")
 			return nil, err
 		}
 		if dniExists {
+			uc.logger.Warn(ctx).Uint("resident_id", id).Uint("business_id", existing.BusinessID).Str("new_dni", *dto.Dni).Msg("DNI de residente ya existe")
 			return nil, domain.ErrResidentDniExists
 		}
 	}
@@ -108,14 +115,14 @@ func (uc *residentUseCase) UpdateResident(ctx context.Context, id uint, dto doma
 	// Actualizar en repositorio
 	_, err = uc.repo.UpdateResident(ctx, id, entity)
 	if err != nil {
-		uc.logger.Error().Err(err).Uint("id", id).Msg("Error actualizando residente")
+		uc.logger.Error(ctx).Err(err).Uint("resident_id", id).Uint("business_id", existing.BusinessID).Msg("Error actualizando residente en repositorio")
 		return nil, err
 	}
 
 	// Obtener detalle completo actualizado
 	updated, err := uc.repo.GetResidentByID(ctx, id)
 	if err != nil {
-		uc.logger.Error().Err(err).Msg("Error obteniendo detalle de residente actualizado")
+		uc.logger.Error(ctx).Err(err).Uint("resident_id", id).Msg("Error obteniendo detalle de residente actualizado")
 		return nil, err
 	}
 

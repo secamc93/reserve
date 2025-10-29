@@ -4,9 +4,13 @@ import (
 	"context"
 
 	"central_reserve/services/horizontalproperty/internal/domain"
+	"central_reserve/shared/log"
 )
 
 func (uc *propertyUnitUseCase) ListPropertyUnits(ctx context.Context, filters domain.PropertyUnitFiltersDTO) (*domain.PaginatedPropertyUnitsDTO, error) {
+	// Configurar contexto de logging
+	ctx = log.WithFunctionCtx(ctx, "ListPropertyUnits")
+
 	// Validar paginación
 	if filters.Page < 1 {
 		filters.Page = 1
@@ -22,7 +26,7 @@ func (uc *propertyUnitUseCase) ListPropertyUnits(ctx context.Context, filters do
 	// Obtener unidades paginadas
 	result, err := uc.repo.ListPropertyUnits(ctx, filters)
 	if err != nil {
-		uc.logger.Error().Err(err).Msg("Error listando unidades de propiedad")
+		uc.logger.Error(ctx).Err(err).Uint("business_id", filters.BusinessID).Int("page", filters.Page).Int("page_size", filters.PageSize).Msg("Error listando unidades de propiedad desde repositorio")
 		return nil, err
 	}
 

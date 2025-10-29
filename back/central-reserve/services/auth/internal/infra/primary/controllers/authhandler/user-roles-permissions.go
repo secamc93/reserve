@@ -4,8 +4,8 @@ import (
 	"central_reserve/services/auth/internal/infra/primary/controllers/authhandler/mapper"
 	"central_reserve/services/auth/internal/infra/primary/controllers/authhandler/response"
 	"central_reserve/services/auth/middleware"
+	"central_reserve/shared/log"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,44 +13,35 @@ import (
 // GetUserRolesPermissionsHandler maneja la solicitud de obtener roles y permisos del usuario
 //
 //	@Summary		Obtener roles y permisos del usuario
-//	@Description	Obtiene los roles y permisos del usuario autenticado validados contra recursos configurados del business
+//	@Description	Obtiene los roles y permisos del usuario autenticado desde el token
 //	@Tags			Auth
 //	@Accept			json
 //	@Produce		json
-//	@Param			business_id	query	int	true	"ID del business para validar recursos activos"
 //	@Security		BearerAuth
 //	@Success		200	{object}	response.UserRolesPermissionsSuccessResponse	"Roles y permisos obtenidos exitosamente"
-//	@Failure		400	{object}	response.LoginErrorResponse						"Business ID requerido o inválido"
 //	@Failure		401	{object}	response.LoginErrorResponse						"Token de acceso requerido"
 //	@Failure		404	{object}	response.LoginErrorResponse						"Usuario no encontrado"
 //	@Failure		500	{object}	response.LoginErrorResponse						"Error interno del servidor"
 //	@Router			/auth/roles-permissions [get]
 func (h *AuthHandler) GetUserRolesPermissionsHandler(c *gin.Context) {
+	ctx := log.WithFunctionCtx(c.Request.Context(), "GetUserRolesPermissionsHandler")
+
 	// Obtener el ID del usuario autenticado desde el middleware
 	userID, exists := middleware.GetUserID(c)
 	if !exists {
-		h.logger.Error().Msg("Usuario no autenticado")
+		h.logger.Error(ctx).Msg("Usuario no autenticado")
 		c.JSON(http.StatusUnauthorized, response.LoginErrorResponse{
 			Error: "Usuario no autenticado",
 		})
 		return
 	}
 
-	// Obtener el business_id desde query params
-	businessIDParam := c.Query("business_id")
-	if businessIDParam == "" {
-		h.logger.Error().Msg("Business ID requerido como query param")
-		c.JSON(http.StatusBadRequest, response.LoginErrorResponse{
-			Error: "Business ID requerido como query param (?business_id=X)",
-		})
-		return
-	}
-
-	businessID, err := strconv.ParseUint(businessIDParam, 10, 32)
-	if err != nil {
-		h.logger.Error().Err(err).Str("business_id", businessIDParam).Msg("Business ID inválido")
-		c.JSON(http.StatusBadRequest, response.LoginErrorResponse{
-			Error: "Business ID debe ser un número válido",
+	// Obtener el business_id desde el token (ya validado por el middleware)
+	businessID, exists := middleware.GetBusinessID(c)
+	if !exists {
+		h.logger.Error(ctx).Msg("Business ID no encontrado en el token")
+		c.JSON(http.StatusUnauthorized, response.LoginErrorResponse{
+			Error: "Token inválido - Business ID no encontrado",
 		})
 		return
 	}
@@ -62,9 +53,9 @@ func (h *AuthHandler) GetUserRolesPermissionsHandler(c *gin.Context) {
 	}
 
 	// Ejecutar caso de uso para obtener roles y permisos
-	rolesPermissions, err := h.usecase.GetUserRolesPermissions(c.Request.Context(), uint(userID), uint(businessID), token)
+	rolesPermissions, err := h.usecase.GetUserRolesPermissions(ctx, uint(userID), businessID, token)
 	if err != nil {
-		h.logger.Error().Err(err).Uint("user_id", uint(userID)).Msg("Error al obtener roles y permisos del usuario")
+		h.logger.Error(ctx).Err(err).Uint("user_id", uint(userID)).Msg("Error al obtener roles y permisos del usuario")
 
 		// Determinar el código de estado HTTP apropiado
 		statusCode := http.StatusInternalServerError
@@ -90,8 +81,9 @@ func (h *AuthHandler) GetUserRolesPermissionsHandler(c *gin.Context) {
 	// Convertir respuesta de dominio a response
 	rolesPermissionsResponse := mapper.ToUserRolesPermissionsResponse(rolesPermissions)
 
-	h.logger.Info().
+	h.logger.Info(ctx).
 		Uint("user_id", uint(userID)).
+		Uint("business_id", businessID).
 		Bool("is_super", rolesPermissions.IsSuper).
 		Int("permissions_count", len(rolesPermissions.Permissions)).
 		Msg("Roles y permisos obtenidos exitosamente")

@@ -1,13 +1,13 @@
 package handlervote
 
 import (
-	"fmt"
 	"net/http"
-	"os"
 	"strconv"
 
+	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlervote/mapper"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlervote/response"
+	"central_reserve/shared/log"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,25 +20,43 @@ import (
 //	@Security		BearerAuth
 //	@Accept			json
 //	@Produce		json
-//	@Param			hp_id	path		int	true	"ID de la propiedad horizontal"
 //	@Success		200		{object}	object
 //	@Failure		400		{object}	object
 //	@Failure		500		{object}	object
-//	@Router			/horizontal-properties/{hp_id}/voting-groups [get]
+//	@Router			/horizontal-properties/voting-groups [get]
 func (h *VotingHandler) ListVotingGroups(c *gin.Context) {
-	idParam := c.Param("hp_id")
-	id64, err := strconv.ParseUint(idParam, 10, 32)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] handlervote/list-voting-groups.go - Error en handler: %v\n", err)
-		h.logger.Error().Err(err).Str("hp_id", idParam).Msg("Error parseando ID de propiedad horizontal")
-		c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "id inválido", Error: "Debe ser numérico"})
-		return
+	ctx := log.WithFunctionCtx(c.Request.Context(), "ListVotingGroups")
+
+	// Determinar business_id: del token para usuarios normales; query param opcional para super admin
+	var businessID uint
+	isSuper := middleware.IsSuperAdmin(c)
+	if isSuper {
+		q := c.Query("business_id")
+		if q == "" {
+			h.logger.Error(ctx).Msg("business_id requerido para super admin")
+			c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "business_id requerido", Error: "Proporcione ?business_id"})
+			return
+		}
+		id64, err := strconv.ParseUint(q, 10, 32)
+		if err != nil || id64 == 0 {
+			h.logger.Error(ctx).Str("business_id", q).Msg("Business ID inválido")
+			c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "business_id inválido", Error: "Debe ser numérico y > 0"})
+			return
+		}
+		businessID = uint(id64)
+	} else {
+		bid, ok := middleware.GetBusinessID(c)
+		if !ok || bid == 0 {
+			h.logger.Error(ctx).Msg("Business ID no disponible en token")
+			c.JSON(http.StatusUnauthorized, response.ErrorResponse{Success: false, Message: "token inválido", Error: "business_id no encontrado"})
+			return
+		}
+		businessID = bid
 	}
 
-	groups, err := h.votingUseCase.ListVotingGroupsByBusiness(c.Request.Context(), uint(id64))
+	groups, err := h.votingUseCase.ListVotingGroupsByBusiness(ctx, businessID)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] handlervote/list-voting-groups.go - Error en handler: %v\n", err)
-		h.logger.Error().Err(err).Uint("hp_id", uint(id64)).Msg("Error listando grupos de votación")
+		h.logger.Error(ctx).Err(err).Uint("business_id", businessID).Msg("Error listando grupos de votación")
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Success: false, Message: "Error listando grupos", Error: err.Error()})
 		return
 	}

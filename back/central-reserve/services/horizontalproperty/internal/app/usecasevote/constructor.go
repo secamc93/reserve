@@ -12,9 +12,10 @@ type votingUseCase struct {
 }
 
 func NewVotingUseCase(repo domain.VotingRepository, residentRepo domain.ResidentRepository, logger log.ILogger) domain.VotingUseCase {
+	contextualLogger := logger.WithModule("votaciones")
 	return &votingUseCase{
 		repo:         repo,
 		residentRepo: residentRepo,
-		logger:       logger,
+		logger:       contextualLogger,
 	}
 }

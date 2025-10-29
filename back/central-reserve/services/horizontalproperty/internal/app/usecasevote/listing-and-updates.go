@@ -5,11 +5,17 @@ import (
 	"fmt"
 
 	"central_reserve/services/horizontalproperty/internal/domain"
+	"central_reserve/shared/log"
 )
 
 func (u *votingUseCase) ListVotingGroupsByBusiness(ctx context.Context, businessID uint) ([]domain.VotingGroupDTO, error) {
+	// Configurar contexto de logging
+	ctx = log.WithFunctionCtx(ctx, "ListVotingGroupsByBusiness")
+	ctx = log.WithBusinessIDCtx(ctx, businessID)
+
 	groups, err := u.repo.ListVotingGroupsByBusiness(ctx, businessID)
 	if err != nil {
+		u.logger.Error(ctx).Err(err).Msg("Error listando grupos de votación desde repositorio")
 		return nil, err
 	}
 	res := make([]domain.VotingGroupDTO, len(groups))
@@ -35,7 +41,11 @@ func (u *votingUseCase) ListVotingGroupsByBusiness(ctx context.Context, business
 }
 
 func (u *votingUseCase) UpdateVotingGroup(ctx context.Context, id uint, dto domain.CreateVotingGroupDTO) (*domain.VotingGroupDTO, error) {
+	// Configurar contexto de logging
+	ctx = log.WithFunctionCtx(ctx, "UpdateVotingGroup")
+
 	if dto.RequiresQuorum && dto.QuorumPercentage == nil {
+		u.logger.Error(ctx).Uint("group_id", id).Msg("Quorum requerido pero no se especificó quorum_percentage")
 		return nil, fmt.Errorf("debe especificar quorum_percentage")
 	}
 	entity := &domain.VotingGroup{
