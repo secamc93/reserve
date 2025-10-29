@@ -31,7 +31,9 @@ export async function getUnvotedUnitsAction(
   const startTime = Date.now();
 
   // Construir URL con filtro opcional
-  const url = new URL(`${env.API_BASE_URL}/horizontal-properties/${hpId}/voting-groups/${groupId}/votings/${votingId}/unvoted-units`);
+  const url = new URL(`${env.API_BASE_URL}/horizontal-properties/votings/${votingId}/unvoted-units`);
+  if (hpId !== undefined) url.searchParams.append('business_id', String(hpId));
+  if (groupId !== undefined) url.searchParams.append('group_id', String(groupId));
   
   if (unitNumber) {
     url.searchParams.append('unit_number', unitNumber);

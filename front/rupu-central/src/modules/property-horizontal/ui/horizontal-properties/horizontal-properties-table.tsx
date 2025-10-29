@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { Table, Badge, Spinner, Alert, ConfirmModal, type TableColumn } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
 import { getHorizontalPropertiesAction, deleteHorizontalPropertyAction } from '../../infrastructure/actions';
+import { businessTokenAction } from '@modules/auth/infrastructure/actions';
 import { CreatePropertyModal } from './create-property-modal';
 
 interface HorizontalProperty {
@@ -42,11 +43,25 @@ export function HorizontalPropertiesTable() {
   const loadProperties = async () => {
     setLoading(true);
     try {
-      const token = TokenStorage.getToken();
+      let token = TokenStorage.getBusinessToken();
       if (!token) {
-        console.error('❌ No hay token disponible');
-        setLoading(false);
-        return;
+        // Intento automático para super admin: obtener business token con business_id = 0 usando el token principal
+        const sessionToken = TokenStorage.getMainToken();
+        if (sessionToken) {
+          try {
+            const bt = await businessTokenAction({ business_id: 0 }, sessionToken);
+            if (bt.success && bt.data?.token) {
+              TokenStorage.setToken(bt.data.token);
+              token = bt.data.token;
+            }
+          } catch (_) {}
+        }
+
+        if (!token) {
+          console.error('❌ No hay business token disponible. Debe seleccionar un negocio primero.');
+          setLoading(false);
+          return;
+        }
       }
 
       const result = await getHorizontalPropertiesAction({
@@ -77,10 +92,22 @@ export function HorizontalPropertiesTable() {
   const handleDeleteConfirm = async () => {
     if (!propertyToDelete) return;
 
-    const token = TokenStorage.getToken();
+    let token = TokenStorage.getBusinessToken();
     if (!token) {
-      setDeleteError('No se encontró el token de autenticación');
-      return;
+      const sessionToken = TokenStorage.getMainToken();
+      if (sessionToken) {
+        try {
+          const bt = await businessTokenAction({ business_id: 0 }, sessionToken);
+          if (bt.success && bt.data?.token) {
+            TokenStorage.setToken(bt.data.token);
+            token = bt.data.token;
+          }
+        } catch (_) {}
+      }
+      if (!token) {
+        setDeleteError('No se encontró el business token. Debe seleccionar un negocio primero.');
+        return;
+      }
     }
 
     setLoading(true);

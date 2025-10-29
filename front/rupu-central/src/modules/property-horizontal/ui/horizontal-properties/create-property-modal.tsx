@@ -36,9 +36,9 @@ export function CreatePropertyModal({ isOpen, onClose, onSuccess }: CreateProper
     setLoading(true);
 
     try {
-      const token = TokenStorage.getToken();
+      const token = TokenStorage.getBusinessToken();
       if (!token) {
-        setError('No se encontró el token de autenticación');
+        setError('No se encontró el business token. Debe seleccionar un negocio primero.');
         return;
       }
 

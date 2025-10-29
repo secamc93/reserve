@@ -17,6 +17,7 @@ export interface GetHorizontalPropertiesInput {
   isActive?: boolean;
   orderBy?: string;
   orderDir?: 'asc' | 'desc';
+  business_id?: number; // Nuevo parámetro para filtrar por business
 }
 
 export interface GetHorizontalPropertiesResult {

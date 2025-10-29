@@ -35,7 +35,7 @@ export async function getVotingDetailsAction(
   params: GetVotingDetailsParams
 ): Promise<VotingDetailsResult> {
   const { hpId, votingGroupId, votingId, token } = params;
-  const url = `${env.API_BASE_URL}/horizontal-properties/${hpId}/voting-groups/${votingGroupId}/votings/${votingId}/voting-details`;
+  const url = `${env.API_BASE_URL}/horizontal-properties/votings/${votingId}/voting-details?business_id=${hpId}&group_id=${votingGroupId}`;
   const startTime = Date.now();
 
   logHttpRequest({

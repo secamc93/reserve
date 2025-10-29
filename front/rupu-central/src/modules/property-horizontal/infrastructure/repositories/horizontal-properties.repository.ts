@@ -27,7 +27,8 @@ export class HorizontalPropertiesRepository implements IHorizontalPropertiesRepo
       code, 
       isActive, 
       orderBy, 
-      orderDir 
+      orderDir,
+      business_id // Nuevo parámetro para filtrar por business
     } = params;
 
     // Construir query params
@@ -41,6 +42,7 @@ export class HorizontalPropertiesRepository implements IHorizontalPropertiesRepo
     if (isActive !== undefined) queryParams.append('is_active', isActive.toString());
     if (orderBy) queryParams.append('order_by', orderBy);
     if (orderDir) queryParams.append('order_dir', orderDir);
+    if (business_id) queryParams.append('business_id', business_id.toString());
 
     const url = `${env.API_BASE_URL}/horizontal-properties?${queryParams.toString()}`;
     const startTime = Date.now();
@@ -110,8 +112,13 @@ export class HorizontalPropertiesRepository implements IHorizontalPropertiesRepo
   }
 
   async getHorizontalPropertyById(params: GetHorizontalPropertyByIdParams): Promise<HorizontalProperty> {
-    const { token, id } = params;
-    const url = `${env.API_BASE_URL}/horizontal-properties/${id}`;
+    const { token, id, business_id } = params;
+    
+    // Construir query params
+    const queryParams = new URLSearchParams();
+    if (business_id) queryParams.append('business_id', business_id.toString());
+    
+    const url = `${env.API_BASE_URL}/horizontal-properties/${id}?${queryParams.toString()}`;
     const startTime = Date.now();
 
     logHttpRequest({

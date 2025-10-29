@@ -51,9 +51,9 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
   const loadVotingGroups = async () => {
     setLoading(true);
     try {
-      const token = TokenStorage.getToken();
+      const token = TokenStorage.getBusinessToken();
       if (!token) {
-        console.error('❌ No hay token disponible');
+        console.error('❌ No hay business token disponible. Debe seleccionar un negocio primero.');
         setLoading(false);
         return;
       }

@@ -13,11 +13,13 @@ export interface GetHorizontalPropertiesParams {
   isActive?: boolean;
   orderBy?: string;
   orderDir?: 'asc' | 'desc';
+  business_id?: number; // Nuevo parámetro para filtrar por business
 }
 
 export interface GetHorizontalPropertyByIdParams {
   token: string;
   id: number;
+  business_id?: number; // Nuevo parámetro para filtrar por business
 }
 
 export interface CreateHorizontalPropertyParams {

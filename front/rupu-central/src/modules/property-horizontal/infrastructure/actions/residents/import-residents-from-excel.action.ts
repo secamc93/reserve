@@ -30,7 +30,7 @@ export async function importResidentsFromExcelAction(
 ): Promise<ImportResidentsResponse> {
   try {
     const { token, hpId, file } = input;
-    const url = `${env.API_BASE_URL}/horizontal-properties/${hpId}/residents/import-excel`;
+    const url = `${env.API_BASE_URL}/horizontal-properties/residents/import-excel?business_id=${hpId}`;
     const startTime = Date.now();
 
     // Crear FormData para enviar el archivo

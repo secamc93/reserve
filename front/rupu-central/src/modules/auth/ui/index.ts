@@ -4,6 +4,7 @@
 
 // Auth components
 export * from './login-form';
+export * from './business-selector';
 
 // IAM components
 export * from './iam-nav';

@@ -56,7 +56,7 @@ export function useAuth(
   loginAction: (data: LoginData) => Promise<LoginResult>
 ): UseAuthReturn {
   const [isAuthenticated, setIsAuthenticated] = useState(() => 
-    TokenStorage.hasToken()
+    TokenStorage.hasSessionToken()
   );
   const [user, setUser] = useState(() => 
     TokenStorage.getUser()
@@ -68,8 +68,8 @@ export function useAuth(
         const result = await loginAction(data);
 
         if (result.success && result.data) {
-          // Guardar token en localStorage
-          TokenStorage.setToken(result.data.token);
+          // Guardar session token en localStorage
+          TokenStorage.setSessionToken(result.data.token);
           
           // Guardar datos del usuario en localStorage
           const userData = {

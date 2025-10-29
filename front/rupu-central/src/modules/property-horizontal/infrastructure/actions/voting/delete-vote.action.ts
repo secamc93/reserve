@@ -26,7 +26,7 @@ export async function deleteVoteAction(
   try {
     const { token, hpId, groupId, votingId, voteId } = input;
     
-    const url = `${env.API_BASE_URL}/horizontal-properties/${hpId}/voting-groups/${groupId}/votings/${votingId}/votes/${voteId}`;
+  const url = `${env.API_BASE_URL}/horizontal-properties/votes/${voteId}?business_id=${hpId}&group_id=${groupId}&voting_id=${votingId}`;
     
     console.log('🗑️ [DELETE VOTE] Eliminando voto:', { url, voteId });
 

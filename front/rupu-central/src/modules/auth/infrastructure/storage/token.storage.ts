@@ -5,6 +5,8 @@
  */
 
 const TOKEN_KEY = 'auth_token';
+const SESSION_TOKEN_KEY = 'session_token';
+const BUSINESS_TOKEN_KEY = 'business_token';
 const USER_KEY = 'auth_user';
 const BUSINESS_IDS_KEY = 'auth_business_ids';
 const BUSINESSES_DATA_KEY = 'auth_businesses_data';
@@ -32,51 +34,169 @@ export interface BusinessData {
 
 export class TokenStorage {
   /**
-   * Guarda el token en localStorage
+   * Guarda el token de sesión (token principal) en localStorage
    */
-  static setToken(token: string): void {
+  static setSessionToken(token: string): void {
     if (typeof window === 'undefined') return;
     try {
-      console.log('🔐 TokenStorage.setToken - Guardando token:', token.substring(0, 50) + '...');
-      localStorage.setItem(TOKEN_KEY, token);
-      console.log('✅ TokenStorage.setToken - Token guardado exitosamente');
+      console.log('🔐 TokenStorage.setSessionToken - Guardando session token:', token.substring(0, 50) + '...');
+      localStorage.setItem(SESSION_TOKEN_KEY, token);
+      console.log('✅ TokenStorage.setSessionToken - Session token guardado exitosamente');
     } catch (error) {
-      console.error('Error guardando token:', error);
+      console.error('Error guardando session token:', error);
     }
   }
 
   /**
-   * Obtiene el token de localStorage
+   * Obtiene el token de sesión de localStorage
    */
-  static getToken(): string | null {
+  static getSessionToken(): string | null {
     if (typeof window === 'undefined') return null;
     try {
-      const token = localStorage.getItem(TOKEN_KEY);
-      console.log('🔍 TokenStorage.getToken - Token obtenido:', token ? token.substring(0, 50) + '...' : 'null');
+      const token = localStorage.getItem(SESSION_TOKEN_KEY);
+      console.log('🔍 TokenStorage.getSessionToken - Session token obtenido:', token ? token.substring(0, 50) + '...' : 'null');
       return token;
     } catch (error) {
-      console.error('Error obteniendo token:', error);
+      console.error('Error obteniendo session token:', error);
       return null;
     }
   }
 
   /**
-   * Elimina el token de localStorage
+   * Elimina el token de sesión de localStorage
    */
-  static removeToken(): void {
+  static removeSessionToken(): void {
     if (typeof window === 'undefined') return;
     try {
-      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(SESSION_TOKEN_KEY);
     } catch (error) {
-      console.error('Error eliminando token:', error);
+      console.error('Error eliminando session token:', error);
     }
   }
 
   /**
-   * Verifica si existe un token
+   * Guarda el business token en localStorage
+   */
+  static setBusinessToken(token: string): void {
+    if (typeof window === 'undefined') return;
+    try {
+      console.log('🔐 TokenStorage.setBusinessToken - Guardando business token:', token.substring(0, 50) + '...');
+      localStorage.setItem(BUSINESS_TOKEN_KEY, token);
+      console.log('✅ TokenStorage.setBusinessToken - Business token guardado exitosamente');
+    } catch (error) {
+      console.error('Error guardando business token:', error);
+    }
+  }
+
+  /**
+   * Obtiene el business token de localStorage
+   */
+  static getBusinessToken(): string | null {
+    if (typeof window === 'undefined') return null;
+    try {
+      const token = localStorage.getItem(BUSINESS_TOKEN_KEY);
+      console.log('🔍 TokenStorage.getBusinessToken - Business token obtenido:', token ? token.substring(0, 50) + '...' : 'null');
+      return token;
+    } catch (error) {
+      console.error('Error obteniendo business token:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Elimina el business token de localStorage
+   */
+  static removeBusinessToken(): void {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.removeItem(BUSINESS_TOKEN_KEY);
+    } catch (error) {
+      console.error('Error eliminando business token:', error);
+    }
+  }
+
+  /**
+   * Método de conveniencia: obtiene el token activo para APIs (business token si existe, sino session token)
+   * Mantiene compatibilidad con código existente que usa getToken() para llamadas de negocio.
+   */
+  static getToken(): string | null {
+    return this.getBusinessToken() || this.getSessionToken();
+  }
+
+  /**
+   * Alias de compatibilidad: setToken afecta el BUSINESS token.
+   * Úsalo para establecer el token que se usa en todas las APIs.
+   */
+  static setToken(token: string): void {
+    this.setBusinessToken(token);
+  }
+
+  /**
+   * Método de conveniencia: establece ambos tokens
+   */
+  static setTokens(sessionToken: string, businessToken?: string): void {
+    this.setSessionToken(sessionToken);
+    if (businessToken) {
+      this.setBusinessToken(businessToken);
+    }
+  }
+
+  /**
+   * Elimina solo el BUSINESS token (compatibilidad con código existente)
+   */
+  static removeToken(): void {
+    this.removeBusinessToken();
+  }
+
+  /**
+   * Elimina ambos tokens (session + business)
+   */
+  static removeAllTokens(): void {
+    this.removeSessionToken();
+    this.removeBusinessToken();
+  }
+
+  /**
+   * Alias semántico para el token principal (session token)
+   */
+  static setMainToken(token: string): void {
+    this.setSessionToken(token);
+  }
+
+  static getMainToken(): string | null {
+    return this.getSessionToken();
+  }
+
+  static removeMainToken(): void {
+    this.removeSessionToken();
+  }
+
+  /**
+   * Método de conveniencia: verifica si hay tokens válidos (ambos presentes)
+   */
+  static hasValidTokens(): boolean {
+    return !!(this.getSessionToken() && this.getBusinessToken());
+  }
+
+  /**
+   * Método de conveniencia: verifica si hay session token
+   */
+  static hasSessionToken(): boolean {
+    return !!this.getSessionToken();
+  }
+
+  /**
+   * Método de conveniencia: verifica si hay business token
+   */
+  static hasBusinessToken(): boolean {
+    return !!this.getBusinessToken();
+  }
+
+  /**
+   * Verifica si existe un token de negocio (compatibilidad con código existente)
    */
   static hasToken(): boolean {
-    return !!this.getToken();
+    return this.hasBusinessToken();
   }
 
   /**
@@ -341,10 +461,11 @@ export class TokenStorage {
   }
 
   /**
-   * Limpia toda la sesión (token + usuario + business IDs + datos + negocio activo + colores)
+   * Limpia toda la sesión (todos los tokens + usuario + business IDs + datos + negocio activo + colores)
    */
   static clearSession(): void {
-    this.removeToken();
+    this.removeSessionToken();
+    this.removeBusinessToken();
     this.removeUser();
     this.removeBusinessIds();
     this.removeBusinessesData();

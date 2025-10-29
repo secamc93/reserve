@@ -16,7 +16,10 @@ import { BackendGetVotingGroupsResponse, BackendCreateVotingGroupResponse, Backe
 export class VotingGroupsRepository implements IVotingGroupsRepository {
   async getVotingGroups(params: GetVotingGroupsParams): Promise<VotingGroupsList> {
     const { token, businessId } = params;
-    const url = `${env.API_BASE_URL}/horizontal-properties/${businessId}/voting-groups`;
+    // Nueva URL: listar grupos con business_id como query param
+    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups?${
+      businessId !== undefined ? `business_id=${businessId}` : ''
+    }`;
     const startTime = Date.now();
 
     logHttpRequest({
@@ -82,11 +85,13 @@ export class VotingGroupsRepository implements IVotingGroupsRepository {
 
   async createVotingGroup(params: CreateVotingGroupParams): Promise<VotingGroup> {
     const { token, businessId, data } = params;
-    const url = `${env.API_BASE_URL}/horizontal-properties/${businessId}/voting-groups`;
+    // Nueva URL: crear grupo, business_id va en el body
+    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups`;
     const startTime = Date.now();
 
     // Solo incluir campos que no sean undefined
     const requestBody: Record<string, unknown> = {
+      business_id: businessId,
       name: data.name,
       voting_start_date: data.votingStartDate,
       voting_end_date: data.votingEndDate,
@@ -164,11 +169,12 @@ export class VotingGroupsRepository implements IVotingGroupsRepository {
 
   async updateVotingGroup(params: UpdateVotingGroupParams): Promise<VotingGroup> {
     const { token, hpId, groupId, data } = params;
-    const url = `${env.API_BASE_URL}/horizontal-properties/${hpId}/voting-groups/${groupId}`;
+    // Nueva URL: actualizar grupo, business_id por body
+    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${groupId}`;
     const startTime = Date.now();
 
     // Solo incluir campos que no sean undefined
-    const requestBody: Record<string, unknown> = {};
+    const requestBody: Record<string, unknown> = { business_id: hpId };
     
     if (data.name !== undefined) requestBody.name = data.name;
     if (data.description !== undefined) requestBody.description = data.description;
@@ -245,7 +251,10 @@ export class VotingGroupsRepository implements IVotingGroupsRepository {
 
   async deleteVotingGroup(params: DeleteVotingGroupParams): Promise<string> {
     const { token, hpId, groupId } = params;
-    const url = `${env.API_BASE_URL}/horizontal-properties/${hpId}/voting-groups/${groupId}`;
+    // Nueva URL: eliminar grupo, business_id por query opcional
+    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${groupId}${
+      hpId !== undefined ? `?business_id=${hpId}` : ''
+    }`;
     const startTime = Date.now();
 
     logHttpRequest({

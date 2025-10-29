@@ -10,6 +10,7 @@ import { createUserAction } from './create-user.action';
 import { deleteUserAction } from './delete-user.action';
 import { updateUserAction } from './update-user.action';
 import { getUserByIdAction } from './get-user-by-id.action';
+import { businessTokenAction } from './business-token.action';
 
 // Interfaz para actions de usuarios
 export interface UsersActionsInput {
@@ -19,6 +20,7 @@ export interface UsersActionsInput {
   deleteUser: (input: Parameters<typeof deleteUserAction>[0]) => ReturnType<typeof deleteUserAction>;
   updateUser: (input: Parameters<typeof updateUserAction>[0]) => ReturnType<typeof updateUserAction>;
   getUserById: (input: Parameters<typeof getUserByIdAction>[0]) => ReturnType<typeof getUserByIdAction>;
+  businessToken: (input: Parameters<typeof businessTokenAction>[0], sessionToken: string) => ReturnType<typeof businessTokenAction>;
 }
 
 // Constructor centralizado para actions de usuarios
@@ -58,6 +60,11 @@ export class UsersActions implements UsersActionsInput {
   async getUserById(input: Parameters<typeof getUserByIdAction>[0]) {
     return getUserByIdAction(input, this.authUseCases);
   }
+
+  // Business Token
+  async businessToken(input: Parameters<typeof businessTokenAction>[0], sessionToken: string) {
+    return businessTokenAction(input, sessionToken);
+  }
 }
 
 // Exportar actions individuales
@@ -67,6 +74,7 @@ export * from './create-user.action';
 export * from './delete-user.action';
 export * from './update-user.action';
 export * from './get-user-by-id.action';
+export * from './business-token.action';
 
 // Exportar interfaces de request y response
 export * from './request';
