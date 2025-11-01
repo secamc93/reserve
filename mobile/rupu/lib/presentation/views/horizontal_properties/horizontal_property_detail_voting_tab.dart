@@ -71,10 +71,7 @@ class _VotingTab extends GetWidget<HorizontalPropertyVotingController> {
 class _VotingGroupCard extends StatelessWidget {
   final HorizontalPropertyVotingGroup group;
   final VoidCallback onOpenAttendance;
-  const _VotingGroupCard({
-    required this.group,
-    required this.onOpenAttendance,
-  });
+  const _VotingGroupCard({required this.group, required this.onOpenAttendance});
 
   @override
   Widget build(BuildContext context) {
@@ -108,81 +105,86 @@ class _VotingGroupCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: cs.primary.withValues(alpha: .12),
-                    shape: BoxShape.circle,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: cs.primary.withValues(alpha: .12),
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(
+                        Icons.how_to_vote_outlined,
+                        color: cs.primary,
+                      ),
+                    ),
+                    const Spacer(),
+                    _StatusChip(
+                      label: labelChip,
+                      background: bgChip,
+                      foreground: fgChip,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  group.name,
+                  style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                ),
+                if ((group.description?.isNotEmpty ?? false)) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    group.description!,
+                    style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                   ),
-                  alignment: Alignment.center,
-                  child: Icon(Icons.how_to_vote_outlined, color: cs.primary),
+                ],
+                const SizedBox(height: 16),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    _DetailLine(
+                      icon: Icons.calendar_month_outlined,
+                      label: 'Inicio',
+                      value: _formatDate(group.votingStartDate),
+                    ),
+                    _DetailLine(
+                      icon: Icons.event_outlined,
+                      label: 'Fin',
+                      value: _formatDate(group.votingEndDate),
+                    ),
+                    _DetailLine(
+                      icon: Icons.gavel_outlined,
+                      label: 'Requiere quórum',
+                      value: group.requiresQuorum ? 'Sí' : 'No',
+                    ),
+                    _DetailLine(
+                      icon: Icons.percent_outlined,
+                      label: 'Quórum',
+                      value: group.quorumPercentage != null
+                          ? '${group.quorumPercentage}%'
+                          : '--',
+                    ),
+                  ],
                 ),
-                const Spacer(),
-                _StatusChip(
-                  label: labelChip,
-                  background: bgChip,
-                  foreground: fgChip,
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              group.name,
-              style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-            ),
-            if ((group.description?.isNotEmpty ?? false)) ...[
-              const SizedBox(height: 6),
-              Text(
-                group.description!,
-                style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-              ),
-            ],
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                _DetailLine(
-                  icon: Icons.calendar_month_outlined,
-                  label: 'Inicio',
-                  value: _formatDate(group.votingStartDate),
-                ),
-                _DetailLine(
-                  icon: Icons.event_outlined,
-                  label: 'Fin',
-                  value: _formatDate(group.votingEndDate),
-                ),
-                _DetailLine(
-                  icon: Icons.gavel_outlined,
-                  label: 'Requiere quórum',
-                  value: group.requiresQuorum ? 'Sí' : 'No',
-                ),
-                _DetailLine(
-                  icon: Icons.percent_outlined,
-                  label: 'Quórum',
-                  value: group.quorumPercentage != null
-                      ? '${group.quorumPercentage}%'
-                      : '--',
+                const SizedBox(height: 16),
+                _CardActions(
+                  onView: onOpenAttendance,
+                  onEdit: () => _showActionFeedback(
+                    'Editar votación',
+                    'Funcionalidad disponible próximamente.',
+                  ),
+                  onDelete: () => _showActionFeedback(
+                    'Eliminar votación',
+                    'Contacta al administrador para continuar con la acción.',
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            _CardActions(
-              onView: onOpenAttendance,
-              onEdit: () => _showActionFeedback(
-                'Editar votación',
-                'Funcionalidad disponible próximamente.',
-              ),
-              onDelete: () => _showActionFeedback(
-                'Eliminar votación',
-                'Contacta al administrador para continuar con la acción.',
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

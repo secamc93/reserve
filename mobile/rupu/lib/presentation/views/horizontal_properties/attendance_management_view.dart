@@ -16,9 +16,9 @@ class AttendanceManagementView extends GetView<AttendanceManagementController> {
 
   @override
   String? get tag => AttendanceManagementController.tagFor(
-        propertyId: propertyId,
-        votingGroupId: votingGroupId,
-      );
+    propertyId: propertyId,
+    votingGroupId: votingGroupId,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -130,11 +130,7 @@ class AttendanceManagementView extends GetView<AttendanceManagementController> {
     );
   }
 
-  void _showComingSoon(
-    BuildContext context,
-    String title,
-    String message,
-  ) {
+  void _showComingSoon(BuildContext context, String title, String message) {
     if (Get.isSnackbarOpen) {
       Get.closeCurrentSnackbar();
     }
@@ -175,9 +171,7 @@ class _HeaderSection extends StatelessWidget {
         children: [
           Text(
             title,
-            style: tt.titleLarge?.copyWith(
-              fontWeight: FontWeight.w800,
-            ),
+            style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 8),
           Text(
@@ -280,8 +274,11 @@ class _AttendanceListCard extends StatelessWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.sticky_note_2_outlined,
-                          size: 18, color: cs.onSecondaryContainer),
+                      Icon(
+                        Icons.sticky_note_2_outlined,
+                        size: 18,
+                        color: cs.onSecondaryContainer,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -349,8 +346,7 @@ class _SummaryHighlights extends StatelessWidget {
 
     return Obx(() {
       final summary = controller.summary.value;
-      final isLoading =
-          controller.isLoadingSummary.value && summary == null;
+      final isLoading = controller.isLoadingSummary.value && summary == null;
       if (isLoading) {
         return const Center(child: CircularProgressIndicator());
       }
@@ -462,10 +458,7 @@ class _AttendanceRecordsSheet extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             color: cs.surface,
-            borderRadius: BorderRadius.only(
-              topLeft: radius,
-              topRight: radius,
-            ),
+            borderRadius: BorderRadius.only(topLeft: radius, topRight: radius),
           ),
           child: SafeArea(
             top: false,
@@ -483,18 +476,16 @@ class _AttendanceRecordsSheet extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   'Lista de asistencia',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleLarge
-                      ?.copyWith(fontWeight: FontWeight.w800),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   controller.selectedList.value?.title ?? '',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(color: cs.onSurfaceVariant),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                 ),
                 const SizedBox(height: 12),
                 Expanded(
@@ -508,14 +499,18 @@ class _AttendanceRecordsSheet extends StatelessWidget {
                       slivers: [
                         SliverPadding(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 8),
+                            horizontal: 20,
+                            vertical: 8,
+                          ),
                           sliver: SliverToBoxAdapter(
                             child: _SummaryGrid(summary: summary),
                           ),
                         ),
                         SliverPadding(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 8),
+                            horizontal: 20,
+                            vertical: 8,
+                          ),
                           sliver: SliverToBoxAdapter(
                             child: _FiltersSection(controller: controller),
                           ),
@@ -523,8 +518,7 @@ class _AttendanceRecordsSheet extends StatelessWidget {
                         if (loadingRecords)
                           const SliverFillRemaining(
                             hasScrollBody: false,
-                            child:
-                                Center(child: CircularProgressIndicator()),
+                            child: Center(child: CircularProgressIndicator()),
                           )
                         else if (error != null)
                           SliverFillRemaining(
@@ -549,9 +543,8 @@ class _AttendanceRecordsSheet extends StatelessWidget {
                             padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
                             sliver: SliverList.separated(
                               itemCount: records.length,
-                              separatorBuilder: (_, __) => const SizedBox(
-                                height: 14,
-                              ),
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(height: 14),
                               itemBuilder: (_, index) {
                                 final record = records[index];
                                 return _AttendanceRecordTile(
@@ -606,14 +599,32 @@ class _SummaryGrid extends StatelessWidget {
         summary!.totalUnits.toString(),
         Icons.apartment_outlined,
       ),
-      ('Asistieron', summary!.attendedUnits.toString(), Icons.people_alt_outlined),
+      (
+        'Asistieron',
+        summary!.attendedUnits.toString(),
+        Icons.people_alt_outlined,
+      ),
       ('Ausentes', summary!.absentUnits.toString(), Icons.person_off_outlined),
-      ('Propietario', summary!.attendedAsOwner.toString(), Icons.person_outline),
-      ('Apoderado', summary!.attendedAsProxy.toString(), Icons.assignment_ind_outlined),
-      ('Asistencia (Coef)', _formatPercent(summary!.attendanceRateByCoef),
-          Icons.percent_outlined),
-      ('Ausencia (Coef)', _formatPercent(summary!.absenceRateByCoef),
-          Icons.percent_rounded),
+      (
+        'Propietario',
+        summary!.attendedAsOwner.toString(),
+        Icons.person_outline,
+      ),
+      (
+        'Apoderado',
+        summary!.attendedAsProxy.toString(),
+        Icons.assignment_ind_outlined,
+      ),
+      (
+        'Asistencia (Coef)',
+        _formatPercent(summary!.attendanceRateByCoef),
+        Icons.percent_outlined,
+      ),
+      (
+        'Ausencia (Coef)',
+        _formatPercent(summary!.absenceRateByCoef),
+        Icons.percent_rounded,
+      ),
     ];
 
     return Wrap(
@@ -621,11 +632,8 @@ class _SummaryGrid extends StatelessWidget {
       runSpacing: 12,
       children: items
           .map(
-            (item) => _SummaryTile(
-              label: item.$1,
-              value: item.$2,
-              icon: item.$3,
-            ),
+            (item) =>
+                _SummaryTile(label: item.$1, value: item.$2, icon: item.$3),
           )
           .toList(),
     );
@@ -731,9 +739,14 @@ class _FiltersSection extends StatelessWidget {
                 child: Obx(() {
                   final selected = controller.attendanceFilter.value;
                   return DropdownButtonFormField<String?>(
-                    value: selected,
+                    initialValue: selected,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(fontSize: 13),
+
                     decoration: InputDecoration(
                       labelText: 'Asistencia',
+                      labelStyle: const TextStyle(fontSize: 13),
                       filled: true,
                       isDense: true,
                       prefixIcon: const Icon(Icons.filter_alt_outlined),
@@ -789,10 +802,7 @@ class _FiltersSection extends StatelessWidget {
 class _AttendanceRecordTile extends StatelessWidget {
   final AttendanceManagementController controller;
   final AttendanceRecord record;
-  const _AttendanceRecordTile({
-    required this.controller,
-    required this.record,
-  });
+  const _AttendanceRecordTile({required this.controller, required this.record});
 
   bool get _isAttended => record.attendedAsOwner || record.attendedAsProxy;
 
@@ -830,13 +840,14 @@ class _AttendanceRecordTile extends StatelessWidget {
                 const SizedBox(width: 12),
                 Text(
                   'Asistencia',
-                  style:
-                      tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                  style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const Spacer(),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: cs.primaryContainer.withValues(alpha: .5),
                     borderRadius: BorderRadius.circular(30),
@@ -1155,18 +1166,16 @@ class _AttendanceSummarySheet extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   'Resumen de asistencia',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleLarge
-                      ?.copyWith(fontWeight: FontWeight.w800),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   controller.selectedList.value?.title ?? '',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(color: cs.onSurfaceVariant),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                 ),
                 const SizedBox(height: 16),
                 Expanded(
@@ -1175,86 +1184,93 @@ class _AttendanceSummarySheet extends StatelessWidget {
                     child: isLoading
                         ? const Center(child: CircularProgressIndicator())
                         : summary == null
-                            ? const Center(
-                                child: _EmptyState(
-                                  icon: Icons.info_outline,
-                                  title: 'Sin información',
-                                  description:
-                                      'Todavía no hay datos disponibles para esta lista.',
-                                ),
-                              )
-                            : ListView(
-                                children: [
-                                  _SummaryCard(
-                                    title: 'Asistencia general',
-                                    items: [
-                                      _SummaryRowItem(
-                                        label: 'Total unidades',
-                                        value:
-                                            summary.totalUnits.toString(),
-                                      ),
-                                      _SummaryRowItem(
-                                        label: 'Asistieron',
-                                        value:
-                                            summary.attendedUnits.toString(),
-                                      ),
-                                      _SummaryRowItem(
-                                        label: 'Ausentes',
-                                        value: summary.absentUnits.toString(),
-                                      ),
-                                    ],
+                        ? const Center(
+                            child: _EmptyState(
+                              icon: Icons.info_outline,
+                              title: 'Sin información',
+                              description:
+                                  'Todavía no hay datos disponibles para esta lista.',
+                            ),
+                          )
+                        : ListView(
+                            children: [
+                              _SummaryCard(
+                                title: 'Asistencia general',
+                                items: [
+                                  _SummaryRowItem(
+                                    label: 'Total unidades',
+                                    value: summary.totalUnits.toString(),
                                   ),
-                                  const SizedBox(height: 16),
-                                  _SummaryCard(
-                                    title: 'Asistencia por propietario',
-                                    items: [
-                                      _SummaryRowItem(
-                                        label: 'Propietarios asistidos',
-                                        value: summary.attendedAsOwner.toString(),
-                                      ),
-                                      _SummaryRowItem(
-                                        label: 'Por apoderado',
-                                        value: summary.attendedAsProxy.toString(),
-                                      ),
-                                    ],
+                                  _SummaryRowItem(
+                                    label: 'Asistieron',
+                                    value: summary.attendedUnits.toString(),
                                   ),
-                                  const SizedBox(height: 16),
-                                  _SummaryCard(
-                                    title: 'Porcentajes detallados',
-                                    items: [
-                                      _SummaryRowItem(
-                                        label: 'Asistencia (cantidad)',
-                                        value: _formatPercent(summary.attendanceRate),
-                                      ),
-                                      _SummaryRowItem(
-                                        label: 'Ausencia (cantidad)',
-                                        value: _formatPercent(summary.absenceRate),
-                                      ),
-                                      _SummaryRowItem(
-                                        label: 'Ausencia (coeficiente)',
-                                        value:
-                                            _formatPercent(summary.absenceRateByCoef),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 16),
-                                  _SummaryProgressCard(
-                                    attendanceProgress:
-                                        _progress(summary.attendanceRateByCoef),
-                                    absenceProgress:
-                                        _progress(summary.absenceRateByCoef),
-                                    attendanceLabel: _formatPercent(
-                                        summary.attendanceRateByCoef),
-                                    absenceLabel:
-                                        _formatPercent(summary.absenceRateByCoef),
+                                  _SummaryRowItem(
+                                    label: 'Ausentes',
+                                    value: summary.absentUnits.toString(),
                                   ),
                                 ],
                               ),
+                              const SizedBox(height: 16),
+                              _SummaryCard(
+                                title: 'Asistencia por propietario',
+                                items: [
+                                  _SummaryRowItem(
+                                    label: 'Propietarios asistidos',
+                                    value: summary.attendedAsOwner.toString(),
+                                  ),
+                                  _SummaryRowItem(
+                                    label: 'Por apoderado',
+                                    value: summary.attendedAsProxy.toString(),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              _SummaryCard(
+                                title: 'Porcentajes detallados',
+                                items: [
+                                  _SummaryRowItem(
+                                    label: 'Asistencia (cantidad)',
+                                    value: _formatPercent(
+                                      summary.attendanceRate,
+                                    ),
+                                  ),
+                                  _SummaryRowItem(
+                                    label: 'Ausencia (cantidad)',
+                                    value: _formatPercent(summary.absenceRate),
+                                  ),
+                                  _SummaryRowItem(
+                                    label: 'Ausencia (coeficiente)',
+                                    value: _formatPercent(
+                                      summary.absenceRateByCoef,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              _SummaryProgressCard(
+                                attendanceProgress: _progress(
+                                  summary.attendanceRateByCoef,
+                                ),
+                                absenceProgress: _progress(
+                                  summary.absenceRateByCoef,
+                                ),
+                                attendanceLabel: _formatPercent(
+                                  summary.attendanceRateByCoef,
+                                ),
+                                absenceLabel: _formatPercent(
+                                  summary.absenceRateByCoef,
+                                ),
+                              ),
+                            ],
+                          ),
                   ),
                 ),
                 Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
                   child: Row(
                     children: [
                       Expanded(
@@ -1433,10 +1449,7 @@ class _ProgressRow extends StatelessWidget {
                 style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
             ),
-            Text(
-              valueLabel,
-              style: tt.bodyMedium?.copyWith(color: color),
-            ),
+            Text(valueLabel, style: tt.bodyMedium?.copyWith(color: color)),
           ],
         ),
         const SizedBox(height: 8),
@@ -1475,17 +1488,13 @@ class _InlineError extends StatelessWidget {
           Expanded(
             child: Text(
               message,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: cs.onErrorContainer),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: cs.onErrorContainer),
             ),
           ),
           if (onRetry != null)
-            TextButton(
-              onPressed: onRetry,
-              child: const Text('Reintentar'),
-            ),
+            TextButton(onPressed: onRetry, child: const Text('Reintentar')),
         ],
       ),
     );
