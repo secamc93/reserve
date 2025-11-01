@@ -479,7 +479,7 @@ class _PropertyCard extends StatelessWidget {
                           )
                         else
                           Image.network(
-                            trimmedUrl!,
+                            trimmedUrl,
                             fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) => Image.asset(
                               'assets/images/logorufu.png',

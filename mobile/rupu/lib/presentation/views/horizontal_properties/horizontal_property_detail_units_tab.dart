@@ -27,7 +27,6 @@ class _UnitsTab extends GetWidget<HorizontalPropertyUnitsController> {
               : width >= 900
               ? 2
               : 1;
-          final aspect = crossAxis == 1 ? 1.18 : 1.05;
 
           return RefreshIndicator(
             onRefresh: controller.refresh,

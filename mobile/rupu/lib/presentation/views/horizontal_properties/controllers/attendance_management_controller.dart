@@ -22,10 +22,8 @@ class AttendanceManagementController extends GetxController {
     AttendanceRepository? repository,
   }) : repository = repository ?? AttendanceRepositoryImpl();
 
-  static String tagFor({
-    required int propertyId,
-    required int votingGroupId,
-  }) => 'attendance-$propertyId-$votingGroupId';
+  static String tagFor({required int propertyId, required int votingGroupId}) =>
+      'attendance-$propertyId-$votingGroupId';
 
   final lists = <AttendanceList>[].obs;
   final isLoadingLists = false.obs;
@@ -212,19 +210,6 @@ class AttendanceManagementController extends GetxController {
           : await repository.markAttendance(recordId: record.id);
       _replaceRecord(updated);
       await fetchSummary(showLoader: false);
-      final message = isAttended
-          ? 'Asistencia desmarcada exitosamente.'
-          : 'Asistencia marcada exitosamente.';
-      if (Get.isSnackbarOpen) {
-        Get.closeCurrentSnackbar();
-      }
-      Get.snackbar(
-        'Gestión de asistencia',
-        message,
-        snackPosition: SnackPosition.BOTTOM,
-        duration: const Duration(seconds: 2),
-        margin: const EdgeInsets.all(16),
-      );
     } catch (_) {
       Get.snackbar(
         'Gestión de asistencia',
@@ -240,9 +225,14 @@ class AttendanceManagementController extends GetxController {
   }
 
   void _replaceRecord(AttendanceRecord updated) {
-    final index = records.indexWhere((element) => element.id == updated.id);
-    if (index >= 0) {
-      records[index] = updated;
+    final idx = records.indexWhere((e) => e.id == updated.id);
+    if (idx >= 0) {
+      records[idx] = updated;
+      records.refresh();
+    } else {
+      // opcional: agrega o ignora
+      // records.insert(0, updated);
+      // records.refresh();
     }
   }
 }

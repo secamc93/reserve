@@ -211,6 +211,9 @@ class _AttendanceListCard extends StatelessWidget {
     final chipColors = isActive
         ? (cs.primaryContainer, cs.onPrimaryContainer, 'ACTIVA')
         : (cs.errorContainer, cs.onErrorContainer, 'INACTIVA');
+    final desc = list.description;
+    // list.notes
+    final notes = list.notes;
 
     return Container(
       decoration: BoxDecoration(
@@ -255,14 +258,15 @@ class _AttendanceListCard extends StatelessWidget {
               list.title,
               style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800),
             ),
-            if (list.description?.isNotEmpty == true) ...[
+            // list.description
+            if (desc != null && desc.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(
-                list.description!,
+                desc,
                 style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
               ),
             ],
-            if (list.notes?.isNotEmpty == true) ...[
+            if (notes != null && notes.isNotEmpty) ...[
               const SizedBox(height: 8),
               DecoratedBox(
                 decoration: BoxDecoration(
@@ -282,7 +286,7 @@ class _AttendanceListCard extends StatelessWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          list.notes!,
+                          notes,
                           style: tt.bodyMedium?.copyWith(
                             color: cs.onSecondaryContainer,
                           ),
@@ -293,6 +297,7 @@ class _AttendanceListCard extends StatelessWidget {
                 ),
               ),
             ],
+
             const SizedBox(height: 20),
             _SummaryHighlights(controller: controller),
             const SizedBox(height: 20),
@@ -571,9 +576,10 @@ class _SummaryGrid extends StatelessWidget {
   final AttendanceSummary? summary;
   const _SummaryGrid({required this.summary});
 
-  String _formatPercent(double value) {
-    if (value.isNaN || !value.isFinite) return '0.0%';
-    final rounded = (value * 10).roundToDouble() / 10;
+  String _formatPercent(double? value) {
+    final v = (value ?? 0).toDouble();
+    if (v.isNaN || !v.isFinite) return '0.0%';
+    final rounded = (v * 10).roundToDouble() / 10;
     return '${rounded.toStringAsFixed(1)}%';
   }
 
@@ -582,7 +588,8 @@ class _SummaryGrid extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    if (summary == null) {
+    final s = summary;
+    if (s == null) {
       return Container(
         padding: const EdgeInsets.symmetric(vertical: 18),
         alignment: Alignment.center,
@@ -594,48 +601,41 @@ class _SummaryGrid extends StatelessWidget {
     }
 
     final items = [
-      (
-        'Total unidades',
-        summary!.totalUnits.toString(),
-        Icons.apartment_outlined,
-      ),
-      (
-        'Asistieron',
-        summary!.attendedUnits.toString(),
-        Icons.people_alt_outlined,
-      ),
-      ('Ausentes', summary!.absentUnits.toString(), Icons.person_off_outlined),
-      (
-        'Propietario',
-        summary!.attendedAsOwner.toString(),
-        Icons.person_outline,
-      ),
+      ('Total unidades', (s.totalUnits).toString(), Icons.apartment_outlined),
+      ('Asistieron', (s.attendedUnits).toString(), Icons.people_alt_outlined),
+      ('Ausentes', (s.absentUnits).toString(), Icons.person_off_outlined),
+      ('Propietario', (s.attendedAsOwner).toString(), Icons.person_outline),
       (
         'Apoderado',
-        summary!.attendedAsProxy.toString(),
+        (s.attendedAsProxy).toString(),
         Icons.assignment_ind_outlined,
       ),
       (
         'Asistencia (Coef)',
-        _formatPercent(summary!.attendanceRateByCoef),
+        _formatPercent(s.attendanceRateByCoef),
         Icons.percent_outlined,
       ),
       (
         'Ausencia (Coef)',
-        _formatPercent(summary!.absenceRateByCoef),
+        _formatPercent(s.absenceRateByCoef),
         Icons.percent_rounded,
       ),
     ];
 
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: items
-          .map(
-            (item) =>
-                _SummaryTile(label: item.$1, value: item.$2, icon: item.$3),
-          )
-          .toList(),
+    return GridView.builder(
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        mainAxisExtent: 128,
+      ),
+      itemCount: items.length,
+      itemBuilder: (_, i) {
+        final item = items[i];
+        return _SummaryTile(label: item.$1, value: item.$2, icon: item.$3);
+      },
     );
   }
 }
@@ -655,8 +655,6 @@ class _SummaryTile extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     return Container(
-      width: 170,
-      constraints: const BoxConstraints(minWidth: 150),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
@@ -672,17 +670,22 @@ class _SummaryTile extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min, // 👈 permite ajustar al alto disponible
         children: [
           Icon(icon, size: 20, color: cs.primary),
           const SizedBox(height: 12),
           Text(
             value,
             style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            maxLines: 2, // 👈 evita desborde vertical
+            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 6),
           Text(
             label,
             style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -721,7 +724,9 @@ class _FiltersSection extends StatelessWidget {
                   controller: controller.unitFilterCtrl,
                   decoration: InputDecoration(
                     labelText: 'Unidad',
-                    hintText: 'CASA 101',
+                    labelStyle: const TextStyle(fontSize: 13),
+                    hintText: 'Ej CASA 101',
+                    hintStyle: const TextStyle(fontSize: 13),
                     prefixIcon: const Icon(Icons.home_work_outlined),
                     filled: true,
                     isDense: true,
@@ -735,18 +740,18 @@ class _FiltersSection extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               SizedBox(
-                width: 180,
+                width: 170,
                 child: Obx(() {
                   final selected = controller.attendanceFilter.value;
                   return DropdownButtonFormField<String?>(
                     initialValue: selected,
                     style: Theme.of(
                       context,
-                    ).textTheme.bodyMedium?.copyWith(fontSize: 13),
+                    ).textTheme.bodyMedium?.copyWith(fontSize: 12),
 
                     decoration: InputDecoration(
                       labelText: 'Asistencia',
-                      labelStyle: const TextStyle(fontSize: 13),
+                      labelStyle: const TextStyle(fontSize: 12),
                       filled: true,
                       isDense: true,
                       prefixIcon: const Icon(Icons.filter_alt_outlined),
@@ -811,6 +816,15 @@ class _AttendanceRecordTile extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final isProcessing = controller.isRecordMarked(record.id);
+    final unit = record.unitNumber;
+    final unitLabel = (unit != null && unit.trim().isNotEmpty)
+        ? unit
+        : 'Sin unidad';
+
+    final owner = record.residentName;
+    final ownerLabel = (owner != null && owner.trim().isNotEmpty)
+        ? owner.trim()
+        : 'Sin propietario asignado';
 
     return Container(
       decoration: BoxDecoration(
@@ -853,9 +867,7 @@ class _AttendanceRecordTile extends StatelessWidget {
                     borderRadius: BorderRadius.circular(30),
                   ),
                   child: Text(
-                    record.unitNumber?.isNotEmpty == true
-                        ? record.unitNumber!
-                        : 'Sin unidad',
+                    unitLabel,
                     style: tt.labelLarge?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: cs.onPrimaryContainer,
@@ -868,9 +880,7 @@ class _AttendanceRecordTile extends StatelessWidget {
             _InfoLine(
               icon: Icons.person_outline,
               label: 'Propietario',
-              value: record.residentName?.trim().isNotEmpty == true
-                  ? record.residentName!.trim()
-                  : 'Sin propietario asignado',
+              value: ownerLabel,
             ),
             const SizedBox(height: 12),
             _ProxySection(controller: controller, record: record),
