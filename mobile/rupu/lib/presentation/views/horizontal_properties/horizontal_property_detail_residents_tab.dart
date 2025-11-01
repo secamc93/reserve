@@ -517,6 +517,10 @@ class _ResidentCard extends StatelessWidget {
                 _MainResidenceIndicator(isMain: resident.isMainResident),
                 const SizedBox(height: 10),
                 _CardActions(
+                  onView: () => _showActionFeedback(
+                    'Ver residente',
+                    'Funcionalidad disponible próximamente.',
+                  ),
                   onEdit: () => _showActionFeedback(
                     'Editar residente',
                     'Funcionalidad disponible próximamente.',

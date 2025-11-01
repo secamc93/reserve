@@ -795,9 +795,23 @@ class _StatusChip extends StatelessWidget {
 }
 
 class _CardActions extends StatelessWidget {
+  final VoidCallback onView;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
-  const _CardActions({required this.onEdit, required this.onDelete});
+  const _CardActions({
+    required this.onView,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  ButtonStyle _primaryStyle(BuildContext context) {
+    return FilledButton.styleFrom(
+      minimumSize: const Size(0, 36),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+    );
+  }
 
   ButtonStyle _tonalStyle(BuildContext context) {
     return FilledButton.styleFrom(
@@ -825,6 +839,12 @@ class _CardActions extends StatelessWidget {
       spacing: 8,
       runSpacing: 8,
       children: [
+        FilledButton.icon(
+          style: _primaryStyle(context),
+          onPressed: onView,
+          icon: const Icon(Icons.visibility_outlined, size: 18),
+          label: const Text('Ver'),
+        ),
         FilledButton.tonalIcon(
           style: _tonalStyle(context),
           onPressed: onEdit,

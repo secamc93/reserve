@@ -1,6 +1,7 @@
 library horizontal_property_detail_view;
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:get/get.dart';
 import 'package:rupu/domain/entities/horizontal_property_residents_page.dart';
 import 'package:rupu/domain/entities/horizontal_property_units_page.dart';

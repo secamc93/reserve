@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:rupu/domain/entities/horizontal_property_voting_groups.dart';
 
 import '../../presentation/views/views.dart';
 
@@ -187,5 +188,50 @@ class RolesPermissionsBinding {
     if (!Get.isRegistered<RolesPermissionsController>()) {
       Get.put(RolesPermissionsController());
     }
+  }
+}
+
+class AttendanceManagementBinding {
+  static void register({
+    required int propertyId,
+    required int votingGroupId,
+    required int businessId,
+    HorizontalPropertyVotingGroup? group,
+  }) {
+    final tag =
+        AttendanceManagementController.tagFor(propertyId: propertyId, votingGroupId: votingGroupId);
+    if (Get.isRegistered<AttendanceManagementController>(tag: tag)) {
+      return;
+    }
+
+    var resolvedGroup = group;
+    var resolvedBusinessId = businessId;
+
+    if (resolvedGroup == null || resolvedBusinessId <= 0) {
+      final votingTag = HorizontalPropertyVotingController.tagFor(propertyId);
+      if (Get.isRegistered<HorizontalPropertyVotingController>(tag: votingTag)) {
+        final votingController =
+            Get.find<HorizontalPropertyVotingController>(tag: votingTag);
+        resolvedGroup ??=
+            votingController.groups.firstWhereOrNull((g) => g.id == votingGroupId);
+        resolvedBusinessId = resolvedGroup?.businessId ?? resolvedBusinessId;
+      }
+    }
+
+    if (resolvedBusinessId <= 0 &&
+        Get.isRegistered<LoginController>() &&
+        Get.find<LoginController>().selectedBusinessId != null) {
+      resolvedBusinessId = Get.find<LoginController>().selectedBusinessId!;
+    }
+
+    Get.put(
+      AttendanceManagementController(
+        propertyId: propertyId,
+        votingGroupId: votingGroupId,
+        businessId: resolvedBusinessId,
+        group: resolvedGroup,
+      ),
+      tag: tag,
+    );
   }
 }

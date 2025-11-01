@@ -436,6 +436,10 @@ class _UnitCard extends StatelessWidget {
                 ),
                 // const Spacer(),
                 _CardActions(
+                  onView: () => _showActionFeedback(
+                    'Ver unidad',
+                    'Funcionalidad disponible próximamente.',
+                  ),
                   onEdit: () => _showActionFeedback(
                     'Editar unidad',
                     'Funcionalidad disponible próximamente.',

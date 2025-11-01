@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:get/get.dart';
 import 'package:rupu/config/routers/app_bindings.dart';
+import 'package:rupu/domain/entities/horizontal_property_voting_groups.dart';
 import 'package:rupu/presentation/widgets/shared/custom_bottom_navigation.dart';
 import '../../presentation/screens/screens.dart';
 import '../../presentation/views/views.dart';
@@ -50,6 +51,19 @@ Widget _guardAccess({
   }
 
   return builder(home);
+}
+
+HorizontalPropertyVotingGroup? _resolveVotingGroup({
+  required int propertyId,
+  required int groupId,
+}) {
+  final tag = HorizontalPropertyVotingController.tagFor(propertyId);
+  if (Get.isRegistered<HorizontalPropertyVotingController>(tag: tag)) {
+    return Get.find<HorizontalPropertyVotingController>(tag: tag)
+        .groups
+        .firstWhereOrNull((g) => g.id == groupId);
+  }
+  return null;
 }
 
 final appRouter = GoRouter(
@@ -174,6 +188,66 @@ final appRouter = GoRouter(
             return HorizontalPropertyDetailScreen(
               pageIndex: page,
               propertyId: id,
+            );
+          },
+        ),
+        GoRoute(
+          path:
+              '/home/:page/horizontal-properties/:id/voting/:groupId/attendance',
+          name: AttendanceManagementScreen.name,
+          builder: (context, state) {
+            final home = Get.isRegistered<HomeController>()
+                ? Get.find<HomeController>()
+                : null;
+            if (home == null || !home.canAccessHorizontalPropertiesMenu) {
+              return const Scaffold(
+                body: Center(child: Text('No autorizado')),
+              );
+            }
+
+            final page = int.tryParse(state.pathParameters['page'] ?? '0') ?? 0;
+            final propertyId =
+                int.tryParse(state.pathParameters['id'] ?? '');
+            final groupId = int.tryParse(state.pathParameters['groupId'] ?? '');
+            if (propertyId == null || groupId == null) {
+              return const Scaffold(
+                body: Center(child: Text('Parámetros inválidos.')),
+              );
+            }
+
+            HorizontalPropertyVotingGroup? group;
+            final extra = state.extra;
+            if (extra is HorizontalPropertyVotingGroup) {
+              group = extra;
+            } else if (extra is Map) {
+              final maybe = extra['group'];
+              if (maybe is HorizontalPropertyVotingGroup) {
+                group = maybe;
+              }
+            }
+
+            group ??=
+                _resolveVotingGroup(propertyId: propertyId, groupId: groupId);
+
+            final businessId = group?.businessId ??
+                int.tryParse(state.uri.queryParameters['business_id'] ?? '') ??
+                (Get.isRegistered<LoginController>()
+                    ? Get.find<LoginController>().selectedBusinessId
+                    : null) ??
+                0;
+
+            AttendanceManagementBinding.register(
+              propertyId: propertyId,
+              votingGroupId: groupId,
+              businessId: businessId,
+              group: group,
+            );
+
+            return AttendanceManagementScreen(
+              pageIndex: page,
+              propertyId: propertyId,
+              votingGroupId: groupId,
+              group: group,
             );
           },
         ),

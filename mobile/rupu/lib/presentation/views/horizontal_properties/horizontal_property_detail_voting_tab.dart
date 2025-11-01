@@ -45,7 +45,20 @@ class _VotingTab extends GetWidget<HorizontalPropertyVotingController> {
                   .map(
                     (group) => Padding(
                       padding: const EdgeInsets.only(bottom: 16),
-                      child: _VotingGroupCard(group: group),
+                      child: _VotingGroupCard(
+                        group: group,
+                        onOpenAttendance: () {
+                          final router = GoRouter.of(context);
+                          final location = router.location;
+                          final match =
+                              RegExp(r'^/home\/(\d+)/').firstMatch(location);
+                          final page = match?.group(1) ?? '0';
+                          final propertyId = controller.propertyId;
+                          final path =
+                              '/home/$page/horizontal-properties/$propertyId/voting/${group.id}/attendance';
+                          context.push(path, extra: group);
+                        },
+                      ),
                     ),
                   )
                   .toList(),
@@ -59,7 +72,11 @@ class _VotingTab extends GetWidget<HorizontalPropertyVotingController> {
 
 class _VotingGroupCard extends StatelessWidget {
   final HorizontalPropertyVotingGroup group;
-  const _VotingGroupCard({required this.group});
+  final VoidCallback onOpenAttendance;
+  const _VotingGroupCard({
+    required this.group,
+    required this.onOpenAttendance,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -70,24 +87,29 @@ class _VotingGroupCard extends StatelessWidget {
         ? (cs.secondaryContainer, cs.onSecondaryContainer, 'ACTIVO')
         : (cs.errorContainer, cs.onErrorContainer, 'INACTIVO');
 
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.surface,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: cs.outlineVariant),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: .05),
-            blurRadius: 18,
-            offset: const Offset(0, 10),
+        onTap: onOpenAttendance,
+        child: Ink(
+          decoration: BoxDecoration(
+            color: cs.surface,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: cs.outlineVariant),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: .05),
+                blurRadius: 18,
+                offset: const Offset(0, 10),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -152,6 +174,7 @@ class _VotingGroupCard extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             _CardActions(
+              onView: onOpenAttendance,
               onEdit: () => _showActionFeedback(
                 'Editar votación',
                 'Funcionalidad disponible próximamente.',

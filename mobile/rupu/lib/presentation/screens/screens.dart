@@ -14,3 +14,4 @@ export 'package:rupu/presentation/screens/business_selector/business_selector_sc
 export 'package:rupu/presentation/screens/users_permissions/users_permissions_screen.dart';
 export 'package:rupu/presentation/screens/horizontal_properties/horizontal_properties_screen.dart';
 export 'package:rupu/presentation/screens/horizontal_properties/horizontal_property_detail_screen.dart';
+export 'package:rupu/presentation/screens/horizontal_properties/attendance_management_screen.dart';

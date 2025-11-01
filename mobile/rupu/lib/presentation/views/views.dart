@@ -52,3 +52,5 @@ export 'package:rupu/presentation/views/horizontal_properties/controllers/horizo
 export 'package:rupu/presentation/views/horizontal_properties/controllers/horizontal_property_residents_controller.dart';
 export 'package:rupu/presentation/views/horizontal_properties/controllers/horizontal_property_voting_controller.dart';
 export 'package:rupu/presentation/views/horizontal_properties/controllers/horizontal_property_dashboard_controller.dart';
+export 'package:rupu/presentation/views/horizontal_properties/controllers/attendance_management_controller.dart';
+export 'package:rupu/presentation/views/horizontal_properties/attendance_management_view.dart';
