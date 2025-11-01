@@ -48,11 +48,9 @@ class _VotingTab extends GetWidget<HorizontalPropertyVotingController> {
                       child: _VotingGroupCard(
                         group: group,
                         onOpenAttendance: () {
-                          final router = GoRouter.of(context);
-                          final location = router.location;
-                          final match =
-                              RegExp(r'^/home\/(\d+)/').firstMatch(location);
-                          final page = match?.group(1) ?? '0';
+                          final state = GoRouterState.of(context);
+                          final segments = state.uri.pathSegments;
+                          final page = segments.length > 1 ? segments[1] : '0';
                           final propertyId = controller.propertyId;
                           final path =
                               '/home/$page/horizontal-properties/$propertyId/voting/${group.id}/attendance';
