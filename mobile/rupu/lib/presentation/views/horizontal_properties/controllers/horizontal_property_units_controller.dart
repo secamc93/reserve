@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:rupu/domain/entities/horizontal_property_unit_detail.dart';
 import 'package:rupu/domain/entities/horizontal_property_units_page.dart';
 import 'package:rupu/domain/infrastructure/repositories/horizontal_properties_repository_impl.dart';
 import 'package:rupu/domain/repositories/horizontal_properties_repository.dart';
@@ -24,6 +25,9 @@ class HorizontalPropertyUnitsController extends GetxController {
   final unitsLoadingMore = false.obs;
   final unitsErrorMessage = RxnString();
   final filtersRevision = 0.obs;
+  final _unitDetailsCache = <int, HorizontalPropertyUnitDetail>{};
+  final _unitDetailRequests =
+      <int, Future<HorizontalPropertyUnitDetailResult>>{};
 
   // Filters
   final unitsPageCtrl = TextEditingController(text: '1');
@@ -65,7 +69,10 @@ class HorizontalPropertyUnitsController extends GetxController {
     refresh();
   }
 
-  Future<void> refresh() => _loadUnits();
+  Future<void> refresh() {
+    _clearUnitDetailsCache();
+    return _loadUnits();
+  }
 
   Future<void> loadMoreUnits() => _loadUnits(append: true);
 
@@ -81,6 +88,40 @@ class HorizontalPropertyUnitsController extends GetxController {
     unitsTypeCtrl.clear();
     unitsSearchCtrl.clear();
     unitsIsActive.value = null;
+    _clearUnitDetailsCache();
+  }
+
+  Future<HorizontalPropertyUnitDetailResult> fetchUnitDetail(int unitId) {
+    final cached = _unitDetailsCache[unitId];
+    if (cached != null) {
+      return Future.value(
+        HorizontalPropertyUnitDetailResult(success: true, unit: cached),
+      );
+    }
+
+    final pending = _unitDetailRequests[unitId];
+    if (pending != null) {
+      return pending;
+    }
+
+    final future = repository
+        .getHorizontalPropertyUnitDetail(unitId: unitId)
+        .then((result) {
+      if (result.success && result.unit != null) {
+        _unitDetailsCache[unitId] = result.unit!;
+      }
+      _unitDetailRequests.remove(unitId);
+      return result;
+    }).catchError((_) {
+      _unitDetailRequests.remove(unitId);
+      return const HorizontalPropertyUnitDetailResult(
+        success: false,
+        message: 'No se pudo cargar el detalle de la unidad.',
+      );
+    });
+
+    _unitDetailRequests[unitId] = future;
+    return future;
   }
 
   Map<String, dynamic> _buildUnitsQuery({int? pageOverride}) {
@@ -179,6 +220,12 @@ class HorizontalPropertyUnitsController extends GetxController {
     unitsBlockCtrl.dispose();
     unitsTypeCtrl.dispose();
     unitsSearchCtrl.dispose();
+    _clearUnitDetailsCache();
     super.onClose();
+  }
+
+  void _clearUnitDetailsCache() {
+    _unitDetailRequests.clear();
+    _unitDetailsCache.clear();
   }
 }

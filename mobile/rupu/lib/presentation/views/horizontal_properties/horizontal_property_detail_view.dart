@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:get/get.dart';
 import 'package:rupu/domain/entities/horizontal_property_residents_page.dart';
+import 'package:rupu/domain/entities/horizontal_property_unit_detail.dart';
 import 'package:rupu/domain/entities/horizontal_property_units_page.dart';
 import 'package:rupu/domain/entities/horizontal_property_voting_groups.dart';
 

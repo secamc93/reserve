@@ -79,6 +79,8 @@ class BusinessSelectorView extends GetView<BusinessSelectorController> {
         final hasItems = controller.businesses.isNotEmpty; // escucha lista
         final canContinue =
             controller.selectedBusinessId.value != null; // <- escucha selección
+        final isProcessing = controller.isProcessing.value;
+        final errorText = controller.errorMessage.value;
 
         if (!hasItems) return const SizedBox.shrink();
 
@@ -94,15 +96,37 @@ class BusinessSelectorView extends GetView<BusinessSelectorController> {
               ),
             ),
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-            child: SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: FilledButton(
-                onPressed: canContinue
-                    ? () => controller.confirmSelection(context)
-                    : null,
-                child: const Text('Continuar'),
-              ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (errorText != null) ...[
+                  Text(
+                    errorText,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: FilledButton(
+                    onPressed: canContinue && !isProcessing
+                        ? () => controller.confirmSelection(context)
+                        : null,
+                    child: isProcessing
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Continuar'),
+                  ),
+                ),
+              ],
             ),
           ),
         );

@@ -38,7 +38,7 @@ class _SideMenuState extends State<SideMenu> {
       if (Get.isRegistered<LoginController>()) {
         await Get.find<LoginController>().logout();
       } else {
-        await TokenStorage().deleteToken();
+        await TokenStorage().clearAllTokens();
       }
 
       home?.resetForLogout();
@@ -125,6 +125,9 @@ class _SideMenuState extends State<SideMenu> {
       child: SafeArea(
         child: Obx(() {
           final menuItems = home.accessibleMenuItems.toList(growable: false);
+          if (menuItems.isEmpty && home.isSuper) {
+            return _buildMenu(context, appMenuItems);
+          }
           return _buildMenu(context, menuItems);
         }),
       ),

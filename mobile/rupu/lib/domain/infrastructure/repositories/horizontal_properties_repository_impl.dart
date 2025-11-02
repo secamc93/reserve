@@ -4,6 +4,7 @@ import 'package:rupu/domain/entities/horizontal_property_action_result.dart';
 import 'package:rupu/domain/entities/horizontal_property_create_result.dart';
 import 'package:rupu/domain/entities/horizontal_property_detail.dart';
 import 'package:rupu/domain/entities/horizontal_property_residents_page.dart';
+import 'package:rupu/domain/entities/horizontal_property_unit_detail.dart';
 import 'package:rupu/domain/entities/horizontal_property_units_page.dart';
 import 'package:rupu/domain/entities/horizontal_property_update_result.dart';
 import 'package:rupu/domain/entities/horizontal_property_voting_groups.dart';
@@ -81,6 +82,23 @@ class HorizontalPropertiesRepositoryImpl
       query: query,
     );
     return HorizontalPropertiesMapper.unitsResponseToEntity(response);
+  }
+
+  @override
+  Future<HorizontalPropertyUnitDetailResult> getHorizontalPropertyUnitDetail({
+    required int unitId,
+  }) async {
+    try {
+      final response = await datasource.getHorizontalPropertyUnitDetail(
+        unitId: unitId,
+      );
+      return HorizontalPropertiesMapper.unitDetailResponseToEntity(response);
+    } catch (_) {
+      return const HorizontalPropertyUnitDetailResult(
+        success: false,
+        message: 'No se pudo obtener el detalle de la unidad.',
+      );
+    }
   }
 
   @override

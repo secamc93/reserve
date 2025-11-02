@@ -32,6 +32,10 @@ Widget _guardAccess({
     );
   }
 
+  if (home.isSuper) {
+    return builder(home);
+  }
+
   if (home.rolesPermisos.value == null) {
     return const Scaffold(
       body: Center(child: CircularProgressIndicator()),

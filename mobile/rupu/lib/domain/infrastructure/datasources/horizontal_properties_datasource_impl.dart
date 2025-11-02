@@ -11,6 +11,7 @@ import 'package:rupu/domain/datasource/horizontal_properties_datasource.dart';
 import 'package:rupu/domain/infrastructure/models/horizontal_properties_response_model.dart';
 import 'package:rupu/domain/infrastructure/models/horizontal_property_detail_response_model.dart';
 import 'package:rupu/domain/infrastructure/models/horizontal_property_residents_response_model.dart';
+import 'package:rupu/domain/infrastructure/models/horizontal_property_unit_detail_response_model.dart';
 import 'package:rupu/domain/infrastructure/models/horizontal_property_units_response_model.dart';
 import 'package:rupu/domain/infrastructure/models/horizontal_property_voting_groups_response_model.dart';
 import 'package:rupu/domain/infrastructure/models/simple_response_model.dart';
@@ -293,6 +294,19 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
       queryParameters: query,
     );
     return HorizontalPropertyUnitsResponseModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<HorizontalPropertyUnitDetailResponseModel>
+      getHorizontalPropertyUnitDetail({
+    required int unitId,
+  }) async {
+    final response = await _dio.get(
+      '/horizontal-properties/property-units/$unitId',
+    );
+    return HorizontalPropertyUnitDetailResponseModel.fromJson(
       response.data as Map<String, dynamic>,
     );
   }

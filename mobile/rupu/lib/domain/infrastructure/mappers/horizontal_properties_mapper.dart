@@ -4,6 +4,7 @@ import 'package:rupu/domain/entities/horizontal_property_action_result.dart';
 import 'package:rupu/domain/entities/horizontal_property_create_result.dart';
 import 'package:rupu/domain/entities/horizontal_property_detail.dart';
 import 'package:rupu/domain/entities/horizontal_property_residents_page.dart';
+import 'package:rupu/domain/entities/horizontal_property_unit_detail.dart';
 import 'package:rupu/domain/entities/horizontal_property_units_page.dart';
 import 'package:rupu/domain/entities/horizontal_property_update_result.dart';
 import 'package:rupu/domain/entities/horizontal_property_voting_groups.dart';
@@ -11,6 +12,7 @@ import 'package:rupu/domain/entities/horizontal_property_voting_groups.dart';
 import '../models/horizontal_properties_response_model.dart';
 import '../models/horizontal_property_detail_response_model.dart';
 import '../models/horizontal_property_residents_response_model.dart';
+import '../models/horizontal_property_unit_detail_response_model.dart';
 import '../models/horizontal_property_units_response_model.dart';
 import '../models/horizontal_property_voting_groups_response_model.dart';
 import '../models/simple_response_model.dart';
@@ -239,6 +241,84 @@ class HorizontalPropertiesMapper {
       createdByUserId: model.createdByUserId,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
+    );
+  }
+
+  static HorizontalPropertyUnitDetailResult unitDetailResponseToEntity(
+    HorizontalPropertyUnitDetailResponseModel model,
+  ) {
+    return HorizontalPropertyUnitDetailResult(
+      success: model.success,
+      message: model.message.isNotEmpty ? model.message : null,
+      unit: model.data != null ? unitDetailModelToEntity(model.data!) : null,
+    );
+  }
+
+  static HorizontalPropertyUnitDetail unitDetailModelToEntity(
+    HorizontalPropertyUnitDetailModel model,
+  ) {
+    return HorizontalPropertyUnitDetail(
+      id: model.id,
+      number: model.number,
+      block: model.block,
+      tower: model.tower,
+      floor: model.floor,
+      area: model.area,
+      bedrooms: model.bedrooms,
+      bathrooms: model.bathrooms,
+      description: model.description,
+      unitType: model.unitType,
+      participationCoefficient: model.participationCoefficient,
+      isActive: model.isActive,
+      owner:
+          model.owner != null ? unitContactModelToEntity(model.owner!) : null,
+      residents: model.residents
+          .map(unitContactModelToEntity)
+          .toList(growable: false),
+      vehicles: model.vehicles
+          .map(unitVehicleModelToEntity)
+          .toList(growable: false),
+      pets: model.pets.map(unitPetModelToEntity).toList(growable: false),
+      extraAttributes: Map.unmodifiable(model.extraAttributes),
+    );
+  }
+
+  static HorizontalPropertyUnitContact unitContactModelToEntity(
+    HorizontalPropertyUnitContactModel model,
+  ) {
+    return HorizontalPropertyUnitContact(
+      id: model.id,
+      name: model.name,
+      email: model.email,
+      phone: model.phone,
+      document: model.document,
+      role: model.role,
+      extra: Map.unmodifiable(model.extra),
+    );
+  }
+
+  static HorizontalPropertyUnitVehicle unitVehicleModelToEntity(
+    HorizontalPropertyUnitVehicleModel model,
+  ) {
+    return HorizontalPropertyUnitVehicle(
+      id: model.id,
+      plate: model.plate,
+      model: model.model,
+      color: model.color,
+      parkingNumber: model.parkingNumber,
+      extra: Map.unmodifiable(model.extra),
+    );
+  }
+
+  static HorizontalPropertyUnitPet unitPetModelToEntity(
+    HorizontalPropertyUnitPetModel model,
+  ) {
+    return HorizontalPropertyUnitPet(
+      id: model.id,
+      name: model.name,
+      type: model.type,
+      breed: model.breed,
+      extra: Map.unmodifiable(model.extra),
     );
   }
 }

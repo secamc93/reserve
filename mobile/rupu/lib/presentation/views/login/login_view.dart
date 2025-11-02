@@ -16,6 +16,15 @@ class LoginView extends GetView<LoginController> {
     final cs = Theme.of(context).colorScheme;
     final surface = cs.surface;
 
+    void showErrorMessage(String message) {
+      if (message.isEmpty) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+    }
+
     BoxDecoration neu([double r = 22]) {
       final isDark = Theme.of(context).brightness == Brightness.dark;
       // Sombras adaptadas al tema para un look “soft”
@@ -134,17 +143,58 @@ class LoginView extends GetView<LoginController> {
                                       final ok = await controller.submit();
                                       if (!context.mounted) return;
                                       if (ok) {
+                                        if (controller.isSuperAdmin) {
+                                          final activated = await controller
+                                              .activateSuperAdminSession();
+                                          if (!context.mounted) return;
+                                          if (activated) {
+                                            GoRouter.of(context).goNamed(
+                                              HomeScreen.name,
+                                              pathParameters: {
+                                                'page': '$pageIndex',
+                                              },
+                                            );
+                                          } else {
+                                            final message = controller
+                                                    .errorMessage.value ??
+                                                'No fue posible completar la sesión del super administrador.';
+                                            showErrorMessage(message);
+                                          }
+                                          return;
+                                        }
+
                                         final businesses = controller.businesses;
+                                        if (businesses.isEmpty) {
+                                          const message =
+                                              'Tu usuario no tiene negocios disponibles.';
+                                          controller.errorMessage.value ??=
+                                              message;
+                                          showErrorMessage(
+                                            controller.errorMessage.value ??
+                                                message,
+                                          );
+                                          return;
+                                        }
+
                                         if (businesses.length == 1) {
-                                          controller.selectBusiness(
+                                          final activated = await controller
+                                              .activateBusinessSession(
                                             businesses.first,
                                           );
-                                          GoRouter.of(context).goNamed(
-                                            HomeScreen.name,
-                                            pathParameters: {
-                                              'page': '$pageIndex',
-                                            },
-                                          );
+                                          if (!context.mounted) return;
+                                          if (activated) {
+                                            GoRouter.of(context).goNamed(
+                                              HomeScreen.name,
+                                              pathParameters: {
+                                                'page': '$pageIndex',
+                                              },
+                                            );
+                                          } else {
+                                            final message = controller
+                                                    .errorMessage.value ??
+                                                'No fue posible activar el negocio seleccionado.';
+                                            showErrorMessage(message);
+                                          }
                                         } else {
                                           GoRouter.of(context).goNamed(
                                             BusinessSelectorScreen.name,
