@@ -26,6 +26,7 @@ class LoginController extends GetxController {
     isLoading.value = true;
     errorMessage.value = null;
     try {
+      await TokenStorage().clearAllTokens();
       final session = await repository.getUser(
         email: emailController.text.trim().toLowerCase(),
         password: passwordController.text,
@@ -33,6 +34,11 @@ class LoginController extends GetxController {
 
       sessionModel.value = session;
       selectedBusiness.value = null;
+
+      final loginToken = session.data.token;
+      if (loginToken.isNotEmpty) {
+        await TokenStorage().saveLoginToken(loginToken);
+      }
 
       return true;
     } on DioException catch (e) {
@@ -54,7 +60,7 @@ class LoginController extends GetxController {
   }
 
   Future<void> logout() async {
-    await TokenStorage().deleteToken();
+    await TokenStorage().clearAllTokens();
     clearFields();
   }
 
@@ -94,7 +100,7 @@ class LoginController extends GetxController {
         businessId: isSuperAdmin ? 0 : business.id,
       );
 
-      await TokenStorage().saveToken(businessToken);
+      await TokenStorage().saveBusinessToken(businessToken);
       selectBusiness(business);
       return true;
     } on DioException catch (e) {
@@ -126,7 +132,7 @@ class LoginController extends GetxController {
         businessId: 0,
       );
 
-      await TokenStorage().saveToken(businessToken);
+      await TokenStorage().saveBusinessToken(businessToken);
       selectedBusiness.value = null;
       return true;
     } on DioException catch (e) {

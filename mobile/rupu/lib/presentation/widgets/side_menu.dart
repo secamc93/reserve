@@ -38,7 +38,7 @@ class _SideMenuState extends State<SideMenu> {
       if (Get.isRegistered<LoginController>()) {
         await Get.find<LoginController>().logout();
       } else {
-        await TokenStorage().deleteToken();
+        await TokenStorage().clearAllTokens();
       }
 
       home?.resetForLogout();
