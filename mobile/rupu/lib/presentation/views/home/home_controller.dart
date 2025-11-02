@@ -27,7 +27,8 @@ class HomeController extends GetxController {
   final accessibleMenuItems = <MenuItem>[].obs;
   final Rxn<MenuItem> defaultMenuItem = Rxn();
 
-  bool get isSuper => rolesPermisos.value?.isSuper ?? false;
+  bool get isSuper =>
+      _loginController.isSuperAdmin || (rolesPermisos.value?.isSuper ?? false);
 
   Worker? _businessWorker;
 
@@ -35,6 +36,8 @@ class HomeController extends GetxController {
   /// - Si [resource] es `null`, busca la acción en todos los permisos.
   /// - Si [resource] tiene valor, filtra por recurso y acción.
   bool hasPermission({required String action, String? resource}) {
+    if (_loginController.isSuperAdmin) return true;
+
     final rp = rolesPermisos.value;
     if (rp == null) return false;
     if (rp.isSuper) return true;
@@ -64,6 +67,8 @@ class HomeController extends GetxController {
     List<String> actions = const [],
     bool requireActive = true,
   }) {
+    if (_loginController.isSuperAdmin) return true;
+
     final rp = rolesPermisos.value;
     if (rp == null) return false;
     if (rp.isSuper) return true;
@@ -116,6 +121,12 @@ class HomeController extends GetxController {
     isLoading.value = true;
     errorMessage.value = null;
     try {
+      if (_loginController.isSuperAdmin) {
+        rolesPermisos.value = null;
+        _updateAccessibleMenuItems();
+        return;
+      }
+
       final businessId = _loginController.selectedBusinessId;
       if (businessId == null) {
         errorMessage.value = 'Debes seleccionar un negocio para continuar.';
@@ -166,6 +177,12 @@ class HomeController extends GetxController {
   }
 
   void _updateAccessibleMenuItems() {
+    if (_loginController.isSuperAdmin) {
+      accessibleMenuItems.assignAll(appMenuItems);
+      defaultMenuItem.value = _selectDefaultMenuItem(appMenuItems);
+      return;
+    }
+
     final rp = rolesPermisos.value;
     if (rp == null) {
       _clearAccessibleMenuItems();
