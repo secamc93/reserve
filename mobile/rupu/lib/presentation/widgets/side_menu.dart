@@ -125,6 +125,9 @@ class _SideMenuState extends State<SideMenu> {
       child: SafeArea(
         child: Obx(() {
           final menuItems = home.accessibleMenuItems.toList(growable: false);
+          if (menuItems.isEmpty && home.isSuper) {
+            return _buildMenu(context, appMenuItems);
+          }
           return _buildMenu(context, menuItems);
         }),
       ),

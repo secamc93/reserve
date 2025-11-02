@@ -5,6 +5,7 @@ import 'package:rupu/domain/entities/horizontal_properties_page.dart';
 import 'package:rupu/domain/entities/horizontal_property.dart';
 import 'package:rupu/domain/entities/horizontal_property_action_result.dart';
 import 'package:rupu/domain/entities/horizontal_property_create_result.dart';
+import 'package:rupu/domain/entities/horizontal_property_detail.dart';
 import 'package:rupu/domain/infrastructure/repositories/horizontal_properties_repository_impl.dart';
 import 'package:rupu/domain/repositories/horizontal_properties_repository.dart';
 import 'package:rupu/presentation/views/home/home_controller.dart';
@@ -128,10 +129,42 @@ class HorizontalPropertiesController extends GetxController {
         return;
       }
 
-      final query = <String, dynamic>{};
       if (!isSuperAdmin && businessId != null) {
-        query['business_id'] = businessId;
+        final HorizontalPropertyDetail? detail = await repository
+            .getHorizontalPropertyDetail(id: businessId);
+
+        if (detail == null) {
+          properties.clear();
+          total.value = 0;
+          page.value = 1;
+          totalPages.value = 1;
+          errorMessage.value =
+              'No se encontró una propiedad asociada al negocio seleccionado.';
+          return;
+        }
+
+        properties.assignAll([
+          HorizontalProperty(
+            id: detail.id,
+            name: detail.name,
+            code: detail.code,
+            businessTypeName: detail.businessTypeName,
+            businessId: detail.parentBusinessId,
+            address: detail.address,
+            totalUnits: detail.totalUnits,
+            isActive: detail.isActive,
+            createdAt: detail.createdAt,
+            updatedAt: detail.updatedAt,
+            logoUrl: detail.logoUrl,
+          ),
+        ]);
+        total.value = 1;
+        page.value = 1;
+        totalPages.value = 1;
+        return;
       }
+
+      final query = <String, dynamic>{};
       final parsedPage = int.tryParse(pageCtrl.text.trim());
       final parsedSize = int.tryParse(pageSizeCtrl.text.trim());
       if (parsedPage != null && parsedPage > 0) {

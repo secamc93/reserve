@@ -121,22 +121,22 @@ class HomeController extends GetxController {
     isLoading.value = true;
     errorMessage.value = null;
     try {
-      if (_loginController.isSuperAdmin) {
+      final isSuperAdminSession = _loginController.isSuperAdmin;
+      if (isSuperAdminSession) {
         rolesPermisos.value = null;
         _updateAccessibleMenuItems();
-        return;
-      }
+      } else {
+        final businessId = _loginController.selectedBusinessId;
+        if (businessId == null) {
+          errorMessage.value = 'Debes seleccionar un negocio para continuar.';
+          _clearAccessibleMenuItems();
+          return;
+        }
 
-      final businessId = _loginController.selectedBusinessId;
-      if (businessId == null) {
-        errorMessage.value = 'Debes seleccionar un negocio para continuar.';
-        _clearAccessibleMenuItems();
-        return;
+        final rp = await repository.obtenerRolesPermisos(businessId: businessId);
+        rolesPermisos.value = rp;
+        _updateAccessibleMenuItems();
       }
-
-      final rp = await repository.obtenerRolesPermisos(businessId: businessId);
-      rolesPermisos.value = rp;
-      _updateAccessibleMenuItems();
     } on DioException catch (e) {
       errorMessage.value = (e.response?.statusCode == 401)
           ? 'No autorizado al obtener permisos.'
