@@ -259,6 +259,7 @@ class HorizontalPropertiesMapper {
   ) {
     return HorizontalPropertyUnitDetail(
       id: model.id,
+      businessId: model.businessId,
       number: model.number,
       block: model.block,
       tower: model.tower,
@@ -270,6 +271,8 @@ class HorizontalPropertiesMapper {
       unitType: model.unitType,
       participationCoefficient: model.participationCoefficient,
       isActive: model.isActive,
+      createdAt: model.createdAt,
+      updatedAt: model.updatedAt,
       owner:
           model.owner != null ? unitContactModelToEntity(model.owner!) : null,
       residents: model.residents

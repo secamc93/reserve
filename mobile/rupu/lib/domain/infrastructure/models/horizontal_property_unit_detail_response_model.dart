@@ -32,6 +32,7 @@ class HorizontalPropertyUnitDetailResponseModel {
 
 class HorizontalPropertyUnitDetailModel {
   final int id;
+  final int? businessId;
   final String number;
   final String? block;
   final String? tower;
@@ -43,6 +44,8 @@ class HorizontalPropertyUnitDetailModel {
   final String? unitType;
   final double? participationCoefficient;
   final bool? isActive;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
   final HorizontalPropertyUnitContactModel? owner;
   final List<HorizontalPropertyUnitContactModel> residents;
   final List<HorizontalPropertyUnitVehicleModel> vehicles;
@@ -51,6 +54,7 @@ class HorizontalPropertyUnitDetailModel {
 
   HorizontalPropertyUnitDetailModel({
     required this.id,
+    this.businessId,
     required this.number,
     this.block,
     this.tower,
@@ -62,6 +66,8 @@ class HorizontalPropertyUnitDetailModel {
     this.unitType,
     this.participationCoefficient,
     this.isActive,
+    this.createdAt,
+    this.updatedAt,
     this.owner,
     this.residents = const [],
     this.vehicles = const [],
@@ -74,20 +80,25 @@ class HorizontalPropertyUnitDetailModel {
   ) {
     final working = Map<String, dynamic>.from(json);
     final id = _tryParseInt(working.remove('id')) ?? 0;
-    final number = working.remove('number')?.toString() ?? '--';
-    final block = working.remove('block')?.toString();
-    final tower = (working.remove('tower') ?? working.remove('tower_name'))
-        ?.toString();
+    final businessId = _tryParseInt(working.remove('business_id'));
+    final number = _sanitizeString(working.remove('number')) ?? '--';
+    final block = _sanitizeString(working.remove('block'));
+    final tower = _sanitizeString(
+      working.remove('tower') ?? working.remove('tower_name'),
+    );
     final floor = _tryParseInt(working.remove('floor'));
     final area = _tryParseDouble(working.remove('area'));
     final bedrooms = _tryParseInt(working.remove('bedrooms'));
     final bathrooms = _tryParseInt(working.remove('bathrooms'));
-    final description = working.remove('description')?.toString();
-    final unitType = (working.remove('unit_type') ?? working.remove('type'))
-        ?.toString();
+    final description = _sanitizeString(working.remove('description'));
+    final unitType = _sanitizeString(
+      working.remove('unit_type') ?? working.remove('type'),
+    );
     final participationCoefficient =
         _tryParseDouble(working.remove('participation_coefficient'));
     final isActive = _tryParseBool(working.remove('is_active'));
+    final createdAt = _tryParseDateTime(working.remove('created_at'));
+    final updatedAt = _tryParseDateTime(working.remove('updated_at'));
 
     HorizontalPropertyUnitContactModel? owner;
     final ownerData = working.remove('owner');
@@ -127,6 +138,7 @@ class HorizontalPropertyUnitDetailModel {
 
     return HorizontalPropertyUnitDetailModel(
       id: id,
+      businessId: businessId,
       number: number,
       block: block,
       tower: tower,
@@ -138,6 +150,8 @@ class HorizontalPropertyUnitDetailModel {
       unitType: unitType,
       participationCoefficient: participationCoefficient,
       isActive: isActive,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
       owner: owner,
       residents: residents,
       vehicles: vehicles,
@@ -279,4 +293,26 @@ bool? _tryParseBool(dynamic value) {
     return false;
   }
   return null;
+}
+
+DateTime? _tryParseDateTime(dynamic value) {
+  if (value == null) return null;
+  if (value is DateTime) return value;
+  final str = value.toString();
+  try {
+    return DateTime.parse(str).toLocal();
+  } catch (_) {
+    return null;
+  }
+}
+
+String? _sanitizeString(dynamic value) {
+  if (value == null) return null;
+  var str = value.toString().trim();
+  if (str.length >= 2 &&
+      ((str.startsWith('"') && str.endsWith('"')) ||
+          (str.startsWith("'") && str.endsWith("'")))) {
+    str = str.substring(1, str.length - 1).trim();
+  }
+  return str.isEmpty ? null : str;
 }

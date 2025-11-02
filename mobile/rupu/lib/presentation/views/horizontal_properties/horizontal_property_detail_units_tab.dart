@@ -744,6 +744,17 @@ class _UnitDetailContent extends StatelessWidget {
         : (cs.errorContainer, cs.onErrorContainer, 'INACTIVA');
 
     final metrics = <_MetricTileData>[
+      _MetricTileData(
+        icon: Icons.confirmation_number_outlined,
+        label: 'ID de unidad',
+        value: detail.id.toString(),
+      ),
+      if (detail.businessId != null)
+        _MetricTileData(
+          icon: Icons.business_outlined,
+          label: 'ID del negocio',
+          value: detail.businessId!.toString(),
+        ),
       if ((detail.block ?? fallback.block).trim().isNotEmpty)
         _MetricTileData(
           icon: Icons.apartment_rounded,
@@ -787,6 +798,18 @@ class _UnitDetailContent extends StatelessWidget {
         label: 'Coeficiente',
         value: _formatCoefficientValue(detail.participationCoefficient),
       ),
+      if (detail.createdAt != null)
+        _MetricTileData(
+          icon: Icons.calendar_today_outlined,
+          label: 'Creada el',
+          value: _formatDateTime(detail.createdAt),
+        ),
+      if (detail.updatedAt != null)
+        _MetricTileData(
+          icon: Icons.update_outlined,
+          label: 'Actualizada el',
+          value: _formatDateTime(detail.updatedAt),
+        ),
     ];
 
     final extras = detail.extraAttributes.entries
@@ -1482,6 +1505,12 @@ String _formatCoefficientValue(double? value) {
   if (value == null) return '—';
   final hasDecimals = value.truncateToDouble() != value;
   return hasDecimals ? value.toStringAsFixed(3) : value.toStringAsFixed(0);
+}
+
+String _formatDateTime(DateTime? value) {
+  if (value == null) return '—';
+  final formatter = DateFormat('d MMM y · h:mm a', 'es');
+  return formatter.format(value);
 }
 
 String _beautifyKey(String key) {

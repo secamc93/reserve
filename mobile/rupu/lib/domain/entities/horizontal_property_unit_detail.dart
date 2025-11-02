@@ -12,6 +12,7 @@ class HorizontalPropertyUnitDetailResult {
 
 class HorizontalPropertyUnitDetail {
   final int id;
+  final int? businessId;
   final String number;
   final String? block;
   final String? tower;
@@ -23,6 +24,8 @@ class HorizontalPropertyUnitDetail {
   final String? unitType;
   final double? participationCoefficient;
   final bool? isActive;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
   final HorizontalPropertyUnitContact? owner;
   final List<HorizontalPropertyUnitContact> residents;
   final List<HorizontalPropertyUnitVehicle> vehicles;
@@ -31,6 +34,7 @@ class HorizontalPropertyUnitDetail {
 
   const HorizontalPropertyUnitDetail({
     required this.id,
+    this.businessId,
     required this.number,
     this.block,
     this.tower,
@@ -42,6 +46,8 @@ class HorizontalPropertyUnitDetail {
     this.unitType,
     this.participationCoefficient,
     this.isActive,
+    this.createdAt,
+    this.updatedAt,
     this.owner,
     this.residents = const [],
     this.vehicles = const [],
