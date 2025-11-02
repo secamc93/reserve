@@ -288,7 +288,7 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
                   {isExpanded && (
                     <div className="mt-4 pt-4 border-t border-gray-200">
                       <VotingsList
-                        hpId={businessId}
+                        businessId={businessId}
                         groupId={group.id}
                         groupName={group.name}
                       />
@@ -315,7 +315,7 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
           isOpen={showEditModal}
           onClose={handleEditClose}
           onSuccess={handleEditSuccess}
-          hpId={businessId}
+          businessId={businessId}
           group={selectedGroup}
         />
       )}
@@ -326,7 +326,7 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
           isOpen={showDeleteModal}
           onClose={handleDeleteClose}
           onSuccess={handleDeleteSuccess}
-          hpId={businessId}
+          businessId={businessId}
           group={selectedGroup}
         />
       )}

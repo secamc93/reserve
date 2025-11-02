@@ -5,12 +5,12 @@
 'use server';
 
 import { UpdateVotingUseCase } from '../../../application';
-import { VotingsRepository } from '../../repositories/votings.repository';
+import { VotingsRepository } from '../../repositories/voting-groups';
 import { Voting, UpdateVotingDTO } from '../../../domain/entities';
 
 export interface UpdateVotingInput {
   token: string;
-  hpId: number;
+  businessId: number;
   groupId: number;
   votingId: number;
   data: UpdateVotingDTO;
@@ -30,7 +30,7 @@ export async function updateVotingAction(input: UpdateVotingInput): Promise<Upda
     const result = await useCase.execute({
       id: input.votingId,
       token: input.token,
-      hpId: input.hpId,
+      businessId: input.businessId,
       groupId: input.groupId,
       votingId: input.votingId,
       data: input.data as Record<string, unknown>,

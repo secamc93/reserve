@@ -47,5 +47,7 @@ export interface LoginResponse {
   user: User;
   token: string;
   businesses: BusinessInfo[];
+  scope: string;
+  is_super_admin: boolean;
 }
 

@@ -4,6 +4,8 @@ import (
 	"central_reserve/services/auth/internal/infra/primary/controllers/userhandler/mapper"
 	"central_reserve/services/auth/internal/infra/primary/controllers/userhandler/request"
 	"central_reserve/services/auth/internal/infra/primary/controllers/userhandler/response"
+	"central_reserve/services/auth/middleware"
+	"central_reserve/shared/log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -35,14 +37,32 @@ import (
 //	@Failure		500			{object}	response.UserErrorResponse	"Error interno del servidor"
 //	@Router			/users [get]
 func (h *UserHandler) GetUsersHandler(c *gin.Context) {
+	ctx := log.WithFunctionCtx(c.Request.Context(), "GetUsersHandler")
+
 	// Crear struct de request y bindear parámetros de query
 	var req request.GetUsersRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		h.logger.Error().Err(err).Msg("Error al parsear parámetros de query")
+		h.logger.Error(ctx).Err(err).Msg("Error al parsear parámetros de query")
 		c.JSON(http.StatusBadRequest, response.UserErrorResponse{
 			Error: "Parámetros de filtro inválidos",
 		})
 		return
+	}
+
+	// Si no es super admin, ignorar business_id del query y usar el del token
+	isSuperAdmin := middleware.IsSuperAdmin(c)
+	if !isSuperAdmin {
+		tokenBusinessID, ok := middleware.GetBusinessID(c)
+		if ok && tokenBusinessID > 0 {
+			req.BusinessID = &tokenBusinessID
+			h.logger.Info(ctx).Uint("business_id", tokenBusinessID).Msg("Usando business_id del token para usuario normal")
+		} else {
+			h.logger.Error(ctx).Msg("Business ID no disponible en token")
+			c.JSON(http.StatusUnauthorized, response.UserErrorResponse{
+				Error: "Token inválido: business_id no disponible",
+			})
+			return
+		}
 	}
 
 	// Convertir request a filtros del dominio
@@ -51,19 +71,18 @@ func (h *UserHandler) GetUsersHandler(c *gin.Context) {
 	// Las validaciones ya están manejadas por el binding automático
 	// Los valores por defecto y las validaciones están en las etiquetas del struct
 
-	h.logger.Info().
+	h.logger.Info(ctx).
 		Int("page", filters.Page).
 		Int("page_size", filters.PageSize).
 		Str("name", filters.Name).
 		Str("email", filters.Email).
 		Str("phone", filters.Phone).
-		Str("sort_by", filters.SortBy).
-		Str("sort_order", filters.SortOrder).
+		Bool("is_super_admin", isSuperAdmin).
 		Msg("Iniciando solicitud para obtener usuarios filtrados y paginados")
 
-	userListDTO, err := h.usecase.GetUsers(c.Request.Context(), filters)
+	userListDTO, err := h.usecase.GetUsers(ctx, filters)
 	if err != nil {
-		h.logger.Error().Err(err).Msg("Error al obtener usuarios desde el caso de uso")
+		h.logger.Error(ctx).Err(err).Msg("Error al obtener usuarios desde el caso de uso")
 		c.JSON(http.StatusInternalServerError, response.UserErrorResponse{
 			Error: "Error interno del servidor",
 		})
@@ -72,7 +91,7 @@ func (h *UserHandler) GetUsersHandler(c *gin.Context) {
 
 	response := mapper.ToUserListResponse(userListDTO)
 
-	h.logger.Info().
+	h.logger.Info(ctx).
 		Int("count", len(userListDTO.Users)).
 		Int64("total", userListDTO.Total).
 		Int("total_pages", userListDTO.TotalPages).

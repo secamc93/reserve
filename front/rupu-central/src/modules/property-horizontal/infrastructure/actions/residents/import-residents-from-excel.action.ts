@@ -9,7 +9,7 @@ import { logHttpRequest, logHttpSuccess, logHttpError } from '@shared/utils';
 
 export interface ImportResidentsFromExcelInput {
   token: string;
-  hpId: number;
+  businessId: number;
   file: File;
 }
 
@@ -29,8 +29,8 @@ export async function importResidentsFromExcelAction(
   input: ImportResidentsFromExcelInput
 ): Promise<ImportResidentsResponse> {
   try {
-    const { token, hpId, file } = input;
-    const url = `${env.API_BASE_URL}/horizontal-properties/residents/import-excel?business_id=${hpId}`;
+    const { token, businessId, file } = input;
+    const url = `${env.API_BASE_URL}/horizontal-properties/residents/import-excel?business_id=${businessId}`;
     const startTime = Date.now();
 
     // Crear FormData para enviar el archivo

@@ -10,27 +10,27 @@ import { Voting, VotingsList, CreateVotingDTO, UpdateVotingDTO, VotingOption, Vo
 
 export interface GetVotingsParams {
   token: string;
-  hpId: number;
+  businessId: number;
   groupId: number;
 }
 
 export interface GetVotingByIdParams {
   token: string;
-  hpId: number;
+  businessId: number;
   groupId: number;
   votingId: number;
 }
 
 export interface CreateVotingParams {
   token: string;
-  hpId: number;
+  businessId: number;
   groupId: number;
   data: CreateVotingDTO;
 }
 
 export interface UpdateVotingParams {
   token: string;
-  hpId: number;
+  businessId: number;
   groupId: number;
   votingId: number;
   data: UpdateVotingDTO;
@@ -38,21 +38,21 @@ export interface UpdateVotingParams {
 
 export interface DeleteVotingParams {
   token: string;
-  hpId: number;
+  businessId: number;
   groupId: number;
   votingId: number;
 }
 
 export interface ActivateVotingParams {
   token: string;
-  hpId: number;
+  businessId: number;
   groupId: number;
   votingId: number;
 }
 
 export interface DeactivateVotingParams {
   token: string;
-  hpId: number;
+  businessId: number;
   groupId: number;
   votingId: number;
 }
@@ -73,14 +73,14 @@ export interface IVotingsRepository {
 
 export interface GetVotingOptionsParams {
   token: string;
-  hpId: number;
+  businessId: number;
   groupId: number;
   votingId: number;
 }
 
 export interface CreateVotingOptionParams {
   token: string;
-  hpId: number;
+  businessId: number;
   groupId: number;
   votingId: number;
   data: CreateVotingOptionDTO;
@@ -97,14 +97,14 @@ export interface IVotingOptionsRepository {
 
 export interface GetVotesParams {
   token: string;
-  hpId: number;
+  businessId: number;
   groupId: number;
   votingId: number;
 }
 
 export interface CreateVoteParams {
   token: string;
-  hpId: number;
+  businessId: number;
   groupId: number;
   votingId: number;
   data: CreateVoteDTO;

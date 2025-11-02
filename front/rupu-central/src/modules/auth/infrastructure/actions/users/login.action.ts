@@ -41,6 +41,8 @@ export async function loginAction(input: LoginActionInput, authUseCases?: AuthUs
           tertiary_color: b.tertiary_color,
           quaternary_color: b.quaternary_color,
         })),
+        scope: result.scope,
+        is_super_admin: result.is_super_admin,
       },
     };
   } catch (error) {

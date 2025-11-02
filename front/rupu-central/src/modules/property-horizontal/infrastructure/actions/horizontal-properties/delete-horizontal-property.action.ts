@@ -5,7 +5,7 @@
 'use server';
 
 import { DeleteHorizontalPropertyUseCase } from '../../../application/horizontal-properties';
-import { HorizontalPropertiesRepository } from '../../repositories/horizontal-properties.repository';
+import { HorizontalPropertiesRepository } from '../../repositories/horizontal-properties';
 
 export interface DeleteHorizontalPropertyInput {
   token: string;

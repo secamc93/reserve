@@ -8,7 +8,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from './hooks';
-import type { LoginActionResult } from '../infrastructure/actions/users/login.action';
+import { BusinessSelector } from './business-selector';
+import type { LoginActionResult } from '../infrastructure/actions/users/response/login.response';
 
 interface LoginFormProps {
   onLogin: (data: { email: string; password: string }) => Promise<LoginActionResult>;
@@ -20,6 +21,35 @@ export function LoginForm({ onLogin }: LoginFormProps) {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showBusinessSelector, setShowBusinessSelector] = useState(false);
+  const [loginBusinesses, setLoginBusinesses] = useState<Array<{
+    id: number;
+    name: string;
+    code: string;
+    business_type_id: number;
+    business_type: {
+      id: number;
+      name: string;
+      code: string;
+      description: string;
+      icon: string;
+    };
+    timezone: string;
+    address: string;
+    description: string;
+    logo_url: string;
+    primary_color: string;
+    secondary_color: string;
+    tertiary_color: string;
+    quaternary_color: string;
+    navbar_image_url: string;
+    custom_domain: string;
+    is_active: boolean;
+    enable_delivery: boolean;
+    enable_pickup: boolean;
+    enable_reservations: boolean;
+  }>>([]);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   
   // Hook para manejar autenticación y guardar token
   const { login } = useAuth(onLogin);
@@ -34,18 +64,66 @@ export function LoginForm({ onLogin }: LoginFormProps) {
       
       if (!result.success) {
         setError(result.error || 'Error al iniciar sesión');
-      } else {
-        // Token, usuario y colores guardados automáticamente por useAuth
-        console.log('✅ Login exitoso - Redirigiendo...');
-        
-        // Redirigir a la página principal
-        router.push('/home');
+      } else if (result.data) {
+        // Verificar si debe mostrar el selector de businesses
+        const isBusinessUser = result.data.scope === 'business';
+        const isSuperAdminUser = result.data.is_super_admin;
+
+        if (isBusinessUser && !isSuperAdminUser && result.data.businesses.length > 0) {
+          // Los businesses del resultado tienen datos limitados, pero podemos obtener los completos
+          // del localStorage donde se guardaron después del login, o usamos los que tenemos
+          // Por ahora, mapeamos los businesses básicos al formato esperado
+          // En producción, deberíamos obtener los businesses completos desde el backend
+          const mappedBusinesses = result.data.businesses.map(b => ({
+            id: b.id,
+            name: b.name,
+            code: b.code,
+            business_type_id: 11, // Default para Propiedad Horizontal
+            business_type: {
+              id: 11,
+              name: 'Propiedad Horizontal',
+              code: 'horizontal_property',
+              description: '',
+              icon: '🏢',
+            },
+            timezone: 'America/Bogota',
+            address: '',
+            description: '',
+            logo_url: b.logo_url || '',
+            primary_color: b.primary_color || '#1f2937',
+            secondary_color: b.secondary_color || '#3b82f6',
+            tertiary_color: b.tertiary_color || '#10b981',
+            quaternary_color: b.quaternary_color || '#fbbf24',
+            navbar_image_url: '',
+            custom_domain: '',
+            is_active: b.is_active,
+            enable_delivery: false,
+            enable_pickup: false,
+            enable_reservations: false,
+          }));
+
+          setLoginBusinesses(mappedBusinesses);
+          setIsSuperAdmin(isSuperAdminUser);
+          setShowBusinessSelector(true);
+        } else {
+          // Token, usuario y colores guardados automáticamente por useAuth
+          console.log('✅ Login exitoso - Redirigiendo...');
+          
+          // Redirigir a la página principal
+          router.push('/home');
+        }
       }
     } catch {
       setError('Error inesperado');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleBusinessSelected = () => {
+    // El BusinessSelector ya maneja la redirección y el guardado del token
+    setShowBusinessSelector(false);
+    // No necesitamos redirigir aquí, el selector lo hace
   };
 
   return (
@@ -145,6 +223,14 @@ export function LoginForm({ onLogin }: LoginFormProps) {
           </a>
         </div>
       </div>
+
+      {/* Modal selector de businesses */}
+      <BusinessSelector
+        businesses={loginBusinesses}
+        isOpen={showBusinessSelector}
+        onClose={() => setShowBusinessSelector(false)}
+        showSuperAdminButton={isSuperAdmin}
+      />
     </form>
   );
 }

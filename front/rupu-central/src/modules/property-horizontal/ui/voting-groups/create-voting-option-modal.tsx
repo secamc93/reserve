@@ -13,7 +13,7 @@ interface CreateVotingOptionModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  hpId: number;
+  businessId: number;
   groupId: number;
   votingId: number;
 }
@@ -22,7 +22,7 @@ export function CreateVotingOptionModal({
   isOpen, 
   onClose, 
   onSuccess, 
-  hpId, 
+  businessId, 
   groupId, 
   votingId 
 }: CreateVotingOptionModalProps) {
@@ -59,7 +59,7 @@ export function CreateVotingOptionModal({
       
       const result = await createVotingOptionAction({
         token,
-        hpId,
+        businessId,
         groupId,
         votingId,
         data: {

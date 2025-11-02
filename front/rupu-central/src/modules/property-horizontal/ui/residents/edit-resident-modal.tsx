@@ -8,14 +8,16 @@ import { Resident, UpdateResidentDTO } from '../../domain';
 import { TokenStorage } from '@/modules/auth/infrastructure/storage';
 
 interface EditResidentModalProps {
-  hpId: number;
+  businessId: number;
   resident: Resident;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export function EditResidentModal({ hpId, resident, onClose, onSuccess }: EditResidentModalProps) {
+export function EditResidentModal({ businessId, resident, onClose, onSuccess }: EditResidentModalProps) {
   const [units, setUnits] = useState<Array<{ id: number; number: string }>>([]);
+  const [unitSearchTerm, setUnitSearchTerm] = useState('');
+  const [showUnitDropdown, setShowUnitDropdown] = useState(false);
   const [loadingUnits, setLoadingUnits] = useState(true);
   const [loadingResident, setLoadingResident] = useState(true);
   const [residentData, setResidentData] = useState<Resident | null>(null);
@@ -33,6 +35,35 @@ export function EditResidentModal({ hpId, resident, onClose, onSuccess }: EditRe
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const loadUnits = async (searchTerm: string = '') => {
+    try {
+      setLoadingUnits(true);
+      const token = TokenStorage.getToken();
+      if (!token) return;
+      const data = await getPropertyUnitsAction({ 
+        businessId, 
+        token, 
+        page: 1, 
+        pageSize: 50,
+        number: searchTerm || undefined
+      });
+      const unitsData = data.units.map(u => ({ id: u.id, number: u.number }));
+      setUnits(unitsData);
+      
+      // Si hay una unidad preseleccionada, mostrarla en el input
+      if (formData.propertyUnitId && formData.propertyUnitId > 0 && !searchTerm) {
+        const currentUnit = unitsData.find(u => u.id === formData.propertyUnitId);
+        if (currentUnit) {
+          setUnitSearchTerm(currentUnit.number);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading units:', error);
+    } finally {
+      setLoadingUnits(false);
+    }
+  };
+
   // Cargar datos completos del residente
   useEffect(() => {
     const loadResident = async () => {
@@ -42,16 +73,12 @@ export function EditResidentModal({ hpId, resident, onClose, onSuccess }: EditRe
         if (!token) return;
         
         const fullResidentData = await getResidentByIdAction({
-          hpId,
+          businessId,
           residentId: resident.id,
           token,
         });
         
         setResidentData(fullResidentData);
-        
-        console.log('🔍 [EDIT RESIDENT] Datos completos del residente:', fullResidentData);
-        console.log('🔍 [EDIT RESIDENT] PropertyUnitId del backend:', fullResidentData.propertyUnitId);
-        console.log('🔍 [EDIT RESIDENT] PropertyUnitNumber del backend:', fullResidentData.propertyUnitNumber);
         
         // Inicializar formulario con datos completos
         setFormData({
@@ -65,6 +92,11 @@ export function EditResidentModal({ hpId, resident, onClose, onSuccess }: EditRe
           isMainResident: fullResidentData.isMainResident,
           isActive: fullResidentData.isActive,
         });
+        
+        // Mostrar la unidad actual en el input
+        if (fullResidentData.propertyUnitNumber) {
+          setUnitSearchTerm(fullResidentData.propertyUnitNumber);
+        }
       } catch (error) {
         console.error('Error loading resident:', error);
         setError('Error al cargar los datos del residente');
@@ -73,49 +105,17 @@ export function EditResidentModal({ hpId, resident, onClose, onSuccess }: EditRe
       }
     };
     loadResident();
-  }, [hpId, resident.id]);
+  }, [businessId, resident.id]);
 
-  // Cargar unidades disponibles
+  // Cargar unidades al enfocar o al buscar
   useEffect(() => {
-    const loadUnits = async () => {
-      setLoadingUnits(true);
-      try {
-        const token = TokenStorage.getToken();
-        if (!token) return;
-        const data = await getPropertyUnitsAction({ hpId, token, page: 1, pageSize: 100 });
-        const unitsData = data.units.map(u => ({ id: u.id, number: u.number }));
-        setUnits(unitsData);
-        
-        console.log('🔍 [EDIT RESIDENT] Unidades cargadas:', unitsData);
-        console.log('🔍 [EDIT RESIDENT] PropertyUnitId actual en formData:', formData.propertyUnitId);
-        
-        // Verificar si la unidad del residente está en la lista
-        const residentUnit = unitsData.find(u => u.id === formData.propertyUnitId);
-        if (residentUnit) {
-          console.log('✅ [EDIT RESIDENT] Unidad del residente encontrada:', residentUnit);
-        } else {
-          console.warn('⚠️ [EDIT RESIDENT] Unidad del residente NO encontrada en la lista. ID buscado:', formData.propertyUnitId);
-        }
-      } catch (error) {
-        console.error('Error loading units:', error);
-      } finally {
-        setLoadingUnits(false);
-      }
-    };
-    loadUnits();
-  }, [hpId, formData.propertyUnitId]); // Agregar formData.propertyUnitId como dependencia
-
-  // Forzar re-render del select cuando los datos estén listos
-  useEffect(() => {
-    if (residentData && units.length > 0 && formData.propertyUnitId && formData.propertyUnitId > 0) {
-      console.log('🔄 [EDIT RESIDENT] Forzando actualización del select con:', {
-        residentData: residentData.propertyUnitNumber,
-        formDataPropertyUnitId: formData.propertyUnitId,
-        unitsCount: units.length,
-        matchingUnit: units.find(u => u.id === formData.propertyUnitId)
-      });
+    if (showUnitDropdown) {
+      const timer = setTimeout(() => {
+        loadUnits(unitSearchTerm);
+      }, 300); // Debounce de 300ms
+      return () => clearTimeout(timer);
     }
-  }, [residentData, units, formData.propertyUnitId]);
+  }, [unitSearchTerm, showUnitDropdown, businessId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,7 +127,7 @@ export function EditResidentModal({ hpId, resident, onClose, onSuccess }: EditRe
       if (!token) throw new Error('No se encontró el token de autenticación');
 
       await updateResidentAction({
-        hpId,
+        businessId,
         residentId: resident.id,
         data: formData,
         token,
@@ -188,31 +188,44 @@ export function EditResidentModal({ hpId, resident, onClose, onSuccess }: EditRe
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1">Unidad</label>
-            <select
-              value={formData.propertyUnitId}
-              onChange={(e) => setFormData({ ...formData, propertyUnitId: Number(e.target.value) })}
-              className="input w-full"
-              disabled={loadingUnits}
-            >
-              {loadingUnits ? (
-                <option value={formData.propertyUnitId}>Cargando unidades...</option>
-              ) : (
-                <>
-                  <option value={0}>Seleccionar unidad...</option>
-                  {units.map(unit => (
-                    <option key={unit.id} value={unit.id}>
-                      {unit.number}
-                    </option>
-                  ))}
-                  {/* Mostrar la unidad del residente si no está en la lista */}
-                  {residentData && formData.propertyUnitId && !units.find(u => u.id === formData.propertyUnitId) && formData.propertyUnitId > 0 && (
-                    <option value={formData.propertyUnitId} disabled>
-                      {residentData.propertyUnitNumber} (No disponible)
-                    </option>
-                  )}
-                </>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Buscar unidad..."
+                value={unitSearchTerm}
+                onChange={(e) => {
+                  setUnitSearchTerm(e.target.value);
+                  setShowUnitDropdown(true);
+                }}
+                onFocus={() => setShowUnitDropdown(true)}
+                className="input w-full pr-8"
+              />
+              {loadingUnits && (
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <svg className="animate-spin h-4 w-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </div>
               )}
-            </select>
+              {showUnitDropdown && !loadingUnits && units.length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                  {units.map(unit => (
+                    <div
+                      key={unit.id}
+                      onClick={() => {
+                        setFormData({ ...formData, propertyUnitId: unit.id });
+                        setUnitSearchTerm(unit.number);
+                        setShowUnitDropdown(false);
+                      }}
+                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-gray-900"
+                    >
+                      {unit.number}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Tipo de Residente</label>

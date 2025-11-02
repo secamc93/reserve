@@ -7,13 +7,13 @@ import { PropertyUnit, UpdatePropertyUnitDTO, UNIT_TYPES } from '../../domain';
 import { TokenStorage } from '@/modules/auth/infrastructure/storage';
 
 interface EditPropertyUnitModalProps {
-  hpId: number;
+  businessId: number;
   unit: PropertyUnit;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export function EditPropertyUnitModal({ hpId, unit, onClose, onSuccess }: EditPropertyUnitModalProps) {
+export function EditPropertyUnitModal({ businessId, unit, onClose, onSuccess }: EditPropertyUnitModalProps) {
   const [formData, setFormData] = useState<UpdatePropertyUnitDTO>({
     number: unit.number,
     unitType: unit.unitType,
@@ -36,7 +36,7 @@ export function EditPropertyUnitModal({ hpId, unit, onClose, onSuccess }: EditPr
       if (!token) throw new Error('No token found');
 
       await updatePropertyUnitAction({
-        hpId,
+        businessId,
         unitId: unit.id,
         data: formData,
         token,

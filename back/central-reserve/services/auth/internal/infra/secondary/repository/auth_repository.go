@@ -239,12 +239,20 @@ func (r *Repository) GetUsers(ctx context.Context, filters domain.UserFilters) (
 		query = query.Where("is_active = ?", *filters.IsActive)
 	}
 	if filters.RoleID != nil {
-		query = query.Joins("JOIN user_role ON user.id = user_role.user_id").
-			Where("user_role.role_id = ?", *filters.RoleID)
+		// Subquery para obtener IDs de usuarios con el rol especificado
+		subquery := r.database.Conn(ctx).
+			Table("user_roles").
+			Select("user_id").
+			Where("role_id = ?", *filters.RoleID)
+		query = query.Where("id IN (?)", subquery)
 	}
 	if filters.BusinessID != nil {
-		query = query.Joins("JOIN user_business ON user.id = user_business.user_id").
-			Where("user_business.business_id = ?", *filters.BusinessID)
+		// Subquery para obtener IDs de usuarios con el business especificado
+		subquery := r.database.Conn(ctx).
+			Table("user_businesses").
+			Select("user_id").
+			Where("business_id = ?", *filters.BusinessID)
+		query = query.Where("id IN (?)", subquery)
 	}
 
 	// Ordenamiento

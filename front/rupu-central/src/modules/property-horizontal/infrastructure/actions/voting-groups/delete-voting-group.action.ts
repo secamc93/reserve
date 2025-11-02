@@ -5,11 +5,11 @@
 'use server';
 
 import { DeleteVotingGroupUseCase } from '../../../application';
-import { VotingGroupsRepository } from '../../repositories/voting-groups.repository';
+import { VotingGroupsRepository } from '../../repositories/voting-groups';
 
 export interface DeleteVotingGroupInput {
   token: string;
-  hpId: number;
+  businessId: number;
   groupId: number;
 }
 
@@ -26,7 +26,7 @@ export async function deleteVotingGroupAction(input: DeleteVotingGroupInput): Pr
 
     const result = await useCase.execute({
       token: input.token,
-      hpId: input.hpId,
+      businessId: input.businessId,
       groupId: input.groupId,
     });
 

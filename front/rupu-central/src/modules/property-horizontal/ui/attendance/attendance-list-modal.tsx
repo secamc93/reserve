@@ -124,7 +124,7 @@ export function AttendanceListModal({
       try {
         const [unitsRes, recordsRes, summaryRes] = await Promise.all([
           getPropertyUnitsAction({
-          hpId: businessId,
+          businessId: businessId,
           page: 1,
           pageSize: 1000,
             token,

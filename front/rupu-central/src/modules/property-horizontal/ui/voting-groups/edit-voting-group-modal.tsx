@@ -14,7 +14,7 @@ interface EditVotingGroupModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  hpId: number;
+  businessId: number;
   group: VotingGroup;
 }
 
@@ -22,7 +22,7 @@ export function EditVotingGroupModal({
   isOpen, 
   onClose, 
   onSuccess, 
-  hpId, 
+  businessId, 
   group 
 }: EditVotingGroupModalProps) {
   const [loading, setLoading] = useState(false);
@@ -117,7 +117,7 @@ export function EditVotingGroupModal({
 
       const result = await updateVotingGroupAction({
         token,
-        hpId,
+        businessId,
         groupId: group.id,
         data: updateData,
       });

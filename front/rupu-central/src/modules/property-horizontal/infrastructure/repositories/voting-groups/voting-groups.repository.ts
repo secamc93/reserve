@@ -8,10 +8,10 @@ import {
   CreateVotingGroupParams,
   UpdateVotingGroupParams,
   DeleteVotingGroupParams 
-} from '../../domain/ports';
-import { VotingGroup, VotingGroupsList } from '../../domain/entities';
+} from '../../../domain/ports';
+import { VotingGroup, VotingGroupsList } from '../../../domain/entities';
 import { env, logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
-import { BackendGetVotingGroupsResponse, BackendCreateVotingGroupResponse, BackendUpdateVotingGroupResponse, BackendDeleteVotingGroupResponse } from './response';
+import { BackendGetVotingGroupsResponse, BackendCreateVotingGroupResponse, BackendUpdateVotingGroupResponse, BackendDeleteVotingGroupResponse } from '../response';
 
 export class VotingGroupsRepository implements IVotingGroupsRepository {
   async getVotingGroups(params: GetVotingGroupsParams): Promise<VotingGroupsList> {
@@ -168,13 +168,13 @@ export class VotingGroupsRepository implements IVotingGroupsRepository {
   }
 
   async updateVotingGroup(params: UpdateVotingGroupParams): Promise<VotingGroup> {
-    const { token, hpId, groupId, data } = params;
+    const { token, businessId, groupId, data } = params;
     // Nueva URL: actualizar grupo, business_id por body
     const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${groupId}`;
     const startTime = Date.now();
 
     // Solo incluir campos que no sean undefined
-    const requestBody: Record<string, unknown> = { business_id: hpId };
+    const requestBody: Record<string, unknown> = { business_id: businessId };
     
     if (data.name !== undefined) requestBody.name = data.name;
     if (data.description !== undefined) requestBody.description = data.description;
@@ -250,10 +250,10 @@ export class VotingGroupsRepository implements IVotingGroupsRepository {
   }
 
   async deleteVotingGroup(params: DeleteVotingGroupParams): Promise<string> {
-    const { token, hpId, groupId } = params;
+    const { token, businessId, groupId } = params;
     // Nueva URL: eliminar grupo, business_id por query opcional
     const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${groupId}${
-      hpId !== undefined ? `?business_id=${hpId}` : ''
+      businessId !== undefined ? `?business_id=${businessId}` : ''
     }`;
     const startTime = Date.now();
 

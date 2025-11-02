@@ -1,6 +1,6 @@
 'use server';
 
-import { ResidentsRepository } from '../../repositories/residents.repository';
+import { ResidentsRepository } from '../../repositories/residents';
 import { DeleteResidentUseCase } from '../../../application';
 import { DeleteResidentParams } from '../../../domain';
 

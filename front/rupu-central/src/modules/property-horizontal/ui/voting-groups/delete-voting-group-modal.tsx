@@ -14,7 +14,7 @@ interface DeleteVotingGroupModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  hpId: number;
+  businessId: number;
   group: VotingGroup | null;
 }
 
@@ -22,7 +22,7 @@ export function DeleteVotingGroupModal({
   isOpen, 
   onClose, 
   onSuccess, 
-  hpId, 
+  businessId, 
   group 
 }: DeleteVotingGroupModalProps) {
   const [loading, setLoading] = useState(false);
@@ -46,7 +46,7 @@ export function DeleteVotingGroupModal({
 
       const result = await deleteVotingGroupAction({
         token,
-        hpId,
+        businessId,
         groupId: group.id,
       });
 

@@ -15,6 +15,8 @@ export interface LoginOutput {
   user: User;
   token: string;
   businesses: BusinessInfo[];
+  scope: string;
+  is_super_admin: boolean;
 }
 
 export class LoginUseCase {
@@ -28,6 +30,8 @@ export class LoginUseCase {
       user: result.user,
       token: result.token,
       businesses: result.businesses,
+      scope: result.scope,
+      is_super_admin: result.is_super_admin,
     };
   }
 }

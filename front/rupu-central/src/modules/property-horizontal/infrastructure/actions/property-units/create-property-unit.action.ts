@@ -1,6 +1,6 @@
 'use server';
 
-import { PropertyUnitsRepository } from '../../repositories/property-units.repository';
+import { PropertyUnitsRepository } from '../../repositories/property-units';
 import { CreatePropertyUnitUseCase } from '../../../application';
 import { CreatePropertyUnitParams, PropertyUnit } from '../../../domain';
 

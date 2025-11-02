@@ -5,11 +5,11 @@
 'use server';
 
 import { DeleteVotingUseCase } from '../../../application';
-import { VotingsRepository } from '../../repositories/votings.repository';
+import { VotingsRepository } from '../../repositories/voting-groups';
 
 export interface DeleteVotingInput {
   token: string;
-  hpId: number;
+  businessId: number;
   groupId: number;
   votingId: number;
 }
@@ -27,7 +27,7 @@ export async function deleteVotingAction(input: DeleteVotingInput): Promise<Dele
 
     const result = await useCase.execute({
       token: input.token,
-      hpId: input.hpId,
+      businessId: input.businessId,
       groupId: input.groupId,
       votingId: input.votingId,
     });

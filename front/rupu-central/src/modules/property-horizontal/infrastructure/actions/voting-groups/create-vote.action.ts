@@ -5,12 +5,12 @@
 'use server';
 
 import { CreateVoteUseCase } from '../../../application';
-import { VotesRepository } from '../../repositories/votings.repository';
+import { VotesRepository } from '../../repositories/voting-groups';
 import { Vote, CreateVoteDTO } from '../../../domain/entities';
 
 export interface CreateVoteInput {
   token: string;
-  hpId: number;
+  businessId: number;
   groupId: number;
   votingId: number;
   data: CreateVoteDTO;
@@ -29,7 +29,7 @@ export async function createVoteAction(input: CreateVoteInput): Promise<CreateVo
 
     const result = await useCase.execute({
       token: input.token,
-      hpId: input.hpId,
+      businessId: input.businessId,
       groupId: input.groupId,
       votingId: input.votingId,
       data: input.data,

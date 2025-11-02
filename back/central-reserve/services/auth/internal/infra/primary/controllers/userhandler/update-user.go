@@ -4,7 +4,10 @@ import (
 	"central_reserve/services/auth/internal/infra/primary/controllers/userhandler/mapper"
 	"central_reserve/services/auth/internal/infra/primary/controllers/userhandler/request"
 	"central_reserve/services/auth/internal/infra/primary/controllers/userhandler/response"
+	"central_reserve/services/auth/middleware"
+	"central_reserve/shared/log"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -35,12 +38,13 @@ import (
 //	@Failure		500				{object}	response.UserErrorResponse		"Error interno del servidor"
 //	@Router			/users/{id} [put]
 func (h *UserHandler) UpdateUserHandler(c *gin.Context) {
+	ctx := log.WithFunctionCtx(c.Request.Context(), "UpdateUserHandler")
 	var uriReq request.GetUserByIDRequest
 	var bodyReq request.UpdateUserRequest
 
 	// Binding automático para parámetros de URL
 	if err := c.ShouldBindUri(&uriReq); err != nil {
-		h.logger.Error().Err(err).Msg("Error al validar ID del usuario")
+		h.logger.Error(ctx).Err(err).Msg("Error al validar ID del usuario")
 		c.JSON(http.StatusBadRequest, response.UserErrorResponse{
 			Error: "ID inválido: " + err.Error(),
 		})
@@ -49,26 +53,42 @@ func (h *UserHandler) UpdateUserHandler(c *gin.Context) {
 
 	// Binding automático para el body (multipart/form-data o JSON)
 	if err := c.ShouldBind(&bodyReq); err != nil {
-		h.logger.Error().Err(err).Msg("Error al validar datos de la solicitud")
+		h.logger.Error(ctx).Err(err).Msg("Error al validar datos de la solicitud")
 		c.JSON(http.StatusBadRequest, response.UserErrorResponse{
 			Error: "Datos inválidos: " + err.Error(),
 		})
 		return
 	}
 
-	h.logger.Info().Uint("id", uriReq.ID).Str("email", bodyReq.Email).Msg("Iniciando solicitud para actualizar usuario")
+	// Si no es super admin, forzar business_ids del token si se está actualizando
+	isSuperAdmin := middleware.IsSuperAdmin(c)
+	if !isSuperAdmin && bodyReq.BusinessIDs != "" {
+		tokenBusinessID, ok := middleware.GetBusinessID(c)
+		if !ok {
+			h.logger.Error(ctx).Msg("Business ID no disponible en token")
+			c.JSON(http.StatusUnauthorized, response.UserErrorResponse{
+				Error: "Token inválido: business_id no disponible",
+			})
+			return
+		}
+		// Forzar que el único business sea el del token
+		bodyReq.BusinessIDs = strconv.FormatUint(uint64(tokenBusinessID), 10)
+		h.logger.Info(ctx).Uint("business_id", tokenBusinessID).Msg("Forzando business_id del token para usuario normal en actualización")
+	}
+
+	h.logger.Info(ctx).Uint("id", uriReq.ID).Str("email", bodyReq.Email).Bool("is_super_admin", isSuperAdmin).Msg("Iniciando solicitud para actualizar usuario")
 
 	// Log para verificar si el archivo está llegando
 	if bodyReq.AvatarFile != nil {
-		h.logger.Info().Uint("id", uriReq.ID).Str("filename", bodyReq.AvatarFile.Filename).Int64("size", bodyReq.AvatarFile.Size).Msg("Archivo de avatar recibido")
+		h.logger.Info(ctx).Uint("id", uriReq.ID).Str("filename", bodyReq.AvatarFile.Filename).Int64("size", bodyReq.AvatarFile.Size).Msg("Archivo de avatar recibido")
 	} else {
-		h.logger.Info().Uint("id", uriReq.ID).Msg("No se recibió archivo de avatar")
+		h.logger.Info(ctx).Uint("id", uriReq.ID).Msg("No se recibió archivo de avatar")
 	}
 
 	userDTO := mapper.ToUpdateUserDTO(bodyReq)
-	message, err := h.usecase.UpdateUser(c.Request.Context(), uriReq.ID, userDTO)
+	message, err := h.usecase.UpdateUser(ctx, uriReq.ID, userDTO)
 	if err != nil {
-		h.logger.Error().Err(err).Uint("id", uriReq.ID).Msg("Error al actualizar usuario desde el caso de uso")
+		h.logger.Error(ctx).Err(err).Uint("id", uriReq.ID).Msg("Error al actualizar usuario desde el caso de uso")
 
 		statusCode := http.StatusInternalServerError
 		errorMessage := "Error interno del servidor"
@@ -87,7 +107,7 @@ func (h *UserHandler) UpdateUserHandler(c *gin.Context) {
 		return
 	}
 
-	h.logger.Info().Uint("id", uriReq.ID).Msg("Usuario actualizado exitosamente")
+	h.logger.Info(ctx).Uint("id", uriReq.ID).Msg("Usuario actualizado exitosamente")
 	c.JSON(http.StatusOK, response.UserMessageResponse{
 		Success: true,
 		Message: message,

@@ -37,7 +37,7 @@ export class LoginRepository implements ILoginRepository {
         throw new Error('Respuesta inválida del servidor');
       }
 
-      const { user: backendUser, token, businesses } = backendResponse.data;
+      const { user: backendUser, token, businesses, scope, is_super_admin } = backendResponse.data;
 
       // Mapear el usuario del backend a nuestra entidad User
       const user: User = {
@@ -64,11 +64,14 @@ export class LoginRepository implements ILoginRepository {
       }));
 
       console.log('🔐 LoginRepository - Token devuelto:', token ? `${token.substring(0, 50)}...` : 'null');
+      console.log('🔐 LoginRepository - Scope:', scope, 'Is Super Admin:', is_super_admin);
       
       return {
         user,
         token,
         businesses: mappedBusinesses,
+        scope,
+        is_super_admin,
       };
     } catch (error) {
       console.error('Error en login:', error);

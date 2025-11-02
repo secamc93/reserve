@@ -54,12 +54,12 @@ interface Vote {
 }
 
 interface VotingsListProps {
-  hpId: number;
+  businessId: number;
   groupId: number;
   groupName: string;
 }
 
-export function VotingsList({ hpId, groupId, groupName }: VotingsListProps) {
+export function VotingsList({ businessId, groupId, groupName }: VotingsListProps) {
   const [loading, setLoading] = useState(false);
   const [votings, setVotings] = useState<Voting[]>([]);
   const [votingOptions, setVotingOptions] = useState<Record<number, VotingOption[]>>({});
@@ -80,7 +80,7 @@ export function VotingsList({ hpId, groupId, groupName }: VotingsListProps) {
 
   useEffect(() => {
     loadVotings();
-  }, [hpId, groupId]);
+  }, [businessId, groupId]);
 
   const loadVotings = async () => {
     setLoading(true);
@@ -91,7 +91,7 @@ export function VotingsList({ hpId, groupId, groupName }: VotingsListProps) {
         return;
       }
 
-      const result = await getVotingsAction({ token, hpId, groupId });
+      const result = await getVotingsAction({ token, businessId, groupId });
       
       if (result.success && result.data) {
         const sortedVotings = result.data.sort((a, b) => a.displayOrder - b.displayOrder);
@@ -108,7 +108,7 @@ export function VotingsList({ hpId, groupId, groupName }: VotingsListProps) {
       const token = TokenStorage.getToken();
       if (!token) return;
 
-      const result = await getVotingOptionsAction({ token, hpId, groupId, votingId });
+      const result = await getVotingOptionsAction({ token, businessId, groupId, votingId });
       
       if (result.success && result.data) {
         const sortedOptions = result.data.sort((a, b) => a.displayOrder - b.displayOrder);
@@ -127,7 +127,7 @@ export function VotingsList({ hpId, groupId, groupName }: VotingsListProps) {
       const token = TokenStorage.getToken();
       if (!token) return;
 
-      const result = await getVotesAction({ token, hpId, groupId, votingId });
+      const result = await getVotesAction({ token, businessId, groupId, votingId });
       
       if (result.success && result.data) {
         setVotingVotes(prev => ({
@@ -203,7 +203,7 @@ export function VotingsList({ hpId, groupId, groupName }: VotingsListProps) {
 
   const handleLiveVoting = (voting: Voting) => {
     // Navegar a la página de votación en vivo
-    window.location.href = `/properties/${hpId}/voting-groups/${groupId}/votings/${voting.id}/live`;
+    window.location.href = `/properties/${businessId}/voting-groups/${groupId}/votings/${voting.id}/live`;
   };
 
   const handleEditClick = (voting: Voting) => {
@@ -249,7 +249,7 @@ export function VotingsList({ hpId, groupId, groupName }: VotingsListProps) {
 
       const result = await activateVotingAction({
         token,
-        hpId,
+        businessId,
         groupId,
         votingId: voting.id,
       });
@@ -279,7 +279,7 @@ export function VotingsList({ hpId, groupId, groupName }: VotingsListProps) {
 
       const result = await deactivateVotingAction({
         token,
-        hpId,
+        businessId,
         groupId,
         votingId: voting.id,
       });
@@ -650,7 +650,7 @@ export function VotingsList({ hpId, groupId, groupName }: VotingsListProps) {
         isOpen={showCreateVotingModal}
         onClose={() => setShowCreateVotingModal(false)}
         onSuccess={handleCreateVotingSuccess}
-        hpId={hpId}
+        businessId={businessId}
         groupId={groupId}
       />
 
@@ -662,7 +662,7 @@ export function VotingsList({ hpId, groupId, groupName }: VotingsListProps) {
             setSelectedVotingForOption(null);
           }}
           onSuccess={handleCreateOptionSuccess}
-          hpId={hpId}
+          businessId={businessId}
           groupId={groupId}
           votingId={selectedVotingForOption}
         />
@@ -676,7 +676,7 @@ export function VotingsList({ hpId, groupId, groupName }: VotingsListProps) {
             setShowVotesDetailModal(false);
             setSelectedVotingForDetails(null);
           }}
-          hpId={hpId}
+          businessId={businessId}
           groupId={groupId}
           votingId={selectedVotingForDetails.id}
           votingTitle={selectedVotingForDetails.title}
@@ -693,7 +693,7 @@ export function VotingsList({ hpId, groupId, groupName }: VotingsListProps) {
             setSelectedVotingForDetails(null);
           }}
           onSuccess={handleVoteSuccess}
-          hpId={hpId}
+          businessId={businessId}
           groupId={groupId}
           votingId={selectedVotingForDetails.id}
           votingTitle={selectedVotingForDetails.title}
@@ -711,7 +711,7 @@ export function VotingsList({ hpId, groupId, groupName }: VotingsListProps) {
             setShowLiveVotingModal(false);
             setSelectedVotingForLive(null);
           }}
-          hpId={hpId}
+          businessId={businessId}
           voting={selectedVotingForLive}
           options={votingOptions[selectedVotingForLive.id] || []}
           votes={votingVotes[selectedVotingForLive.id] || []}
@@ -725,7 +725,7 @@ export function VotingsList({ hpId, groupId, groupName }: VotingsListProps) {
           isOpen={showEditModal}
           onClose={handleEditClose}
           onSuccess={handleEditSuccess}
-          hpId={hpId}
+          businessId={businessId}
           groupId={groupId}
           voting={selectedVotingForEdit as any}
         />
@@ -737,7 +737,7 @@ export function VotingsList({ hpId, groupId, groupName }: VotingsListProps) {
           isOpen={showDeleteModal}
           onClose={handleDeleteClose}
           onSuccess={handleDeleteSuccess}
-          hpId={hpId}
+          businessId={businessId}
           groupId={groupId}
           voting={selectedVotingForDelete as any}
         />

@@ -6,7 +6,7 @@
 import { PropertyUnit, PropertyUnitsPaginated, CreatePropertyUnitDTO, UpdatePropertyUnitDTO } from '../entities/property-units';
 
 export interface GetPropertyUnitsParams {
-  hpId: number;
+  businessId: number;
   token: string;
   page?: number;
   pageSize?: number;
@@ -18,26 +18,26 @@ export interface GetPropertyUnitsParams {
 }
 
 export interface GetPropertyUnitByIdParams {
-  hpId: number;
+  businessId: number;
   unitId: number;
   token: string;
 }
 
 export interface CreatePropertyUnitParams {
-  hpId: number;
+  businessId: number;
   data: CreatePropertyUnitDTO;
   token: string;
 }
 
 export interface UpdatePropertyUnitParams {
-  hpId: number;
+  businessId: number;
   unitId: number;
   data: UpdatePropertyUnitDTO;
   token: string;
 }
 
 export interface DeletePropertyUnitParams {
-  hpId: number;
+  businessId: number;
   unitId: number;
   token: string;
 }

@@ -3856,6 +3856,12 @@ const docTemplate = `{
                         "name": "group_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Alternativa: enviar como query si no va en el path",
+                        "name": "group_id",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -4223,6 +4229,12 @@ const docTemplate = `{
                         "name": "voting_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID del business (opcional para super admin)",
+                        "name": "business_id",
+                        "in": "query"
                     },
                     {
                         "description": "Configuración de la URL",
@@ -4794,6 +4806,12 @@ const docTemplate = `{
                         "name": "voting_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID del business (opcional para super admin)",
+                        "name": "business_id",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -4836,6 +4854,15 @@ const docTemplate = `{
                     "Propiedades Horizontales"
                 ],
                 "summary": "Obtener propiedad horizontal por ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la propiedad horizontal",
+                        "name": "business_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",

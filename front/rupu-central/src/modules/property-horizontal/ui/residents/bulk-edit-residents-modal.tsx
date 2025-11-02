@@ -9,10 +9,10 @@ interface BulkEditResidentsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  hpId: number;
+  businessId: number;
 }
 
-export function BulkEditResidentsModal({ isOpen, onClose, onSuccess, hpId }: BulkEditResidentsModalProps) {
+export function BulkEditResidentsModal({ isOpen, onClose, onSuccess, businessId }: BulkEditResidentsModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -83,7 +83,7 @@ export function BulkEditResidentsModal({ isOpen, onClose, onSuccess, hpId }: Bul
     try {
       const result = await bulkUpdateResidentsAction({
         token,
-        hpId,
+        businessId,
         file: selectedFile,
       });
 

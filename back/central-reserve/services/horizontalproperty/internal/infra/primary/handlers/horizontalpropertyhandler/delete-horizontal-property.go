@@ -4,7 +4,9 @@ import (
 	"net/http"
 	"strconv"
 
+	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/horizontalpropertyhandler/response"
+	"central_reserve/shared/log"
 
 	"github.com/gin-gonic/gin"
 )
@@ -24,11 +26,13 @@ import (
 //	@Failure		500		{object}	object
 //	@Router			/horizontal-properties/{business_id} [delete]
 func (h *HorizontalPropertyHandler) DeleteHorizontalProperty(c *gin.Context) {
+	ctx := log.WithFunctionCtx(c.Request.Context(), "DeleteHorizontalProperty")
+
 	// Get ID from path parameter
 	idParam := c.Param("business_id")
 	id, err := strconv.ParseUint(idParam, 10, 32)
 	if err != nil {
-		h.logger.Error().Err(err).Str("id_param", idParam).Msg("Error parsing ID parameter")
+		h.logger.Error(ctx).Err(err).Str("id_param", idParam).Msg("Error parsing ID parameter")
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{
 			Success: false,
 			Message: "ID inválido",
@@ -37,10 +41,34 @@ func (h *HorizontalPropertyHandler) DeleteHorizontalProperty(c *gin.Context) {
 		return
 	}
 
+	// Verificar acceso: super admin puede eliminar cualquier propiedad, usuario normal solo la suya
+	isSuperAdmin := middleware.IsSuperAdmin(c)
+	if !isSuperAdmin {
+		tokenBusinessID, exists := middleware.GetBusinessID(c)
+		if !exists {
+			h.logger.Error(ctx).Msg("Business ID no disponible en token")
+			c.JSON(http.StatusUnauthorized, response.ErrorResponse{
+				Success: false,
+				Message: "Token inválido",
+				Error:   "business_id no disponible",
+			})
+			return
+		}
+		if uint(id) != tokenBusinessID {
+			h.logger.Error(ctx).Uint("requested_id", uint(id)).Uint("token_business_id", tokenBusinessID).Msg("Acceso denegado: business_id no coincide")
+			c.JSON(http.StatusForbidden, response.ErrorResponse{
+				Success: false,
+				Message: "No tiene acceso a esta propiedad",
+				Error:   "El business_id del token no coincide con el solicitado",
+			})
+			return
+		}
+	}
+
 	// Call use case
-	err = h.horizontalPropertyUseCase.DeleteHorizontalProperty(c.Request.Context(), uint(id))
+	err = h.horizontalPropertyUseCase.DeleteHorizontalProperty(ctx, uint(id))
 	if err != nil {
-		h.logger.Error().Err(err).Uint("id", uint(id)).Msg("Error deleting horizontal property")
+		h.logger.Error(ctx).Err(err).Uint("id", uint(id)).Msg("Error deleting horizontal property")
 
 		// Handle specific domain errors
 		switch err.Error() {
@@ -72,13 +100,14 @@ func (h *HorizontalPropertyHandler) DeleteHorizontalProperty(c *gin.Context) {
 		return
 	}
 
+	h.logger.Info(ctx).
+		Uint("id", uint(id)).
+		Bool("is_super_admin", isSuperAdmin).
+		Msg("Propiedad horizontal eliminada exitosamente")
+
 	// Return success response
 	c.JSON(http.StatusOK, response.HorizontalPropertyDeleteSuccessResponse{
 		Success: true,
 		Message: "Propiedad horizontal eliminada exitosamente",
 	})
-
-	h.logger.Info().
-		Uint("id", uint(id)).
-		Msg("Propiedad horizontal eliminada exitosamente")
 }

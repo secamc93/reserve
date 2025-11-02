@@ -2,11 +2,11 @@
  * Use Case: Eliminar/Desactivar grupo de votación
  */
 
-import { VotingGroupsRepository } from '../../infrastructure/repositories/voting-groups.repository';
+import { VotingGroupsRepository } from '../../infrastructure/repositories/voting-groups/voting-groups.repository';
 
 export interface DeleteVotingGroupParams {
   token: string;
-  hpId: number;
+  businessId: number;
   groupId: number;
 }
 
@@ -28,7 +28,7 @@ export class DeleteVotingGroupUseCase {
     // Eliminar/desactivar grupo de votación
     const message = await this.repository.deleteVotingGroup({
       token: input.token,
-      hpId: input.hpId,
+      businessId: input.businessId,
       groupId: input.groupId,
     });
 

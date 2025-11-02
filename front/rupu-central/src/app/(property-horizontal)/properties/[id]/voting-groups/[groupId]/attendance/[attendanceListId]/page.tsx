@@ -23,7 +23,7 @@ export default function AttendanceListPage() {
   const [deleting, setDeleting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const hpId = parseInt(params.id as string);
+  const businessId = parseInt(params.id as string);
   const groupId = parseInt(params.groupId as string);
   const attendanceListId = parseInt(params.attendanceListId as string);
 
@@ -69,7 +69,7 @@ export default function AttendanceListPage() {
     try {
       const result = await removeAttendanceListAction({ token, id: attendanceList.id });
       if (result.success) {
-        router.push(`/properties/${hpId}/voting-groups/${groupId}/attendance`);
+        router.push(`/properties/${businessId}/voting-groups/${groupId}/attendance`);
       } else {
         setError(result.error || 'No se pudo eliminar la lista');
       }
@@ -93,7 +93,7 @@ export default function AttendanceListPage() {
     return (
       <div className="min-h-screen bg-gray-50">
         <PropertyNavigation
-          hpId={hpId}
+          businessId={businessId}
           currentSection="attendance"
           groupId={groupId}
         />
@@ -108,7 +108,7 @@ export default function AttendanceListPage() {
     return (
       <div className="min-h-screen bg-gray-50">
         <PropertyNavigation
-          hpId={hpId}
+          businessId={businessId}
           currentSection="attendance"
           groupId={groupId}
         />
@@ -134,7 +134,7 @@ export default function AttendanceListPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Navigation */}
       <PropertyNavigation
-        hpId={hpId}
+        businessId={businessId}
         currentSection="attendance"
         groupId={groupId}
       />
@@ -179,7 +179,7 @@ export default function AttendanceListPage() {
             onClose={() => router.back()}
             attendanceList={attendanceList}
             token={token}
-            businessId={hpId}
+            businessId={businessId}
           />
         </div>
 

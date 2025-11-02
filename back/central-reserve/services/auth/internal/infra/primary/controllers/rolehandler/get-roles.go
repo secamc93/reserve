@@ -4,6 +4,8 @@ import (
 	"central_reserve/services/auth/internal/domain"
 	"central_reserve/services/auth/internal/infra/primary/controllers/rolehandler/mapper"
 	"central_reserve/services/auth/internal/infra/primary/controllers/rolehandler/response"
+	"central_reserve/services/auth/middleware"
+	"central_reserve/shared/log"
 	"net/http"
 	"strconv"
 
@@ -28,16 +30,28 @@ import (
 //	@Failure		500					{object}	response.RoleErrorResponse		"Error interno del servidor"
 //	@Router			/roles [get]
 func (h *RoleHandler) GetRolesHandler(c *gin.Context) {
-	h.logger.Info().Msg("Iniciando solicitud para obtener todos los roles")
+	ctx := log.WithFunctionCtx(c.Request.Context(), "GetRolesHandler")
 
 	// Leer todos los query parameters
 	filters := domain.RoleFilters{}
 
-	// Filtrar por business_type_id
-	if businessTypeIDStr := c.Query("business_type_id"); businessTypeIDStr != "" {
-		if id, err := strconv.ParseUint(businessTypeIDStr, 10, 32); err == nil {
-			val := uint(id)
-			filters.BusinessTypeID = &val
+	// Si no es super admin, obtener business_type_id del token
+	isSuperAdmin := middleware.IsSuperAdmin(c)
+	if !isSuperAdmin {
+		// Obtener business_type_id del token
+		tokenBusinessTypeID, ok := middleware.GetBusinessTypeID(c)
+		if ok && tokenBusinessTypeID > 0 {
+			filters.BusinessTypeID = &tokenBusinessTypeID
+			h.logger.Info(ctx).Uint("business_type_id", tokenBusinessTypeID).Msg("Usuario normal: filtrando roles por business_type_id del token")
+		}
+	} else {
+		// Super admin puede filtrar por business_type_id desde query param
+		if businessTypeIDStr := c.Query("business_type_id"); businessTypeIDStr != "" {
+			if id, err := strconv.ParseUint(businessTypeIDStr, 10, 32); err == nil {
+				val := uint(id)
+				filters.BusinessTypeID = &val
+				h.logger.Info(ctx).Uint("business_type_id", val).Msg("Super admin: filtrando roles por business_type_id del query")
+			}
 		}
 	}
 
@@ -68,9 +82,9 @@ func (h *RoleHandler) GetRolesHandler(c *gin.Context) {
 		}
 	}
 
-	roles, err := h.usecase.GetRoles(c.Request.Context(), filters)
+	roles, err := h.usecase.GetRoles(ctx, filters)
 	if err != nil {
-		h.logger.Error().Err(err).Msg("Error al obtener roles desde el caso de uso")
+		h.logger.Error(ctx).Err(err).Msg("Error al obtener roles desde el caso de uso")
 		c.JSON(http.StatusInternalServerError, response.RoleErrorResponse{
 			Error: "Error interno del servidor",
 		})
@@ -79,6 +93,6 @@ func (h *RoleHandler) GetRolesHandler(c *gin.Context) {
 
 	response := mapper.ToRoleListResponse(roles)
 
-	h.logger.Info().Int("count", len(roles)).Msg("Roles obtenidos exitosamente")
+	h.logger.Info(ctx).Int("count", len(roles)).Bool("is_super_admin", isSuperAdmin).Msg("Roles obtenidos exitosamente")
 	c.JSON(http.StatusOK, response)
 }

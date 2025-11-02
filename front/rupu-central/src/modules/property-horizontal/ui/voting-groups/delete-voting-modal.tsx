@@ -14,7 +14,7 @@ interface DeleteVotingModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  hpId: number;
+  businessId: number;
   groupId: number;
   voting: Voting | null;
 }
@@ -23,7 +23,7 @@ export function DeleteVotingModal({
   isOpen, 
   onClose, 
   onSuccess, 
-  hpId,
+  businessId,
   groupId,
   voting 
 }: DeleteVotingModalProps) {
@@ -48,7 +48,7 @@ export function DeleteVotingModal({
 
       const result = await deleteVotingAction({
         token,
-        hpId,
+        businessId,
         groupId,
         votingId: voting.id,
       });

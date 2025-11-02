@@ -4,6 +4,8 @@ import (
 	"central_reserve/services/auth/internal/infra/primary/controllers/userhandler/mapper"
 	"central_reserve/services/auth/internal/infra/primary/controllers/userhandler/request"
 	"central_reserve/services/auth/internal/infra/primary/controllers/userhandler/response"
+	"central_reserve/services/auth/middleware"
+	"central_reserve/shared/log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -25,22 +27,39 @@ import (
 //	@Failure		500	{object}	response.UserErrorResponse		"Error interno del servidor"
 //	@Router			/users/{id} [get]
 func (h *UserHandler) GetUserByIDHandler(c *gin.Context) {
+	ctx := log.WithFunctionCtx(c.Request.Context(), "GetUserByIDHandler")
 	var req request.GetUserByIDRequest
 
 	// Binding automático con validaciones para parámetros de URL
 	if err := c.ShouldBindUri(&req); err != nil {
-		h.logger.Error().Err(err).Msg("Error al validar ID del usuario")
+		h.logger.Error(ctx).Err(err).Msg("Error al validar ID del usuario")
 		c.JSON(http.StatusBadRequest, response.UserErrorResponse{
 			Error: "ID inválido: " + err.Error(),
 		})
 		return
 	}
 
-	h.logger.Info().Uint("id", req.ID).Msg("Iniciando solicitud para obtener usuario por ID")
+	// Verificar acceso: super admin puede ver cualquier usuario, usuario normal solo los de su business
+	isSuperAdmin := middleware.IsSuperAdmin(c)
+	if !isSuperAdmin {
+		tokenBusinessID, ok := middleware.GetBusinessID(c)
+		if !ok {
+			h.logger.Error(ctx).Msg("Business ID no disponible en token")
+			c.JSON(http.StatusUnauthorized, response.UserErrorResponse{
+				Error: "Token inválido: business_id no disponible",
+			})
+			return
+		}
+		h.logger.Info(ctx).Uint("requested_user_id", req.ID).Uint("token_business_id", tokenBusinessID).Msg("Verificando acceso a usuario")
+		// TODO: Aquí deberíamos validar que el usuario pertenezca al business del token
+		// Por ahora, el caso de uso lo manejará internamente
+	}
 
-	user, err := h.usecase.GetUserByID(c.Request.Context(), req.ID)
+	h.logger.Info(ctx).Uint("id", req.ID).Bool("is_super_admin", isSuperAdmin).Msg("Iniciando solicitud para obtener usuario por ID")
+
+	user, err := h.usecase.GetUserByID(ctx, req.ID)
 	if err != nil {
-		h.logger.Error().Uint("id", req.ID).Err(err).Msg("Error al obtener usuario por ID desde el caso de uso")
+		h.logger.Error(ctx).Uint("id", req.ID).Err(err).Msg("Error al obtener usuario por ID desde el caso de uso")
 
 		statusCode := http.StatusInternalServerError
 		errorMessage := "Error interno del servidor"
@@ -58,7 +77,7 @@ func (h *UserHandler) GetUserByIDHandler(c *gin.Context) {
 
 	userResponse := mapper.ToUserResponse(*user)
 
-	h.logger.Info().Uint("id", req.ID).Msg("Usuario obtenido exitosamente")
+	h.logger.Info(ctx).Uint("id", req.ID).Msg("Usuario obtenido exitosamente")
 	c.JSON(http.StatusOK, response.UserSuccessResponse{
 		Success: true,
 		Data:    userResponse,

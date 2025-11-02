@@ -9,7 +9,7 @@ import { logHttpRequest, logHttpSuccess, logHttpError } from '@shared/utils';
 
 export interface ImportUnitsFromExcelInput {
   token: string;
-  hpId: number;
+  businessId: number;
   file: File;
 }
 
@@ -29,8 +29,8 @@ export async function importUnitsFromExcelAction(
   input: ImportUnitsFromExcelInput
 ): Promise<ImportUnitsResponse> {
   try {
-    const { token, hpId, file } = input;
-    const url = `${env.API_BASE_URL}/horizontal-properties/${hpId}/property-units/import-excel`;
+    const { token, businessId, file } = input;
+    const url = `${env.API_BASE_URL}/horizontal-properties/property-units/import-excel?business_id=${businessId}`;
     const startTime = Date.now();
 
     // Crear FormData para enviar el archivo

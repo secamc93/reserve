@@ -30,6 +30,7 @@ func (r *Repository) GetBusinessByID(ctx context.Context, businessID uint) (*dom
 		Name:           business.Name,
 		Code:           business.Code,
 		BusinessTypeID: business.BusinessTypeID,
+		IsActive:       business.IsActive,
 		BusinessType: domain.BusinessTypeInfo{
 			ID:          business.BusinessType.ID,
 			Name:        business.BusinessType.Name,

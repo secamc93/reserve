@@ -2,13 +2,13 @@
  * Use Case: Actualizar grupo de votación
  */
 
-import { VotingGroupsRepository } from '../../infrastructure/repositories/voting-groups.repository';
+import { VotingGroupsRepository } from '../../infrastructure/repositories/voting-groups/voting-groups.repository';
 import { VotingGroup, UpdateVotingGroupDTO } from '../../domain/entities';
 import { validateUpdateVotingGroup } from '../../domain/validation/voting-validation';
 
 export interface UpdateVotingGroupParams {
   token: string;
-  hpId: number;
+  businessId: number;
   groupId: number;
   data: UpdateVotingGroupDTO;
 }
@@ -29,7 +29,7 @@ export class UpdateVotingGroupUseCase {
     // Actualizar grupo de votación
     const group = await this.repository.updateVotingGroup({
       token: input.token,
-      hpId: input.hpId,
+      businessId: input.businessId,
       groupId: input.groupId,
       data: input.data,
     });

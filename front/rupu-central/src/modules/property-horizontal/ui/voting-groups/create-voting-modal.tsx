@@ -13,11 +13,11 @@ interface CreateVotingModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  hpId: number;
+  businessId: number;
   groupId: number;
 }
 
-export function CreateVotingModal({ isOpen, onClose, onSuccess, hpId, groupId }: CreateVotingModalProps) {
+export function CreateVotingModal({ isOpen, onClose, onSuccess, businessId, groupId }: CreateVotingModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,7 +52,7 @@ export function CreateVotingModal({ isOpen, onClose, onSuccess, hpId, groupId }:
 
       const result = await createVotingAction({
         token,
-        hpId,
+        businessId,
         groupId,
         data: {
           votingGroupId: groupId,

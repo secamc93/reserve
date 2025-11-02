@@ -14,7 +14,7 @@ import {
   BulkUpdateResidentsResponse,
   Resident,
   ResidentsPaginated,
-} from '../../domain';
+} from '../../../domain';
 import {
   BackendGetResidentsResponse,
   BackendGetResidentByIdResponse,
@@ -23,7 +23,7 @@ import {
   BackendDeleteResidentResponse,
   BackendResident,
   BackendResidentListItem,
-} from './response';
+} from '../response';
 
 export class ResidentsRepository implements IResidentsRepository {
   private baseUrl = env.API_BASE_URL;
@@ -83,7 +83,7 @@ export class ResidentsRepository implements IResidentsRepository {
   }
 
   async getResidents(params: GetResidentsParams): Promise<ResidentsPaginated> {
-    const { hpId, token, page = 1, pageSize = 10, name, propertyUnitId, propertyUnitNumber, residentTypeId, isActive, isMainResident, dni } = params;
+    const { businessId, token, page = 1, pageSize = 10, name, propertyUnitId, propertyUnitNumber, residentTypeId, isActive, isMainResident, dni } = params;
 
     const queryParams = new URLSearchParams({
       page: page.toString(),
@@ -99,7 +99,7 @@ export class ResidentsRepository implements IResidentsRepository {
     if (dni !== undefined) queryParams.append('dni', dni);
 
     // Nueva URL: listar residentes por business (hp)
-    if (hpId !== undefined) queryParams.append('business_id', hpId.toString());
+    if (businessId !== undefined) queryParams.append('business_id', businessId.toString());
     const url = `${this.baseUrl}/horizontal-properties/residents?${queryParams.toString()}`;
     const method = 'GET';
     const startTime = Date.now();
@@ -150,9 +150,9 @@ export class ResidentsRepository implements IResidentsRepository {
   }
 
   async getResidentById(params: GetResidentByIdParams): Promise<Resident> {
-    const { hpId, residentId, token } = params;
+    const { businessId, residentId, token } = params;
     // Nueva URL: detalle de residente con business_id opcional en query
-    const url = `${this.baseUrl}/horizontal-properties/residents/${residentId}${hpId !== undefined ? `?business_id=${hpId}` : ''}`;
+    const url = `${this.baseUrl}/horizontal-properties/residents/${residentId}${businessId !== undefined ? `?business_id=${businessId}` : ''}`;
     const method = 'GET';
     const startTime = Date.now();
 
@@ -196,14 +196,14 @@ export class ResidentsRepository implements IResidentsRepository {
   }
 
   async createResident(params: CreateResidentParams): Promise<Resident> {
-    const { hpId, data: residentData, token } = params;
+    const { businessId, data: residentData, token } = params;
     // Nueva URL: sin business_id en path, se envía en el body
     const url = `${this.baseUrl}/horizontal-properties/residents`;
     const method = 'POST';
     const startTime = Date.now();
 
     const body = {
-      business_id: hpId,
+      business_id: businessId,
       property_unit_id: residentData.propertyUnitId,
       resident_type_id: residentData.residentTypeId,
       name: residentData.name,
@@ -259,12 +259,14 @@ export class ResidentsRepository implements IResidentsRepository {
   }
 
   async updateResident(params: UpdateResidentParams): Promise<Resident> {
-    const { hpId, residentId, data: residentData, token } = params;
-    const url = `${this.baseUrl}/horizontal-properties/${hpId}/residents/${residentId}`;
+    const { businessId, residentId, data: residentData, token } = params;
+    const url = `${this.baseUrl}/horizontal-properties/residents/${residentId}`;
     const method = 'PUT';
     const startTime = Date.now();
 
-    const body: Record<string, unknown> = {};
+    const body: Record<string, unknown> = {
+      business_id: businessId,
+    };
     if (residentData.propertyUnitId !== undefined) body.property_unit_id = residentData.propertyUnitId;
     if (residentData.residentTypeId !== undefined) body.resident_type_id = residentData.residentTypeId;
     if (residentData.name !== undefined) body.name = residentData.name;
@@ -321,8 +323,8 @@ export class ResidentsRepository implements IResidentsRepository {
   }
 
   async deleteResident(params: DeleteResidentParams): Promise<void> {
-    const { hpId, residentId, token } = params;
-    const url = `${this.baseUrl}/horizontal-properties/${hpId}/residents/${residentId}`;
+    const { businessId, residentId, token } = params;
+    const url = `${this.baseUrl}/horizontal-properties/residents/${residentId}?business_id=${businessId}`;
     const method = 'DELETE';
     const startTime = Date.now();
 
@@ -364,8 +366,8 @@ export class ResidentsRepository implements IResidentsRepository {
   }
 
   async bulkUpdateResidents(params: BulkUpdateResidentsParams): Promise<BulkUpdateResidentsResponse> {
-    const { hpId, file, token } = params;
-    const url = `${this.baseUrl}/horizontal-properties/${hpId}/residents/bulk-update`;
+    const { businessId, file, token } = params;
+    const url = `${this.baseUrl}/horizontal-properties/residents/bulk-update?business_id=${businessId}`;
     const startTime = Date.now();
 
     const formData = new FormData();

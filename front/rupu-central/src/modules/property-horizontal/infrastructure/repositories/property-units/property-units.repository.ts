@@ -12,7 +12,7 @@ import {
   DeletePropertyUnitParams,
   PropertyUnit,
   PropertyUnitsPaginated,
-} from '../../domain';
+} from '../../../domain';
 import {
   BackendGetPropertyUnitsResponse,
   BackendGetPropertyUnitByIdResponse,
@@ -20,7 +20,7 @@ import {
   BackendUpdatePropertyUnitResponse,
   BackendDeletePropertyUnitResponse,
   BackendPropertyUnit,
-} from './response';
+} from '../response';
 
 export class PropertyUnitsRepository implements IPropertyUnitsRepository {
   private baseUrl = env.API_BASE_URL;
@@ -45,7 +45,7 @@ export class PropertyUnitsRepository implements IPropertyUnitsRepository {
   }
 
   async getPropertyUnits(params: GetPropertyUnitsParams): Promise<PropertyUnitsPaginated> {
-    const { hpId, token, page = 1, pageSize = 10, number, unitType, floor, block, isActive } = params;
+    const { businessId, token, page = 1, pageSize = 10, number, unitType, floor, block, isActive } = params;
 
     const queryParams = new URLSearchParams({
       page: page.toString(),
@@ -57,7 +57,7 @@ export class PropertyUnitsRepository implements IPropertyUnitsRepository {
     if (floor !== undefined) queryParams.append('floor', floor.toString());
     if (block) queryParams.append('block', block);
     if (isActive !== undefined) queryParams.append('is_active', isActive.toString());
-    if (hpId !== undefined) queryParams.append('business_id', hpId.toString());
+    if (businessId !== undefined) queryParams.append('business_id', businessId.toString());
 
     // URL correcta para listar unidades
     const url = `${this.baseUrl}/horizontal-properties/property-units?${queryParams.toString()}`;
@@ -110,10 +110,10 @@ export class PropertyUnitsRepository implements IPropertyUnitsRepository {
   }
 
   async getPropertyUnitById(params: GetPropertyUnitByIdParams): Promise<PropertyUnit> {
-    const { hpId, unitId, token } = params;
+    const { businessId, unitId, token } = params;
     // URL correcta para obtener unidad por ID
     const url = `${this.baseUrl}/horizontal-properties/property-units/${unitId}?${
-      hpId !== undefined ? `business_id=${hpId}` : ''
+      businessId !== undefined ? `business_id=${businessId}` : ''
     }`;
     const method = 'GET';
     const startTime = Date.now();
@@ -158,7 +158,7 @@ export class PropertyUnitsRepository implements IPropertyUnitsRepository {
   }
 
   async createPropertyUnit(params: CreatePropertyUnitParams): Promise<PropertyUnit> {
-    const { hpId, data: unitData, token } = params;
+    const { businessId, data: unitData, token } = params;
     // Nueva URL: sin business_id en path, se envía en el body
     const url = `${this.baseUrl}/horizontal-properties/property-units`;
     const method = 'POST';
@@ -166,7 +166,7 @@ export class PropertyUnitsRepository implements IPropertyUnitsRepository {
 
     // Solo incluir campos requeridos y campos opcionales que estén definidos
     const body: Record<string, unknown> = {
-      business_id: hpId,
+      business_id: businessId,
       number: unitData.number,
       unit_type: unitData.unitType,
     };
@@ -220,12 +220,14 @@ export class PropertyUnitsRepository implements IPropertyUnitsRepository {
   }
 
   async updatePropertyUnit(params: UpdatePropertyUnitParams): Promise<PropertyUnit> {
-    const { hpId, unitId, data: unitData, token } = params;
-    const url = `${this.baseUrl}/horizontal-properties/${hpId}/property-units/${unitId}`;
+    const { businessId, unitId, data: unitData, token } = params;
+    const url = `${this.baseUrl}/horizontal-properties/property-units/${unitId}`;
     const method = 'PUT';
     const startTime = Date.now();
 
-    const body: Record<string, unknown> = {};
+    const body: Record<string, unknown> = {
+      business_id: businessId,
+    };
     if (unitData.number !== undefined) body.number = unitData.number;
     if (unitData.floor !== undefined) body.floor = unitData.floor;
     if (unitData.block !== undefined) body.block = unitData.block;
@@ -277,8 +279,8 @@ export class PropertyUnitsRepository implements IPropertyUnitsRepository {
   }
 
   async deletePropertyUnit(params: DeletePropertyUnitParams): Promise<void> {
-    const { hpId, unitId, token } = params;
-    const url = `${this.baseUrl}/horizontal-properties/${hpId}/property-units/${unitId}`;
+    const { businessId, unitId, token } = params;
+    const url = `${this.baseUrl}/horizontal-properties/property-units/${unitId}?business_id=${businessId}`;
     const method = 'DELETE';
     const startTime = Date.now();
 

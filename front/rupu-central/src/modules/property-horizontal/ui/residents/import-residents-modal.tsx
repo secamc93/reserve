@@ -13,10 +13,10 @@ interface ImportResidentsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  hpId: number;
+  businessId: number;
 }
 
-export function ImportResidentsModal({ isOpen, onClose, onSuccess, hpId }: ImportResidentsModalProps) {
+export function ImportResidentsModal({ isOpen, onClose, onSuccess, businessId }: ImportResidentsModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -77,7 +77,7 @@ export function ImportResidentsModal({ isOpen, onClose, onSuccess, hpId }: Impor
 
       const result = await importResidentsFromExcelAction({
         token,
-        hpId,
+        businessId,
         file: selectedFile,
       });
 

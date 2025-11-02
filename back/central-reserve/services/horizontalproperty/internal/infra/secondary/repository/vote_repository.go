@@ -387,6 +387,17 @@ func (r *Repository) GetVotingResults(ctx context.Context, votingID uint) ([]dom
 }
 
 func (r *Repository) GetVotingDetailsByUnit(ctx context.Context, votingID, hpID uint) ([]domain.VotingDetailByUnitDTO, error) {
+	// PASO 0: Validar que la votación pertenezca al business_id correcto
+	votingBusinessID, err := r.getBusinessIDByVotingID(ctx, votingID)
+	if err != nil {
+		r.logger.Error().Err(err).Uint("voting_id", votingID).Msg("Error validando votación")
+		return nil, err
+	}
+	if votingBusinessID != hpID {
+		r.logger.Error().Uint("voting_id", votingID).Uint("expected_business_id", hpID).Uint("actual_business_id", votingBusinessID).Msg("La votación no pertenece al business especificado")
+		return nil, fmt.Errorf("la votación no pertenece al business especificado")
+	}
+
 	// PASO 1: Obtener todas las unidades activas de la propiedad
 	var units []models.PropertyUnit
 	if err := r.db.Conn(ctx).
@@ -467,18 +478,18 @@ func (r *Repository) GetVotingDetailsByUnit(ctx context.Context, votingID, hpID 
 
 		// Verificar si la unidad ha votado
 		if vote, hasVoted := voteByUnit[unit.ID]; hasVoted {
-				dto.HasVoted = true
-				dto.VotingOptionID = &vote.VotingOptionID
+			dto.HasVoted = true
+			dto.VotingOptionID = &vote.VotingOptionID
 
-				if vote.VotingOption.ID != 0 {
-					dto.OptionText = &vote.VotingOption.OptionText
-					dto.OptionCode = &vote.VotingOption.OptionCode
-					dto.OptionColor = &vote.VotingOption.Color
-				}
-
-				votedAtStr := vote.VotedAt.Format("2006-01-02T15:04:05Z07:00")
-				dto.VotedAt = &votedAtStr
+			if vote.VotingOption.ID != 0 {
+				dto.OptionText = &vote.VotingOption.OptionText
+				dto.OptionCode = &vote.VotingOption.OptionCode
+				dto.OptionColor = &vote.VotingOption.Color
 			}
+
+			votedAtStr := vote.VotedAt.Format("2006-01-02T15:04:05Z07:00")
+			dto.VotedAt = &votedAtStr
+		}
 
 		// Agregar info del residente si existe
 		if infos, hasResident := residentByUnit[unit.ID]; hasResident && len(infos) > 0 {

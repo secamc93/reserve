@@ -2,7 +2,7 @@ import { getUnvotedUnitsAction, type GetUnvotedUnitsInput, type GetUnvotedUnitsR
 
 export interface GetUnvotedUnitsUseCaseParams {
   token: string;
-  hpId: number;
+  businessId: number;
   groupId: number;
   votingId: number;
   unitNumber?: string;
@@ -24,7 +24,7 @@ export class GetUnvotedUnitsUseCase {
     try {
       const input: GetUnvotedUnitsInput = {
         token: params.token,
-        hpId: params.hpId,
+        businessId: params.businessId,
         groupId: params.groupId,
         votingId: params.votingId,
         unitNumber: params.unitNumber

@@ -10,7 +10,7 @@ import { EditResidentModal } from './edit-resident-modal';
 import { ImportResidentsModal } from './import-residents-modal';
 import { BulkEditResidentsModal } from './bulk-edit-residents-modal';
 
-export function ResidentsTable({ hpId }: { hpId: number }) {
+export function ResidentsTable({ businessId }: { businessId: number }) {
   const [residents, setResidents] = useState<Resident[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -77,14 +77,14 @@ export function ResidentsTable({ hpId }: { hpId: number }) {
         const token = TokenStorage.getToken();
         if (!token) return;
         const { getPropertyUnitsAction } = await import('../../infrastructure/actions');
-        const data = await getPropertyUnitsAction({ hpId, token, page: 1, pageSize: 100 });
+        const data = await getPropertyUnitsAction({ businessId, token, page: 1, pageSize: 100 });
         setUnits(data.units.map(u => ({ id: u.id, number: u.number })));
       } catch (error) {
         console.error('Error loading units:', error);
       }
     };
     loadUnits();
-  }, [hpId]);
+  }, [businessId]);
 
   const loadResidents = async () => {
     setLoading(true);
@@ -93,7 +93,7 @@ export function ResidentsTable({ hpId }: { hpId: number }) {
       if (!token) throw new Error('No token found');
 
       const data = await getResidentsAction({
-        hpId,
+        businessId,
         token,
         page: currentPage,
         pageSize: 10,
@@ -163,7 +163,7 @@ export function ResidentsTable({ hpId }: { hpId: number }) {
       const token = TokenStorage.getToken();
       if (!token) throw new Error('No token found');
 
-      await deleteResidentAction({ hpId, residentId: residentToDelete, token });
+      await deleteResidentAction({ businessId, residentId: residentToDelete, token });
       await loadResidents();
       
       setAlert({ type: 'success', message: 'Residente eliminado correctamente' });
@@ -423,7 +423,7 @@ export function ResidentsTable({ hpId }: { hpId: number }) {
 
       {showCreateModal && (
         <CreateResidentModal
-          hpId={hpId}
+          businessId={businessId}
           onClose={() => setShowCreateModal(false)}
           onSuccess={() => {
             setShowCreateModal(false);
@@ -434,7 +434,7 @@ export function ResidentsTable({ hpId }: { hpId: number }) {
 
       {showEditModal && selectedResident && (
         <EditResidentModal
-          hpId={hpId}
+          businessId={businessId}
           resident={selectedResident}
           onClose={() => {
             setShowEditModal(false);
@@ -468,7 +468,7 @@ export function ResidentsTable({ hpId }: { hpId: number }) {
         isOpen={showImportModal}
         onClose={() => setShowImportModal(false)}
         onSuccess={loadResidents}
-        hpId={hpId}
+        businessId={businessId}
       />
 
       {/* Modal de edición masiva */}
@@ -476,7 +476,7 @@ export function ResidentsTable({ hpId }: { hpId: number }) {
         isOpen={showBulkEditModal}
         onClose={() => setShowBulkEditModal(false)}
         onSuccess={loadResidents}
-        hpId={hpId}
+        businessId={businessId}
       />
     </div>
   );

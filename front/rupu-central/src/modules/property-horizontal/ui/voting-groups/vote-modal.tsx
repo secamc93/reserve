@@ -14,7 +14,7 @@ interface VoteModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  hpId: number;
+  businessId: number;
   groupId: number;
   votingId: number;
   votingTitle: string;
@@ -42,7 +42,7 @@ export function VoteModal({
   isOpen,
   onClose,
   onSuccess,
-  hpId,
+  businessId,
   groupId,
   votingId,
   votingTitle,
@@ -90,7 +90,7 @@ export function VoteModal({
     if (isOpen) {
       loadResidents();
     }
-  }, [isOpen, hpId]);
+  }, [isOpen, businessId]);
 
   // 🔄 IMPORTANTE: Consultar endpoint cada vez que se abre el dropdown
   useEffect(() => {
@@ -111,7 +111,7 @@ export function VoteModal({
     setIsSearching(true); // Indicar que se va a buscar
     
     const searchResidents = async () => {
-      if (!isOpen || !hpId) {
+      if (!isOpen || !businessId) {
         setIsSearching(false);
         return;
       }
@@ -125,7 +125,7 @@ export function VoteModal({
       try {
         // Usar el endpoint de unidades sin votar con filtro (SIEMPRE consulta directa al endpoint, sin cache)
         const unvotedData = await getUnvotedUnitsAction({
-          hpId,
+          businessId: businessId,
           groupId,
           votingId,
           token,
@@ -186,7 +186,7 @@ export function VoteModal({
       clearTimeout(timeoutId);
       setIsSearching(false);
     };
-  }, [unitFilter, hpId, isOpen, showResidentDropdown, selectedResidentId]);
+  }, [unitFilter, businessId, isOpen, showResidentDropdown, selectedResidentId]);
 
   // Cerrar dropdown al hacer clic fuera
   useEffect(() => {
@@ -218,10 +218,10 @@ export function VoteModal({
       }
 
       // Cargar solo unidades sin votar (SIEMPRE consulta directa al endpoint, sin cache)
-      console.log('🔍 [VOTE MODAL] Cargando unidades sin votar (consulta directa):', { hpId, groupId, votingId });
+      console.log('🔍 [VOTE MODAL] Cargando unidades sin votar (consulta directa):', { businessId, groupId, votingId });
       
       const unvotedData = await getUnvotedUnitsAction({
-        hpId,
+        businessId: businessId,
         groupId,
         votingId,
         token,
@@ -320,13 +320,13 @@ export function VoteModal({
         votingId,
         votingOptionId: selectedOptionId,
         propertyUnitId: selectedResidentId, // selectedResidentId contiene el unit_id
-        hpId,
+        businessId,
         groupId
       });
 
       const result = await createVoteAction({
         token,
-        hpId,
+        businessId: businessId,
         groupId,
         votingId,
         data: {

@@ -3540,6 +3540,12 @@ paths:
       - application/json
       description: Obtiene una propiedad horizontal con información detallada (incluye
         unidades y comités)
+      parameters:
+      - description: ID de la propiedad horizontal
+        in: path
+        name: business_id
+        required: true
+        type: integer
       produces:
       - application/json
       responses:
@@ -4336,6 +4342,10 @@ paths:
         name: group_id
         required: true
         type: integer
+      - description: 'Alternativa: enviar como query si no va en el path'
+        in: query
+        name: group_id
+        type: integer
       produces:
       - application/json
       responses:
@@ -4574,6 +4584,10 @@ paths:
         in: path
         name: voting_id
         required: true
+        type: integer
+      - description: ID del business (opcional para super admin)
+        in: query
+        name: business_id
         type: integer
       - description: Configuración de la URL
         in: body
@@ -4950,6 +4964,10 @@ paths:
         in: path
         name: voting_id
         required: true
+        type: integer
+      - description: ID del business (opcional para super admin)
+        in: query
+        name: business_id
         type: integer
       produces:
       - application/json

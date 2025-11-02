@@ -9,7 +9,7 @@ import { CreatePropertyUnitModal } from './create-property-unit-modal';
 import { EditPropertyUnitModal } from './edit-property-unit-modal';
 import { ImportUnitsModal } from './import-units-modal';
 
-export function PropertyUnitsTable({ hpId }: { hpId: number }) {
+export function PropertyUnitsTable({ businessId }: { businessId: number }) {
   const [units, setUnits] = useState<PropertyUnit[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -47,7 +47,7 @@ export function PropertyUnitsTable({ hpId }: { hpId: number }) {
       if (!token) throw new Error('No token found');
 
       const data = await getPropertyUnitsAction({
-        hpId,
+        businessId,
         token,
         page: currentPage,
         pageSize: 10,
@@ -112,7 +112,7 @@ export function PropertyUnitsTable({ hpId }: { hpId: number }) {
       const token = TokenStorage.getToken();
       if (!token) throw new Error('No token found');
 
-      await deletePropertyUnitAction({ hpId, unitId: unitToDelete, token });
+      await deletePropertyUnitAction({ businessId, unitId: unitToDelete, token });
       await loadUnits();
       
       setAlert({ type: 'success', message: 'Unidad eliminada correctamente' });
@@ -312,7 +312,7 @@ export function PropertyUnitsTable({ hpId }: { hpId: number }) {
 
       {showCreateModal && (
         <CreatePropertyUnitModal
-          hpId={hpId}
+          businessId={businessId}
           onClose={() => setShowCreateModal(false)}
           onSuccess={() => {
             setShowCreateModal(false);
@@ -323,7 +323,7 @@ export function PropertyUnitsTable({ hpId }: { hpId: number }) {
 
       {showEditModal && selectedUnit && (
         <EditPropertyUnitModal
-          hpId={hpId}
+          businessId={businessId}
           unit={selectedUnit}
           onClose={() => {
             setShowEditModal(false);
@@ -357,7 +357,7 @@ export function PropertyUnitsTable({ hpId }: { hpId: number }) {
         isOpen={showImportModal}
         onClose={() => setShowImportModal(false)}
         onSuccess={loadUnits}
-        hpId={hpId}
+        businessId={businessId}
       />
     </div>
   );

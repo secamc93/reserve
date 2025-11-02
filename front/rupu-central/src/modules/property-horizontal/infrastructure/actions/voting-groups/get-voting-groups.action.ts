@@ -5,7 +5,7 @@
 'use server';
 
 import { GetVotingGroupsUseCase } from '../../../application';
-import { VotingGroupsRepository } from '../../repositories/voting-groups.repository';
+import { VotingGroupsRepository } from '../../repositories/voting-groups';
 import { VotingGroup } from '../../../domain/entities';
 
 export interface GetVotingGroupsInput {

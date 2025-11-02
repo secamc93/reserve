@@ -5,12 +5,12 @@
 'use server';
 
 import { UpdateVotingGroupUseCase } from '../../../application';
-import { VotingGroupsRepository } from '../../repositories/voting-groups.repository';
+import { VotingGroupsRepository } from '../../repositories/voting-groups';
 import { VotingGroup, UpdateVotingGroupDTO } from '../../../domain/entities';
 
 export interface UpdateVotingGroupInput {
   token: string;
-  hpId: number;
+  businessId: number;
   groupId: number;
   data: UpdateVotingGroupDTO;
 }
@@ -28,7 +28,7 @@ export async function updateVotingGroupAction(input: UpdateVotingGroupInput): Pr
 
     const result = await useCase.execute({
       token: input.token,
-      hpId: input.hpId,
+      businessId: input.businessId,
       groupId: input.groupId,
       data: input.data,
     });

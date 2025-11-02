@@ -23,7 +23,7 @@ interface Vote {
 interface VotesDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
-  hpId: number;
+  businessId: number;
   groupId: number;
   votingId: number;
   votingTitle: string;
@@ -33,7 +33,7 @@ interface VotesDetailModalProps {
 export function VotesDetailModal({
   isOpen,
   onClose,
-  hpId,
+  businessId,
   groupId,
   votingId,
   votingTitle,
@@ -57,7 +57,7 @@ export function VotesDetailModal({
         return;
       }
 
-      const result = await getVotesAction({ token, hpId, groupId, votingId });
+      const result = await getVotesAction({ token, businessId, groupId, votingId });
 
       if (result.success && result.data) {
         setVotes(result.data);

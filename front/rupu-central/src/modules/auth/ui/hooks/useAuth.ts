@@ -36,6 +36,8 @@ interface LoginResult {
     avatarUrl?: string;
     token: string;
     businesses: BusinessData[];
+    scope: string;
+    is_super_admin: boolean;
   };
   error?: string;
 }
@@ -87,22 +89,34 @@ export function useAuth(
           TokenStorage.setBusinessIds(businessIds);
           TokenStorage.setBusinessesData(businesses);
 
-          // Establecer el primer business activo como sesión activa
-          const firstActiveBusiness = businesses.find(b => b.is_active);
-          if (firstActiveBusiness) {
-            TokenStorage.setActiveBusiness(firstActiveBusiness.id);
-            console.log('Negocio activo (ID):', firstActiveBusiness.id);
+          // Solo establecer business automáticamente si es super admin o no es tipo business
+          // Si es business y NO es super admin, el usuario debe seleccionar el business
+          const isBusinessUser = result.data.scope === 'business';
+          const isSuperAdmin = result.data.is_super_admin;
 
-            // Aplicar colores del negocio si están disponibles
-            if (
-              firstActiveBusiness.primary_color &&
-              firstActiveBusiness.secondary_color &&
-              firstActiveBusiness.tertiary_color &&
-              firstActiveBusiness.quaternary_color
-            ) {
-              applyBusinessTheme(firstActiveBusiness as unknown as { name: string; primary_color: string; secondary_color: string; tertiary_color: string; quaternary_color: string });
+          if (isSuperAdmin || !isBusinessUser) {
+            // Establecer el primer business activo como sesión activa (o business_id: 0 para super admin)
+            const firstActiveBusiness = businesses.find(b => b.is_active);
+            if (firstActiveBusiness) {
+              TokenStorage.setActiveBusiness(firstActiveBusiness.id);
+              console.log('Negocio activo (ID):', firstActiveBusiness.id);
+
+              // Aplicar colores del negocio si están disponibles
+              if (
+                firstActiveBusiness.primary_color &&
+                firstActiveBusiness.secondary_color &&
+                firstActiveBusiness.tertiary_color &&
+                firstActiveBusiness.quaternary_color
+              ) {
+                applyBusinessTheme(firstActiveBusiness as unknown as { name: string; primary_color: string; secondary_color: string; tertiary_color: string; quaternary_color: string });
+              }
+            } else if (isSuperAdmin) {
+              // Para super admin sin businesses, usar business_id: 0
+              TokenStorage.setActiveBusiness(0);
             }
           }
+          // Si es business user y NO es super admin, NO establecer business automáticamente
+          // El usuario deberá seleccionarlo desde el selector
 
           // Actualizar estado local
           setIsAuthenticated(true);

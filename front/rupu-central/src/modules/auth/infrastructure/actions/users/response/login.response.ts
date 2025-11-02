@@ -24,6 +24,8 @@ export interface LoginActionResult {
     avatarUrl?: string;
     token: string;
     businesses: BusinessData[];
+    scope: string;
+    is_super_admin: boolean;
   };
   error?: string;
 }

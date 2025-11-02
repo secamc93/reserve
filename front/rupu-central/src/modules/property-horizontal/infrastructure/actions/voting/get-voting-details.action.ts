@@ -25,7 +25,7 @@ interface VotingDetailsResult {
 }
 
 interface GetVotingDetailsParams {
-  hpId: number;
+  businessId: number;
   votingGroupId: number;
   votingId: number;
   token: string;
@@ -34,8 +34,10 @@ interface GetVotingDetailsParams {
 export async function getVotingDetailsAction(
   params: GetVotingDetailsParams
 ): Promise<VotingDetailsResult> {
-  const { hpId, votingGroupId, votingId, token } = params;
-  const url = `${env.API_BASE_URL}/horizontal-properties/votings/${votingId}/voting-details?business_id=${hpId}&group_id=${votingGroupId}`;
+  const { businessId, votingGroupId, votingId, token } = params;
+  const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${votingGroupId}/votings/${votingId}/voting-details${
+    businessId !== undefined ? `?business_id=${businessId}` : ''
+  }`;
   const startTime = Date.now();
 
   logHttpRequest({

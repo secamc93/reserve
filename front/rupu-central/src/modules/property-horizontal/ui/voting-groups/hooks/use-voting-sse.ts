@@ -47,7 +47,7 @@ interface UseVotingSSEReturn {
 }
 
 export function useVotingSSE(
-  hpId: number,
+  businessId: number,
   groupId: number,
   votingId: number,
   enabled: boolean = true
@@ -60,7 +60,7 @@ export function useVotingSSE(
   const [deletedVotes, setDeletedVotes] = useState<Array<{ id: number; property_unit_id: number }>>([]);
 
   const connectToSSE = useCallback(async () => {
-    if (!enabled || !hpId || !groupId || !votingId) {
+    if (!enabled || !businessId || !groupId || !votingId) {
       return;
     }
 
@@ -75,7 +75,9 @@ export function useVotingSSE(
       setConnectionStatus('connecting');
       setError(null);
 
-      const url = `${getApiBaseUrl()}/horizontal-properties/${hpId}/voting-groups/${groupId}/votings/${votingId}/stream`;
+      const url = `${getApiBaseUrl()}/horizontal-properties/voting-groups/${groupId}/votings/${votingId}/stream${
+        businessId !== undefined ? `?business_id=${businessId}` : ''
+      }`;
 
       console.log('🔌 Conectando a SSE:', url);
 
@@ -197,7 +199,7 @@ export function useVotingSSE(
       setConnectionStatus('error');
       setIsConnected(false);
     }
-  }, [enabled, hpId, groupId, votingId]);
+  }, [enabled, businessId, groupId, votingId]);
 
   useEffect(() => {
     if (enabled) {

@@ -15,7 +15,7 @@ export default function AttendanceManagementPage() {
   const router = useRouter();
   const [token, setToken] = useState<string>('');
 
-  const hpId = parseInt(params.id as string);
+  const businessId = parseInt(params.id as string);
   const groupId = parseInt(params.groupId as string);
 
   useEffect(() => {
@@ -39,7 +39,7 @@ export default function AttendanceManagementPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Navigation */}
       <PropertyNavigation
-        hpId={hpId}
+        businessId={businessId}
         currentSection="attendance"
         groupId={groupId}
       />
@@ -71,7 +71,7 @@ export default function AttendanceManagementPage() {
             votingGroupId={groupId}
             votingGroupName={`Grupo de Votación ${groupId}`} // TODO: Get actual name from API
             token={token}
-            businessId={hpId}
+            businessId={businessId}
           />
         </div>
       </div>

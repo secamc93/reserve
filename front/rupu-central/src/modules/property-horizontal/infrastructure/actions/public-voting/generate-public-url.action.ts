@@ -8,7 +8,7 @@ import { env } from '@shared/config';
 
 export interface GeneratePublicUrlInput {
   token: string;
-  hpId: number;
+  businessId: number;
   groupId: number;
   votingId: number;
   durationHours: number;
@@ -33,7 +33,7 @@ export async function generatePublicUrlAction(
 ): Promise<GeneratePublicUrlResult> {
   try {
     const response = await fetch(
-      `${env.API_BASE_URL}/horizontal-properties/${input.hpId}/voting-groups/${input.groupId}/votings/${input.votingId}/generate-public-url`,
+      `${env.API_BASE_URL}/horizontal-properties/voting-groups/${input.groupId}/votings/${input.votingId}/generate-public-url`,
       {
         method: 'POST',
         headers: {
@@ -41,6 +41,7 @@ export async function generatePublicUrlAction(
           'Authorization': `Bearer ${input.token}`
         },
         body: JSON.stringify({
+          business_id: input.businessId,
           duration_hours: input.durationHours,
           frontend_url: input.frontendUrl
         })

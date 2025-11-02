@@ -51,7 +51,7 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
   const { id } = use(params);
   const [property, setProperty] = useState<PropertyData | null>(null);
   const [loading, setLoading] = useState(true);
-  const hpId = parseInt(id);
+  const businessId = parseInt(id);
 
   useEffect(() => {
     loadProperty();
@@ -69,7 +69,7 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
 
       const result = await getHorizontalPropertyByIdAction({
         token,
-        id: hpId,
+        id: businessId,
       });
 
       if (result.success && result.data) {
@@ -107,7 +107,7 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
   return (
     <div>
       {/* Navegación */}
-      <PropertyNavigation hpId={hpId} propertyName={property.name} />
+      <PropertyNavigation businessId={businessId} propertyName={property.name} />
       
       {/* Contenido del Dashboard */}
       <div className="p-8">
@@ -234,7 +234,7 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <button
-                onClick={() => router.push(`/properties/${hpId}/units`)}
+                onClick={() => router.push(`/properties/${businessId}/units`)}
                 className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
               >
                 <div className="text-2xl mb-2">🏢</div>
@@ -243,7 +243,7 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
               </button>
               
               <button
-                onClick={() => router.push(`/properties/${hpId}/residents`)}
+                onClick={() => router.push(`/properties/${businessId}/residents`)}
                 className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
               >
                 <div className="text-2xl mb-2">👥</div>
@@ -252,7 +252,7 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
               </button>
               
               <button
-                onClick={() => router.push(`/properties/${hpId}/voting-groups`)}
+                onClick={() => router.push(`/properties/${businessId}/voting-groups`)}
                 className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
               >
                 <div className="text-2xl mb-2">🗳️</div>
@@ -261,7 +261,7 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
               </button>
               
               <button
-                onClick={() => router.push(`/properties/${hpId}/fees`)}
+                onClick={() => router.push(`/properties/${businessId}/fees`)}
                 className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
               >
                 <div className="text-2xl mb-2">💰</div>

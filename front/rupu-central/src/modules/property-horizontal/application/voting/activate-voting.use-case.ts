@@ -2,11 +2,11 @@
  * Use Case: Activar votación
  */
 
-import { VotingsRepository } from '../../infrastructure/repositories/votings.repository';
+import { VotingsRepository } from '../../infrastructure/repositories/voting-groups';
 
 export interface ActivateVotingParams {
   token: string;
-  hpId: number;
+  businessId: number;
   groupId: number;
   votingId: number;
 }
@@ -29,7 +29,7 @@ export class ActivateVotingUseCase {
     // Activar votación
     const message = await this.repository.activateVoting({
       token: input.token,
-      hpId: input.hpId,
+      businessId: input.businessId,
       groupId: input.groupId,
       votingId: input.votingId,
     });

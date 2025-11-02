@@ -5,7 +5,7 @@
 'use server';
 
 import { GetHorizontalPropertiesUseCase } from '../../../application';
-import { HorizontalPropertiesRepository } from '../../repositories/horizontal-properties.repository';
+import { HorizontalPropertiesRepository } from '../../repositories/horizontal-properties';
 import { HorizontalProperty } from '../../../domain/entities';
 
 export interface GetHorizontalPropertiesInput {

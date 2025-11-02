@@ -13,10 +13,10 @@ interface ImportUnitsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  hpId: number;
+  businessId: number;
 }
 
-export function ImportUnitsModal({ isOpen, onClose, onSuccess, hpId }: ImportUnitsModalProps) {
+export function ImportUnitsModal({ isOpen, onClose, onSuccess, businessId }: ImportUnitsModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -75,7 +75,7 @@ export function ImportUnitsModal({ isOpen, onClose, onSuccess, hpId }: ImportUni
 
       const result = await importUnitsFromExcelAction({
         token,
-        hpId,
+        businessId,
         file: selectedFile,
       });
 

@@ -11,7 +11,7 @@ import { Spinner, Alert } from '@shared/ui';
 
 export default function LiveVotingPage() {
   const params = useParams();
-  const hpId = parseInt(params.id as string);
+  const businessId = parseInt(params.id as string);
   const groupId = parseInt(params.groupId as string);
   const votingId = parseInt(params.votingId as string);
 
@@ -23,7 +23,7 @@ export default function LiveVotingPage() {
 
   useEffect(() => {
     loadVoting();
-  }, [hpId, groupId, votingId]);
+  }, [businessId, groupId, votingId]);
 
   const loadVoting = async () => {
     setLoading(true);
@@ -39,7 +39,7 @@ export default function LiveVotingPage() {
       // Cargar la votación
       const votingResult = await getVotingByIdAction({
         token,
-        hpId,
+        businessId,
         groupId,
         votingId,
       });
@@ -54,7 +54,7 @@ export default function LiveVotingPage() {
       // Cargar las opciones de votación
       const optionsResult = await getVotingOptionsAction({
         token,
-        hpId,
+        businessId,
         groupId,
         votingId,
       });
@@ -66,7 +66,7 @@ export default function LiveVotingPage() {
       // Cargar los votos
       const votesResult = await getVotesAction({
         token,
-        hpId,
+        businessId,
         groupId,
         votingId,
       });
@@ -88,10 +88,10 @@ export default function LiveVotingPage() {
     console.log('✅ Voto registrado exitosamente. SSE actualizará los datos automáticamente.');
   };
 
-  if (isNaN(hpId) || isNaN(groupId) || isNaN(votingId)) {
+  if (isNaN(businessId) || isNaN(groupId) || isNaN(votingId)) {
     return (
       <div>
-        <PropertyNavigation hpId={hpId} />
+        <PropertyNavigation businessId={businessId} />
         <div className="p-6">
           <Alert type="error">ID de votación inválido</Alert>
         </div>
@@ -102,7 +102,7 @@ export default function LiveVotingPage() {
   if (loading) {
     return (
       <div>
-        <PropertyNavigation hpId={hpId} />
+        <PropertyNavigation businessId={businessId} />
         <div className="p-6">
           <div className="flex items-center justify-center h-64">
             <Spinner size="xl" text="Cargando votación..." />
@@ -115,7 +115,7 @@ export default function LiveVotingPage() {
   if (error) {
     return (
       <div>
-        <PropertyNavigation hpId={hpId} />
+        <PropertyNavigation businessId={businessId} />
         <div className="p-6">
           <Alert type="error">{error}</Alert>
         </div>
@@ -126,7 +126,7 @@ export default function LiveVotingPage() {
   if (!voting) {
     return (
       <div>
-        <PropertyNavigation hpId={hpId} />
+        <PropertyNavigation businessId={businessId} />
         <div className="p-6">
           <Alert type="error">Votación no encontrada</Alert>
         </div>
@@ -136,7 +136,7 @@ export default function LiveVotingPage() {
 
   return (
     <div>
-      <PropertyNavigation hpId={hpId} />
+      <PropertyNavigation businessId={businessId} />
       <div className="p-6">
         {/* Header */}
         <div className="mb-6">
@@ -164,7 +164,7 @@ export default function LiveVotingPage() {
               )}
               <div className="mt-3 text-sm text-gray-500">
                 <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
-                  URL: /properties/{hpId}/voting-groups/{groupId}/votings/{votingId}/live
+                  URL: /properties/{businessId}/voting-groups/{groupId}/votings/{votingId}/live
                 </span>
               </div>
             </div>
@@ -184,7 +184,7 @@ export default function LiveVotingPage() {
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
           <LiveVotingModal 
             voting={voting as any}
-            hpId={hpId}
+            businessId={businessId}
             options={options as any}
             votes={votes as any}
             isOpen={true}

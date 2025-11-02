@@ -2,11 +2,11 @@
  * Use Case: Eliminar/Desactivar votación
  */
 
-import { VotingsRepository } from '../../infrastructure/repositories/votings.repository';
+import { VotingsRepository } from '../../infrastructure/repositories/voting-groups';
 
 export interface DeleteVotingParams {
   token: string;
-  hpId: number;
+  businessId: number;
   groupId: number;
   votingId: number;
 }
@@ -29,7 +29,7 @@ export class DeleteVotingUseCase {
     // Eliminar/desactivar votación
     const message = await this.repository.deleteVoting({
       token: input.token,
-      hpId: input.hpId,
+      businessId: input.businessId,
       groupId: input.groupId,
       votingId: input.votingId,
     });

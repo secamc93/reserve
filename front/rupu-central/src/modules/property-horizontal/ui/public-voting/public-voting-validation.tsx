@@ -18,7 +18,7 @@ interface ResidentData {
   name: string;
   unitNumber: string;
   votingId: number;
-  hpId: number;
+  businessId: number;
   groupId?: number;
 }
 
@@ -193,7 +193,7 @@ export function PublicVotingValidation({
           name: resident_name,
           unitNumber: property_unit_number,
           votingId: voting_id,
-          hpId: hp_id,
+          businessId: hp_id,
           groupId: group_id
         });
       } else {

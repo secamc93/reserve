@@ -3,7 +3,7 @@
 import { env } from '@shared/config';
 
 export interface SubmitVoteInput {
-  hpId: number;
+  businessId: number;
   groupId: number;
   votingId: number;
   propertyUnitId: number;
@@ -32,13 +32,13 @@ export async function submitVoteAction(
   input: SubmitVoteInput
 ): Promise<SubmitVoteResult> {
   try {
-    const url = `${env.API_BASE_URL}/horizontal-properties/${input.hpId}/voting-groups/${input.groupId}/votings/${input.votingId}/vote`;
+    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${input.groupId}/votings/${input.votingId}/votes`;
     
     console.log('🗳️ [ACTION] submitVote - Request:', {
       url,
       propertyUnitId: input.propertyUnitId,
       votingOptionId: input.votingOptionId,
-      hpId: input.hpId,
+      businessId: input.businessId,
       groupId: input.groupId,
       votingId: input.votingId
     });
@@ -50,6 +50,7 @@ export async function submitVoteAction(
         'Authorization': `Bearer ${input.token}`
       },
       body: JSON.stringify({
+        business_id: input.businessId,
         property_unit_id: input.propertyUnitId,
         voting_option_id: input.votingOptionId,
         ip_address: input.ipAddress,

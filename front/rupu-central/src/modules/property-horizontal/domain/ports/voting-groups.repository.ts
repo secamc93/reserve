@@ -11,20 +11,20 @@ export interface GetVotingGroupsParams {
 
 export interface CreateVotingGroupParams {
   token: string;
-  businessId: number; // ID de la propiedad horizontal (va en la URL, no en el body)
+  businessId: number; // ID de la propiedad horizontal (va en el body, no en la URL)
   data: CreateVotingGroupDTO;
 }
 
 export interface UpdateVotingGroupParams {
   token: string;
-  hpId: number;
+  businessId: number;
   groupId: number;
   data: UpdateVotingGroupDTO;
 }
 
 export interface DeleteVotingGroupParams {
   token: string;
-  hpId: number;
+  businessId: number;
   groupId: number;
 }
 

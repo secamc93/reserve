@@ -17,8 +17,8 @@ import {
   CreateVotingOptionParams,
   GetVotesParams,
   CreateVoteParams
-} from '../../domain/ports';
-import { Voting, VotingsList, VotingOption, VotingOptionsList, Vote, VotesList } from '../../domain/entities';
+} from '../../../domain/ports/votings.repository';
+import { Voting, VotingsList, VotingOption, VotingOptionsList, Vote, VotesList } from '../../../domain/entities';
 import { env, logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
 import { 
   BackendGetVotingsResponse,
@@ -32,7 +32,7 @@ import {
   BackendCreateVotingOptionResponse,
   BackendGetVotesResponse,
   BackendCreateVoteResponse
-} from './response';
+} from '../response';
 
 // ============================================
 // VOTINGS REPOSITORY
@@ -42,7 +42,7 @@ export class VotingsRepository implements IVotingsRepository {
   async getVotings(params: GetVotingsParams): Promise<VotingsList> {
     // URL correcta: mantener groupId en path; business_id por query param
     const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings${
-      params.hpId !== undefined ? `?business_id=${params.hpId}` : ''
+      params.businessId !== undefined ? `?business_id=${params.businessId}` : ''
     }`;
     const startTime = Date.now();
 
@@ -101,7 +101,7 @@ export class VotingsRepository implements IVotingsRepository {
 
   async getVotingById(params: GetVotingByIdParams): Promise<Voting> {
     const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings/${params.votingId}${
-      params.hpId !== undefined ? `?business_id=${params.hpId}` : ''
+      params.businessId !== undefined ? `?business_id=${params.businessId}` : ''
     }`;
     const startTime = Date.now();
 
@@ -185,7 +185,7 @@ export class VotingsRepository implements IVotingsRepository {
 
   private async getVotingFromList(params: GetVotingByIdParams): Promise<Voting> {
     const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings${
-      params.hpId !== undefined ? `?business_id=${params.hpId}` : ''
+      params.businessId !== undefined ? `?business_id=${params.businessId}` : ''
     }`;
     const startTime = Date.now();
 
@@ -261,7 +261,9 @@ export class VotingsRepository implements IVotingsRepository {
   }
 
   async createVoting(params: CreateVotingParams): Promise<Voting> {
-    const url = `${env.API_BASE_URL}/horizontal-properties/${params.hpId}/voting-groups/${params.groupId}/votings`;
+    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings${
+      params.businessId !== undefined ? `?business_id=${params.businessId}` : ''
+    }`;
     const startTime = Date.now();
 
     const body = {
@@ -324,9 +326,9 @@ export class VotingsRepository implements IVotingsRepository {
   }
 
   async updateVoting(params: UpdateVotingParams): Promise<Voting> {
-    const { token, hpId, groupId, votingId, data } = params;
+    const { token, businessId, groupId, votingId, data } = params;
     const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${groupId}/votings/${votingId}${
-      hpId !== undefined ? `?business_id=${hpId}` : ''
+      businessId !== undefined ? `?business_id=${businessId}` : ''
     }`;
     const startTime = Date.now();
 
@@ -403,9 +405,9 @@ export class VotingsRepository implements IVotingsRepository {
   }
 
   async deleteVoting(params: DeleteVotingParams): Promise<string> {
-    const { token, hpId, groupId, votingId } = params;
+    const { token, businessId, groupId, votingId } = params;
     const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${groupId}/votings/${votingId}${
-      hpId !== undefined ? `?business_id=${hpId}` : ''
+      businessId !== undefined ? `?business_id=${businessId}` : ''
     }`;
     const startTime = Date.now();
 
@@ -456,9 +458,9 @@ export class VotingsRepository implements IVotingsRepository {
   }
 
   async activateVoting(params: ActivateVotingParams): Promise<string> {
-    const { token, hpId, groupId, votingId } = params;
+    const { token, businessId, groupId, votingId } = params;
     const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${groupId}/votings/${votingId}/activate${
-      hpId !== undefined ? `?business_id=${hpId}` : ''
+      businessId !== undefined ? `?business_id=${businessId}` : ''
     }`;
     const startTime = Date.now();
 
@@ -509,9 +511,9 @@ export class VotingsRepository implements IVotingsRepository {
   }
 
   async deactivateVoting(params: DeactivateVotingParams): Promise<string> {
-    const { token, hpId, groupId, votingId } = params;
+    const { token, businessId, groupId, votingId } = params;
     const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${groupId}/votings/${votingId}/deactivate${
-      hpId !== undefined ? `?business_id=${hpId}` : ''
+      businessId !== undefined ? `?business_id=${businessId}` : ''
     }`;
     const startTime = Date.now();
 
@@ -570,7 +572,7 @@ export class VotingOptionsRepository implements IVotingOptionsRepository {
   async getVotingOptions(params: GetVotingOptionsParams): Promise<VotingOptionsList> {
     // Mantener groupId y votingId en la URL; business_id por query param
     const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings/${params.votingId}/options${
-      params.hpId !== undefined ? `?business_id=${params.hpId}` : ''
+      params.businessId !== undefined ? `?business_id=${params.businessId}` : ''
     }`;
     const startTime = Date.now();
 
@@ -624,7 +626,7 @@ export class VotingOptionsRepository implements IVotingOptionsRepository {
 
   async createVotingOption(params: CreateVotingOptionParams): Promise<VotingOption> {
     const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings/${params.votingId}/options${
-      params.hpId !== undefined ? `?business_id=${params.hpId}` : ''
+      params.businessId !== undefined ? `?business_id=${params.businessId}` : ''
     }`;
     const startTime = Date.now();
 
@@ -689,7 +691,9 @@ export class VotingOptionsRepository implements IVotingOptionsRepository {
 
 export class VotesRepository implements IVotesRepository {
   async getVotes(params: GetVotesParams): Promise<VotesList> {
-    const url = `${env.API_BASE_URL}/horizontal-properties/${params.hpId}/voting-groups/${params.groupId}/votings/${params.votingId}/votes`;
+    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings/${params.votingId}/votes${
+      params.businessId !== undefined ? `?business_id=${params.businessId}` : ''
+    }`;
     const startTime = Date.now();
 
     logHttpRequest({ method: 'GET', url });
@@ -742,10 +746,11 @@ export class VotesRepository implements IVotesRepository {
   }
 
   async createVote(params: CreateVoteParams): Promise<Vote> {
-    const url = `${env.API_BASE_URL}/horizontal-properties/${params.hpId}/voting-groups/${params.groupId}/votings/${params.votingId}/votes`;
+    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings/${params.votingId}/votes`;
     const startTime = Date.now();
 
     const body = {
+      business_id: params.businessId,
       property_unit_id: params.data.propertyUnitId,
       voting_option_id: params.data.votingOptionId,
       ip_address: params.data.ipAddress,

@@ -1,11 +1,11 @@
 'use server';
 
 import { BulkUpdateResidentsUseCase } from '../../../application';
-import { ResidentsRepository } from '../../repositories/residents.repository';
+import { ResidentsRepository } from '../../repositories/residents';
 
 export interface BulkUpdateResidentsInput {
   token: string;
-  hpId: number;
+  businessId: number;
   file: File;
 }
 

@@ -33,7 +33,7 @@ export class UpdateVotingUseCase {
     // Actualizar votación
     const voting = await this.votingsRepository.updateVoting({
       token: input.token,
-      hpId: input.hpId,
+      businessId: input.businessId,
       groupId: input.groupId,
       votingId: input.votingId,
       data: input.data,

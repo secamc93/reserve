@@ -6,7 +6,7 @@
 import { Resident, ResidentsPaginated, CreateResidentDTO, UpdateResidentDTO, BulkUpdateResidentDTO } from '../entities/residents';
 
 export interface GetResidentsParams {
-  hpId: number;
+  businessId: number;
   token: string;
   page?: number;
   pageSize?: number;
@@ -20,32 +20,32 @@ export interface GetResidentsParams {
 }
 
 export interface GetResidentByIdParams {
-  hpId: number;
+  businessId: number;
   residentId: number;
   token: string;
 }
 
 export interface CreateResidentParams {
-  hpId: number;
+  businessId: number;
   data: CreateResidentDTO;
   token: string;
 }
 
 export interface UpdateResidentParams {
-  hpId: number;
+  businessId: number;
   residentId: number;
   data: UpdateResidentDTO;
   token: string;
 }
 
 export interface DeleteResidentParams {
-  hpId: number;
+  businessId: number;
   residentId: number;
   token: string;
 }
 
 export interface BulkUpdateResidentsParams {
-  hpId: number;
+  businessId: number;
   file: File;
   token: string;
 }

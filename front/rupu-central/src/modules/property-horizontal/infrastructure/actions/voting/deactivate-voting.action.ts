@@ -5,11 +5,11 @@
 'use server';
 
 import { DeactivateVotingUseCase } from '../../../application';
-import { VotingsRepository } from '../../repositories/votings.repository';
+import { VotingsRepository } from '../../repositories/voting-groups';
 
 export interface DeactivateVotingInput {
   token: string;
-  hpId: number;
+  businessId: number;
   groupId: number;
   votingId: number;
 }
@@ -27,7 +27,7 @@ export async function deactivateVotingAction(input: DeactivateVotingInput): Prom
 
     const result = await useCase.execute({
       token: input.token,
-      hpId: input.hpId,
+      businessId: input.businessId,
       groupId: input.groupId,
       votingId: input.votingId,
     });

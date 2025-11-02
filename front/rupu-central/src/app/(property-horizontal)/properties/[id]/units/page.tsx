@@ -7,9 +7,9 @@ import { PropertyNavigation } from '@/modules/property-horizontal/ui/components/
 
 export default function UnitsPage() {
   const params = useParams();
-  const hpId = parseInt(params.id as string);
+  const businessId = parseInt(params.id as string);
 
-  if (isNaN(hpId)) {
+  if (isNaN(businessId)) {
     return (
       <div className="p-6">
         <div className="text-red-600">ID de propiedad inválido</div>
@@ -20,10 +20,10 @@ export default function UnitsPage() {
   return (
     <div>
       {/* Navegación */}
-      <PropertyNavigation hpId={hpId} />
+      <PropertyNavigation businessId={businessId} />
       
       <div className="p-6">
-        <PropertyUnitsTable hpId={hpId} />
+        <PropertyUnitsTable businessId={businessId} />
       </div>
     </div>
   );

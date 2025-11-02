@@ -7,12 +7,12 @@ import { CreatePropertyUnitDTO, UNIT_TYPES } from '../../domain';
 import { TokenStorage } from '@/modules/auth/infrastructure/storage';
 
 interface CreatePropertyUnitModalProps {
-  hpId: number;
+  businessId: number;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export function CreatePropertyUnitModal({ hpId, onClose, onSuccess }: CreatePropertyUnitModalProps) {
+export function CreatePropertyUnitModal({ businessId, onClose, onSuccess }: CreatePropertyUnitModalProps) {
   const [formData, setFormData] = useState<CreatePropertyUnitDTO>({
     number: '',
     unitType: UNIT_TYPES.APARTMENT,
@@ -34,7 +34,7 @@ export function CreatePropertyUnitModal({ hpId, onClose, onSuccess }: CreateProp
       if (!token) throw new Error('No token found');
 
       await createPropertyUnitAction({
-        hpId,
+        businessId,
         data: formData,
         token,
       });

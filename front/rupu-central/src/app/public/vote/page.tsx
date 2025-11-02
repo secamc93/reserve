@@ -43,7 +43,7 @@ interface ResidentData {
   name: string;
   unitNumber: string;
   votingId: number;
-  hpId: number;
+  businessId: number;
   groupId?: number;
 }
 
@@ -63,13 +63,13 @@ function PublicVotePageContent() {
     // Extraer parámetros de la URL
     const token = searchParams.get('token');
     let votingId = searchParams.get('voting_id');
-    let hpId = searchParams.get('hp_id');
+    let businessId = searchParams.get('hp_id');
     const groupId = searchParams.get('group_id');
 
     console.log('📥 [PUBLIC VOTE] Parámetros recibidos de la URL:', {
       token: token ? `${token.substring(0, 20)}...` : null,
       voting_id: votingId,
-      hp_id: hpId,
+      hp_id: businessId,
       group_id: groupId
     });
 
@@ -82,7 +82,7 @@ function PublicVotePageContent() {
     }
 
     // Si voting_id o hp_id no vienen en la URL, intentar extraerlos del token JWT
-    if (!votingId || !hpId) {
+    if (!votingId || !businessId) {
       console.log('🔓 [PUBLIC VOTE] voting_id o hp_id no en URL, extrayendo del token...');
       try {
         // Decodificar el token JWT (solo la parte del payload, no validamos la firma aquí)
@@ -92,11 +92,11 @@ function PublicVotePageContent() {
           console.log('📋 [PUBLIC VOTE] Payload del token:', payload);
           
           votingId = votingId || payload.voting_id?.toString();
-          hpId = hpId || payload.hp_id?.toString();
+          businessId = businessId || payload.hp_id?.toString();
           
           console.log('✅ [PUBLIC VOTE] Datos extraídos del token:', { 
             votingId, 
-            hpId, 
+            businessId, 
             groupId: payload.voting_group_id 
           });
         }
@@ -105,8 +105,8 @@ function PublicVotePageContent() {
       }
     }
 
-    if (!votingId || !hpId) {
-      console.error('❌ [PUBLIC VOTE] Faltan parámetros requeridos:', { votingId, hpId });
+    if (!votingId || !businessId) {
+      console.error('❌ [PUBLIC VOTE] Faltan parámetros requeridos:', { votingId, businessId });
       setError('Parámetros de votación inválidos. Por favor, escanee el código QR nuevamente.');
       setStep('error');
       setLoading(false);
@@ -116,11 +116,11 @@ function PublicVotePageContent() {
     console.log('✅ [PUBLIC VOTE] Parámetros validados correctamente:', { 
       token: 'OK', 
       voting_id: votingId, 
-      hp_id: hpId,
+      hp_id: businessId,
       group_id: groupId 
     });
 
-    setVotingParams({ token, voting_id: votingId, hp_id: hpId, group_id: groupId || undefined });
+    setVotingParams({ token, voting_id: votingId, hp_id: businessId, group_id: groupId || undefined });
     setLoading(false);
   }, [searchParams]);
 

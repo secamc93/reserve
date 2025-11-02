@@ -4,14 +4,14 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
 interface PropertyNavigationProps {
-  hpId: number;
+  businessId: number;
   propertyName?: string;
   currentSection?: 'dashboard' | 'units' | 'residents' | 'voting-groups' | 'attendance';
   groupId?: number;
 }
 
 export function PropertyNavigation({ 
-  hpId, 
+  businessId, 
   propertyName, 
   currentSection, 
   groupId 
@@ -21,27 +21,27 @@ export function PropertyNavigation({
   const navigationItems = [
     {
       name: 'Dashboard',
-      href: `/properties/${hpId}`,
+      href: `/properties/${businessId}`,
       icon: '🏠',
-      current: currentSection === 'dashboard' || pathname === `/properties/${hpId}`
+      current: currentSection === 'dashboard' || pathname === `/properties/${businessId}`
     },
     {
       name: 'Unidades',
-      href: `/properties/${hpId}/units`,
+      href: `/properties/${businessId}/units`,
       icon: '🏢',
-      current: currentSection === 'units' || pathname === `/properties/${hpId}/units`
+      current: currentSection === 'units' || pathname === `/properties/${businessId}/units`
     },
     {
       name: 'Residentes',
-      href: `/properties/${hpId}/residents`,
+      href: `/properties/${businessId}/residents`,
       icon: '👥',
-      current: currentSection === 'residents' || pathname === `/properties/${hpId}/residents`
+      current: currentSection === 'residents' || pathname === `/properties/${businessId}/residents`
     },
     {
       name: 'Votaciones',
-      href: `/properties/${hpId}/voting-groups`,
+      href: `/properties/${businessId}/voting-groups`,
       icon: '🗳️',
-      current: currentSection === 'voting-groups' || pathname.startsWith(`/properties/${hpId}/voting-groups`)
+      current: currentSection === 'voting-groups' || pathname.startsWith(`/properties/${businessId}/voting-groups`)
     }
   ];
 
@@ -49,7 +49,7 @@ export function PropertyNavigation({
   if (currentSection === 'attendance' && groupId) {
     navigationItems.push({
       name: 'Asistencia',
-      href: `/properties/${hpId}/voting-groups/${groupId}/attendance`,
+      href: `/properties/${businessId}/voting-groups/${groupId}/attendance`,
       icon: '✅',
       current: true
     });

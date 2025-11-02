@@ -8,13 +8,16 @@ import { CreateResidentDTO } from '../../domain';
 import { TokenStorage } from '@/modules/auth/infrastructure/storage';
 
 interface CreateResidentModalProps {
-  hpId: number;
+  businessId: number;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export function CreateResidentModal({ hpId, onClose, onSuccess }: CreateResidentModalProps) {
+export function CreateResidentModal({ businessId, onClose, onSuccess }: CreateResidentModalProps) {
   const [units, setUnits] = useState<Array<{ id: number; number: string }>>([]);
+  const [unitSearchTerm, setUnitSearchTerm] = useState('');
+  const [showUnitDropdown, setShowUnitDropdown] = useState(false);
+  const [loadingUnits, setLoadingUnits] = useState(false);
   const [formData, setFormData] = useState<CreateResidentDTO>({
     propertyUnitId: 0,
     residentTypeId: 1,
@@ -28,19 +31,35 @@ export function CreateResidentModal({ hpId, onClose, onSuccess }: CreateResident
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const loadUnits = async (searchTerm: string = '') => {
+    try {
+      setLoadingUnits(true);
+      const token = TokenStorage.getToken();
+      if (!token) return;
+      const data = await getPropertyUnitsAction({ 
+        businessId, 
+        token, 
+        page: 1, 
+        pageSize: 50,
+        number: searchTerm || undefined
+      });
+      setUnits(data.units.map(u => ({ id: u.id, number: u.number })));
+    } catch (error) {
+      console.error('Error loading units:', error);
+    } finally {
+      setLoadingUnits(false);
+    }
+  };
+
+  // Cargar unidades al enfocar o al buscar
   useEffect(() => {
-    const loadUnits = async () => {
-      try {
-        const token = TokenStorage.getToken();
-        if (!token) return;
-        const data = await getPropertyUnitsAction({ hpId, token, page: 1, pageSize: 100 });
-        setUnits(data.units.map(u => ({ id: u.id, number: u.number })));
-      } catch (error) {
-        console.error('Error loading units:', error);
-      }
-    };
-    loadUnits();
-  }, [hpId]);
+    if (showUnitDropdown) {
+      const timer = setTimeout(() => {
+        loadUnits(unitSearchTerm);
+      }, 300); // Debounce de 300ms
+      return () => clearTimeout(timer);
+    }
+  }, [unitSearchTerm, showUnitDropdown, businessId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +76,7 @@ export function CreateResidentModal({ hpId, onClose, onSuccess }: CreateResident
       }
 
       await createResidentAction({
-        hpId,
+        businessId,
         data: formData,
         token,
       });
@@ -103,19 +122,45 @@ export function CreateResidentModal({ hpId, onClose, onSuccess }: CreateResident
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1">Unidad</label>
-            <select
-              value={formData.propertyUnitId}
-              onChange={(e) => setFormData({ ...formData, propertyUnitId: Number(e.target.value) })}
-              className="input w-full"
-              required
-            >
-              <option value={0}>Seleccionar unidad</option>
-              {units.map(unit => (
-                <option key={unit.id} value={unit.id}>
-                  {unit.number}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Buscar unidad..."
+                value={unitSearchTerm}
+                onChange={(e) => {
+                  setUnitSearchTerm(e.target.value);
+                  setShowUnitDropdown(true);
+                }}
+                onFocus={() => setShowUnitDropdown(true)}
+                className="input w-full pr-8"
+                required
+              />
+              {loadingUnits && (
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <svg className="animate-spin h-4 w-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </div>
+              )}
+              {showUnitDropdown && !loadingUnits && units.length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                  {units.map(unit => (
+                    <div
+                      key={unit.id}
+                      onClick={() => {
+                        setFormData({ ...formData, propertyUnitId: unit.id });
+                        setUnitSearchTerm(unit.number);
+                        setShowUnitDropdown(false);
+                      }}
+                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-gray-900"
+                    >
+                      {unit.number}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Tipo de Residente</label>

@@ -8,7 +8,7 @@ import { env } from '@shared/config';
 
 export interface DeleteVoteInput {
   token: string;
-  hpId: number;
+  businessId: number;
   groupId: number;
   votingId: number;
   voteId: number;
@@ -24,9 +24,11 @@ export async function deleteVoteAction(
   input: DeleteVoteInput
 ): Promise<DeleteVoteResult> {
   try {
-    const { token, hpId, groupId, votingId, voteId } = input;
+    const { token, businessId, groupId, votingId, voteId } = input;
     
-  const url = `${env.API_BASE_URL}/horizontal-properties/votes/${voteId}?business_id=${hpId}&group_id=${groupId}&voting_id=${votingId}`;
+  const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${groupId}/votings/${votingId}/votes/${voteId}${
+    businessId !== undefined ? `?business_id=${businessId}` : ''
+  }`;
     
     console.log('🗑️ [DELETE VOTE] Eliminando voto:', { url, voteId });
 

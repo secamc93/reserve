@@ -3,7 +3,7 @@
 import { env, logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
 
 export interface GetUnvotedUnitsInput {
-  hpId: number;
+  businessId: number;
   groupId: number;
   votingId: number;
   token: string; // Token de autenticación
@@ -27,13 +27,12 @@ export interface GetUnvotedUnitsResult {
 export async function getUnvotedUnitsAction(
   input: GetUnvotedUnitsInput
 ): Promise<GetUnvotedUnitsResult> {
-  const { hpId, groupId, votingId, token, unitNumber } = input;
+  const { businessId, groupId, votingId, token, unitNumber } = input;
   const startTime = Date.now();
 
-  // Construir URL con filtro opcional
-  const url = new URL(`${env.API_BASE_URL}/horizontal-properties/votings/${votingId}/unvoted-units`);
-  if (hpId !== undefined) url.searchParams.append('business_id', String(hpId));
-  if (groupId !== undefined) url.searchParams.append('group_id', String(groupId));
+  // Construir URL: el group_id va en el path, no como query parameter
+  const url = new URL(`${env.API_BASE_URL}/horizontal-properties/voting-groups/${groupId}/votings/${votingId}/unvoted-units`);
+  if (businessId !== undefined) url.searchParams.append('business_id', String(businessId));
   
   if (unitNumber) {
     url.searchParams.append('unit_number', unitNumber);
@@ -56,7 +55,7 @@ export async function getUnvotedUnitsAction(
     }
 
     console.log(`🏠 [UNVOTED UNITS] Consultando unidades sin votar:`, {
-      hpId,
+      businessId,
       groupId,
       votingId,
       unitNumber: unitNumber || 'todos',
@@ -78,7 +77,7 @@ export async function getUnvotedUnitsAction(
       success: result.success,
       unitsCount: result.data?.length || 0,
       duration: `${duration}ms`,
-      hpId,
+      businessId,
       groupId,
       votingId,
       unitNumber: unitNumber || 'todos'
@@ -88,7 +87,7 @@ export async function getUnvotedUnitsAction(
       console.error(`❌ [UNVOTED UNITS] Error del backend:`, {
         status: response.status,
         error: result.error || result.message,
-        hpId,
+        businessId,
         groupId,
         votingId
       });
@@ -118,7 +117,7 @@ export async function getUnvotedUnitsAction(
 
     console.log(`✅ [UNVOTED UNITS] Unidades sin votar obtenidas exitosamente:`, {
       count: result.data?.length || 0,
-      hpId,
+      businessId,
       groupId,
       votingId,
       unitNumber: unitNumber || 'todos',
@@ -131,7 +130,7 @@ export async function getUnvotedUnitsAction(
     
     console.error(`❌ [UNVOTED UNITS] Exception:`, {
       error: error instanceof Error ? error.message : error,
-      hpId,
+      businessId,
       groupId,
       votingId,
       duration: `${duration}ms`

@@ -59,7 +59,7 @@ interface SSEVote {
 interface LiveVotingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  hpId: number; // ID de la propiedad horizontal
+  businessId: number; // ID de la propiedad horizontal
   voting: Voting | null;
   options: VotingOption[];
   votes: Vote[];
@@ -69,7 +69,7 @@ interface LiveVotingModalProps {
 export function LiveVotingModal({ 
   isOpen, 
   onClose, 
-  hpId,
+  businessId,
   voting, 
   options, 
   votes: initialVotes, 
@@ -117,14 +117,14 @@ export function LiveVotingModal({
     connectionStatus,
     deletedVotes // ✅ NUEVO: Votos eliminados del SSE
   } = useVotingSSE(
-    hpId, 
+    businessId, 
     voting?.votingGroupId || 0, 
     voting?.id || 0, 
     isOpen && useRealTime && voting?.isActive
   );
 
   const loadVotingDetails = useCallback(async () => {
-    if (!voting || !hpId) return;
+    if (!voting || !businessId) return;
     
     setLoadingDetails(true);
     setDetailsError(null);
@@ -136,7 +136,7 @@ export function LiveVotingModal({
       }
 
       const result = await getVotingDetailsAction({
-        hpId,
+        businessId: businessId,
         votingGroupId: voting.votingGroupId,
         votingId: voting.id,
         token
@@ -155,7 +155,7 @@ export function LiveVotingModal({
     } finally {
       setLoadingDetails(false);
     }
-  }, [voting, hpId]);
+  }, [voting, businessId]);
 
   // Estado para trackear los votos ya procesados
   const [processedVoteIds, setProcessedVoteIds] = useState<Set<number>>(new Set());
@@ -256,10 +256,10 @@ export function LiveVotingModal({
 
   // Cargar detalles de votación cuando se abre el modal
   useEffect(() => {
-    if (isOpen && voting && hpId) {
+    if (isOpen && voting && businessId) {
       loadVotingDetails();
     }
-  }, [isOpen, voting, hpId, loadVotingDetails]);
+  }, [isOpen, voting, businessId, loadVotingDetails]);
 
   // Estado para los colores personalizados de cada opción (solo para override temporal)
   const [optionColors, setOptionColors] = useState<Record<number, string>>({});
@@ -541,7 +541,7 @@ export function LiveVotingModal({
       // Generar URL pública usando Server Action
       const result = await generatePublicUrlAction({
         token,
-        hpId,
+        businessId: businessId,
         groupId: voting.votingGroupId,
         votingId: voting.id,
         durationHours: 24,
@@ -765,7 +765,7 @@ export function LiveVotingModal({
       
       const result = await deleteVoteAction({
         token,
-        hpId,
+        businessId: businessId,
         groupId: voting.votingGroupId,
         votingId: voting.id,
         voteId: voteToDelete.id
@@ -974,7 +974,7 @@ export function LiveVotingModal({
             setSelectedUnitForVote(null); // Limpiar selección al cerrar
           }}
           onSuccess={handleVoteSuccess}
-          hpId={hpId}
+          businessId={businessId}
           groupId={voting.votingGroupId}
           votingId={voting.id}
           votingTitle={voting.title}

@@ -48,6 +48,8 @@ export interface BackendLoginData {
   token: string;
   require_password_change: boolean;
   businesses: Business[];
+  scope: string;
+  is_super_admin: boolean;
 }
 
 export interface BackendLoginResponse {

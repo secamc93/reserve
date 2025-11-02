@@ -5,12 +5,12 @@
 'use server';
 
 import { GetVotingsUseCase } from '../../../application';
-import { VotingsRepository } from '../../repositories/votings.repository';
+import { VotingsRepository } from '../../repositories/voting-groups';
 import { Voting } from '../../../domain/entities';
 
 export interface GetVotingsInput {
   token: string;
-  hpId: number;
+  businessId: number;
   groupId: number;
 }
 
@@ -27,7 +27,7 @@ export async function getVotingsAction(input: GetVotingsInput): Promise<GetVotin
 
     const result = await useCase.execute({
       token: input.token,
-      hpId: input.hpId,
+      businessId: input.businessId,
       groupId: input.groupId,
     });
 

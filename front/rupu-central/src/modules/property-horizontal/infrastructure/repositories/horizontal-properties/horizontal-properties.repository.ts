@@ -15,7 +15,7 @@ import {
   BackendHorizontalPropertiesResponse,
   BackendGetHorizontalPropertyByIdResponse, 
   BackendCreateHorizontalPropertyResponse 
-} from './response';
+} from '../response';
 
 export class HorizontalPropertiesRepository implements IHorizontalPropertiesRepository {
   async getHorizontalProperties(params: GetHorizontalPropertiesParams): Promise<HorizontalPropertiesPaginated> {
