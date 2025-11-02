@@ -10,6 +10,8 @@ class User {
   final String token;
   final bool requirePasswordChange;
   final List<Business> businesses;
+  final String scope;
+  final bool isSuperAdmin;
 
   User({
     required this.id,
@@ -22,6 +24,8 @@ class User {
     required this.token,
     required this.requirePasswordChange,
     required this.businesses,
+    required this.scope,
+    required this.isSuperAdmin,
   });
 }
 
@@ -37,6 +41,9 @@ class Business {
   final String logoUrl;
   final String primaryColor;
   final String secondaryColor;
+  final String tertiaryColor;
+  final String quaternaryColor;
+  final String navbarImageUrl;
   final String customDomain;
   final bool isActive;
   final bool enableDelivery;
@@ -55,6 +62,9 @@ class Business {
     required this.logoUrl,
     required this.primaryColor,
     required this.secondaryColor,
+    required this.tertiaryColor,
+    required this.quaternaryColor,
+    required this.navbarImageUrl,
     required this.customDomain,
     required this.isActive,
     required this.enableDelivery,

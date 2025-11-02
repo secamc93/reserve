@@ -14,6 +14,7 @@ class BusinessSelectorController extends GetxController {
 
   final RxnInt selectedBusinessId = RxnInt();
   final RxnString errorMessage = RxnString();
+  final RxBool isProcessing = false.obs;
 
   List<BusinessModel> get businesses =>
       _loginController.sessionModel.value?.data.businesses ?? const <BusinessModel>[];
@@ -44,12 +45,7 @@ class BusinessSelectorController extends GetxController {
     }
 
     if (businesses.length == 1) {
-      final business = businesses.first;
-      _loginController.selectBusiness(business);
-      GoRouter.of(context).goNamed(
-        HomeScreen.name,
-        pathParameters: {'page': '0'},
-      );
+      Future.microtask(() => confirmSelection(context));
     }
   }
 
@@ -67,16 +63,39 @@ class BusinessSelectorController extends GetxController {
     final id = selectedBusinessId.value;
     if (id == null) {
       errorMessage.value = 'Selecciona un negocio para continuar.';
+      _showError(context, errorMessage.value!);
       return;
     }
 
     final business = _findBusinessById(id);
     if (business == null) {
       errorMessage.value = 'No fue posible cargar la información del negocio seleccionado.';
+      _showError(context, errorMessage.value!);
       return;
     }
 
-    _loginController.selectBusiness(business);
+    if (isProcessing.value) return;
+
+    isProcessing.value = true;
+    bool activated = false;
+
+    try {
+      activated = await _loginController.activateBusinessSession(business);
+    } finally {
+      isProcessing.value = false;
+    }
+
+    if (!activated) {
+      final message = _loginController.errorMessage.value ??
+          'No fue posible activar el negocio seleccionado.';
+      errorMessage.value = message;
+      if (context.mounted) {
+        _showError(context, message);
+      }
+      return;
+    }
+
+    errorMessage.value = null;
 
     if (!context.mounted) return;
 
@@ -98,5 +117,14 @@ class BusinessSelectorController extends GetxController {
       if (business.id == id) return business;
     }
     return null;
+  }
+
+  void _showError(BuildContext context, String message) {
+    if (message.isEmpty || !context.mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(content: Text(message)),
+      );
   }
 }
