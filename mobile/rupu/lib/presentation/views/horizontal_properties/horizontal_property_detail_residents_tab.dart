@@ -497,9 +497,10 @@ class _ResidentCard extends StatelessWidget {
                 _DetailLine(
                   icon: Icons.meeting_room_outlined,
                   label: 'Unidad',
-                  value: resident.propertyUnitNumber.isEmpty
-                      ? 'Sin unidad asignada'
-                      : '#${resident.propertyUnitNumber}',
+                  value: "#${resident.propertyUnitNumber}",
+                  // resident.propertyUnitNumber.isEmpty
+                  //     ? 'Sin unidad asignada'
+                  //     : '#${resident.propertyUnitNumber}',
                 ),
                 _DetailLine(
                   icon: Icons.alternate_email_outlined,
