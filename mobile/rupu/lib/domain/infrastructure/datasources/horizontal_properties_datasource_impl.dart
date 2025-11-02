@@ -15,7 +15,8 @@ import 'package:rupu/domain/infrastructure/models/horizontal_property_units_resp
 import 'package:rupu/domain/infrastructure/models/horizontal_property_voting_groups_response_model.dart';
 import 'package:rupu/domain/infrastructure/models/simple_response_model.dart';
 
-class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource {
+class HorizontalPropertiesDatasourceImpl
+    extends HorizontalPropertiesDatasource {
   final Dio _dio;
 
   static const _maxUploadBytes = 2 * 1024 * 1024; // 2 MB
@@ -23,9 +24,9 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
   static const _minResizeDimension = 640;
 
   HorizontalPropertiesDatasourceImpl({String? baseUrl})
-      : _dio = AuthenticatedDio(
-          baseUrl: baseUrl ?? 'https://www.xn--rup-joa.com/api/v1',
-        ).dio;
+    : _dio = AuthenticatedDio(
+        baseUrl: baseUrl ?? 'https://www.xn--rup-joa.com/api/v1',
+      ).dio;
 
   @override
   Future<HorizontalPropertiesResponseModel> getHorizontalProperties({
@@ -48,19 +49,17 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
     final response = await _dio.post(
       '/horizontal-properties',
       data: formData,
-      options: Options(
-        contentType: 'multipart/form-data',
-      ),
+      options: Options(contentType: 'multipart/form-data'),
     );
     return HorizontalPropertyDetailResponseModel.fromResponse(response.data);
   }
 
   @override
-  Future<SimpleResponseModel> deleteHorizontalProperty({required int id}) async {
+  Future<SimpleResponseModel> deleteHorizontalProperty({
+    required int id,
+  }) async {
     final response = await _dio.delete('/horizontal-properties/$id');
-    return SimpleResponseModel.fromJson(
-      response.data as Map<String, dynamic>,
-    );
+    return SimpleResponseModel.fromJson(response.data as Map<String, dynamic>);
   }
 
   @override
@@ -90,9 +89,7 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
     final response = await _dio.put(
       '/horizontal-properties/$id',
       data: formData,
-      options: Options(
-        contentType: 'multipart/form-data',
-      ),
+      options: Options(contentType: 'multipart/form-data'),
     );
     return HorizontalPropertyDetailResponseModel.fromResponse(response.data);
   }
@@ -181,8 +178,9 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
     final originalName = (preferredName?.isNotEmpty ?? false)
         ? preferredName!
         : p.basename(path);
-    final sanitizedName =
-        originalName.isNotEmpty ? originalName : 'property_image$ext';
+    final sanitizedName = originalName.isNotEmpty
+        ? originalName
+        : 'property_image$ext';
 
     final fileSize = await sourceFile.length();
     final keepOriginal = allowed.contains(ext) && fileSize <= _maxUploadBytes;
@@ -202,8 +200,8 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
 
     final preferredExt =
         allowed.contains(ext) && !{'.bmp', '.heic', '.heif'}.contains(ext)
-            ? ext
-            : '.jpg';
+        ? ext
+        : '.jpg';
     final encoded = await _encodeWithinLimit(resized, preferredExt);
 
     final finalName = p.setExtension(
@@ -289,7 +287,7 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
     Map<String, dynamic>? query,
   }) async {
     final response = await _dio.get(
-      '/horizontal-properties/$id/property-units',
+      '/horizontal-properties/property-units',
       queryParameters: query,
     );
     return HorizontalPropertyUnitsResponseModel.fromJson(
@@ -299,12 +297,12 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
 
   @override
   Future<HorizontalPropertyResidentsResponseModel>
-      getHorizontalPropertyResidents({
+  getHorizontalPropertyResidents({
     required int id,
     Map<String, dynamic>? query,
   }) async {
     final response = await _dio.get(
-      '/horizontal-properties/$id/residents',
+      '/horizontal-properties/residents',
       queryParameters: query,
     );
     return HorizontalPropertyResidentsResponseModel.fromJson(
@@ -314,12 +312,8 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
 
   @override
   Future<HorizontalPropertyVotingGroupsResponseModel>
-      getHorizontalPropertyVotingGroups({
-    required int id,
-  }) async {
-    final response = await _dio.get(
-      '/horizontal-properties/$id/voting-groups',
-    );
+  getHorizontalPropertyVotingGroups({required int id}) async {
+    final response = await _dio.get('/horizontal-properties/voting-groups');
     return HorizontalPropertyVotingGroupsResponseModel.fromJson(
       response.data as Map<String, dynamic>,
     );

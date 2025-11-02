@@ -13,6 +13,8 @@ class UserMapper {
     lastLoginAt: user.data.user.lastLoginAt,
     token: user.data.token,
     requirePasswordChange: user.data.requirePasswordChange,
+    scope: user.data.scope,
+    isSuperAdmin: user.data.isSuperAdmin,
     businesses: user.data.businesses
         .map(
           (b) => Business(
@@ -33,6 +35,9 @@ class UserMapper {
             logoUrl: b.logoUrl,
             primaryColor: b.primaryColor,
             secondaryColor: b.secondaryColor,
+            tertiaryColor: b.tertiaryColor,
+            quaternaryColor: b.quaternaryColor,
+            navbarImageUrl: b.navbarImageUrl,
             customDomain: b.customDomain,
             isActive: b.isActive,
             enableDelivery: b.enableDelivery,

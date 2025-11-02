@@ -26,6 +26,7 @@ class LoginController extends GetxController {
     isLoading.value = true;
     errorMessage.value = null;
     try {
+      await TokenStorage().clearAllTokens();
       final session = await repository.getUser(
         email: emailController.text.trim().toLowerCase(),
         password: passwordController.text,
@@ -34,7 +35,10 @@ class LoginController extends GetxController {
       sessionModel.value = session;
       selectedBusiness.value = null;
 
-      await TokenStorage().saveToken(session.data.token);
+      final loginToken = session.data.token;
+      if (loginToken.isNotEmpty) {
+        await TokenStorage().saveLoginToken(loginToken);
+      }
 
       return true;
     } on DioException catch (e) {
@@ -56,7 +60,7 @@ class LoginController extends GetxController {
   }
 
   Future<void> logout() async {
-    await TokenStorage().deleteToken();
+    await TokenStorage().clearAllTokens();
     clearFields();
   }
 
@@ -71,7 +75,89 @@ class LoginController extends GetxController {
   List<BusinessModel> get businesses =>
       sessionModel.value?.data.businesses ?? const <BusinessModel>[];
 
-  int? get selectedBusinessId => selectedBusiness.value?.id;
+  int? get selectedBusinessId {
+    if (isSuperAdmin && sessionModel.value != null) {
+      return 0;
+    }
+    return selectedBusiness.value?.id;
+  }
+
+  bool get isSuperAdmin => sessionModel.value?.data.isSuperAdmin ?? false;
+
+  Future<bool> activateBusinessSession(BusinessModel business) async {
+    final loginToken = sessionModel.value?.data.token;
+    if (loginToken == null || loginToken.isEmpty) {
+      errorMessage.value =
+          'No se encontró un token de autenticación válido para la sesión actual.';
+      return false;
+    }
+
+    errorMessage.value = null;
+
+    try {
+      final businessToken = await repository.getBusinessToken(
+        token: loginToken,
+        businessId: isSuperAdmin ? 0 : business.id,
+      );
+
+      await TokenStorage().saveBusinessToken(businessToken);
+      selectBusiness(business);
+      return true;
+    } on DioException catch (e) {
+      errorMessage.value = _resolveDioMessage(
+        e,
+        'No fue posible activar el negocio seleccionado.',
+      );
+      return false;
+    } catch (_) {
+      errorMessage.value =
+          'No fue posible activar el negocio seleccionado.';
+      return false;
+    }
+  }
+
+  Future<bool> activateSuperAdminSession() async {
+    final loginToken = sessionModel.value?.data.token;
+    if (loginToken == null || loginToken.isEmpty) {
+      errorMessage.value =
+          'No se encontró un token de autenticación válido para la sesión actual.';
+      return false;
+    }
+
+    errorMessage.value = null;
+
+    try {
+      final businessToken = await repository.getBusinessToken(
+        token: loginToken,
+        businessId: 0,
+      );
+
+      await TokenStorage().saveBusinessToken(businessToken);
+      selectedBusiness.value = null;
+      return true;
+    } on DioException catch (e) {
+      errorMessage.value = _resolveDioMessage(
+        e,
+        'No fue posible completar la sesión del super administrador.',
+      );
+      return false;
+    } catch (_) {
+      errorMessage.value =
+          'No fue posible completar la sesión del super administrador.';
+      return false;
+    }
+  }
+
+  String _resolveDioMessage(DioException e, String fallback) {
+    final data = e.response?.data;
+    if (data is Map<String, dynamic>) {
+      final messageCandidate = data['message'] ?? data['error'];
+      if (messageCandidate is String && messageCandidate.isNotEmpty) {
+        return messageCandidate;
+      }
+    }
+    return fallback;
+  }
 
   @override
   void onClose() {

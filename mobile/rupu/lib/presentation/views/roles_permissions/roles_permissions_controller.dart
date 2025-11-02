@@ -85,7 +85,7 @@ class RolesPermissionsController extends GetxController {
         .toList(growable: false);
   }
 
-  bool get isSuperAdmin => homeController.rolesPermisos.value?.isSuper ?? false;
+  bool get isSuperAdmin => homeController.isSuper;
 
   // ───────────────── lifecycle ─────────────────
   @override

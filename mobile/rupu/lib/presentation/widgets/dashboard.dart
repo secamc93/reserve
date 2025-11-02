@@ -19,6 +19,15 @@ class DashBoard extends GetView<HomeController> {
     return Obx(() {
       final items = controller.accessibleMenuItems;
       if (items.isEmpty) {
+        if (controller.isSuper) {
+          final fallbackItems = List<MenuItem>.of(appMenuItems);
+          final defaultMenu =
+              controller.defaultMenuItem.value ?? fallbackItems.first;
+          return _DashboardModule(
+            pageIndex: pageIndex,
+            menuItem: defaultMenu,
+          );
+        }
         return const _WelcomeMessage();
       }
 

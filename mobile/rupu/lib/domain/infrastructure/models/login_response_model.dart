@@ -21,13 +21,17 @@ class LoginDataModel {
   final UserModel user;
   final String token;
   final bool requirePasswordChange;
-  final List<BusinessModel> businesses; // ← nuevo campo
+  final List<BusinessModel> businesses;
+  final String scope;
+  final bool isSuperAdmin;
 
   LoginDataModel({
     required this.user,
     required this.token,
     required this.requirePasswordChange,
     required this.businesses,
+    required this.scope,
+    required this.isSuperAdmin,
   });
 
   factory LoginDataModel.fromJson(Map<String, dynamic> json) {
@@ -38,6 +42,8 @@ class LoginDataModel {
       businesses: (json['businesses'] as List<dynamic>)
           .map((b) => BusinessModel.fromJson(b as Map<String, dynamic>))
           .toList(),
+      scope: json['scope'] as String,
+      isSuperAdmin: json['is_super_admin'] as bool,
     );
   }
 
@@ -47,6 +53,8 @@ class LoginDataModel {
       'token': token,
       'require_password_change': requirePasswordChange,
       'businesses': businesses.map((b) => b.toJson()).toList(),
+      'scope': scope,
+      'is_super_admin': isSuperAdmin,
     };
   }
 }
@@ -146,6 +154,9 @@ class BusinessModel {
   final String logoUrl;
   final String primaryColor;
   final String secondaryColor;
+  final String tertiaryColor;
+  final String quaternaryColor;
+  final String navbarImageUrl;
   final String customDomain;
   final bool isActive;
   final bool enableDelivery;
@@ -164,6 +175,9 @@ class BusinessModel {
     required this.logoUrl,
     required this.primaryColor,
     required this.secondaryColor,
+    required this.tertiaryColor,
+    required this.quaternaryColor,
+    required this.navbarImageUrl,
     required this.customDomain,
     required this.isActive,
     required this.enableDelivery,
@@ -186,6 +200,9 @@ class BusinessModel {
       logoUrl: json['logo_url'] as String,
       primaryColor: json['primary_color'] as String,
       secondaryColor: json['secondary_color'] as String,
+      tertiaryColor: json['tertiary_color'] as String,
+      quaternaryColor: json['quaternary_color'] as String,
+      navbarImageUrl: json['navbar_image_url'] as String,
       customDomain: json['custom_domain'] as String,
       isActive: json['is_active'] as bool,
       enableDelivery: json['enable_delivery'] as bool,
@@ -207,6 +224,9 @@ class BusinessModel {
       'logo_url': logoUrl,
       'primary_color': primaryColor,
       'secondary_color': secondaryColor,
+      'tertiary_color': tertiaryColor,
+      'quaternary_color': quaternaryColor,
+      'navbar_image_url': navbarImageUrl,
       'custom_domain': customDomain,
       'is_active': isActive,
       'enable_delivery': enableDelivery,
