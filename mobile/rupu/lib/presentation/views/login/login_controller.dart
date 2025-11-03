@@ -75,12 +75,7 @@ class LoginController extends GetxController {
   List<BusinessModel> get businesses =>
       sessionModel.value?.data.businesses ?? const <BusinessModel>[];
 
-  int? get selectedBusinessId {
-    if (isSuperAdmin && sessionModel.value != null) {
-      return 0;
-    }
-    return selectedBusiness.value?.id;
-  }
+  int? get selectedBusinessId => selectedBusiness.value?.id;
 
   bool get isSuperAdmin => sessionModel.value?.data.isSuperAdmin ?? false;
 

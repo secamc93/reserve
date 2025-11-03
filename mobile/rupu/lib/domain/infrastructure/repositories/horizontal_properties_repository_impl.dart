@@ -148,15 +148,8 @@ class HorizontalPropertiesRepositoryImpl
     }
 
     final businessId = loginController.selectedBusinessId;
-    final isSuperAdmin = loginController.isSuperAdmin;
 
     if (businessId == null) {
-      if (isSuperAdmin) {
-        return {
-          ...?query,
-          'business_id': 0,
-        };
-      }
       return query;
     }
 
