@@ -13,14 +13,17 @@ abstract class HorizontalPropertiesDatasource {
 
   Future<HorizontalPropertyDetailResponseModel> createHorizontalProperty({
     required Map<String, dynamic> data,
+    Map<String, dynamic>? query,
   });
 
   Future<SimpleResponseModel> deleteHorizontalProperty({
     required int id,
+    Map<String, dynamic>? query,
   });
 
   Future<HorizontalPropertyDetailResponseModel> getHorizontalPropertyDetail({
     required int id,
+    Map<String, dynamic>? query,
   });
 
   Future<HorizontalPropertyDetailResponseModel> updateHorizontalProperty({
@@ -30,6 +33,7 @@ abstract class HorizontalPropertiesDatasource {
     String? logoFileName,
     String? navbarImagePath,
     String? navbarImageFileName,
+    Map<String, dynamic>? query,
   });
 
   Future<HorizontalPropertyUnitsResponseModel> getHorizontalPropertyUnits({
@@ -37,8 +41,10 @@ abstract class HorizontalPropertiesDatasource {
     Map<String, dynamic>? query,
   });
 
-  Future<HorizontalPropertyUnitDetailResponseModel> getHorizontalPropertyUnitDetail({
+  Future<HorizontalPropertyUnitDetailResponseModel>
+      getHorizontalPropertyUnitDetail({
     required int unitId,
+    Map<String, dynamic>? query,
   });
 
   Future<HorizontalPropertyResidentsResponseModel> getHorizontalPropertyResidents({
@@ -49,5 +55,6 @@ abstract class HorizontalPropertiesDatasource {
   Future<HorizontalPropertyVotingGroupsResponseModel>
       getHorizontalPropertyVotingGroups({
     required int id,
+    Map<String, dynamic>? query,
   });
 }

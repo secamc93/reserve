@@ -44,6 +44,7 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
   @override
   Future<HorizontalPropertyDetailResponseModel> createHorizontalProperty({
     required Map<String, dynamic> data,
+    Map<String, dynamic>? query,
   }) async {
     final formData = FormData.fromMap(data);
     final response = await _dio.post(
@@ -52,13 +53,20 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
       options: Options(
         contentType: 'multipart/form-data',
       ),
+      queryParameters: query,
     );
     return HorizontalPropertyDetailResponseModel.fromResponse(response.data);
   }
 
   @override
-  Future<SimpleResponseModel> deleteHorizontalProperty({required int id}) async {
-    final response = await _dio.delete('/horizontal-properties/$id');
+  Future<SimpleResponseModel> deleteHorizontalProperty({
+    required int id,
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await _dio.delete(
+      '/horizontal-properties/$id',
+      queryParameters: query,
+    );
     return SimpleResponseModel.fromJson(
       response.data as Map<String, dynamic>,
     );
@@ -67,8 +75,12 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
   @override
   Future<HorizontalPropertyDetailResponseModel> getHorizontalPropertyDetail({
     required int id,
+    Map<String, dynamic>? query,
   }) async {
-    final response = await _dio.get('/horizontal-properties/$id');
+    final response = await _dio.get(
+      '/horizontal-properties/$id',
+      queryParameters: query,
+    );
     return HorizontalPropertyDetailResponseModel.fromResponse(response.data);
   }
 
@@ -80,6 +92,7 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
     String? logoFileName,
     String? navbarImagePath,
     String? navbarImageFileName,
+    Map<String, dynamic>? query,
   }) async {
     final formData = await _buildFormData(
       map: data,
@@ -94,6 +107,7 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
       options: Options(
         contentType: 'multipart/form-data',
       ),
+      queryParameters: query,
     );
     return HorizontalPropertyDetailResponseModel.fromResponse(response.data);
   }
@@ -302,9 +316,11 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
   Future<HorizontalPropertyUnitDetailResponseModel>
       getHorizontalPropertyUnitDetail({
     required int unitId,
+    Map<String, dynamic>? query,
   }) async {
     final response = await _dio.get(
       '/horizontal-properties/property-units/$unitId',
+      queryParameters: query,
     );
     return HorizontalPropertyUnitDetailResponseModel.fromJson(
       response.data as Map<String, dynamic>,
@@ -330,9 +346,11 @@ class HorizontalPropertiesDatasourceImpl extends HorizontalPropertiesDatasource 
   Future<HorizontalPropertyVotingGroupsResponseModel>
       getHorizontalPropertyVotingGroups({
     required int id,
+    Map<String, dynamic>? query,
   }) async {
     final response = await _dio.get(
       '/horizontal-properties/$id/voting-groups',
+      queryParameters: query,
     );
     return HorizontalPropertyVotingGroupsResponseModel.fromJson(
       response.data as Map<String, dynamic>,

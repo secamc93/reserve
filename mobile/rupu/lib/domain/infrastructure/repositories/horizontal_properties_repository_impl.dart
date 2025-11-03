@@ -1,3 +1,4 @@
+import 'package:get/get.dart';
 import 'package:rupu/domain/datasource/horizontal_properties_datasource.dart';
 import 'package:rupu/domain/entities/horizontal_properties_page.dart';
 import 'package:rupu/domain/entities/horizontal_property_action_result.dart';
@@ -11,6 +12,7 @@ import 'package:rupu/domain/entities/horizontal_property_voting_groups.dart';
 import 'package:rupu/domain/infrastructure/datasources/horizontal_properties_datasource_impl.dart';
 import 'package:rupu/domain/infrastructure/mappers/horizontal_properties_mapper.dart';
 import 'package:rupu/domain/repositories/horizontal_properties_repository.dart';
+import 'package:rupu/presentation/views/login/login_controller.dart';
 
 class HorizontalPropertiesRepositoryImpl
     extends HorizontalPropertiesRepository {
@@ -23,8 +25,10 @@ class HorizontalPropertiesRepositoryImpl
   @override
   Future<HorizontalPropertiesPage> getHorizontalProperties({
     Map<String, dynamic>? query,
-  }) async {   
-    final response = await datasource.getHorizontalProperties(query: query);
+  }) async {
+    final response = await datasource.getHorizontalProperties(
+      query: _withBusinessQuery(query),
+    );
     return HorizontalPropertiesMapper.responseToEntity(response);
   }
 
@@ -32,7 +36,10 @@ class HorizontalPropertiesRepositoryImpl
   Future<HorizontalPropertyCreateResult> createHorizontalProperty({
     required Map<String, dynamic> data,
   }) async {
-    final response = await datasource.createHorizontalProperty(data: data);
+    final response = await datasource.createHorizontalProperty(
+      data: data,
+      query: _withBusinessQuery(),
+    );
     return HorizontalPropertiesMapper.detailResponseToCreateResult(response);
   }
 
@@ -40,7 +47,10 @@ class HorizontalPropertiesRepositoryImpl
   Future<HorizontalPropertyActionResult> deleteHorizontalProperty({
     required int id,
   }) async {
-    final response = await datasource.deleteHorizontalProperty(id: id);
+    final response = await datasource.deleteHorizontalProperty(
+      id: id,
+      query: _withBusinessQuery(),
+    );
     return HorizontalPropertiesMapper.simpleResponseToActionResult(response);
   }
 
@@ -48,7 +58,10 @@ class HorizontalPropertiesRepositoryImpl
   Future<HorizontalPropertyDetail?> getHorizontalPropertyDetail({
     required int id,
   }) async {
-    final response = await datasource.getHorizontalPropertyDetail(id: id);
+    final response = await datasource.getHorizontalPropertyDetail(
+      id: id,
+      query: _withBusinessQuery(),
+    );
     return HorizontalPropertiesMapper.detailResponseToDetail(response);
   }
 
@@ -68,6 +81,7 @@ class HorizontalPropertiesRepositoryImpl
       logoFileName: logoFileName,
       navbarImagePath: navbarImagePath,
       navbarImageFileName: navbarImageFileName,
+      query: _withBusinessQuery(),
     );
     return HorizontalPropertiesMapper.detailResponseToUpdateResult(response);
   }
@@ -79,7 +93,7 @@ class HorizontalPropertiesRepositoryImpl
   }) async {
     final response = await datasource.getHorizontalPropertyUnits(
       id: id,
-      query: query,
+      query: _withBusinessQuery(query),
     );
     return HorizontalPropertiesMapper.unitsResponseToEntity(response);
   }
@@ -91,6 +105,7 @@ class HorizontalPropertiesRepositoryImpl
     try {
       final response = await datasource.getHorizontalPropertyUnitDetail(
         unitId: unitId,
+        query: _withBusinessQuery(),
       );
       return HorizontalPropertiesMapper.unitDetailResponseToEntity(response);
     } catch (_) {
@@ -108,7 +123,7 @@ class HorizontalPropertiesRepositoryImpl
   }) async {
     final response = await datasource.getHorizontalPropertyResidents(
       id: id,
-      query: query,
+      query: _withBusinessQuery(query),
     );
     return HorizontalPropertiesMapper.residentsResponseToEntity(response);
   }
@@ -119,7 +134,35 @@ class HorizontalPropertiesRepositoryImpl
   }) async {
     final response = await datasource.getHorizontalPropertyVotingGroups(
       id: id,
+      query: _withBusinessQuery(),
     );
     return HorizontalPropertiesMapper.votingGroupsResponseToEntity(response);
+  }
+
+  Map<String, dynamic>? _withBusinessQuery([Map<String, dynamic>? query]) {
+    final loginController =
+        Get.isRegistered<LoginController>() ? Get.find<LoginController>() : null;
+
+    if (loginController == null) {
+      return query;
+    }
+
+    final businessId = loginController.selectedBusinessId;
+    final isSuperAdmin = loginController.isSuperAdmin;
+
+    if (businessId == null) {
+      if (isSuperAdmin) {
+        return {
+          ...?query,
+          'business_id': 0,
+        };
+      }
+      return query;
+    }
+
+    return {
+      ...?query,
+      'business_id': businessId,
+    };
   }
 }
