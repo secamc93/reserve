@@ -1031,9 +1031,8 @@ class _ProxySection extends StatelessWidget {
 
   void _showProxyForm(BuildContext context) {
     final isEditing = (record.proxyId ?? 0) > 0;
-    final textController =
-        TextEditingController(text: isEditing ? (record.proxyName ?? '') : '');
     final formKey = GlobalKey<FormState>();
+    var proxyName = isEditing ? (record.proxyName ?? '') : '';
 
     showDialog<void>(
       context: context,
@@ -1045,7 +1044,7 @@ class _ProxySection extends StatelessWidget {
             content: Form(
               key: formKey,
               child: TextFormField(
-                controller: textController,
+                initialValue: proxyName,
                 decoration: const InputDecoration(
                   labelText: 'Nombre del apoderado',
                   hintText: 'Ingresa el nombre completo',
@@ -1059,10 +1058,11 @@ class _ProxySection extends StatelessWidget {
                   }
                   return null;
                 },
+                onChanged: (value) => proxyName = value,
                 onFieldSubmitted: (_) async {
                   if (loading) return;
                   if (!(formKey.currentState?.validate() ?? false)) return;
-                  final name = textController.text.trim();
+                  final name = proxyName.trim();
                   final success = isEditing
                       ? await controller.updateProxyForRecord(
                           record: record,
@@ -1090,7 +1090,7 @@ class _ProxySection extends StatelessWidget {
                         if (!(formKey.currentState?.validate() ?? false)) {
                           return;
                         }
-                        final name = textController.text.trim();
+                        final name = proxyName.trim();
                         final success = isEditing
                             ? await controller.updateProxyForRecord(
                                 record: record,
@@ -1110,7 +1110,7 @@ class _ProxySection extends StatelessWidget {
           );
         });
       },
-    ).whenComplete(() => textController.dispose());
+    );
   }
 
   void _confirmDelete(BuildContext context) {
