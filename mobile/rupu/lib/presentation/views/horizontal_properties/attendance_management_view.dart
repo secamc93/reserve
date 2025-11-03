@@ -890,6 +890,16 @@ class _AttendanceRecordTileState extends State<_AttendanceRecordTile> {
                     ),
                   ),
                 ),
+                SizedBox(width: 20),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: IconButton(
+                    onPressed: _toggleExpanded,
+                    icon: Icon(
+                      _expanded ? Icons.expand_less : Icons.expand_more,
+                    ),
+                  ),
+                ),
               ],
             ),
             AnimatedCrossFade(
@@ -914,16 +924,6 @@ class _AttendanceRecordTileState extends State<_AttendanceRecordTile> {
               ),
             ),
             const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                onPressed: _toggleExpanded,
-                icon: Icon(
-                  _expanded ? Icons.expand_less : Icons.expand_more,
-                ),
-                label: Text(_expanded ? 'Ver menos' : 'Ver más'),
-              ),
-            ),
           ],
         ),
       ),

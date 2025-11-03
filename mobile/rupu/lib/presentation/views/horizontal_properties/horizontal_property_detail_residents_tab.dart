@@ -431,7 +431,7 @@ class _ResidentCard extends StatelessWidget {
           // HEADER con gradiente, ya clipeado por el Card
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [cs.primary.withValues(alpha: .14), cs.surface],
@@ -447,7 +447,7 @@ class _ResidentCard extends StatelessWidget {
                   children: [
                     Container(
                       width: 48,
-                      height: 48,
+                      height: 10,
                       decoration: BoxDecoration(
                         color: cs.primary.withValues(alpha: .16),
                         shape: BoxShape.circle,
@@ -490,7 +490,7 @@ class _ResidentCard extends StatelessWidget {
 
           // BODY (sin Expanded/Spacer para no pelear con la altura del grid)
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

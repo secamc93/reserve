@@ -451,8 +451,8 @@ class _PropertyCard extends StatelessWidget {
         child: LayoutBuilder(
           builder: (ctx, constraints) {
             final w = constraints.maxWidth;
-            final desired = w * 9 / 16;
-            final mediaH = desired.clamp(120.0, 180.0);
+            final desired = w * 7 / 16;
+            // final mediaH = desired.clamp(140.0, 180.0);
 
             // Clamp local para que todo quepa
             final mq = MediaQuery.of(context);
@@ -467,7 +467,7 @@ class _PropertyCard extends StatelessWidget {
                 children: [
                   // Header visual
                   SizedBox(
-                    height: mediaH,
+                    height: desired,
                     width: double.infinity,
                     child: Stack(
                       fit: StackFit.expand,
@@ -516,7 +516,7 @@ class _PropertyCard extends StatelessWidget {
                   // Cuerpo (ocupa el resto) y acciones al fondo
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                      padding: const EdgeInsets.fromLTRB(14, 4, 14, 8),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
