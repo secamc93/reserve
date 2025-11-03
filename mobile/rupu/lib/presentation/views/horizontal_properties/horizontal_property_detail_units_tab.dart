@@ -749,6 +749,13 @@ class _UnitDetailContent extends StatelessWidget {
         label: 'ID de unidad',
         value: detail.id.toString(),
       ),
+      _MetricTileData(
+        icon: Icons.tag_outlined,
+        label: 'Número de unidad',
+        value: _formatText(
+          detail.number.isNotEmpty ? detail.number : fallback.number,
+        ),
+      ),
       if (detail.businessId != null)
         _MetricTileData(
           icon: Icons.business_outlined,
@@ -798,6 +805,12 @@ class _UnitDetailContent extends StatelessWidget {
         label: 'Coeficiente',
         value: _formatCoefficientValue(detail.participationCoefficient),
       ),
+      if ((detail.description ?? '').trim().isNotEmpty)
+        _MetricTileData(
+          icon: Icons.description_outlined,
+          label: 'Descripción',
+          value: _formatText(detail.description),
+        ),
       if (detail.createdAt != null)
         _MetricTileData(
           icon: Icons.calendar_today_outlined,
@@ -912,16 +925,6 @@ class _UnitDetailContent extends StatelessWidget {
                         ),
                     ],
                   ),
-                  if ((detail.description ?? '').trim().isNotEmpty) ...[
-                    const SizedBox(height: 18),
-                    Text(
-                      detail.description!,
-                      style: tt.bodyMedium?.copyWith(
-                        color: cs.onSurfaceVariant,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
                 ],
               ),
             ),
