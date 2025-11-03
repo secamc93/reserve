@@ -804,12 +804,28 @@ class _FiltersSection extends StatelessWidget {
   }
 }
 
-class _AttendanceRecordTile extends StatelessWidget {
+class _AttendanceRecordTile extends StatefulWidget {
   final AttendanceManagementController controller;
   final AttendanceRecord record;
   const _AttendanceRecordTile({required this.controller, required this.record});
 
+  @override
+  State<_AttendanceRecordTile> createState() => _AttendanceRecordTileState();
+}
+
+class _AttendanceRecordTileState extends State<_AttendanceRecordTile> {
+  bool _expanded = false;
+
+  AttendanceManagementController get controller => widget.controller;
+  AttendanceRecord get record => widget.record;
+
   bool get _isAttended => record.attendedAsOwner || record.attendedAsProxy;
+
+  void _toggleExpanded() {
+    setState(() {
+      _expanded = !_expanded;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -876,14 +892,38 @@ class _AttendanceRecordTile extends StatelessWidget {
                 ),
               ],
             ),
-            const Divider(height: 24),
-            _InfoLine(
-              icon: Icons.person_outline,
-              label: 'Propietario',
-              value: ownerLabel,
+            AnimatedCrossFade(
+              crossFadeState: _expanded
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+              duration: const Duration(milliseconds: 200),
+              firstChild: const SizedBox.shrink(),
+              secondChild: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 16),
+                  const Divider(height: 24),
+                  _InfoLine(
+                    icon: Icons.person_outline,
+                    label: 'Propietario',
+                    value: ownerLabel,
+                  ),
+                  const SizedBox(height: 12),
+                  _ProxySection(controller: controller, record: record),
+                ],
+              ),
             ),
             const SizedBox(height: 12),
-            _ProxySection(controller: controller, record: record),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: _toggleExpanded,
+                icon: Icon(
+                  _expanded ? Icons.expand_less : Icons.expand_more,
+                ),
+                label: Text(_expanded ? 'Ver menos' : 'Ver más'),
+              ),
+            ),
           ],
         ),
       ),

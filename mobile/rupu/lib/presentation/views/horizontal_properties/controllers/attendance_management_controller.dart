@@ -227,12 +227,45 @@ class AttendanceManagementController extends GetxController {
   void _replaceRecord(AttendanceRecord updated) {
     final idx = records.indexWhere((e) => e.id == updated.id);
     if (idx >= 0) {
-      records[idx] = updated;
+      final current = records[idx];
+      records[idx] = _mergeRecords(current, updated);
       records.refresh();
     } else {
       // opcional: agrega o ignora
       // records.insert(0, updated);
       // records.refresh();
     }
+  }
+
+  AttendanceRecord _mergeRecords(
+    AttendanceRecord current,
+    AttendanceRecord updated,
+  ) {
+    String? _mergeText(String? existing, String? incoming) {
+      final hasText = incoming?.trim().isNotEmpty ?? false;
+      return hasText ? incoming!.trim() : existing;
+    }
+
+    return AttendanceRecord(
+      id: updated.id == 0 ? current.id : updated.id,
+      attendanceListId: updated.attendanceListId == 0
+          ? current.attendanceListId
+          : updated.attendanceListId,
+      propertyUnitId:
+          updated.propertyUnitId == 0 ? current.propertyUnitId : updated.propertyUnitId,
+      attendedAsOwner: updated.attendedAsOwner,
+      attendedAsProxy: updated.attendedAsProxy,
+      signature: updated.signature ?? current.signature,
+      signatureMethod: updated.signatureMethod ?? current.signatureMethod,
+      verificationNotes:
+          updated.verificationNotes ?? current.verificationNotes,
+      notes: updated.notes ?? current.notes,
+      isValid: updated.isValid,
+      createdAt: updated.createdAt ?? current.createdAt,
+      updatedAt: updated.updatedAt ?? current.updatedAt,
+      residentName: _mergeText(current.residentName, updated.residentName),
+      proxyName: _mergeText(current.proxyName, updated.proxyName),
+      unitNumber: _mergeText(current.unitNumber, updated.unitNumber),
+    );
   }
 }
