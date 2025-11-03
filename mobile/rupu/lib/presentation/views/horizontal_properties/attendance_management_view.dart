@@ -447,9 +447,31 @@ class _MiniStatChip extends StatelessWidget {
   }
 }
 
-class _AttendanceRecordsSheet extends StatelessWidget {
+class _AttendanceRecordsSheet extends StatefulWidget {
   final AttendanceManagementController controller;
   const _AttendanceRecordsSheet({required this.controller});
+
+  @override
+  State<_AttendanceRecordsSheet> createState() =>
+      _AttendanceRecordsSheetState();
+}
+
+class _AttendanceRecordsSheetState extends State<_AttendanceRecordsSheet> {
+  late final ScrollController _scrollController;
+
+  AttendanceManagementController get controller => widget.controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -501,6 +523,7 @@ class _AttendanceRecordsSheet extends StatelessWidget {
                     final error = controller.recordsError.value;
 
                     return CustomScrollView(
+                      controller: _scrollController,
                       slivers: [
                         SliverPadding(
                           padding: const EdgeInsets.symmetric(
@@ -1176,7 +1199,7 @@ class _ProxyFormDialog extends StatefulWidget {
 
 class _ProxyFormDialogState extends State<_ProxyFormDialog> {
   final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _controller;
+  final TextEditingController _controller = TextEditingController();
 
   AttendanceManagementController get _attendanceController => widget.controller;
   AttendanceRecord get _record => widget.record;
@@ -1184,7 +1207,7 @@ class _ProxyFormDialogState extends State<_ProxyFormDialog> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.initialName);
+    _controller.text = widget.initialName;
   }
 
   @override
