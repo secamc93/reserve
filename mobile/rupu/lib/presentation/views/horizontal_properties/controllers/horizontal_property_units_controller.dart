@@ -235,6 +235,10 @@ class HorizontalPropertyUnitsController extends GetxController {
   }
 
   int? _resolveBusinessId() {
+    if (propertyId > 0) {
+      return propertyId;
+    }
+
     if (Get.isRegistered<LoginController>()) {
       final loginController = Get.find<LoginController>();
       final id = loginController.selectedBusinessId;
@@ -247,6 +251,10 @@ class HorizontalPropertyUnitsController extends GetxController {
     if (Get.isRegistered<HorizontalPropertyDetailController>(tag: detailTag)) {
       final detailController =
           Get.find<HorizontalPropertyDetailController>(tag: detailTag);
+      final detailId = detailController.detail.value?.id;
+      if (detailId != null && detailId > 0) {
+        return detailId;
+      }
       return detailController.detail.value?.parentBusinessId;
     }
 

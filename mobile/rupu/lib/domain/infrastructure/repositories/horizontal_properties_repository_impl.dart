@@ -134,7 +134,7 @@ class HorizontalPropertiesRepositoryImpl
   }) async {
     final response = await datasource.getHorizontalPropertyVotingGroups(
       id: id,
-      query: _withBusinessQuery(),
+      query: _withBusinessQuery({'business_id': id}),
     );
     return HorizontalPropertiesMapper.votingGroupsResponseToEntity(response);
   }

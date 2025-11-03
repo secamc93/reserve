@@ -218,6 +218,10 @@ class AttendanceManagementBinding {
       }
     }
 
+    if (resolvedBusinessId <= 0) {
+      resolvedBusinessId = propertyId;
+    }
+
     if (resolvedBusinessId <= 0 &&
         Get.isRegistered<LoginController>() &&
         Get.find<LoginController>().selectedBusinessId != null) {
