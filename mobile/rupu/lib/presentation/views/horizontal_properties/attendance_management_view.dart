@@ -1030,85 +1030,13 @@ class _ProxySection extends StatelessWidget {
   const _ProxySection({required this.controller, required this.record});
 
   void _showProxyForm(BuildContext context) {
-    final isEditing = (record.proxyId ?? 0) > 0;
-    final formKey = GlobalKey<FormState>();
-    var proxyName = isEditing ? (record.proxyName ?? '') : '';
-
     showDialog<void>(
       context: context,
-      builder: (ctx) {
-        return Obx(() {
-          final loading = controller.isProxyProcessing(record.id);
-          return AlertDialog(
-            title: Text(isEditing ? 'Editar apoderado' : 'Agregar apoderado'),
-            content: Form(
-              key: formKey,
-              child: TextFormField(
-                initialValue: proxyName,
-                decoration: const InputDecoration(
-                  labelText: 'Nombre del apoderado',
-                  hintText: 'Ingresa el nombre completo',
-                ),
-                autofocus: true,
-                textCapitalization: TextCapitalization.words,
-                textInputAction: TextInputAction.done,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Ingresa el nombre del apoderado';
-                  }
-                  return null;
-                },
-                onChanged: (value) => proxyName = value,
-                onFieldSubmitted: (_) async {
-                  if (loading) return;
-                  if (!(formKey.currentState?.validate() ?? false)) return;
-                  final name = proxyName.trim();
-                  final success = isEditing
-                      ? await controller.updateProxyForRecord(
-                          record: record,
-                          proxyName: name,
-                        )
-                      : await controller.createProxyForRecord(
-                          record: record,
-                          proxyName: name,
-                        );
-                  if (success && Navigator.of(ctx).canPop()) {
-                    Navigator.of(ctx).pop();
-                  }
-                },
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: loading ? null : () => Navigator.of(ctx).pop(),
-                child: const Text('Cancelar'),
-              ),
-              FilledButton(
-                onPressed: loading
-                    ? null
-                    : () async {
-                        if (!(formKey.currentState?.validate() ?? false)) {
-                          return;
-                        }
-                        final name = proxyName.trim();
-                        final success = isEditing
-                            ? await controller.updateProxyForRecord(
-                                record: record,
-                                proxyName: name,
-                              )
-                            : await controller.createProxyForRecord(
-                                record: record,
-                                proxyName: name,
-                              );
-                        if (success && Navigator.of(ctx).canPop()) {
-                          Navigator.of(ctx).pop();
-                        }
-                      },
-                child: Text(loading ? 'Guardando…' : 'Guardar'),
-              ),
-            ],
-          );
-        });
+      builder: (_) {
+        return _ProxyFormDialog(
+          controller: controller,
+          record: record,
+        );
       },
     );
   }
@@ -1223,6 +1151,113 @@ class _ProxySection extends StatelessWidget {
                 ],
               ),
             ),
+        ],
+      );
+    });
+  }
+}
+
+class _ProxyFormDialog extends StatefulWidget {
+  final AttendanceManagementController controller;
+  final AttendanceRecord record;
+
+  const _ProxyFormDialog({
+    required this.controller,
+    required this.record,
+  });
+
+  bool get isEditing => (record.proxyId ?? 0) > 0;
+
+  String get initialName => isEditing ? (record.proxyName ?? '') : '';
+
+  @override
+  State<_ProxyFormDialog> createState() => _ProxyFormDialogState();
+}
+
+class _ProxyFormDialogState extends State<_ProxyFormDialog> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _controller;
+
+  AttendanceManagementController get _attendanceController => widget.controller;
+  AttendanceRecord get _record => widget.record;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialName);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleSubmit(BuildContext context) async {
+    final isEditing = widget.isEditing;
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      return;
+    }
+
+    final name = _controller.text.trim();
+    final success = isEditing
+        ? await _attendanceController.updateProxyForRecord(
+            record: _record,
+            proxyName: name,
+          )
+        : await _attendanceController.createProxyForRecord(
+            record: _record,
+            proxyName: name,
+          );
+
+    if (success && Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final loading = _attendanceController.isProxyProcessing(_record.id);
+      return AlertDialog(
+        title: Text(widget.isEditing ? 'Editar apoderado' : 'Agregar apoderado'),
+        content: Form(
+          key: _formKey,
+          child: TextFormField(
+            controller: _controller,
+            decoration: const InputDecoration(
+              labelText: 'Nombre del apoderado',
+              hintText: 'Ingresa el nombre completo',
+            ),
+            autofocus: true,
+            textCapitalization: TextCapitalization.words,
+            textInputAction: TextInputAction.done,
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Ingresa el nombre del apoderado';
+              }
+              return null;
+            },
+            onFieldSubmitted: (_) async {
+              if (loading) return;
+              await _handleSubmit(context);
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: loading ? null : () => Navigator.of(context).pop(),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: loading
+                ? null
+                : () async {
+                    if (loading) return;
+                    await _handleSubmit(context);
+                  },
+            child: Text(loading ? 'Guardando…' : 'Guardar'),
+          ),
         ],
       );
     });
