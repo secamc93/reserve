@@ -45,6 +45,7 @@ class AttendanceManagementController extends GetxController {
   final unitFilterCtrl = TextEditingController();
   final attendanceFilter = RxnString();
   final markingRecordIds = <int>{}.obs;
+  final proxyProcessingRecordIds = <int>{}.obs;
 
   Timer? _summaryTimer;
 
@@ -199,6 +200,18 @@ class AttendanceManagementController extends GetxController {
 
   bool isRecordMarked(int id) => markingRecordIds.contains(id);
 
+  bool isProxyProcessing(int recordId) =>
+      proxyProcessingRecordIds.contains(recordId);
+
+  void _setProxyProcessing(int recordId, bool value) {
+    if (value) {
+      proxyProcessingRecordIds.add(recordId);
+    } else {
+      proxyProcessingRecordIds.remove(recordId);
+    }
+    proxyProcessingRecordIds.refresh();
+  }
+
   Future<void> toggleAttendance(AttendanceRecord record) async {
     if (isRecordMarked(record.id)) return;
     final isAttended = record.attendedAsOwner || record.attendedAsProxy;
@@ -224,15 +237,235 @@ class AttendanceManagementController extends GetxController {
     }
   }
 
+  Future<bool> createProxyForRecord({
+    required AttendanceRecord record,
+    required String proxyName,
+  }) async {
+    final trimmedName = proxyName.trim();
+    if (trimmedName.isEmpty) {
+      if (Get.isSnackbarOpen) {
+        Get.closeCurrentSnackbar();
+      }
+      Get.snackbar(
+        'Gestión de asistencia',
+        'Debes ingresar el nombre del apoderado.',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+        margin: const EdgeInsets.all(16),
+      );
+      return false;
+    }
+
+    if (record.propertyUnitId <= 0) {
+      if (Get.isSnackbarOpen) {
+        Get.closeCurrentSnackbar();
+      }
+      Get.snackbar(
+        'Gestión de asistencia',
+        'No se pudo identificar la unidad para crear el apoderado.',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+        margin: const EdgeInsets.all(16),
+      );
+      return false;
+    }
+
+    _setProxyProcessing(record.id, true);
+    try {
+      await repository.createAttendanceProxy(
+        businessId: businessId,
+        propertyUnitId: record.propertyUnitId,
+        proxyName: trimmedName,
+      );
+      await fetchRecords(page: currentPage.value);
+      if (Get.isSnackbarOpen) {
+        Get.closeCurrentSnackbar();
+      }
+      Get.snackbar(
+        'Gestión de asistencia',
+        'Apoderado agregado correctamente.',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+        margin: const EdgeInsets.all(16),
+      );
+      return true;
+    } catch (_) {
+      if (Get.isSnackbarOpen) {
+        Get.closeCurrentSnackbar();
+      }
+      Get.snackbar(
+        'Gestión de asistencia',
+        'No se pudo agregar el apoderado. Intenta nuevamente.',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+        margin: const EdgeInsets.all(16),
+      );
+      return false;
+    } finally {
+      _setProxyProcessing(record.id, false);
+    }
+  }
+
+  Future<bool> updateProxyForRecord({
+    required AttendanceRecord record,
+    required String proxyName,
+  }) async {
+    final proxyId = record.proxyId;
+    final trimmedName = proxyName.trim();
+    if (proxyId == null || proxyId <= 0) {
+      if (Get.isSnackbarOpen) {
+        Get.closeCurrentSnackbar();
+      }
+      Get.snackbar(
+        'Gestión de asistencia',
+        'No se encontró un apoderado asignado para actualizar.',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+        margin: const EdgeInsets.all(16),
+      );
+      return false;
+    }
+
+    if (trimmedName.isEmpty) {
+      if (Get.isSnackbarOpen) {
+        Get.closeCurrentSnackbar();
+      }
+      Get.snackbar(
+        'Gestión de asistencia',
+        'Debes ingresar el nombre del apoderado.',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+        margin: const EdgeInsets.all(16),
+      );
+      return false;
+    }
+
+    _setProxyProcessing(record.id, true);
+    try {
+      await repository.updateAttendanceProxy(
+        proxyId: proxyId,
+        proxyName: trimmedName,
+      );
+      await fetchRecords(page: currentPage.value);
+      if (Get.isSnackbarOpen) {
+        Get.closeCurrentSnackbar();
+      }
+      Get.snackbar(
+        'Gestión de asistencia',
+        'Apoderado actualizado correctamente.',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+        margin: const EdgeInsets.all(16),
+      );
+      return true;
+    } catch (_) {
+      if (Get.isSnackbarOpen) {
+        Get.closeCurrentSnackbar();
+      }
+      Get.snackbar(
+        'Gestión de asistencia',
+        'No se pudo actualizar el apoderado. Intenta nuevamente.',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+        margin: const EdgeInsets.all(16),
+      );
+      return false;
+    } finally {
+      _setProxyProcessing(record.id, false);
+    }
+  }
+
+  Future<bool> deleteProxyForRecord({required AttendanceRecord record}) async {
+    final proxyId = record.proxyId;
+    if (proxyId == null || proxyId <= 0) {
+      if (Get.isSnackbarOpen) {
+        Get.closeCurrentSnackbar();
+      }
+      Get.snackbar(
+        'Gestión de asistencia',
+        'No se encontró un apoderado asignado para eliminar.',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+        margin: const EdgeInsets.all(16),
+      );
+      return false;
+    }
+
+    _setProxyProcessing(record.id, true);
+    try {
+      await repository.deleteAttendanceProxy(proxyId: proxyId);
+      await fetchRecords(page: currentPage.value);
+      if (Get.isSnackbarOpen) {
+        Get.closeCurrentSnackbar();
+      }
+      Get.snackbar(
+        'Gestión de asistencia',
+        'Apoderado eliminado correctamente.',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+        margin: const EdgeInsets.all(16),
+      );
+      return true;
+    } catch (_) {
+      if (Get.isSnackbarOpen) {
+        Get.closeCurrentSnackbar();
+      }
+      Get.snackbar(
+        'Gestión de asistencia',
+        'No se pudo eliminar el apoderado. Intenta nuevamente.',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+        margin: const EdgeInsets.all(16),
+      );
+      return false;
+    } finally {
+      _setProxyProcessing(record.id, false);
+    }
+  }
+
   void _replaceRecord(AttendanceRecord updated) {
     final idx = records.indexWhere((e) => e.id == updated.id);
     if (idx >= 0) {
-      records[idx] = updated;
+      final current = records[idx];
+      records[idx] = _mergeRecords(current, updated);
       records.refresh();
     } else {
       // opcional: agrega o ignora
       // records.insert(0, updated);
       // records.refresh();
     }
+  }
+
+  AttendanceRecord _mergeRecords(
+    AttendanceRecord current,
+    AttendanceRecord updated,
+  ) {
+    String? _mergeText(String? existing, String? incoming) {
+      final hasText = incoming?.trim().isNotEmpty ?? false;
+      return hasText ? incoming!.trim() : existing;
+    }
+
+    return AttendanceRecord(
+      id: updated.id == 0 ? current.id : updated.id,
+      attendanceListId: updated.attendanceListId == 0
+          ? current.attendanceListId
+          : updated.attendanceListId,
+      propertyUnitId:
+          updated.propertyUnitId == 0 ? current.propertyUnitId : updated.propertyUnitId,
+      attendedAsOwner: updated.attendedAsOwner,
+      attendedAsProxy: updated.attendedAsProxy,
+      proxyId: updated.proxyId ?? current.proxyId,
+      signature: updated.signature ?? current.signature,
+      signatureMethod: updated.signatureMethod ?? current.signatureMethod,
+      verificationNotes:
+          updated.verificationNotes ?? current.verificationNotes,
+      notes: updated.notes ?? current.notes,
+      isValid: updated.isValid,
+      createdAt: updated.createdAt ?? current.createdAt,
+      updatedAt: updated.updatedAt ?? current.updatedAt,
+      residentName: _mergeText(current.residentName, updated.residentName),
+      proxyName: _mergeText(current.proxyName, updated.proxyName),
+      unitNumber: _mergeText(current.unitNumber, updated.unitNumber),
+    );
   }
 }

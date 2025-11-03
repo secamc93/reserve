@@ -4,6 +4,7 @@ import 'package:rupu/domain/entities/horizontal_property_unit_detail.dart';
 import 'package:rupu/domain/entities/horizontal_property_units_page.dart';
 import 'package:rupu/domain/infrastructure/repositories/horizontal_properties_repository_impl.dart';
 import 'package:rupu/domain/repositories/horizontal_properties_repository.dart';
+import 'package:rupu/presentation/views/login/login_controller.dart';
 
 import '../horizontal_property_detail_controller.dart';
 
@@ -146,6 +147,10 @@ class HorizontalPropertyUnitsController extends GetxController {
     if (status != null) {
       query['is_active'] = status;
     }
+    final businessId = _resolveBusinessId();
+    if (businessId != null) {
+      query['business_id'] = businessId;
+    }
     return query;
   }
 
@@ -227,5 +232,32 @@ class HorizontalPropertyUnitsController extends GetxController {
   void _clearUnitDetailsCache() {
     _unitDetailRequests.clear();
     _unitDetailsCache.clear();
+  }
+
+  int? _resolveBusinessId() {
+    if (propertyId > 0) {
+      return propertyId;
+    }
+
+    if (Get.isRegistered<LoginController>()) {
+      final loginController = Get.find<LoginController>();
+      final id = loginController.selectedBusinessId;
+      if (id != null) {
+        return id;
+      }
+    }
+
+    final detailTag = HorizontalPropertyDetailController.tagFor(propertyId);
+    if (Get.isRegistered<HorizontalPropertyDetailController>(tag: detailTag)) {
+      final detailController =
+          Get.find<HorizontalPropertyDetailController>(tag: detailTag);
+      final detailId = detailController.detail.value?.id;
+      if (detailId != null && detailId > 0) {
+        return detailId;
+      }
+      return detailController.detail.value?.parentBusinessId;
+    }
+
+    return null;
   }
 }

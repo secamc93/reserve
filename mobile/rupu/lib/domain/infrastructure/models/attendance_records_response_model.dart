@@ -57,6 +57,7 @@ class AttendanceRecordModel {
   final int propertyUnitId;
   final bool attendedAsOwner;
   final bool attendedAsProxy;
+  final int? proxyId;
   final String? signature;
   final String? signatureMethod;
   final String? verificationNotes;
@@ -74,6 +75,7 @@ class AttendanceRecordModel {
     required this.propertyUnitId,
     required this.attendedAsOwner,
     required this.attendedAsProxy,
+    required this.proxyId,
     required this.signature,
     required this.signatureMethod,
     required this.verificationNotes,
@@ -93,6 +95,7 @@ class AttendanceRecordModel {
       propertyUnitId: json['property_unit_id'] as int? ?? 0,
       attendedAsOwner: json['attended_as_owner'] as bool? ?? false,
       attendedAsProxy: json['attended_as_proxy'] as bool? ?? false,
+      proxyId: json['proxy_id'] as int?,
       signature: json['signature'] as String?,
       signatureMethod: json['signature_method'] as String?,
       verificationNotes: json['verification_notes'] as String?,

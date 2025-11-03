@@ -29,4 +29,19 @@ abstract class AttendanceDatasource {
   Future<AttendanceRecordActionResponseModel> unmarkAttendance({
     required int recordId,
   });
+
+  Future<void> createAttendanceProxy({
+    required int businessId,
+    required int propertyUnitId,
+    required String proxyName,
+  });
+
+  Future<void> updateAttendanceProxy({
+    required int proxyId,
+    required String proxyName,
+  });
+
+  Future<void> deleteAttendanceProxy({
+    required int proxyId,
+  });
 }
