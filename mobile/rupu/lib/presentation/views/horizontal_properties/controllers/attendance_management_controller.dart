@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:rupu/domain/entities/attendance.dart';
@@ -212,6 +213,15 @@ class AttendanceManagementController extends GetxController {
     proxyProcessingRecordIds.refresh();
   }
 
+  void _dismissSnackbarIfOpen() {
+    if (!Get.isSnackbarOpen) return;
+    try {
+      Get.closeCurrentSnackbar();
+    } catch (_) {
+      // Ignora errores de Get al cerrar snackbars inexistentes.
+    }
+  }
+
   Future<void> toggleAttendance(AttendanceRecord record) async {
     if (isRecordMarked(record.id)) return;
     final isAttended = record.attendedAsOwner || record.attendedAsProxy;
@@ -243,9 +253,7 @@ class AttendanceManagementController extends GetxController {
   }) async {
     final trimmedName = proxyName.trim();
     if (trimmedName.isEmpty) {
-      if (Get.isSnackbarOpen) {
-        Get.closeCurrentSnackbar();
-      }
+      _dismissSnackbarIfOpen();
       Get.snackbar(
         'Gestión de asistencia',
         'Debes ingresar el nombre del apoderado.',
@@ -257,9 +265,7 @@ class AttendanceManagementController extends GetxController {
     }
 
     if (record.propertyUnitId <= 0) {
-      if (Get.isSnackbarOpen) {
-        Get.closeCurrentSnackbar();
-      }
+      _dismissSnackbarIfOpen();
       Get.snackbar(
         'Gestión de asistencia',
         'No se pudo identificar la unidad para crear el apoderado.',
@@ -278,9 +284,7 @@ class AttendanceManagementController extends GetxController {
         proxyName: trimmedName,
       );
       await fetchRecords(page: currentPage.value);
-      if (Get.isSnackbarOpen) {
-        Get.closeCurrentSnackbar();
-      }
+      _dismissSnackbarIfOpen();
       Get.snackbar(
         'Gestión de asistencia',
         'Apoderado agregado correctamente.',
@@ -290,9 +294,7 @@ class AttendanceManagementController extends GetxController {
       );
       return true;
     } catch (_) {
-      if (Get.isSnackbarOpen) {
-        Get.closeCurrentSnackbar();
-      }
+      _dismissSnackbarIfOpen();
       Get.snackbar(
         'Gestión de asistencia',
         'No se pudo agregar el apoderado. Intenta nuevamente.',
@@ -310,12 +312,12 @@ class AttendanceManagementController extends GetxController {
     required AttendanceRecord record,
     required String proxyName,
   }) async {
-    final proxyId = record.proxyId;
+    final effectiveRecord =
+        records.firstWhereOrNull((element) => element.id == record.id) ?? record;
+    final proxyId = effectiveRecord.proxyId;
     final trimmedName = proxyName.trim();
     if (proxyId == null || proxyId <= 0) {
-      if (Get.isSnackbarOpen) {
-        Get.closeCurrentSnackbar();
-      }
+      _dismissSnackbarIfOpen();
       Get.snackbar(
         'Gestión de asistencia',
         'No se encontró un apoderado asignado para actualizar.',
@@ -327,9 +329,7 @@ class AttendanceManagementController extends GetxController {
     }
 
     if (trimmedName.isEmpty) {
-      if (Get.isSnackbarOpen) {
-        Get.closeCurrentSnackbar();
-      }
+      _dismissSnackbarIfOpen();
       Get.snackbar(
         'Gestión de asistencia',
         'Debes ingresar el nombre del apoderado.',
@@ -347,9 +347,7 @@ class AttendanceManagementController extends GetxController {
         proxyName: trimmedName,
       );
       await fetchRecords(page: currentPage.value);
-      if (Get.isSnackbarOpen) {
-        Get.closeCurrentSnackbar();
-      }
+      _dismissSnackbarIfOpen();
       Get.snackbar(
         'Gestión de asistencia',
         'Apoderado actualizado correctamente.',
@@ -359,9 +357,7 @@ class AttendanceManagementController extends GetxController {
       );
       return true;
     } catch (_) {
-      if (Get.isSnackbarOpen) {
-        Get.closeCurrentSnackbar();
-      }
+      _dismissSnackbarIfOpen();
       Get.snackbar(
         'Gestión de asistencia',
         'No se pudo actualizar el apoderado. Intenta nuevamente.',
@@ -376,11 +372,11 @@ class AttendanceManagementController extends GetxController {
   }
 
   Future<bool> deleteProxyForRecord({required AttendanceRecord record}) async {
-    final proxyId = record.proxyId;
+    final effectiveRecord =
+        records.firstWhereOrNull((element) => element.id == record.id) ?? record;
+    final proxyId = effectiveRecord.proxyId;
     if (proxyId == null || proxyId <= 0) {
-      if (Get.isSnackbarOpen) {
-        Get.closeCurrentSnackbar();
-      }
+      _dismissSnackbarIfOpen();
       Get.snackbar(
         'Gestión de asistencia',
         'No se encontró un apoderado asignado para eliminar.',
@@ -395,9 +391,7 @@ class AttendanceManagementController extends GetxController {
     try {
       await repository.deleteAttendanceProxy(proxyId: proxyId);
       await fetchRecords(page: currentPage.value);
-      if (Get.isSnackbarOpen) {
-        Get.closeCurrentSnackbar();
-      }
+      _dismissSnackbarIfOpen();
       Get.snackbar(
         'Gestión de asistencia',
         'Apoderado eliminado correctamente.',
@@ -407,9 +401,7 @@ class AttendanceManagementController extends GetxController {
       );
       return true;
     } catch (_) {
-      if (Get.isSnackbarOpen) {
-        Get.closeCurrentSnackbar();
-      }
+      _dismissSnackbarIfOpen();
       Get.snackbar(
         'Gestión de asistencia',
         'No se pudo eliminar el apoderado. Intenta nuevamente.',
