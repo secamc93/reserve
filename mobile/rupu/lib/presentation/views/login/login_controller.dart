@@ -92,7 +92,7 @@ class LoginController extends GetxController {
     try {
       final businessToken = await repository.getBusinessToken(
         token: loginToken,
-        businessId: isSuperAdmin ? 0 : business.id,
+        businessId: business.id,
       );
 
       await TokenStorage().saveBusinessToken(businessToken);

@@ -143,19 +143,31 @@ class HorizontalPropertiesRepositoryImpl
     final loginController =
         Get.isRegistered<LoginController>() ? Get.find<LoginController>() : null;
 
-    if (loginController == null) {
-      return query;
+    final baseQuery = query == null
+        ? <String, dynamic>{}
+        : Map<String, dynamic>.from(query);
+
+    final existingBusinessId = baseQuery['business_id'];
+    if (existingBusinessId != null) {
+      if (existingBusinessId is num && existingBusinessId > 0) {
+        return baseQuery;
+      }
+      if (existingBusinessId is String) {
+        final trimmed = existingBusinessId.trim();
+        if (trimmed.isNotEmpty && trimmed != '0') {
+          return baseQuery;
+        }
+      }
+      baseQuery.remove('business_id');
     }
 
-    final businessId = loginController.selectedBusinessId;
+    final businessId = loginController?.selectedBusinessId;
 
     if (businessId == null) {
-      return query;
+      return baseQuery.isEmpty ? null : baseQuery;
     }
 
-    return {
-      ...?query,
-      'business_id': businessId,
-    };
+    baseQuery['business_id'] = businessId;
+    return baseQuery;
   }
 }

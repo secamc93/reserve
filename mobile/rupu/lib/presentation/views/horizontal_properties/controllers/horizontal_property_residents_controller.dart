@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:rupu/domain/entities/horizontal_property_residents_page.dart';
 import 'package:rupu/domain/infrastructure/repositories/horizontal_properties_repository_impl.dart';
 import 'package:rupu/domain/repositories/horizontal_properties_repository.dart';
+import 'package:rupu/presentation/views/login/login_controller.dart';
 
 import '../horizontal_property_detail_controller.dart';
 
@@ -126,6 +127,10 @@ class HorizontalPropertyResidentsController extends GetxController {
     if (isActive != null) {
       query['is_active'] = isActive;
     }
+    final businessId = _resolveBusinessId();
+    if (businessId != null) {
+      query['business_id'] = businessId;
+    }
     return query;
   }
 
@@ -206,5 +211,24 @@ class HorizontalPropertyResidentsController extends GetxController {
     residentsTypeCtrl.dispose();
     residentsSearchCtrl.dispose();
     super.onClose();
+  }
+
+  int? _resolveBusinessId() {
+    if (Get.isRegistered<LoginController>()) {
+      final loginController = Get.find<LoginController>();
+      final id = loginController.selectedBusinessId;
+      if (id != null) {
+        return id;
+      }
+    }
+
+    final detailTag = HorizontalPropertyDetailController.tagFor(propertyId);
+    if (Get.isRegistered<HorizontalPropertyDetailController>(tag: detailTag)) {
+      final detailController =
+          Get.find<HorizontalPropertyDetailController>(tag: detailTag);
+      return detailController.detail.value?.parentBusinessId;
+    }
+
+    return null;
   }
 }
