@@ -594,19 +594,28 @@ class _UnitCard extends StatelessWidget {
       const Center(child: CircularProgressIndicator()),
       barrierDismissible: false,
     );
-    HorizontalPropertyUnitDetailResult detailResult;
+    HorizontalPropertyUnitDetailResult? detailResult;
     try {
       detailResult = await controller.fetchUnitDetail(unit.id);
+    } catch (_) {
+      detailResult = const HorizontalPropertyUnitDetailResult(
+        success: false,
+        message: 'No se pudo cargar el detalle de la unidad. Inténtalo nuevamente.',
+      );
     } finally {
       if (Get.isDialogOpen ?? false) {
         Get.back();
       }
     }
 
-    if (!detailResult.success || detailResult.unit == null) {
+    final resolvedDetail = detailResult;
+    if (resolvedDetail == null ||
+        !resolvedDetail.success ||
+        resolvedDetail.unit == null) {
       _showSnack(
         'No se pudo cargar la unidad',
-        detailResult.message ?? 'Inténtalo nuevamente en unos segundos.',
+        resolvedDetail?.message ??
+            'Inténtalo nuevamente en unos segundos.',
         isError: true,
       );
       return;
@@ -621,7 +630,7 @@ class _UnitCard extends StatelessWidget {
       builder: (_) => _UnitFormBottomSheet(
         title: 'Editar unidad',
         actionLabel: 'Guardar cambios',
-        initialDetail: detailResult.unit!,
+        initialDetail: resolvedDetail.unit,
         fallback: unit,
         showStatusSwitch: true,
         onSubmit: (payload) => controller.updateUnit(
