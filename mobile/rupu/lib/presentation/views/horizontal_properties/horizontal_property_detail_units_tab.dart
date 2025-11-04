@@ -588,61 +588,22 @@ class _UnitCard extends StatelessWidget {
   }
 
   Future<void> _openEditSheet(BuildContext context) async {
-    final controller =
-        Get.find<HorizontalPropertyUnitsController>(tag: controllerTag);
-    Get.dialog(
-      const Center(child: CircularProgressIndicator()),
-      barrierDismissible: false,
-    );
-    HorizontalPropertyUnitDetailResult? detailResult;
-    try {
-      detailResult = await controller.fetchUnitDetail(unit.id);
-    } catch (_) {
-      detailResult = const HorizontalPropertyUnitDetailResult(
-        success: false,
-        message: 'No se pudo cargar el detalle de la unidad. Inténtalo nuevamente.',
-      );
-    } finally {
-      if (Get.isDialogOpen ?? false) {
-        Get.back();
-      }
-    }
-
-    final resolvedDetail = detailResult;
-    if (resolvedDetail == null ||
-        !resolvedDetail.success ||
-        resolvedDetail.unit == null) {
-      _showSnack(
-        'No se pudo cargar la unidad',
-        resolvedDetail?.message ??
-            'Inténtalo nuevamente en unos segundos.',
-        isError: true,
-      );
-      return;
-    }
-
     final result = await showModalBottomSheet<
         HorizontalPropertyUnitDetailResult>(
       context: context,
       backgroundColor: Colors.transparent,
       useRootNavigator: true,
       isScrollControlled: true,
-      builder: (_) => _UnitFormBottomSheet(
-        title: 'Editar unidad',
-        actionLabel: 'Guardar cambios',
-        initialDetail: resolvedDetail.unit,
-        fallback: unit,
-        showStatusSwitch: true,
-        onSubmit: (payload) => controller.updateUnit(
-          unitId: unit.id,
-          data: payload,
-        ),
+      builder: (_) => _UnitEditBottomSheet(
+        controllerTag: controllerTag,
+        unit: unit,
       ),
     );
 
     if (result != null && result.success) {
       final updatedNumber = result.unit?.number ?? unit.number;
-      final message = 'Los cambios de la unidad $updatedNumber se guardaron correctamente.';
+      final message =
+          'Los cambios de la unidad $updatedNumber se guardaron correctamente.';
       _showSnack('Unidad actualizada', message);
     }
   }
@@ -869,6 +830,242 @@ class _UnitDetailBottomSheetState extends State<_UnitDetailBottomSheet> {
   }
 }
 
+class _UnitEditBottomSheet extends StatefulWidget {
+  final String controllerTag;
+  final HorizontalPropertyUnitItem unit;
+
+  const _UnitEditBottomSheet({
+    required this.controllerTag,
+    required this.unit,
+  });
+
+  @override
+  State<_UnitEditBottomSheet> createState() => _UnitEditBottomSheetState();
+}
+
+class _UnitEditBottomSheetState extends State<_UnitEditBottomSheet> {
+  late Future<HorizontalPropertyUnitDetailResult> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = _load();
+  }
+
+  Future<HorizontalPropertyUnitDetailResult> _load() {
+    final controller =
+        Get.find<HorizontalPropertyUnitsController>(tag: widget.controllerTag);
+    return controller.fetchUnitDetail(widget.unit.id);
+  }
+
+  void _retry() {
+    setState(() {
+      _future = _load();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final controller =
+        Get.find<HorizontalPropertyUnitsController>(tag: widget.controllerTag);
+
+    return FutureBuilder<HorizontalPropertyUnitDetailResult>(
+      future: _future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const _UnitFormLoadingSheet();
+        }
+
+        if (!snapshot.hasData) {
+          return _UnitFormErrorSheet(
+            onRetry: _retry,
+          );
+        }
+
+        final result = snapshot.data!;
+        if (!result.success || result.unit == null) {
+          return _UnitFormErrorSheet(
+            message: result.message ??
+                'No se pudo obtener la información de la unidad.',
+            onRetry: _retry,
+          );
+        }
+
+        return _UnitFormBottomSheet(
+          title: 'Editar unidad',
+          actionLabel: 'Guardar cambios',
+          initialDetail: result.unit,
+          fallback: widget.unit,
+          showStatusSwitch: true,
+          onSubmit: (payload) => controller.updateUnit(
+            unitId: widget.unit.id,
+            data: payload,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _UnitFormScaffold extends StatelessWidget {
+  final Widget child;
+  final double heightFactor;
+
+  const _UnitFormScaffold({
+    required this.child,
+    this.heightFactor = 0.95,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final viewInsets = MediaQuery.viewInsetsOf(context);
+    final cs = Theme.of(context).colorScheme;
+
+    return FractionallySizedBox(
+      heightFactor: heightFactor,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(16, 0, 16, viewInsets.bottom + 16),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: cs.surface,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(32),
+                topRight: Radius.circular(32),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: .18),
+                  blurRadius: 28,
+                  offset: const Offset(0, 22),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(32),
+                topRight: Radius.circular(32),
+              ),
+              child: Column(
+                children: [
+                  const SizedBox(height: 12),
+                  const _SheetHandle(),
+                  Expanded(child: child),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _UnitFormLoadingSheet extends StatelessWidget {
+  const _UnitFormLoadingSheet();
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
+    return _UnitFormScaffold(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: cs.primary.withValues(alpha: .12),
+                shape: BoxShape.circle,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: CircularProgressIndicator(color: cs.primary),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Cargando unidad…',
+              style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Obteniendo la información más reciente de la unidad para continuar.',
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _UnitFormErrorSheet extends StatelessWidget {
+  final String? message;
+  final VoidCallback onRetry;
+
+  const _UnitFormErrorSheet({
+    this.message,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return _UnitFormScaffold(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: cs.errorContainer,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.error_outline, color: cs.error, size: 28),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'No se pudo cargar la unidad',
+              style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message ??
+                  'Ocurrió un problema al obtener la información. Inténtalo nuevamente.',
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            FilledButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Reintentar'),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancelar'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _UnitFormBottomSheet extends StatefulWidget {
   final String title;
   final String actionLabel;
@@ -1041,7 +1238,6 @@ class _UnitFormBottomSheetState extends State<_UnitFormBottomSheet> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final viewInsets = MediaQuery.viewInsetsOf(context);
 
     InputDecoration decoration(String label, {String? hint}) {
       return InputDecoration(
@@ -1079,269 +1275,235 @@ class _UnitFormBottomSheetState extends State<_UnitFormBottomSheet> {
       );
     }
 
-    return FractionallySizedBox(
-      heightFactor: 0.95,
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(16, 0, 16, viewInsets.bottom + 16),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: cs.surface,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(32),
-                topRight: Radius.circular(32),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: .18),
-                  blurRadius: 28,
-                  offset: const Offset(0, 22),
+    return _UnitFormScaffold(
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 10, 24, 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.title,
+                  style: tt.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Completa la información de la unidad para continuar.',
+                  style: tt.bodyMedium?.copyWith(
+                    color: cs.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
-            child: ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(32),
-                topRight: Radius.circular(32),
-              ),
-              child: Column(
-                children: [
-                  const SizedBox(height: 12),
-                  const _SheetHandle(),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 10, 24, 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ResponsiveFormGrid(
                       children: [
-                        Text(
-                          widget.title,
-                          style: tt.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
+                        field(
+                          label: 'Número de unidad',
+                          controller: _numberCtrl,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Ingresa el número de la unidad';
+                            }
+                            return null;
+                          },
                         ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Completa la información de la unidad para continuar.',
-                          style: tt.bodyMedium?.copyWith(
-                            color: cs.onSurfaceVariant,
+                        field(
+                          label: 'Tipo de unidad',
+                          controller: _unitTypeCtrl,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Indica el tipo de unidad';
+                            }
+                            return null;
+                          },
+                        ),
+                        field(
+                          label: 'Bloque',
+                          controller: _blockCtrl,
+                          hint: 'Bloque o torre',
+                        ),
+                        field(
+                          label: 'Piso',
+                          controller: _floorCtrl,
+                          keyboardType: TextInputType.number,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return null;
+                            }
+                            return _parseInt(value.trim()) == null
+                                ? 'Ingresa un número válido'
+                                : null;
+                          },
+                        ),
+                        field(
+                          label: 'Área (m²)',
+                          controller: _areaCtrl,
+                          keyboardType:
+                              const TextInputType.numberWithOptions(
+                            decimal: true,
                           ),
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return null;
+                            }
+                            return _parseDouble(value.trim()) == null
+                                ? 'Ingresa un valor numérico'
+                                : null;
+                          },
+                        ),
+                        field(
+                          label: 'Coeficiente de participación',
+                          controller: _coefficientCtrl,
+                          keyboardType:
+                              const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return null;
+                            }
+                            return _parseDouble(value.trim()) == null
+                                ? 'Ingresa un valor numérico'
+                                : null;
+                          },
+                        ),
+                        field(
+                          label: 'Habitaciones',
+                          controller: _bedroomsCtrl,
+                          keyboardType: TextInputType.number,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return null;
+                            }
+                            return _parseInt(value.trim()) == null
+                                ? 'Ingresa un número válido'
+                                : null;
+                          },
+                        ),
+                        field(
+                          label: 'Baños',
+                          controller: _bathroomsCtrl,
+                          keyboardType: TextInputType.number,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return null;
+                            }
+                            return _parseInt(value.trim()) == null
+                                ? 'Ingresa un número válido'
+                                : null;
+                          },
                         ),
                       ],
                     ),
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _descriptionCtrl,
+                      decoration: decoration(
+                        'Descripción',
+                        hint: 'Comparte detalles adicionales de la unidad',
+                      ),
+                      textInputAction: TextInputAction.newline,
+                      keyboardType: TextInputType.multiline,
+                      maxLines: 3,
+                    ),
+                    if (widget.showStatusSwitch) ...[
+                      const SizedBox(height: 8),
+                      SwitchListTile.adaptive(
+                        value: _isActive,
+                        onChanged: _saving
+                            ? null
+                            : (value) {
+                                setState(() {
+                                  _isActive = value;
+                                });
+                              },
+                        title: const Text('Unidad activa'),
+                        subtitle: const Text(
+                          'Controla si la unidad permanece visible en la administración.',
+                        ),
+                      ),
+                    ],
+                    if (_errorMessage != null) ...[
+                      const SizedBox(height: 16),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: cs.errorContainer,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            ResponsiveFormGrid(
-                              children: [
-                                field(
-                                  label: 'Número de unidad',
-                                  controller: _numberCtrl,
-                                  validator: (value) {
-                                    if (value == null || value.trim().isEmpty) {
-                                      return 'Ingresa el número de la unidad';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                field(
-                                  label: 'Tipo de unidad',
-                                  controller: _unitTypeCtrl,
-                                  validator: (value) {
-                                    if (value == null || value.trim().isEmpty) {
-                                      return 'Indica el tipo de unidad';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                field(
-                                  label: 'Bloque',
-                                  controller: _blockCtrl,
-                                  hint: 'Bloque o torre',
-                                ),
-                                field(
-                                  label: 'Piso',
-                                  controller: _floorCtrl,
-                                  keyboardType: TextInputType.number,
-                                  validator: (value) {
-                                    if (value == null || value.trim().isEmpty) {
-                                      return null;
-                                    }
-                                    return _parseInt(value.trim()) == null
-                                        ? 'Ingresa un número válido'
-                                        : null;
-                                  },
-                                ),
-                                field(
-                                  label: 'Área (m²)',
-                                  controller: _areaCtrl,
-                                  keyboardType:
-                                      const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
-                                  validator: (value) {
-                                    if (value == null || value.trim().isEmpty) {
-                                      return null;
-                                    }
-                                    return _parseDouble(value.trim()) == null
-                                        ? 'Ingresa un valor numérico'
-                                        : null;
-                                  },
-                                ),
-                                field(
-                                  label: 'Coeficiente de participación',
-                                  controller: _coefficientCtrl,
-                                  keyboardType:
-                                      const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
-                                  validator: (value) {
-                                    if (value == null || value.trim().isEmpty) {
-                                      return null;
-                                    }
-                                    return _parseDouble(value.trim()) == null
-                                        ? 'Ingresa un valor numérico'
-                                        : null;
-                                  },
-                                ),
-                                field(
-                                  label: 'Habitaciones',
-                                  controller: _bedroomsCtrl,
-                                  keyboardType: TextInputType.number,
-                                  validator: (value) {
-                                    if (value == null || value.trim().isEmpty) {
-                                      return null;
-                                    }
-                                    return _parseInt(value.trim()) == null
-                                        ? 'Ingresa un número válido'
-                                        : null;
-                                  },
-                                ),
-                                field(
-                                  label: 'Baños',
-                                  controller: _bathroomsCtrl,
-                                  keyboardType: TextInputType.number,
-                                  validator: (value) {
-                                    if (value == null || value.trim().isEmpty) {
-                                      return null;
-                                    }
-                                    return _parseInt(value.trim()) == null
-                                        ? 'Ingresa un número válido'
-                                        : null;
-                                  },
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              controller: _descriptionCtrl,
-                              decoration: decoration(
-                                'Descripción',
-                                hint:
-                                    'Comparte detalles adicionales de la unidad',
-                              ),
-                              textInputAction: TextInputAction.newline,
-                              keyboardType: TextInputType.multiline,
-                              maxLines: 3,
-                            ),
-                            if (widget.showStatusSwitch) ...[
-                              const SizedBox(height: 8),
-                              SwitchListTile.adaptive(
-                                value: _isActive,
-                                onChanged: _saving
-                                    ? null
-                                    : (value) {
-                                        setState(() {
-                                          _isActive = value;
-                                        });
-                                      },
-                                title: const Text('Unidad activa'),
-                                subtitle: const Text(
-                                  'Controla si la unidad permanece visible en la administración.',
+                            Icon(Icons.error_outline, color: cs.error),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                _errorMessage!,
+                                style: tt.bodyMedium?.copyWith(
+                                  color: cs.onErrorContainer,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
-                            ],
-                            if (_errorMessage != null) ...[
-                              const SizedBox(height: 16),
-                              Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: cs.errorContainer,
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Icon(Icons.error_outline, color: cs.error),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Text(
-                                        _errorMessage!,
-                                        style: tt.bodyMedium?.copyWith(
-                                          color: cs.onErrorContainer,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                            const SizedBox(height: 24),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: OutlinedButton(
-                                    onPressed: _saving
-                                        ? null
-                                        : () => Navigator.of(context).pop(),
-                                    child: const Text('Cancelar'),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: FilledButton.icon(
-                                    onPressed: _saving ? null : _handleSubmit,
-                                    icon: _saving
-                                        ? SizedBox(
-                                            width: 18,
-                                            height: 18,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2.2,
-                                              color: cs.onPrimary,
-                                            ),
-                                          )
-                                        : const Icon(Icons.save_outlined),
-                                    label: Text(
-                                      _saving
-                                          ? 'Guardando...'
-                                          : widget.actionLabel,
-                                    ),
-                                  ),
-                                ),
-                              ],
                             ),
                           ],
                         ),
                       ),
+                    ],
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: _saving
+                                ? null
+                                : () => Navigator.of(context).pop(),
+                            child: const Text('Cancelar'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: FilledButton.icon(
+                            onPressed: _saving ? null : _handleSubmit,
+                            icon: _saving
+                                ? SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.2,
+                                      color: cs.onPrimary,
+                                    ),
+                                  )
+                                : const Icon(Icons.save_outlined),
+                            label: Text(
+                              _saving ? 'Guardando...' : widget.actionLabel,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
-}
+
 
 class _UnitDetailLoading extends StatelessWidget {
   const _UnitDetailLoading();
