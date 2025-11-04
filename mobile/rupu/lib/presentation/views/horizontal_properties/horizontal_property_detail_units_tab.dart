@@ -146,7 +146,7 @@ class _UnitsTab extends GetWidget<HorizontalPropertyUnitsController> {
         },
       );
 
-      final bottomPadding = MediaQuery.viewPaddingOf(context).bottom;
+      final bottomPadding = MediaQuery.of(context).viewPadding.bottom;
 
       return Stack(
         children: [
@@ -755,7 +755,7 @@ class _UnitDetailBottomSheetState extends State<_UnitDetailBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final viewInsets = MediaQuery.viewInsetsOf(context);
+    final viewInsets = MediaQuery.of(context).viewInsets;
     final cs = Theme.of(context).colorScheme;
 
     return FractionallySizedBox(
@@ -918,7 +918,7 @@ class _UnitFormScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final viewInsets = MediaQuery.viewInsetsOf(context);
+    final viewInsets = MediaQuery.of(context).viewInsets;
     final cs = Theme.of(context).colorScheme;
 
     return FractionallySizedBox(
@@ -2005,6 +2005,12 @@ class _MetricTile extends StatelessWidget {
   }
 }
 
+class _IconTextPair {
+  final IconData icon;
+  final String text;
+  const _IconTextPair(this.icon, this.text);
+}
+
 class _ContactTile extends StatelessWidget {
   final HorizontalPropertyUnitContact contact;
   final Color accent;
@@ -2016,15 +2022,17 @@ class _ContactTile extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    final details = <(IconData, String)>[];
+    final details = <_IconTextPair>[];
     if ((contact.document ?? '').trim().isNotEmpty) {
-      details.add((Icons.credit_card, contact.document!.trim()));
+      details.add(_IconTextPair(Icons.credit_card, contact.document!.trim()));
     }
     if ((contact.phone ?? '').trim().isNotEmpty) {
-      details.add((Icons.call_outlined, contact.phone!.trim()));
+      details.add(_IconTextPair(Icons.call_outlined, contact.phone!.trim()));
     }
     if ((contact.email ?? '').trim().isNotEmpty) {
-      details.add((Icons.alternate_email, contact.email!.trim()));
+      details.add(
+        _IconTextPair(Icons.alternate_email, contact.email!.trim()),
+      );
     }
 
     return Container(
@@ -2090,8 +2098,8 @@ class _ContactTile extends StatelessWidget {
               (item) => Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: _InfoRow(
-                  icon: item.$1,
-                  text: item.$2,
+                  icon: item.icon,
+                  text: item.text,
                 ),
               ),
             ),
@@ -2111,18 +2119,26 @@ class _VehicleTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final details = <(IconData, String)>[];
+    final details = <_IconTextPair>[];
     if ((vehicle.plate ?? '').trim().isNotEmpty) {
-      details.add((Icons.confirmation_number_outlined, vehicle.plate!.trim()));
+      details.add(
+        _IconTextPair(Icons.confirmation_number_outlined, vehicle.plate!.trim()),
+      );
     }
     if ((vehicle.model ?? '').trim().isNotEmpty) {
-      details.add((Icons.directions_car_outlined, vehicle.model!.trim()));
+      details.add(
+        _IconTextPair(Icons.directions_car_outlined, vehicle.model!.trim()),
+      );
     }
     if ((vehicle.color ?? '').trim().isNotEmpty) {
-      details.add((Icons.color_lens_outlined, vehicle.color!.trim()));
+      details.add(
+        _IconTextPair(Icons.color_lens_outlined, vehicle.color!.trim()),
+      );
     }
     if ((vehicle.parkingNumber ?? '').trim().isNotEmpty) {
-      details.add((Icons.local_parking_outlined, vehicle.parkingNumber!.trim()));
+      details.add(
+        _IconTextPair(Icons.local_parking_outlined, vehicle.parkingNumber!.trim()),
+      );
     }
 
     return Container(
@@ -2159,7 +2175,7 @@ class _VehicleTile extends StatelessWidget {
             ...details.map(
               (item) => Padding(
                 padding: const EdgeInsets.only(bottom: 6),
-                child: _InfoRow(icon: item.$1, text: item.$2),
+                child: _InfoRow(icon: item.icon, text: item.text),
               ),
             ),
           ],
@@ -2179,12 +2195,12 @@ class _PetTile extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    final details = <(IconData, String)>[];
+    final details = <_IconTextPair>[];
     if ((pet.type ?? '').trim().isNotEmpty) {
-      details.add((Icons.pets, pet.type!.trim()));
+      details.add(_IconTextPair(Icons.pets, pet.type!.trim()));
     }
     if ((pet.breed ?? '').trim().isNotEmpty) {
-      details.add((Icons.badge_outlined, pet.breed!.trim()));
+      details.add(_IconTextPair(Icons.badge_outlined, pet.breed!.trim()));
     }
 
     return Container(
@@ -2221,7 +2237,7 @@ class _PetTile extends StatelessWidget {
             ...details.map(
               (item) => Padding(
                 padding: const EdgeInsets.only(bottom: 6),
-                child: _InfoRow(icon: item.$1, text: item.$2),
+                child: _InfoRow(icon: item.icon, text: item.text),
               ),
             ),
           ],
