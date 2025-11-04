@@ -48,10 +48,10 @@ class HorizontalPropertyDetailView
           child: _PremiumAppBar(
             tag: detailTag,
             tabs: const [
-              (Icons.home_outlined, 'Dashboard'),
-              (Icons.apartment_outlined, 'Unidades'),
-              (Icons.group_outlined, 'Residentes'),
-              (Icons.how_to_vote_outlined, 'Votaciones'),
+              _TabDefinition(Icons.home_outlined, 'Dashboard'),
+              _TabDefinition(Icons.apartment_outlined, 'Unidades'),
+              _TabDefinition(Icons.group_outlined, 'Residentes'),
+              _TabDefinition(Icons.how_to_vote_outlined, 'Votaciones'),
             ],
           ),
         ),
@@ -70,9 +70,15 @@ class HorizontalPropertyDetailView
   }
 }
 
+class _TabDefinition {
+  final IconData icon;
+  final String label;
+  const _TabDefinition(this.icon, this.label);
+}
+
 class _PremiumAppBar extends GetWidget<HorizontalPropertyDetailController> {
   final String tag;
-  final List<(IconData, String)> tabs;
+  final List<_TabDefinition> tabs;
   const _PremiumAppBar({required this.tag, required this.tabs});
 
   @override
@@ -126,13 +132,15 @@ class _PremiumAppBar extends GetWidget<HorizontalPropertyDetailController> {
 }
 
 class _PillTabBar extends StatelessWidget {
-  final List<(IconData, String)> items;
+  final List<_TabDefinition> items;
   const _PillTabBar({required this.items});
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final tabs = items.map((t) => Tab(icon: Icon(t.$1), text: t.$2)).toList();
+    final tabs = items
+        .map((item) => Tab(icon: Icon(item.icon), text: item.label))
+        .toList();
 
     return Container(
       height: 50,

@@ -94,4 +94,38 @@ class AttendanceDatasourceImpl extends AttendanceDatasource {
       response.data as Map<String, dynamic>,
     );
   }
+
+  @override
+  Future<void> createAttendanceProxy({
+    required int businessId,
+    required int propertyUnitId,
+    required String proxyName,
+  }) async {
+    await _dio.post(
+      '/attendance/proxies',
+      data: {
+        'business_id': businessId,
+        'property_unit_id': propertyUnitId,
+        'proxy_name': proxyName,
+      },
+    );
+  }
+
+  @override
+  Future<void> updateAttendanceProxy({
+    required int proxyId,
+    required String proxyName,
+  }) async {
+    await _dio.put(
+      '/attendance/proxies/$proxyId',
+      data: {
+        'proxy_name': proxyName,
+      },
+    );
+  }
+
+  @override
+  Future<void> deleteAttendanceProxy({required int proxyId}) async {
+    await _dio.delete('/attendance/proxies/$proxyId');
+  }
 }

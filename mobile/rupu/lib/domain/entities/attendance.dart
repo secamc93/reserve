@@ -82,6 +82,7 @@ class AttendanceRecord {
   final int propertyUnitId;
   final bool attendedAsOwner;
   final bool attendedAsProxy;
+  final int? proxyId;
   final String? signature;
   final String? signatureMethod;
   final String? verificationNotes;
@@ -99,6 +100,7 @@ class AttendanceRecord {
     required this.propertyUnitId,
     required this.attendedAsOwner,
     required this.attendedAsProxy,
+    this.proxyId,
     this.signature,
     this.signatureMethod,
     this.verificationNotes,

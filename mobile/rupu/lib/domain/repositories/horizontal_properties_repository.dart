@@ -43,6 +43,22 @@ abstract class HorizontalPropertiesRepository {
     required int unitId,
   });
 
+  Future<HorizontalPropertyUnitDetailResult> createHorizontalPropertyUnit({
+    required int propertyId,
+    required Map<String, dynamic> data,
+  });
+
+  Future<HorizontalPropertyUnitDetailResult> updateHorizontalPropertyUnit({
+    required int propertyId,
+    required int unitId,
+    required Map<String, dynamic> data,
+  });
+
+  Future<HorizontalPropertyActionResult> deleteHorizontalPropertyUnit({
+    required int propertyId,
+    required int unitId,
+  });
+
   Future<HorizontalPropertyResidentsPage> getHorizontalPropertyResidents({
     required int id,
     Map<String, dynamic>? query,

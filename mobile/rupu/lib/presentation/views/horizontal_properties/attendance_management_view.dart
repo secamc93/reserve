@@ -447,9 +447,31 @@ class _MiniStatChip extends StatelessWidget {
   }
 }
 
-class _AttendanceRecordsSheet extends StatelessWidget {
+class _AttendanceRecordsSheet extends StatefulWidget {
   final AttendanceManagementController controller;
   const _AttendanceRecordsSheet({required this.controller});
+
+  @override
+  State<_AttendanceRecordsSheet> createState() =>
+      _AttendanceRecordsSheetState();
+}
+
+class _AttendanceRecordsSheetState extends State<_AttendanceRecordsSheet> {
+  late final ScrollController _scrollController;
+
+  AttendanceManagementController get controller => widget.controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -501,6 +523,7 @@ class _AttendanceRecordsSheet extends StatelessWidget {
                     final error = controller.recordsError.value;
 
                     return CustomScrollView(
+                      controller: _scrollController,
                       slivers: [
                         SliverPadding(
                           padding: const EdgeInsets.symmetric(
@@ -890,7 +913,7 @@ class _AttendanceRecordTileState extends State<_AttendanceRecordTile> {
                     ),
                   ),
                 ),
-                SizedBox(width: 20),
+                SizedBox(width: 12),
                 Align(
                   alignment: Alignment.centerRight,
                   child: IconButton(
@@ -923,7 +946,7 @@ class _AttendanceRecordTileState extends State<_AttendanceRecordTile> {
                 ],
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 6),
           ],
         ),
       ),
@@ -1029,72 +1052,48 @@ class _ProxySection extends StatelessWidget {
   final AttendanceRecord record;
   const _ProxySection({required this.controller, required this.record});
 
-  void _showProxyForm(BuildContext context, {String? initialValue}) {
-    final textController = TextEditingController(text: initialValue ?? '');
+  void _showProxyForm(BuildContext context) {
     showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(
-          initialValue?.isNotEmpty == true
-              ? 'Editar apoderado'
-              : 'Agregar apoderado',
-        ),
-        content: TextField(
-          controller: textController,
-          decoration: const InputDecoration(
-            labelText: 'Nombre del apoderado',
-            hintText: 'Ingresa el nombre completo',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              Get.snackbar(
-                'Gestión de asistencia',
-                'Funcionalidad disponible próximamente.',
-                snackPosition: SnackPosition.BOTTOM,
-                margin: const EdgeInsets.all(16),
-              );
-            },
-            child: const Text('Guardar'),
-          ),
-        ],
-      ),
+      builder: (_) {
+        return _ProxyFormDialog(controller: controller, record: record);
+      },
     );
   }
 
   void _confirmDelete(BuildContext context) {
     showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Eliminar apoderado'),
-        content: const Text(
-          '¿Deseas eliminar el apoderado asignado a esta unidad?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              Get.snackbar(
-                'Gestión de asistencia',
-                'Funcionalidad disponible próximamente.',
-                snackPosition: SnackPosition.BOTTOM,
-                margin: const EdgeInsets.all(16),
-              );
-            },
-            child: const Text('Eliminar'),
-          ),
-        ],
-      ),
+      builder: (ctx) {
+        return Obx(() {
+          final loading = controller.isProxyProcessing(record.id);
+          return AlertDialog(
+            title: const Text('Eliminar apoderado'),
+            content: const Text(
+              '¿Deseas eliminar el apoderado asignado a esta unidad?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: loading ? null : () => Navigator.of(ctx).pop(),
+                child: const Text('Cancelar'),
+              ),
+              FilledButton(
+                onPressed: loading
+                    ? null
+                    : () async {
+                        final success = await controller.deleteProxyForRecord(
+                          record: record,
+                        );
+                        if (success && Navigator.of(ctx).canPop()) {
+                          Navigator.of(ctx).pop();
+                        }
+                      },
+                child: Text(loading ? 'Eliminando…' : 'Eliminar'),
+              ),
+            ],
+          );
+        });
+      },
     );
   }
 
@@ -1102,69 +1101,188 @@ class _ProxySection extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final proxyName = record.proxyName?.trim() ?? '';
-    final hasProxy = proxyName.isNotEmpty;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(Icons.badge_outlined, size: 18, color: cs.onSurfaceVariant),
-            const SizedBox(width: 10),
-            Text(
-              'Apoderado',
-              style: tt.bodySmall?.copyWith(
-                color: cs.onSurfaceVariant,
-                fontWeight: FontWeight.w600,
+    return Obx(() {
+      final isProcessing = controller.isProxyProcessing(record.id);
+      final proxyName = record.proxyName?.trim() ?? '';
+      final hasProxy = proxyName.isNotEmpty;
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.badge_outlined, size: 18, color: cs.onSurfaceVariant),
+              const SizedBox(width: 10),
+              Text(
+                'Apoderado',
+                style: tt.bodySmall?.copyWith(
+                  color: cs.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          if (!hasProxy)
+            OutlinedButton.icon(
+              onPressed: isProcessing ? null : () => _showProxyForm(context),
+              icon: isProcessing
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.add_outlined),
+              label: Text(isProcessing ? 'Procesando…' : 'Agregar apoderado'),
+            )
+          else
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: cs.secondaryContainer.withValues(alpha: .3),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    proxyName,
+                    style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      FilledButton.tonalIcon(
+                        onPressed: isProcessing
+                            ? null
+                            : () => _showProxyForm(context),
+                        icon: const Icon(Icons.edit_outlined, size: 18),
+                        label: Text(isProcessing ? 'Actualizando…' : 'Editar'),
+                      ),
+                      TextButton.icon(
+                        onPressed: isProcessing
+                            ? null
+                            : () => _confirmDelete(context),
+                        icon: const Icon(Icons.delete_outline, size: 18),
+                        label: Text(isProcessing ? 'Eliminando…' : 'Eliminar'),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        if (!hasProxy)
-          OutlinedButton.icon(
-            onPressed: () => _showProxyForm(context),
-            icon: const Icon(Icons.add_outlined),
-            label: const Text('Agregar apoderado'),
+        ],
+      );
+    });
+  }
+}
+
+class _ProxyFormDialog extends StatefulWidget {
+  final AttendanceManagementController controller;
+  final AttendanceRecord record;
+
+  const _ProxyFormDialog({required this.controller, required this.record});
+
+  bool get isEditing => (record.proxyId ?? 0) > 0;
+
+  String get initialName => isEditing ? (record.proxyName ?? '') : '';
+
+  @override
+  State<_ProxyFormDialog> createState() => _ProxyFormDialogState();
+}
+
+class _ProxyFormDialogState extends State<_ProxyFormDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _controller = TextEditingController();
+
+  AttendanceManagementController get _attendanceController => widget.controller;
+  AttendanceRecord get _record => widget.record;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.text = widget.initialName;
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleSubmit(BuildContext context) async {
+    final isEditing = widget.isEditing;
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      return;
+    }
+
+    final name = _controller.text.trim();
+    final success = isEditing
+        ? await _attendanceController.updateProxyForRecord(
+            record: _record,
+            proxyName: name,
           )
-        else
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: cs.secondaryContainer.withValues(alpha: .3),
-              borderRadius: BorderRadius.circular(14),
+        : await _attendanceController.createProxyForRecord(
+            record: _record,
+            proxyName: name,
+          );
+
+    if (success && Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final loading = _attendanceController.isProxyProcessing(_record.id);
+      return AlertDialog(
+        title: Text(
+          widget.isEditing ? 'Editar apoderado' : 'Agregar apoderado',
+        ),
+        content: Form(
+          key: _formKey,
+          child: TextFormField(
+            controller: _controller,
+            decoration: const InputDecoration(
+              labelText: 'Nombre del apoderado',
+              hintText: 'Ingresa el nombre completo',
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  proxyName,
-                  style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    FilledButton.tonalIcon(
-                      onPressed: () =>
-                          _showProxyForm(context, initialValue: proxyName),
-                      icon: const Icon(Icons.edit_outlined, size: 18),
-                      label: const Text('Editar'),
-                    ),
-                    TextButton.icon(
-                      onPressed: () => _confirmDelete(context),
-                      icon: const Icon(Icons.delete_outline, size: 18),
-                      label: const Text('Eliminar'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+            autofocus: true,
+            textCapitalization: TextCapitalization.words,
+            textInputAction: TextInputAction.done,
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Ingresa el nombre del apoderado';
+              }
+              return null;
+            },
+            onFieldSubmitted: (_) async {
+              if (loading) return;
+              await _handleSubmit(context);
+            },
           ),
-      ],
-    );
+        ),
+        actions: [
+          TextButton(
+            onPressed: loading ? null : () => Navigator.of(context).pop(),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: loading
+                ? null
+                : () async {
+                    if (loading) return;
+                    await _handleSubmit(context);
+                  },
+            child: Text(loading ? 'Guardando…' : 'Guardar'),
+          ),
+        ],
+      );
+    });
   }
 }
 

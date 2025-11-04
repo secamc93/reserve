@@ -19,7 +19,7 @@ class _UnitsTab extends GetWidget<HorizontalPropertyUnitsController> {
       final page = unitsPage?.page ?? 1;
       final totalPages = unitsPage?.totalPages ?? 1;
 
-      return LayoutBuilder(
+      final listContent = LayoutBuilder(
         builder: (context, constraints) {
           final width = constraints.maxWidth;
           final crossAxis = width >= 1200
@@ -91,7 +91,6 @@ class _UnitsTab extends GetWidget<HorizontalPropertyUnitsController> {
                     SliverPadding(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                       sliver: crossAxis == 1
-                          // 1 columna: altura libre -> imposible overflow
                           ? SliverList.builder(
                               itemCount: units.length,
                               itemBuilder: (context, index) => Padding(
@@ -102,16 +101,14 @@ class _UnitsTab extends GetWidget<HorizontalPropertyUnitsController> {
                                 ),
                               ),
                             )
-                          // 2–3 columnas: fija una altura amplia por ítem
                           : SliverGrid(
                               gridDelegate:
                                   SliverGridDelegateWithFixedCrossAxisCount(
                                     crossAxisCount: crossAxis,
                                     mainAxisSpacing: 16,
                                     crossAxisSpacing: 16,
-                                    mainAxisExtent:
-                                        320, // súbela a 340–360 si aún ves justo
-                              ),
+                                    mainAxisExtent: 320,
+                                  ),
                               delegate: SliverChildBuilderDelegate(
                                 (context, index) => _UnitCard(
                                   unit: units[index],
@@ -121,7 +118,6 @@ class _UnitsTab extends GetWidget<HorizontalPropertyUnitsController> {
                               ),
                             ),
                     ),
-
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 32),
@@ -148,6 +144,19 @@ class _UnitsTab extends GetWidget<HorizontalPropertyUnitsController> {
             ),
           );
         },
+      );
+
+      final bottomPadding = MediaQuery.viewPaddingOf(context).bottom;
+
+      return Stack(
+        children: [
+          Positioned.fill(child: listContent),
+          Positioned(
+            right: 24,
+            bottom: 24 + bottomPadding,
+            child: _AddUnitFab(controllerTag: controllerTag),
+          ),
+        ],
       );
     });
   }
@@ -343,6 +352,106 @@ class _UnitsFiltersContent
   }
 }
 
+class _AddUnitFab extends GetWidget<HorizontalPropertyUnitsController> {
+  final String controllerTag;
+  const _AddUnitFab({required this.controllerTag});
+
+  @override
+  String? get tag => controllerTag;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Obx(() {
+      final isBusy = controller.unitMutationBusy.value;
+      final gradientColors = isBusy
+          ? [
+              cs.primary.withValues(alpha: .45),
+              cs.secondary.withValues(alpha: .45),
+            ]
+          : [cs.primary, cs.secondary];
+      final shadowColor = cs.primary.withValues(alpha: isBusy ? .18 : .32);
+
+      final labelStyle = tt.labelLarge?.copyWith(
+        fontWeight: FontWeight.w800,
+        color: cs.onPrimary,
+      );
+
+      final label = isBusy
+          ? Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.2,
+                    color: cs.onPrimary,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text('Procesando...', style: labelStyle),
+              ],
+            )
+          : Text('Agregar unidad', style: labelStyle);
+
+      return Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: gradientColors,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: [
+            BoxShadow(
+              color: shadowColor,
+              blurRadius: 18,
+              offset: const Offset(0, 12),
+            ),
+          ],
+        ),
+        child: FloatingActionButton.extended(
+          heroTag: 'add-unit-$controllerTag',
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          foregroundColor: cs.onPrimary,
+          onPressed: isBusy ? null : () => _openCreateSheet(context),
+          icon: isBusy ? null : const Icon(Icons.add, size: 24),
+          label: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: label,
+          ),
+        ),
+      );
+    });
+  }
+
+  Future<void> _openCreateSheet(BuildContext context) async {
+    final result =
+        await showModalBottomSheet<HorizontalPropertyUnitDetailResult>(
+          context: context,
+          backgroundColor: Colors.transparent,
+          useRootNavigator: true,
+          isScrollControlled: true,
+          builder: (_) => _UnitFormBottomSheet(
+            title: 'Agregar nueva unidad',
+            actionLabel: 'Crear unidad',
+            onSubmit: (payload) => controller.createUnit(data: payload),
+          ),
+        );
+
+    if (result != null && result.success) {
+      final number = result.unit?.number;
+      final message = (number == null || number.isEmpty)
+          ? 'La unidad se registró correctamente.'
+          : 'La unidad $number se registró correctamente.';
+      _showSnack('Unidad creada', message);
+    }
+  }
+}
+
 class _UnitCard extends StatelessWidget {
   final HorizontalPropertyUnitItem unit;
   final String controllerTag;
@@ -352,6 +461,9 @@ class _UnitCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final unitsController = Get.find<HorizontalPropertyUnitsController>(
+      tag: controllerTag,
+    );
 
     final (bgChip, fgChip, labelChip) = unit.isActive
         ? (cs.secondaryContainer, cs.onSecondaryContainer, 'ACTIVA')
@@ -439,18 +551,22 @@ class _UnitCard extends StatelessWidget {
                   label: 'CoeficieXnte',
                   value: _formatCoefficient(unit.participationCoefficient),
                 ),
-                // const Spacer(),
-                _CardActions(
-                  onView: () => _openDetailSheet(context),
-                  onEdit: () => _showActionFeedback(
-                    'Editar unidad',
-                    'Funcionalidad disponible próximamente.',
-                  ),
-                  onDelete: () => _showActionFeedback(
-                    'Eliminar unidad',
-                    'Contacta al administrador para continuar con la acción.',
-                  ),
-                ),
+                Obx(() {
+                  final isDeleting = unitsController.deletingUnitIds.contains(
+                    unit.id,
+                  );
+                  final disableEdition = unitsController.unitMutationBusy.value;
+                  return _CardActions(
+                    onView: () => _openDetailSheet(context),
+                    onEdit: disableEdition
+                        ? null
+                        : () => _openEditSheet(context),
+                    onDelete: isDeleting ? null : () => _confirmDelete(context),
+                    isEditDisabled: disableEdition,
+                    isDeleteDisabled: disableEdition,
+                    showDeleteLoader: isDeleting,
+                  );
+                }),
               ],
             ),
           ),
@@ -465,11 +581,117 @@ class _UnitCard extends StatelessWidget {
       backgroundColor: Colors.transparent,
       useRootNavigator: true,
       isScrollControlled: true,
-      builder: (_) => _UnitDetailBottomSheet(
-        controllerTag: controllerTag,
-        unit: unit,
+      builder: (_) =>
+          _UnitDetailBottomSheet(controllerTag: controllerTag, unit: unit),
+    );
+  }
+
+  Future<void> _openEditSheet(BuildContext context) async {
+    final controller = Get.find<HorizontalPropertyUnitsController>(
+      tag: controllerTag,
+    );
+    Get.dialog(
+      const Center(child: CircularProgressIndicator()),
+      barrierDismissible: false,
+    );
+    HorizontalPropertyUnitDetailResult? detailResult;
+    try {
+      detailResult = await controller.fetchUnitDetail(unit.id);
+    } catch (_) {
+      detailResult = const HorizontalPropertyUnitDetailResult(
+        success: false,
+        message:
+            'No se pudo cargar el detalle de la unidad. Inténtalo nuevamente.',
+      );
+    } finally {
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
+    }
+
+    final resolvedDetail = detailResult;
+    if (resolvedDetail == null ||
+        !resolvedDetail.success ||
+        resolvedDetail.unit == null) {
+      _showSnack(
+        'No se pudo cargar la unidad',
+        resolvedDetail?.message ?? 'Inténtalo nuevamente en unos segundos.',
+        isError: true,
+      );
+      return;
+    }
+
+    final result =
+        await showModalBottomSheet<HorizontalPropertyUnitDetailResult>(
+          context: context,
+          backgroundColor: Colors.transparent,
+          useRootNavigator: true,
+          isScrollControlled: true,
+          builder: (_) => _UnitFormBottomSheet(
+            title: 'Editar unidad',
+            actionLabel: 'Guardar cambios',
+            initialDetail: resolvedDetail.unit,
+            fallback: unit,
+            showStatusSwitch: true,
+            onSubmit: (payload) =>
+                controller.updateUnit(unitId: unit.id, data: payload),
+          ),
+        );
+
+    if (result != null && result.success) {
+      final updatedNumber = result.unit?.number ?? unit.number;
+      final message =
+          'Los cambios de la unidad $updatedNumber se guardaron correctamente.';
+      _showSnack('Unidad actualizada', message);
+    }
+  }
+
+  Future<void> _confirmDelete(BuildContext context) async {
+    final cs = Theme.of(context).colorScheme;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: const Text('Eliminar unidad'),
+        content: Text(
+          '¿Quieres eliminar la unidad ${unit.number}? Esta acción no se puede deshacer.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: cs.error,
+              foregroundColor: cs.onError,
+            ),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Eliminar'),
+          ),
+        ],
       ),
     );
+
+    if (confirmed != true) return;
+
+    final controller = Get.find<HorizontalPropertyUnitsController>(
+      tag: controllerTag,
+    );
+    final actionResult = await controller.deleteUnit(unit.id);
+
+    if (actionResult.success) {
+      final message = (actionResult.message?.isNotEmpty ?? false)
+          ? actionResult.message!
+          : 'La unidad ${unit.number} se eliminó correctamente.';
+      _showSnack('Unidad eliminada', message);
+    } else {
+      _showSnack(
+        'No se pudo eliminar',
+        actionResult.message ?? 'Inténtalo nuevamente en unos instantes.',
+        isError: true,
+      );
+    }
   }
 
   String _formatCoefficient(double? value) {
@@ -545,8 +767,7 @@ class _UnitDetailBottomSheet extends StatefulWidget {
   });
 
   @override
-  State<_UnitDetailBottomSheet> createState() =>
-      _UnitDetailBottomSheetState();
+  State<_UnitDetailBottomSheet> createState() => _UnitDetailBottomSheetState();
 }
 
 class _UnitDetailBottomSheetState extends State<_UnitDetailBottomSheet> {
@@ -559,8 +780,9 @@ class _UnitDetailBottomSheetState extends State<_UnitDetailBottomSheet> {
   }
 
   Future<HorizontalPropertyUnitDetailResult> _load() {
-    final controller =
-        Get.find<HorizontalPropertyUnitsController>(tag: widget.controllerTag);
+    final controller = Get.find<HorizontalPropertyUnitsController>(
+      tag: widget.controllerTag,
+    );
     return controller.fetchUnitDetail(widget.unit.id);
   }
 
@@ -607,12 +829,10 @@ class _UnitDetailBottomSheetState extends State<_UnitDetailBottomSheet> {
                   const SizedBox(height: 12),
                   const _SheetHandle(),
                   Expanded(
-                    child:
-                        FutureBuilder<HorizontalPropertyUnitDetailResult>(
+                    child: FutureBuilder<HorizontalPropertyUnitDetailResult>(
                       future: _future,
                       builder: (context, snapshot) {
-                        if (snapshot.connectionState !=
-                            ConnectionState.done) {
+                        if (snapshot.connectionState != ConnectionState.done) {
                           return const _UnitDetailLoading();
                         }
                         if (!snapshot.hasData) {
@@ -625,7 +845,8 @@ class _UnitDetailBottomSheetState extends State<_UnitDetailBottomSheet> {
                         final result = snapshot.data!;
                         if (!result.success || result.unit == null) {
                           return _UnitDetailError(
-                            message: result.message ??
+                            message:
+                                result.message ??
                                 'No se pudo obtener la información de la unidad.',
                             onRetry: _retry,
                           );
@@ -635,6 +856,473 @@ class _UnitDetailBottomSheetState extends State<_UnitDetailBottomSheet> {
                           fallback: widget.unit,
                         );
                       },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _UnitFormBottomSheet extends StatefulWidget {
+  final String title;
+  final String actionLabel;
+  final HorizontalPropertyUnitDetail? initialDetail;
+  final HorizontalPropertyUnitItem? fallback;
+  final bool showStatusSwitch;
+  final Future<HorizontalPropertyUnitDetailResult> Function(
+    Map<String, dynamic> data,
+  )
+  onSubmit;
+
+  const _UnitFormBottomSheet({
+    required this.title,
+    required this.actionLabel,
+    required this.onSubmit,
+    this.initialDetail,
+    this.fallback,
+    this.showStatusSwitch = false,
+  });
+
+  @override
+  State<_UnitFormBottomSheet> createState() => _UnitFormBottomSheetState();
+}
+
+class _UnitFormBottomSheetState extends State<_UnitFormBottomSheet> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _numberCtrl;
+  late final TextEditingController _blockCtrl;
+  late final TextEditingController _unitTypeCtrl;
+  late final TextEditingController _floorCtrl;
+  late final TextEditingController _areaCtrl;
+  late final TextEditingController _bedroomsCtrl;
+  late final TextEditingController _bathroomsCtrl;
+  late final TextEditingController _coefficientCtrl;
+  late final TextEditingController _descriptionCtrl;
+  bool _isActive = true;
+  bool _saving = false;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    final detail = widget.initialDetail;
+    final fallback = widget.fallback;
+
+    _numberCtrl = TextEditingController(
+      text: detail?.number ?? fallback?.number ?? '',
+    );
+    _blockCtrl = TextEditingController(
+      text: detail?.block ?? fallback?.block ?? '',
+    );
+    _unitTypeCtrl = TextEditingController(
+      text: detail?.unitType ?? fallback?.unitType ?? '',
+    );
+    _floorCtrl = TextEditingController(text: detail?.floor?.toString() ?? '');
+    _areaCtrl = TextEditingController(text: _doubleToText(detail?.area));
+    _bedroomsCtrl = TextEditingController(
+      text: detail?.bedrooms?.toString() ?? '',
+    );
+    _bathroomsCtrl = TextEditingController(
+      text: detail?.bathrooms?.toString() ?? '',
+    );
+    _coefficientCtrl = TextEditingController(
+      text: _doubleToText(
+        detail?.participationCoefficient ?? fallback?.participationCoefficient,
+      ),
+    );
+    _descriptionCtrl = TextEditingController(text: detail?.description ?? '');
+    _isActive = detail?.isActive ?? fallback?.isActive ?? true;
+  }
+
+  @override
+  void dispose() {
+    _numberCtrl.dispose();
+    _blockCtrl.dispose();
+    _unitTypeCtrl.dispose();
+    _floorCtrl.dispose();
+    _areaCtrl.dispose();
+    _bedroomsCtrl.dispose();
+    _bathroomsCtrl.dispose();
+    _coefficientCtrl.dispose();
+    _descriptionCtrl.dispose();
+    super.dispose();
+  }
+
+  String _doubleToText(double? value) {
+    if (value == null) return '';
+    if (value.truncateToDouble() == value) {
+      return value.toStringAsFixed(0);
+    }
+    return value.toString();
+  }
+
+  int? _parseInt(String value) {
+    if (value.isEmpty) return null;
+    return int.tryParse(value);
+  }
+
+  double? _parseDouble(String value) {
+    if (value.isEmpty) return null;
+    final normalized = value.replaceAll(',', '.');
+    return double.tryParse(normalized);
+  }
+
+  Map<String, dynamic> _buildPayload() {
+    final payload = <String, dynamic>{
+      'number': _numberCtrl.text.trim(),
+      'block': _emptyToNull(_blockCtrl.text.trim()),
+      'unit_type': _unitTypeCtrl.text.trim(),
+      'floor': _parseInt(_floorCtrl.text.trim()),
+      'area': _parseDouble(_areaCtrl.text.trim()),
+      'bedrooms': _parseInt(_bedroomsCtrl.text.trim()),
+      'bathrooms': _parseInt(_bathroomsCtrl.text.trim()),
+      'participation_coefficient': _parseDouble(_coefficientCtrl.text.trim()),
+      'description': _emptyToNull(_descriptionCtrl.text.trim()),
+    };
+
+    if (widget.showStatusSwitch) {
+      payload['is_active'] = _isActive;
+    }
+
+    payload.removeWhere((key, value) => value == null);
+    return payload;
+  }
+
+  String? _emptyToNull(String value) => value.isEmpty ? null : value;
+
+  Future<void> _handleSubmit() async {
+    if (_saving) return;
+    final formState = _formKey.currentState;
+    if (formState == null || !formState.validate()) {
+      return;
+    }
+
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _saving = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final result = await widget.onSubmit(_buildPayload());
+      if (!mounted) return;
+      if (!result.success) {
+        setState(() {
+          _saving = false;
+          _errorMessage =
+              result.message ??
+              'No se pudo guardar la unidad. Inténtalo más tarde.';
+        });
+        return;
+      }
+      Navigator.of(context).pop(result);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _errorMessage =
+            'Ocurrió un error al guardar la unidad. Inténtalo nuevamente.';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final viewInsets = MediaQuery.viewInsetsOf(context);
+
+    InputDecoration decoration(String label, {String? hint}) {
+      return InputDecoration(
+        labelText: label,
+        hintText: hint,
+        filled: true,
+        fillColor: cs.surfaceContainerHighest,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: cs.outlineVariant),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: cs.primary.withValues(alpha: .5)),
+        ),
+      );
+    }
+
+    Widget field({
+      required String label,
+      required TextEditingController controller,
+      String? hint,
+      TextInputType keyboardType = TextInputType.text,
+      String? Function(String?)? validator,
+    }) {
+      return TextFormField(
+        controller: controller,
+        decoration: decoration(label, hint: hint),
+        keyboardType: keyboardType,
+        textInputAction: TextInputAction.next,
+        validator: validator,
+      );
+    }
+
+    return FractionallySizedBox(
+      heightFactor: 0.95,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(16, 0, 16, viewInsets.bottom + 16),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: cs.surface,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(32),
+                topRight: Radius.circular(32),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: .18),
+                  blurRadius: 28,
+                  offset: const Offset(0, 22),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(32),
+                topRight: Radius.circular(32),
+              ),
+              child: Column(
+                children: [
+                  const SizedBox(height: 12),
+                  const _SheetHandle(),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 10, 24, 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.title,
+                          style: tt.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Completa la información de la unidad para continuar.',
+                          style: tt.bodyMedium?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ResponsiveFormGrid(
+                              children: [
+                                field(
+                                  label: 'Número de unidad',
+                                  controller: _numberCtrl,
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return 'Ingresa el número de la unidad';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                field(
+                                  label: 'Tipo de unidad',
+                                  controller: _unitTypeCtrl,
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return 'Indica el tipo de unidad';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                field(
+                                  label: 'Bloque',
+                                  controller: _blockCtrl,
+                                  hint: 'Bloque o torre',
+                                ),
+                                field(
+                                  label: 'Piso',
+                                  controller: _floorCtrl,
+                                  keyboardType: TextInputType.number,
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return null;
+                                    }
+                                    return _parseInt(value.trim()) == null
+                                        ? 'Ingresa un número válido'
+                                        : null;
+                                  },
+                                ),
+                                field(
+                                  label: 'Área (m²)',
+                                  controller: _areaCtrl,
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                        decimal: true,
+                                      ),
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return null;
+                                    }
+                                    return _parseDouble(value.trim()) == null
+                                        ? 'Ingresa un valor numérico'
+                                        : null;
+                                  },
+                                ),
+                                field(
+                                  label: 'Coeficiente de participación',
+                                  controller: _coefficientCtrl,
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                        decimal: true,
+                                      ),
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return null;
+                                    }
+                                    return _parseDouble(value.trim()) == null
+                                        ? 'Ingresa un valor numérico'
+                                        : null;
+                                  },
+                                ),
+                                field(
+                                  label: 'Habitaciones',
+                                  controller: _bedroomsCtrl,
+                                  keyboardType: TextInputType.number,
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return null;
+                                    }
+                                    return _parseInt(value.trim()) == null
+                                        ? 'Ingresa un número válido'
+                                        : null;
+                                  },
+                                ),
+                                field(
+                                  label: 'Baños',
+                                  controller: _bathroomsCtrl,
+                                  keyboardType: TextInputType.number,
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return null;
+                                    }
+                                    return _parseInt(value.trim()) == null
+                                        ? 'Ingresa un número válido'
+                                        : null;
+                                  },
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _descriptionCtrl,
+                              decoration: decoration(
+                                'Descripción',
+                                hint:
+                                    'Comparte detalles adicionales de la unidad',
+                              ),
+                              textInputAction: TextInputAction.newline,
+                              keyboardType: TextInputType.multiline,
+                              maxLines: 3,
+                            ),
+                            if (widget.showStatusSwitch) ...[
+                              const SizedBox(height: 8),
+                              SwitchListTile.adaptive(
+                                value: _isActive,
+                                onChanged: _saving
+                                    ? null
+                                    : (value) {
+                                        setState(() {
+                                          _isActive = value;
+                                        });
+                                      },
+                                title: const Text('Unidad activa'),
+                                subtitle: const Text(
+                                  'Controla si la unidad permanece visible en la administración.',
+                                ),
+                              ),
+                            ],
+                            if (_errorMessage != null) ...[
+                              const SizedBox(height: 16),
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: cs.errorContainer,
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(Icons.error_outline, color: cs.error),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        _errorMessage!,
+                                        style: tt.bodyMedium?.copyWith(
+                                          color: cs.onErrorContainer,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: 24),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: _saving
+                                        ? null
+                                        : () => Navigator.of(context).pop(),
+                                    child: const Text('Cancelar'),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: FilledButton.icon(
+                                    onPressed: _saving ? null : _handleSubmit,
+                                    icon: _saving
+                                        ? SizedBox(
+                                            width: 18,
+                                            height: 18,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2.2,
+                                              color: cs.onPrimary,
+                                            ),
+                                          )
+                                        : const Icon(Icons.save_outlined),
+                                    label: Text(
+                                      _saving
+                                          ? 'Guardando...'
+                                          : widget.actionLabel,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -724,14 +1412,31 @@ class _UnitDetailError extends StatelessWidget {
   }
 }
 
+void _showSnack(String title, String message, {bool isError = false}) {
+  final cs = Get.theme.colorScheme;
+  if (Get.isSnackbarOpen) {
+    Get.closeCurrentSnackbar();
+  }
+  Get.snackbar(
+    title,
+    message,
+    snackPosition: SnackPosition.BOTTOM,
+    duration: const Duration(seconds: 3),
+    margin: const EdgeInsets.all(16),
+    backgroundColor: isError ? cs.errorContainer : cs.primaryContainer,
+    colorText: isError ? cs.onErrorContainer : cs.onPrimaryContainer,
+    icon: Icon(
+      isError ? Icons.error_outline : Icons.check_circle_outline,
+      color: isError ? cs.error : cs.primary,
+    ),
+  );
+}
+
 class _UnitDetailContent extends StatelessWidget {
   final HorizontalPropertyUnitDetail detail;
   final HorizontalPropertyUnitItem fallback;
 
-  const _UnitDetailContent({
-    required this.detail,
-    required this.fallback,
-  });
+  const _UnitDetailContent({required this.detail, required this.fallback});
 
   @override
   Widget build(BuildContext context) {
@@ -825,16 +1530,13 @@ class _UnitDetailContent extends StatelessWidget {
         ),
     ];
 
-    final extras = detail.extraAttributes.entries
-        .where((entry) {
-          final value = entry.value;
-          if (value == null) return false;
-          if (value is bool || value is num) return true;
-          if (value is String) return value.trim().isNotEmpty;
-          return false;
-        })
-        .toList()
-      ..sort((a, b) => a.key.compareTo(b.key));
+    final extras = detail.extraAttributes.entries.where((entry) {
+      final value = entry.value;
+      if (value == null) return false;
+      if (value is bool || value is num) return true;
+      if (value is String) return value.trim().isNotEmpty;
+      return false;
+    }).toList()..sort((a, b) => a.key.compareTo(b.key));
 
     return Scrollbar(
       thumbVisibility: true,
@@ -848,14 +1550,13 @@ class _UnitDetailContent extends StatelessWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(28),
                 gradient: LinearGradient(
-                  colors: [
-                    cs.primary.withValues(alpha: .1),
-                    cs.surface,
-                  ],
+                  colors: [cs.primary.withValues(alpha: .1), cs.surface],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                border: Border.all(color: cs.outlineVariant.withValues(alpha: .6)),
+                border: Border.all(
+                  color: cs.outlineVariant.withValues(alpha: .6),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -871,8 +1572,10 @@ class _UnitDetailContent extends StatelessWidget {
                           color: cs.primary.withValues(alpha: .16),
                         ),
                         alignment: Alignment.center,
-                        child:
-                            Icon(Icons.apartment_outlined, color: cs.primary),
+                        child: Icon(
+                          Icons.apartment_outlined,
+                          color: cs.primary,
+                        ),
                       ),
                       const SizedBox(width: 18),
                       Expanded(
@@ -891,7 +1594,9 @@ class _UnitDetailContent extends StatelessWidget {
                                 .trim()
                                 .isNotEmpty)
                               Text(
-                                _formatText(detail.unitType ?? fallback.unitType),
+                                _formatText(
+                                  detail.unitType ?? fallback.unitType,
+                                ),
                                 style: tt.bodyMedium?.copyWith(
                                   color: cs.onSurfaceVariant,
                                   fontWeight: FontWeight.w600,
@@ -974,10 +1679,7 @@ class _UnitDetailContent extends StatelessWidget {
               ...detail.residents.map(
                 (resident) => Padding(
                   padding: const EdgeInsets.only(bottom: 12),
-                  child: _ContactTile(
-                    contact: resident,
-                    accent: cs.secondary,
-                  ),
+                  child: _ContactTile(contact: resident, accent: cs.secondary),
                 ),
               ),
             ],
@@ -1154,10 +1856,7 @@ class _ContactTile extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
         gradient: LinearGradient(
-          colors: [
-            accent.withValues(alpha: .12),
-            cs.surface,
-          ],
+          colors: [accent.withValues(alpha: .12), cs.surface],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -1211,10 +1910,7 @@ class _ContactTile extends StatelessWidget {
             ...details.map(
               (item) => Padding(
                 padding: const EdgeInsets.only(bottom: 8),
-                child: _InfoRow(
-                  icon: item.$1,
-                  text: item.$2,
-                ),
+                child: _InfoRow(icon: item.$1, text: item.$2),
               ),
             ),
           ],
@@ -1244,7 +1940,10 @@ class _VehicleTile extends StatelessWidget {
       details.add((Icons.color_lens_outlined, vehicle.color!.trim()));
     }
     if ((vehicle.parkingNumber ?? '').trim().isNotEmpty) {
-      details.add((Icons.local_parking_outlined, vehicle.parkingNumber!.trim()));
+      details.add((
+        Icons.local_parking_outlined,
+        vehicle.parkingNumber!.trim(),
+      ));
     }
 
     return Container(
@@ -1458,9 +2157,9 @@ class _InfoChip extends StatelessWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: cs.primary,
-                  fontWeight: FontWeight.w700,
-                ),
+              color: cs.primary,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),
@@ -1499,8 +2198,9 @@ String _formatInt(int? value) {
 String _formatArea(double? area) {
   if (area == null) return '—';
   final hasDecimals = area.truncateToDouble() != area;
-  final formatted =
-      hasDecimals ? area.toStringAsFixed(2) : area.toStringAsFixed(0);
+  final formatted = hasDecimals
+      ? area.toStringAsFixed(2)
+      : area.toStringAsFixed(0);
   return '$formatted m²';
 }
 
@@ -1520,9 +2220,11 @@ String _beautifyKey(String key) {
   return key
       .replaceAll('_', ' ')
       .split(' ')
-      .map((word) => word.isEmpty
-          ? word
-          : '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}')
+      .map(
+        (word) => word.isEmpty
+            ? word
+            : '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}',
+      )
       .join(' ');
 }
 

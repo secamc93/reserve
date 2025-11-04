@@ -67,4 +67,33 @@ class AttendanceRepositoryImpl extends AttendanceRepository {
     final response = await datasource.unmarkAttendance(recordId: recordId);
     return _actionToEntity(response);
   }
+
+  @override
+  Future<void> createAttendanceProxy({
+    required int businessId,
+    required int propertyUnitId,
+    required String proxyName,
+  }) {
+    return datasource.createAttendanceProxy(
+      businessId: businessId,
+      propertyUnitId: propertyUnitId,
+      proxyName: proxyName,
+    );
+  }
+
+  @override
+  Future<void> updateAttendanceProxy({
+    required int proxyId,
+    required String proxyName,
+  }) {
+    return datasource.updateAttendanceProxy(
+      proxyId: proxyId,
+      proxyName: proxyName,
+    );
+  }
+
+  @override
+  Future<void> deleteAttendanceProxy({required int proxyId}) {
+    return datasource.deleteAttendanceProxy(proxyId: proxyId);
+  }
 }

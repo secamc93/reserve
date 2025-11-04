@@ -47,6 +47,24 @@ abstract class HorizontalPropertiesDatasource {
     Map<String, dynamic>? query,
   });
 
+  Future<HorizontalPropertyUnitDetailResponseModel>
+      createHorizontalPropertyUnit({
+    required Map<String, dynamic> data,
+    Map<String, dynamic>? query,
+  });
+
+  Future<HorizontalPropertyUnitDetailResponseModel>
+      updateHorizontalPropertyUnit({
+    required int unitId,
+    required Map<String, dynamic> data,
+    Map<String, dynamic>? query,
+  });
+
+  Future<SimpleResponseModel> deleteHorizontalPropertyUnit({
+    required int unitId,
+    Map<String, dynamic>? query,
+  });
+
   Future<HorizontalPropertyResidentsResponseModel> getHorizontalPropertyResidents({
     required int id,
     Map<String, dynamic>? query,

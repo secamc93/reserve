@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:rupu/domain/entities/attendance.dart';
@@ -45,6 +46,7 @@ class AttendanceManagementController extends GetxController {
   final unitFilterCtrl = TextEditingController();
   final attendanceFilter = RxnString();
   final markingRecordIds = <int>{}.obs;
+  final proxyProcessingRecordIds = <int>{}.obs;
 
   Timer? _summaryTimer;
 
@@ -199,6 +201,27 @@ class AttendanceManagementController extends GetxController {
 
   bool isRecordMarked(int id) => markingRecordIds.contains(id);
 
+  bool isProxyProcessing(int recordId) =>
+      proxyProcessingRecordIds.contains(recordId);
+
+  void _setProxyProcessing(int recordId, bool value) {
+    if (value) {
+      proxyProcessingRecordIds.add(recordId);
+    } else {
+      proxyProcessingRecordIds.remove(recordId);
+    }
+    proxyProcessingRecordIds.refresh();
+  }
+
+  void _dismissSnackbarIfOpen() {
+    if (!Get.isSnackbarOpen) return;
+    try {
+      Get.closeCurrentSnackbar();
+    } catch (_) {
+      // Ignora errores de Get al cerrar snackbars inexistentes.
+    }
+  }
+
   Future<void> toggleAttendance(AttendanceRecord record) async {
     if (isRecordMarked(record.id)) return;
     final isAttended = record.attendedAsOwner || record.attendedAsProxy;
@@ -221,6 +244,174 @@ class AttendanceManagementController extends GetxController {
     } finally {
       markingRecordIds.remove(record.id);
       markingRecordIds.refresh();
+    }
+  }
+
+  Future<bool> createProxyForRecord({
+    required AttendanceRecord record,
+    required String proxyName,
+  }) async {
+    final trimmedName = proxyName.trim();
+    if (trimmedName.isEmpty) {
+      _dismissSnackbarIfOpen();
+      Get.snackbar(
+        'Gestión de asistencia',
+        'Debes ingresar el nombre del apoderado.',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+        margin: const EdgeInsets.all(16),
+      );
+      return false;
+    }
+
+    if (record.propertyUnitId <= 0) {
+      _dismissSnackbarIfOpen();
+      Get.snackbar(
+        'Gestión de asistencia',
+        'No se pudo identificar la unidad para crear el apoderado.',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+        margin: const EdgeInsets.all(16),
+      );
+      return false;
+    }
+
+    _setProxyProcessing(record.id, true);
+    try {
+      await repository.createAttendanceProxy(
+        businessId: businessId,
+        propertyUnitId: record.propertyUnitId,
+        proxyName: trimmedName,
+      );
+      await fetchRecords(page: currentPage.value);
+      _dismissSnackbarIfOpen();
+      Get.snackbar(
+        'Gestión de asistencia',
+        'Apoderado agregado correctamente.',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+        margin: const EdgeInsets.all(16),
+      );
+      return true;
+    } catch (_) {
+      _dismissSnackbarIfOpen();
+      Get.snackbar(
+        'Gestión de asistencia',
+        'No se pudo agregar el apoderado. Intenta nuevamente.',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+        margin: const EdgeInsets.all(16),
+      );
+      return false;
+    } finally {
+      _setProxyProcessing(record.id, false);
+    }
+  }
+
+  Future<bool> updateProxyForRecord({
+    required AttendanceRecord record,
+    required String proxyName,
+  }) async {
+    final effectiveRecord =
+        records.firstWhereOrNull((element) => element.id == record.id) ?? record;
+    final proxyId = effectiveRecord.proxyId;
+    final trimmedName = proxyName.trim();
+    if (proxyId == null || proxyId <= 0) {
+      _dismissSnackbarIfOpen();
+      Get.snackbar(
+        'Gestión de asistencia',
+        'No se encontró un apoderado asignado para actualizar.',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+        margin: const EdgeInsets.all(16),
+      );
+      return false;
+    }
+
+    if (trimmedName.isEmpty) {
+      _dismissSnackbarIfOpen();
+      Get.snackbar(
+        'Gestión de asistencia',
+        'Debes ingresar el nombre del apoderado.',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+        margin: const EdgeInsets.all(16),
+      );
+      return false;
+    }
+
+    _setProxyProcessing(record.id, true);
+    try {
+      await repository.updateAttendanceProxy(
+        proxyId: proxyId,
+        proxyName: trimmedName,
+      );
+      await fetchRecords(page: currentPage.value);
+      _dismissSnackbarIfOpen();
+      Get.snackbar(
+        'Gestión de asistencia',
+        'Apoderado actualizado correctamente.',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+        margin: const EdgeInsets.all(16),
+      );
+      return true;
+    } catch (_) {
+      _dismissSnackbarIfOpen();
+      Get.snackbar(
+        'Gestión de asistencia',
+        'No se pudo actualizar el apoderado. Intenta nuevamente.',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+        margin: const EdgeInsets.all(16),
+      );
+      return false;
+    } finally {
+      _setProxyProcessing(record.id, false);
+    }
+  }
+
+  Future<bool> deleteProxyForRecord({required AttendanceRecord record}) async {
+    final effectiveRecord =
+        records.firstWhereOrNull((element) => element.id == record.id) ?? record;
+    final proxyId = effectiveRecord.proxyId;
+    if (proxyId == null || proxyId <= 0) {
+      _dismissSnackbarIfOpen();
+      Get.snackbar(
+        'Gestión de asistencia',
+        'No se encontró un apoderado asignado para eliminar.',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+        margin: const EdgeInsets.all(16),
+      );
+      return false;
+    }
+
+    _setProxyProcessing(record.id, true);
+    try {
+      await repository.deleteAttendanceProxy(proxyId: proxyId);
+      await fetchRecords(page: currentPage.value);
+      _dismissSnackbarIfOpen();
+      Get.snackbar(
+        'Gestión de asistencia',
+        'Apoderado eliminado correctamente.',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+        margin: const EdgeInsets.all(16),
+      );
+      return true;
+    } catch (_) {
+      _dismissSnackbarIfOpen();
+      Get.snackbar(
+        'Gestión de asistencia',
+        'No se pudo eliminar el apoderado. Intenta nuevamente.',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+        margin: const EdgeInsets.all(16),
+      );
+      return false;
+    } finally {
+      _setProxyProcessing(record.id, false);
     }
   }
 
@@ -255,6 +446,7 @@ class AttendanceManagementController extends GetxController {
           updated.propertyUnitId == 0 ? current.propertyUnitId : updated.propertyUnitId,
       attendedAsOwner: updated.attendedAsOwner,
       attendedAsProxy: updated.attendedAsProxy,
+      proxyId: updated.proxyId ?? current.proxyId,
       signature: updated.signature ?? current.signature,
       signatureMethod: updated.signatureMethod ?? current.signatureMethod,
       verificationNotes:
