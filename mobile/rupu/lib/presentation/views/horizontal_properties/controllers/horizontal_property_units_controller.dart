@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:rupu/domain/entities/horizontal_property_action_result.dart';
 import 'package:rupu/domain/entities/horizontal_property_unit_detail.dart';
 import 'package:rupu/domain/entities/horizontal_property_units_page.dart';
 import 'package:rupu/domain/infrastructure/repositories/horizontal_properties_repository_impl.dart';
@@ -29,6 +30,8 @@ class HorizontalPropertyUnitsController extends GetxController {
   final _unitDetailsCache = <int, HorizontalPropertyUnitDetail>{};
   final _unitDetailRequests =
       <int, Future<HorizontalPropertyUnitDetailResult>>{};
+  final unitMutationBusy = false.obs;
+  final RxSet<int> deletingUnitIds = <int>{}.obs;
 
   // Filters
   final unitsPageCtrl = TextEditingController(text: '1');
@@ -206,6 +209,93 @@ class HorizontalPropertyUnitsController extends GetxController {
     }
   }
 
+  Future<HorizontalPropertyUnitDetailResult> createUnit({
+    required Map<String, dynamic> data,
+  }) async {
+    if (unitMutationBusy.value) {
+      return const HorizontalPropertyUnitDetailResult(
+        success: false,
+        message: 'Ya hay una operación de unidad en curso.',
+      );
+    }
+    unitMutationBusy.value = true;
+    try {
+      final result = await repository.createHorizontalPropertyUnit(
+        propertyId: propertyId,
+        data: data,
+      );
+      if (result.success) {
+        await refresh();
+      }
+      return result;
+    } catch (_) {
+      return const HorizontalPropertyUnitDetailResult(
+        success: false,
+        message: 'No se pudo crear la unidad. Inténtalo nuevamente.',
+      );
+    } finally {
+      unitMutationBusy.value = false;
+    }
+  }
+
+  Future<HorizontalPropertyUnitDetailResult> updateUnit({
+    required int unitId,
+    required Map<String, dynamic> data,
+  }) async {
+    if (unitMutationBusy.value) {
+      return const HorizontalPropertyUnitDetailResult(
+        success: false,
+        message: 'Ya hay una operación de unidad en curso.',
+      );
+    }
+    unitMutationBusy.value = true;
+    try {
+      final result = await repository.updateHorizontalPropertyUnit(
+        propertyId: propertyId,
+        unitId: unitId,
+        data: data,
+      );
+      if (result.success) {
+        await refresh();
+      }
+      return result;
+    } catch (_) {
+      return const HorizontalPropertyUnitDetailResult(
+        success: false,
+        message: 'No se pudo actualizar la unidad. Inténtalo nuevamente.',
+      );
+    } finally {
+      unitMutationBusy.value = false;
+    }
+  }
+
+  Future<HorizontalPropertyActionResult> deleteUnit(int unitId) async {
+    if (deletingUnitIds.contains(unitId)) {
+      return const HorizontalPropertyActionResult(
+        success: false,
+        message: 'Ya se está eliminando esta unidad.',
+      );
+    }
+    deletingUnitIds.add(unitId);
+    try {
+      final result = await repository.deleteHorizontalPropertyUnit(
+        propertyId: propertyId,
+        unitId: unitId,
+      );
+      if (result.success) {
+        await refresh();
+      }
+      return result;
+    } catch (_) {
+      return const HorizontalPropertyActionResult(
+        success: false,
+        message: 'No se pudo eliminar la unidad. Inténtalo nuevamente.',
+      );
+    } finally {
+      deletingUnitIds.remove(unitId);
+    }
+  }
+
   @override
   void onClose() {
     for (final controller in [
@@ -226,6 +316,7 @@ class HorizontalPropertyUnitsController extends GetxController {
     unitsTypeCtrl.dispose();
     unitsSearchCtrl.dispose();
     _clearUnitDetailsCache();
+    deletingUnitIds.clear();
     super.onClose();
   }
 

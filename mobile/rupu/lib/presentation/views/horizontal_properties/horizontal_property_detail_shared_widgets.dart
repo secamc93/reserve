@@ -795,13 +795,19 @@ class _StatusChip extends StatelessWidget {
 }
 
 class _CardActions extends StatelessWidget {
-  final VoidCallback onView;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
+  final VoidCallback? onView;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
+  final bool isEditDisabled;
+  final bool isDeleteDisabled;
+  final bool showDeleteLoader;
   const _CardActions({
-    required this.onView,
-    required this.onEdit,
-    required this.onDelete,
+    this.onView,
+    this.onEdit,
+    this.onDelete,
+    this.isEditDisabled = false,
+    this.isDeleteDisabled = false,
+    this.showDeleteLoader = false,
   });
 
   ButtonStyle _primaryStyle(BuildContext context) {
@@ -847,15 +853,25 @@ class _CardActions extends StatelessWidget {
         ),
         FilledButton.tonalIcon(
           style: _tonalStyle(context),
-          onPressed: onEdit,
+          onPressed: isEditDisabled ? null : onEdit,
           icon: const Icon(Icons.edit_outlined, size: 18),
           label: const Text('Editar'),
         ),
         TextButton.icon(
           style: _dangerStyle(context),
-          onPressed: onDelete,
-          icon: const Icon(Icons.delete_outline, size: 18),
-          label: const Text('Eliminar'),
+          onPressed:
+              (isDeleteDisabled || showDeleteLoader) ? null : onDelete,
+          icon: showDeleteLoader
+              ? SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.2,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                )
+              : const Icon(Icons.delete_outline, size: 18),
+          label: Text(showDeleteLoader ? 'Eliminando...' : 'Eliminar'),
         ),
       ],
     );

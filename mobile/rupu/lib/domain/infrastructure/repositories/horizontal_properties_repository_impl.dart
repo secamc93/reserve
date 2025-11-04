@@ -117,6 +117,71 @@ class HorizontalPropertiesRepositoryImpl
   }
 
   @override
+  Future<HorizontalPropertyUnitDetailResult> createHorizontalPropertyUnit({
+    required int propertyId,
+    required Map<String, dynamic> data,
+  }) async {
+    try {
+      final response = await datasource.createHorizontalPropertyUnit(
+        data: data,
+        query: _withBusinessQuery(
+          propertyId > 0 ? {'business_id': propertyId} : null,
+        ),
+      );
+      return HorizontalPropertiesMapper.unitDetailResponseToEntity(response);
+    } catch (_) {
+      return const HorizontalPropertyUnitDetailResult(
+        success: false,
+        message: 'No se pudo crear la unidad.',
+      );
+    }
+  }
+
+  @override
+  Future<HorizontalPropertyUnitDetailResult> updateHorizontalPropertyUnit({
+    required int propertyId,
+    required int unitId,
+    required Map<String, dynamic> data,
+  }) async {
+    try {
+      final response = await datasource.updateHorizontalPropertyUnit(
+        unitId: unitId,
+        data: data,
+        query: _withBusinessQuery(
+          propertyId > 0 ? {'business_id': propertyId} : null,
+        ),
+      );
+      return HorizontalPropertiesMapper.unitDetailResponseToEntity(response);
+    } catch (_) {
+      return const HorizontalPropertyUnitDetailResult(
+        success: false,
+        message: 'No se pudo actualizar la unidad.',
+      );
+    }
+  }
+
+  @override
+  Future<HorizontalPropertyActionResult> deleteHorizontalPropertyUnit({
+    required int propertyId,
+    required int unitId,
+  }) async {
+    try {
+      final response = await datasource.deleteHorizontalPropertyUnit(
+        unitId: unitId,
+        query: _withBusinessQuery(
+          propertyId > 0 ? {'business_id': propertyId} : null,
+        ),
+      );
+      return HorizontalPropertiesMapper.simpleResponseToActionResult(response);
+    } catch (_) {
+      return const HorizontalPropertyActionResult(
+        success: false,
+        message: 'No se pudo eliminar la unidad.',
+      );
+    }
+  }
+
+  @override
   Future<HorizontalPropertyResidentsPage> getHorizontalPropertyResidents({
     required int id,
     Map<String, dynamic>? query,

@@ -324,6 +324,53 @@ class HorizontalPropertiesDatasourceImpl
   }
 
   @override
+  Future<HorizontalPropertyUnitDetailResponseModel>
+      createHorizontalPropertyUnit({
+    required Map<String, dynamic> data,
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await _dio.post(
+      '/horizontal-properties/property-units',
+      data: data,
+      queryParameters: query,
+    );
+    return HorizontalPropertyUnitDetailResponseModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<HorizontalPropertyUnitDetailResponseModel>
+      updateHorizontalPropertyUnit({
+    required int unitId,
+    required Map<String, dynamic> data,
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await _dio.put(
+      '/horizontal-properties/property-units/$unitId',
+      data: data,
+      queryParameters: query,
+    );
+    return HorizontalPropertyUnitDetailResponseModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<SimpleResponseModel> deleteHorizontalPropertyUnit({
+    required int unitId,
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await _dio.delete(
+      '/horizontal-properties/property-units/$unitId',
+      queryParameters: query,
+    );
+    return SimpleResponseModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
   Future<HorizontalPropertyResidentsResponseModel>
   getHorizontalPropertyResidents({
     required int id,
