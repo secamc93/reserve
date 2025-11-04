@@ -913,6 +913,16 @@ class _AttendanceRecordTileState extends State<_AttendanceRecordTile> {
                     ),
                   ),
                 ),
+                SizedBox(width: 12),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: IconButton(
+                    onPressed: _toggleExpanded,
+                    icon: Icon(
+                      _expanded ? Icons.expand_less : Icons.expand_more,
+                    ),
+                  ),
+                ),
               ],
             ),
             AnimatedCrossFade(
@@ -936,17 +946,7 @@ class _AttendanceRecordTileState extends State<_AttendanceRecordTile> {
                 ],
               ),
             ),
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                onPressed: _toggleExpanded,
-                icon: Icon(
-                  _expanded ? Icons.expand_less : Icons.expand_more,
-                ),
-                label: Text(_expanded ? 'Ver menos' : 'Ver más'),
-              ),
-            ),
+            const SizedBox(height: 6),
           ],
         ),
       ),
@@ -1056,10 +1056,7 @@ class _ProxySection extends StatelessWidget {
     showDialog<void>(
       context: context,
       builder: (_) {
-        return _ProxyFormDialog(
-          controller: controller,
-          record: record,
-        );
+        return _ProxyFormDialog(controller: controller, record: record);
       },
     );
   }
@@ -1084,8 +1081,9 @@ class _ProxySection extends StatelessWidget {
                 onPressed: loading
                     ? null
                     : () async {
-                        final success =
-                            await controller.deleteProxyForRecord(record: record);
+                        final success = await controller.deleteProxyForRecord(
+                          record: record,
+                        );
                         if (success && Navigator.of(ctx).canPop()) {
                           Navigator.of(ctx).pop();
                         }
@@ -1158,14 +1156,16 @@ class _ProxySection extends StatelessWidget {
                     runSpacing: 8,
                     children: [
                       FilledButton.tonalIcon(
-                        onPressed:
-                            isProcessing ? null : () => _showProxyForm(context),
+                        onPressed: isProcessing
+                            ? null
+                            : () => _showProxyForm(context),
                         icon: const Icon(Icons.edit_outlined, size: 18),
                         label: Text(isProcessing ? 'Actualizando…' : 'Editar'),
                       ),
                       TextButton.icon(
-                        onPressed:
-                            isProcessing ? null : () => _confirmDelete(context),
+                        onPressed: isProcessing
+                            ? null
+                            : () => _confirmDelete(context),
                         icon: const Icon(Icons.delete_outline, size: 18),
                         label: Text(isProcessing ? 'Eliminando…' : 'Eliminar'),
                       ),
@@ -1184,10 +1184,7 @@ class _ProxyFormDialog extends StatefulWidget {
   final AttendanceManagementController controller;
   final AttendanceRecord record;
 
-  const _ProxyFormDialog({
-    required this.controller,
-    required this.record,
-  });
+  const _ProxyFormDialog({required this.controller, required this.record});
 
   bool get isEditing => (record.proxyId ?? 0) > 0;
 
@@ -1243,7 +1240,9 @@ class _ProxyFormDialogState extends State<_ProxyFormDialog> {
     return Obx(() {
       final loading = _attendanceController.isProxyProcessing(_record.id);
       return AlertDialog(
-        title: Text(widget.isEditing ? 'Editar apoderado' : 'Agregar apoderado'),
+        title: Text(
+          widget.isEditing ? 'Editar apoderado' : 'Agregar apoderado',
+        ),
         content: Form(
           key: _formKey,
           child: TextFormField(

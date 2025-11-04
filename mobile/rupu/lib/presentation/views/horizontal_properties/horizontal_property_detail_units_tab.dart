@@ -25,8 +25,8 @@ class _UnitsTab extends GetWidget<HorizontalPropertyUnitsController> {
           final crossAxis = width >= 1200
               ? 3
               : width >= 900
-                  ? 2
-                  : 1;
+              ? 2
+              : 1;
 
           return RefreshIndicator(
             onRefresh: controller.refresh,
@@ -104,11 +104,11 @@ class _UnitsTab extends GetWidget<HorizontalPropertyUnitsController> {
                           : SliverGrid(
                               gridDelegate:
                                   SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: crossAxis,
-                                mainAxisSpacing: 16,
-                                crossAxisSpacing: 16,
-                                mainAxisExtent: 320,
-                              ),
+                                    crossAxisCount: crossAxis,
+                                    mainAxisSpacing: 16,
+                                    crossAxisSpacing: 16,
+                                    mainAxisExtent: 320,
+                                  ),
                               delegate: SliverChildBuilderDelegate(
                                 (context, index) => _UnitCard(
                                   unit: units[index],
@@ -130,11 +130,11 @@ class _UnitsTab extends GetWidget<HorizontalPropertyUnitsController> {
                                   ),
                                 )
                               : (!controller.canLoadMoreUnits &&
-                                      units.isNotEmpty
-                                  ? const Text(
-                                      'No hay más unidades para cargar.',
-                                    )
-                                  : const SizedBox.shrink()),
+                                        units.isNotEmpty
+                                    ? const Text(
+                                        'No hay más unidades para cargar.',
+                                      )
+                                    : const SizedBox.shrink()),
                         ),
                       ),
                     ),
@@ -146,7 +146,7 @@ class _UnitsTab extends GetWidget<HorizontalPropertyUnitsController> {
         },
       );
 
-      final bottomPadding = MediaQuery.of(context).viewPadding.bottom;
+      final bottomPadding = MediaQuery.viewPaddingOf(context).bottom;
 
       return Stack(
         children: [
@@ -429,18 +429,18 @@ class _AddUnitFab extends GetWidget<HorizontalPropertyUnitsController> {
   }
 
   Future<void> _openCreateSheet(BuildContext context) async {
-    final result = await showModalBottomSheet<
-        HorizontalPropertyUnitDetailResult>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      useRootNavigator: true,
-      isScrollControlled: true,
-      builder: (_) => _UnitFormBottomSheet(
-        title: 'Agregar nueva unidad',
-        actionLabel: 'Crear unidad',
-        onSubmit: (payload) => controller.createUnit(data: payload),
-      ),
-    );
+    final result =
+        await showModalBottomSheet<HorizontalPropertyUnitDetailResult>(
+          context: context,
+          backgroundColor: Colors.transparent,
+          useRootNavigator: true,
+          isScrollControlled: true,
+          builder: (_) => _UnitFormBottomSheet(
+            title: 'Agregar nueva unidad',
+            actionLabel: 'Crear unidad',
+            onSubmit: (payload) => controller.createUnit(data: payload),
+          ),
+        );
 
     if (result != null && result.success) {
       final number = result.unit?.number;
@@ -461,8 +461,9 @@ class _UnitCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final unitsController =
-        Get.find<HorizontalPropertyUnitsController>(tag: controllerTag);
+    final unitsController = Get.find<HorizontalPropertyUnitsController>(
+      tag: controllerTag,
+    );
 
     final (bgChip, fgChip, labelChip) = unit.isActive
         ? (cs.secondaryContainer, cs.onSecondaryContainer, 'ACTIVA')
@@ -551,16 +552,16 @@ class _UnitCard extends StatelessWidget {
                   value: _formatCoefficient(unit.participationCoefficient),
                 ),
                 Obx(() {
-                  final isDeleting =
-                      unitsController.deletingUnitIds.contains(unit.id);
+                  final isDeleting = unitsController.deletingUnitIds.contains(
+                    unit.id,
+                  );
                   final disableEdition = unitsController.unitMutationBusy.value;
                   return _CardActions(
                     onView: () => _openDetailSheet(context),
                     onEdit: disableEdition
                         ? null
                         : () => _openEditSheet(context),
-                    onDelete:
-                        isDeleting ? null : () => _confirmDelete(context),
+                    onDelete: isDeleting ? null : () => _confirmDelete(context),
                     isEditDisabled: disableEdition,
                     isDeleteDisabled: disableEdition,
                     showDeleteLoader: isDeleting,
@@ -580,25 +581,62 @@ class _UnitCard extends StatelessWidget {
       backgroundColor: Colors.transparent,
       useRootNavigator: true,
       isScrollControlled: true,
-      builder: (_) => _UnitDetailBottomSheet(
-        controllerTag: controllerTag,
-        unit: unit,
-      ),
+      builder: (_) =>
+          _UnitDetailBottomSheet(controllerTag: controllerTag, unit: unit),
     );
   }
 
   Future<void> _openEditSheet(BuildContext context) async {
-    final result = await showModalBottomSheet<
-        HorizontalPropertyUnitDetailResult>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      useRootNavigator: true,
-      isScrollControlled: true,
-      builder: (_) => _UnitEditBottomSheet(
-        controllerTag: controllerTag,
-        unit: unit,
-      ),
+    final controller = Get.find<HorizontalPropertyUnitsController>(
+      tag: controllerTag,
     );
+    Get.dialog(
+      const Center(child: CircularProgressIndicator()),
+      barrierDismissible: false,
+    );
+    HorizontalPropertyUnitDetailResult? detailResult;
+    try {
+      detailResult = await controller.fetchUnitDetail(unit.id);
+    } catch (_) {
+      detailResult = const HorizontalPropertyUnitDetailResult(
+        success: false,
+        message:
+            'No se pudo cargar el detalle de la unidad. Inténtalo nuevamente.',
+      );
+    } finally {
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
+    }
+
+    final resolvedDetail = detailResult;
+    if (resolvedDetail == null ||
+        !resolvedDetail.success ||
+        resolvedDetail.unit == null) {
+      _showSnack(
+        'No se pudo cargar la unidad',
+        resolvedDetail?.message ?? 'Inténtalo nuevamente en unos segundos.',
+        isError: true,
+      );
+      return;
+    }
+
+    final result =
+        await showModalBottomSheet<HorizontalPropertyUnitDetailResult>(
+          context: context,
+          backgroundColor: Colors.transparent,
+          useRootNavigator: true,
+          isScrollControlled: true,
+          builder: (_) => _UnitFormBottomSheet(
+            title: 'Editar unidad',
+            actionLabel: 'Guardar cambios',
+            initialDetail: resolvedDetail.unit,
+            fallback: unit,
+            showStatusSwitch: true,
+            onSubmit: (payload) =>
+                controller.updateUnit(unitId: unit.id, data: payload),
+          ),
+        );
 
     if (result != null && result.success) {
       final updatedNumber = result.unit?.number ?? unit.number;
@@ -637,8 +675,9 @@ class _UnitCard extends StatelessWidget {
 
     if (confirmed != true) return;
 
-    final controller =
-        Get.find<HorizontalPropertyUnitsController>(tag: controllerTag);
+    final controller = Get.find<HorizontalPropertyUnitsController>(
+      tag: controllerTag,
+    );
     final actionResult = await controller.deleteUnit(unit.id);
 
     if (actionResult.success) {
@@ -728,8 +767,7 @@ class _UnitDetailBottomSheet extends StatefulWidget {
   });
 
   @override
-  State<_UnitDetailBottomSheet> createState() =>
-      _UnitDetailBottomSheetState();
+  State<_UnitDetailBottomSheet> createState() => _UnitDetailBottomSheetState();
 }
 
 class _UnitDetailBottomSheetState extends State<_UnitDetailBottomSheet> {
@@ -742,8 +780,9 @@ class _UnitDetailBottomSheetState extends State<_UnitDetailBottomSheet> {
   }
 
   Future<HorizontalPropertyUnitDetailResult> _load() {
-    final controller =
-        Get.find<HorizontalPropertyUnitsController>(tag: widget.controllerTag);
+    final controller = Get.find<HorizontalPropertyUnitsController>(
+      tag: widget.controllerTag,
+    );
     return controller.fetchUnitDetail(widget.unit.id);
   }
 
@@ -755,7 +794,7 @@ class _UnitDetailBottomSheetState extends State<_UnitDetailBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final viewInsets = MediaQuery.of(context).viewInsets;
+    final viewInsets = MediaQuery.viewInsetsOf(context);
     final cs = Theme.of(context).colorScheme;
 
     return FractionallySizedBox(
@@ -790,12 +829,10 @@ class _UnitDetailBottomSheetState extends State<_UnitDetailBottomSheet> {
                   const SizedBox(height: 12),
                   const _SheetHandle(),
                   Expanded(
-                    child:
-                        FutureBuilder<HorizontalPropertyUnitDetailResult>(
+                    child: FutureBuilder<HorizontalPropertyUnitDetailResult>(
                       future: _future,
                       builder: (context, snapshot) {
-                        if (snapshot.connectionState !=
-                            ConnectionState.done) {
+                        if (snapshot.connectionState != ConnectionState.done) {
                           return const _UnitDetailLoading();
                         }
                         if (!snapshot.hasData) {
@@ -808,7 +845,8 @@ class _UnitDetailBottomSheetState extends State<_UnitDetailBottomSheet> {
                         final result = snapshot.data!;
                         if (!result.success || result.unit == null) {
                           return _UnitDetailError(
-                            message: result.message ??
+                            message:
+                                result.message ??
                                 'No se pudo obtener la información de la unidad.',
                             onRetry: _retry,
                           );
@@ -830,242 +868,6 @@ class _UnitDetailBottomSheetState extends State<_UnitDetailBottomSheet> {
   }
 }
 
-class _UnitEditBottomSheet extends StatefulWidget {
-  final String controllerTag;
-  final HorizontalPropertyUnitItem unit;
-
-  const _UnitEditBottomSheet({
-    required this.controllerTag,
-    required this.unit,
-  });
-
-  @override
-  State<_UnitEditBottomSheet> createState() => _UnitEditBottomSheetState();
-}
-
-class _UnitEditBottomSheetState extends State<_UnitEditBottomSheet> {
-  late Future<HorizontalPropertyUnitDetailResult> _future;
-
-  @override
-  void initState() {
-    super.initState();
-    _future = _load();
-  }
-
-  Future<HorizontalPropertyUnitDetailResult> _load() {
-    final controller =
-        Get.find<HorizontalPropertyUnitsController>(tag: widget.controllerTag);
-    return controller.fetchUnitDetail(widget.unit.id);
-  }
-
-  void _retry() {
-    setState(() {
-      _future = _load();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final controller =
-        Get.find<HorizontalPropertyUnitsController>(tag: widget.controllerTag);
-
-    return FutureBuilder<HorizontalPropertyUnitDetailResult>(
-      future: _future,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
-          return const _UnitFormLoadingSheet();
-        }
-
-        if (!snapshot.hasData) {
-          return _UnitFormErrorSheet(
-            onRetry: _retry,
-          );
-        }
-
-        final result = snapshot.data!;
-        if (!result.success || result.unit == null) {
-          return _UnitFormErrorSheet(
-            message: result.message ??
-                'No se pudo obtener la información de la unidad.',
-            onRetry: _retry,
-          );
-        }
-
-        return _UnitFormBottomSheet(
-          title: 'Editar unidad',
-          actionLabel: 'Guardar cambios',
-          initialDetail: result.unit,
-          fallback: widget.unit,
-          showStatusSwitch: true,
-          onSubmit: (payload) => controller.updateUnit(
-            unitId: widget.unit.id,
-            data: payload,
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _UnitFormScaffold extends StatelessWidget {
-  final Widget child;
-  final double heightFactor;
-
-  const _UnitFormScaffold({
-    required this.child,
-    this.heightFactor = 0.95,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final viewInsets = MediaQuery.of(context).viewInsets;
-    final cs = Theme.of(context).colorScheme;
-
-    return FractionallySizedBox(
-      heightFactor: heightFactor,
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(16, 0, 16, viewInsets.bottom + 16),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: cs.surface,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(32),
-                topRight: Radius.circular(32),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: .18),
-                  blurRadius: 28,
-                  offset: const Offset(0, 22),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(32),
-                topRight: Radius.circular(32),
-              ),
-              child: Column(
-                children: [
-                  const SizedBox(height: 12),
-                  const _SheetHandle(),
-                  Expanded(child: child),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _UnitFormLoadingSheet extends StatelessWidget {
-  const _UnitFormLoadingSheet();
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-
-    return _UnitFormScaffold(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: cs.primary.withValues(alpha: .12),
-                shape: BoxShape.circle,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: CircularProgressIndicator(color: cs.primary),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Cargando unidad…',
-              style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Obteniendo la información más reciente de la unidad para continuar.',
-              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _UnitFormErrorSheet extends StatelessWidget {
-  final String? message;
-  final VoidCallback onRetry;
-
-  const _UnitFormErrorSheet({
-    this.message,
-    required this.onRetry,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return _UnitFormScaffold(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: cs.errorContainer,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.error_outline, color: cs.error, size: 28),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'No se pudo cargar la unidad',
-              style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              message ??
-                  'Ocurrió un problema al obtener la información. Inténtalo nuevamente.',
-              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            FilledButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Reintentar'),
-            ),
-            const SizedBox(height: 12),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancelar'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _UnitFormBottomSheet extends StatefulWidget {
   final String title;
   final String actionLabel;
@@ -1073,8 +875,9 @@ class _UnitFormBottomSheet extends StatefulWidget {
   final HorizontalPropertyUnitItem? fallback;
   final bool showStatusSwitch;
   final Future<HorizontalPropertyUnitDetailResult> Function(
-      Map<String, dynamic> data)
-      onSubmit;
+    Map<String, dynamic> data,
+  )
+  onSubmit;
 
   const _UnitFormBottomSheet({
     required this.title,
@@ -1119,12 +922,8 @@ class _UnitFormBottomSheetState extends State<_UnitFormBottomSheet> {
     _unitTypeCtrl = TextEditingController(
       text: detail?.unitType ?? fallback?.unitType ?? '',
     );
-    _floorCtrl = TextEditingController(
-      text: detail?.floor?.toString() ?? '',
-    );
-    _areaCtrl = TextEditingController(
-      text: _doubleToText(detail?.area),
-    );
+    _floorCtrl = TextEditingController(text: detail?.floor?.toString() ?? '');
+    _areaCtrl = TextEditingController(text: _doubleToText(detail?.area));
     _bedroomsCtrl = TextEditingController(
       text: detail?.bedrooms?.toString() ?? '',
     );
@@ -1136,9 +935,7 @@ class _UnitFormBottomSheetState extends State<_UnitFormBottomSheet> {
         detail?.participationCoefficient ?? fallback?.participationCoefficient,
       ),
     );
-    _descriptionCtrl = TextEditingController(
-      text: detail?.description ?? '',
-    );
+    _descriptionCtrl = TextEditingController(text: detail?.description ?? '');
     _isActive = detail?.isActive ?? fallback?.isActive ?? true;
   }
 
@@ -1184,8 +981,7 @@ class _UnitFormBottomSheetState extends State<_UnitFormBottomSheet> {
       'area': _parseDouble(_areaCtrl.text.trim()),
       'bedrooms': _parseInt(_bedroomsCtrl.text.trim()),
       'bathrooms': _parseInt(_bathroomsCtrl.text.trim()),
-      'participation_coefficient':
-          _parseDouble(_coefficientCtrl.text.trim()),
+      'participation_coefficient': _parseDouble(_coefficientCtrl.text.trim()),
       'description': _emptyToNull(_descriptionCtrl.text.trim()),
     };
 
@@ -1219,7 +1015,8 @@ class _UnitFormBottomSheetState extends State<_UnitFormBottomSheet> {
         setState(() {
           _saving = false;
           _errorMessage =
-              result.message ?? 'No se pudo guardar la unidad. Inténtalo más tarde.';
+              result.message ??
+              'No se pudo guardar la unidad. Inténtalo más tarde.';
         });
         return;
       }
@@ -1238,6 +1035,7 @@ class _UnitFormBottomSheetState extends State<_UnitFormBottomSheet> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final viewInsets = MediaQuery.viewInsetsOf(context);
 
     InputDecoration decoration(String label, {String? hint}) {
       return InputDecoration(
@@ -1245,9 +1043,7 @@ class _UnitFormBottomSheetState extends State<_UnitFormBottomSheet> {
         hintText: hint,
         filled: true,
         fillColor: cs.surfaceContainerHighest,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(color: cs.outlineVariant),
@@ -1275,235 +1071,269 @@ class _UnitFormBottomSheetState extends State<_UnitFormBottomSheet> {
       );
     }
 
-    return _UnitFormScaffold(
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 10, 24, 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.title,
-                  style: tt.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Completa la información de la unidad para continuar.',
-                  style: tt.bodyMedium?.copyWith(
-                    color: cs.onSurfaceVariant,
-                  ),
+    return FractionallySizedBox(
+      heightFactor: 0.95,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(16, 0, 16, viewInsets.bottom + 16),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: cs.surface,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(32),
+                topRight: Radius.circular(32),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: .18),
+                  blurRadius: 28,
+                  offset: const Offset(0, 22),
                 ),
               ],
             ),
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ResponsiveFormGrid(
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(32),
+                topRight: Radius.circular(32),
+              ),
+              child: Column(
+                children: [
+                  const SizedBox(height: 12),
+                  const _SheetHandle(),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 10, 24, 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        field(
-                          label: 'Número de unidad',
-                          controller: _numberCtrl,
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Ingresa el número de la unidad';
-                            }
-                            return null;
-                          },
-                        ),
-                        field(
-                          label: 'Tipo de unidad',
-                          controller: _unitTypeCtrl,
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Indica el tipo de unidad';
-                            }
-                            return null;
-                          },
-                        ),
-                        field(
-                          label: 'Bloque',
-                          controller: _blockCtrl,
-                          hint: 'Bloque o torre',
-                        ),
-                        field(
-                          label: 'Piso',
-                          controller: _floorCtrl,
-                          keyboardType: TextInputType.number,
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return null;
-                            }
-                            return _parseInt(value.trim()) == null
-                                ? 'Ingresa un número válido'
-                                : null;
-                          },
-                        ),
-                        field(
-                          label: 'Área (m²)',
-                          controller: _areaCtrl,
-                          keyboardType:
-                              const TextInputType.numberWithOptions(
-                            decimal: true,
+                        Text(
+                          widget.title,
+                          style: tt.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
                           ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return null;
-                            }
-                            return _parseDouble(value.trim()) == null
-                                ? 'Ingresa un valor numérico'
-                                : null;
-                          },
                         ),
-                        field(
-                          label: 'Coeficiente de participación',
-                          controller: _coefficientCtrl,
-                          keyboardType:
-                              const TextInputType.numberWithOptions(
-                            decimal: true,
+                        const SizedBox(height: 6),
+                        Text(
+                          'Completa la información de la unidad para continuar.',
+                          style: tt.bodyMedium?.copyWith(
+                            color: cs.onSurfaceVariant,
                           ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return null;
-                            }
-                            return _parseDouble(value.trim()) == null
-                                ? 'Ingresa un valor numérico'
-                                : null;
-                          },
-                        ),
-                        field(
-                          label: 'Habitaciones',
-                          controller: _bedroomsCtrl,
-                          keyboardType: TextInputType.number,
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return null;
-                            }
-                            return _parseInt(value.trim()) == null
-                                ? 'Ingresa un número válido'
-                                : null;
-                          },
-                        ),
-                        field(
-                          label: 'Baños',
-                          controller: _bathroomsCtrl,
-                          keyboardType: TextInputType.number,
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return null;
-                            }
-                            return _parseInt(value.trim()) == null
-                                ? 'Ingresa un número válido'
-                                : null;
-                          },
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _descriptionCtrl,
-                      decoration: decoration(
-                        'Descripción',
-                        hint: 'Comparte detalles adicionales de la unidad',
-                      ),
-                      textInputAction: TextInputAction.newline,
-                      keyboardType: TextInputType.multiline,
-                      maxLines: 3,
-                    ),
-                    if (widget.showStatusSwitch) ...[
-                      const SizedBox(height: 8),
-                      SwitchListTile.adaptive(
-                        value: _isActive,
-                        onChanged: _saving
-                            ? null
-                            : (value) {
-                                setState(() {
-                                  _isActive = value;
-                                });
-                              },
-                        title: const Text('Unidad activa'),
-                        subtitle: const Text(
-                          'Controla si la unidad permanece visible en la administración.',
-                        ),
-                      ),
-                    ],
-                    if (_errorMessage != null) ...[
-                      const SizedBox(height: 16),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: cs.errorContainer,
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Row(
+                  ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(Icons.error_outline, color: cs.error),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                _errorMessage!,
-                                style: tt.bodyMedium?.copyWith(
-                                  color: cs.onErrorContainer,
-                                  fontWeight: FontWeight.w600,
+                            ResponsiveFormGrid(
+                              children: [
+                                field(
+                                  label: 'Número de unidad',
+                                  controller: _numberCtrl,
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return 'Ingresa el número de la unidad';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                field(
+                                  label: 'Tipo de unidad',
+                                  controller: _unitTypeCtrl,
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return 'Indica el tipo de unidad';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                field(
+                                  label: 'Bloque',
+                                  controller: _blockCtrl,
+                                  hint: 'Bloque o torre',
+                                ),
+                                field(
+                                  label: 'Piso',
+                                  controller: _floorCtrl,
+                                  keyboardType: TextInputType.number,
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return null;
+                                    }
+                                    return _parseInt(value.trim()) == null
+                                        ? 'Ingresa un número válido'
+                                        : null;
+                                  },
+                                ),
+                                field(
+                                  label: 'Área (m²)',
+                                  controller: _areaCtrl,
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                        decimal: true,
+                                      ),
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return null;
+                                    }
+                                    return _parseDouble(value.trim()) == null
+                                        ? 'Ingresa un valor numérico'
+                                        : null;
+                                  },
+                                ),
+                                field(
+                                  label: 'Coeficiente de participación',
+                                  controller: _coefficientCtrl,
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                        decimal: true,
+                                      ),
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return null;
+                                    }
+                                    return _parseDouble(value.trim()) == null
+                                        ? 'Ingresa un valor numérico'
+                                        : null;
+                                  },
+                                ),
+                                field(
+                                  label: 'Habitaciones',
+                                  controller: _bedroomsCtrl,
+                                  keyboardType: TextInputType.number,
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return null;
+                                    }
+                                    return _parseInt(value.trim()) == null
+                                        ? 'Ingresa un número válido'
+                                        : null;
+                                  },
+                                ),
+                                field(
+                                  label: 'Baños',
+                                  controller: _bathroomsCtrl,
+                                  keyboardType: TextInputType.number,
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return null;
+                                    }
+                                    return _parseInt(value.trim()) == null
+                                        ? 'Ingresa un número válido'
+                                        : null;
+                                  },
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _descriptionCtrl,
+                              decoration: decoration(
+                                'Descripción',
+                                hint:
+                                    'Comparte detalles adicionales de la unidad',
+                              ),
+                              textInputAction: TextInputAction.newline,
+                              keyboardType: TextInputType.multiline,
+                              maxLines: 3,
+                            ),
+                            if (widget.showStatusSwitch) ...[
+                              const SizedBox(height: 8),
+                              SwitchListTile.adaptive(
+                                value: _isActive,
+                                onChanged: _saving
+                                    ? null
+                                    : (value) {
+                                        setState(() {
+                                          _isActive = value;
+                                        });
+                                      },
+                                title: const Text('Unidad activa'),
+                                subtitle: const Text(
+                                  'Controla si la unidad permanece visible en la administración.',
                                 ),
                               ),
+                            ],
+                            if (_errorMessage != null) ...[
+                              const SizedBox(height: 16),
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: cs.errorContainer,
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(Icons.error_outline, color: cs.error),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        _errorMessage!,
+                                        style: tt.bodyMedium?.copyWith(
+                                          color: cs.onErrorContainer,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: 24),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: _saving
+                                        ? null
+                                        : () => Navigator.of(context).pop(),
+                                    child: const Text('Cancelar'),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: FilledButton.icon(
+                                    onPressed: _saving ? null : _handleSubmit,
+                                    icon: _saving
+                                        ? SizedBox(
+                                            width: 18,
+                                            height: 18,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2.2,
+                                              color: cs.onPrimary,
+                                            ),
+                                          )
+                                        : const Icon(Icons.save_outlined),
+                                    label: Text(
+                                      _saving
+                                          ? 'Guardando...'
+                                          : widget.actionLabel,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
                       ),
-                    ],
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: _saving
-                                ? null
-                                : () => Navigator.of(context).pop(),
-                            child: const Text('Cancelar'),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: FilledButton.icon(
-                            onPressed: _saving ? null : _handleSubmit,
-                            icon: _saving
-                                ? SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.2,
-                                      color: cs.onPrimary,
-                                    ),
-                                  )
-                                : const Icon(Icons.save_outlined),
-                            label: Text(
-                              _saving ? 'Guardando...' : widget.actionLabel,
-                            ),
-                          ),
-                        ),
-                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
-
+}
 
 class _UnitDetailLoading extends StatelessWidget {
   const _UnitDetailLoading();
@@ -1606,10 +1436,7 @@ class _UnitDetailContent extends StatelessWidget {
   final HorizontalPropertyUnitDetail detail;
   final HorizontalPropertyUnitItem fallback;
 
-  const _UnitDetailContent({
-    required this.detail,
-    required this.fallback,
-  });
+  const _UnitDetailContent({required this.detail, required this.fallback});
 
   @override
   Widget build(BuildContext context) {
@@ -1703,16 +1530,13 @@ class _UnitDetailContent extends StatelessWidget {
         ),
     ];
 
-    final extras = detail.extraAttributes.entries
-        .where((entry) {
-          final value = entry.value;
-          if (value == null) return false;
-          if (value is bool || value is num) return true;
-          if (value is String) return value.trim().isNotEmpty;
-          return false;
-        })
-        .toList()
-      ..sort((a, b) => a.key.compareTo(b.key));
+    final extras = detail.extraAttributes.entries.where((entry) {
+      final value = entry.value;
+      if (value == null) return false;
+      if (value is bool || value is num) return true;
+      if (value is String) return value.trim().isNotEmpty;
+      return false;
+    }).toList()..sort((a, b) => a.key.compareTo(b.key));
 
     return Scrollbar(
       thumbVisibility: true,
@@ -1726,14 +1550,13 @@ class _UnitDetailContent extends StatelessWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(28),
                 gradient: LinearGradient(
-                  colors: [
-                    cs.primary.withValues(alpha: .1),
-                    cs.surface,
-                  ],
+                  colors: [cs.primary.withValues(alpha: .1), cs.surface],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                border: Border.all(color: cs.outlineVariant.withValues(alpha: .6)),
+                border: Border.all(
+                  color: cs.outlineVariant.withValues(alpha: .6),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1749,8 +1572,10 @@ class _UnitDetailContent extends StatelessWidget {
                           color: cs.primary.withValues(alpha: .16),
                         ),
                         alignment: Alignment.center,
-                        child:
-                            Icon(Icons.apartment_outlined, color: cs.primary),
+                        child: Icon(
+                          Icons.apartment_outlined,
+                          color: cs.primary,
+                        ),
                       ),
                       const SizedBox(width: 18),
                       Expanded(
@@ -1769,7 +1594,9 @@ class _UnitDetailContent extends StatelessWidget {
                                 .trim()
                                 .isNotEmpty)
                               Text(
-                                _formatText(detail.unitType ?? fallback.unitType),
+                                _formatText(
+                                  detail.unitType ?? fallback.unitType,
+                                ),
                                 style: tt.bodyMedium?.copyWith(
                                   color: cs.onSurfaceVariant,
                                   fontWeight: FontWeight.w600,
@@ -1852,10 +1679,7 @@ class _UnitDetailContent extends StatelessWidget {
               ...detail.residents.map(
                 (resident) => Padding(
                   padding: const EdgeInsets.only(bottom: 12),
-                  child: _ContactTile(
-                    contact: resident,
-                    accent: cs.secondary,
-                  ),
+                  child: _ContactTile(contact: resident, accent: cs.secondary),
                 ),
               ),
             ],
@@ -2005,12 +1829,6 @@ class _MetricTile extends StatelessWidget {
   }
 }
 
-class _IconTextPair {
-  final IconData icon;
-  final String text;
-  const _IconTextPair(this.icon, this.text);
-}
-
 class _ContactTile extends StatelessWidget {
   final HorizontalPropertyUnitContact contact;
   final Color accent;
@@ -2022,17 +1840,15 @@ class _ContactTile extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    final details = <_IconTextPair>[];
+    final details = <(IconData, String)>[];
     if ((contact.document ?? '').trim().isNotEmpty) {
-      details.add(_IconTextPair(Icons.credit_card, contact.document!.trim()));
+      details.add((Icons.credit_card, contact.document!.trim()));
     }
     if ((contact.phone ?? '').trim().isNotEmpty) {
-      details.add(_IconTextPair(Icons.call_outlined, contact.phone!.trim()));
+      details.add((Icons.call_outlined, contact.phone!.trim()));
     }
     if ((contact.email ?? '').trim().isNotEmpty) {
-      details.add(
-        _IconTextPair(Icons.alternate_email, contact.email!.trim()),
-      );
+      details.add((Icons.alternate_email, contact.email!.trim()));
     }
 
     return Container(
@@ -2040,10 +1856,7 @@ class _ContactTile extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
         gradient: LinearGradient(
-          colors: [
-            accent.withValues(alpha: .12),
-            cs.surface,
-          ],
+          colors: [accent.withValues(alpha: .12), cs.surface],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -2097,10 +1910,7 @@ class _ContactTile extends StatelessWidget {
             ...details.map(
               (item) => Padding(
                 padding: const EdgeInsets.only(bottom: 8),
-                child: _InfoRow(
-                  icon: item.icon,
-                  text: item.text,
-                ),
+                child: _InfoRow(icon: item.$1, text: item.$2),
               ),
             ),
           ],
@@ -2119,26 +1929,21 @@ class _VehicleTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final details = <_IconTextPair>[];
+    final details = <(IconData, String)>[];
     if ((vehicle.plate ?? '').trim().isNotEmpty) {
-      details.add(
-        _IconTextPair(Icons.confirmation_number_outlined, vehicle.plate!.trim()),
-      );
+      details.add((Icons.confirmation_number_outlined, vehicle.plate!.trim()));
     }
     if ((vehicle.model ?? '').trim().isNotEmpty) {
-      details.add(
-        _IconTextPair(Icons.directions_car_outlined, vehicle.model!.trim()),
-      );
+      details.add((Icons.directions_car_outlined, vehicle.model!.trim()));
     }
     if ((vehicle.color ?? '').trim().isNotEmpty) {
-      details.add(
-        _IconTextPair(Icons.color_lens_outlined, vehicle.color!.trim()),
-      );
+      details.add((Icons.color_lens_outlined, vehicle.color!.trim()));
     }
     if ((vehicle.parkingNumber ?? '').trim().isNotEmpty) {
-      details.add(
-        _IconTextPair(Icons.local_parking_outlined, vehicle.parkingNumber!.trim()),
-      );
+      details.add((
+        Icons.local_parking_outlined,
+        vehicle.parkingNumber!.trim(),
+      ));
     }
 
     return Container(
@@ -2175,7 +1980,7 @@ class _VehicleTile extends StatelessWidget {
             ...details.map(
               (item) => Padding(
                 padding: const EdgeInsets.only(bottom: 6),
-                child: _InfoRow(icon: item.icon, text: item.text),
+                child: _InfoRow(icon: item.$1, text: item.$2),
               ),
             ),
           ],
@@ -2195,12 +2000,12 @@ class _PetTile extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    final details = <_IconTextPair>[];
+    final details = <(IconData, String)>[];
     if ((pet.type ?? '').trim().isNotEmpty) {
-      details.add(_IconTextPair(Icons.pets, pet.type!.trim()));
+      details.add((Icons.pets, pet.type!.trim()));
     }
     if ((pet.breed ?? '').trim().isNotEmpty) {
-      details.add(_IconTextPair(Icons.badge_outlined, pet.breed!.trim()));
+      details.add((Icons.badge_outlined, pet.breed!.trim()));
     }
 
     return Container(
@@ -2237,7 +2042,7 @@ class _PetTile extends StatelessWidget {
             ...details.map(
               (item) => Padding(
                 padding: const EdgeInsets.only(bottom: 6),
-                child: _InfoRow(icon: item.icon, text: item.text),
+                child: _InfoRow(icon: item.$1, text: item.$2),
               ),
             ),
           ],
@@ -2352,9 +2157,9 @@ class _InfoChip extends StatelessWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: cs.primary,
-                  fontWeight: FontWeight.w700,
-                ),
+              color: cs.primary,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),
@@ -2393,8 +2198,9 @@ String _formatInt(int? value) {
 String _formatArea(double? area) {
   if (area == null) return '—';
   final hasDecimals = area.truncateToDouble() != area;
-  final formatted =
-      hasDecimals ? area.toStringAsFixed(2) : area.toStringAsFixed(0);
+  final formatted = hasDecimals
+      ? area.toStringAsFixed(2)
+      : area.toStringAsFixed(0);
   return '$formatted m²';
 }
 
@@ -2414,9 +2220,11 @@ String _beautifyKey(String key) {
   return key
       .replaceAll('_', ' ')
       .split(' ')
-      .map((word) => word.isEmpty
-          ? word
-          : '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}')
+      .map(
+        (word) => word.isEmpty
+            ? word
+            : '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}',
+      )
       .join(' ');
 }
 
