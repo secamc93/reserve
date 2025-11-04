@@ -26,3 +26,6 @@ export * from './create-business-type.entity';
 export * from './update-business-type.entity';
 export * from './delete-business-type.entity';
 export * from './business-token.entity';
+export * from './action.entity';
+export * from './generate-password.entity';
+export * from './assign-user-role.entity';

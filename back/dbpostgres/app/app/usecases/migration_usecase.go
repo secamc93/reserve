@@ -47,7 +47,6 @@ func (uc *MigrationUseCase) MigrateDB() error {
 		&models.Room{},
 		&models.APIKey{},
 		&models.Resource{},
-		&models.BusinessTypeResourcePermitted{},
 		&models.BusinessResourceConfigured{},
 		&models.Action{},
 		&models.StaffType{}, // Genérico para todos los dominios

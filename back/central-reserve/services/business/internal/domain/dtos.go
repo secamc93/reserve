@@ -120,9 +120,9 @@ type BusinessTypeListResponse struct {
 
 // BusinessResourceConfiguredResponse representa la respuesta de recursos configurados de un negocio
 type BusinessResourceConfiguredResponse struct {
-	ResourceID   uint
-	ResourceName string
-	IsActive     bool
+	ResourceID   uint   `json:"resource_id"`
+	ResourceName string `json:"resource_name"`
+	IsActive     bool   `json:"is_active"`
 }
 
 // BusinessResourcesResponse representa la respuesta completa de recursos de un negocio
@@ -182,12 +182,12 @@ type UpdateBusinessTypeResourcesRequest struct {
 
 // BusinessWithConfiguredResourcesResponse representa un business con sus recursos configurados
 type BusinessWithConfiguredResourcesResponse struct {
-	ID        uint
-	Name      string
-	Code      string
-	Resources []BusinessResourceConfiguredResponse
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID        uint                                 `json:"id"`
+	Name      string                               `json:"name"`
+	Code      string                               `json:"code"`
+	Resources []BusinessResourceConfiguredResponse `json:"resources"`
+	CreatedAt time.Time                            `json:"created_at"`
+	UpdatedAt time.Time                            `json:"updated_at"`
 }
 
 // BusinessesWithConfiguredResourcesPaginatedResponse representa la respuesta paginada de business con recursos configurados

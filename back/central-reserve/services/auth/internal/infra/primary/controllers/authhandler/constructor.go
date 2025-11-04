@@ -13,6 +13,7 @@ type IAuthHandler interface {
 	VerifyHandler(c *gin.Context)
 	GetUserRolesPermissionsHandler(c *gin.Context)
 	ChangePasswordHandler(c *gin.Context)
+	GeneratePasswordHandler(c *gin.Context)
 	GenerateBusinessTokenHandler(c *gin.Context)
 	RegisterRoutes(v1Group *gin.RouterGroup, handler IAuthHandler, logger log.ILogger)
 	// GenerateAPIKeyHandler(c *gin.Context)

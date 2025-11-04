@@ -26,9 +26,20 @@ type BusinessResponse struct {
 
 // GetBusinessesResponse representa la respuesta para obtener múltiples negocios
 type GetBusinessesResponse struct {
-	Success bool               `json:"success"`
-	Message string             `json:"message"`
-	Data    []BusinessResponse `json:"data"`
+	Success    bool               `json:"success"`
+	Message    string             `json:"message"`
+	Data       []BusinessResponse `json:"data"`
+	Pagination *PaginationInfo    `json:"pagination,omitempty"`
+}
+
+// PaginationInfo representa información de paginación
+type PaginationInfo struct {
+	CurrentPage int   `json:"current_page"`
+	PerPage     int   `json:"per_page"`
+	Total       int64 `json:"total"`
+	LastPage    int   `json:"last_page"`
+	HasNext     bool  `json:"has_next"`
+	HasPrev     bool  `json:"has_prev"`
 }
 
 // GetBusinessResponse representa la respuesta para obtener un negocio

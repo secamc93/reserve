@@ -17,5 +17,5 @@ export * from './spinner';
 export * from './table';
 
 // Re-exportar tipos útiles
-export type { TableColumn } from './table';
+export type { TableColumn, PaginationProps } from './table';
 

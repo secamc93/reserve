@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getPermissionsListAction } from '@modules/auth/infrastructure/actions';
-import { Table, TableColumn, Spinner, Badge, Button, Input } from '@shared/ui';
+import { getPermissionsListAction, deletePermissionAction } from '@modules/auth/infrastructure/actions';
+import { Table, TableColumn, Spinner, Badge, Button, Input, ConfirmModal } from '@shared/ui';
 import { PencilIcon, TrashIcon, EyeIcon, KeyIcon } from '@heroicons/react/24/outline';
 
 interface PermissionsTableProps {
@@ -28,6 +28,8 @@ export function PermissionsTable({ token }: PermissionsTableProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [permissionToDelete, setPermissionToDelete] = useState<Permission | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const loadPermissions = async () => {
     setLoading(true);
@@ -60,30 +62,42 @@ export function PermissionsTable({ token }: PermissionsTableProps) {
     permission.action.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleDeleteClick = (permission: Permission) => {
+    setPermissionToDelete(permission);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!permissionToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const result = await deletePermissionAction({
+        id: permissionToDelete.id,
+        token,
+      });
+
+      if (result.success) {
+        // Remover el permiso de la lista
+        setPermissions(permissions.filter(p => p.id !== permissionToDelete.id));
+        setPermissionToDelete(null);
+      } else {
+        setError(result.error || 'Error al eliminar permiso');
+      }
+    } catch (err) {
+      setError('Error inesperado al eliminar permiso');
+      console.error('Error deleting permission:', err);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   // Definir las columnas de la tabla
   const columns: TableColumn<Permission>[] = [
     {
-      key: 'permission',
-      label: 'Permiso',
+      key: 'name',
+      label: 'Nombre del Permiso',
       render: (_, permission) => (
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-            <KeyIcon className="w-5 h-5 text-purple-600" />
-          </div>
-          <div>
-            <div className="font-medium text-gray-900">{permission.name}</div>
-            <div className="text-sm text-gray-500">{permission.description}</div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: 'code',
-      label: 'Código',
-      render: (code) => (
-        <Badge className="badge-secondary">
-          {code as string}
-        </Badge>
+        <div className="font-medium text-gray-900">{permission.name || 'Sin nombre'}</div>
       ),
     },
     {
@@ -126,7 +140,7 @@ export function PermissionsTable({ token }: PermissionsTableProps) {
     {
       key: 'actions',
       label: 'Acciones',
-      render: () => (
+      render: (_, permission) => (
         <div className="flex gap-2">
           <Button className="btn-outline btn-sm">
             <EyeIcon className="w-4 h-4" />
@@ -134,7 +148,11 @@ export function PermissionsTable({ token }: PermissionsTableProps) {
           <Button className="btn-outline btn-sm">
             <PencilIcon className="w-4 h-4" />
           </Button>
-          <Button className="btn-outline btn-sm">
+          <Button 
+            className="btn-outline btn-sm hover:bg-red-50 hover:text-red-600"
+            onClick={() => handleDeleteClick(permission)}
+            disabled={isDeleting}
+          >
             <TrashIcon className="w-4 h-4" />
           </Button>
         </div>
@@ -189,6 +207,18 @@ export function PermissionsTable({ token }: PermissionsTableProps) {
         loading={loading}
         keyExtractor={(permission) => permission.id}
         emptyMessage={searchTerm ? "No se encontraron permisos con los criterios de búsqueda." : "No hay permisos disponibles. Comienza creando tu primer permiso del sistema."}
+      />
+
+      {/* Modal de confirmación de eliminación */}
+      <ConfirmModal
+        isOpen={!!permissionToDelete}
+        onClose={() => setPermissionToDelete(null)}
+        onConfirm={handleDeleteConfirm}
+        title="Eliminar Permiso"
+        message={`¿Estás seguro de que quieres eliminar el permiso "${permissionToDelete?.name}"? Esta acción no se puede deshacer.`}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        type="danger"
       />
     </div>
   );

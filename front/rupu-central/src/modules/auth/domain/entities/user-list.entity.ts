@@ -26,9 +26,16 @@ export interface UserListItem {
   phone: string;
   avatar_url?: string;
   is_active: boolean;
+  is_super_user?: boolean;
   last_login_at?: string;
   roles: UserRole[];
   businesses: UserBusiness[];
+  business_role_assignments?: Array<{
+    business_id: number;
+    business_name?: string;
+    role_id: number;
+    role_name: string;
+  }>;
   created_at: string;
   updated_at: string;
 }

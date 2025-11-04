@@ -22,6 +22,17 @@ func (uc *PermissionUseCase) CreatePermission(ctx context.Context, permissionDTO
 		return "", err
 	}
 
+	// Validar que no existe un permiso con el mismo nombre
+	exists, err := uc.repository.PermissionExistsByName(ctx, permissionDTO.Name)
+	if err != nil {
+		uc.logger.Error().Err(err).Str("name", permissionDTO.Name).Msg("Error verificando existencia de permiso por nombre")
+		return "", fmt.Errorf("error verificando existencia de permiso: %w", err)
+	}
+	if exists {
+		uc.logger.Warn().Str("name", permissionDTO.Name).Msg("Ya existe un permiso con este nombre")
+		return "", fmt.Errorf("ya existe un permiso con el nombre '%s'", permissionDTO.Name)
+	}
+
 	// Generar código automáticamente si no se proporciona
 	if permissionDTO.Code == "" {
 		generatedCode, err := uc.generatePermissionCode(ctx, permissionDTO)
@@ -99,6 +110,7 @@ func dtosToPermissionEntity(permissionDTO domain.CreatePermissionDTO) domain.Per
 	}
 
 	return domain.Permission{
+		Name:             permissionDTO.Name,
 		Description:      permissionDTO.Description,
 		ResourceID:       permissionDTO.ResourceID,
 		ActionID:         permissionDTO.ActionID,

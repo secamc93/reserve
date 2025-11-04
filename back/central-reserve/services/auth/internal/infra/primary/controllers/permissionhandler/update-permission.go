@@ -4,10 +4,13 @@ import (
 	"central_reserve/services/auth/internal/infra/primary/controllers/permissionhandler/mapper"
 	"central_reserve/services/auth/internal/infra/primary/controllers/permissionhandler/request"
 	"central_reserve/services/auth/internal/infra/primary/controllers/permissionhandler/response"
+	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 // UpdatePermissionHandler maneja la solicitud de actualizar un permiso existente
@@ -62,10 +65,13 @@ func (h *PermissionHandler) UpdatePermissionHandler(c *gin.Context) {
 		statusCode := http.StatusInternalServerError
 		errorMessage := "Error interno del servidor"
 
-		if err.Error() == "permiso no encontrado" {
+		errMsg := err.Error()
+		if errors.Is(err, gorm.ErrRecordNotFound) ||
+			strings.Contains(errMsg, "record not found") ||
+			strings.Contains(errMsg, "permiso no encontrado") {
 			statusCode = http.StatusNotFound
 			errorMessage = "Permiso no encontrado"
-		} else if err.Error() == "ya existe otro permiso con el código: "+req.Code {
+		} else if strings.HasPrefix(errMsg, "ya existe otro permiso con el código: ") {
 			statusCode = http.StatusConflict
 			errorMessage = "Ya existe otro permiso con este código"
 		}

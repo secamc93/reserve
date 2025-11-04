@@ -7,4 +7,6 @@ export * from './voting-groups.response';
 export * from './votings.response';
 export * from './property-units.response';
 export * from './residents.response';
+export * from './businesses.response';
+export * from './configured-resources.response';
 

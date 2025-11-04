@@ -14,6 +14,7 @@ export interface GetUserByIdResponse {
   phone: string | null;
   avatar_url: string | null;
   is_active: boolean;
+  is_super_user?: boolean;
   last_login_at: string | null;
   created_at: string;
   updated_at: string;
@@ -31,6 +32,12 @@ export interface GetUserByIdResponse {
     logo_url: string;
     business_type_id: number;
     business_type_name: string;
+  }>;
+  business_role_assignments?: Array<{
+    business_id: number;
+    business_name?: string;
+    role_id: number;
+    role_name: string;
   }>;
 }
 

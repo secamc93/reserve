@@ -233,6 +233,8 @@ export class TokenStorage {
     email: string;
     role: string;
     avatarUrl?: string;
+    is_super_admin?: boolean;
+    scope?: string;
   }): void {
     if (typeof window === 'undefined') return;
     try {
@@ -251,6 +253,8 @@ export class TokenStorage {
     email: string;
     role: string;
     avatarUrl?: string;
+    is_super_admin?: boolean;
+    scope?: string;
   } | null {
     if (typeof window === 'undefined') return null;
     try {

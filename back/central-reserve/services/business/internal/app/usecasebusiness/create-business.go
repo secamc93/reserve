@@ -82,17 +82,17 @@ func (uc *BusinessUseCase) CreateBusiness(ctx context.Context, request domain.Bu
 		EnableReservations: request.EnableReservations,
 	}
 
-	// Guardar en repositorio
-	_, err = uc.repository.CreateBusiness(ctx, business)
+	// Guardar en repositorio (esto ahora crea también las relaciones con recursos)
+	businessID, err := uc.repository.CreateBusiness(ctx, business)
 	if err != nil {
 		uc.log.Error().Err(err).Str("name", request.Name).Msg("Error al crear negocio")
 		return nil, fmt.Errorf("error al crear negocio: %w", err)
 	}
 
 	// Obtener el negocio creado
-	created, err := uc.repository.GetBusinessByCode(ctx, request.Code)
+	created, err := uc.repository.GetBusinessByID(ctx, businessID)
 	if err != nil {
-		uc.log.Error().Err(err).Str("code", request.Code).Msg("Error al obtener negocio creado")
+		uc.log.Error().Err(err).Uint("id", businessID).Msg("Error al obtener negocio creado")
 		return nil, fmt.Errorf("error al obtener negocio creado: %w", err)
 	}
 
@@ -113,13 +113,28 @@ func (uc *BusinessUseCase) CreateBusiness(ctx context.Context, request domain.Bu
 		}
 	}
 
+	// Mapear BusinessType
+	businessType := domain.BusinessTypeResponse{
+		ID: created.BusinessTypeID,
+	}
+	if created.BusinessType != nil {
+		businessType = domain.BusinessTypeResponse{
+			ID:          created.BusinessType.ID,
+			Name:        created.BusinessType.Name,
+			Code:        created.BusinessType.Code,
+			Description: created.BusinessType.Description,
+			Icon:        created.BusinessType.Icon,
+			IsActive:    created.BusinessType.IsActive,
+			CreatedAt:   created.BusinessType.CreatedAt,
+			UpdatedAt:   created.BusinessType.UpdatedAt,
+		}
+	}
+
 	response := &domain.BusinessResponse{
-		ID:   created.ID,
-		Name: created.Name,
-		Code: created.Code,
-		BusinessType: domain.BusinessTypeResponse{
-			ID: created.BusinessTypeID, // Nota: necesitaríamos obtener el BusinessType completo
-		},
+		ID:                 created.ID,
+		Name:               created.Name,
+		Code:               created.Code,
+		BusinessType:       businessType,
 		Timezone:           created.Timezone,
 		Address:            created.Address,
 		Description:        created.Description,
@@ -138,6 +153,6 @@ func (uc *BusinessUseCase) CreateBusiness(ctx context.Context, request domain.Bu
 		UpdatedAt:          created.UpdatedAt,
 	}
 
-	uc.log.Info().Uint("id", created.ID).Str("name", request.Name).Msg("Negocio creado exitosamente")
+	uc.log.Info().Uint("id", businessID).Str("name", request.Name).Msg("Negocio creado exitosamente")
 	return response, nil
 }

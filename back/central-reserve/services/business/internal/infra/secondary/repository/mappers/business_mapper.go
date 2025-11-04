@@ -7,7 +7,7 @@ import (
 
 // ToBusinessEntity convierte models.Business a entities.Business
 func ToBusinessEntity(model models.Business) domain.Business {
-	return domain.Business{
+	business := domain.Business{
 		ID:                 model.Model.ID,
 		Name:               model.Name,
 		Code:               model.Code,
@@ -30,6 +30,23 @@ func ToBusinessEntity(model models.Business) domain.Business {
 		UpdatedAt:          model.Model.UpdatedAt,
 		DeletedAt:          &model.Model.DeletedAt.Time,
 	}
+
+	// Mapear BusinessType si existe
+	if model.BusinessType.ID != 0 {
+		business.BusinessType = &domain.BusinessType{
+			ID:          model.BusinessType.ID,
+			Name:        model.BusinessType.Name,
+			Code:        model.BusinessType.Code,
+			Description: model.BusinessType.Description,
+			Icon:        model.BusinessType.Icon,
+			IsActive:    model.BusinessType.IsActive,
+			CreatedAt:   model.BusinessType.CreatedAt,
+			UpdatedAt:   model.BusinessType.UpdatedAt,
+			DeletedAt:   &model.BusinessType.DeletedAt.Time,
+		}
+	}
+
+	return business
 }
 
 // ToBusinessEntitySlice convierte un slice de models.Business a entities.Business
@@ -66,25 +83,4 @@ func ToBusinessModel(entity domain.Business) models.Business {
 		EnablePickup:       entity.EnablePickup,
 		EnableReservations: entity.EnableReservations,
 	}
-}
-
-func ToBusinessTypeResourcePermittedEntity(model models.BusinessTypeResourcePermitted) domain.BusinessTypeResourcePermitted {
-	return domain.BusinessTypeResourcePermitted{
-		ID:             model.Model.ID,
-		BusinessTypeID: model.BusinessTypeID,
-		ResourceID:     model.ResourceID,
-		ResourceName:   model.Resource.Name,
-	}
-}
-
-func ToBusinessTypeResourcePermittedEntitySlice(models []models.BusinessTypeResourcePermitted) []domain.BusinessTypeResourcePermitted {
-	if models == nil {
-		return nil
-	}
-
-	entities := make([]domain.BusinessTypeResourcePermitted, len(models))
-	for i, model := range models {
-		entities[i] = ToBusinessTypeResourcePermittedEntity(model)
-	}
-	return entities
 }

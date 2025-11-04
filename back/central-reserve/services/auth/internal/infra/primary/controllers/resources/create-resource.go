@@ -4,6 +4,8 @@ import (
 	"central_reserve/services/auth/internal/domain"
 	"central_reserve/services/auth/internal/infra/primary/controllers/resources/request"
 	"central_reserve/services/auth/internal/infra/primary/controllers/resources/response"
+	"central_reserve/services/auth/middleware"
+	"central_reserve/shared/log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -25,12 +27,25 @@ import (
 //	@Router			/resources [post]
 //	@Security		BearerAuth
 func (h *ResourceHandler) CreateResourceHandler(c *gin.Context) {
-	h.logger.Info().Msg("Iniciando creación de recurso")
+	ctx := log.WithFunctionCtx(c.Request.Context(), "CreateResourceHandler")
+
+	// Validar que el usuario sea super admin
+	if !middleware.IsSuperAdmin(c) {
+		h.logger.Warn(ctx).Msg("Intento de creación de recurso por usuario no super admin")
+		c.JSON(http.StatusForbidden, response.ErrorResponse{
+			Success: false,
+			Message: "Solo los super usuarios pueden crear recursos",
+			Error:   "permisos insuficientes",
+		})
+		return
+	}
+
+	h.logger.Info(ctx).Msg("Iniciando creación de recurso")
 
 	// Parsear el cuerpo de la petición
 	var req request.CreateResourceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		h.logger.Error().Err(err).Msg("Error al parsear el cuerpo de la petición")
+		h.logger.Error(ctx).Err(err).Msg("Error al parsear el cuerpo de la petición")
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{
 			Success: false,
 			Message: "Datos de entrada inválidos",
@@ -49,9 +64,9 @@ func (h *ResourceHandler) CreateResourceHandler(c *gin.Context) {
 	}
 
 	// Llamar al caso de uso
-	result, err := h.usecase.CreateResource(c.Request.Context(), createDTO)
+	result, err := h.usecase.CreateResource(ctx, createDTO)
 	if err != nil {
-		h.logger.Error().Err(err).Str("name", req.Name).Msg("Error al crear recurso")
+		h.logger.Error(ctx).Err(err).Str("name", req.Name).Msg("Error al crear recurso")
 
 		// Determinar el tipo de error y el código de estado HTTP
 		statusCode := http.StatusInternalServerError
@@ -86,7 +101,7 @@ func (h *ResourceHandler) CreateResourceHandler(c *gin.Context) {
 		UpdatedAt:        result.UpdatedAt,
 	}
 
-	h.logger.Info().
+	h.logger.Info(ctx).
 		Uint("resource_id", result.ID).
 		Str("name", result.Name).
 		Msg("Recurso creado exitosamente")

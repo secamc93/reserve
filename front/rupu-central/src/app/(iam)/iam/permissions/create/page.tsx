@@ -6,8 +6,7 @@ import { useAuthSimple as useAuth } from '@modules/auth/ui';
 import { Button, Input, Select, Modal } from '@shared/ui';
 import { KeyIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useEffect } from 'react';
-import { useBusinessTypes } from '@modules/auth/ui/hooks/use-business-types';
-import { useResources } from '@modules/auth/ui/hooks/use-resources';
+import { useBusinessTypes, useResources, useActions } from '@modules/auth/ui/hooks';
 
 export default function CreatePermissionPage() {
   const { isAuthenticated, loading, token } = useAuth();
@@ -24,11 +23,12 @@ export default function CreatePermissionPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch business types and resources
+  // Fetch business types, resources, and actions
   const { businessTypes } = useBusinessTypes();
   const { resources, loading: resourcesLoading } = useResources(
     formData.businessTypeId ? parseInt(formData.businessTypeId) : undefined
   );
+  const { actions, loading: actionsLoading } = useActions();
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -104,12 +104,19 @@ export default function CreatePermissionPage() {
     try {
       const { createPermissionAction } = await import('@modules/auth/infrastructure/actions');
       
+      // Validar que el nombre no esté vacío antes de enviar
+      if (!formData.name.trim()) {
+        setErrors({ name: 'El nombre es requerido' });
+        setIsSubmitting(false);
+        return;
+      }
+      
       const result = await createPermissionAction(
         {
-          name: formData.name,
-          description: formData.description,
+          name: formData.name.trim(),
+          description: formData.description.trim(),
           resource_id: parseInt(formData.resource),
-          action_id: parseInt(formData.action), // TODO: Pendiente - implementar lista de acciones
+          action_id: parseInt(formData.action),
           scope_id: parseInt(formData.scopeId),
           business_type_id: formData.businessTypeId ? parseInt(formData.businessTypeId) : undefined,
         },
@@ -132,11 +139,10 @@ export default function CreatePermissionPage() {
 
   const actionOptions = [
     { value: '', label: 'Seleccionar acción' },
-    { value: 'create', label: 'Crear' },
-    { value: 'read', label: 'Leer' },
-    { value: 'update', label: 'Actualizar' },
-    { value: 'delete', label: 'Eliminar' },
-    { value: 'manage', label: 'Gestionar' },
+    ...(actions?.map((action) => ({
+      value: action.id.toString(),
+      label: `${action.name} - ${action.description}`,
+    })) || []),
   ];
 
   const scopeOptions = [
@@ -198,7 +204,7 @@ export default function CreatePermissionPage() {
           <textarea
             name="description"
             value={formData.description}
-            onChange={handleInputChange}
+            onChange={(e) => handleInputChange(e as unknown as React.ChangeEvent<HTMLInputElement | HTMLSelectElement>)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white min-h-[100px] resize-none"
             placeholder="Describe qué permite este permiso..."
           />
@@ -231,13 +237,14 @@ export default function CreatePermissionPage() {
 
         {/* Acción */}
         <Select
-          label="Acción"
+          label="Acción *"
           name="action"
           value={formData.action}
           onChange={handleInputChange}
           error={errors.action}
           options={actionOptions}
           required
+          disabled={actionsLoading}
         />
 
         {/* Scope */}

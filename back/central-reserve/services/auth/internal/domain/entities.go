@@ -20,12 +20,16 @@ type UsersEntity struct {
 // Permission representa un permiso del sistema
 type Permission struct {
 	ID               uint
+	Name             string
+	Code             string
 	Description      string
 	Resource         string
 	Action           string
 	ResourceID       uint
 	ActionID         uint // ID de la acción
 	ScopeID          uint
+	ScopeName        string
+	ScopeCode        string
 	BusinessTypeID   uint
 	BusinessTypeName string
 }
@@ -136,4 +140,14 @@ type Resource struct {
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
 	DeletedAt        *time.Time
+}
+
+// Action representa una acción del sistema
+type Action struct {
+	ID          uint
+	Name        string
+	Description string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	DeletedAt   *time.Time
 }

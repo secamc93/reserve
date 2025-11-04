@@ -2,16 +2,19 @@ package permissionhandler
 
 import (
 	"central_reserve/services/auth/internal/infra/primary/controllers/permissionhandler/response"
+	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 // DeletePermissionHandler maneja la solicitud de eliminar un permiso
 //
-//	@Summary		Eliminar permiso
-//	@Description	Elimina un permiso del sistema
+//	@Summary		Eliminar permiso permanentemente
+//	@Description	Elimina permanentemente un permiso del sistema (eliminación física, no se puede recuperar)
 //	@Tags			Permissions
 //	@Accept			json
 //	@Produce		json
@@ -43,7 +46,11 @@ func (h *PermissionHandler) DeletePermissionHandler(c *gin.Context) {
 		statusCode := http.StatusInternalServerError
 		errorMessage := "Error interno del servidor"
 
-		if err.Error() == "permiso no encontrado" {
+		errMsg := err.Error()
+		// Verificar si es un error de "record not found" o contiene ese mensaje
+		if errors.Is(err, gorm.ErrRecordNotFound) ||
+			strings.Contains(errMsg, "record not found") ||
+			strings.Contains(errMsg, "permiso no encontrado") {
 			statusCode = http.StatusNotFound
 			errorMessage = "Permiso no encontrado"
 		}

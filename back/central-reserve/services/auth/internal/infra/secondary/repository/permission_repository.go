@@ -93,6 +93,19 @@ func (r *Repository) GetPermissionsByResource(ctx context.Context, resource stri
 	return mappers.ToPermissionEntitySlice(permissions), nil
 }
 
+// PermissionExistsByName verifica si existe un permiso con el nombre especificado
+func (r *Repository) PermissionExistsByName(ctx context.Context, name string) (bool, error) {
+	var count int64
+	if err := r.database.Conn(ctx).
+		Model(&models.Permission{}).
+		Where("name = ?", name).
+		Count(&count).Error; err != nil {
+		r.logger.Error().Err(err).Str("name", name).Msg("Error verificando existencia de permiso por nombre")
+		return false, fmt.Errorf("error verificando existencia de permiso por nombre: %w", err)
+	}
+	return count > 0, nil
+}
+
 // CreatePermission crea un nuevo permiso
 func (r *Repository) CreatePermission(ctx context.Context, permission domain.Permission) (string, error) {
 	// Verificar que el Resource existe
@@ -111,9 +124,11 @@ func (r *Repository) CreatePermission(ctx context.Context, permission domain.Per
 
 	// Crear el modelo Permission
 	permissionModel := models.Permission{
-		ResourceID: permission.ResourceID,
-		ActionID:   permission.ActionID,
-		ScopeID:    permission.ScopeID,
+		Name:        permission.Name,
+		Description: permission.Description,
+		ResourceID:  permission.ResourceID,
+		ActionID:    permission.ActionID,
+		ScopeID:     permission.ScopeID,
 	}
 
 	// Agregar business_type_id si está presente
@@ -138,16 +153,79 @@ func (r *Repository) CreatePermission(ctx context.Context, permission domain.Per
 
 // UpdatePermission actualiza un permiso existente
 func (r *Repository) UpdatePermission(ctx context.Context, id uint, permission domain.Permission) (string, error) {
-	// Este método requiere lógica adicional para mapear nombres de recurso/acción a IDs
-	// Por ahora, retornamos un error indicando que no está implementado
-	return "", fmt.Errorf("método UpdatePermission no implementado - requiere mapeo de nombres a IDs")
-}
+	// Verificar que el permiso existe
+	var existingPermission models.Permission
+	if err := r.database.Conn(ctx).Where("id = ?", id).First(&existingPermission).Error; err != nil {
+		r.logger.Error().Uint("id", id).Err(err).Msg("Error al buscar permiso para actualizar")
+		return "", fmt.Errorf("permiso no encontrado con ID: %d", id)
+	}
 
-// DeletePermission elimina un permiso
-func (r *Repository) DeletePermission(ctx context.Context, id uint) (string, error) {
-	if err := r.database.Conn(ctx).Delete(&models.Permission{}, id).Error; err != nil {
-		r.logger.Error().Uint("id", id).Err(err).Msg("Error al eliminar permiso")
+	// Verificar que el Resource existe
+	var resource models.Resource
+	if err := r.database.Conn(ctx).Where("id = ?", permission.ResourceID).First(&resource).Error; err != nil {
+		r.logger.Error().Uint("resource_id", permission.ResourceID).Err(err).Msg("Error al buscar resource")
+		return "", fmt.Errorf("resource no encontrado con ID: %d", permission.ResourceID)
+	}
+
+	// Verificar que el Action existe
+	var action models.Action
+	if err := r.database.Conn(ctx).Where("id = ?", permission.ActionID).First(&action).Error; err != nil {
+		r.logger.Error().Uint("action_id", permission.ActionID).Err(err).Msg("Error al buscar action")
+		return "", fmt.Errorf("action no encontrada con ID: %d", permission.ActionID)
+	}
+
+	// Preparar los campos a actualizar
+	updates := map[string]interface{}{
+		"name":        permission.Name,
+		"description": permission.Description,
+		"resource_id": permission.ResourceID,
+		"action_id":   permission.ActionID,
+		"scope_id":    permission.ScopeID,
+	}
+
+	// Agregar business_type_id si está presente o si se necesita limpiar
+	if permission.BusinessTypeID > 0 {
+		btID := permission.BusinessTypeID
+		updates["business_type_id"] = &btID
+	} else if permission.BusinessTypeID == 0 && existingPermission.BusinessTypeID != nil {
+		// Si viene 0 pero el existente tiene valor, limpiar
+		updates["business_type_id"] = nil
+	}
+
+	// Actualizar el permiso
+	if err := r.database.Conn(ctx).
+		Model(&models.Permission{}).
+		Where("id = ?", id).
+		Updates(updates).Error; err != nil {
+		r.logger.Error().Err(err).Uint("id", id).Msg("Error al actualizar permiso")
 		return "", err
 	}
+
+	r.logger.Info().
+		Uint("permission_id", id).
+		Str("name", permission.Name).
+		Msg("Permiso actualizado exitosamente")
+
+	return fmt.Sprintf("Permiso actualizado con ID: %d", id), nil
+}
+
+// DeletePermission elimina un permiso permanentemente
+func (r *Repository) DeletePermission(ctx context.Context, id uint) (string, error) {
+	r.logger.Info().Uint("id", id).Msg("Eliminando permiso permanentemente")
+
+	// Usar Unscoped().Delete() para eliminación física (no soft delete)
+	// Esto activará la eliminación en cascada de las relaciones definidas en el modelo
+	result := r.database.Conn(ctx).Unscoped().Delete(&models.Permission{}, id)
+	if result.Error != nil {
+		r.logger.Error().Err(result.Error).Uint("id", id).Msg("Error al eliminar permiso")
+		return "", result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		r.logger.Warn().Uint("id", id).Msg("Permiso no encontrado para eliminar")
+		return "", fmt.Errorf("permiso con ID %d no encontrado", id)
+	}
+
+	r.logger.Info().Uint("id", id).Msg("Permiso eliminado permanentemente")
 	return fmt.Sprintf("Permiso eliminado con ID: %d", id), nil
 }

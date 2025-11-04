@@ -4,6 +4,8 @@ import (
 	"central_reserve/services/auth/internal/domain"
 	"central_reserve/services/auth/internal/infra/primary/controllers/resources/request"
 	"central_reserve/services/auth/internal/infra/primary/controllers/resources/response"
+	"central_reserve/services/auth/middleware"
+	"central_reserve/shared/log"
 	"net/http"
 	"strconv"
 
@@ -28,11 +30,24 @@ import (
 //	@Router			/resources/{id} [put]
 //	@Security		BearerAuth
 func (h *ResourceHandler) UpdateResourceHandler(c *gin.Context) {
+	ctx := log.WithFunctionCtx(c.Request.Context(), "UpdateResourceHandler")
+
+	// Validar que el usuario sea super admin
+	if !middleware.IsSuperAdmin(c) {
+		h.logger.Warn(ctx).Msg("Intento de actualización de recurso por usuario no super admin")
+		c.JSON(http.StatusForbidden, response.ErrorResponse{
+			Success: false,
+			Message: "Solo los super usuarios pueden actualizar recursos",
+			Error:   "permisos insuficientes",
+		})
+		return
+	}
+
 	// Obtener el ID del recurso de los parámetros de la URL
 	resourceIDStr := c.Param("id")
 	resourceID, err := strconv.ParseUint(resourceIDStr, 10, 32)
 	if err != nil {
-		h.logger.Error().Err(err).Str("resource_id", resourceIDStr).Msg("Error al parsear ID del recurso")
+		h.logger.Error(ctx).Err(err).Str("resource_id", resourceIDStr).Msg("Error al parsear ID del recurso")
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{
 			Success: false,
 			Message: "ID de recurso inválido",
@@ -41,12 +56,12 @@ func (h *ResourceHandler) UpdateResourceHandler(c *gin.Context) {
 		return
 	}
 
-	h.logger.Info().Uint64("resource_id", resourceID).Msg("Iniciando actualización de recurso")
+	h.logger.Info(ctx).Uint64("resource_id", resourceID).Msg("Iniciando actualización de recurso")
 
 	// Parsear el cuerpo de la petición
 	var req request.UpdateResourceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		h.logger.Error().Err(err).Uint64("resource_id", resourceID).Msg("Error al parsear el cuerpo de la petición")
+		h.logger.Error(ctx).Err(err).Uint64("resource_id", resourceID).Msg("Error al parsear el cuerpo de la petición")
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{
 			Success: false,
 			Message: "Datos de entrada inválidos",
@@ -55,7 +70,7 @@ func (h *ResourceHandler) UpdateResourceHandler(c *gin.Context) {
 		return
 	}
 
-	h.logger.Info().
+	h.logger.Info(ctx).
 		Uint64("resource_id", resourceID).
 		Str("name", req.Name).
 		Msg("Datos de actualización de recurso recibidos")
@@ -68,9 +83,9 @@ func (h *ResourceHandler) UpdateResourceHandler(c *gin.Context) {
 	}
 
 	// Llamar al caso de uso
-	result, err := h.usecase.UpdateResource(c.Request.Context(), uint(resourceID), updateDTO)
+	result, err := h.usecase.UpdateResource(ctx, uint(resourceID), updateDTO)
 	if err != nil {
-		h.logger.Error().Err(err).Uint64("resource_id", resourceID).Msg("Error al actualizar recurso")
+		h.logger.Error(ctx).Err(err).Uint64("resource_id", resourceID).Msg("Error al actualizar recurso")
 
 		// Determinar el tipo de error y el código de estado HTTP
 		statusCode := http.StatusInternalServerError
@@ -108,7 +123,7 @@ func (h *ResourceHandler) UpdateResourceHandler(c *gin.Context) {
 		UpdatedAt:        result.UpdatedAt,
 	}
 
-	h.logger.Info().
+	h.logger.Info(ctx).
 		Uint64("resource_id", resourceID).
 		Str("name", result.Name).
 		Msg("Recurso actualizado exitosamente")

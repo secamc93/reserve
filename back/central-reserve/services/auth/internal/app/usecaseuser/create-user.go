@@ -69,6 +69,7 @@ func (uc *UserUseCase) CreateUser(ctx context.Context, userDTO domain.CreateUser
 		uc.log.Error().Err(err).Msg("Error al generar contraseña aleatoria")
 		return "", "", "", fmt.Errorf("error al generar contraseña")
 	}
+	uc.log.Info().Str("email", normalizedEmail).Msg("Contraseña aleatoria generada exitosamente")
 
 	// Procesar imagen de avatar si se proporciona
 	avatarURL := userDTO.AvatarURL
@@ -105,31 +106,22 @@ func (uc *UserUseCase) CreateUser(ctx context.Context, userDTO domain.CreateUser
 		return "", "", "", err
 	}
 
-	uc.log.Info().Uint("user_id", userID).Msg("Usuario creado exitosamente, asignando roles y businesses")
+	uc.log.Info().Uint("user_id", userID).Msg("Usuario creado exitosamente, asignando businesses")
 
-	// Asignar roles si se proporcionan
-	if len(userDTO.RoleIDs) > 0 {
-		uc.log.Info().Uint("user_id", userID).Any("role_ids", userDTO.RoleIDs).Msg("Asignando roles al usuario")
-		if err := uc.repository.AssignRolesToUser(ctx, userID, userDTO.RoleIDs); err != nil {
-			uc.log.Error().Err(err).Uint("user_id", userID).Any("role_ids", userDTO.RoleIDs).Msg("Error al asignar roles al usuario")
-			// No fallar la creación del usuario si falla la asignación de roles
-		} else {
-			uc.log.Info().Uint("user_id", userID).Int("roles_count", len(userDTO.RoleIDs)).Msg("Roles asignados exitosamente")
-		}
-	}
-
-	// Asignar businesses si se proporcionan
 	if len(userDTO.BusinessIDs) > 0 {
 		uc.log.Info().Uint("user_id", userID).Any("business_ids", userDTO.BusinessIDs).Msg("Asignando businesses al usuario")
 		if err := uc.repository.AssignBusinessesToUser(ctx, userID, userDTO.BusinessIDs); err != nil {
 			uc.log.Error().Err(err).Uint("user_id", userID).Any("business_ids", userDTO.BusinessIDs).Msg("Error al asignar businesses al usuario")
-			// No fallar la creación del usuario si falla la asignación de businesses
-		} else {
-			uc.log.Info().Uint("user_id", userID).Int("businesses_count", len(userDTO.BusinessIDs)).Msg("Businesses asignados exitosamente")
+			return "", "", "", err
 		}
+		uc.log.Info().Uint("user_id", userID).Int("businesses_count", len(userDTO.BusinessIDs)).Msg("Businesses asignados exitosamente")
 	}
 
 	message := fmt.Sprintf("Usuario creado con ID: %d", userID)
-	uc.log.Info().Uint("user_id", userID).Msg("Usuario creado exitosamente")
+	uc.log.Info().
+		Uint("user_id", userID).
+		Str("email", normalizedEmail).
+		Bool("password_generated", generatedPassword != "").
+		Msg("Usuario creado exitosamente - retornando email y contraseña generada")
 	return normalizedEmail, generatedPassword, message, nil
 }

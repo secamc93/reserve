@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 // GetResources obtiene todos los recursos con filtros y paginación
@@ -211,8 +213,32 @@ func (r *Repository) CreateResource(ctx context.Context, resource domain.Resourc
 		modelResource.BusinessTypeID = &btID
 	}
 
-	if err := r.database.Conn(ctx).Create(&modelResource).Error; err != nil {
+	// Iniciar transacción para crear recurso y sus relaciones
+	tx := r.database.Conn(ctx).Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	if err := tx.Create(&modelResource).Error; err != nil {
+		tx.Rollback()
 		r.logger.Error().Err(err).Str("name", resource.Name).Msg("Error al crear recurso")
+		return 0, err
+	}
+
+	// Si el recurso tiene business_type_id, crear relaciones con todos los businesses de ese tipo
+	if resource.BusinessTypeID > 0 {
+		if err := r.createBusinessRelationsForResource(tx, modelResource.ID, resource.BusinessTypeID); err != nil {
+			tx.Rollback()
+			r.logger.Error().Err(err).Uint("resource_id", modelResource.ID).Uint("business_type_id", resource.BusinessTypeID).Msg("Error al crear relaciones con businesses")
+			return 0, err
+		}
+	}
+
+	// Confirmar transacción
+	if err := tx.Commit().Error; err != nil {
+		r.logger.Error().Err(err).Msg("Error al confirmar transacción")
 		return 0, err
 	}
 
@@ -224,30 +250,140 @@ func (r *Repository) CreateResource(ctx context.Context, resource domain.Resourc
 	return modelResource.ID, nil
 }
 
+// createBusinessRelationsForResource crea relaciones entre el recurso y todos los businesses del tipo especificado
+func (r *Repository) createBusinessRelationsForResource(tx *gorm.DB, resourceID uint, businessTypeID uint) error {
+	// Obtener todos los businesses del tipo especificado
+	var businesses []models.Business
+	if err := tx.Where("business_type_id = ?", businessTypeID).Find(&businesses).Error; err != nil {
+		r.logger.Error().Err(err).Uint("business_type_id", businessTypeID).Msg("Error al obtener businesses del tipo")
+		return err
+	}
+
+	if len(businesses) == 0 {
+		r.logger.Info().Uint("business_type_id", businessTypeID).Msg("No hay businesses de este tipo, no se crean relaciones")
+		return nil
+	}
+
+	// Crear relaciones en BusinessResourceConfigured con Active = false
+	for _, business := range businesses {
+		businessResource := models.BusinessResourceConfigured{
+			BusinessID: business.ID,
+			ResourceID: resourceID,
+			Active:     false, // Nuevo recurso inactivo por defecto
+		}
+
+		if err := tx.Create(&businessResource).Error; err != nil {
+			r.logger.Error().Err(err).
+				Uint("business_id", business.ID).
+				Uint("resource_id", resourceID).
+				Msg("Error al crear relación business-resource")
+			return err
+		}
+	}
+
+	r.logger.Info().
+		Uint("resource_id", resourceID).
+		Uint("business_type_id", businessTypeID).
+		Int("businesses_count", len(businesses)).
+		Msg("Relaciones con businesses creadas exitosamente")
+
+	return nil
+}
+
 // UpdateResource actualiza un recurso existente
 func (r *Repository) UpdateResource(ctx context.Context, id uint, resource domain.Resource) (string, error) {
 	r.logger.Info().Uint("resource_id", id).Str("name", resource.Name).Msg("Actualizando recurso")
+
+	// Obtener el recurso actual para comparar business_type_id
+	var currentResource models.Resource
+	if err := r.database.Conn(ctx).Where("id = ?", id).First(&currentResource).Error; err != nil {
+		r.logger.Error().Err(err).Uint("resource_id", id).Msg("Error al obtener recurso actual")
+		return "", fmt.Errorf("recurso con ID %d no encontrado", id)
+	}
+
+	// Iniciar transacción
+	tx := r.database.Conn(ctx).Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
 
 	updateData := map[string]interface{}{
 		"name":        resource.Name,
 		"description": resource.Description,
 	}
 
-	// Agregar business_type_id si está presente
+	var oldBusinessTypeID *uint
+	var newBusinessTypeID *uint
+
+	// Extraer business_type_id actual y nuevo
+	if currentResource.BusinessTypeID != nil {
+		oldBusinessTypeID = currentResource.BusinessTypeID
+	}
+
 	if resource.BusinessTypeID > 0 {
 		btID := resource.BusinessTypeID
 		updateData["business_type_id"] = &btID
+		newBusinessTypeID = &btID
 	}
 
-	result := r.database.Conn(ctx).Model(&models.Resource{}).Where("id = ?", id).Updates(updateData)
+	// Actualizar el recurso
+	result := tx.Model(&models.Resource{}).Where("id = ?", id).Updates(updateData)
 	if result.Error != nil {
+		tx.Rollback()
 		r.logger.Error().Err(result.Error).Uint("resource_id", id).Msg("Error al actualizar recurso")
 		return "", result.Error
 	}
 
 	if result.RowsAffected == 0 {
+		tx.Rollback()
 		r.logger.Warn().Uint("resource_id", id).Msg("Recurso no encontrado para actualizar")
 		return "", fmt.Errorf("recurso con ID %d no encontrado", id)
+	}
+
+	// Verificar si cambió el business_type_id
+	businessTypeChanged := false
+	if oldBusinessTypeID != nil && newBusinessTypeID != nil {
+		businessTypeChanged = *oldBusinessTypeID != *newBusinessTypeID
+	} else if oldBusinessTypeID == nil && newBusinessTypeID != nil {
+		businessTypeChanged = true // de NULL a un valor
+	} else if oldBusinessTypeID != nil && newBusinessTypeID == nil {
+		businessTypeChanged = true // de un valor a NULL
+	}
+
+	// Si cambió el business_type_id, actualizar las relaciones
+	if businessTypeChanged {
+		r.logger.Info().
+			Uint("resource_id", id).
+			Interface("old_business_type_id", oldBusinessTypeID).
+			Interface("new_business_type_id", newBusinessTypeID).
+			Msg("Cambió business_type_id, actualizando relaciones")
+
+		// Eliminar todas las relaciones existentes
+		if err := tx.Unscoped().Where("resource_id = ?", id).Delete(&models.BusinessResourceConfigured{}).Error; err != nil {
+			tx.Rollback()
+			r.logger.Error().Err(err).Uint("resource_id", id).Msg("Error al eliminar relaciones antiguas")
+			return "", err
+		}
+
+		// Crear nuevas relaciones si el nuevo business_type_id no es NULL
+		if newBusinessTypeID != nil {
+			if err := r.createBusinessRelationsForResource(tx, id, *newBusinessTypeID); err != nil {
+				tx.Rollback()
+				r.logger.Error().Err(err).Uint("resource_id", id).Uint("business_type_id", *newBusinessTypeID).Msg("Error al crear relaciones nuevas")
+				return "", err
+			}
+		} else {
+			// Si se cambia a NULL (recurso genérico), no se crean relaciones
+			r.logger.Info().Uint("resource_id", id).Msg("Recurso cambiado a genérico (NULL), no se crean relaciones")
+		}
+	}
+
+	// Confirmar transacción
+	if err := tx.Commit().Error; err != nil {
+		r.logger.Error().Err(err).Msg("Error al confirmar transacción")
+		return "", err
 	}
 
 	message := fmt.Sprintf("Recurso actualizado con ID: %d", id)
@@ -256,11 +392,13 @@ func (r *Repository) UpdateResource(ctx context.Context, id uint, resource domai
 	return message, nil
 }
 
-// DeleteResource elimina un recurso (soft delete)
+// DeleteResource elimina un recurso permanentemente con eliminación en cascada
 func (r *Repository) DeleteResource(ctx context.Context, id uint) (string, error) {
-	r.logger.Info().Uint("resource_id", id).Msg("Eliminando recurso")
+	r.logger.Info().Uint("resource_id", id).Msg("Eliminando recurso permanentemente")
 
-	result := r.database.Conn(ctx).Delete(&models.Resource{}, id)
+	// Usar Unscoped().Delete() para eliminación física (no soft delete)
+	// Esto activará la eliminación en cascada de las relaciones definidas en el modelo
+	result := r.database.Conn(ctx).Unscoped().Delete(&models.Resource{}, id)
 	if result.Error != nil {
 		r.logger.Error().Err(result.Error).Uint("resource_id", id).Msg("Error al eliminar recurso")
 		return "", result.Error
@@ -271,8 +409,11 @@ func (r *Repository) DeleteResource(ctx context.Context, id uint) (string, error
 		return "", fmt.Errorf("recurso con ID %d no encontrado", id)
 	}
 
-	message := fmt.Sprintf("Recurso eliminado con ID: %d", id)
-	r.logger.Info().Uint("resource_id", id).Msg("Recurso eliminado exitosamente")
+	message := fmt.Sprintf("Recurso eliminado permanentemente con ID: %d", id)
+	r.logger.Info().
+		Uint("resource_id", id).
+		Int64("rows_affected", result.RowsAffected).
+		Msg("Recurso eliminado exitosamente (eliminación en cascada aplicada)")
 
 	return message, nil
 }

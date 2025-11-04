@@ -18,7 +18,7 @@ import {
 } from '../../../infrastructure/actions/users';
 
 export interface UseUserCrudOptions {
-  onSuccess?: (message: string) => void;
+  onSuccess?: (message: string, data?: { email?: string; password?: string; message?: string }) => void;
   onError?: (error: string) => void;
 }
 
@@ -28,7 +28,7 @@ export interface UseUserCrudReturn {
   error: string | null;
   
   // Acciones
-  createUser: (input: CreateUserInput) => Promise<boolean>;
+  createUser: (input: CreateUserInput) => Promise<{ success: boolean; data?: { email?: string; password?: string; message?: string } }>;
   updateUser: (input: UpdateUserInput) => Promise<boolean>;
   deleteUser: (input: DeleteUserInput) => Promise<boolean>;
   getUserById: (input: GetUserByIdInput) => Promise<any>;
@@ -44,7 +44,7 @@ export function useUserCrud(options: UseUserCrudOptions = {}) {
   const [error, setError] = useState<string | null>(null);
 
   // Crear usuario
-  const createUser = useCallback(async (input: CreateUserInput): Promise<boolean> => {
+  const createUser = useCallback(async (input: CreateUserInput): Promise<{ success: boolean; data?: { email?: string; password?: string; message?: string } }> => {
     setLoading(true);
     setError(null);
 
@@ -52,19 +52,19 @@ export function useUserCrud(options: UseUserCrudOptions = {}) {
       const result = await createUserAction(input);
 
       if (result.success) {
-        onSuccess?.('Usuario creado exitosamente');
-        return true;
+        onSuccess?.('Usuario creado exitosamente', result.data);
+        return { success: true, data: result.data };
       } else {
         const errorMsg = result.error || 'Error al crear usuario';
         setError(errorMsg);
         onError?.(errorMsg);
-        return false;
+        return { success: false };
       }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
       setError(errorMsg);
       onError?.(errorMsg);
-      return false;
+      return { success: false };
     } finally {
       setLoading(false);
     }

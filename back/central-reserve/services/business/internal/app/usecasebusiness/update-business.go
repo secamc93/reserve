@@ -195,13 +195,28 @@ func (uc *BusinessUseCase) UpdateBusiness(ctx context.Context, id uint, request 
 		}
 	}
 
+	// Mapear BusinessType
+	businessType := domain.BusinessTypeResponse{
+		ID: updated.BusinessTypeID,
+	}
+	if updated.BusinessType != nil {
+		businessType = domain.BusinessTypeResponse{
+			ID:          updated.BusinessType.ID,
+			Name:        updated.BusinessType.Name,
+			Code:        updated.BusinessType.Code,
+			Description: updated.BusinessType.Description,
+			Icon:        updated.BusinessType.Icon,
+			IsActive:    updated.BusinessType.IsActive,
+			CreatedAt:   updated.BusinessType.CreatedAt,
+			UpdatedAt:   updated.BusinessType.UpdatedAt,
+		}
+	}
+
 	response := &domain.BusinessResponse{
-		ID:   updated.ID,
-		Name: updated.Name,
-		Code: updated.Code,
-		BusinessType: domain.BusinessTypeResponse{
-			ID: updated.BusinessTypeID,
-		},
+		ID:                 updated.ID,
+		Name:               updated.Name,
+		Code:               updated.Code,
+		BusinessType:       businessType,
 		Timezone:           updated.Timezone,
 		Address:            updated.Address,
 		Description:        updated.Description,

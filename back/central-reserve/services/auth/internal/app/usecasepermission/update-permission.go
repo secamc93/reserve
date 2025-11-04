@@ -3,7 +3,10 @@ package usecasepermission
 import (
 	"central_reserve/services/auth/internal/domain"
 	"context"
+	"errors"
 	"fmt"
+
+	"gorm.io/gorm"
 )
 
 // UpdatePermission actualiza un permiso existente
@@ -23,8 +26,12 @@ func (uc *PermissionUseCase) UpdatePermission(ctx context.Context, id uint, perm
 	// Verificar que el permiso existe
 	existingPermission, err := uc.repository.GetPermissionByID(ctx, id)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			uc.logger.Warn().Uint("id", id).Msg("Permiso no encontrado para actualizar")
+			return "", fmt.Errorf("permiso no encontrado")
+		}
 		uc.logger.Error().Uint("id", id).Err(err).Msg("Error al obtener permiso para actualizar")
-		return "", fmt.Errorf("permiso no encontrado: %w", err)
+		return "", err
 	}
 
 	// Actualizar los campos del permiso existente
@@ -63,10 +70,19 @@ func validateUpdatePermission(permission domain.UpdatePermissionDTO) error {
 
 // updatePermissionFields actualiza los campos de un permiso existente
 func updatePermissionFields(existing domain.Permission, updateDTO domain.UpdatePermissionDTO) domain.Permission {
+	businessTypeID := existing.BusinessTypeID
+	if updateDTO.BusinessTypeID != nil {
+		businessTypeID = *updateDTO.BusinessTypeID
+	}
+
 	return domain.Permission{
-		ID:          existing.ID,
-		Description: updateDTO.Description,
-		ResourceID:  updateDTO.ResourceID,
-		ActionID:    updateDTO.ActionID,
+		ID:               existing.ID,
+		Name:             updateDTO.Name,
+		Description:      updateDTO.Description,
+		ResourceID:       updateDTO.ResourceID,
+		ActionID:         updateDTO.ActionID,
+		ScopeID:          updateDTO.ScopeID,
+		BusinessTypeID:   businessTypeID,
+		BusinessTypeName: existing.BusinessTypeName,
 	}
 }

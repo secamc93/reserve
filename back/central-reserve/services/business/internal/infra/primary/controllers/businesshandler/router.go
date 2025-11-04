@@ -12,9 +12,14 @@ func (h *BusinessHandler) RegisterRoutes(router *gin.RouterGroup, handler IBusin
 
 	// Rutas de Business
 	businesses.GET("", middleware.JWT(), handler.GetBusinesses)
+	businesses.GET("/configured-resources", middleware.JWT(), handler.GetBusinessesConfiguredResourcesHandler)
+	businesses.GET("/:id/configured-resources", middleware.JWT(), handler.GetBusinessConfiguredResourcesByIDHandler)
 	businesses.GET("/:id", middleware.JWT(), handler.GetBusinessByIDHandler)
 	businesses.POST("", middleware.JWT(), handler.CreateBusinessHandler)
 	businesses.PUT("/:id", middleware.JWT(), handler.UpdateBusinessHandler)
 	businesses.DELETE("/:id", middleware.JWT(), handler.DeleteBusinessHandler)
 
+	// Rutas para activar/desactivar recursos de business
+	businesses.PUT("/configured-resources/:resource_id/activate", middleware.JWT(), handler.ActivateBusinessResourceHandler)
+	businesses.PUT("/configured-resources/:resource_id/deactivate", middleware.JWT(), handler.DeactivateBusinessResourceHandler)
 }

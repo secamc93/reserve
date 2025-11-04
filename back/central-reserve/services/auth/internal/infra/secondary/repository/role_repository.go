@@ -4,6 +4,7 @@ import (
 	"central_reserve/services/auth/internal/domain"
 	"context"
 	"dbpostgres/app/infra/models"
+	"fmt"
 )
 
 // CreateRole crea un nuevo rol en la base de datos
@@ -300,6 +301,23 @@ func (r *Repository) GetSystemRoles(ctx context.Context) ([]domain.Role, error) 
 	}
 
 	return domainRoles, nil
+}
+
+// RoleExistsByName verifica si existe un rol con el nombre especificado
+// excludeID permite excluir un rol específico (útil para actualizaciones)
+func (r *Repository) RoleExistsByName(ctx context.Context, name string, excludeID *uint) (bool, error) {
+	var count int64
+	query := r.database.Conn(ctx).Model(&models.Role{}).Where("name = ?", name)
+
+	if excludeID != nil {
+		query = query.Where("id != ?", *excludeID)
+	}
+
+	if err := query.Count(&count).Error; err != nil {
+		r.logger.Error().Err(err).Str("name", name).Msg("Error verificando existencia de rol por nombre")
+		return false, fmt.Errorf("error verificando existencia de rol por nombre: %w", err)
+	}
+	return count > 0, nil
 }
 
 // UpdateRole actualiza un rol existente en la base de datos

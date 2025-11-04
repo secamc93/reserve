@@ -163,7 +163,58 @@ func (uc *UserUseCase) GetUserByID(ctx context.Context, id uint) (*domain.UserDT
 		}
 	}
 
-	uc.log.Info().Uint("id", id).Msg("Usuario obtenido exitosamente")
+	// Construir assignments SIEMPRE desde user_businesses; si no hay rol asignado, dejarlo en blanco
+	if len(userDTO.Businesses) > 0 {
+		assignments := make([]domain.BusinessRoleAssignmentDetailed, 0, len(userDTO.Businesses))
+		for _, b := range userDTO.Businesses {
+			assignment := domain.BusinessRoleAssignmentDetailed{
+				BusinessID:   b.ID,
+				BusinessName: b.Name,
+			}
+			if b.Role != nil {
+				assignment.RoleID = b.Role.ID
+				assignment.RoleName = b.Role.Name
+			}
+			assignments = append(assignments, assignment)
+		}
+		userDTO.BusinessRoleAssignments = assignments
+	}
+
+	// Determinar si es super usuario: tiene un rol con scope_id = 1 o scope code = "platform"
+	isSuperUser := false
+	var superUserRoleID uint
+	for _, role := range userDTO.Roles {
+		if role.ScopeID == 1 || role.ScopeCode == "platform" {
+			isSuperUser = true
+			superUserRoleID = role.ID
+			break
+		}
+	}
+
+	userDTO.IsSuperUser = isSuperUser
+
+	// Si es super usuario, agregar assignment con business_id = 0
+	if isSuperUser {
+		// Buscar el nombre del rol
+		roleName := ""
+		for _, role := range userDTO.Roles {
+			if role.ID == superUserRoleID {
+				roleName = role.Name
+				break
+			}
+		}
+
+		superUserAssignment := domain.BusinessRoleAssignmentDetailed{
+			BusinessID:   0,
+			BusinessName: "", // Super usuarios no tienen business específico
+			RoleID:       superUserRoleID,
+			RoleName:     roleName,
+		}
+		// Agregar al inicio del array
+		userDTO.BusinessRoleAssignments = append([]domain.BusinessRoleAssignmentDetailed{superUserAssignment}, userDTO.BusinessRoleAssignments...)
+	}
+
+	uc.log.Info().Uint("id", id).Bool("is_super_user", isSuperUser).Msg("Usuario obtenido exitosamente")
 	return &userDTO, nil
 }
 

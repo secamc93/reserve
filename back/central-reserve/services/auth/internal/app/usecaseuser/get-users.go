@@ -120,64 +120,137 @@ func (uc *UserUseCase) GetUsers(ctx context.Context, filters domain.UserFilters)
 			}
 		}
 
-		// Obtener businesses del usuario
-		businesses, err := uc.repository.GetUserBusinesses(ctx, user.ID)
+		// Obtener relaciones business_staff directamente (incluye roles)
+		staffRelationships, err := uc.repository.GetBusinessStaffRelationships(ctx, user.ID)
 		if err != nil {
-			uc.log.Error().Uint("user_id", user.ID).Err(err).Msg("Error al obtener businesses del usuario")
+			uc.log.Error().Uint("user_id", user.ID).Err(err).Msg("Error al obtener relaciones business_staff del usuario")
 		} else {
-			// Convertir businesses a DTOs
-			userDTOs[i].Businesses = make([]domain.BusinessDTO, len(businesses))
-			for j, business := range businesses {
-				navbarURL := business.NavbarImageURL
-				if navbarURL != "" && !strings.HasPrefix(navbarURL, "http") {
-					base := strings.TrimRight(uc.getMediaBaseURL(), "/")
-					if base != "" {
-						navbarURL = fmt.Sprintf("%s/%s", base, strings.TrimLeft(navbarURL, "/"))
-					}
-				}
+			// Construir assignments desde business_staff (incluye roles)
+			assignments := make([]domain.BusinessRoleAssignmentDetailed, 0)
+			businessMap := make(map[uint]domain.BusinessDTO)
 
-				// Obtener el rol del usuario en este business desde business_staff
-				var role *domain.RoleDTO
-				businessRole, err := uc.repository.GetUserRoleByBusiness(ctx, user.ID, business.ID)
-				if err == nil && businessRole != nil {
-					role = &domain.RoleDTO{
-						ID:               businessRole.ID,
-						Name:             businessRole.Name,
-						Description:      businessRole.Description,
-						Level:            businessRole.Level,
-						IsSystem:         businessRole.IsSystem,
-						ScopeID:          businessRole.ScopeID,
-						ScopeName:        businessRole.ScopeName,
-						ScopeCode:        businessRole.ScopeCode,
-						BusinessTypeID:   businessRole.BusinessTypeID,
-						BusinessTypeName: businessRole.BusinessTypeName,
+			// Primero obtener businesses para construir BusinessDTO
+			businesses, err := uc.repository.GetUserBusinesses(ctx, user.ID)
+			if err == nil {
+				for _, business := range businesses {
+					navbarURL := business.NavbarImageURL
+					if navbarURL != "" && !strings.HasPrefix(navbarURL, "http") {
+						base := strings.TrimRight(uc.getMediaBaseURL(), "/")
+						if base != "" {
+							navbarURL = fmt.Sprintf("%s/%s", base, strings.TrimLeft(navbarURL, "/"))
+						}
 					}
-				}
 
-				userDTOs[i].Businesses[j] = domain.BusinessDTO{
-					ID:                 business.ID,
-					Name:               business.Name,
-					Code:               business.Code,
-					BusinessTypeID:     business.BusinessTypeID,
-					Timezone:           business.Timezone,
-					Address:            business.Address,
-					Description:        business.Description,
-					LogoURL:            business.LogoURL,
-					PrimaryColor:       business.PrimaryColor,
-					SecondaryColor:     business.SecondaryColor,
-					TertiaryColor:      business.TertiaryColor,
-					QuaternaryColor:    business.QuaternaryColor,
-					NavbarImageURL:     navbarURL,
-					CustomDomain:       business.CustomDomain,
-					IsActive:           business.IsActive,
-					EnableDelivery:     business.EnableDelivery,
-					EnablePickup:       business.EnablePickup,
-					EnableReservations: business.EnableReservations,
-					BusinessTypeName:   business.BusinessTypeName,
-					BusinessTypeCode:   business.BusinessTypeCode,
-					Role:               role,
+					businessMap[business.ID] = domain.BusinessDTO{
+						ID:                 business.ID,
+						Name:               business.Name,
+						Code:               business.Code,
+						BusinessTypeID:     business.BusinessTypeID,
+						Timezone:           business.Timezone,
+						Address:            business.Address,
+						Description:        business.Description,
+						LogoURL:            business.LogoURL,
+						PrimaryColor:       business.PrimaryColor,
+						SecondaryColor:     business.SecondaryColor,
+						TertiaryColor:      business.TertiaryColor,
+						QuaternaryColor:    business.QuaternaryColor,
+						NavbarImageURL:     navbarURL,
+						CustomDomain:       business.CustomDomain,
+						IsActive:           business.IsActive,
+						EnableDelivery:     business.EnableDelivery,
+						EnablePickup:       business.EnablePickup,
+						EnableReservations: business.EnableReservations,
+						BusinessTypeName:   business.BusinessTypeName,
+						BusinessTypeCode:   business.BusinessTypeCode,
+						Role:               nil, // Se completará desde staffRelationships
+					}
 				}
 			}
+
+			// Construir assignments desde staffRelationships (solo los que tienen business_id)
+			for _, rel := range staffRelationships {
+				if rel.BusinessID == 0 {
+					continue // Saltar super usuarios (business_id = 0)
+				}
+
+				// Buscar el rol completo si existe
+				var role *domain.RoleDTO
+				if rel.RoleID > 0 {
+					// Obtener información completa del rol
+					roleInfo, err := uc.repository.GetRoleByID(ctx, rel.RoleID)
+					if err == nil && roleInfo != nil {
+						role = &domain.RoleDTO{
+							ID:               roleInfo.ID,
+							Name:             roleInfo.Name,
+							Description:      roleInfo.Description,
+							Level:            roleInfo.Level,
+							IsSystem:         roleInfo.IsSystem,
+							ScopeID:          roleInfo.ScopeID,
+							ScopeName:        roleInfo.ScopeName,
+							ScopeCode:        roleInfo.ScopeCode,
+							BusinessTypeID:   roleInfo.BusinessTypeID,
+							BusinessTypeName: roleInfo.BusinessTypeName,
+						}
+					} else {
+						uc.log.Warn().
+							Uint("user_id", user.ID).
+							Uint("role_id", rel.RoleID).
+							Err(err).
+							Msg("No se pudo obtener información completa del rol")
+					}
+				}
+
+				// Actualizar el Role en el BusinessDTO si existe
+				if businessDTO, exists := businessMap[rel.BusinessID]; exists {
+					businessDTO.Role = role
+					businessMap[rel.BusinessID] = businessDTO
+				}
+
+				// Agregar al assignment (usar directamente rel que ya tiene RoleID y RoleName)
+				assignments = append(assignments, rel)
+			}
+
+			// Convertir businessMap a slice
+			businessDTOs := make([]domain.BusinessDTO, 0, len(businessMap))
+			for _, b := range businessMap {
+				businessDTOs = append(businessDTOs, b)
+			}
+			userDTOs[i].Businesses = businessDTOs
+			userDTOs[i].BusinessRoleAssignments = assignments
+		}
+
+		// Determinar si es super usuario: tiene un rol con scope_id = 1 o scope code = "platform"
+		isSuperUser := false
+		var superUserRoleID uint
+		for _, role := range userDTOs[i].Roles {
+			if role.ScopeID == 1 || role.ScopeCode == "platform" {
+				isSuperUser = true
+				superUserRoleID = role.ID
+				break
+			}
+		}
+
+		userDTOs[i].IsSuperUser = isSuperUser
+
+		// Si es super usuario, agregar assignment con business_id = 0
+		if isSuperUser {
+			// Buscar el nombre del rol
+			roleName := ""
+			for _, role := range userDTOs[i].Roles {
+				if role.ID == superUserRoleID {
+					roleName = role.Name
+					break
+				}
+			}
+
+			superUserAssignment := domain.BusinessRoleAssignmentDetailed{
+				BusinessID:   0,
+				BusinessName: "", // Super usuarios no tienen business específico
+				RoleID:       superUserRoleID,
+				RoleName:     roleName,
+			}
+			// Agregar al inicio del array
+			userDTOs[i].BusinessRoleAssignments = append([]domain.BusinessRoleAssignmentDetailed{superUserAssignment}, userDTOs[i].BusinessRoleAssignments...)
 		}
 	}
 

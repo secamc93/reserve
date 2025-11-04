@@ -144,7 +144,7 @@ export function UsersFilters({ filters, onFiltersChange, onClearFilters }: Users
               </label>
               <Select
                 value={localFilters.is_active?.toString() || ''}
-                onChange={(value) => handleFilterChange('is_active', value === '' ? undefined : value === 'true')}
+                onChange={(e) => handleFilterChange('is_active', e.target.value === '' ? undefined : e.target.value === 'true')}
                 options={statusOptions}
                 className="input"
               />
@@ -157,7 +157,7 @@ export function UsersFilters({ filters, onFiltersChange, onClearFilters }: Users
               </label>
               <Select
                 value={localFilters.role_id?.toString() || ''}
-                onChange={(value) => handleFilterChange('role_id', value === '' ? undefined : parseInt(value))}
+                onChange={(e) => handleFilterChange('role_id', e.target.value === '' ? undefined : parseInt(e.target.value))}
                 options={roleOptions}
                 className="input"
               />
@@ -170,7 +170,7 @@ export function UsersFilters({ filters, onFiltersChange, onClearFilters }: Users
               </label>
               <Select
                 value={localFilters.business_id?.toString() || ''}
-                onChange={(value) => handleFilterChange('business_id', value === '' ? undefined : parseInt(value))}
+                onChange={(e) => handleFilterChange('business_id', e.target.value === '' ? undefined : parseInt(e.target.value))}
                 options={businessOptions}
                 className="input"
               />
@@ -194,7 +194,7 @@ export function UsersFilters({ filters, onFiltersChange, onClearFilters }: Users
 
             {/* Contador de filtros activos */}
             {activeFiltersCount > 0 && (
-              <Badge variant="secondary" className="text-xs">
+              <Badge type="secondary" className="text-xs">
                 {activeFiltersCount} filtro{activeFiltersCount !== 1 ? 's' : ''} activo{activeFiltersCount !== 1 ? 's' : ''}
               </Badge>
             )}
@@ -203,7 +203,7 @@ export function UsersFilters({ filters, onFiltersChange, onClearFilters }: Users
           {/* Botón de limpiar filtros */}
           {activeFiltersCount > 0 && (
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={handleClearFilters}
               className="text-red-600 hover:text-red-700 hover:bg-red-50"
@@ -218,7 +218,7 @@ export function UsersFilters({ filters, onFiltersChange, onClearFilters }: Users
         {activeFiltersCount > 0 && (
           <div className="flex flex-wrap gap-2 pt-2">
             {localFilters.name && (
-              <Badge variant="outline" className="text-xs">
+              <Badge type="secondary" className="text-xs">
                 Nombre: {localFilters.name}
                 <button
                   onClick={() => handleFilterChange('name', '')}
@@ -229,7 +229,7 @@ export function UsersFilters({ filters, onFiltersChange, onClearFilters }: Users
               </Badge>
             )}
             {localFilters.email && (
-              <Badge variant="outline" className="text-xs">
+              <Badge type="secondary" className="text-xs">
                 Email: {localFilters.email}
                 <button
                   onClick={() => handleFilterChange('email', '')}
@@ -240,7 +240,7 @@ export function UsersFilters({ filters, onFiltersChange, onClearFilters }: Users
               </Badge>
             )}
             {localFilters.phone && (
-              <Badge variant="outline" className="text-xs">
+              <Badge type="secondary" className="text-xs">
                 Teléfono: {localFilters.phone}
                 <button
                   onClick={() => handleFilterChange('phone', '')}
@@ -251,7 +251,7 @@ export function UsersFilters({ filters, onFiltersChange, onClearFilters }: Users
               </Badge>
             )}
             {localFilters.is_active !== undefined && (
-              <Badge variant="outline" className="text-xs">
+              <Badge type="secondary" className="text-xs">
                 Estado: {localFilters.is_active ? 'Activo' : 'Inactivo'}
                 <button
                   onClick={() => handleFilterChange('is_active', undefined)}
@@ -262,7 +262,7 @@ export function UsersFilters({ filters, onFiltersChange, onClearFilters }: Users
               </Badge>
             )}
             {localFilters.role_id && (
-              <Badge variant="outline" className="text-xs">
+              <Badge type="secondary" className="text-xs">
                 Rol: {roleOptions.find(r => r.value === localFilters.role_id?.toString())?.label}
                 <button
                   onClick={() => handleFilterChange('role_id', undefined)}
@@ -273,7 +273,7 @@ export function UsersFilters({ filters, onFiltersChange, onClearFilters }: Users
               </Badge>
             )}
             {localFilters.business_id && (
-              <Badge variant="outline" className="text-xs">
+              <Badge type="secondary" className="text-xs">
                 Negocio: {businessOptions.find(b => b.value === localFilters.business_id?.toString())?.label}
                 <button
                   onClick={() => handleFilterChange('business_id', undefined)}

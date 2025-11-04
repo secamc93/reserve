@@ -2,7 +2,8 @@
  * Caso de uso: Crear permiso
  */
 
-import { ICreatePermissionRepository, CreatePermissionInput, CreatePermissionResult } from '../../domain/ports/permissions/create-permission.repository';
+import { ICreatePermissionRepository } from '../../domain/ports/permissions/create-permission.repository';
+import { CreatePermissionInput, CreatePermissionResult } from '../../domain/entities/create-permission.entity';
 
 export class CreatePermissionUseCase {
   constructor(private readonly createPermissionRepository: ICreatePermissionRepository) {}

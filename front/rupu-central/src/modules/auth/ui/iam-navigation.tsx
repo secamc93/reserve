@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { UsersIcon, ShieldCheckIcon, KeyIcon, CubeTransparentIcon, BuildingOfficeIcon } from '@heroicons/react/24/outline';
+import { UsersIcon, ShieldCheckIcon, KeyIcon, CubeTransparentIcon, BuildingOfficeIcon, ShoppingBagIcon } from '@heroicons/react/24/outline';
 
 export function IAMNavigation() {
   const pathname = usePathname();
@@ -37,6 +37,12 @@ export function IAMNavigation() {
       href: '/iam/business-types',
       icon: BuildingOfficeIcon,
       current: pathname === '/iam/business-types' || pathname.startsWith('/iam/business-types')
+    },
+    {
+      name: 'Negocios',
+      href: '/iam/businesses',
+      icon: ShoppingBagIcon,
+      current: pathname === '/iam/businesses' || pathname.startsWith('/iam/businesses')
     }
   ];
 

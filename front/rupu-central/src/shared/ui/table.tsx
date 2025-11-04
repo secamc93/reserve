@@ -15,6 +15,17 @@ export interface TableColumn<T = Record<string, unknown>> {
   align?: 'left' | 'center' | 'right';
 }
 
+export interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
+  onPageChange: (page: number) => void;
+  onItemsPerPageChange?: (itemsPerPage: number) => void;
+  showItemsPerPageSelector?: boolean;
+  itemsPerPageOptions?: number[];
+}
+
 interface TableProps<T = Record<string, unknown>> {
   columns: TableColumn<T>[];
   data: T[];
@@ -22,6 +33,7 @@ interface TableProps<T = Record<string, unknown>> {
   emptyMessage?: string;
   loading?: boolean;
   onRowClick?: (row: T, index: number) => void;
+  pagination?: PaginationProps;
 }
 
 export function Table<T = Record<string, unknown>>({ 
@@ -31,11 +43,79 @@ export function Table<T = Record<string, unknown>>({
   emptyMessage = 'No hay datos disponibles',
   loading = false,
   onRowClick,
+  pagination,
 }: TableProps<T>) {
   const alignClass = {
     left: 'text-left',
     center: 'text-center',
     right: 'text-right',
+  };
+
+  const renderPagination = () => {
+    if (!pagination) return null;
+
+    const {
+      currentPage,
+      totalPages,
+      totalItems,
+      itemsPerPage,
+      onPageChange,
+      onItemsPerPageChange,
+      showItemsPerPageSelector = true,
+      itemsPerPageOptions = [10, 20, 50, 100],
+    } = pagination;
+
+    // Solo mostrar paginación si hay más de una página o hay items
+    if (totalPages <= 1 && totalItems === 0) return null;
+
+    return (
+      <div className="pagination-alt border-t border-gray-200 rounded-t-none mt-0">
+        <div className="flex items-center justify-between w-full flex-wrap gap-4">
+          {/* Información y navegación - Centrado */}
+          <div className="flex items-center gap-3 flex-1 justify-center">
+            <button
+              onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1 || loading}
+              className="pagination-button"
+            >
+              ← Anterior
+            </button>
+            <span className="pagination-info">
+              Página {currentPage} de {totalPages} ({totalItems} registros totales)
+            </span>
+            <button
+              onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages || loading}
+              className="pagination-button"
+            >
+              Siguiente →
+            </button>
+          </div>
+          {/* Selector de elementos por página */}
+          {showItemsPerPageSelector && onItemsPerPageChange && (
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-700">Mostrar:</label>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  onItemsPerPageChange(parseInt(e.target.value));
+                  onPageChange(1); // Reset a página 1 cuando cambia items per page
+                }}
+                className="input text-sm px-3 py-2"
+                disabled={loading}
+              >
+                {itemsPerPageOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+              <span className="text-sm text-gray-700">por página</span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -109,6 +189,8 @@ export function Table<T = Record<string, unknown>>({
           </tbody>
         </table>
       </div>
+      {/* Paginación integrada */}
+      {renderPagination()}
     </div>
   );
 }

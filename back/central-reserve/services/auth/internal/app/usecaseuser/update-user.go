@@ -61,8 +61,8 @@ func (uc *UserUseCase) UpdateUser(ctx context.Context, id uint, userDTO domain.U
 				}
 			}
 		}
-	} else if userDTO.AvatarURL == "" && existingUser.AvatarURL != "" {
-		// Si se quiere eliminar la imagen (AvatarURL vacío) y existe una imagen anterior
+	} else if userDTO.RemoveAvatar {
+		// Eliminar avatar solo si el cliente lo solicita explícitamente
 		uc.log.Info().Uint("user_id", id).Str("old_avatar", existingUser.AvatarURL).Msg("Eliminando imagen de avatar")
 
 		// Verificar si la imagen anterior es un path relativo (no URL completa)
@@ -84,10 +84,7 @@ func (uc *UserUseCase) UpdateUser(ctx context.Context, id uint, userDTO domain.U
 		IsActive:  userDTO.IsActive,
 	}
 
-	// Solo actualizar contraseña si se proporciona una nueva
-	if userDTO.Password != "" {
-		user.Password = userDTO.Password
-	}
+	// No se permite actualizar contraseña por este endpoint
 
 	// Actualizar usuario
 	message, err := uc.repository.UpdateUser(ctx, id, user)
@@ -96,20 +93,14 @@ func (uc *UserUseCase) UpdateUser(ctx context.Context, id uint, userDTO domain.U
 		return "", err
 	}
 
-	// Asignar roles si se proporcionan
-	if len(userDTO.RoleIDs) > 0 {
-		if err := uc.repository.AssignRolesToUser(ctx, id, userDTO.RoleIDs); err != nil {
-			uc.log.Error().Err(err).Msg("Error al asignar roles al usuario")
-			// No fallar la actualización del usuario si falla la asignación de roles
-		}
-	}
-
-	// Asignar businesses si se proporcionan
+	// Actualizar relación de businesses
 	if len(userDTO.BusinessIDs) > 0 {
+		uc.log.Info().Uint("user_id", id).Any("business_ids", userDTO.BusinessIDs).Msg("Actualizando businesses del usuario")
 		if err := uc.repository.AssignBusinessesToUser(ctx, id, userDTO.BusinessIDs); err != nil {
-			uc.log.Error().Err(err).Msg("Error al asignar businesses al usuario")
-			// No fallar la actualización del usuario si falla la asignación de businesses
+			uc.log.Error().Err(err).Uint("user_id", id).Any("business_ids", userDTO.BusinessIDs).Msg("Error al asignar businesses al usuario")
+			return "", err
 		}
+		uc.log.Info().Uint("user_id", id).Int("businesses_count", len(userDTO.BusinessIDs)).Msg("Businesses actualizados exitosamente")
 	}
 
 	uc.log.Info().Uint("user_id", id).Msg("Usuario actualizado exitosamente")

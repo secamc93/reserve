@@ -46,6 +46,8 @@ func (h *AuthHandler) GetUserRolesPermissionsHandler(c *gin.Context) {
 		return
 	}
 
+	h.logger.Info(ctx).Uint("user_id", uint(userID)).Uint("business_id", businessID).Msg("Obteniendo roles y permisos desde business_staff")
+
 	// Obtener el token del header de autorización (ya validado por el middleware)
 	token := c.GetHeader("Authorization")
 	if len(token) > 7 && token[:7] == "Bearer " {

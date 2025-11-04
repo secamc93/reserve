@@ -2,7 +2,8 @@
  * Repositorio para crear permisos
  */
 
-import { ICreatePermissionRepository, CreatePermissionInput, CreatePermissionResult } from '../../../domain/ports/permissions/create-permission.repository';
+import { ICreatePermissionRepository } from '../../../domain/ports/permissions/create-permission.repository';
+import { CreatePermissionInput, CreatePermissionResult } from '../../../domain/entities/create-permission.entity';
 import { env, logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
 
 interface BackendCreatePermissionRequest {
@@ -36,14 +37,20 @@ export class CreatePermissionRepository implements ICreatePermissionRepository {
     const url = `${env.API_BASE_URL}/permissions`;
     const startTime = Date.now();
     
+    // No enviar code, el backend lo genera automáticamente
     const requestBody: BackendCreatePermissionRequest = {
-      name: input.name,
-      description: input.description,
+      name: input.name.trim(), // Asegurar que el nombre no tenga espacios extras
+      description: input.description?.trim(),
       resource_id: input.resource_id,
       action_id: input.action_id,
       scope_id: input.scope_id,
       business_type_id: input.business_type_id,
     };
+
+    // Validar que el nombre no esté vacío
+    if (!requestBody.name) {
+      throw new Error('El nombre del permiso es requerido');
+    }
     
     logHttpRequest({
       method: 'POST',
@@ -79,12 +86,33 @@ export class CreatePermissionRepository implements ICreatePermissionRepository {
         status: response.status,
         statusText: response.statusText,
         duration,
-        summary: `Permiso "${backendResponse.data?.name}" creado exitosamente`,
+        summary: `Permiso "${backendResponse.data?.name || input.name}" creado exitosamente`,
         data: backendResponse,
       });
 
+      // El backend puede devolver solo success y message sin data
+      // En ese caso, construimos el objeto de respuesta con los datos que enviamos
       if (!backendResponse.data) {
-        throw new Error('Respuesta inválida del servidor');
+        // Intentar extraer el ID del mensaje si está disponible
+        // El mensaje suele ser: "Permiso creado con ID: 26"
+        let permissionId = 0;
+        const idMatch = backendResponse.message?.match(/ID:\s*(\d+)/);
+        if (idMatch) {
+          permissionId = parseInt(idMatch[1], 10);
+        }
+
+        return {
+          success: true,
+          data: {
+            id: permissionId,
+            name: input.name,
+            description: input.description || '',
+            resource_id: input.resource_id,
+            action_id: input.action_id,
+            scope_id: input.scope_id,
+            business_type_id: input.business_type_id,
+          },
+        };
       }
 
       return {

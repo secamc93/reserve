@@ -3,10 +3,13 @@ package permissionhandler
 import (
 	"central_reserve/services/auth/internal/infra/primary/controllers/permissionhandler/mapper"
 	"central_reserve/services/auth/internal/infra/primary/controllers/permissionhandler/response"
+	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 // GetPermissionByIDHandler maneja la solicitud de obtener un permiso por ID
@@ -44,7 +47,10 @@ func (h *PermissionHandler) GetPermissionByIDHandler(c *gin.Context) {
 		statusCode := http.StatusInternalServerError
 		errorMessage := "Error interno del servidor"
 
-		if err.Error() == "permiso no encontrado" {
+		errMsg := err.Error()
+		if errors.Is(err, gorm.ErrRecordNotFound) ||
+			strings.Contains(errMsg, "record not found") ||
+			strings.Contains(errMsg, "permiso no encontrado") {
 			statusCode = http.StatusNotFound
 			errorMessage = "Permiso no encontrado"
 		}

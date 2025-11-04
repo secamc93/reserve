@@ -11,6 +11,8 @@ import { deleteUserAction } from './delete-user.action';
 import { updateUserAction } from './update-user.action';
 import { getUserByIdAction } from './get-user-by-id.action';
 import { businessTokenAction } from './business-token.action';
+import { generatePasswordAction } from './generate-password.action';
+import { assignUserRoleAction } from './assign-user-role.action';
 
 // Interfaz para actions de usuarios
 export interface UsersActionsInput {
@@ -21,6 +23,8 @@ export interface UsersActionsInput {
   updateUser: (input: Parameters<typeof updateUserAction>[0]) => ReturnType<typeof updateUserAction>;
   getUserById: (input: Parameters<typeof getUserByIdAction>[0]) => ReturnType<typeof getUserByIdAction>;
   businessToken: (input: Parameters<typeof businessTokenAction>[0], sessionToken: string) => ReturnType<typeof businessTokenAction>;
+  generatePassword: (input: Parameters<typeof generatePasswordAction>[0]) => ReturnType<typeof generatePasswordAction>;
+  assignUserRole: (input: Parameters<typeof assignUserRoleAction>[0]) => ReturnType<typeof assignUserRoleAction>;
 }
 
 // Constructor centralizado para actions de usuarios
@@ -65,6 +69,16 @@ export class UsersActions implements UsersActionsInput {
   async businessToken(input: Parameters<typeof businessTokenAction>[0], sessionToken: string) {
     return businessTokenAction(input, sessionToken);
   }
+
+  // Generate Password
+  async generatePassword(input: Parameters<typeof generatePasswordAction>[0]) {
+    return generatePasswordAction(input, this.authUseCases);
+  }
+
+  // Assign User Role
+  async assignUserRole(input: Parameters<typeof assignUserRoleAction>[0]) {
+    return assignUserRoleAction(input, this.authUseCases);
+  }
 }
 
 // Exportar actions individuales
@@ -75,6 +89,8 @@ export * from './delete-user.action';
 export * from './update-user.action';
 export * from './get-user-by-id.action';
 export * from './business-token.action';
+export * from './generate-password.action';
+export * from './assign-user-role.action';
 
 // Exportar interfaces de request y response
 export * from './request';

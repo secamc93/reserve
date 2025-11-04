@@ -10,8 +10,7 @@ export interface UpdateUserParams {
   phone?: string;
   avatarFile?: File | null;
   is_active?: boolean;
-  role_ids?: string; // Comma-separated string of role IDs
-  business_ids?: string; // Comma-separated string of business IDs
+  business_ids?: string; // IDs separados por comas
 }
 
 export interface UpdateUserResponse {

@@ -6,4 +6,5 @@ export * from './horizontal-properties.repository';
 export * from './voting-groups.repository';
 export * from './votings.repository';
 export * from './residents.repository';
+export * from './businesses.repository';
 

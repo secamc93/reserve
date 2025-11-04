@@ -7,14 +7,14 @@ import (
 	"strings"
 )
 
-// GetBusinesses obtiene todos los negocios
-func (uc *BusinessUseCase) GetBusinesses(ctx context.Context) ([]domain.BusinessResponse, error) {
-	uc.log.Info().Msg("Obteniendo negocios")
+// GetBusinesses obtiene todos los negocios con paginación
+func (uc *BusinessUseCase) GetBusinesses(ctx context.Context, page, perPage int, name string, businessTypeID *uint, isActive *bool) ([]domain.BusinessResponse, int64, error) {
+	uc.log.Info().Int("page", page).Int("per_page", perPage).Str("name", name).Msg("Obteniendo negocios")
 
-	businesses, err := uc.repository.GetBusinesses(ctx)
+	businesses, total, err := uc.repository.GetBusinesses(ctx, page, perPage, name, businessTypeID, isActive)
 	if err != nil {
 		uc.log.Error().Err(err).Msg("Error al obtener negocios")
-		return nil, fmt.Errorf("error al obtener negocios: %w", err)
+		return nil, 0, fmt.Errorf("error al obtener negocios: %w", err)
 	}
 
 	// Convertir entidades a DTOs
@@ -35,13 +35,28 @@ func (uc *BusinessUseCase) GetBusinesses(ctx context.Context) ([]domain.Business
 			}
 		}
 
+		// Mapear BusinessType
+		businessType := domain.BusinessTypeResponse{
+			ID: business.BusinessTypeID,
+		}
+		if business.BusinessType != nil {
+			businessType = domain.BusinessTypeResponse{
+				ID:          business.BusinessType.ID,
+				Name:        business.BusinessType.Name,
+				Code:        business.BusinessType.Code,
+				Description: business.BusinessType.Description,
+				Icon:        business.BusinessType.Icon,
+				IsActive:    business.BusinessType.IsActive,
+				CreatedAt:   business.BusinessType.CreatedAt,
+				UpdatedAt:   business.BusinessType.UpdatedAt,
+			}
+		}
+
 		response[i] = domain.BusinessResponse{
-			ID:   business.ID,
-			Name: business.Name,
-			Code: business.Code,
-			BusinessType: domain.BusinessTypeResponse{
-				ID: business.BusinessTypeID, // Nota: necesitaríamos obtener el BusinessType completo
-			},
+			ID:                 business.ID,
+			Name:               business.Name,
+			Code:               business.Code,
+			BusinessType:       businessType,
 			Timezone:           business.Timezone,
 			Address:            business.Address,
 			Description:        business.Description,
@@ -61,6 +76,6 @@ func (uc *BusinessUseCase) GetBusinesses(ctx context.Context) ([]domain.Business
 		}
 	}
 
-	uc.log.Info().Int("count", len(response)).Msg("Negocios obtenidos exitosamente")
-	return response, nil
+	uc.log.Info().Int("count", len(response)).Int64("total", total).Msg("Negocios obtenidos exitosamente")
+	return response, total, nil
 }

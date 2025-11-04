@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect } from 'react';
 import { getResourcesAction } from '../../infrastructure/actions';
 import { TokenStorage } from '@shared/config';
@@ -35,7 +37,15 @@ export function useResources(businessTypeId?: number) {
         });
 
         if (result.success && result.data) {
-          setResources(result.data.resources);
+          // Normalizar fechas a Date y claves a camelCase
+          const normalized = (result.data.resources as any[]).map((r) => ({
+            id: r.id,
+            name: r.name,
+            description: r.description ?? '',
+            createdAt: new Date(r.created_at ?? r.createdAt),
+            updatedAt: new Date(r.updated_at ?? r.updatedAt),
+          }));
+          setResources(normalized);
         } else {
           setError(result.error || 'Error al cargar recursos');
         }

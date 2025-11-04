@@ -63,13 +63,14 @@ export class GetUserByIdRepository {
         id: user.id,
         name: user.name,
         email: user.email,
-        phone: user.phone || '',
-        avatar_url: user.avatar_url || undefined,
+        phone: user.phone || null,
+        avatar_url: user.avatar_url || null,
         is_active: user.is_active,
-        last_login_at: user.last_login_at || undefined,
+        is_super_user: user.is_super_admin,
+        last_login_at: user.last_login_at || null,
         created_at: user.created_at,
         updated_at: user.updated_at,
-        roles: user.roles.map((role: any) => ({
+        roles: (user.roles || []).map((role: any) => ({
           id: role.id,
           name: role.name,
           description: role.description,
@@ -77,12 +78,18 @@ export class GetUserByIdRepository {
           is_system: role.is_system,
           scope_id: role.scope_id,
         })),
-        businesses: user.businesses.map((business: any) => ({
+        businesses: (user.businesses || []).map((business: any) => ({
           id: business.id,
           name: business.name,
           logo_url: business.logo_url,
           business_type_id: business.business_type_id,
           business_type_name: business.business_type_name,
+        })),
+        business_role_assignments: (user.business_role_assignments || []).map((bra: any) => ({
+          business_id: bra.business_id,
+          business_name: bra.business_name,
+          role_id: bra.role_id,
+          role_name: bra.role_name,
         })),
       };
     } catch (error) {

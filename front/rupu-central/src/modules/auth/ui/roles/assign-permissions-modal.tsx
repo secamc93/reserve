@@ -56,6 +56,10 @@ export function AssignPermissionsModal({
       const allPermissionsResult = await getPermissionsListAction(token);
       
       // Cargar permisos asignados al rol
+      if (!roleId) {
+        console.error('❌ roleId es null');
+        return;
+      }
       const rolePermissionsResult = await getRolePermissionsAction(
         { role_id: roleId },
         token

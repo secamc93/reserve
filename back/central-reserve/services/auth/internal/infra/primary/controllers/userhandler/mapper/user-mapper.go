@@ -4,6 +4,7 @@ import (
 	"central_reserve/services/auth/internal/domain"
 	"central_reserve/services/auth/internal/infra/primary/controllers/userhandler/request"
 	"central_reserve/services/auth/internal/infra/primary/controllers/userhandler/response"
+	"encoding/json"
 	"strconv"
 	"strings"
 )
@@ -42,28 +43,21 @@ func ToUserFilters(req request.GetUsersRequest) domain.UserFilters {
 
 // ToCreateUserDTO convierte CreateUserRequest a CreateUserDTO del dominio
 func ToCreateUserDTO(req request.CreateUserRequest) domain.CreateUserDTO {
-	// Parsear role_ids desde string separado por comas
-	var roleIDs []uint
-	if req.RoleIDs != "" {
-		roleIDsStr := strings.Split(req.RoleIDs, ",")
-		for _, idStr := range roleIDsStr {
-			idStr = strings.TrimSpace(idStr)
-			if idStr != "" {
-				if id, err := strconv.ParseUint(idStr, 10, 32); err == nil {
-					roleIDs = append(roleIDs, uint(id))
+	businessIDs := make([]uint, 0)
+	if len(req.BusinessIDs) > 0 {
+		businessIDs = append(businessIDs, req.BusinessIDs...)
+	} else if req.BusinessIDsRaw != "" {
+		var arr []uint
+		if err := json.Unmarshal([]byte(req.BusinessIDsRaw), &arr); err == nil {
+			businessIDs = append(businessIDs, arr...)
+		} else {
+			parts := strings.Split(req.BusinessIDsRaw, ",")
+			for _, p := range parts {
+				p = strings.TrimSpace(p)
+				if p == "" {
+					continue
 				}
-			}
-		}
-	}
-
-	// Parsear business_ids desde string separado por comas
-	var businessIDs []uint
-	if req.BusinessIDs != "" {
-		businessIDsStr := strings.Split(req.BusinessIDs, ",")
-		for _, idStr := range businessIDsStr {
-			idStr = strings.TrimSpace(idStr)
-			if idStr != "" {
-				if id, err := strconv.ParseUint(idStr, 10, 32); err == nil {
+				if id, err := strconv.ParseUint(p, 10, 32); err == nil {
 					businessIDs = append(businessIDs, uint(id))
 				}
 			}
@@ -77,35 +71,27 @@ func ToCreateUserDTO(req request.CreateUserRequest) domain.CreateUserDTO {
 		AvatarURL:   req.AvatarURL,
 		AvatarFile:  req.AvatarFile,
 		IsActive:    req.IsActive,
-		RoleIDs:     roleIDs,
 		BusinessIDs: businessIDs,
 	}
 }
 
 // ToUpdateUserDTO convierte UpdateUserRequest a UpdateUserDTO del dominio
 func ToUpdateUserDTO(req request.UpdateUserRequest) domain.UpdateUserDTO {
-	// Parsear role_ids desde string separado por comas
-	var roleIDs []uint
-	if req.RoleIDs != "" {
-		roleIDsStr := strings.Split(req.RoleIDs, ",")
-		for _, idStr := range roleIDsStr {
-			idStr = strings.TrimSpace(idStr)
-			if idStr != "" {
-				if id, err := strconv.ParseUint(idStr, 10, 32); err == nil {
-					roleIDs = append(roleIDs, uint(id))
+	businessIDs := make([]uint, 0)
+	if len(req.BusinessIDs) > 0 {
+		businessIDs = append(businessIDs, req.BusinessIDs...)
+	} else if req.BusinessIDsRaw != "" {
+		var arr []uint
+		if err := json.Unmarshal([]byte(req.BusinessIDsRaw), &arr); err == nil {
+			businessIDs = append(businessIDs, arr...)
+		} else {
+			parts := strings.Split(req.BusinessIDsRaw, ",")
+			for _, p := range parts {
+				p = strings.TrimSpace(p)
+				if p == "" {
+					continue
 				}
-			}
-		}
-	}
-
-	// Parsear business_ids desde string separado por comas
-	var businessIDs []uint
-	if req.BusinessIDs != "" {
-		businessIDsStr := strings.Split(req.BusinessIDs, ",")
-		for _, idStr := range businessIDsStr {
-			idStr = strings.TrimSpace(idStr)
-			if idStr != "" {
-				if id, err := strconv.ParseUint(idStr, 10, 32); err == nil {
+				if id, err := strconv.ParseUint(p, 10, 32); err == nil {
 					businessIDs = append(businessIDs, uint(id))
 				}
 			}
@@ -113,85 +99,66 @@ func ToUpdateUserDTO(req request.UpdateUserRequest) domain.UpdateUserDTO {
 	}
 
 	return domain.UpdateUserDTO{
-		Name:        req.Name,
-		Email:       req.Email,
-		Password:    req.Password,
-		Phone:       req.Phone,
-		AvatarURL:   req.AvatarURL,
-		AvatarFile:  req.AvatarFile,
-		IsActive:    req.IsActive,
-		RoleIDs:     roleIDs,
-		BusinessIDs: businessIDs,
+		Name:         req.Name,
+		Email:        req.Email,
+		Phone:        req.Phone,
+		AvatarURL:    req.AvatarURL,
+		AvatarFile:   req.AvatarFile,
+		RemoveAvatar: req.RemoveAvatar,
+		IsActive:     req.IsActive,
+		BusinessIDs:  businessIDs,
 	}
 }
 
 // ToUserResponse convierte UserDTO a UserResponse
 func ToUserResponse(dto domain.UserDTO) response.UserResponse {
-	roles := make([]response.RoleInfo, len(dto.Roles))
-	for i, role := range dto.Roles {
-		roles[i] = response.RoleInfo{
-			ID:          role.ID,
-			Name:        role.Name,
-			Description: role.Description,
-			Level:       role.Level,
-			IsSystem:    role.IsSystem,
-			ScopeID:     role.ScopeID,
-		}
-	}
-
-	businesses := make([]response.BusinessInfo, len(dto.Businesses))
-	for i, business := range dto.Businesses {
-		var roleInfo *response.RoleInfoDetailed
-		if business.Role != nil {
-			roleInfo = &response.RoleInfoDetailed{
-				ID:               business.Role.ID,
-				Name:             business.Role.Name,
-				Description:      business.Role.Description,
-				Level:            business.Role.Level,
-				IsSystem:         business.Role.IsSystem,
-				ScopeID:          business.Role.ScopeID,
-				ScopeName:        business.Role.ScopeName,
-				ScopeCode:        business.Role.ScopeCode,
-				BusinessTypeID:   business.Role.BusinessTypeID,
-				BusinessTypeName: business.Role.BusinessTypeName,
-			}
-		}
-
-		businesses[i] = response.BusinessInfo{
-			ID:               business.ID,
-			Name:             business.Name,
-			LogoURL:          business.LogoURL,
-			BusinessTypeID:   business.BusinessTypeID,
-			BusinessTypeName: business.BusinessTypeName,
-			Role:             roleInfo,
+	// Convertir BusinessRoleAssignments
+	businessRoleAssignments := make([]response.BusinessRoleAssignmentResponse, len(dto.BusinessRoleAssignments))
+	for i, assignment := range dto.BusinessRoleAssignments {
+		businessRoleAssignments[i] = response.BusinessRoleAssignmentResponse{
+			BusinessID:   assignment.BusinessID,
+			BusinessName: assignment.BusinessName,
+			RoleID:       assignment.RoleID,
+			RoleName:     assignment.RoleName,
 		}
 	}
 
 	return response.UserResponse{
-		ID:          dto.ID,
-		Name:        dto.Name,
-		Email:       dto.Email,
-		Phone:       dto.Phone,
-		AvatarURL:   dto.AvatarURL,
-		IsActive:    dto.IsActive,
-		LastLoginAt: dto.LastLoginAt,
-		Roles:       roles,
-		Businesses:  businesses,
-		CreatedAt:   dto.CreatedAt,
-		UpdatedAt:   dto.UpdatedAt,
+		ID:                      dto.ID,
+		Name:                    dto.Name,
+		Email:                   dto.Email,
+		Phone:                   dto.Phone,
+		AvatarURL:               dto.AvatarURL,
+		IsActive:                dto.IsActive,
+		IsSuperUser:             dto.IsSuperUser,
+		LastLoginAt:             dto.LastLoginAt,
+		BusinessRoleAssignments: businessRoleAssignments,
+		CreatedAt:               dto.CreatedAt,
+		UpdatedAt:               dto.UpdatedAt,
 	}
 }
 
-// ToUserListResponse convierte un UserListDTO a UserListResponse
+// ToUserListResponse convierte un UserListDTO a UserListResponse con paginación
 func ToUserListResponse(userListDTO *domain.UserListDTO) response.UserListResponse {
 	userResponses := make([]response.UserResponse, len(userListDTO.Users))
 	for i, user := range userListDTO.Users {
 		userResponses[i] = ToUserResponse(user)
 	}
 
+	// Calcular has_next y has_prev
+	hasNext := userListDTO.Page < userListDTO.TotalPages
+	hasPrev := userListDTO.Page > 1
+
 	return response.UserListResponse{
 		Success: true,
 		Data:    userResponses,
-		Count:   int(userListDTO.Total),
+		Pagination: response.PaginationInfo{
+			CurrentPage: userListDTO.Page,
+			PerPage:     userListDTO.PageSize,
+			Total:       userListDTO.Total,
+			LastPage:    userListDTO.TotalPages,
+			HasNext:     hasNext,
+			HasPrev:     hasPrev,
+		},
 	}
 }

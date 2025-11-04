@@ -36,26 +36,44 @@ type BusinessInfo struct {
 	Role             *RoleInfoDetailed `json:"role,omitempty"` // Rol del usuario en este business
 }
 
-// UserResponse representa la respuesta de un usuario
-type UserResponse struct {
-	ID          uint           `json:"id"`
-	Name        string         `json:"name"`
-	Email       string         `json:"email"`
-	Phone       string         `json:"phone"`
-	AvatarURL   string         `json:"avatar_url"`
-	IsActive    bool           `json:"is_active"`
-	LastLoginAt *time.Time     `json:"last_login_at"`
-	Roles       []RoleInfo     `json:"roles"`
-	Businesses  []BusinessInfo `json:"businesses"`
-	CreatedAt   time.Time      `json:"created_at"`
-	UpdatedAt   time.Time      `json:"updated_at"`
+// BusinessRoleAssignmentResponse representa una asignación business-rol en la respuesta
+type BusinessRoleAssignmentResponse struct {
+	BusinessID   uint   `json:"business_id"`
+	BusinessName string `json:"business_name,omitempty"`
+	RoleID       uint   `json:"role_id"`
+	RoleName     string `json:"role_name,omitempty"`
 }
 
-// UserListResponse representa la respuesta de una lista de usuarios
+// UserResponse representa la respuesta de un usuario
+type UserResponse struct {
+	ID                      uint                             `json:"id"`
+	Name                    string                           `json:"name"`
+	Email                   string                           `json:"email"`
+	Phone                   string                           `json:"phone"`
+	AvatarURL               string                           `json:"avatar_url"`
+	IsActive                bool                             `json:"is_active"`
+	IsSuperUser             bool                             `json:"is_super_user"`
+	LastLoginAt             *time.Time                       `json:"last_login_at"`
+	BusinessRoleAssignments []BusinessRoleAssignmentResponse `json:"business_role_assignments"`
+	CreatedAt               time.Time                        `json:"created_at"`
+	UpdatedAt               time.Time                        `json:"updated_at"`
+}
+
+// PaginationInfo representa información de paginación
+type PaginationInfo struct {
+	CurrentPage int   `json:"current_page"`
+	PerPage     int   `json:"per_page"`
+	Total       int64 `json:"total"`
+	LastPage    int   `json:"last_page"`
+	HasNext     bool  `json:"has_next"`
+	HasPrev     bool  `json:"has_prev"`
+}
+
+// UserListResponse representa la respuesta de una lista de usuarios con paginación
 type UserListResponse struct {
-	Success bool           `json:"success"`
-	Data    []UserResponse `json:"data"`
-	Count   int            `json:"count"`
+	Success    bool           `json:"success"`
+	Data       []UserResponse `json:"data"`
+	Pagination PaginationInfo `json:"pagination"`
 }
 
 // UserSuccessResponse representa la respuesta exitosa de un usuario individual

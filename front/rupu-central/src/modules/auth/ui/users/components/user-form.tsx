@@ -11,14 +11,19 @@ import {
   EnvelopeIcon, 
   PhoneIcon, 
   PhotoIcon,
-  XMarkIcon
+  XMarkIcon,
+  DocumentDuplicateIcon,
+  CheckIcon
 } from '@heroicons/react/24/outline';
 import { Button } from '@shared/ui/button';
 import { Input } from '@shared/ui/input';
 import { Select } from '@shared/ui/select';
 import { FileInput } from '@shared/ui/file-input';
 import { FormModal } from '@shared/ui/form-modal';
+import { Modal } from '@shared/ui/modal';
 import { useUserCrud } from '../hooks/use-user-crud';
+import { TokenStorage } from '../../../infrastructure/storage/token.storage';
+// Roles y asignaciones removidas del flujo actual
 
 interface UserFormProps {
   isOpen: boolean;
@@ -29,10 +34,22 @@ interface UserFormProps {
 }
 
 export function UserForm({ isOpen, onClose, onSuccess, user, mode }: UserFormProps) {
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [createdUserData, setCreatedUserData] = useState<{ email?: string; password?: string; message?: string } | null>(null);
+  const [emailCopied, setEmailCopied] = useState(false);
+  const [passwordCopied, setPasswordCopied] = useState(false);
+
   const { createUser, updateUser, loading, error, clearError } = useUserCrud({
-    onSuccess: () => {
-      onSuccess();
-      onClose();
+    onSuccess: (message, data) => {
+      if (mode === 'create' && data?.password) {
+        // Mostrar modal con contraseña solo al crear
+        setCreatedUserData(data);
+        setShowPasswordModal(true);
+      } else {
+        // Para edición, cerrar normalmente
+        onSuccess();
+        onClose();
+      }
     }
   });
 
@@ -41,10 +58,13 @@ export function UserForm({ isOpen, onClose, onSuccess, user, mode }: UserFormPro
     name: '',
     email: '',
     phone: '',
-    role: '',
-    business_ids: '',
+    is_active: true as boolean,
     avatarFile: null as File | null
   });
+  // Negocios (multi-selección -> CSV)
+  const [businessOptions, setBusinessOptions] = useState<Array<{ value: string; label: string }>>([]);
+  const [selectedBusinessId, setSelectedBusinessId] = useState<string>('');
+  const [selectedBusinesses, setSelectedBusinesses] = useState<Array<{ id: number; name: string }>>([]);
 
   // Estado de validación
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -56,23 +76,93 @@ export function UserForm({ isOpen, onClose, onSuccess, user, mode }: UserFormPro
         name: user.name || '',
         email: user.email || '',
         phone: user.phone || '',
-        role: user.roles?.[0]?.name || '',
-        business_ids: user.businesses?.map((b: any) => b.id).join(',') || '',
+        is_active: user.is_active ?? true,
         avatarFile: null
       });
+      
+      // Función helper para obtener el nombre del negocio
+      const getBusinessName = (businessId: number): string => {
+        // Primero buscar en businessOptions (si ya está cargado)
+        const option = businessOptions.find(b => b.value === String(businessId));
+        if (option?.label) {
+          return option.label;
+        }
+        // Si no está en businessOptions, buscar en business_role_assignments
+        if (Array.isArray(user.business_role_assignments)) {
+          const bra = user.business_role_assignments.find((br: any) => br.business_id === businessId);
+          if (bra?.business_name) {
+            return bra.business_name;
+          }
+        }
+        // Si no está en ningún lado, buscar en businesses
+        if (Array.isArray(user.businesses)) {
+          const bus = user.businesses.find((b: any) => b.id === businessId);
+          if (bus?.name) {
+            return bus.name;
+          }
+        }
+        // Fallback
+        return `Negocio ${businessId}`;
+      };
+      
+      // Intentar cargar desde business_role_assignments primero (más confiable)
+      if (Array.isArray(user.business_role_assignments) && user.business_role_assignments.length > 0) {
+        const pre = user.business_role_assignments
+          .map((bra: any) => {
+            const businessId = Number(bra?.business_id);
+            if (!Number.isFinite(businessId) || businessId <= 0) return null;
+            const name = getBusinessName(businessId);
+            return {
+              id: businessId,
+              name: String(name || `Negocio ${businessId}`)
+            };
+          })
+          .filter((b: any) => b !== null && Number.isFinite(b?.id) && b.id > 0) as Array<{ id: number; name: string }>;
+        setSelectedBusinesses(pre);
+      } else if (Array.isArray(user.businesses) && user.businesses.length > 0) {
+        const pre = user.businesses
+          .map((b: any) => {
+            const businessId = Number(b?.id);
+            if (!Number.isFinite(businessId) || businessId <= 0) return null;
+            const name = getBusinessName(businessId);
+            return {
+              id: businessId,
+              name: String(name || `Negocio ${businessId}`)
+            };
+          })
+          .filter((b: any) => b !== null && Number.isFinite(b?.id) && b.id > 0) as Array<{ id: number; name: string }>;
+        setSelectedBusinesses(pre);
+      } else {
+        setSelectedBusinesses([]);
+      }
     } else {
       setFormData({
         name: '',
         email: '',
         phone: '',
-        role: '',
-        business_ids: '',
+        is_active: true,
         avatarFile: null
       });
+      setSelectedBusinesses([]);
     }
     setErrors({});
     clearError();
-  }, [mode, user, clearError]);
+  }, [mode, user, clearError, businessOptions]);
+
+  // Cargar lista de negocios para selección
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = TokenStorage.getToken();
+        if (!token) return;
+        const { getBusinessesAction } = await import('../../../../property-horizontal/infrastructure/actions/businesses/get-businesses.action');
+        const res = await getBusinessesAction({ token, page: 1, page_size: 200, name: '' } as any);
+        if (res.success && res.data) {
+          setBusinessOptions(res.data.businesses.map((b: any) => ({ value: String(b.id), label: b.name })));
+        }
+      } catch {}
+    })();
+  }, []);
 
   // Validar formulario
   const validateForm = () => {
@@ -88,17 +178,14 @@ export function UserForm({ isOpen, onClose, onSuccess, user, mode }: UserFormPro
       newErrors.email = 'El email no es válido';
     }
 
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'El teléfono es requerido';
+    if (formData.phone && formData.phone.trim().length > 0) {
+      const digits = formData.phone.replace(/\D/g, '');
+      if (digits.length !== 10) {
+        newErrors.phone = 'El teléfono debe tener exactamente 10 dígitos';
+      }
     }
 
-    if (!formData.role.trim()) {
-      newErrors.role = 'El rol es requerido';
-    }
-
-    if (!formData.business_ids.trim()) {
-      newErrors.business_ids = 'Los negocios son requeridos';
-    }
+    // Sin validación de asignaciones
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -120,36 +207,64 @@ export function UserForm({ isOpen, onClose, onSuccess, user, mode }: UserFormPro
       return;
     }
 
-    const userData = {
-      ...formData,
-      token: 'your-token-here' // Esto debería venir de un contexto de auth
+    const token = TokenStorage.getToken() || '';
+    const business_ids = selectedBusinesses.map(b => b.id).join(',');
+    const userData: any = {
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone || undefined,
+      is_active: formData.is_active,
+      avatarFile: formData.avatarFile,
+      business_ids: business_ids || undefined,
+      token,
     };
 
-    let success = false;
+    let result;
     
     if (mode === 'create') {
-      success = await createUser(userData);
+      result = await createUser(userData);
+      // El modal se mostrará desde el callback onSuccess
     } else if (mode === 'edit' && user) {
-      success = await updateUser({
+      const success = await updateUser({
         ...userData,
         id: user.id
       });
-    }
-
-    if (success) {
-      onSuccess();
+      if (success) {
+        onSuccess();
+        onClose();
+      }
     }
   };
 
-  // Opciones de roles (esto debería venir de una API)
-  const roleOptions = [
-    { value: 'admin', label: 'Administrador' },
-    { value: 'user', label: 'Usuario' },
-    { value: 'manager', label: 'Gerente' },
-    { value: 'viewer', label: 'Visualizador' }
-  ];
+  // (Asignaciones removidas)
+
+  const handleCopyPassword = () => {
+    if (createdUserData?.password) {
+      navigator.clipboard.writeText(createdUserData.password);
+      setPasswordCopied(true);
+      setTimeout(() => setPasswordCopied(false), 2000);
+    }
+  };
+
+  const handleCopyEmail = () => {
+    if (createdUserData?.email) {
+      navigator.clipboard.writeText(createdUserData.email);
+      setEmailCopied(true);
+      setTimeout(() => setEmailCopied(false), 2000);
+    }
+  };
+
+  const handleClosePasswordModal = () => {
+    setShowPasswordModal(false);
+    setCreatedUserData(null);
+    setEmailCopied(false);
+    setPasswordCopied(false);
+    onSuccess();
+    onClose();
+  };
 
   return (
+    <>
     <FormModal
       isOpen={isOpen}
       onClose={onClose}
@@ -232,41 +347,104 @@ export function UserForm({ isOpen, onClose, onSuccess, user, mode }: UserFormPro
           )}
         </div>
 
-        {/* Rol */}
+        {/* Negocios (se envían como CSV en business_ids) */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Rol *
-          </label>
-          <Select
-            value={formData.role}
-            onChange={(value) => handleChange('role', value)}
-            options={roleOptions}
-            placeholder="Selecciona un rol"
-            className={errors.role ? 'input-error' : 'input'}
-          />
-          {errors.role && (
-            <p className="mt-1 text-sm text-red-600">{errors.role}</p>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Negocios</label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
+            <Select
+              value={selectedBusinessId}
+              onChange={(e) => {
+                const value = e.target.value;
+                console.log('🔍 Select onChange - value:', value);
+                setSelectedBusinessId(value);
+              }}
+              options={[{ value: '', label: 'Selecciona un negocio' }, ...businessOptions]}
+              placeholder="Selecciona un negocio"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                console.log('🔍 Agregar negocio - selectedBusinessId:', selectedBusinessId);
+                console.log('🔍 businessOptions:', businessOptions);
+                
+                if (!selectedBusinessId || selectedBusinessId === '') {
+                  console.log('❌ No hay negocio seleccionado');
+                  return;
+                }
+                
+                const businessIdNum = Number(selectedBusinessId);
+                console.log('🔍 businessIdNum:', businessIdNum);
+                
+                if (!Number.isFinite(businessIdNum) || businessIdNum <= 0) {
+                  console.log('❌ ID inválido:', businessIdNum);
+                  return;
+                }
+                
+                const exists = selectedBusinesses.some(b => b.id === businessIdNum);
+                if (exists) {
+                  console.log('❌ El negocio ya está agregado');
+                  return;
+                }
+                
+                const businessOption = businessOptions.find(b => b.value === selectedBusinessId);
+                console.log('🔍 businessOption encontrado:', businessOption);
+                
+                const name = businessOption?.label ? String(businessOption.label) : `Negocio ${businessIdNum}`;
+                console.log('✅ Agregando negocio:', { id: businessIdNum, name });
+                
+                setSelectedBusinesses(prev => {
+                  const newList = [...prev, { 
+                    id: businessIdNum, 
+                    name: String(name) 
+                  }];
+                  console.log('✅ Nueva lista de negocios:', newList);
+                  return newList;
+                });
+                setSelectedBusinessId('');
+              }}
+            >
+              Agregar
+            </Button>
+          </div>
+          {selectedBusinesses.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-1">
+              {selectedBusinesses
+                .filter((b) => b && Number.isFinite(b.id) && b.id > 0)
+                .map((b, idx) => {
+                  // Obtener el ID válido
+                  const businessId = Number(b.id);
+                  if (!Number.isFinite(businessId) || businessId <= 0) {
+                    return null;
+                  }
+                  
+                  // Obtener el nombre: buscar primero en businessOptions (más confiable)
+                  let businessName = '';
+                  const option = businessOptions.find(opt => opt.value === String(businessId));
+                  if (option?.label) {
+                    businessName = option.label;
+                  } else if (b?.name && typeof b.name === 'string' && b.name.trim() !== '' && b.name !== '[object Object]') {
+                    businessName = b.name.trim();
+                  } else {
+                    businessName = `Negocio ${businessId}`;
+                  }
+                  
+                  return (
+                    <div key={`${businessId}-${idx}`} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs">
+                      <span className="font-medium">{businessName} (ID: {businessId})</span>
+                      <button 
+                        type="button" 
+                        className="ml-1 text-blue-700 hover:text-blue-900" 
+                        onClick={() => setSelectedBusinesses(prev => prev.filter(x => Number.isFinite(x.id) && x.id !== businessId))}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  );
+                })
+                .filter(Boolean)}
+            </div>
           )}
-        </div>
-
-        {/* Negocios */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Negocios (IDs separados por comas) *
-          </label>
-          <Input
-            type="text"
-            value={formData.business_ids}
-            onChange={(e) => handleChange('business_ids', e.target.value)}
-            placeholder="1,2,3"
-            className={errors.business_ids ? 'input-error' : 'input'}
-          />
-          {errors.business_ids && (
-            <p className="mt-1 text-sm text-red-600">{errors.business_ids}</p>
-          )}
-          <p className="mt-1 text-xs text-gray-500">
-            Ingresa los IDs de los negocios separados por comas
-          </p>
         </div>
 
         {/* Error general */}
@@ -305,5 +483,94 @@ export function UserForm({ isOpen, onClose, onSuccess, user, mode }: UserFormPro
         </div>
       </form>
     </FormModal>
+
+    {/* Modal para mostrar contraseña generada */}
+    <Modal
+      isOpen={showPasswordModal}
+      onClose={handleClosePasswordModal}
+      title="Usuario creado exitosamente"
+      size="md"
+    >
+      <div className="space-y-6">
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <p className="text-sm text-green-800 mb-4">
+            {createdUserData?.message || 'Usuario creado exitosamente. Guarda esta información de forma segura.'}
+          </p>
+          
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Email:</label>
+              <div className="flex items-center space-x-2">
+                <code className="flex-1 px-3 py-2 bg-white border border-gray-300 rounded text-sm font-mono">
+                  {createdUserData?.email || 'N/A'}
+                </code>
+                <button
+                  type="button"
+                  onClick={handleCopyEmail}
+                  className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                  title="Copiar email"
+                >
+                  {emailCopied ? (
+                    <CheckIcon className="w-5 h-5 text-green-600" />
+                  ) : (
+                    <DocumentDuplicateIcon className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Contraseña generada <span className="text-red-600">(solo se muestra una vez)</span>:
+              </label>
+              <div className="flex items-center space-x-2">
+                <code className="flex-1 px-3 py-2 bg-yellow-50 border-2 border-yellow-400 rounded text-sm font-mono font-bold text-gray-900">
+                  {createdUserData?.password || 'N/A'}
+                </code>
+                <button
+                  type="button"
+                  onClick={handleCopyPassword}
+                  className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                  title="Copiar contraseña"
+                >
+                  {passwordCopied ? (
+                    <CheckIcon className="w-5 h-5 text-green-600" />
+                  ) : (
+                    <DocumentDuplicateIcon className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-yellow-700">
+                <strong>Importante:</strong> Esta contraseña solo se muestra una vez. Asegúrate de copiarla y guardarla de forma segura antes de cerrar este mensaje.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-end pt-4 border-t border-gray-200">
+          <Button
+            type="button"
+            variant="primary"
+            onClick={handleClosePasswordModal}
+            className="btn-primary"
+          >
+            Entendido
+          </Button>
+        </div>
+      </div>
+    </Modal>
+    </>
   );
 }

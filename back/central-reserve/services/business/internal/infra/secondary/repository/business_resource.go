@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"errors"
-	"time"
 
 	"central_reserve/services/business/internal/domain"
 	"dbpostgres/app/infra/models"
@@ -12,14 +11,14 @@ import (
 )
 
 // GetBusinessTypeResourcesPermitted obtiene los recursos permitidos para un tipo de negocio
+// Ahora consulta directamente a Resources filtrando por business_type_id (incluye recursos genéricos con business_type_id = NULL)
 func (r *Repository) GetBusinessTypeResourcesPermitted(ctx context.Context, businessTypeID uint) ([]domain.BusinessTypeResourcePermitted, error) {
-	var resourcesModel []models.BusinessTypeResourcePermitted
+	var resourcesModel []models.Resource
 
-	// Usar GORM con preload para obtener la relación con Resource
+	// Consultar recursos: los del tipo específico Y los genéricos (business_type_id IS NULL)
 	err := r.database.Conn(ctx).
-		Model(&models.BusinessTypeResourcePermitted{}).
-		Preload("Resource").
-		Where("business_type_id = ?", businessTypeID).
+		Model(&models.Resource{}).
+		Where("business_type_id = ? OR business_type_id IS NULL", businessTypeID).
 		Order("id ASC").
 		Find(&resourcesModel).Error
 
@@ -31,11 +30,17 @@ func (r *Repository) GetBusinessTypeResourcesPermitted(ctx context.Context, busi
 	// Convertir a entidades de dominio
 	resources := make([]domain.BusinessTypeResourcePermitted, len(resourcesModel))
 	for i, model := range resourcesModel {
+		// Si el resource tiene business_type_id, usarlo; si es NULL, usar el del parámetro
+		btID := businessTypeID
+		if model.BusinessTypeID != nil {
+			btID = *model.BusinessTypeID
+		}
+
 		resources[i] = domain.BusinessTypeResourcePermitted{
 			ID:             model.ID,
-			BusinessTypeID: model.BusinessTypeID,
-			ResourceID:     model.ResourceID,
-			ResourceName:   model.Resource.Name,
+			BusinessTypeID: btID,
+			ResourceID:     model.ID,
+			ResourceName:   model.Name,
 			CreatedAt:      model.CreatedAt,
 			UpdatedAt:      model.UpdatedAt,
 		}
@@ -44,76 +49,9 @@ func (r *Repository) GetBusinessTypeResourcesPermitted(ctx context.Context, busi
 	return resources, nil
 }
 
-// UpdateBusinessTypeResourcesPermitted actualiza los recursos permitidos para un tipo de negocio
-func (r *Repository) UpdateBusinessTypeResourcesPermitted(ctx context.Context, businessTypeID uint, resourcesIDs []uint) error {
-	// Verificar que el tipo de negocio existe usando el modelo
-	var businessTypeModel models.BusinessType
-	if err := r.database.Conn(ctx).First(&businessTypeModel, businessTypeID).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			r.logger.Error().Uint("business_type_id", businessTypeID).Msg("[business_resource_repository] Tipo de negocio no encontrado")
-			return errors.New("tipo de negocio no encontrado")
-		}
-		r.logger.Error().Err(err).Uint("business_type_id", businessTypeID).Msg("[business_resource_repository] Error al verificar tipo de negocio")
-		return errors.New("error interno del servidor")
-	}
-
-	// Verificar que todos los recursos existen usando el modelo
-	if len(resourcesIDs) > 0 {
-		var count int64
-		if err := r.database.Conn(ctx).Model(&models.Resource{}).Where("id IN ?", resourcesIDs).Count(&count).Error; err != nil {
-			r.logger.Error().Err(err).Int("resources_ids", len(resourcesIDs)).Msg("[business_resource_repository] Error al verificar recursos")
-			return errors.New("error interno del servidor")
-		}
-
-		if int64(len(resourcesIDs)) != count {
-			r.logger.Error().Int("requested", len(resourcesIDs)).Int64("found", count).Msg("[business_resource_repository] Algunos recursos no existen")
-			return errors.New("algunos recursos especificados no existen")
-		}
-	}
-
-	// Iniciar transacción
-	tx := r.database.Conn(ctx).Begin()
-	if tx.Error != nil {
-		r.logger.Error().Err(tx.Error).Msg("[business_resource_repository] Error al iniciar transacción")
-		return errors.New("error interno del servidor")
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		}
-	}()
-
-	// Eliminar todas las asociaciones existentes usando el modelo
-	if err := tx.Where("business_type_id = ?", businessTypeID).Delete(&models.BusinessTypeResourcePermitted{}).Error; err != nil {
-		tx.Rollback()
-		r.logger.Error().Err(err).Uint("business_type_id", businessTypeID).Msg("[business_resource_repository] Error al eliminar recursos permitidos existentes")
-		return errors.New("error interno del servidor")
-	}
-
-	// Crear las nuevas asociaciones usando el modelo
-	for _, resourceID := range resourcesIDs {
-		newResource := models.BusinessTypeResourcePermitted{
-			BusinessTypeID: businessTypeID,
-			ResourceID:     resourceID,
-		}
-
-		if err := tx.Create(&newResource).Error; err != nil {
-			tx.Rollback()
-			r.logger.Error().Err(err).Uint("business_type_id", businessTypeID).Uint("resource_id", resourceID).Msg("[business_resource_repository] Error al crear recurso permitido")
-			return errors.New("error interno del servidor")
-		}
-	}
-
-	// Confirmar transacción
-	if err := tx.Commit().Error; err != nil {
-		r.logger.Error().Err(err).Msg("[business_resource_repository] Error al confirmar transacción")
-		return errors.New("error interno del servidor")
-	}
-
-	r.logger.Info().Uint("business_type_id", businessTypeID).Int("resources_count", len(resourcesIDs)).Msg("[business_resource_repository] Recursos del tipo de negocio actualizados exitosamente")
-
-	return nil
-}
+// UpdateBusinessTypeResourcesPermitted NO DEBE EXISTIR
+// Los recursos ahora se gestionan directamente en la tabla Resource (agregando/quitando business_type_id)
+// Este método debería eliminarse o implementarse de otra forma
 
 // GetResourceByID obtiene un recurso por su ID
 func (r *Repository) GetResourceByID(ctx context.Context, resourceID uint) (*domain.Resource, error) {
@@ -173,16 +111,15 @@ func (r *Repository) GetBusinessTypesWithResourcesPaginated(ctx context.Context,
 	// Construir respuesta con recursos para cada tipo de negocio
 	var businessTypes []domain.BusinessTypeWithResourcesResponse
 	for _, btModel := range businessTypesModel {
-		// Obtener recursos para este tipo de negocio usando GORM con relaciones
-		var resourcesModel []models.BusinessTypeResourcePermitted
+		// Obtener recursos para este tipo de negocio consultando directamente Resources
+		var resourcesModel []models.Resource
 		if err := r.database.Conn(ctx).
-			Model(&models.BusinessTypeResourcePermitted{}).
-			Preload("Resource").
-			Where("business_type_id = ?", btModel.ID).
+			Model(&models.Resource{}).
+			Where("business_type_id = ? OR business_type_id IS NULL", btModel.ID).
 			Find(&resourcesModel).Error; err != nil {
 			r.logger.Error().Err(err).Uint("business_type_id", btModel.ID).Msg("[business_resource_repository] Error al obtener recursos del tipo de negocio")
 			// Continuar con array vacío en caso de error
-			resourcesModel = []models.BusinessTypeResourcePermitted{}
+			resourcesModel = []models.Resource{}
 		}
 
 		// Convertir recursos a respuesta de dominio
@@ -190,8 +127,8 @@ func (r *Repository) GetBusinessTypesWithResourcesPaginated(ctx context.Context,
 		for i, resourceModel := range resourcesModel {
 			resourcesResponse[i] = domain.BusinessTypeResourcePermittedResponse{
 				ID:           resourceModel.ID,
-				ResourceID:   resourceModel.ResourceID,
-				ResourceName: resourceModel.Resource.Name,
+				ResourceID:   resourceModel.ID,
+				ResourceName: resourceModel.Name,
 			}
 		}
 
@@ -211,7 +148,7 @@ func (r *Repository) GetBusinessTypesWithResourcesPaginated(ctx context.Context,
 }
 
 // GetBusinessesWithConfiguredResourcesPaginated obtiene todos los business con sus recursos configurados con paginación
-func (r *Repository) GetBusinessesWithConfiguredResourcesPaginated(ctx context.Context, page, perPage int, businessID *uint) ([]domain.BusinessWithConfiguredResourcesResponse, int64, error) {
+func (r *Repository) GetBusinessesWithConfiguredResourcesPaginated(ctx context.Context, page, perPage int, businessID *uint, businessTypeID *uint) ([]domain.BusinessWithConfiguredResourcesResponse, int64, error) {
 	var total int64
 
 	// Calcular offset
@@ -223,6 +160,11 @@ func (r *Repository) GetBusinessesWithConfiguredResourcesPaginated(ctx context.C
 	// Aplicar filtro por business ID si se proporciona
 	if businessID != nil {
 		query = query.Where("id = ?", *businessID)
+	}
+
+	// Aplicar filtro por business type ID si se proporciona
+	if businessTypeID != nil {
+		query = query.Where("business_type_id = ?", *businessTypeID)
 	}
 
 	// Contar total de business
@@ -249,7 +191,7 @@ func (r *Repository) GetBusinessesWithConfiguredResourcesPaginated(ctx context.C
 		var configuredResourcesModel []models.BusinessResourceConfigured
 		if err := r.database.Conn(ctx).
 			Model(&models.BusinessResourceConfigured{}).
-			Preload("BusinessTypeResourcePermitted.Resource").
+			Preload("Resource").
 			Where("business_id = ?", businessModel.ID).
 			Find(&configuredResourcesModel).Error; err != nil {
 			r.logger.Error().Err(err).Uint("business_id", businessModel.ID).Msg("[business_resource_repository] Error al obtener recursos configurados del business")
@@ -261,9 +203,9 @@ func (r *Repository) GetBusinessesWithConfiguredResourcesPaginated(ctx context.C
 		resourcesResponse := make([]domain.BusinessResourceConfiguredResponse, len(configuredResourcesModel))
 		for i, resourceModel := range configuredResourcesModel {
 			resourcesResponse[i] = domain.BusinessResourceConfiguredResponse{
-				ResourceID:   resourceModel.BusinessTypeResourcePermitted.ResourceID,
-				ResourceName: resourceModel.BusinessTypeResourcePermitted.Resource.Name,
-				IsActive:     true, // Si está configurado, está activo
+				ResourceID:   resourceModel.ResourceID,
+				ResourceName: resourceModel.Resource.Name,
+				IsActive:     resourceModel.Active, // Usar el campo Active del modelo
 			}
 		}
 
@@ -283,6 +225,56 @@ func (r *Repository) GetBusinessesWithConfiguredResourcesPaginated(ctx context.C
 	return businesses, total, nil
 }
 
+// GetBusinessByIDWithConfiguredResources obtiene un business por ID con sus recursos configurados
+func (r *Repository) GetBusinessByIDWithConfiguredResources(ctx context.Context, businessID uint) (*domain.BusinessWithConfiguredResourcesResponse, error) {
+	// Obtener el business
+	var businessModel models.Business
+	if err := r.database.Conn(ctx).
+		Where("id = ?", businessID).
+		First(&businessModel).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			r.logger.Error().Uint("business_id", businessID).Msg("[business_resource_repository] Business no encontrado")
+			return nil, errors.New("business no encontrado")
+		}
+		r.logger.Error().Err(err).Uint("business_id", businessID).Msg("[business_resource_repository] Error al obtener business")
+		return nil, errors.New("error interno del servidor")
+	}
+
+	// Obtener recursos configurados para este business usando GORM con relaciones
+	var configuredResourcesModel []models.BusinessResourceConfigured
+	if err := r.database.Conn(ctx).
+		Model(&models.BusinessResourceConfigured{}).
+		Preload("Resource").
+		Where("business_id = ?", businessModel.ID).
+		Find(&configuredResourcesModel).Error; err != nil {
+		r.logger.Error().Err(err).Uint("business_id", businessModel.ID).Msg("[business_resource_repository] Error al obtener recursos configurados del business")
+		// Continuar con array vacío en caso de error
+		configuredResourcesModel = []models.BusinessResourceConfigured{}
+	}
+
+	// Convertir recursos configurados a respuesta de dominio
+	resourcesResponse := make([]domain.BusinessResourceConfiguredResponse, len(configuredResourcesModel))
+	for i, resourceModel := range configuredResourcesModel {
+		resourcesResponse[i] = domain.BusinessResourceConfiguredResponse{
+			ResourceID:   resourceModel.ResourceID,
+			ResourceName: resourceModel.Resource.Name,
+			IsActive:     resourceModel.Active,
+		}
+	}
+
+	// Convertir business a respuesta de dominio
+	business := &domain.BusinessWithConfiguredResourcesResponse{
+		ID:        businessModel.ID,
+		Name:      businessModel.Name,
+		Code:      businessModel.Code,
+		Resources: resourcesResponse,
+		CreatedAt: businessModel.CreatedAt,
+		UpdatedAt: businessModel.UpdatedAt,
+	}
+
+	return business, nil
+}
+
 // UpdateBusinessConfiguredResources actualiza los recursos configurados para un business específico
 func (r *Repository) UpdateBusinessConfiguredResources(ctx context.Context, businessID uint, resourcesIDs []uint) error {
 	// Verificar que el business existe y obtener su tipo
@@ -296,27 +288,24 @@ func (r *Repository) UpdateBusinessConfiguredResources(ctx context.Context, busi
 		return errors.New("error interno del servidor")
 	}
 
-	// Obtener los recursos permitidos para el tipo de business
-	var permittedResourcesModel []models.BusinessTypeResourcePermitted
-	if err := r.database.Conn(ctx).
-		Model(&models.BusinessTypeResourcePermitted{}).
-		Where("business_type_id = ?", businessModel.BusinessTypeID).
-		Find(&permittedResourcesModel).Error; err != nil {
+	// Obtener los recursos permitidos para el tipo de business (usando GetBusinessTypeResourcesPermitted)
+	permittedResources, err := r.GetBusinessTypeResourcesPermitted(ctx, businessModel.BusinessTypeID)
+	if err != nil {
 		r.logger.Error().Err(err).Uint("business_type_id", businessModel.BusinessTypeID).Msg("[business_resource_repository] Error al obtener recursos permitidos")
 		return errors.New("error interno del servidor")
 	}
 
 	// Crear mapa de recursos permitidos para validación rápida
-	permittedResourcesMap := make(map[uint]uint) // resourceID -> businessTypeResourcePermittedID
-	for _, permitted := range permittedResourcesModel {
-		permittedResourcesMap[permitted.ResourceID] = permitted.ID
+	permittedResourcesMap := make(map[uint]bool)
+	for _, permitted := range permittedResources {
+		permittedResourcesMap[permitted.ResourceID] = true
 	}
 
 	// Validar que todos los recursos solicitados están permitidos para este tipo de business
-	var validResourcesPermittedIDs []uint
+	var validResourcesIDs []uint
 	for _, resourceID := range resourcesIDs {
-		if permittedID, exists := permittedResourcesMap[resourceID]; exists {
-			validResourcesPermittedIDs = append(validResourcesPermittedIDs, permittedID)
+		if permittedResourcesMap[resourceID] {
+			validResourcesIDs = append(validResourcesIDs, resourceID)
 		} else {
 			r.logger.Error().Uint("resource_id", resourceID).Uint("business_type_id", businessModel.BusinessTypeID).Msg("[business_resource_repository] Recurso no permitido para este tipo de business")
 			return errors.New("algunos recursos no están permitidos para este tipo de business")
@@ -342,41 +331,18 @@ func (r *Repository) UpdateBusinessConfiguredResources(ctx context.Context, busi
 		return errors.New("error interno del servidor")
 	}
 
-	// Crear/restaurar las nuevas configuraciones usando UPSERT
-	for _, permittedID := range validResourcesPermittedIDs {
-		// Verificar si existe un registro (incluso soft-deleted)
-		var existing models.BusinessResourceConfigured
-		err := tx.Unscoped().Where("business_id = ? AND business_type_resource_permitted_id = ?",
-			businessID, permittedID).First(&existing).Error
+	// Crear las nuevas configuraciones
+	for _, resourceID := range validResourcesIDs {
+		newConfigured := models.BusinessResourceConfigured{
+			BusinessID: businessID,
+			ResourceID: resourceID,
+			Active:     true, // Por defecto activo
+		}
 
-		if err == gorm.ErrRecordNotFound {
-			// No existe, crear nuevo
-			newConfigured := models.BusinessResourceConfigured{
-				BusinessID:                      businessID,
-				BusinessTypeResourcePermittedID: permittedID,
-				BusinessTypeID:                  businessModel.BusinessTypeID,
-			}
-
-			if err := tx.Create(&newConfigured).Error; err != nil {
-				tx.Rollback()
-				r.logger.Error().Err(err).Uint("business_id", businessID).Uint("permitted_id", permittedID).Msg("[business_resource_repository] Error al crear recurso configurado")
-				return errors.New("error interno del servidor")
-			}
-		} else if err != nil {
-			// Error inesperado
+		if err := tx.Create(&newConfigured).Error; err != nil {
 			tx.Rollback()
-			r.logger.Error().Err(err).Uint("business_id", businessID).Uint("permitted_id", permittedID).Msg("[business_resource_repository] Error al verificar recurso existente")
+			r.logger.Error().Err(err).Uint("business_id", businessID).Uint("resource_id", resourceID).Msg("[business_resource_repository] Error al crear recurso configurado")
 			return errors.New("error interno del servidor")
-		} else {
-			// Existe (posiblemente soft-deleted), restaurar
-			if err := tx.Unscoped().Model(&existing).Updates(map[string]interface{}{
-				"deleted_at": nil,
-				"updated_at": time.Now(),
-			}).Error; err != nil {
-				tx.Rollback()
-				r.logger.Error().Err(err).Uint("business_id", businessID).Uint("permitted_id", permittedID).Msg("[business_resource_repository] Error al restaurar recurso configurado")
-				return errors.New("error interno del servidor")
-			}
 		}
 	}
 
@@ -386,7 +352,7 @@ func (r *Repository) UpdateBusinessConfiguredResources(ctx context.Context, busi
 		return errors.New("error interno del servidor")
 	}
 
-	r.logger.Info().Uint("business_id", businessID).Int("resources_count", len(validResourcesPermittedIDs)).Msg("[business_resource_repository] Recursos configurados del business actualizados exitosamente")
+	r.logger.Info().Uint("business_id", businessID).Int("resources_count", len(validResourcesIDs)).Msg("[business_resource_repository] Recursos configurados del business actualizados exitosamente")
 
 	return nil
 }
@@ -398,30 +364,47 @@ func (r *Repository) GetBusinessConfiguredResourcesIDs(ctx context.Context, busi
 	err := r.database.Conn(ctx).
 		Model(&models.BusinessResourceConfigured{}).
 		Where("business_id = ?", businessID).
-		Pluck("business_type_resource_permitted_id", &resourcesIDs).Error
+		Pluck("resource_id", &resourcesIDs).Error
 
 	if err != nil {
 		r.logger.Error().Err(err).Uint("business_id", businessID).Msg("[business_resource_repository] Error al obtener recursos configurados del business")
 		return nil, err
 	}
 
-	// Obtener los resource_ids desde BusinessTypeResourcePermitted
-	if len(resourcesIDs) == 0 {
-		return []uint{}, nil
+	r.logger.Info().Uint("business_id", businessID).Int("resources_count", len(resourcesIDs)).Msg("[business_resource_repository] Recursos configurados del business obtenidos exitosamente")
+
+	return resourcesIDs, nil
+}
+
+// ToggleBusinessResourceActive activa o desactiva un recurso para un business específico
+func (r *Repository) ToggleBusinessResourceActive(ctx context.Context, businessID uint, resourceID uint, active bool) error {
+	r.logger.Info().Uint("business_id", businessID).Uint("resource_id", resourceID).Bool("active", active).Msg("Cambiando estado de activación del recurso para el business")
+
+	// Verificar que la relación existe
+	var configuredResource models.BusinessResourceConfigured
+	if err := r.database.Conn(ctx).
+		Where("business_id = ? AND resource_id = ?", businessID, resourceID).
+		First(&configuredResource).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			r.logger.Error().Uint("business_id", businessID).Uint("resource_id", resourceID).Msg("[business_resource_repository] Relación no encontrada")
+			return errors.New("la relación entre business y recurso no existe")
+		}
+		r.logger.Error().Err(err).Uint("business_id", businessID).Uint("resource_id", resourceID).Msg("[business_resource_repository] Error al buscar relación")
+		return errors.New("error interno del servidor")
 	}
 
-	var actualResourceIDs []uint
-	err = r.database.Conn(ctx).
-		Model(&models.BusinessTypeResourcePermitted{}).
-		Where("id IN ?", resourcesIDs).
-		Pluck("resource_id", &actualResourceIDs).Error
+	// Actualizar el estado activo
+	result := r.database.Conn(ctx).
+		Model(&models.BusinessResourceConfigured{}).
+		Where("business_id = ? AND resource_id = ?", businessID, resourceID).
+		Update("active", active)
 
-	if err != nil {
-		r.logger.Error().Err(err).Uint("business_id", businessID).Msg("[business_resource_repository] Error al obtener resource_ids")
-		return nil, err
+	if result.Error != nil {
+		r.logger.Error().Err(result.Error).Uint("business_id", businessID).Uint("resource_id", resourceID).Msg("[business_resource_repository] Error al actualizar estado del recurso")
+		return errors.New("error interno del servidor")
 	}
 
-	r.logger.Info().Uint("business_id", businessID).Int("resources_count", len(actualResourceIDs)).Msg("[business_resource_repository] Recursos configurados del business obtenidos exitosamente")
+	r.logger.Info().Uint("business_id", businessID).Uint("resource_id", resourceID).Bool("active", active).Msg("[business_resource_repository] Estado del recurso actualizado exitosamente")
 
-	return actualResourceIDs, nil
+	return nil
 }

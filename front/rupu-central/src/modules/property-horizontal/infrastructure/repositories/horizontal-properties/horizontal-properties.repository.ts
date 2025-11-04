@@ -8,8 +8,8 @@ import {
   GetHorizontalPropertyByIdParams,
   CreateHorizontalPropertyParams,
   DeleteHorizontalPropertyParams
-} from '../../domain/ports';
-import { HorizontalProperty, HorizontalPropertiesPaginated } from '../../domain/entities';
+} from '../../../domain/ports/horizontal-properties.repository';
+import { HorizontalProperty, HorizontalPropertiesPaginated } from '../../../domain/entities';
 import { env, logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
 import { 
   BackendHorizontalPropertiesResponse,
@@ -332,4 +332,3 @@ export class HorizontalPropertiesRepository implements IHorizontalPropertiesRepo
     }
   }
 }
-

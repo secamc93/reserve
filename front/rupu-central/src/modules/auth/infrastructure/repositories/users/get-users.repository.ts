@@ -83,7 +83,7 @@ export class GetUsersRepository {
         status: response.status,
         statusText: response.statusText,
         duration,
-        summary: `${backendResponse.count || 0} usuarios obtenidos`,
+        summary: `${backendResponse.pagination?.total || 0} usuarios obtenidos`,
         data: backendResponse,
       });
 
@@ -91,8 +91,9 @@ export class GetUsersRepository {
         throw new Error('Respuesta inválida del servidor');
       }
 
-      // El backend devuelve data como array directamente, no como objeto con users
+      // El backend devuelve data como array directamente con paginación separada
       const usersArray = Array.isArray(backendResponse.data) ? backendResponse.data : [];
+      const pagination = backendResponse.pagination;
       
       if (usersArray.length === 0) {
         console.log('No hay usuarios en la respuesta');
@@ -105,6 +106,7 @@ export class GetUsersRepository {
         phone: user.phone || '',
         avatar_url: user.avatar_url || undefined,
         is_active: user.is_active,
+        is_super_user: user.is_super_user,
         last_login_at: user.last_login_at || undefined,
         created_at: user.created_at,
         updated_at: user.updated_at,
@@ -123,18 +125,21 @@ export class GetUsersRepository {
           business_type_id: business.business_type_id,
           business_type_name: business.business_type_name,
         })),
+        business_role_assignments: (user.business_role_assignments || []).map((bra: any) => ({
+          business_id: bra.business_id,
+          business_name: bra.business_name,
+          role_id: bra.role_id,
+          role_name: bra.role_name,
+        })),
       }));
 
-      // Calcular información de paginación basada en los parámetros de entrada
-      const totalCount = backendResponse.count || users.length;
-      const totalPages = Math.ceil(totalCount / page_size);
-
+      // Usar información de paginación del backend
       return {
         users,
-        count: totalCount,
-        page: page,
-        page_size: page_size,
-        total_pages: totalPages,
+        count: pagination?.total || users.length,
+        page: pagination?.current_page || page,
+        page_size: pagination?.per_page || page_size,
+        total_pages: pagination?.last_page || Math.ceil((pagination?.total || users.length) / (pagination?.per_page || page_size)),
       };
     } catch (error) {
       console.error('Error obteniendo usuarios:', error);

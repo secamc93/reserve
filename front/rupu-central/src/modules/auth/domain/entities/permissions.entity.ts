@@ -3,7 +3,7 @@
  * Representa roles y permisos en el dominio de negocio
  */
 
-export interface Role {
+export interface PermissionRole {
   id: number;
   name: string;
   description: string;
@@ -17,7 +17,7 @@ export interface ResourcePermission {
 
 export interface UserPermissions {
   isSuperAdmin: boolean;
-  roles: Role[];
+  roles: PermissionRole[];
   resources: ResourcePermission[];
 }
 

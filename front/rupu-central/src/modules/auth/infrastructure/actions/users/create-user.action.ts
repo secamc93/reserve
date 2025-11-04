@@ -16,8 +16,7 @@ export async function createUserAction(input: CreateUserInput, authUseCases?: Au
       name: input.name,
       email: input.email,
       phone: input.phone,
-      role: input.role,
-      business_ids: input.business_ids,
+      is_active: input.is_active,
       hasAvatar: !!input.avatarFile
     });
     
@@ -25,12 +24,14 @@ export async function createUserAction(input: CreateUserInput, authUseCases?: Au
     const useCases = authUseCases || new (await import('../../../application')).AuthUseCases();
     const result = await useCases.users.UseCaseCreateUser.execute(input);
 
-    console.log('✅ Usuario creado:', result.user.id);
+    console.log('✅ Usuario creado:', result.email);
 
     return {
       success: true,
       data: {
-        user: result.user,
+        email: result.email,
+        password: result.password,
+        message: result.message,
       },
     };
   } catch (error) {

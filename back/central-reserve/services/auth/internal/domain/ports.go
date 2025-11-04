@@ -38,6 +38,8 @@ type IAuthRepository interface {
 	ChangePassword(ctx context.Context, userID uint, newPassword string) error
 	GetUserBusinesses(ctx context.Context, userID uint) ([]BusinessInfoEntity, error)
 	GetUserRoleByBusiness(ctx context.Context, userID uint, businessID uint) (*Role, error)
+	GetUserRoleIDFromBusinessStaff(ctx context.Context, userID uint, businessID *uint) (*uint, error)
+	GetBusinessStaffRelation(ctx context.Context, userID uint, businessID *uint) (*BusinessStaffRelation, error)
 	CreateAPIKey(ctx context.Context, apiKey APIKey, keyHash string) (uint, error)
 	ValidateAPIKey(ctx context.Context, apiKey string) (*APIKey, error)
 	UpdateAPIKeyLastUsed(ctx context.Context, apiKeyID uint) error
@@ -51,6 +53,7 @@ type IAuthRepository interface {
 	GetPermissionByID(ctx context.Context, id uint) (*Permission, error)
 	GetPermissionsByScopeID(ctx context.Context, scopeID uint) ([]Permission, error)
 	GetPermissionsByResource(ctx context.Context, resource string) ([]Permission, error)
+	PermissionExistsByName(ctx context.Context, name string) (bool, error)
 	CreatePermission(ctx context.Context, permission Permission) (string, error)
 	UpdatePermission(ctx context.Context, id uint, permission Permission) (string, error)
 	DeletePermission(ctx context.Context, id uint) (string, error)
@@ -65,13 +68,17 @@ type IAuthRepository interface {
 	GetRolesByScopeID(ctx context.Context, scopeID uint) ([]Role, error)
 	GetRolesByLevel(ctx context.Context, level int) ([]Role, error)
 	GetSystemRoles(ctx context.Context) ([]Role, error)
+	RoleExistsByName(ctx context.Context, name string, excludeID *uint) (bool, error)
 	UpdateRole(ctx context.Context, id uint, role UpdateRoleDTO) (*Role, error)
 	GetUsers(ctx context.Context, filters UserFilters) ([]UserQueryDTO, int64, error)
 	CreateUser(ctx context.Context, user UsersEntity) (uint, error)
 	UpdateUser(ctx context.Context, id uint, user UsersEntity) (string, error)
 	DeleteUser(ctx context.Context, id uint) (string, error)
-	AssignRolesToUser(ctx context.Context, userID uint, roleIDs []uint) error
-	AssignBusinessesToUser(ctx context.Context, userID uint, businessIDs []uint) error
+	AssignBusinessStaffRelationships(ctx context.Context, userID uint, assignments []BusinessRoleAssignment) error
+	GetBusinessStaffRelationships(ctx context.Context, userID uint) ([]BusinessRoleAssignmentDetailed, error)
+	AssignRoleToUserBusiness(ctx context.Context, userID uint, assignments []BusinessRoleAssignment) error // Asigna/actualiza roles a usuario en múltiples businesses
+	AssignRolesToUser(ctx context.Context, userID uint, roleIDs []uint) error                              // Deprecated: usar AssignBusinessStaffRelationships
+	AssignBusinessesToUser(ctx context.Context, userID uint, businessIDs []uint) error                     // Deprecated: usar AssignBusinessStaffRelationships
 
 	// Métodos para Resource
 	GetResources(ctx context.Context, filters ResourceFilters) ([]Resource, int64, error)
@@ -85,6 +92,14 @@ type IAuthRepository interface {
 	AssignPermissionsToRole(ctx context.Context, roleID uint, permissionIDs []uint) error
 	RemovePermissionFromRole(ctx context.Context, roleID uint, permissionID uint) error
 	GetRolePermissionsIDs(ctx context.Context, roleID uint) ([]uint, error)
+
+	// Métodos para Action
+	GetActions(ctx context.Context, page, pageSize int, name string) ([]Action, int64, error)
+	GetActionByID(ctx context.Context, id uint) (*Action, error)
+	GetActionByName(ctx context.Context, name string) (*Action, error)
+	CreateAction(ctx context.Context, action Action) (uint, error)
+	UpdateAction(ctx context.Context, id uint, action Action) (string, error)
+	DeleteAction(ctx context.Context, id uint) (string, error)
 }
 
 // IS3Service define las operaciones de almacenamiento en S3

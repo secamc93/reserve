@@ -50,59 +50,73 @@ func (uc *AuthUseCase) GetUserRolesPermissions(ctx context.Context, userID uint,
 		return nil, fmt.Errorf("usuario inactivo")
 	}
 
-	// Obtener roles del usuario
-	roles, err := uc.repository.GetUserRoles(ctx, userID)
+	// Obtener relación completa desde business_staff (única fuente de verdad)
+	var bidPtr *uint
+	if businessID != 0 {
+		bidPtr = &businessID
+	}
+	bsRelation, err := uc.repository.GetBusinessStaffRelation(ctx, userID, bidPtr)
 	if err != nil {
-		uc.log.Error().Err(err).Uint("user_id", userID).Msg("Error al obtener roles del usuario")
+		uc.log.Error().Err(err).Uint("user_id", userID).Msg("Error al obtener relación desde business_staff")
 		return nil, fmt.Errorf("error interno del servidor")
 	}
 
-	// Verificar si es super admin (tiene rol super_admin)
-	isSuper := false
-	for _, role := range roles {
-		if role.Name == "Super Administrador" {
-			isSuper = true
-			break
-		}
+	// Si no existe la relación en business_staff, retornar error
+	if bsRelation == nil {
+		uc.log.Warn().Uint("user_id", userID).Uint("business_id", businessID).Msg("Relación usuario-business no encontrada en business_staff")
+		return nil, fmt.Errorf("relación usuario-business no encontrada")
 	}
 
-	// Si es super admin y businessID es 0, saltarse validaciones de business
+	uc.log.Info().
+		Uint("user_id", userID).
+		Any("business_id", bsRelation.BusinessID).
+		Any("role_id", bsRelation.RoleID).
+		Msg("Relación business_staff obtenida")
+
+	// Determinar si es super: business_id NULL en business_staff
+	isSuper := (bsRelation.BusinessID == nil)
+
+	// Obtener información del business desde la relación
 	var business *domain.BusinessInfo
 	var businessType *domain.BusinessTypeInfo
 	var activeResourcesMap map[uint]bool
+	var roleIDPtr *uint = bsRelation.RoleID
 
-	if businessID == 0 {
+	if roleIDPtr == nil {
+		uc.log.Warn().Uint("user_id", userID).Any("business_id", bsRelation.BusinessID).Msg("Relación encontrada pero role_id es NULL")
+	} else {
+		uc.log.Info().Uint("user_id", userID).Uint("role_id", *roleIDPtr).Msg("Role ID encontrado en relación")
+	}
+
+	if bsRelation.BusinessID == nil {
 		// Super admin sin business específico
 		activeResourcesMap = make(map[uint]bool)
 	} else {
-		// Validar business para usuarios normales
-		business, err = uc.repository.GetBusinessByID(ctx, businessID)
-		if err != nil {
-			uc.log.Error().Err(err).Uint("business_id", businessID).Msg("Error al obtener información del business")
-			return nil, fmt.Errorf("error interno del servidor")
-		}
-
-		if business == nil {
-			uc.log.Error().Uint("business_id", businessID).Msg("Business no encontrado")
+		// Business existe en la relación
+		if bsRelation.Business == nil {
+			uc.log.Error().Uint("business_id", *bsRelation.BusinessID).Msg("Business no encontrado en relación")
 			return nil, fmt.Errorf("business no encontrado")
 		}
 
-		// Obtener información del tipo de business
-		businessType, err = uc.repository.GetBusinessTypeByID(ctx, business.BusinessTypeID)
-		if err != nil {
-			uc.log.Error().Err(err).Uint("business_type_id", business.BusinessTypeID).Msg("Error al obtener información del tipo de business")
-			return nil, fmt.Errorf("error interno del servidor")
+		business = &domain.BusinessInfo{
+			ID:             bsRelation.Business.ID,
+			Name:           bsRelation.Business.Name,
+			Code:           bsRelation.Business.Code,
+			BusinessTypeID: bsRelation.Business.BusinessTypeID,
 		}
 
-		if businessType == nil {
-			uc.log.Error().Uint("business_type_id", business.BusinessTypeID).Msg("Tipo de business no encontrado")
-			return nil, fmt.Errorf("tipo de business no encontrado")
+		businessType = &domain.BusinessTypeInfo{
+			ID:          bsRelation.Business.BusinessTypeID,
+			Name:        bsRelation.Business.BusinessTypeName,
+			Code:        bsRelation.Business.BusinessTypeCode,
+			Description: "",
+			Icon:        "",
 		}
 
 		// Obtener recursos configurados para el business
-		businessResourcesIDs, err := uc.repository.GetBusinessConfiguredResourcesIDs(ctx, businessID)
+		businessResourcesIDs, err := uc.repository.GetBusinessConfiguredResourcesIDs(ctx, *bsRelation.BusinessID)
 		if err != nil {
-			uc.log.Error().Err(err).Uint("business_id", businessID).Msg("Error al obtener recursos configurados del business")
+			uc.log.Error().Err(err).Uint("business_id", *bsRelation.BusinessID).Msg("Error al obtener recursos configurados del business")
 			return nil, fmt.Errorf("error interno del servidor")
 		}
 
@@ -113,15 +127,24 @@ func (uc *AuthUseCase) GetUserRolesPermissions(ctx context.Context, userID uint,
 		}
 	}
 
-	// Obtener permisos de todos los roles del usuario
+	var currentRole *domain.Role
 	var allPermissions []domain.Permission
-	for _, role := range roles {
-		permissions, err := uc.repository.GetRolePermissions(ctx, role.ID)
-		if err != nil {
-			uc.log.Error().Err(err).Uint("role_id", role.ID).Msg("Error al obtener permisos del rol")
-			continue
+	if roleIDPtr != nil {
+		// Cargar info del rol y permisos
+		currentRole, _ = uc.repository.GetRoleByID(ctx, *roleIDPtr)
+		perms, err := uc.repository.GetRolePermissions(ctx, *roleIDPtr)
+		if err == nil {
+			allPermissions = perms
 		}
-		allPermissions = append(allPermissions, permissions...)
+		// Ajustar isSuper según scope del rol si está disponible
+		if currentRole != nil && (currentRole.ScopeID == 1 || currentRole.ScopeCode == "platform") {
+			isSuper = true
+		}
+	} else {
+		// Si no hay role_id asignado aún, verificar si es super por business_id NULL
+		if bsRelation.BusinessID == nil {
+			isSuper = true
+		}
 	}
 
 	// Construir respuesta
@@ -144,27 +167,41 @@ func (uc *AuthUseCase) GetUserRolesPermissions(ctx context.Context, userID uint,
 	}
 
 	// Mapear el primer rol (ya que ahora solo hay uno por business)
-	if len(roles) > 0 {
+	if currentRole != nil {
 		response.Role = domain.RoleInfo{
-			ID:          roles[0].ID,
-			Name:        roles[0].Name,
-			Description: roles[0].Description,
-			Level:       roles[0].Level,
-			IsSystem:    roles[0].IsSystem,
-			Scope:       roles[0].ScopeName,
+			ID:          currentRole.ID,
+			Name:        currentRole.Name,
+			Description: currentRole.Description,
+			Level:       currentRole.Level,
+			IsSystem:    currentRole.IsSystem,
+			Scope:       currentRole.ScopeName,
 		}
 	}
 
-	// Mapear permisos (eliminar duplicados) y verificar si están activos para el business
+	// Mapear permisos (eliminar duplicados) SOLO de recursos activos para el business
+	// Si el recurso no está activo, se excluye completamente del resultado
 	permissionMap := make(map[string]domain.PermissionInfo)
 	for _, permission := range allPermissions {
+		// Verificar si el recurso está activo para el business
+		isActive := activeResourcesMap[permission.ResourceID]
+
+		// Si hay un businessID (no es super admin sin business), filtrar por recursos activos
+		// Si el recurso no está activo, omitir el permiso completamente
+		if bsRelation.BusinessID != nil {
+			if !isActive {
+				// Omitir permiso si el recurso no está activo para el business
+				continue
+			}
+		} else {
+			// Super admin sin business: mostrar todos los permisos como activos
+			isActive = true
+		}
+
 		key := permission.Resource + ":" + permission.Action
 		if _, exists := permissionMap[key]; !exists {
-			// Verificar si el recurso está configurado para el business
-			isActive := activeResourcesMap[permission.ResourceID]
-
 			permissionMap[key] = domain.PermissionInfo{
 				ID:          permission.ID,
+				Name:        permission.Name,
 				Description: permission.Description,
 				Resource:    permission.Resource,
 				Action:      permission.Action,
@@ -173,14 +210,13 @@ func (uc *AuthUseCase) GetUserRolesPermissions(ctx context.Context, userID uint,
 		}
 	}
 
-	// Convertir map a slice
+	// Convertir map a slice (solo incluye permisos de recursos activos)
 	for _, permission := range permissionMap {
 		response.Permissions = append(response.Permissions, permission)
 	}
 
 	uc.log.Info().
 		Uint("user_id", userID).
-		Int("roles_count", len(roles)).
 		Int("permissions_count", len(response.Permissions)).
 		Bool("is_super", isSuper).
 		Msg("Roles y permisos obtenidos exitosamente")

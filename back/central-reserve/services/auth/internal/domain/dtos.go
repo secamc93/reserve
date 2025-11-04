@@ -121,6 +121,17 @@ type ChangePasswordResponse struct {
 	Message string
 }
 
+type GeneratePasswordRequest struct {
+	UserID uint
+}
+
+type GeneratePasswordResponse struct {
+	Success  bool
+	Email    string
+	Password string
+	Message  string
+}
+
 type GenerateAPIKeyRequest struct {
 	UserID      uint
 	BusinessID  uint
@@ -284,18 +295,42 @@ type UserQueryDTO struct {
 
 // UserDTO representa un usuario para casos de uso
 type UserDTO struct {
-	ID          uint
-	Name        string
-	Email       string
-	Phone       string
-	AvatarURL   string
-	IsActive    bool
-	LastLoginAt *time.Time
-	Roles       []RoleDTO
-	Businesses  []BusinessDTO
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	DeletedAt   *time.Time
+	ID                      uint
+	Name                    string
+	Email                   string
+	Phone                   string
+	AvatarURL               string
+	IsActive                bool
+	LastLoginAt             *time.Time
+	IsSuperUser             bool                             // Indica si es super usuario (scope platform)
+	BusinessRoleAssignments []BusinessRoleAssignmentDetailed // Parejas business-rol con información completa
+	Roles                   []RoleDTO                        // Mantener por compatibilidad
+	Businesses              []BusinessDTO                    // Mantener por compatibilidad
+	CreatedAt               time.Time
+	UpdatedAt               time.Time
+	DeletedAt               *time.Time
+}
+
+// BusinessRoleAssignment representa una asignación de rol a un negocio específico
+type BusinessRoleAssignment struct {
+	BusinessID uint
+	RoleID     uint
+}
+
+// BusinessRoleAssignmentDetailed representa una asignación con información completa para respuestas
+type BusinessRoleAssignmentDetailed struct {
+	BusinessID   uint   `json:"business_id"`
+	BusinessName string `json:"business_name,omitempty"`
+	RoleID       uint   `json:"role_id"`
+	RoleName     string `json:"role_name,omitempty"`
+}
+
+// BusinessStaffRelation representa la relación completa desde business_staff (user-business-role)
+type BusinessStaffRelation struct {
+	UserID     uint
+	BusinessID *uint               // NULL para super usuarios
+	RoleID     *uint               // NULL si aún no tiene rol asignado
+	Business   *BusinessInfoEntity // Info del business si business_id no es NULL
 }
 
 // CreateUserDTO representa los datos para crear un usuario
@@ -307,21 +342,19 @@ type CreateUserDTO struct {
 	AvatarURL   string                // URL completa (para compatibilidad)
 	AvatarFile  *multipart.FileHeader // Archivo de imagen para subir a S3
 	IsActive    bool
-	RoleIDs     []uint
-	BusinessIDs []uint
+	BusinessIDs []uint // Businesses a relacionar con el usuario
 }
 
 // UpdateUserDTO representa los datos para actualizar un usuario
 type UpdateUserDTO struct {
-	Name        string
-	Email       string
-	Password    string // Opcional, solo si se quiere cambiar
-	Phone       string
-	AvatarURL   string                // URL completa (para compatibilidad)
-	AvatarFile  *multipart.FileHeader // Archivo de imagen para subir a S3
-	IsActive    bool
-	RoleIDs     []uint
-	BusinessIDs []uint
+	Name         string
+	Email        string
+	Phone        string
+	AvatarURL    string                // URL completa (para compatibilidad)
+	AvatarFile   *multipart.FileHeader // Archivo de imagen para subir a S3
+	RemoveAvatar bool
+	IsActive     bool
+	BusinessIDs  []uint // Businesses a mantener (sobrescribe relaciones)
 }
 
 // BusinessDTO representa un business para el DTO de usuario
@@ -461,4 +494,34 @@ type GetRolePermissionsResponse struct {
 	RoleID      uint
 	RoleName    string
 	Permissions []PermissionDTO
+}
+
+// ActionDTO representa un action en la respuesta
+type ActionDTO struct {
+	ID          uint
+	Name        string
+	Description string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+}
+
+// CreateActionDTO representa los datos para crear un action
+type CreateActionDTO struct {
+	Name        string
+	Description string
+}
+
+// UpdateActionDTO representa los datos para actualizar un action
+type UpdateActionDTO struct {
+	Name        string
+	Description string
+}
+
+// ActionListDTO representa una lista paginada de actions
+type ActionListDTO struct {
+	Actions    []ActionDTO
+	Total      int64
+	Page       int
+	PageSize   int
+	TotalPages int
 }

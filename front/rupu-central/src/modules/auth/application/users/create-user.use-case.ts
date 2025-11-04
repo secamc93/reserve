@@ -7,15 +7,13 @@ import { CreateUserResponse } from '../../domain/entities/create-user.entity';
 
 export interface CreateUserInput extends CreateUserParams {}
 
-export interface CreateUserOutput {
-  user: CreateUserResponse;
-}
+export interface CreateUserOutput extends CreateUserResponse {}
 
 export class CreateUserUseCase {
   constructor(private readonly usersRepository: IUsersRepository) {}
 
   async execute(input: CreateUserInput): Promise<CreateUserOutput> {
-    const user = await this.usersRepository.createUser(input);
-    return { user };
+    const resp = await this.usersRepository.createUser(input);
+    return resp;
   }
 }

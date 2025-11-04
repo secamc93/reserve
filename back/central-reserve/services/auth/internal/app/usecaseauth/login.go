@@ -184,27 +184,25 @@ func (uc *AuthUseCase) Login(ctx context.Context, request domain.LoginRequest) (
 		roleNames[i] = role.Name
 	}
 
-	// Usar el primer business para el token (si existe)
+	// Determinar business_id para token: si es super admin sin businesses, usar 0
 	var businessID uint
-	if len(businesses) > 0 {
+	if isSuperAdmin(roles) {
+		businessID = 0 // Super admin sin business específico
+		uc.log.Info().
+			Uint("user_id", userAuth.ID).
+			Uint("business_id", businessID).
+			Msg("Usuario super admin - usando business_id = 0")
+	} else if len(businesses) > 0 {
 		businessID = businesses[0].ID
 		uc.log.Info().
 			Uint("user_id", userAuth.ID).
 			Uint("business_id", businessID).
 			Msg("Usando primer business para token JWT")
 	} else {
-		// Verificar si el usuario es super admin
-		if isSuperAdmin(roles) {
-			businessID = 1 // Super admin siempre tiene business_id = 1
-			uc.log.Info().
-				Uint("user_id", userAuth.ID).
-				Uint("business_id", businessID).
-				Msg("Usuario super admin - asignando business_id = 1")
-		} else {
-			uc.log.Warn().
-				Uint("user_id", userAuth.ID).
-				Msg("Usuario sin businesses y no es super admin - usando business_id = 0")
-		}
+		businessID = 0
+		uc.log.Warn().
+			Uint("user_id", userAuth.ID).
+			Msg("Usuario sin businesses - usando business_id = 0")
 	}
 
 	token, err := uc.jwtService.GenerateToken(userAuth.ID)

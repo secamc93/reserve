@@ -39,13 +39,28 @@ func (uc *BusinessUseCase) GetBusinessByID(ctx context.Context, id uint) (*domai
 		}
 	}
 
+	// Mapear BusinessType
+	businessType := domain.BusinessTypeResponse{
+		ID: business.BusinessTypeID,
+	}
+	if business.BusinessType != nil {
+		businessType = domain.BusinessTypeResponse{
+			ID:          business.BusinessType.ID,
+			Name:        business.BusinessType.Name,
+			Code:        business.BusinessType.Code,
+			Description: business.BusinessType.Description,
+			Icon:        business.BusinessType.Icon,
+			IsActive:    business.BusinessType.IsActive,
+			CreatedAt:   business.BusinessType.CreatedAt,
+			UpdatedAt:   business.BusinessType.UpdatedAt,
+		}
+	}
+
 	response := &domain.BusinessResponse{
-		ID:   business.ID,
-		Name: business.Name,
-		Code: business.Code,
-		BusinessType: domain.BusinessTypeResponse{
-			ID: business.BusinessTypeID, // Nota: necesitaríamos obtener el BusinessType completo
-		},
+		ID:                 business.ID,
+		Name:               business.Name,
+		Code:               business.Code,
+		BusinessType:       businessType,
 		Timezone:           business.Timezone,
 		Address:            business.Address,
 		Description:        business.Description,

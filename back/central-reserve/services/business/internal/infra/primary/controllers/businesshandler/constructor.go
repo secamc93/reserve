@@ -14,6 +14,10 @@ type IBusinessHandler interface {
 	CreateBusinessHandler(c *gin.Context)
 	UpdateBusinessHandler(c *gin.Context)
 	DeleteBusinessHandler(c *gin.Context)
+	GetBusinessesConfiguredResourcesHandler(c *gin.Context)
+	GetBusinessConfiguredResourcesByIDHandler(c *gin.Context)
+	ActivateBusinessResourceHandler(c *gin.Context)
+	DeactivateBusinessResourceHandler(c *gin.Context)
 	RegisterRoutes(router *gin.RouterGroup, handler IBusinessHandler)
 }
 
@@ -29,3 +33,4 @@ func New(usecase usecasebusiness.IUseCaseBusiness, logger log.ILogger) IBusiness
 		logger:  logger,
 	}
 }
+

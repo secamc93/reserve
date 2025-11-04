@@ -8,3 +8,4 @@ export * from './dashboard';
 export * from './components';
 export * from './property-units';
 export * from './residents';
+export * from './businesses';

@@ -14,6 +14,7 @@ type IUseCaseUser interface {
 	CreateUser(ctx context.Context, user domain.CreateUserDTO) (string, string, string, error)
 	UpdateUser(ctx context.Context, id uint, user domain.UpdateUserDTO) (string, error)
 	DeleteUser(ctx context.Context, id uint) (string, error)
+	AssignRoleToUserBusiness(ctx context.Context, userID uint, assignments []domain.BusinessRoleAssignment) error
 }
 
 // UserUseCase implementa los casos de uso para usuarios

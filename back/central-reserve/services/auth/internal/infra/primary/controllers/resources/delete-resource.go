@@ -2,6 +2,8 @@ package resources
 
 import (
 	"central_reserve/services/auth/internal/infra/primary/controllers/resources/response"
+	"central_reserve/services/auth/middleware"
+	"central_reserve/shared/log"
 	"net/http"
 	"strconv"
 
@@ -11,7 +13,7 @@ import (
 // DeleteResourceHandler elimina un recurso por su ID
 //
 //	@Summary		Eliminar recurso
-//	@Description	Elimina un recurso del sistema por su ID único (eliminación suave)
+//	@Description	Elimina permanentemente un recurso del sistema por su ID único con eliminación en cascada
 //	@Tags			Resources
 //	@Accept			json
 //	@Produce		json
@@ -24,11 +26,24 @@ import (
 //	@Router			/resources/{id} [delete]
 //	@Security		BearerAuth
 func (h *ResourceHandler) DeleteResourceHandler(c *gin.Context) {
+	ctx := log.WithFunctionCtx(c.Request.Context(), "DeleteResourceHandler")
+
+	// Validar que el usuario sea super admin
+	if !middleware.IsSuperAdmin(c) {
+		h.logger.Warn(ctx).Msg("Intento de eliminación de recurso por usuario no super admin")
+		c.JSON(http.StatusForbidden, response.ErrorResponse{
+			Success: false,
+			Message: "Solo los super usuarios pueden eliminar recursos",
+			Error:   "permisos insuficientes",
+		})
+		return
+	}
+
 	// Obtener el ID del recurso de los parámetros de la URL
 	resourceIDStr := c.Param("id")
 	resourceID, err := strconv.ParseUint(resourceIDStr, 10, 32)
 	if err != nil {
-		h.logger.Error().Err(err).Str("resource_id", resourceIDStr).Msg("Error al parsear ID del recurso")
+		h.logger.Error(ctx).Err(err).Str("resource_id", resourceIDStr).Msg("Error al parsear ID del recurso")
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{
 			Success: false,
 			Message: "ID de recurso inválido",
@@ -37,12 +52,12 @@ func (h *ResourceHandler) DeleteResourceHandler(c *gin.Context) {
 		return
 	}
 
-	h.logger.Info().Uint64("resource_id", resourceID).Msg("Iniciando eliminación de recurso")
+	h.logger.Info(ctx).Uint64("resource_id", resourceID).Msg("Iniciando eliminación de recurso")
 
 	// Llamar al caso de uso
-	message, err := h.usecase.DeleteResource(c.Request.Context(), uint(resourceID))
+	message, err := h.usecase.DeleteResource(ctx, uint(resourceID))
 	if err != nil {
-		h.logger.Error().Err(err).Uint64("resource_id", resourceID).Msg("Error al eliminar recurso")
+		h.logger.Error(ctx).Err(err).Uint64("resource_id", resourceID).Msg("Error al eliminar recurso")
 
 		// Determinar el tipo de error y el código de estado HTTP
 		statusCode := http.StatusInternalServerError
@@ -61,7 +76,7 @@ func (h *ResourceHandler) DeleteResourceHandler(c *gin.Context) {
 		return
 	}
 
-	h.logger.Info().
+	h.logger.Info(ctx).
 		Uint64("resource_id", resourceID).
 		Str("message", message).
 		Msg("Recurso eliminado exitosamente")

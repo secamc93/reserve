@@ -29,9 +29,14 @@ func (uc *PermissionUseCase) GetPermissions(ctx context.Context, businessTypeID 
 func entityToPermissionDTO(permission domain.Permission) domain.PermissionDTO {
 	return domain.PermissionDTO{
 		ID:               permission.ID,
+		Name:             permission.Name,
+		Code:             permission.Code, // Code se genera o viene de otra fuente
 		Description:      permission.Description,
 		Resource:         permission.Resource,
 		Action:           permission.Action,
+		ScopeID:          permission.ScopeID,
+		ScopeName:        permission.ScopeName,
+		ScopeCode:        permission.ScopeCode,
 		BusinessTypeID:   permission.BusinessTypeID,
 		BusinessTypeName: permission.BusinessTypeName,
 	}

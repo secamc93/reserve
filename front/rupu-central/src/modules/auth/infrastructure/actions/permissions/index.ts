@@ -6,3 +6,4 @@
 export * from './get-permissions-list.action';
 export * from './get-permissions.action';
 export * from './create-permission.action';
+export * from './delete-permission.action';

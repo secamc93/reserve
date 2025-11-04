@@ -102,7 +102,7 @@ export function UserDetailModal({ isOpen, onClose, user }: UserDetailModalProps)
               Estado
             </label>
             <Badge 
-              variant={user.is_active ? "success" : "error"}
+              type={user.is_active ? "success" : "error"}
               className="text-sm"
             >
               {user.is_active ? 'Activo' : 'Inactivo'}
@@ -129,7 +129,7 @@ export function UserDetailModal({ isOpen, onClose, user }: UserDetailModalProps)
               </label>
               <div className="flex flex-wrap gap-2">
                 {user.roles.map((role: any) => (
-                  <Badge key={role.id} variant="secondary" className="text-sm">
+                  <Badge key={role.id} type="secondary" className="text-sm">
                     {role.name}
                   </Badge>
                 ))}

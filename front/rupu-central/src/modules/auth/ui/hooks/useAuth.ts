@@ -80,6 +80,8 @@ export function useAuth(
             email: result.data.email,
             role: result.data.role,
             avatarUrl: result.data.avatarUrl,
+            is_super_admin: result.data.is_super_admin,
+            scope: result.data.scope, // Guardar scope para validaciones posteriores
           };
           TokenStorage.setUser(userData);
 

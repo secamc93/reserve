@@ -4,6 +4,8 @@ import (
 	"central_reserve/services/auth/internal/domain"
 	"central_reserve/services/auth/internal/infra/primary/controllers/resources/request"
 	"central_reserve/services/auth/internal/infra/primary/controllers/resources/response"
+	"central_reserve/services/auth/middleware"
+	"central_reserve/shared/log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -30,12 +32,12 @@ import (
 //	@Router			/resources [get]
 //	@Security		BearerAuth
 func (h *ResourceHandler) GetResourcesHandler(c *gin.Context) {
-	h.logger.Info().Msg("Iniciando obtención de recursos")
+	ctx := log.WithFunctionCtx(c.Request.Context(), "GetResourcesHandler")
 
 	// Parsear parámetros de consulta
 	var req request.GetResourcesRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		h.logger.Error().Err(err).Msg("Error al parsear parámetros de consulta")
+		h.logger.Error(ctx).Err(err).Msg("Error al parsear parámetros de consulta")
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{
 			Success: false,
 			Message: "Parámetros de consulta inválidos",
@@ -54,15 +56,27 @@ func (h *ResourceHandler) GetResourcesHandler(c *gin.Context) {
 		SortOrder:   req.SortOrder,
 	}
 
-	// Agregar business_type_id si está presente
-	if req.BusinessTypeID > 0 {
-		filters.BusinessTypeID = &req.BusinessTypeID
+	// Si no es super admin, obtener business_type_id del token
+	isSuperAdmin := middleware.IsSuperAdmin(c)
+	if !isSuperAdmin {
+		// Obtener business_type_id del token
+		tokenBusinessTypeID, ok := middleware.GetBusinessTypeID(c)
+		if ok && tokenBusinessTypeID > 0 {
+			filters.BusinessTypeID = &tokenBusinessTypeID
+			h.logger.Info(ctx).Uint("business_type_id", tokenBusinessTypeID).Msg("Usuario normal: filtrando recursos por business_type_id del token")
+		}
+	} else {
+		// Super admin puede filtrar por business_type_id desde query param
+		if req.BusinessTypeID > 0 {
+			filters.BusinessTypeID = &req.BusinessTypeID
+			h.logger.Info(ctx).Uint("business_type_id", req.BusinessTypeID).Msg("Super admin: filtrando recursos por business_type_id del query")
+		}
 	}
 
 	// Llamar al caso de uso
-	result, err := h.usecase.GetResources(c.Request.Context(), filters)
+	result, err := h.usecase.GetResources(ctx, filters)
 	if err != nil {
-		h.logger.Error().Err(err).Msg("Error al obtener recursos")
+		h.logger.Error(ctx).Err(err).Msg("Error al obtener recursos")
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{
 			Success: false,
 			Message: "Error interno del servidor",
@@ -93,10 +107,11 @@ func (h *ResourceHandler) GetResourcesHandler(c *gin.Context) {
 		TotalPages: result.TotalPages,
 	}
 
-	h.logger.Info().
+	h.logger.Info(ctx).
 		Int64("total", result.Total).
 		Int("returned", len(resourceResponses)).
 		Int("page", result.Page).
+		Bool("is_super_admin", isSuperAdmin).
 		Msg("Recursos obtenidos exitosamente")
 
 	c.JSON(http.StatusOK, response.GetResourcesResponse{

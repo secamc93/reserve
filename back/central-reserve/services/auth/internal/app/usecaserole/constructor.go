@@ -83,6 +83,26 @@ func (uc *RoleUseCase) UpdateRole(ctx context.Context, id uint, roleDTO domain.U
 		return nil, fmt.Errorf("rol no encontrado")
 	}
 
+	// Validar que no existe otro rol con el mismo nombre (si se está actualizando el nombre)
+	if roleDTO.Name != nil && *roleDTO.Name != existingRole.Name {
+		exists, err := uc.repository.RoleExistsByName(ctx, *roleDTO.Name, &id)
+		if err != nil {
+			uc.log.Error().
+				Err(err).
+				Str("name", *roleDTO.Name).
+				Uint("role_id", id).
+				Msg("Error verificando existencia de rol por nombre")
+			return nil, fmt.Errorf("error verificando existencia de rol: %w", err)
+		}
+		if exists {
+			uc.log.Warn().
+				Str("name", *roleDTO.Name).
+				Uint("role_id", id).
+				Msg("Ya existe un rol con este nombre")
+			return nil, fmt.Errorf("ya existe un rol con el nombre '%s'", *roleDTO.Name)
+		}
+	}
+
 	// Actualizar el rol usando el repositorio
 	role, err := uc.repository.UpdateRole(ctx, id, roleDTO)
 	if err != nil {

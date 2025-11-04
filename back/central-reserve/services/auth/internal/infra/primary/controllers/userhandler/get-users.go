@@ -94,7 +94,11 @@ func (h *UserHandler) GetUsersHandler(c *gin.Context) {
 	h.logger.Info(ctx).
 		Int("count", len(userListDTO.Users)).
 		Int64("total", userListDTO.Total).
-		Int("total_pages", userListDTO.TotalPages).
-		Msg("Usuarios obtenidos exitosamente")
+		Int("current_page", userListDTO.Page).
+		Int("per_page", userListDTO.PageSize).
+		Int("last_page", userListDTO.TotalPages).
+		Bool("has_next", userListDTO.Page < userListDTO.TotalPages).
+		Bool("has_prev", userListDTO.Page > 1).
+		Msg("Usuarios obtenidos exitosamente con paginación")
 	c.JSON(http.StatusOK, response)
 }

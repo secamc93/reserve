@@ -4,3 +4,4 @@
 
 export * from './get-permissions-list.use-case';
 export * from './get-permissions.use-case';
+export * from './delete-permission.use-case';

@@ -111,7 +111,7 @@ export function UsersPagination({
           <span className="text-sm text-gray-600">Mostrar:</span>
           <Select
             value={pageSize.toString()}
-            onChange={(value) => onPageSizeChange(parseInt(value))}
+            onChange={(e) => onPageSizeChange(parseInt(e.target.value))}
             options={pageSizeOptions}
             className="input"
             disabled={loading}
@@ -122,7 +122,7 @@ export function UsersPagination({
         <div className="flex items-center gap-1">
           {/* Primera página */}
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={() => onPageChange(1)}
             disabled={currentPage === 1 || loading}
@@ -133,7 +133,7 @@ export function UsersPagination({
 
           {/* Página anterior */}
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={() => onPageChange(currentPage - 1)}
             disabled={currentPage === 1 || loading}
@@ -148,7 +148,7 @@ export function UsersPagination({
               <div key={index}>
                 {typeof page === 'number' ? (
                   <Button
-                    variant={page === currentPage ? "primary" : "ghost"}
+                    variant={page === currentPage ? "primary" : "outline"}
                     size="sm"
                     onClick={() => onPageChange(page)}
                     disabled={loading}
@@ -169,7 +169,7 @@ export function UsersPagination({
 
           {/* Página siguiente */}
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={() => onPageChange(currentPage + 1)}
             disabled={currentPage === totalPages || loading}
@@ -180,7 +180,7 @@ export function UsersPagination({
 
           {/* Última página */}
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={() => onPageChange(totalPages)}
             disabled={currentPage === totalPages || loading}

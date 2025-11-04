@@ -44,9 +44,10 @@ interface BusinessSelectorProps {
   isOpen: boolean;
   onClose: () => void;
   showSuperAdminButton?: boolean;
+  skipRedirect?: boolean; // Si es true, no redirige después de seleccionar
 }
 
-export function BusinessSelector({ businesses, isOpen, onClose, showSuperAdminButton = false }: BusinessSelectorProps) {
+export function BusinessSelector({ businesses, isOpen, onClose, showSuperAdminButton = false, skipRedirect = false }: BusinessSelectorProps) {
   const router = useRouter();
   const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
   const [loading, setLoading] = useState(false);
@@ -87,8 +88,13 @@ export function BusinessSelector({ businesses, isOpen, onClose, showSuperAdminBu
           });
         }
 
-        // Redirigir según el tipo de negocio
-        redirectByBusinessType(business);
+        // Redirigir según el tipo de negocio (solo si no se omite la redirección)
+        if (!skipRedirect) {
+          redirectByBusinessType(business);
+        } else {
+          // Si se omite la redirección, simplemente cerrar el modal
+          onClose();
+        }
       } else {
         setError(result.error || 'Error al obtener token del negocio');
       }
@@ -162,8 +168,12 @@ export function BusinessSelector({ businesses, isOpen, onClose, showSuperAdminBu
         TokenStorage.setBusinessToken(result.data.token);
         TokenStorage.setActiveBusiness(0);
         
-        // Redirigir al dashboard principal
-        router.push('/dashboard');
+        // Redirigir al dashboard principal (solo si no se omite la redirección)
+        if (!skipRedirect) {
+          router.push('/dashboard');
+        } else {
+          onClose();
+        }
       } else {
         setError(result.error || 'Error al obtener token de super admin');
       }

@@ -211,7 +211,7 @@ export function Filters({
               }
 
               return (
-                <Badge key={key} type="outline" className="text-xs">
+                <Badge key={key} type="secondary" className="text-xs">
                   {field.label}: {displayValue}
                   <button
                     onClick={() => handleFilterChange(key, undefined)}

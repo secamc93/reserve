@@ -5,6 +5,7 @@ import (
 	"central_reserve/services/auth/internal/infra/primary/controllers/rolehandler/request"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -55,16 +56,43 @@ func (h *RoleHandler) UpdateRole(c *gin.Context) {
 	if err != nil {
 		statusCode := http.StatusInternalServerError
 		message := "Error al actualizar el rol"
+		errMsg := err.Error()
 
-		if err.Error() == "rol no encontrado" {
+		// Detectar errores de validación de negocio (deben loggearse como WARN)
+		if errMsg == "rol no encontrado" {
 			statusCode = http.StatusNotFound
 			message = "Rol no encontrado"
+		} else if strings.Contains(errMsg, "ya existe un rol con el nombre") {
+			// Detectar error de nombre duplicado (validación previa)
+			statusCode = http.StatusConflict
+			message = errMsg
+		} else if strings.Contains(errMsg, "duplicate key") && strings.Contains(errMsg, "uni_role_name") {
+			// Fallback: Detectar error de nombre duplicado desde la BD (no debería ocurrir)
+			statusCode = http.StatusConflict
+			message = "Ya existe un rol con este nombre. Por favor, use un nombre diferente."
+		} else if strings.Contains(errMsg, "duplicate key") && strings.Contains(errMsg, "SQLSTATE 23505") {
+			// Fallback: Detectar cualquier otro error de clave duplicada desde la BD
+			statusCode = http.StatusConflict
+			message = "Ya existe un rol con estos datos. Por favor, verifique los valores ingresados."
+		}
+
+		// Log apropiado según el tipo de error
+		name := ""
+		if req.Name != nil {
+			name = *req.Name
+		}
+		if statusCode == http.StatusConflict {
+			h.logger.Warn().Str("name", name).Uint("id", uint(id)).Msg("Intento de actualizar rol con nombre duplicado")
+		} else if statusCode == http.StatusNotFound {
+			h.logger.Warn().Uint("id", uint(id)).Msg("Intento de actualizar rol no encontrado")
+		} else {
+			h.logger.Error().Err(err).Uint("id", uint(id)).Msg("Error al actualizar rol")
 		}
 
 		c.JSON(statusCode, gin.H{
 			"success": false,
 			"message": message,
-			"error":   err.Error(),
+			"error":   errMsg,
 		})
 		return
 	}
@@ -74,4 +102,3 @@ func (h *RoleHandler) UpdateRole(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response)
 }
-

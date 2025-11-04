@@ -115,7 +115,7 @@ export function CreateResourceModal({ isOpen, onClose, onSuccess }: CreateResour
           label="Tipo de Negocio (Opcional)"
           name="business_type_id"
           value={business_type_id}
-          onChange={(value) => setBusinessTypeId(value)}
+          onChange={(e) => setBusinessTypeId(e.target.value)}
           options={businessTypeOptions}
           disabled={loading}
         />

@@ -17,9 +17,9 @@ import { useUsers } from '../hooks/use-users';
 import { useUserModals } from '../hooks/use-user-modals';
 import { UsersTable } from './users-table';
 import { UsersFilters } from './users-filters';
-import { UsersPagination } from './users-pagination';
 import { UserForm } from './user-form';
 import { UserDetailModal } from './user-detail-modal';
+import { AssignRolesModal } from './assign-roles-modal';
 
 export function UsersPage() {
   // Hooks
@@ -48,15 +48,18 @@ export function UsersPage() {
     isEditModalOpen,
     isDeleteModalOpen,
     isViewModalOpen,
+    isAssignRolesModalOpen,
     selectedUser,
     openCreateModal,
     openEditModal,
     openDeleteModal,
     openViewModal,
+    openAssignRolesModal,
     closeCreateModal,
     closeEditModal,
     closeDeleteModal,
     closeViewModal,
+    closeAssignRolesModal,
     closeAllModals
   } = useUserModals();
 
@@ -152,7 +155,7 @@ export function UsersPage() {
         onClearFilters={handleClearFilters}
       />
 
-      {/* Tabla de usuarios */}
+      {/* Tabla de usuarios con paginación integrada */}
       <UsersTable
         users={users}
         loading={loading}
@@ -160,25 +163,19 @@ export function UsersPage() {
         onEditUser={openEditModal}
         onViewUser={openViewModal}
         onDeleteUser={openDeleteModal}
+        onAssignRoles={openAssignRolesModal}
         selectedUser={selectedUser}
         isDeleteModalOpen={isDeleteModalOpen}
         closeDeleteModal={closeDeleteModal}
         isViewModalOpen={isViewModalOpen}
         closeViewModal={closeViewModal}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalCount={totalCount}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
       />
-
-      {/* Paginación */}
-      {totalPages > 1 && (
-        <UsersPagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalCount={totalCount}
-          pageSize={pageSize}
-          onPageChange={setPage}
-          onPageSizeChange={setPageSize}
-          loading={loading}
-        />
-      )}
 
       {/* Error general */}
       {error && (
@@ -213,6 +210,14 @@ export function UsersPage() {
         isOpen={isViewModalOpen}
         onClose={closeViewModal}
         user={selectedUser}
+      />
+
+      {/* Modal de asignar roles */}
+      <AssignRolesModal
+        isOpen={isAssignRolesModalOpen}
+        onClose={closeAssignRolesModal}
+        user={selectedUser}
+        onSuccess={handleCrudSuccess}
       />
     </div>
   );

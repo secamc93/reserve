@@ -6,11 +6,11 @@ import (
 )
 
 type IBusinessRepository interface {
-	GetBusinesses(ctx context.Context) ([]Business, error)
+	GetBusinesses(ctx context.Context, page, perPage int, name string, businessTypeID *uint, isActive *bool) ([]Business, int64, error)
 	GetBusinessByID(ctx context.Context, id uint) (*Business, error)
 	GetBusinessByCode(ctx context.Context, code string) (*Business, error)
 	GetBusinessByCustomDomain(ctx context.Context, domain string) (*Business, error)
-	CreateBusiness(ctx context.Context, business Business) (string, error)
+	CreateBusiness(ctx context.Context, business Business) (uint, error)
 	UpdateBusiness(ctx context.Context, id uint, business Business) (string, error)
 	DeleteBusiness(ctx context.Context, id uint) (string, error)
 	GetBusinesResourcesConfigured(ctx context.Context, businessID uint) ([]BusinessResourceConfigured, error)
@@ -23,14 +23,15 @@ type IBusinessRepository interface {
 
 	// Métodos para BusinessTypeResourcePermitted
 	GetBusinessTypeResourcesPermitted(ctx context.Context, businessTypeID uint) ([]BusinessTypeResourcePermitted, error)
-	UpdateBusinessTypeResourcesPermitted(ctx context.Context, businessTypeID uint, resourcesIDs []uint) error
 	GetResourceByID(ctx context.Context, resourceID uint) (*Resource, error)
 	GetBusinessTypesWithResourcesPaginated(ctx context.Context, page, perPage int, businessTypeID *uint) ([]BusinessTypeWithResourcesResponse, int64, error)
 
 	// Métodos para BusinessResourceConfigured (recursos asignados a un business)
-	GetBusinessesWithConfiguredResourcesPaginated(ctx context.Context, page, perPage int, businessID *uint) ([]BusinessWithConfiguredResourcesResponse, int64, error)
+	GetBusinessesWithConfiguredResourcesPaginated(ctx context.Context, page, perPage int, businessID *uint, businessTypeID *uint) ([]BusinessWithConfiguredResourcesResponse, int64, error)
+	GetBusinessByIDWithConfiguredResources(ctx context.Context, businessID uint) (*BusinessWithConfiguredResourcesResponse, error)
 	GetBusinessConfiguredResourcesIDs(ctx context.Context, businessID uint) ([]uint, error)
 	UpdateBusinessConfiguredResources(ctx context.Context, businessID uint, resourcesIDs []uint) error
+	ToggleBusinessResourceActive(ctx context.Context, businessID uint, resourceID uint, active bool) error
 }
 
 // IS3Service define las operaciones de almacenamiento en S3

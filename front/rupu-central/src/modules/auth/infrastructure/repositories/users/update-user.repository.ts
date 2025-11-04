@@ -10,7 +10,7 @@ import { BackendUpdateUserResponse } from '../response/users.response';
 
 export class UpdateUserRepository {
   async updateUser(params: UpdateUserParams): Promise<UpdateUserResponse> {
-    const { id, token, name, email, phone, avatarFile, is_active, role_ids, business_ids } = params;
+    const { id, token, name, email, phone, avatarFile, is_active, business_ids } = params;
 
     // Preparar FormData para el envío (soporta archivos)
     const formData = new FormData();
@@ -19,11 +19,12 @@ export class UpdateUserRepository {
     if (email !== undefined) formData.append('email', email);
     if (phone !== undefined) formData.append('phone', phone);
     if (is_active !== undefined) formData.append('is_active', is_active.toString());
-    if (role_ids !== undefined) formData.append('role_ids', role_ids);
     if (business_ids !== undefined) formData.append('business_ids', business_ids);
+    // Sin roles: ya no se envían asignaciones
     
     if (avatarFile) {
-      formData.append('avatar', avatarFile);
+      // Clave esperada por el backend para multipart
+      formData.append('avatarFile', avatarFile);
     }
 
     const url = `${env.API_BASE_URL}/users/${id}`;
@@ -54,7 +55,7 @@ export class UpdateUserRepository {
           duration,
           data: errorData,
         });
-        throw new Error(errorData.message || `Error actualizando usuario: ${response.status}`);
+        throw new Error(errorData.message || (errorData as any).error || `Error actualizando usuario: ${response.status}`);
       }
 
       const backendResponse: BackendUpdateUserResponse = await response.json();
@@ -73,16 +74,19 @@ export class UpdateUserRepository {
 
       const user = backendResponse.data;
 
+      const rolesArray = Array.isArray(user?.roles) ? user.roles : [];
+      const businessesArray = Array.isArray(user?.businesses) ? user.businesses : [];
+
       return {
         id: user.id,
         name: user.name,
         email: user.email,
-        phone: user.phone || '',
-        avatar_url: user.avatar_url || undefined,
+        phone: user.phone ?? '',
+        avatar_url: user.avatar_url ?? null,
         is_active: user.is_active,
         created_at: user.created_at,
         updated_at: user.updated_at,
-        roles: user.roles.map((role: any) => ({
+        roles: rolesArray.map((role: any) => ({
           id: role.id,
           name: role.name,
           description: role.description,
@@ -90,7 +94,7 @@ export class UpdateUserRepository {
           is_system: role.is_system,
           scope_id: role.scope_id,
         })),
-        businesses: user.businesses.map((business: any) => ({
+        businesses: businessesArray.map((business: any) => ({
           id: business.id,
           name: business.name,
           logo_url: business.logo_url,

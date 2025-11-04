@@ -16,6 +16,10 @@ definitions:
     type: object
   handlervote.GeneratePublicVotingURLRequest:
     properties:
+      business_id:
+        description: ID del business (solo para super admin, opcional en body)
+        example: 19
+        type: integer
       duration_hours:
         description: Duración del token en horas
         example: 24
@@ -100,6 +104,18 @@ definitions:
     - email
     - name
     - phone
+    type: object
+  request.CreateActionRequest:
+    description: Solicitud para crear un nuevo action en el sistema
+    properties:
+      description:
+        example: Permite crear nuevos registros
+        type: string
+      name:
+        example: create
+        type: string
+    required:
+    - name
     type: object
   request.CreateAttendanceListRequest:
     properties:
@@ -505,6 +521,18 @@ definitions:
     - capacity
     - number
     type: object
+  request.UpdateActionRequest:
+    description: Solicitud para actualizar un action existente
+    properties:
+      description:
+        example: Permite crear nuevos registros
+        type: string
+      name:
+        example: create
+        type: string
+    required:
+    - name
+    type: object
   request.UpdateClient:
     properties:
       business_id:
@@ -816,6 +844,17 @@ definitions:
       timezone:
         type: string
       updated_at:
+        type: string
+    type: object
+  response.BusinessRoleAssignmentResponse:
+    properties:
+      business_id:
+        type: integer
+      business_name:
+        type: string
+      role_id:
+        type: integer
+      role_name:
         type: string
     type: object
   response.BusinessTokenResponse:
@@ -1261,29 +1300,6 @@ definitions:
         example: Error interno del servidor
         type: string
     type: object
-  response.RoleInfoDetailed:
-    properties:
-      business_type_id:
-        type: integer
-      business_type_name:
-        type: string
-      description:
-        type: string
-      id:
-        type: integer
-      is_system:
-        type: boolean
-      level:
-        type: integer
-      name:
-        type: string
-      scope_code:
-        type: string
-      scope_id:
-        type: integer
-      scope_name:
-        type: string
-    type: object
   response.RoleListResponse:
     properties:
       count:
@@ -1352,6 +1368,17 @@ definitions:
         example: true
         type: boolean
     type: object
+  response.UserCreatedResponse:
+    properties:
+      email:
+        type: string
+      message:
+        type: string
+      password:
+        type: string
+      success:
+        type: boolean
+    type: object
   response.UserErrorResponse:
     properties:
       error:
@@ -1396,9 +1423,9 @@ definitions:
     properties:
       avatar_url:
         type: string
-      businesses:
+      business_role_assignments:
         items:
-          $ref: '#/definitions/services_auth_internal_infra_primary_controllers_userhandler_response.BusinessInfo'
+          $ref: '#/definitions/response.BusinessRoleAssignmentResponse'
         type: array
       created_at:
         type: string
@@ -1408,16 +1435,14 @@ definitions:
         type: integer
       is_active:
         type: boolean
+      is_super_user:
+        type: boolean
       last_login_at:
         type: string
       name:
         type: string
       phone:
         type: string
-      roles:
-        items:
-          $ref: '#/definitions/services_auth_internal_infra_primary_controllers_userhandler_response.RoleInfo'
-        type: array
       updated_at:
         type: string
     type: object
@@ -1564,38 +1589,6 @@ definitions:
         example: Sistema
         type: string
     type: object
-  services_auth_internal_infra_primary_controllers_userhandler_response.BusinessInfo:
-    properties:
-      business_type_id:
-        type: integer
-      business_type_name:
-        type: string
-      id:
-        type: integer
-      logo_url:
-        type: string
-      name:
-        type: string
-      role:
-        allOf:
-        - $ref: '#/definitions/response.RoleInfoDetailed'
-        description: Rol del usuario en este business
-    type: object
-  services_auth_internal_infra_primary_controllers_userhandler_response.RoleInfo:
-    properties:
-      description:
-        type: string
-      id:
-        type: integer
-      is_system:
-        type: boolean
-      level:
-        type: integer
-      name:
-        type: string
-      scope_id:
-        type: integer
-    type: object
   services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.PropertyUnitResponse:
     properties:
       area:
@@ -1642,6 +1635,267 @@ info:
   title: Restaurant Reservation API
   version: "1.0"
 paths:
+  /actions:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene una lista paginada de actions del sistema con opciones
+        de filtrado
+      parameters:
+      - default: 1
+        description: Número de página
+        in: query
+        minimum: 1
+        name: page
+        type: integer
+      - default: 10
+        description: Tamaño de página
+        in: query
+        maximum: 100
+        minimum: 1
+        name: page_size
+        type: integer
+      - description: Filtrar por nombre (búsqueda parcial)
+        in: query
+        name: name
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de actions obtenida exitosamente
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Parámetros de consulta inválidos
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Obtener actions
+      tags:
+      - Actions
+    post:
+      consumes:
+      - application/json
+      description: Crea un nuevo action en el sistema con nombre y descripción únicos
+      parameters:
+      - description: Datos del action a crear
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateActionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Action creado exitosamente
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Datos de entrada inválidos
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Solo super usuarios pueden crear actions
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Action ya existe
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Crear action
+      tags:
+      - Actions
+  /actions/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Elimina un action del sistema por su ID único. No se puede eliminar
+        si tiene permisos asociados.
+      parameters:
+      - description: ID del action
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Action eliminado exitosamente
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: ID de action inválido
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Solo super usuarios pueden eliminar actions
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Action no encontrado
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Action tiene permisos asociados
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Eliminar action
+      tags:
+      - Actions
+    get:
+      consumes:
+      - application/json
+      description: Obtiene un action específico del sistema por su ID único
+      parameters:
+      - description: ID del action
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Action obtenido exitosamente
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: ID de action inválido
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Action no encontrado
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Obtener action por ID
+      tags:
+      - Actions
+    put:
+      consumes:
+      - application/json
+      description: Actualiza un action existente en el sistema
+      parameters:
+      - description: ID del action
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      - description: Datos del action a actualizar
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateActionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Action actualizado exitosamente
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Datos de entrada inválidos
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Solo super usuarios pueden actualizar actions
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Action no encontrado
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflicto con action existente
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Actualizar action
+      tags:
+      - Actions
   /attendance/lists:
     get:
       consumes:
@@ -2342,201 +2596,6 @@ paths:
       summary: Obtener roles y permisos del usuario
       tags:
       - Auth
-  /business-resources/{business_type_id}/resources:
-    put:
-      consumes:
-      - application/json
-      description: Actualiza la lista de recursos permitidos para un tipo de negocio
-        específico
-      parameters:
-      - description: ID del tipo de negocio
-        in: path
-        name: business_type_id
-        required: true
-        type: integer
-      - description: Lista de IDs de recursos
-        in: body
-        name: request
-        required: true
-        schema:
-          properties:
-            resources_ids:
-              items:
-                type: integer
-              type: array
-          type: object
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Tipo de negocio creado exitosamente
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Solicitud inválida
-          schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: Token de acceso requerido
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Error interno del servidor
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Actualizar recursos de un tipo de negocio
-      tags:
-      - Business Resources
-  /business-resources/businesses/{business_id}/configured-resources:
-    put:
-      consumes:
-      - application/json
-      description: Actualiza la lista de recursos configurados para un business específico
-        (solo recursos permitidos por su tipo)
-      parameters:
-      - description: ID del business
-        in: path
-        name: business_id
-        required: true
-        type: integer
-      - description: Lista de IDs de recursos
-        in: body
-        name: request
-        required: true
-        schema:
-          properties:
-            resources_ids:
-              items:
-                type: integer
-              type: array
-          type: object
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Recursos configurados actualizados exitosamente
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Parámetros inválidos o recursos no permitidos
-          schema:
-            additionalProperties: true
-            type: object
-        "404":
-          description: Business no encontrado
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Error interno del servidor
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Actualizar recursos configurados de un business
-      tags:
-      - Business Resources
-  /business-resources/businesses/configured-resources:
-    get:
-      consumes:
-      - application/json
-      description: Obtiene todos los business con sus recursos configurados aplicando
-        paginación
-      parameters:
-      - default: 1
-        description: 'Número de página (por defecto: 1)'
-        in: query
-        name: page
-        type: integer
-      - default: 10
-        description: 'Elementos por página (por defecto: 10, máximo: 100)'
-        in: query
-        name: per_page
-        type: integer
-      - description: ID del business para filtrar
-        in: query
-        name: business_id
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Business con recursos configurados obtenidos exitosamente
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Parámetros inválidos
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Error interno del servidor
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Obtener business con recursos configurados
-      tags:
-      - Business Resources
-  /business-resources/resources:
-    get:
-      consumes:
-      - application/json
-      description: Obtiene todos los tipos de negocio con sus recursos asociados aplicando
-        paginación
-      parameters:
-      - default: 1
-        description: 'Número de página (por defecto: 1)'
-        in: query
-        name: page
-        type: integer
-      - default: 10
-        description: 'Elementos por página (por defecto: 10, máximo: 100)'
-        in: query
-        name: per_page
-        type: integer
-      - description: ID del tipo de negocio para filtrar
-        in: query
-        name: business_type_id
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Tipos de negocio con recursos obtenidos exitosamente
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Solicitud inválida
-          schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: Token de acceso requerido
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Error interno del servidor
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Obtener tipos de negocio con recursos
-      tags:
-      - Business Resources
   /business-rooms/{business_id}:
     get:
       consumes:
@@ -2779,10 +2838,22 @@ paths:
         in: query
         name: page
         type: integer
-      - description: Límite de elementos por página (por defecto 10)
+      - description: Elementos por página (por defecto 10)
         in: query
-        name: limit
+        name: per_page
         type: integer
+      - description: Filtrar por nombre de negocio
+        in: query
+        name: name
+        type: string
+      - description: Filtrar por tipo de negocio
+        in: query
+        name: business_type_id
+        type: integer
+      - description: Filtrar por estado activo/inactivo
+        in: query
+        name: is_active
+        type: boolean
       produces:
       - application/json
       responses:
@@ -3069,6 +3140,227 @@ paths:
       summary: Actualizar negocio
       tags:
       - businesses
+  /businesses/{id}/configured-resources:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene la configuración de recursos de un business específico
+        por su ID, incluyendo todos los recursos asociados y su estado (activo/inactivo)
+      parameters:
+      - description: ID del business
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Configuración de recursos del business obtenida exitosamente
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Parámetros inválidos
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Sin permisos
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Business no encontrado
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Obtener configuración de recursos de un business por ID
+      tags:
+      - Business Resources
+  /businesses/configured-resources:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene una lista paginada de businesses con sus recursos configurados
+        y su estado (activo/inactivo)
+      parameters:
+      - default: 1
+        description: Número de página
+        in: query
+        minimum: 1
+        name: page
+        type: integer
+      - default: 10
+        description: Elementos por página
+        in: query
+        maximum: 100
+        minimum: 1
+        name: per_page
+        type: integer
+      - description: Filtrar por ID de business
+        in: query
+        name: business_id
+        type: integer
+      - description: Filtrar por ID de tipo de business
+        in: query
+        name: business_type_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de businesses con recursos obtenida exitosamente
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Parámetros de consulta inválidos
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Sin permisos
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Obtener configuración de recursos de businesses
+      tags:
+      - Business Resources
+  /businesses/configured-resources/{resource_id}/activate:
+    put:
+      consumes:
+      - application/json
+      description: Activa un recurso configurado para un business específico
+      parameters:
+      - description: ID del recurso
+        in: path
+        minimum: 1
+        name: resource_id
+        required: true
+        type: integer
+      - description: ID del business (solo super admin)
+        in: query
+        minimum: 1
+        name: business_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Recurso activado exitosamente
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Parámetros inválidos
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Sin permisos
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Business o recurso no encontrado
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Activar recurso de business
+      tags:
+      - Business Resources
+  /businesses/configured-resources/{resource_id}/deactivate:
+    put:
+      consumes:
+      - application/json
+      description: Desactiva un recurso configurado para un business específico
+      parameters:
+      - description: ID del recurso
+        in: path
+        minimum: 1
+        name: resource_id
+        required: true
+        type: integer
+      - description: ID del business (solo super admin)
+        in: query
+        minimum: 1
+        name: business_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Recurso desactivado exitosamente
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Parámetros inválidos
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Sin permisos
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Business o recurso no encontrado
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Desactivar recurso de business
+      tags:
+      - Business Resources
   /clients:
     get:
       consumes:
@@ -4585,11 +4877,12 @@ paths:
         name: voting_id
         required: true
         type: integer
-      - description: ID del business (opcional para super admin)
+      - description: ID del business (opcional para super admin, alternativo a body)
         in: query
         name: business_id
         type: integer
-      - description: Configuración de la URL
+      - description: Configuración de la URL (business_id opcional en body para super
+          admin)
         in: body
         name: request
         required: true
@@ -5055,7 +5348,7 @@ paths:
           schema:
             $ref: '#/definitions/response.PermissionErrorResponse'
         "409":
-          description: Permiso con código duplicado
+          description: Permiso con código o nombre duplicado
           schema:
             $ref: '#/definitions/response.PermissionErrorResponse'
         "500":
@@ -5071,7 +5364,8 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Elimina un permiso del sistema
+      description: Elimina permanentemente un permiso del sistema (eliminación física,
+        no se puede recuperar)
       parameters:
       - description: ID del permiso
         in: path
@@ -5104,7 +5398,7 @@ paths:
             $ref: '#/definitions/response.PermissionErrorResponse'
       security:
       - BearerAuth: []
-      summary: Eliminar permiso
+      summary: Eliminar permiso permanentemente
       tags:
       - Permissions
     get:
@@ -5962,7 +6256,8 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Elimina un recurso del sistema por su ID único (eliminación suave)
+      description: Elimina permanentemente un recurso del sistema por su ID único
+        con eliminación en cascada
       parameters:
       - description: ID del recurso
         in: path
@@ -7003,52 +7298,45 @@ paths:
     post:
       consumes:
       - multipart/form-data
-      description: Crea un nuevo usuario con roles y businesses opcionales. Soporta
-        carga de imagen (avatarFile).
+      description: |-
+        Crea un nuevo usuario.
+        ENVÍO: SOLO multipart/form-data (no JSON body)
       parameters:
-      - description: Nombre
+      - description: Nombre (2-100)
         in: formData
         name: name
         required: true
         type: string
-      - description: Email
+      - description: Email válido
         in: formData
         name: email
         required: true
         type: string
-      - description: Teléfono (10 dígitos)
+      - description: Teléfono (exactamente 10 dígitos)
         in: formData
         name: phone
         type: string
-      - description: ¿Activo?
+      - description: ¿Activo? (true/false)
         in: formData
         name: is_active
         type: boolean
-      - description: 'IDs de roles separados por comas (ej: 1,2,3)'
-        in: formData
-        name: role_ids
-        type: string
-      - description: 'IDs de negocios separados por comas (ej: 1,2,3)'
-        in: formData
-        name: business_ids
-        type: string
-      - description: URL de avatar (opcional si se usa avatarFile)
-        in: formData
-        name: avatar_url
-        type: string
-      - description: Imagen de avatar
+      - description: Imagen de avatar (sube a S3)
         in: formData
         name: avatarFile
         type: file
+      - description: 'IDs de negocios separados por comas. Ej: ''16,21'''
+        in: formData
+        name: business_ids
+        type: string
       produces:
       - application/json
       responses:
         "201":
-          description: Usuario creado exitosamente
+          description: Usuario creado exitosamente (incluye contraseña generada)
           schema:
-            $ref: '#/definitions/response.UserMessageResponse'
+            $ref: '#/definitions/response.UserCreatedResponse'
         "400":
-          description: Datos inválidos
+          description: Datos inválidos (mensajes claros de validación)
           schema:
             $ref: '#/definitions/response.UserErrorResponse'
         "401":
@@ -7150,28 +7438,28 @@ paths:
     put:
       consumes:
       - multipart/form-data
-      description: Actualiza un usuario existente en el sistema. Soporta carga de
-        imagen (avatarFile).
+      description: |-
+        Actualiza un usuario existente.
+        ENVÍO: SOLO multipart/form-data (no JSON body)
       parameters:
       - description: ID del usuario
         in: path
-        minimum: 1
         name: id
         required: true
         type: integer
-      - description: Nombre
+      - description: Nombre (2-100)
         in: formData
         name: name
         type: string
-      - description: Email
+      - description: Email válido
         in: formData
         name: email
         type: string
-      - description: Nueva contraseña
+      - description: Nueva contraseña (>=6)
         in: formData
         name: password
         type: string
-      - description: Teléfono (10 dígitos)
+      - description: Teléfono (exactamente 10 dígitos)
         in: formData
         name: phone
         type: string
@@ -7179,31 +7467,27 @@ paths:
         in: formData
         name: is_active
         type: boolean
-      - description: 'IDs de roles separados por comas (ej: 1,2,3)'
+      - description: Eliminar avatar actual (true/false)
         in: formData
-        name: role_ids
-        type: string
-      - description: 'IDs de negocios separados por comas (ej: 1,2,3)'
-        in: formData
-        name: business_ids
-        type: string
-      - description: URL de avatar (opcional si se usa avatarFile)
-        in: formData
-        name: avatar_url
-        type: string
-      - description: Imagen de avatar
+        name: remove_avatar
+        type: boolean
+      - description: Imagen de avatar (sube a S3)
         in: formData
         name: avatarFile
         type: file
+      - description: 'IDs de negocios separados por comas. Ej: ''16,21'''
+        in: formData
+        name: business_ids
+        type: string
       produces:
       - application/json
       responses:
         "200":
-          description: Usuario actualizado exitosamente
+          description: Usuario actualizado (data con usuario)
           schema:
             $ref: '#/definitions/response.UserSuccessResponse'
         "400":
-          description: Datos inválidos
+          description: Datos inválidos o IDs inexistentes
           schema:
             $ref: '#/definitions/response.UserErrorResponse'
         "401":

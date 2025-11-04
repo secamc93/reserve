@@ -117,7 +117,7 @@ func BusinessDTOToResponse(businessDTO domain.BusinessResponse) response.Busines
 		NavbarImageURL:  businessDTO.NavbarImageURL,
 		IsActive:        businessDTO.IsActive,
 		BusinessTypeID:  businessDTO.BusinessType.ID,
-		BusinessType:    "", // Se llenará desde el handler
+		BusinessType:    businessDTO.BusinessType.Name,
 		CreatedAt:       businessDTO.CreatedAt,
 		UpdatedAt:       businessDTO.UpdatedAt,
 	}
@@ -191,6 +191,27 @@ func BuildGetBusinessesResponseFromDTOs(businessDTOs []domain.BusinessResponse, 
 		Success: true,
 		Message: message,
 		Data:    BusinessDTOsToResponse(businessDTOs),
+	}
+}
+
+// BuildGetBusinessesResponseWithPagination construye la respuesta completa para obtener múltiples negocios con paginación
+func BuildGetBusinessesResponseWithPagination(businessDTOs []domain.BusinessResponse, message string, page, limit int, total int64) response.GetBusinessesResponse {
+	totalPages := int((total + int64(limit) - 1) / int64(limit))
+	hasNext := page < totalPages
+	hasPrev := page > 1
+
+	return response.GetBusinessesResponse{
+		Success: true,
+		Message: message,
+		Data:    BusinessDTOsToResponse(businessDTOs),
+		Pagination: &response.PaginationInfo{
+			CurrentPage: page,
+			PerPage:     limit,
+			Total:       total,
+			LastPage:    totalPages,
+			HasNext:     hasNext,
+			HasPrev:     hasPrev,
+		},
 	}
 }
 

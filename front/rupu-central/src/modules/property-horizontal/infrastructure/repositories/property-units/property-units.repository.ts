@@ -47,9 +47,11 @@ export class PropertyUnitsRepository implements IPropertyUnitsRepository {
   async getPropertyUnits(params: GetPropertyUnitsParams): Promise<PropertyUnitsPaginated> {
     const { businessId, token, page = 1, pageSize = 10, number, unitType, floor, block, isActive } = params;
 
+    // Agregar el business_id SIEMPRE como query param
     const queryParams = new URLSearchParams({
       page: page.toString(),
       page_size: pageSize.toString(),
+      business_id: businessId?.toString() || '', // business_id requerido siempre
     });
 
     if (number) queryParams.append('number', number);
@@ -57,10 +59,10 @@ export class PropertyUnitsRepository implements IPropertyUnitsRepository {
     if (floor !== undefined) queryParams.append('floor', floor.toString());
     if (block) queryParams.append('block', block);
     if (isActive !== undefined) queryParams.append('is_active', isActive.toString());
-    if (businessId !== undefined) queryParams.append('business_id', businessId.toString());
 
-    // URL correcta para listar unidades
+    // URL correcta para listar unidades (con business_id como query param)
     const url = `${this.baseUrl}/horizontal-properties/property-units?${queryParams.toString()}`;
+
     const method = 'GET';
     const startTime = Date.now();
 

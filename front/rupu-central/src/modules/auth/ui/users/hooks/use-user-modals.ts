@@ -13,6 +13,7 @@ export interface UseUserModalsReturn {
   isEditModalOpen: boolean;
   isDeleteModalOpen: boolean;
   isViewModalOpen: boolean;
+  isAssignRolesModalOpen: boolean;
   
   // Datos del usuario seleccionado
   selectedUser: any | null;
@@ -22,12 +23,14 @@ export interface UseUserModalsReturn {
   openEditModal: (user: any) => void;
   openDeleteModal: (user: any) => void;
   openViewModal: (user: any) => void;
+  openAssignRolesModal: (user: any) => void;
   
   // Acciones para cerrar modales
   closeCreateModal: () => void;
   closeEditModal: () => void;
   closeDeleteModal: () => void;
   closeViewModal: () => void;
+  closeAssignRolesModal: () => void;
   
   // Acciones para cerrar todos los modales
   closeAllModals: () => void;
@@ -39,6 +42,7 @@ export function useUserModals() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isAssignRolesModalOpen, setIsAssignRolesModalOpen] = useState(false);
   
   // Usuario seleccionado
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
@@ -64,6 +68,11 @@ export function useUserModals() {
     setIsViewModalOpen(true);
   }, []);
 
+  const openAssignRolesModal = useCallback((user: any) => {
+    setSelectedUser(user);
+    setIsAssignRolesModalOpen(true);
+  }, []);
+
   // Cerrar modales
   const closeCreateModal = useCallback(() => {
     setIsCreateModalOpen(false);
@@ -85,12 +94,18 @@ export function useUserModals() {
     setSelectedUser(null);
   }, []);
 
+  const closeAssignRolesModal = useCallback(() => {
+    setIsAssignRolesModalOpen(false);
+    setSelectedUser(null);
+  }, []);
+
   // Cerrar todos los modales
   const closeAllModals = useCallback(() => {
     setIsCreateModalOpen(false);
     setIsEditModalOpen(false);
     setIsDeleteModalOpen(false);
     setIsViewModalOpen(false);
+    setIsAssignRolesModalOpen(false);
     setSelectedUser(null);
   }, []);
 
@@ -100,6 +115,7 @@ export function useUserModals() {
     isEditModalOpen,
     isDeleteModalOpen,
     isViewModalOpen,
+    isAssignRolesModalOpen,
     
     // Datos del usuario seleccionado
     selectedUser,
@@ -109,12 +125,14 @@ export function useUserModals() {
     openEditModal,
     openDeleteModal,
     openViewModal,
+    openAssignRolesModal,
     
     // Acciones para cerrar modales
     closeCreateModal,
     closeEditModal,
     closeDeleteModal,
     closeViewModal,
+    closeAssignRolesModal,
     
     // Acciones para cerrar todos los modales
     closeAllModals

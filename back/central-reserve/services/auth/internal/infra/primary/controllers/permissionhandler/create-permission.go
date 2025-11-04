@@ -5,6 +5,7 @@ import (
 	"central_reserve/services/auth/internal/infra/primary/controllers/permissionhandler/request"
 	"central_reserve/services/auth/internal/infra/primary/controllers/permissionhandler/response"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,7 +22,7 @@ import (
 //	@Success		201			{object}	response.PermissionMessageResponse	"Permiso creado exitosamente"
 //	@Failure		400			{object}	response.PermissionErrorResponse	"Datos de entrada inválidos"
 //	@Failure		401			{object}	response.PermissionErrorResponse	"Token de acceso requerido"
-//	@Failure		409			{object}	response.PermissionErrorResponse	"Permiso con código duplicado"
+//	@Failure		409			{object}	response.PermissionErrorResponse	"Permiso con código o nombre duplicado"
 //	@Failure		500			{object}	response.PermissionErrorResponse	"Error interno del servidor"
 //	@Router			/permissions [post]
 func (h *PermissionHandler) CreatePermissionHandler(c *gin.Context) {
@@ -45,14 +46,33 @@ func (h *PermissionHandler) CreatePermissionHandler(c *gin.Context) {
 
 	result, err := h.usecase.CreatePermission(c.Request.Context(), permissionDTO)
 	if err != nil {
-		h.logger.Error().Err(err).Msg("Error al crear permiso desde el caso de uso")
-
 		statusCode := http.StatusInternalServerError
 		errorMessage := "Error interno del servidor"
+		errMsg := err.Error()
 
-		if err.Error() == "ya existe un permiso con el código: "+req.Code {
+		// Detectar errores de validación de negocio (deben loggearse como WARN)
+		if errMsg == "ya existe un permiso con el código: "+req.Code {
 			statusCode = http.StatusConflict
 			errorMessage = "Ya existe un permiso con este código"
+			h.logger.Warn().Str("code", req.Code).Msg("Intento de crear permiso con código duplicado")
+		} else if strings.Contains(errMsg, "ya existe un permiso con el nombre") {
+			// Detectar error de nombre duplicado (validación previa)
+			statusCode = http.StatusConflict
+			errorMessage = errMsg
+			h.logger.Warn().Str("name", req.Name).Msg("Intento de crear permiso con nombre duplicado")
+		} else if strings.Contains(errMsg, "duplicate key") && strings.Contains(errMsg, "uni_permission_name") {
+			// Fallback: Detectar error de nombre duplicado desde la BD (no debería ocurrir)
+			statusCode = http.StatusConflict
+			errorMessage = "Ya existe un permiso con el nombre '" + req.Name + "'. Por favor, use un nombre diferente."
+			h.logger.Error().Err(err).Str("name", req.Name).Msg("Error de constraint de BD - validación previa falló")
+		} else if strings.Contains(errMsg, "duplicate key") && strings.Contains(errMsg, "SQLSTATE 23505") {
+			// Fallback: Detectar cualquier otro error de clave duplicada desde la BD
+			statusCode = http.StatusConflict
+			errorMessage = "Ya existe un permiso con estos datos. Por favor, verifique los valores ingresados."
+			h.logger.Error().Err(err).Msg("Error de constraint de BD - validación previa falló")
+		} else {
+			// Error real del sistema
+			h.logger.Error().Err(err).Msg("Error al crear permiso desde el caso de uso")
 		}
 
 		c.JSON(statusCode, response.PermissionErrorResponse{

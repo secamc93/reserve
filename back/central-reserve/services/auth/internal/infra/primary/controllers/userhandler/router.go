@@ -17,5 +17,6 @@ func (h *UserHandler) RegisterRoutes(router *gin.RouterGroup, handler IUserHandl
 		usersGroup.POST("", middleware.JWT(), handler.CreateUserHandler)
 		usersGroup.PUT("/:id", middleware.JWT(), handler.UpdateUserHandler)
 		usersGroup.DELETE("/:id", middleware.JWT(), handler.DeleteUserHandler)
+		usersGroup.POST("/:id/assign-role", middleware.JWT(), handler.AssignRoleToUserBusinessHandler)
 	}
 }
