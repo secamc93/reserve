@@ -1,48 +1,229 @@
 ---
-
+// Navbar moderno para Trattoria La Bella
 ---
 
 <nav
-  class="bg-gray-100 shadow-md border-b border-[#ccc] text-[#4e563f] font-serif sticky top-0 z-50"
+  class="bg-white/95 backdrop-blur-md shadow-lg border-b border-amber-100 text-gray-800 font-serif sticky top-0 z-50 transition-all duration-300"
 >
-  <div
-    class="max-w-4xl mx-auto px-4 py-4 flex flex-col lg:flex-row items-center justify-center gap-2 lg:gap-50 text-center"
-  >
-    <!-- Logo -->
-    <div class="mb-4 lg:mb-0 flex justify-center items-center space-x-4">
-      <img
-        src="/images/trattoria-la-bella-main-logo-sec.png"
-        alt="Logo Trattoria La Bella"
-        class="h-20 w-auto"
-      />
+  <div class="max-w-7xl mx-auto px-4 md:px-8">
+    <div class="flex items-center justify-center py-4">
+      <!-- Desktop Menu -->
+      <div class="hidden lg:flex items-center space-x-8">
+        <a
+          href="/trattoria/inicio"
+          class="relative text-lg font-medium text-gray-700 hover:text-amber-600 transition-colors duration-300 group"
+        >
+          Inicio
+          <span
+            class="absolute -bottom-1 left-0 w-0 h-0.5 bg-amber-600 group-hover:w-full transition-all duration-300"
+          ></span>
+        </a>
+
+        <!-- Menu Button -->
+        <a
+          href="https://images-cam93.s3.us-east-1.amazonaws.com/Menu+la+bella++(1).pdf"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center justify-center px-6 py-3 border-2 border-amber-600 text-amber-600 font-semibold rounded-full hover:bg-amber-600 hover:text-white transform hover:scale-105 transition-all duration-300"
+        >
+          <i class="fas fa-utensils mr-2"></i>
+          Menú
+        </a>
+
+        <a
+          href={`/contacto`}
+          class="relative text-lg font-medium text-gray-700 hover:text-amber-600 transition-colors duration-300 group"
+        >
+          Contacto
+          <span
+            class="absolute -bottom-1 left-0 w-0 h-0.5 bg-amber-600 group-hover:w-full transition-all duration-300"
+          ></span>
+        </a>
+
+        <!-- CTA Button -->
+        <a
+          href={`/reservas`}
+          class="group relative inline-flex items-center justify-center px-8 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold rounded-full hover:from-amber-600 hover:to-amber-700 transform hover:scale-105 hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-amber-500/25 overflow-hidden"
+        >
+          <!-- Shine effect -->
+          <div
+            class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"
+          >
+          </div>
+
+          <i
+            class="fas fa-calendar-alt mr-3 text-lg group-hover:rotate-12 transition-transform duration-300"
+          ></i>
+          <span class="relative z-10">Reservar Mesa</span>
+        </a>
+      </div>
+
+      <!-- Mobile Menu Button -->
+      <div class="lg:hidden">
+        <button
+          id="mobile-menu-button"
+          class="text-gray-700 hover:text-amber-600 focus:outline-none focus:text-amber-600 transition-colors duration-300"
+          aria-label="Toggle mobile menu"
+        >
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+      </div>
     </div>
 
-    <!-- Menú -->
-    <div
-      class="flex justify-center flex-wrap gap-8 text-2xl font-light text-center"
-    >
-      <a href="/inicio" class="hover:text-[#e9d8a6] transition-colors">Inicio</a
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="lg:hidden hidden">
+      <div
+        class="px-2 pt-2 pb-3 space-y-1 bg-white/95 backdrop-blur-md rounded-lg mt-4 shadow-lg"
       >
-      <a
-        href="https://images-cam93.s3.us-east-1.amazonaws.com/Menu+la+bella++(1).pdf"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="hover:text-[#e9d8a6] transition-colors"
-      >
-        Menú
-      </a>
+        <a
+          href={`/inicio`}
+          class="block px-3 py-3 text-lg font-medium text-gray-700 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all duration-300"
+        >
+          <i class="fas fa-home mr-3"></i>
+          Inicio
+        </a>
 
-      <a
-        href="#"
-        onclick="event.preventDefault(); setTimeout(() => window.location.href = '/reservas', 50);"
-        class="hover:text-[#e9d8a6] transition-colors"
-      >
-        Reservas
-      </a>
+        <!-- Mobile Menu Button -->
+        <div class="px-3 py-3">
+          <a
+            href="https://images-cam93.s3.us-east-1.amazonaws.com/Menu+la+bella++(1).pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="block w-full text-center px-6 py-3 border-2 border-amber-600 text-amber-600 font-semibold rounded-full hover:bg-amber-600 hover:text-white transition-all duration-300"
+          >
+            <i class="fas fa-utensils mr-2"></i>
+            Ver Menú
+          </a>
+        </div>
 
-      <a href="/contacto" class="hover:text-[#e9d8a6] transition-colors"
-        >Contacto</a
-      >
+        <a
+          href={`/contacto`}
+          class="block px-3 py-3 text-lg font-medium text-gray-700 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all duration-300"
+        >
+          <i class="fas fa-envelope mr-3"></i>
+          Contacto
+        </a>
+
+        <!-- Mobile CTA Button -->
+        <div class="px-3 py-3">
+          <a
+            href={`/reservas`}
+            class="group relative block w-full text-center px-8 py-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold rounded-full hover:from-amber-600 hover:to-amber-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-amber-500/25 overflow-hidden"
+          >
+            <!-- Shine effect -->
+            <div
+              class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"
+            >
+            </div>
+
+            <i
+              class="fas fa-calendar-check mr-3 text-lg group-hover:rotate-12 transition-transform duration-300"
+            ></i>
+            <span class="relative z-10">Reservar Mesa</span>
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 </nav>
+
+<script>
+  // Mobile menu toggle
+  document.addEventListener("DOMContentLoaded", function () {
+    const mobileMenuButton = document.getElementById("mobile-menu-button");
+    const mobileMenu = document.getElementById("mobile-menu");
+
+    if (mobileMenuButton && mobileMenu) {
+      mobileMenuButton.addEventListener("click", function () {
+        mobileMenu.classList.toggle("hidden");
+
+        // Animate menu button
+        const svg = mobileMenuButton.querySelector("svg");
+        if (svg) {
+          if (mobileMenu.classList.contains("hidden")) {
+            svg.innerHTML =
+              '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>';
+          } else {
+            svg.innerHTML =
+              '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>';
+          }
+        }
+      });
+    }
+
+    // Close mobile menu when clicking outside
+    document.addEventListener("click", function (event) {
+      const target = event.target as Node;
+      if (
+        !mobileMenuButton?.contains(target) &&
+        !mobileMenu?.contains(target)
+      ) {
+        mobileMenu?.classList.add("hidden");
+        const svg = mobileMenuButton?.querySelector("svg");
+        if (svg) {
+          svg.innerHTML =
+            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>';
+        }
+      }
+    });
+
+    // Navbar scroll effect
+    let lastScrollTop = 0;
+    const navbar = document.querySelector("nav");
+
+    window.addEventListener("scroll", function () {
+      const scrollTop =
+        window.pageYOffset || document.documentElement.scrollTop;
+
+      if (scrollTop > lastScrollTop && scrollTop > 100) {
+        // Scrolling down
+        navbar?.classList.add("-translate-y-full");
+      } else {
+        // Scrolling up
+        navbar?.classList.remove("-translate-y-full");
+      }
+
+      lastScrollTop = scrollTop;
+    });
+  });
+</script>
+
+<style>
+  /* Smooth transitions for navbar */
+  nav {
+    transition:
+      transform 0.3s ease-in-out,
+      background-color 0.3s ease-in-out;
+  }
+
+  /* Mobile menu animations */
+  #mobile-menu {
+    transition: all 0.3s ease-in-out;
+  }
+
+  #mobile-menu:not(.hidden) {
+    animation: slideDown 0.3s ease-out;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>

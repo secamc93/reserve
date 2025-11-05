@@ -1,0 +1,62 @@
+---
+export interface Props {
+    id: string;
+    name: string;
+    price: number;
+    image: string;
+    description: string;
+    viscosity: string;
+}
+
+const { id, name, price, image, description, viscosity } = Astro.props;
+---
+
+<div
+    class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
+>
+    <div class="relative">
+        <img src={image} alt={name} class="w-full h-48 object-cover" />
+        <div
+            class="absolute top-2 right-2 bg-blue-600 text-white px-2 py-1 rounded-full text-xs font-semibold"
+        >
+            {viscosity}
+        </div>
+    </div>
+
+    <div class="p-4">
+        <h3 class="text-lg font-semibold text-gray-800 mb-2">{name}</h3>
+        <p class="text-gray-600 text-sm mb-3">{description}</p>
+
+        <div class="flex items-center justify-between">
+            <span class="text-2xl font-bold text-blue-600"
+                >${price.toFixed(2)}</span
+            >
+            <!-- Botón Agregar al carrito -->
+            <button
+                class="ml-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-semibold text-sm flex items-center gap-2 hover:scale-105 hover:shadow-xl transform"
+                type="button"
+                data-id={id}
+                data-name={name}
+                data-price={price}
+                data-image={image}
+                data-viscosity={viscosity}
+                onclick="window.dispatchEvent(new CustomEvent('add-to-cart', { detail: { id: this.dataset.id, name: this.dataset.name, price: parseFloat(this.dataset.price), image: this.dataset.image, viscosity: this.dataset.viscosity } }))"
+            >
+                <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 9m13-9l2 9m-5-9V6a2 2 0 10-4 0v7"
+                    ></path>
+                </svg>
+                Agregar
+            </button>
+        </div>
+    </div>
+</div>

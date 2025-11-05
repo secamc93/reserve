@@ -1,0 +1,115 @@
+/* [project]/src/shared/ui/components/ErrorMessage/ErrorMessage.css [app-client] (css) */
+.error-message {
+  border-radius: .5rem;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .1), 0 1px 2px rgba(0, 0, 0, .06);
+}
+
+.error-message:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, .1), 0 2px 4px -1px rgba(0, 0, 0, .06);
+}
+
+.error-message.error-variant {
+  color: #b91c1c;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.error-message.warning-variant {
+  color: #d97706;
+  background-color: #fffbeb;
+  border: 1px solid #fed7aa;
+}
+
+.error-message.info-variant {
+  color: #2563eb;
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+}
+
+.error-message .error-title {
+  margin-bottom: .25rem;
+  font-size: .875rem;
+  font-weight: 500;
+}
+
+.error-message.error-variant .error-title {
+  color: #991b1b;
+}
+
+.error-message.warning-variant .error-title {
+  color: #92400e;
+}
+
+.error-message.info-variant .error-title {
+  color: #1d4ed8;
+}
+
+.error-message .error-text {
+  font-size: .875rem;
+  line-height: 1.25rem;
+}
+
+.error-message .error-icon {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.error-message.error-variant .error-icon {
+  color: #f87171;
+}
+
+.error-message.warning-variant .error-icon {
+  color: #fbbf24;
+}
+
+.error-message.info-variant .error-icon {
+  color: #60a5fa;
+}
+
+.error-message .close-button {
+  cursor: pointer;
+  transition: opacity .2s;
+  display: inline-flex;
+}
+
+.error-message .close-button:hover, .error-message .close-button:focus {
+  opacity: .75;
+  outline: none;
+}
+
+.error-message .close-button svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: .3s ease-out fadeIn;
+}
+
+.error-message button:focus {
+  outline-offset: 2px;
+  outline: 2px solid rgba(0, 0, 0, 0);
+}
+
+@media (max-width: 640px) {
+  .error-message {
+    margin-left: 1rem;
+    margin-right: 1rem;
+  }
+}
+
+/*# sourceMappingURL=src_shared_ui_components_ErrorMessage_ErrorMessage_css_e59ae46c._.single.css.map*/

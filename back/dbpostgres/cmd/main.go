@@ -2,9 +2,8 @@ package main
 
 import (
 	"context"
-	"dbpostgres/internal/app/usecases"
-	"dbpostgres/internal/infra/db"
-	"dbpostgres/internal/infra/repository"
+	"dbpostgres/app/app/usecases"
+	"dbpostgres/app/infra/db"
 	"dbpostgres/pkg/env"
 	"dbpostgres/pkg/log"
 	"time"
@@ -42,35 +41,8 @@ func main() {
 	// Obtener la conexión de GORM
 	dbConn := database.Conn(context.Background())
 
-	// Crear repositorios
-	permissionRepo := repository.NewPermissionRepository(dbConn, logger)
-	roleRepo := repository.NewRoleRepository(dbConn, logger)
-	userRepo := repository.NewUserRepository(dbConn, logger)
-	businessRepo := repository.NewBusinessRepository(dbConn, logger)
-	tableRepo := repository.NewTableRepository(dbConn, logger)
-	statusRepo := repository.NewReservationStatusRepository(dbConn, logger)
-
-	// Crear casos de uso
-	systemUseCase := usecases.NewSystemUseCase(
-		permissionRepo,
-		roleRepo,
-		userRepo,
-		businessRepo,
-		tableRepo,
-		statusRepo,
-		logger,
-	)
-
-	scopeUseCase := usecases.NewScopeUseCase(dbConn, logger)
-
-	// Crear caso de uso de migración
-	migrationUseCase := usecases.NewMigrationUseCase(
-		systemUseCase,
-		scopeUseCase,
-		dbConn,
-		logger,
-		config,
-	)
+	// Crear caso de uso de migración (solo esquema)
+	migrationUseCase := usecases.NewMigrationUseCase(dbConn, logger)
 
 	// Ejecutar migración
 	if err := migrationUseCase.MigrateDB(); err != nil {

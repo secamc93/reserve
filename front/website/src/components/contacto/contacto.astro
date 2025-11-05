@@ -1,94 +1,220 @@
-<section class="bg-[#e9d8a6] text-[#4e563f] py-16 px-6 font-serif">
-  <div class="max-w-4xl mx-auto text-center">
-    <h2 class="text-4xl md:text-5xl font-light mb-4">Contáctanos</h2>
-    <p class="text-lg md:text-xl mb-12 italic text-[#4e563f]/80">
-      ¿Tienes alguna pregunta o quieres hacer una reserva especial?
-    </p>
-
-    <form
-      id="formContacto"
-      class="grid gap-6 text-left bg-white/90 rounded-xl shadow-xl p-8 max-w-2xl mx-auto"
+<section
+  class="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-100 py-16 px-6 font-serif relative overflow-hidden"
+>
+  <!-- Background Pattern -->
+  <div class="absolute inset-0 opacity-5">
+    <div
+      class="absolute top-0 left-0 w-96 h-96 bg-amber-300 rounded-full mix-blend-multiply filter blur-xl animate-pulse"
     >
-      <div>
-        <label class="block mb-2 text-sm font-medium">Nombre</label>
-        <input
-          type="text"
-          name="nombre"
-          required
-          class="w-full border border-[#ccc] rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#4e563f] transition"
-        />
-      </div>
+    </div>
+    <div
+      class="absolute top-0 right-0 w-96 h-96 bg-orange-300 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-2000"
+    >
+    </div>
+    <div
+      class="absolute bottom-0 left-0 w-96 h-96 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-4000"
+    >
+    </div>
+  </div>
 
-      <div>
-        <label class="block mb-2 text-sm font-medium">Correo electrónico</label>
-        <input
-          type="email"
-          name="correo"
-          required
-          class="w-full border border-[#ccc] rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#4e563f] transition"
-        />
-      </div>
-
-      <div>
-        <label class="block mb-2 text-sm font-medium">Mensaje</label>
-        <textarea
-          name="mensaje"
-          rows="6"
-          required
-          class="w-full border border-[#ccc] rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#4e563f] transition"
-        ></textarea>
-      </div>
-
-      <button
-        type="submit"
-        class="bg-[#4e563f] text-white px-6 py-3 rounded-full hover:bg-[#3a4534] transition"
-      >
-        Enviar mensaje
-      </button>
-
-      <p id="mensajeExito" class="text-green-600 mt-4 hidden">
-        ✅ Mensaje enviado con éxito.
+  <div class="relative z-10 max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="text-center mb-16">
+      <h1 class="text-5xl md:text-6xl font-bold text-gray-800 mb-6">
+        <span class="text-gradient">Contáctanos</span>
+      </h1>
+      <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+        ¿Tienes alguna pregunta, quieres hacer una reserva especial o
+        simplemente quieres conocernos mejor? Estamos aquí para ayudarte.
       </p>
-    </form>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+      <!-- Información de Contacto -->
+      <div class="space-y-8">
+        <div
+          class="group relative bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-white/20"
+        >
+          <div
+            class="absolute inset-0 bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+          >
+          </div>
+          <div class="relative z-10">
+            <div class="text-center mb-6">
+              <div
+                class="w-16 h-16 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg"
+              >
+                <i class="fas fa-map-marker-alt text-white text-2xl"></i>
+              </div>
+              <h3 class="text-2xl font-bold text-gray-800 mb-2">Ubicación</h3>
+              <p class="text-gray-600">Visítanos en nuestro restaurante</p>
+            </div>
+
+            <div class="space-y-4">
+              <div
+                class="flex items-center space-x-4 p-4 bg-white rounded-xl shadow-sm border border-amber-200"
+              >
+                <div
+                  class="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center"
+                >
+                  <i class="fas fa-map-pin text-white"></i>
+                </div>
+                <div>
+                  <p class="text-sm text-gray-500 font-medium">Dirección</p>
+                  <p class="text-lg font-bold text-gray-800">
+                    Carrera 10 #27-27
+                  </p>
+                </div>
+              </div>
+
+              <div
+                class="flex items-center space-x-4 p-4 bg-white rounded-xl shadow-sm border border-amber-200"
+              >
+                <div
+                  class="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center"
+                >
+                  <i class="fas fa-clock text-white"></i>
+                </div>
+                <div>
+                  <p class="text-sm text-gray-500 font-medium">Horarios</p>
+                  <div class="text-sm text-gray-600 space-y-1">
+                    <p><strong>Lun - Mié:</strong> 11:00 AM - 7:00 PM</p>
+                    <p><strong>Jue - Vie:</strong> 11:00 AM - 9:00 PM</p>
+                    <p><strong>Sábado:</strong> 11:00 AM - 5:00 PM</p>
+                    <p><strong>Domingo:</strong> Cerrado</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="group relative bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-white/20"
+        >
+          <div
+            class="absolute inset-0 bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+          >
+          </div>
+          <div class="relative z-10">
+            <div class="text-center mb-6">
+              <div
+                class="w-16 h-16 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg"
+              >
+                <i class="fas fa-phone-alt text-white text-2xl"></i>
+              </div>
+              <h3 class="text-2xl font-bold text-gray-800 mb-2">
+                Comunícate con Nosotros
+              </h3>
+              <p class="text-gray-600">Estamos aquí para ayudarte</p>
+            </div>
+
+            <div class="space-y-4">
+              <div
+                class="flex items-center space-x-4 p-4 bg-white rounded-xl shadow-sm border border-amber-200"
+              >
+                <div
+                  class="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center"
+                >
+                  <i class="fas fa-phone text-white"></i>
+                </div>
+                <div>
+                  <p class="text-sm text-gray-500 font-medium">Teléfono</p>
+                  <p class="text-lg font-bold text-gray-800">311 2064619</p>
+                </div>
+              </div>
+
+              <div
+                class="flex items-center space-x-4 p-4 bg-white rounded-xl shadow-sm border border-amber-200"
+              >
+                <div
+                  class="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center"
+                >
+                  <i class="fas fa-envelope text-white"></i>
+                </div>
+                <div>
+                  <p class="text-sm text-gray-500 font-medium">Email</p>
+                  <p class="text-lg font-bold text-gray-800">
+                    TrattorialaBella@adrwork.com
+                  </p>
+                </div>
+              </div>
+
+              <div
+                class="flex items-center space-x-4 p-4 bg-white rounded-xl shadow-sm border border-amber-200"
+              >
+                <div
+                  class="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center"
+                >
+                  <i class="fab fa-whatsapp text-white"></i>
+                </div>
+                <div>
+                  <p class="text-sm text-gray-500 font-medium">WhatsApp</p>
+                  <p class="text-lg font-bold text-gray-800">311 2064619</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- WhatsApp Contact Section -->
+      <div
+        class="group relative bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-white/20"
+      >
+        <div
+          class="absolute inset-0 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+        >
+        </div>
+        <div class="relative z-10">
+          <div class="text-center mb-8">
+            <div
+              class="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg"
+            >
+              <i class="fab fa-whatsapp text-white text-2xl"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-2">
+              Reserva Personalizada
+            </h3>
+            <p class="text-gray-600">
+              Contáctanos por WhatsApp para personalizar tu reserva
+            </p>
+          </div>
+
+          <div class="space-y-6">
+            <div class="text-center">
+              <p class="text-gray-700 mb-4">
+                ¿Tienes alguna solicitud especial para tu reserva? ¿Celebras
+                algún evento importante? Contáctanos directamente por WhatsApp y
+                te ayudaremos a crear la experiencia perfecta.
+              </p>
+            </div>
+            <a
+              href="https://wa.me/573112064619?text=Hola! Me gustaría hacer una reserva personalizada en Trattoria La Bella. ¿Podrían ayudarme?"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="group relative w-full inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-green-500 via-green-600 to-green-700 text-white font-bold text-lg rounded-xl hover:from-green-600 hover:via-green-700 hover:to-green-800 transform hover:scale-105 hover:-translate-y-1 transition-all duration-500 shadow-xl hover:shadow-2xl hover:shadow-green-500/30 overflow-hidden"
+            >
+              <!-- Shine effect -->
+              <div
+                class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"
+              >
+              </div>
+
+              <i
+                class="fab fa-whatsapp mr-3 text-xl group-hover:scale-110 transition-transform duration-300"
+              ></i>
+              <span class="relative z-10">Contactar por WhatsApp</span>
+            </a>
+
+            <div class="text-center">
+              <p class="text-sm text-gray-500">
+                Horario de atención: Lun - Sáb 11:00 AM - 9:00 PM
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
-
-<!-- Script para envío -->
-<script is:inline>
-  document
-    .getElementById("formContacto")
-    .addEventListener("submit", async function (e) {
-      e.preventDefault();
-
-      const form = e.target;
-      const nombre = form.nombre.value.trim();
-      const correo = form.correo.value.trim();
-      const mensaje = form.mensaje.value.trim();
-
-      const datos = {
-        nombre,
-        correo,
-        mensaje,
-      };
-
-      try {
-        const respuesta = await fetch("https://httpbin.org/post", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(datos),
-        });
-
-        if (respuesta.ok) {
-          console.log("✅ Enviado:", await respuesta.json());
-          document.getElementById("mensajeExito").classList.remove("hidden");
-          form.reset();
-        } else {
-          console.error("❌ Error al enviar");
-        }
-      } catch (err) {
-        console.error("❌ Error de red:", err);
-      }
-    });
-</script>

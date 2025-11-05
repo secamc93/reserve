@@ -153,15 +153,30 @@ build_and_push_images() {
             log "Configurando REACT_APP_API_BASE_URL para frontend: $API_BASE_URL"
         fi
         
-        docker buildx build \
-            --platform linux/arm64 \
-            --cache-from type=local,src="$CACHE_DIR/$tag_name" \
-            --cache-to type=local,dest="$CACHE_DIR/$tag_name",mode=max \
-            --load \
-            $BUILD_ARGS \
-            -t "reserve-$tag_name:$IMAGE_TAG" \
-            -f "$context/$dockerfile" \
-            "$context"
+        # Manejar contexto especial para backend
+        if [ "$tag_name" = "backend" ]; then
+            log "Ejecutando build de backend desde directorio 'back'..."
+            docker buildx build \
+                --platform linux/arm64 \
+                --cache-from type=local,src="$CACHE_DIR/$tag_name" \
+                --cache-to type=local,dest="$CACHE_DIR/$tag_name",mode=max \
+                --load \
+                $BUILD_ARGS \
+                -t "reserve-$tag_name:$IMAGE_TAG" \
+                -f "$context/$dockerfile" \
+                "back"
+        else
+            # Para las demás imágenes, usar el contexto normal
+            docker buildx build \
+                --platform linux/arm64 \
+                --cache-from type=local,src="$CACHE_DIR/$tag_name" \
+                --cache-to type=local,dest="$CACHE_DIR/$tag_name",mode=max \
+                --load \
+                $BUILD_ARGS \
+                -t "reserve-$tag_name:$IMAGE_TAG" \
+                -f "$context/$dockerfile" \
+                "$context"
+        fi
         
         # Tagear para ECR público
         docker tag "reserve-$tag_name:$IMAGE_TAG" "$FULL_IMAGE_NAME"

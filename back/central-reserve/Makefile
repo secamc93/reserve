@@ -70,7 +70,7 @@ deps: ## Instalar dependencias
 	go mod download
 
 docs: ## Generar documentación
-	swag init -g cmd/main.go -o internal/infra/primary/http2/docs
+	swag init -g ./cmd/main.go --output ./shared/docs --parseDependency --parseInternal --exclude services/reserve
 
 # Base de datos
 db-migrate: ## Ejecutar migraciones de base de datos

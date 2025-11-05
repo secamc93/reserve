@@ -36,11 +36,9 @@ const { title = "Trattoria La Bella" } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <ViewTransitions />
   </head>
-  <body
-    class="bg-[#fefcf5] text-gray-900 bg-no-repeat bg-right-top bg-[length:350px] opacity-[97%]"
-  >
+  <body class="bg-white text-gray-900 font-serif antialiased">
     <Navbar />
-    <main class="p-6">
+    <main>
       <slot />
     </main>
     <Footer />

@@ -1,0 +1,619 @@
+================================================================================
+  DOCUMENTACIÓN API - PROPERTY UNITS (UNIDADES DE PROPIEDAD)
+  Base URL: http://localhost:3050/api/v1
+================================================================================
+
+DESCRIPCIÓN GENERAL:
+Las Property Units (Unidades de Propiedad) representan los apartamentos, casas,
+oficinas o cualquier otra unidad dentro de una propiedad horizontal. Cada unidad
+puede tener información como número, piso, bloque, tipo, área, número de 
+habitaciones y baños.
+
+################################################################################
+# PROPERTY UNITS CRUD
+################################################################################
+
+================================================================================
+1. CREAR UNIDAD DE PROPIEDAD
+================================================================================
+Method: POST
+URL: /horizontal-properties/{hp_id}/property-units
+Content-Type: application/json
+Authentication: JWT Token Required
+
+--- PARAMS PATH ---
+- hp_id (number): ID de la propiedad horizontal
+
+--- REQUEST BODY ---
+{
+  "number": "101",
+  "floor": 1,
+  "block": "A",
+  "unit_type": "apartment",
+  "area": 85.5,
+  "bedrooms": 3,
+  "bathrooms": 2,
+  "description": "Apartamento esquinero con vista al parque"
+}
+
+CAMPOS REQUERIDOS:
+- number (string): Número de la unidad (único por propiedad horizontal)
+- unit_type (string): Tipo de unidad
+
+CAMPOS OPCIONALES:
+- floor (number): Número de piso
+- block (string): Bloque o torre
+- area (number): Área en metros cuadrados
+- bedrooms (number): Número de habitaciones
+- bathrooms (number): Número de baños
+- description (string): Descripción de la unidad
+
+VALORES PERMITIDOS PARA unit_type:
+- "apartment" - Apartamento
+- "house" - Casa
+- "office" - Oficina
+- "commercial" - Local comercial
+- "parking" - Parqueadero
+- "storage" - Depósito/Bodega
+- "penthouse" - Penthouse
+
+--- RESPONSE 201 (SUCCESS) ---
+{
+  "success": true,
+  "message": "Unidad creada exitosamente",
+  "data": {
+    "id": 1,
+    "business_id": 1,
+    "number": "101",
+    "floor": 1,
+    "block": "A",
+    "unit_type": "apartment",
+    "area": 85.5,
+    "bedrooms": 3,
+    "bathrooms": 2,
+    "description": "Apartamento esquinero con vista al parque",
+    "is_active": true,
+    "created_at": "2025-01-15T10:30:00Z",
+    "updated_at": "2025-01-15T10:30:00Z"
+  }
+}
+
+--- RESPONSE 400 (BAD REQUEST - Validación) ---
+{
+  "success": false,
+  "message": "Datos inválidos",
+  "error": "Key: 'CreatePropertyUnitRequest.Number' Error:Field validation for 'Number' failed on the 'required' tag"
+}
+
+--- RESPONSE 400 (BAD REQUEST - Número requerido) ---
+{
+  "success": false,
+  "message": "No se pudo crear la unidad",
+  "error": "el número de unidad es requerido"
+}
+
+--- RESPONSE 409 (CONFLICT - Número duplicado) ---
+{
+  "success": false,
+  "message": "No se pudo crear la unidad",
+  "error": "ya existe una unidad con este número en la propiedad"
+}
+
+--- RESPONSE 500 (INTERNAL SERVER ERROR) ---
+{
+  "success": false,
+  "message": "No se pudo crear la unidad",
+  "error": "database error details"
+}
+
+--- EJEMPLO CURL ---
+curl -X POST "http://localhost:3050/api/v1/horizontal-properties/1/property-units" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{
+    "number": "101",
+    "floor": 1,
+    "block": "A",
+    "unit_type": "apartment",
+    "area": 85.5,
+    "bedrooms": 3,
+    "bathrooms": 2,
+    "description": "Apartamento esquinero con vista al parque"
+  }'
+
+
+================================================================================
+2. LISTAR UNIDADES DE PROPIEDAD (CON PAGINACIÓN Y FILTROS)
+================================================================================
+Method: GET
+URL: /horizontal-properties/{hp_id}/property-units
+Authentication: JWT Token Required
+
+--- PARAMS PATH ---
+- hp_id (number): ID de la propiedad horizontal
+
+--- QUERY PARAMETERS (TODOS OPCIONALES) ---
+- unit_type (string): Filtrar por tipo de unidad (apartment, house, office, etc)
+- floor (number): Filtrar por número de piso
+- block (string): Filtrar por bloque/torre
+- is_active (boolean): Filtrar por estado activo (true/false)
+- page (number, default: 1): Número de página
+- page_size (number, default: 10): Cantidad de elementos por página
+
+--- EJEMPLO DE URL CON FILTROS ---
+GET /horizontal-properties/1/property-units?page=1&page_size=10&unit_type=apartment&floor=1&block=A&is_active=true
+
+--- RESPONSE 200 (SUCCESS) ---
+{
+  "success": true,
+  "message": "Unidades obtenidas exitosamente",
+  "data": {
+    "units": [
+      {
+        "id": 1,
+        "number": "101",
+        "floor": 1,
+        "block": "A",
+        "unit_type": "apartment",
+        "area": 85.5,
+        "bedrooms": 3,
+        "bathrooms": 2,
+        "is_active": true
+      },
+      {
+        "id": 2,
+        "number": "102",
+        "floor": 1,
+        "block": "A",
+        "unit_type": "apartment",
+        "area": 75.0,
+        "bedrooms": 2,
+        "bathrooms": 2,
+        "is_active": true
+      }
+    ],
+    "total": 50,
+    "page": 1,
+    "page_size": 10,
+    "total_pages": 5
+  }
+}
+
+--- RESPONSE 400 (BAD REQUEST - ID inválido) ---
+{
+  "success": false,
+  "message": "ID de propiedad horizontal inválido",
+  "error": "Debe ser numérico"
+}
+
+--- RESPONSE 400 (BAD REQUEST - Parámetros inválidos) ---
+{
+  "success": false,
+  "message": "Parámetros de búsqueda inválidos",
+  "error": "validation error details"
+}
+
+--- RESPONSE 500 (INTERNAL SERVER ERROR) ---
+{
+  "success": false,
+  "message": "Error listando unidades",
+  "error": "database error"
+}
+
+--- EJEMPLO CURL ---
+curl -X GET "http://localhost:3050/api/v1/horizontal-properties/1/property-units?page=1&page_size=10&unit_type=apartment&is_active=true" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+
+================================================================================
+3. OBTENER UNIDAD POR ID
+================================================================================
+Method: GET
+URL: /horizontal-properties/{hp_id}/property-units/{unit_id}
+Authentication: JWT Token Required
+
+--- PARAMS PATH ---
+- hp_id (number): ID de la propiedad horizontal
+- unit_id (number): ID de la unidad de propiedad
+
+--- RESPONSE 200 (SUCCESS) ---
+{
+  "success": true,
+  "message": "Unidad obtenida exitosamente",
+  "data": {
+    "id": 1,
+    "business_id": 1,
+    "number": "101",
+    "floor": 1,
+    "block": "A",
+    "unit_type": "apartment",
+    "area": 85.5,
+    "bedrooms": 3,
+    "bathrooms": 2,
+    "description": "Apartamento esquinero con vista al parque",
+    "is_active": true,
+    "created_at": "2025-01-15T10:30:00Z",
+    "updated_at": "2025-01-15T10:30:00Z"
+  }
+}
+
+--- RESPONSE 400 (BAD REQUEST - ID inválido) ---
+{
+  "success": false,
+  "message": "ID de unidad inválido",
+  "error": "Debe ser numérico"
+}
+
+--- RESPONSE 404 (NOT FOUND) ---
+{
+  "success": false,
+  "message": "No se pudo obtener la unidad",
+  "error": "unidad de propiedad no encontrada"
+}
+
+--- RESPONSE 500 (INTERNAL SERVER ERROR) ---
+{
+  "success": false,
+  "message": "No se pudo obtener la unidad",
+  "error": "database error"
+}
+
+--- EJEMPLO CURL ---
+curl -X GET "http://localhost:3050/api/v1/horizontal-properties/1/property-units/1" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+
+================================================================================
+4. ACTUALIZAR UNIDAD DE PROPIEDAD
+================================================================================
+Method: PUT
+URL: /horizontal-properties/{hp_id}/property-units/{unit_id}
+Content-Type: application/json
+Authentication: JWT Token Required
+
+--- PARAMS PATH ---
+- hp_id (number): ID de la propiedad horizontal
+- unit_id (number): ID de la unidad de propiedad
+
+--- REQUEST BODY (TODOS LOS CAMPOS OPCIONALES) ---
+{
+  "number": "101-A",
+  "floor": 2,
+  "block": "B",
+  "unit_type": "penthouse",
+  "area": 120.5,
+  "bedrooms": 4,
+  "bathrooms": 3,
+  "description": "Penthouse con terraza privada",
+  "is_active": false
+}
+
+NOTA: Solo envía los campos que quieres actualizar. Los campos no enviados
+      permanecerán sin cambios.
+
+CAMPOS ACTUALIZABLES:
+- number (string): Número de la unidad
+- floor (number): Número de piso
+- block (string): Bloque o torre
+- unit_type (string): Tipo de unidad
+- area (number): Área en m²
+- bedrooms (number): Número de habitaciones
+- bathrooms (number): Número de baños
+- description (string): Descripción
+- is_active (boolean): Estado activo/inactivo
+
+--- RESPONSE 200 (SUCCESS) ---
+{
+  "success": true,
+  "message": "Unidad actualizada exitosamente",
+  "data": {
+    "id": 1,
+    "business_id": 1,
+    "number": "101-A",
+    "floor": 2,
+    "block": "B",
+    "unit_type": "penthouse",
+    "area": 120.5,
+    "bedrooms": 4,
+    "bathrooms": 3,
+    "description": "Penthouse con terraza privada",
+    "is_active": false,
+    "created_at": "2025-01-15T10:30:00Z",
+    "updated_at": "2025-01-15T14:45:00Z"
+  }
+}
+
+--- RESPONSE 400 (BAD REQUEST - ID inválido) ---
+{
+  "success": false,
+  "message": "ID de unidad inválido",
+  "error": "Debe ser numérico"
+}
+
+--- RESPONSE 400 (BAD REQUEST - Datos inválidos) ---
+{
+  "success": false,
+  "message": "Datos inválidos",
+  "error": "validation error details"
+}
+
+--- RESPONSE 404 (NOT FOUND) ---
+{
+  "success": false,
+  "message": "No se pudo actualizar la unidad",
+  "error": "unidad de propiedad no encontrada"
+}
+
+--- RESPONSE 409 (CONFLICT - Número duplicado) ---
+{
+  "success": false,
+  "message": "No se pudo actualizar la unidad",
+  "error": "ya existe una unidad con este número en la propiedad"
+}
+
+--- RESPONSE 500 (INTERNAL SERVER ERROR) ---
+{
+  "success": false,
+  "message": "No se pudo actualizar la unidad",
+  "error": "database error"
+}
+
+--- EJEMPLO CURL ---
+curl -X PUT "http://localhost:3050/api/v1/horizontal-properties/1/property-units/1" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{
+    "description": "Penthouse con terraza privada",
+    "is_active": false
+  }'
+
+
+================================================================================
+5. ELIMINAR UNIDAD DE PROPIEDAD (SOFT DELETE)
+================================================================================
+Method: DELETE
+URL: /horizontal-properties/{hp_id}/property-units/{unit_id}
+Authentication: JWT Token Required
+
+--- PARAMS PATH ---
+- hp_id (number): ID de la propiedad horizontal
+- unit_id (number): ID de la unidad de propiedad
+
+NOTA IMPORTANTE: Esta operación es un SOFT DELETE (eliminación lógica).
+La unidad se marca como inactiva pero no se elimina físicamente de la base de datos.
+
+--- RESPONSE 200 (SUCCESS) ---
+{
+  "success": true,
+  "message": "Unidad eliminada exitosamente"
+}
+
+--- RESPONSE 400 (BAD REQUEST - ID inválido) ---
+{
+  "success": false,
+  "message": "ID de unidad inválido",
+  "error": "Debe ser numérico"
+}
+
+--- RESPONSE 404 (NOT FOUND) ---
+{
+  "success": false,
+  "message": "No se pudo eliminar la unidad",
+  "error": "unidad de propiedad no encontrada"
+}
+
+--- RESPONSE 500 (INTERNAL SERVER ERROR) ---
+{
+  "success": false,
+  "message": "No se pudo eliminar la unidad",
+  "error": "database error"
+}
+
+--- EJEMPLO CURL ---
+curl -X DELETE "http://localhost:3050/api/v1/horizontal-properties/1/property-units/1" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+
+################################################################################
+# CÓDIGOS DE ESTADO HTTP
+################################################################################
+
+200 OK          - Operación exitosa
+201 Created     - Recurso creado exitosamente
+400 Bad Request - Datos inválidos, parámetros incorrectos o campos requeridos faltantes
+404 Not Found   - Recurso no encontrado
+409 Conflict    - Conflicto con recurso existente (ej: número de unidad duplicado)
+500 Internal    - Error interno del servidor
+
+
+################################################################################
+# TIPOS DE UNIDADES (unit_type)
+################################################################################
+
+"apartment"   - Apartamento (unidad residencial en edificio)
+"house"       - Casa (vivienda independiente)
+"office"      - Oficina (espacio de trabajo)
+"commercial"  - Local comercial (tienda, restaurante, etc)
+"parking"     - Parqueadero (espacio de estacionamiento)
+"storage"     - Depósito/Bodega (espacio de almacenamiento)
+"penthouse"   - Penthouse (apartamento de lujo en último piso)
+
+
+################################################################################
+# VALIDACIONES Y REGLAS DE NEGOCIO
+################################################################################
+
+1. NÚMERO DE UNIDAD:
+   - Es REQUERIDO al crear
+   - Debe ser ÚNICO dentro de la propiedad horizontal
+   - No puede estar vacío
+   - Puede contener letras, números y guiones (ej: "101", "A-201", "PH-01")
+
+2. TIPO DE UNIDAD:
+   - Es REQUERIDO al crear
+   - Debe ser uno de los valores permitidos en la lista de tipos
+
+3. CAMPOS NUMÉRICOS:
+   - floor: Puede ser null o un número entero
+   - area: Puede ser null o un número decimal positivo
+   - bedrooms: Puede ser null o un número entero positivo
+   - bathrooms: Puede ser null o un número entero positivo
+
+4. ESTADO ACTIVO/INACTIVO:
+   - Por defecto las unidades se crean como activas (is_active: true)
+   - Se puede cambiar el estado en la actualización
+   - Al eliminar, se marca como inactiva (soft delete)
+
+5. RELACIONES:
+   - Una unidad pertenece a una propiedad horizontal (business_id)
+   - Una unidad puede tener múltiples residentes
+   - No se puede eliminar una unidad si tiene residentes activos
+
+6. FILTROS EN LISTADO:
+   - Los filtros se aplican con lógica AND (todos deben cumplirse)
+   - La búsqueda es exacta, no parcial
+   - Los campos null no se incluyen en los filtros
+
+
+################################################################################
+# PAGINACIÓN
+################################################################################
+
+PARÁMETROS:
+- page: Número de página (default: 1, mínimo: 1)
+- page_size: Cantidad de elementos por página (default: 10, rango: 1-100)
+
+RESPUESTA INCLUYE:
+- units: Array de unidades
+- total: Total de registros que cumplen los filtros
+- page: Página actual
+- page_size: Tamaño de página usado
+- total_pages: Total de páginas disponibles
+
+CÁLCULO DE PÁGINAS:
+total_pages = ceil(total / page_size)
+
+
+################################################################################
+# AUTENTICACIÓN
+################################################################################
+
+TODOS los endpoints requieren autenticación mediante JWT Token.
+
+El token debe enviarse en el header Authorization:
+Authorization: Bearer YOUR_JWT_TOKEN
+
+ERRORES DE AUTENTICACIÓN:
+- 401 Unauthorized: Token inválido, expirado o no proporcionado
+- 403 Forbidden: Usuario sin permisos para la operación
+
+
+################################################################################
+# PERMISOS NECESARIOS
+################################################################################
+
+CREAR UNIDAD:
+- Requiere rol de administrador de la propiedad
+
+LISTAR UNIDADES:
+- Administradores: Ven todas las unidades
+- Residentes: Solo ven su propia unidad
+
+ACTUALIZAR UNIDAD:
+- Requiere rol de administrador de la propiedad
+
+ELIMINAR UNIDAD:
+- Requiere rol de administrador de la propiedad
+- No se puede eliminar si tiene residentes activos
+
+
+################################################################################
+# FORMATO DE FECHAS
+################################################################################
+
+Todas las fechas usan formato ISO 8601 con timezone UTC:
+"2025-01-15T10:30:00Z"
+
+CAMPOS DE FECHA EN RESPONSE:
+- created_at: Fecha de creación de la unidad
+- updated_at: Fecha de última actualización
+
+
+################################################################################
+# CASOS DE USO COMUNES
+################################################################################
+
+1. CREAR UNIDAD BÁSICA:
+   POST con solo number y unit_type (mínimo requerido)
+
+2. CREAR UNIDAD COMPLETA:
+   POST con todos los campos disponibles
+
+3. LISTAR TODAS LAS UNIDADES DE UNA TORRE/BLOQUE:
+   GET con filtro ?block=A
+
+4. LISTAR APARTAMENTOS DE UN PISO ESPECÍFICO:
+   GET con filtros ?unit_type=apartment&floor=5
+
+5. DESACTIVAR UNIDAD TEMPORALMENTE:
+   PUT con {"is_active": false}
+
+6. CAMBIAR NÚMERO DE UNIDAD:
+   PUT con {"number": "nuevo_numero"}
+
+7. BUSCAR UNIDADES DISPONIBLES (INACTIVAS):
+   GET con filtro ?is_active=false
+
+
+################################################################################
+# ERRORES COMUNES Y SOLUCIONES
+################################################################################
+
+ERROR: "ya existe una unidad con este número en la propiedad"
+SOLUCIÓN: Verificar que el número de unidad sea único. Usar un número diferente.
+
+ERROR: "el número de unidad es requerido"
+SOLUCIÓN: Enviar el campo "number" en el request body.
+
+ERROR: "unidad de propiedad no encontrada"
+SOLUCIÓN: Verificar que el unit_id sea correcto y que la unidad exista.
+
+ERROR: "ID de unidad inválido - Debe ser numérico"
+SOLUCIÓN: Verificar que el unit_id en la URL sea un número entero válido.
+
+ERROR: "no se puede eliminar una unidad que tiene residentes registrados"
+SOLUCIÓN: Primero eliminar o reasignar los residentes, luego eliminar la unidad.
+
+
+################################################################################
+# NOTAS ADICIONALES
+################################################################################
+
+1. SOFT DELETE:
+   - Las eliminaciones son lógicas (soft delete)
+   - Los registros se marcan como inactivos (is_active: false)
+   - Los datos históricos se mantienen para auditoría
+
+2. CAMPOS OPCIONALES:
+   - Los campos opcionales pueden ser null
+   - En responses, los campos null se omiten si tienen tag omitempty
+   - En updates, los campos no enviados no se modifican
+
+3. ACTUALIZACIÓN PARCIAL:
+   - El método PUT soporta actualización parcial
+   - Solo envía los campos que quieres modificar
+   - Los demás campos conservan su valor actual
+
+4. RELACIÓN CON RESIDENTES:
+   - Ver documentación de API_RESIDENTS para gestionar residentes de una unidad
+   - Endpoint relacionado: /horizontal-properties/{hp_id}/residents
+
+5. ORDENAMIENTO EN LISTADO:
+   - Por defecto se ordena por created_at descendente (más recientes primero)
+   - No hay parámetros de ordenamiento personalizados actualmente
+
+
+################################################################################
+# FIN DE LA DOCUMENTACIÓN
+################################################################################
+

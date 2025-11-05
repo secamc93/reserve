@@ -1,5 +1,7 @@
 ---
 // HeroCarrusel.astro
+// Asegurar que BASE_URL siempre termine con barra
+const baseUrl = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : import.meta.env.BASE_URL + '/';
 const images = [
   "images/hero1.jpeg",
   "images/hero2.jpeg",
@@ -8,91 +10,289 @@ const images = [
 ];
 ---
 
+<!-- Hero Section Moderno -->
 <section
-  class="min-h-[60vh] bg-[#e9d8a6] text-[#4e563f] flex items-center justify-center px-4 md:px-16 py-12 font-serif"
+  class="relative min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-100 overflow-hidden"
 >
-  <div
-    class="grid grid-cols-1 md:grid-cols-2 gap-10 items-center max-w-7xl w-full"
-  >
-    <!-- Logo -->
-    <div class="flex justify-center md:justify-start">
-      <img
-        src="/images/trattoria-la-bella-main-logo-sec.png"
-        alt="Logo Trattoria La Bella"
-        class="max-h-52 w-auto md:max-h-60 object-contain animate-fade-in"
-      />
+  <!-- Background Pattern -->
+  <div class="absolute inset-0 opacity-10">
+    <div
+      class="absolute top-0 left-0 w-96 h-96 bg-amber-300 rounded-full mix-blend-multiply filter blur-xl animate-pulse"
+    >
     </div>
+    <div
+      class="absolute top-0 right-0 w-96 h-96 bg-orange-300 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-2000"
+    >
+    </div>
+    <div
+      class="absolute bottom-0 left-0 w-96 h-96 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-4000"
+    >
+    </div>
+  </div>
 
-    <!-- Frase llamativa -->
-    <div class="text-center md:text-left px-2 md:px-0 animate-fade-in">
-      <h2
-        class="text-2xl sm:text-3xl md:text-5xl font-bold mb-4 leading-snug md:leading-tight"
-      >
-        "Pasión por cada plato, tradición en cada bocado"
-      </h2>
-      <p
-        class="text-sm sm:text-base md:text-xl text-[#333] max-w-xl mx-auto md:mx-0"
-      >
-        Inspirados en la auténtica gastronomía italiana, en Trattoria La Bella
-        combinamos ingredientes frescos, recetas tradicionales y pasión por el
-        sabor para ofrecerte una experiencia culinaria única.
-      </p>
+  <!-- Main Content -->
+  <div
+    class="relative z-10 flex items-center justify-center min-h-screen px-4 md:px-16 py-4"
+  >
+    <div
+      class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center max-w-7xl w-full"
+    >
+      <!-- Logo y Contenido Principal -->
+      <div class="text-center lg:text-left space-y-4 animate-fade-in-up">
+        <div class="flex justify-center mb-8">
+          <img
+
+            src="https://images-cam93.s3.us-east-1.amazonaws.com/trattoria-la-bella-main-logo-sec.png"
+
+            alt="Logo Trattoria La Bella"
+            class="max-h-48 lg:max-h-56 w-auto object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500"
+          />
+        </div>
+
+        <div class="space-y-4">
+          <p class="text-xl md:text-2xl text-amber-700 font-light italic">
+            "Pasión por cada plato, tradición en cada bocado"
+          </p>
+
+          <p
+            class="text-lg text-gray-600 max-w-xl mx-auto lg:mx-0 leading-relaxed"
+          >
+            Inspirados en la auténtica gastronomía italiana, combinamos
+            ingredientes frescos, recetas tradicionales y pasión por el sabor
+            para ofrecerte una experiencia culinaria única.
+          </p>
+
+          <!-- CTA Buttons -->
+          <div
+            class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-2"
+          >
+            <a
+              href={`/reservas`}
+              class="group relative inline-flex items-center justify-center px-10 py-5 bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white font-bold text-lg rounded-full hover:from-amber-600 hover:via-amber-700 hover:to-amber-800 transform hover:scale-110 hover:-translate-y-2 transition-all duration-500 shadow-xl hover:shadow-2xl hover:shadow-amber-500/30 overflow-hidden animate-pulse-glow"
+            >
+              <!-- Shine effect -->
+              <div
+                class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"
+              >
+              </div>
+
+              <!-- Pulse ring -->
+              <div
+                class="absolute inset-0 rounded-full border-2 border-amber-400/50 animate-ping"
+              >
+              </div>
+
+              <i
+                class="fas fa-calendar-alt mr-3 text-xl group-hover:rotate-12 transition-transform duration-300"
+              ></i>
+              <span class="relative z-10">Reservar Mesa</span>
+            </a>
+            <a
+              href="https://images-cam93.s3.us-east-1.amazonaws.com/Menu+la+bella++(1).pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="group relative inline-flex items-center justify-center px-10 py-5 border-3 border-amber-600 text-amber-600 font-bold text-lg rounded-full hover:bg-gradient-to-r hover:from-amber-600 hover:to-amber-700 hover:text-white transform hover:scale-110 hover:-translate-y-2 transition-all duration-500 shadow-xl hover:shadow-2xl hover:shadow-amber-500/20 overflow-hidden"
+            >
+              <!-- Shine effect -->
+              <div
+                class="absolute inset-0 bg-gradient-to-r from-transparent via-amber-100/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"
+              >
+              </div>
+
+              <i
+                class="fas fa-utensils mr-3 text-xl group-hover:rotate-12 transition-transform duration-300"
+              ></i>
+              <span class="relative z-10">Ver Menú</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Imagen Hero -->
+      <div class="relative animate-fade-in-right">
+        <div class="relative">
+          <img
+            src="https://images-cam93.s3.us-east-1.amazonaws.com/hero1.jpeg"
+            alt="Trattoria La Bella"
+            class="w-full h-96 lg:h-[500px] object-cover rounded-2xl shadow-2xl"
+          />
+          <div
+            class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-2xl"
+          >
+          </div>
+        </div>
+
+        <div
+          class="absolute -bottom-4 -left-4 bg-amber-600 text-white p-3 rounded-full shadow-lg animate-float-delayed"
+        >
+          <i class="fas fa-heart text-xl"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scroll Indicator -->
+  <div
+    class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce"
+  >
+    <div
+      class="w-6 h-10 border-2 border-amber-600 rounded-full flex justify-center"
+    >
+      <div class="w-1 h-3 bg-amber-600 rounded-full mt-2 animate-pulse"></div>
     </div>
   </div>
 </section>
 
-<!-- En tu layout base o donde renderices el componente -->
-<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer
-></script>
+<!-- Sección de Platos Destacados -->
+<section class="py-20 bg-white">
+  <div class="max-w-7xl mx-auto px-4 md:px-8">
+    <div class="text-center mb-16">
+      <h2 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+        Nuestros Platos <span class="text-amber-600">Destacados</span>
+      </h2>
+      <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+        Descubre la auténtica cocina italiana con nuestros platos más populares,
+        preparados con ingredientes frescos y técnicas tradicionales.
+      </p>
+    </div>
 
-<div class="max-w-9xl mx-auto px-8 md:px-10 text-center py-10">
-  <h2 class="text-2xl md:text-3xl font-semibold text-[#4e563f] mb-8">
-    Una probadita de nuestros platos
-  </h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <!-- Plato 1 -->
+      <div
+        class="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2"
+      >
+        <div class="relative overflow-hidden">
+          <img
+            src="https://images-cam93.s3.us-east-1.amazonaws.com/pasta_carbonara.JPG"
+            alt="Pasta Carbonara"
+            class="w-full h-80 object-cover group-hover:scale-110 transition-transform duration-500"
+          />
+          <div
+            class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"
+          >
+          </div>
+        </div>
+        <div class="absolute bottom-0 left-0 right-0 p-6 text-white">
+          <h3 class="text-2xl font-bold mb-2">Pasta Carbonara</h3>
+          <p class="text-sm opacity-90">
+            Huevos, queso pecorino, panceta y pimienta negra
+          </p>
+        </div>
+        <div
+          class="absolute top-4 right-4 bg-amber-600 text-white px-3 py-1 rounded-full text-sm font-semibold"
+        >
+          Popular
+        </div>
+      </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <img
-      src="https://images-cam93.s3.us-east-1.amazonaws.com/pasta_carbonara.JPG"
-      alt="Pasta carbonara"
-      class="w-full h-100 object-cover rounded-lg shadow-md hover:scale-105 transition-transform duration-300"
-    />
-    <img
-      src="https://images-cam93.s3.us-east-1.amazonaws.com/pasta_calamar.JPG"
-      alt="Pasta con calamar"
-      class="w-full h-100 object-cover rounded-lg shadow-md hover:scale-105 transition-transform duration-300"
-    />
-    <img
-      src="https://images-cam93.s3.us-east-1.amazonaws.com/pasta.JPG"
-      alt="Pasta al pomodoro"
-      class="w-full h-100 object-cover rounded-lg shadow-md hover:scale-105 transition-transform duration-300"
-    />
+      <!-- Plato 2 -->
+      <div
+        class="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2"
+      >
+        <div class="relative overflow-hidden">
+          <img
+            src="https://images-cam93.s3.us-east-1.amazonaws.com/pasta_calamar.JPG"
+            alt="Pasta con Calamar"
+            class="w-full h-80 object-cover group-hover:scale-110 transition-transform duration-500"
+          />
+          <div
+            class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"
+          >
+          </div>
+        </div>
+        <div class="absolute bottom-0 left-0 right-0 p-6 text-white">
+          <h3 class="text-2xl font-bold mb-2">Pasta con Calamar</h3>
+          <p class="text-sm opacity-90">Calamar fresco, ajo, perejil y limón</p>
+        </div>
+        <div
+          class="absolute top-4 right-4 bg-green-600 text-white px-3 py-1 rounded-full text-sm font-semibold"
+        >
+          Fresco
+        </div>
+      </div>
+
+      <!-- Plato 3 -->
+      <div
+        class="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2"
+      >
+        <div class="relative overflow-hidden">
+          <img
+            src="https://images-cam93.s3.us-east-1.amazonaws.com/pasta.JPG"
+            alt="Pasta al Pomodoro"
+            class="w-full h-80 object-cover group-hover:scale-110 transition-transform duration-500"
+          />
+          <div
+            class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"
+          >
+          </div>
+        </div>
+        <div class="absolute bottom-0 left-0 right-0 p-6 text-white">
+          <h3 class="text-2xl font-bold mb-2">Pasta al Pomodoro</h3>
+          <p class="text-sm opacity-90">
+            Salsa de tomate casera, albahaca y parmesano
+          </p>
+        </div>
+        <div
+          class="absolute top-4 right-4 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold"
+        >
+          Clásico
+        </div>
+      </div>
+    </div>
   </div>
-</div>
+</section>
 
-<section class="bg-[#e9d8a6] py-10">
-  <div class="max-w-6xl mx-auto text-center px-6 md:px-10">
-    <h2 class="text-2xl md:text-3xl font-semibold text-[#4e563f] mb-8">
-      Nuestros Espacios
-    </h2>
+<!-- Sección de Espacios -->
+<section class="py-20 bg-gradient-to-br from-amber-50 to-orange-50">
+  <div class="max-w-7xl mx-auto px-4 md:px-8">
+    <div class="text-center mb-16">
+      <h2 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+        Nuestros <span class="text-amber-600">Espacios</span>
+      </h2>
+      <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+        Disfruta de la auténtica atmósfera italiana en nuestros espacios
+        cuidadosamente diseñados para crear momentos inolvidables.
+      </p>
+    </div>
 
-    <div
-      class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6"
-    >
-      <!-- Imagenes -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
       {
         [
-          "hero2+(3).jpeg",
-          "hero3.jpeg",
-          "reserva-fondo.jpeg",
-          "imagen-de-frente.jpeg",
-          "hero1.jpeg",
-        ].map((img) => (
-          <div class="w-full h-48 rounded-lg overflow-hidden shadow-md hover:scale-105 transition-transform duration-300">
-            <img
-              src={`https://images-cam93.s3.us-east-1.amazonaws.com/${img}`}
-              alt="Espacio Trattoria"
-              class="w-full h-full object-cover"
-            />
+          {
+            img: "hero2+(3).jpeg",
+            title: "Terraza",
+            desc: "Vistas panorámicas",
+          },
+          {
+            img: "hero3.jpeg",
+            title: "Sala Principal",
+            desc: "Ambiente elegante",
+          },
+          {
+            img: "reserva-fondo.jpeg",
+            title: "Área Privada",
+            desc: "Eventos especiales",
+          },
+          {
+            img: "imagen-de-frente.jpeg",
+            title: "Entrada",
+            desc: "Primera impresión",
+          },
+          { img: "hero1.jpeg", title: "Bar", desc: "Cócteles italianos" },
+        ].map((item) => (
+          <div class="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
+            <div class="relative overflow-hidden">
+              <img
+                src={`https://images-cam93.s3.us-east-1.amazonaws.com/${item.img}`}
+                alt={item.title}
+                class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
+              />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent group-hover:from-black/50 transition-all duration-300" />
+            </div>
+            <div class="absolute bottom-0 left-0 right-0 p-4 text-white transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+              <h3 class="text-lg font-bold mb-1">{item.title}</h3>
+              <p class="text-sm opacity-90">{item.desc}</p>
+            </div>
           </div>
         ))
       }
@@ -100,21 +300,167 @@ const images = [
   </div>
 </section>
 
-<!-- Mapa -->
-<section class="bg-[#f6f6f6] py-10">
-  <div class="max-w-6xl mx-auto px-6 text-center">
-    <h3 class="text-xl font-semibold text-[#4e563f] mb-6">
-      Puedes encontrarnos aquí
-    </h3>
-    <div class="w-full h-96 rounded-xl overflow-hidden shadow-lg">
-      <iframe
-        src="https://www.google.com/maps?q=Carrera+10+%2327-27,+Bogotá,+Colombia&output=embed"
-        width="100%"
-        height="100%"
-        allowfullscreen=""
-        loading="lazy"
-        referrerpolicy="no-referrer-when-downgrade"
-        class="border-0"></iframe>
+<!-- Sección de Ubicación -->
+<section class="py-20 bg-white">
+  <div class="max-w-7xl mx-auto px-4 md:px-8">
+    <div class="text-center mb-16">
+      <h2 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+        Encuéntranos <span class="text-amber-600">Aquí</span>
+      </h2>
+      <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+        Visítanos en el corazón de Bogotá y disfruta de la mejor experiencia
+        gastronómica italiana.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <!-- Información de contacto -->
+      <div class="space-y-8">
+        <div
+          class="bg-gradient-to-r from-amber-50 to-orange-50 p-8 rounded-2xl"
+        >
+          <h3 class="text-2xl font-bold text-gray-800 mb-6">
+            Información de Contacto
+          </h3>
+
+          <div class="space-y-4">
+            <div class="flex items-center space-x-4">
+              <div
+                class="w-12 h-12 bg-amber-600 rounded-full flex items-center justify-center"
+              >
+                <i class="fas fa-map-marker-alt text-white"></i>
+              </div>
+              <div>
+                <p class="font-semibold text-gray-800">Dirección</p>
+                <p class="text-gray-600">Carrera 10 #27-27, Bogotá, Colombia</p>
+              </div>
+            </div>
+
+            <div class="flex items-center space-x-4">
+              <div
+                class="w-12 h-12 bg-amber-600 rounded-full flex items-center justify-center"
+              >
+                <i class="fas fa-phone text-white"></i>
+              </div>
+              <div>
+                <p class="font-semibold text-gray-800">Teléfono</p>
+                <p class="text-gray-600">311 2064619</p>
+              </div>
+            </div>
+
+            <div class="flex items-center space-x-4">
+              <div
+                class="w-12 h-12 bg-amber-600 rounded-full flex items-center justify-center"
+              >
+                <i class="fas fa-clock text-white"></i>
+              </div>
+              <div>
+                <p class="font-semibold text-gray-800">Horarios</p>
+                <p class="text-gray-600">Lun-Dom: 12:00 PM - 10:00 PM</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mapa -->
+      <div class="relative">
+        <div
+          class="w-full h-96 lg:h-[500px] rounded-2xl overflow-hidden shadow-2xl"
+        >
+          <iframe
+            src="https://www.google.com/maps?q=Carrera+10+%2327-27,+Bogotá,+Colombia&output=embed"
+            width="100%"
+            height="100%"
+            allowfullscreen=""
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            class="border-0"
+          >
+          </iframe>
+        </div>
+
+        <!-- Floating CTA -->
+        <div
+          class="absolute -bottom-6 -right-6 bg-gradient-to-r from-amber-500 to-amber-600 text-white p-4 rounded-2xl shadow-2xl hover:shadow-amber-500/25 transform hover:scale-110 transition-all duration-300"
+        >
+          <a
+            href={`/reservas`}
+            class="flex items-center space-x-2 hover:scale-105 transition-transform duration-300"
+          >
+            <i class="fas fa-calendar-check text-xl animate-pulse"></i>
+            <span class="font-bold">Reservar Ahora</span>
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 </section>
+
+<style>
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fade-in-right {
+    from {
+      opacity: 0;
+      transform: translateX(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  @keyframes float-delayed {
+    0%,
+    100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-15px);
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 1s ease-out;
+  }
+
+  .animate-fade-in-right {
+    animation: fade-in-right 1s ease-out 0.3s both;
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-float-delayed {
+    animation: float-delayed 3s ease-in-out infinite 1.5s;
+  }
+
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+
+  .animation-delay-4000 {
+    animation-delay: 4s;
+  }
+</style>

@@ -1,0 +1,1228 @@
+================================================================================
+  DOCUMENTACIÓN API - SISTEMA DE VOTACIONES
+  Base URL: http://localhost:3050/api/v1
+================================================================================
+
+################################################################################
+# GRUPOS DE VOTACIÓN (VOTING GROUPS)
+################################################################################
+
+================================================================================
+1. CREAR GRUPO DE VOTACIÓN
+================================================================================
+Method: POST
+URL: /horizontal-properties/{hp_id}/voting-groups
+Content-Type: application/json
+
+--- PARAMS PATH ---
+- hp_id (number): ID de la propiedad horizontal
+
+--- REQUEST BODY ---
+{
+  "name": "Asamblea Ordinaria 2025",
+  "description": "Primera asamblea del año para votaciones importantes",
+  "voting_start_date": "2025-03-01T08:00:00Z",
+  "voting_end_date": "2025-03-15T23:59:59Z",
+  "requires_quorum": true,
+  "quorum_percentage": 50.0,
+  "created_by_user_id": 5,
+  "notes": "Todas las votaciones se realizarán de manera digital"
+}
+
+CAMPOS REQUERIDOS:
+- name (string, min: 3, max: 150): Nombre del grupo de votación
+- voting_start_date (datetime): Fecha inicio del periodo de votación
+- voting_end_date (datetime): Fecha fin del periodo de votación
+
+CAMPOS OPCIONALES:
+- description (string, max: 1000): Descripción del grupo
+- requires_quorum (boolean, default: false): Si requiere quórum
+- quorum_percentage (number): Porcentaje de quórum necesario
+- created_by_user_id (number): ID del usuario que crea el grupo
+- notes (string, max: 2000): Notas adicionales
+
+--- RESPONSE 201 (SUCCESS) ---
+{
+  "success": true,
+  "message": "Grupo de votación creado",
+  "data": {
+    "id": 1,
+    "business_id": 1,
+    "name": "Asamblea Ordinaria 2025",
+    "description": "Primera asamblea del año para votaciones importantes",
+    "voting_start_date": "2025-03-01T08:00:00Z",
+    "voting_end_date": "2025-03-15T23:59:59Z",
+    "is_active": true,
+    "requires_quorum": true,
+    "quorum_percentage": 50.0,
+    "created_by_user_id": 5,
+    "notes": "Todas las votaciones se realizarán de manera digital",
+    "created_at": "2025-01-15T10:30:00Z",
+    "updated_at": "2025-01-15T10:30:00Z"
+  }
+}
+
+--- RESPONSE 400 (BAD REQUEST) ---
+{
+  "success": false,
+  "message": "Datos inválidos",
+  "error": "Key: 'CreateVotingGroupRequest.Name' Error:Field validation for 'Name' failed on the 'required' tag"
+}
+
+--- RESPONSE 500 (INTERNAL SERVER ERROR) ---
+{
+  "success": false,
+  "message": "No se pudo crear el grupo",
+  "error": "error al guardar en base de datos"
+}
+
+--- EJEMPLO CURL ---
+curl -X POST "http://localhost:3050/api/v1/horizontal-properties/1/voting-groups" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Asamblea Ordinaria 2025",
+    "description": "Primera asamblea del año",
+    "voting_start_date": "2025-03-01T08:00:00Z",
+    "voting_end_date": "2025-03-15T23:59:59Z",
+    "requires_quorum": true,
+    "quorum_percentage": 50.0
+  }'
+
+
+================================================================================
+2. LISTAR GRUPOS DE VOTACIÓN
+================================================================================
+Method: GET
+URL: /horizontal-properties/{hp_id}/voting-groups
+
+--- PARAMS PATH ---
+- hp_id (number): ID de la propiedad horizontal
+
+--- RESPONSE 200 (SUCCESS) ---
+{
+  "success": true,
+  "message": "Grupos obtenidos",
+  "data": [
+    {
+      "id": 1,
+      "business_id": 1,
+      "name": "Asamblea Ordinaria 2025",
+      "description": "Primera asamblea del año",
+      "voting_start_date": "2025-03-01T08:00:00Z",
+      "voting_end_date": "2025-03-15T23:59:59Z",
+      "is_active": true,
+      "requires_quorum": true,
+      "quorum_percentage": 50.0,
+      "created_by_user_id": 5,
+      "notes": "Notas adicionales",
+      "created_at": "2025-01-15T10:30:00Z",
+      "updated_at": "2025-01-15T10:30:00Z"
+    }
+  ]
+}
+
+--- RESPONSE 400 (BAD REQUEST) ---
+{
+  "success": false,
+  "message": "id inválido",
+  "error": "Debe ser numérico"
+}
+
+--- RESPONSE 500 (INTERNAL SERVER ERROR) ---
+{
+  "success": false,
+  "message": "Error listando grupos",
+  "error": "database error"
+}
+
+--- EJEMPLO CURL ---
+curl -X GET "http://localhost:3050/api/v1/horizontal-properties/1/voting-groups"
+
+
+================================================================================
+3. ACTUALIZAR GRUPO DE VOTACIÓN
+================================================================================
+Method: PUT
+URL: /horizontal-properties/{hp_id}/voting-groups/{group_id}
+Content-Type: application/json
+
+--- PARAMS PATH ---
+- hp_id (number): ID de la propiedad horizontal
+- group_id (number): ID del grupo de votación
+
+--- REQUEST BODY (TODOS LOS CAMPOS OPCIONALES PERO RECOMENDADO ENVIAR TODOS) ---
+{
+  "name": "Asamblea Ordinaria 2025 - Actualizada",
+  "description": "Descripción actualizada",
+  "voting_start_date": "2025-03-05T08:00:00Z",
+  "voting_end_date": "2025-03-20T23:59:59Z",
+  "requires_quorum": true,
+  "quorum_percentage": 60.0,
+  "created_by_user_id": 5,
+  "notes": "Notas actualizadas"
+}
+
+--- RESPONSE 200 (SUCCESS) ---
+{
+  "success": true,
+  "message": "Grupo actualizado",
+  "data": {
+    "id": 1,
+    "business_id": 1,
+    "name": "Asamblea Ordinaria 2025 - Actualizada",
+    "description": "Descripción actualizada",
+    "voting_start_date": "2025-03-05T08:00:00Z",
+    "voting_end_date": "2025-03-20T23:59:59Z",
+    "is_active": true,
+    "requires_quorum": true,
+    "quorum_percentage": 60.0,
+    "created_by_user_id": 5,
+    "notes": "Notas actualizadas",
+    "created_at": "2025-01-15T10:30:00Z",
+    "updated_at": "2025-01-15T14:45:00Z"
+  }
+}
+
+--- RESPONSE 400 (BAD REQUEST) ---
+{
+  "success": false,
+  "message": "Datos inválidos",
+  "error": "validation error"
+}
+
+--- RESPONSE 404 (NOT FOUND) ---
+{
+  "success": false,
+  "message": "No se pudo actualizar",
+  "error": "grupo de votación no encontrado"
+}
+
+--- EJEMPLO CURL ---
+curl -X PUT "http://localhost:3050/api/v1/horizontal-properties/1/voting-groups/1" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Asamblea Ordinaria 2025 - Actualizada",
+    "quorum_percentage": 60.0
+  }'
+
+
+================================================================================
+4. DESACTIVAR GRUPO DE VOTACIÓN
+================================================================================
+Method: DELETE
+URL: /horizontal-properties/{hp_id}/voting-groups/{group_id}
+
+--- PARAMS PATH ---
+- hp_id (number): ID de la propiedad horizontal
+- group_id (number): ID del grupo de votación
+
+NOTA: Esta operación es un SOFT DELETE (desactivación), no elimina físicamente.
+
+--- RESPONSE 200 (SUCCESS) ---
+{
+  "success": true,
+  "message": "Grupo desactivado"
+}
+
+--- RESPONSE 400 (BAD REQUEST) ---
+{
+  "success": false,
+  "message": "id inválido",
+  "error": "Debe ser numérico"
+}
+
+--- RESPONSE 404 (NOT FOUND) ---
+{
+  "success": false,
+  "message": "No se pudo desactivar",
+  "error": "grupo de votación no encontrado"
+}
+
+--- RESPONSE 500 (INTERNAL SERVER ERROR) ---
+{
+  "success": false,
+  "message": "No se pudo desactivar",
+  "error": "database error"
+}
+
+--- EJEMPLO CURL ---
+curl -X DELETE "http://localhost:3050/api/v1/horizontal-properties/1/voting-groups/1"
+
+
+################################################################################
+# VOTACIONES (VOTINGS)
+################################################################################
+
+================================================================================
+1. CREAR VOTACIÓN
+================================================================================
+Method: POST
+URL: /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings
+Content-Type: application/json
+
+--- PARAMS PATH ---
+- hp_id (number): ID de la propiedad horizontal
+- group_id (number): ID del grupo de votación
+
+--- REQUEST BODY ---
+{
+  "title": "Aprobación del presupuesto anual 2025",
+  "description": "Se votará sobre la aprobación del presupuesto general para el año 2025",
+  "voting_type": "simple",
+  "is_secret": false,
+  "allow_abstention": true,
+  "display_order": 1,
+  "required_percentage": 50.0
+}
+
+CAMPOS REQUERIDOS:
+- title (string, min: 3, max: 200): Título de la votación
+- description (string, max: 2000): Descripción detallada
+- voting_type (string): Tipo de votación
+- display_order (number, min: 1): Orden de visualización
+
+CAMPOS OPCIONALES:
+- is_secret (boolean, default: false): Si la votación es secreta
+- allow_abstention (boolean, default: false): Si se permite abstención
+- required_percentage (number): Porcentaje requerido para aprobar
+
+VALORES PERMITIDOS PARA voting_type:
+- "simple": Votación simple (mayoría simple)
+- "majority": Mayoría calificada
+- "unanimity": Unanimidad
+
+--- RESPONSE 201 (SUCCESS) ---
+{
+  "success": true,
+  "message": "Votación creada",
+  "data": {
+    "id": 1,
+    "voting_group_id": 1,
+    "title": "Aprobación del presupuesto anual 2025",
+    "description": "Se votará sobre la aprobación del presupuesto general",
+    "voting_type": "simple",
+    "is_secret": false,
+    "allow_abstention": true,
+    "is_active": true,
+    "display_order": 1,
+    "required_percentage": 50.0,
+    "created_at": "2025-01-15T10:30:00Z",
+    "updated_at": "2025-01-15T10:30:00Z"
+  }
+}
+
+--- RESPONSE 400 (BAD REQUEST) ---
+{
+  "success": false,
+  "message": "Datos inválidos",
+  "error": "Key: 'CreateVotingRequest.VotingType' Error:Field validation for 'VotingType' failed on the 'oneof' tag"
+}
+
+--- RESPONSE 500 (INTERNAL SERVER ERROR) ---
+{
+  "success": false,
+  "message": "No se pudo crear la votación",
+  "error": "database error"
+}
+
+--- EJEMPLO CURL ---
+curl -X POST "http://localhost:3050/api/v1/horizontal-properties/1/voting-groups/1/votings" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Aprobación del presupuesto anual 2025",
+    "description": "Se votará sobre la aprobación del presupuesto general",
+    "voting_type": "simple",
+    "is_secret": false,
+    "allow_abstention": true,
+    "display_order": 1,
+    "required_percentage": 50.0
+  }'
+
+
+================================================================================
+2. LISTAR VOTACIONES DE UN GRUPO
+================================================================================
+Method: GET
+URL: /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings
+
+--- PARAMS PATH ---
+- hp_id (number): ID de la propiedad horizontal
+- group_id (number): ID del grupo de votación
+
+--- RESPONSE 200 (SUCCESS) ---
+{
+  "success": true,
+  "message": "Votaciones obtenidas",
+  "data": [
+    {
+      "id": 1,
+      "voting_group_id": 1,
+      "title": "Aprobación del presupuesto anual 2025",
+      "description": "Se votará sobre la aprobación del presupuesto general",
+      "voting_type": "simple",
+      "is_secret": false,
+      "allow_abstention": true,
+      "is_active": true,
+      "display_order": 1,
+      "required_percentage": 50.0,
+      "created_at": "2025-01-15T10:30:00Z",
+      "updated_at": "2025-01-15T10:30:00Z"
+    }
+  ]
+}
+
+--- RESPONSE 400 (BAD REQUEST) ---
+{
+  "success": false,
+  "message": "id inválido",
+  "error": "Debe ser numérico"
+}
+
+--- RESPONSE 500 (INTERNAL SERVER ERROR) ---
+{
+  "success": false,
+  "message": "Error listando votaciones",
+  "error": "database error"
+}
+
+--- EJEMPLO CURL ---
+curl -X GET "http://localhost:3050/api/v1/horizontal-properties/1/voting-groups/1/votings"
+
+
+================================================================================
+3. ACTUALIZAR VOTACIÓN
+================================================================================
+Method: PUT
+URL: /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}
+Content-Type: application/json
+
+--- PARAMS PATH ---
+- hp_id (number): ID de la propiedad horizontal
+- group_id (number): ID del grupo de votación
+- voting_id (number): ID de la votación
+
+--- REQUEST BODY (TODOS LOS CAMPOS OPCIONALES) ---
+{
+  "title": "Aprobación del presupuesto anual 2025 - Actualizado",
+  "description": "Descripción actualizada",
+  "voting_type": "majority",
+  "is_secret": true,
+  "allow_abstention": false,
+  "display_order": 2,
+  "required_percentage": 66.67
+}
+
+--- RESPONSE 200 (SUCCESS) ---
+{
+  "success": true,
+  "message": "Votación actualizada",
+  "data": {
+    "id": 1,
+    "voting_group_id": 1,
+    "title": "Aprobación del presupuesto anual 2025 - Actualizado",
+    "description": "Descripción actualizada",
+    "voting_type": "majority",
+    "is_secret": true,
+    "allow_abstention": false,
+    "is_active": true,
+    "display_order": 2,
+    "required_percentage": 66.67,
+    "created_at": "2025-01-15T10:30:00Z",
+    "updated_at": "2025-01-15T14:45:00Z"
+  }
+}
+
+--- RESPONSE 400 (BAD REQUEST) ---
+{
+  "success": false,
+  "message": "Datos inválidos",
+  "error": "validation error"
+}
+
+--- RESPONSE 404 (NOT FOUND) ---
+{
+  "success": false,
+  "message": "No se pudo actualizar",
+  "error": "votación no encontrada"
+}
+
+--- EJEMPLO CURL ---
+curl -X PUT "http://localhost:3050/api/v1/horizontal-properties/1/voting-groups/1/votings/1" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "is_secret": true,
+    "required_percentage": 66.67
+  }'
+
+
+================================================================================
+4. DESACTIVAR VOTACIÓN
+================================================================================
+Method: DELETE
+URL: /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}
+
+--- PARAMS PATH ---
+- hp_id (number): ID de la propiedad horizontal
+- group_id (number): ID del grupo de votación
+- voting_id (number): ID de la votación
+
+NOTA: Esta operación es un SOFT DELETE (desactivación).
+
+--- RESPONSE 200 (SUCCESS) ---
+{
+  "success": true,
+  "message": "Votación desactivada"
+}
+
+--- RESPONSE 400 (BAD REQUEST) ---
+{
+  "success": false,
+  "message": "id inválido",
+  "error": "Debe ser numérico"
+}
+
+--- RESPONSE 404 (NOT FOUND) ---
+{
+  "success": false,
+  "message": "No se pudo desactivar",
+  "error": "votación no encontrada"
+}
+
+--- EJEMPLO CURL ---
+curl -X DELETE "http://localhost:3050/api/v1/horizontal-properties/1/voting-groups/1/votings/1"
+
+
+################################################################################
+# OPCIONES DE VOTACIÓN (VOTING OPTIONS)
+################################################################################
+
+================================================================================
+1. CREAR OPCIÓN DE VOTACIÓN
+================================================================================
+Method: POST
+URL: /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/options
+Content-Type: application/json
+
+--- PARAMS PATH ---
+- hp_id (number): ID de la propiedad horizontal
+- group_id (number): ID del grupo de votación
+- voting_id (number): ID de la votación
+
+--- REQUEST BODY ---
+{
+  "option_text": "Sí, apruebo el presupuesto",
+  "option_code": "YES",
+  "display_order": 1
+}
+
+CAMPOS REQUERIDOS:
+- option_text (string, min: 1, max: 100): Texto de la opción
+- option_code (string, min: 1, max: 20): Código identificador
+- display_order (number, min: 1): Orden de visualización
+
+EJEMPLOS DE option_code:
+- "YES" / "NO" para votaciones binarias
+- "A" / "B" / "C" para opciones múltiples
+- "APPROVE" / "REJECT" / "ABSTAIN"
+
+--- RESPONSE 201 (SUCCESS) ---
+{
+  "success": true,
+  "message": "Opción creada",
+  "data": {
+    "id": 1,
+    "voting_id": 1,
+    "option_text": "Sí, apruebo el presupuesto",
+    "option_code": "YES",
+    "display_order": 1,
+    "is_active": true
+  }
+}
+
+--- RESPONSE 400 (BAD REQUEST) ---
+{
+  "success": false,
+  "message": "Datos inválidos",
+  "error": "Key: 'CreateVotingOptionRequest.OptionText' Error:Field validation for 'OptionText' failed on the 'required' tag"
+}
+
+--- RESPONSE 500 (INTERNAL SERVER ERROR) ---
+{
+  "success": false,
+  "message": "No se pudo crear la opción",
+  "error": "database error"
+}
+
+--- EJEMPLO CURL ---
+curl -X POST "http://localhost:3050/api/v1/horizontal-properties/1/voting-groups/1/votings/1/options" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "option_text": "Sí, apruebo el presupuesto",
+    "option_code": "YES",
+    "display_order": 1
+  }'
+
+
+================================================================================
+2. LISTAR OPCIONES DE UNA VOTACIÓN
+================================================================================
+Method: GET
+URL: /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/options
+
+--- PARAMS PATH ---
+- hp_id (number): ID de la propiedad horizontal
+- group_id (number): ID del grupo de votación
+- voting_id (number): ID de la votación
+
+--- RESPONSE 200 (SUCCESS) ---
+{
+  "success": true,
+  "message": "Opciones obtenidas",
+  "data": [
+    {
+      "id": 1,
+      "voting_id": 1,
+      "option_text": "Sí, apruebo el presupuesto",
+      "option_code": "YES",
+      "display_order": 1,
+      "is_active": true
+    },
+    {
+      "id": 2,
+      "voting_id": 1,
+      "option_text": "No, rechazo el presupuesto",
+      "option_code": "NO",
+      "display_order": 2,
+      "is_active": true
+    }
+  ]
+}
+
+--- RESPONSE 400 (BAD REQUEST) ---
+{
+  "success": false,
+  "message": "id inválido",
+  "error": "Debe ser numérico"
+}
+
+--- RESPONSE 500 (INTERNAL SERVER ERROR) ---
+{
+  "success": false,
+  "message": "Error listando opciones",
+  "error": "database error"
+}
+
+--- EJEMPLO CURL ---
+curl -X GET "http://localhost:3050/api/v1/horizontal-properties/1/voting-groups/1/votings/1/options"
+
+
+================================================================================
+3. DESACTIVAR OPCIÓN DE VOTACIÓN
+================================================================================
+Method: DELETE
+URL: /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/options/{option_id}
+
+--- PARAMS PATH ---
+- hp_id (number): ID de la propiedad horizontal
+- group_id (number): ID del grupo de votación
+- voting_id (number): ID de la votación
+- option_id (number): ID de la opción de votación
+
+NOTA: Esta operación es un SOFT DELETE (desactivación).
+
+--- RESPONSE 200 (SUCCESS) ---
+{
+  "success": true,
+  "message": "Opción desactivada"
+}
+
+--- RESPONSE 400 (BAD REQUEST) ---
+{
+  "success": false,
+  "message": "id inválido",
+  "error": "Debe ser numérico"
+}
+
+--- RESPONSE 404 (NOT FOUND) ---
+{
+  "success": false,
+  "message": "No se pudo desactivar",
+  "error": "opción de votación no encontrada"
+}
+
+--- EJEMPLO CURL ---
+curl -X DELETE "http://localhost:3050/api/v1/horizontal-properties/1/voting-groups/1/votings/1/options/1"
+
+
+################################################################################
+# VOTOS (VOTES)
+################################################################################
+
+================================================================================
+1. REGISTRAR VOTO
+================================================================================
+Method: POST
+URL: /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/votes
+Content-Type: application/json
+
+--- PARAMS PATH ---
+- hp_id (number): ID de la propiedad horizontal
+- group_id (number): ID del grupo de votación
+- voting_id (number): ID de la votación
+
+--- REQUEST BODY ---
+{
+  "resident_id": 10,
+  "voting_option_id": 1,
+  "ip_address": "192.168.1.100",
+  "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+  "notes": "Voto emitido desde la aplicación móvil"
+}
+
+CAMPOS REQUERIDOS:
+- resident_id (number): ID del residente que vota
+- voting_option_id (number): ID de la opción seleccionada
+
+CAMPOS OPCIONALES:
+- ip_address (string): Dirección IP desde donde se emite el voto
+- user_agent (string): Información del navegador/dispositivo
+- notes (string): Notas adicionales
+
+--- RESPONSE 201 (SUCCESS) ---
+{
+  "success": true,
+  "message": "Voto registrado",
+  "data": {
+    "id": 1,
+    "voting_id": 1,
+    "resident_id": 10,
+    "voting_option_id": 1,
+    "voted_at": "2025-03-05T14:30:00Z",
+    "ip_address": "192.168.1.100",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+    "notes": "Voto emitido desde la aplicación móvil"
+  }
+}
+
+--- RESPONSE 400 (BAD REQUEST) ---
+{
+  "success": false,
+  "message": "Datos inválidos",
+  "error": "Key: 'CreateVoteRequest.ResidentID' Error:Field validation for 'ResidentID' failed on the 'required' tag"
+}
+
+--- RESPONSE 400 (CONFLICT - Voto duplicado) ---
+{
+  "success": false,
+  "message": "No se pudo registrar el voto",
+  "error": "el residente ya ha votado en esta votación"
+}
+
+--- RESPONSE 500 (INTERNAL SERVER ERROR) ---
+{
+  "success": false,
+  "message": "No se pudo registrar el voto",
+  "error": "database error"
+}
+
+--- EJEMPLO CURL ---
+curl -X POST "http://localhost:3050/api/v1/horizontal-properties/1/voting-groups/1/votings/1/votes" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "resident_id": 10,
+    "voting_option_id": 1,
+    "ip_address": "192.168.1.100"
+  }'
+
+
+================================================================================
+2. STREAM EN TIEMPO REAL DE VOTACIÓN (SSE)
+================================================================================
+Method: GET
+URL: /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/stream
+Content-Type: text/event-stream
+Authentication: JWT Token Required
+
+--- PARAMS PATH ---
+- hp_id (number): ID de la propiedad horizontal
+- group_id (number): ID del grupo de votación
+- voting_id (number): ID de la votación
+
+DESCRIPCIÓN:
+Este endpoint establece una conexión de Server-Sent Events (SSE) que permite
+recibir actualizaciones en tiempo real de los votos a medida que se van registrando.
+
+FUNCIONAMIENTO:
+1. Al conectarse, el cliente recibe PRIMERO una precarga con todos los votos
+   existentes en la votación (si los hay)
+2. Luego, recibe actualizaciones en tiempo real cada vez que alguien vota
+3. La conexión se mantiene abierta hasta que el cliente la cierre
+4. Envía heartbeats cada 30 segundos para mantener la conexión viva
+
+--- EVENTOS QUE PUEDE RECIBIR ---
+
+EVENT: connected
+- Se envía al establecer la conexión
+- Confirma que estás conectado a la votación
+
+EVENT: vote
+- Se envía cada vez que se registra un nuevo voto
+- Incluye información completa del voto
+
+EVENT: preload_complete
+- Se envía después de terminar la precarga inicial
+- Indica cuántos votos se enviaron en la precarga
+
+EVENT: heartbeat
+- Se envía cada 30 segundos
+- Mantiene la conexión viva
+
+--- EJEMPLO DE CONEXIÓN ---
+
+JavaScript (EventSource):
+```javascript
+const votingId = 1;
+const groupId = 1;
+const hpId = 14;
+const token = 'YOUR_JWT_TOKEN';
+
+const url = `http://localhost:3050/api/v1/horizontal-properties/${hpId}/voting-groups/${groupId}/votings/${votingId}/stream`;
+
+// EventSource no permite enviar headers personalizados, usa fetch con stream
+const response = await fetch(url, {
+  headers: {
+    'Authorization': `Bearer ${token}`
+  }
+});
+
+const reader = response.body.getReader();
+const decoder = new TextDecoder();
+
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+  
+  const chunk = decoder.decode(value);
+  const lines = chunk.split('\n');
+  
+  for (const line of lines) {
+    if (line.startsWith('event:')) {
+      const eventType = line.substring(7).trim();
+      console.log('Evento:', eventType);
+    }
+    if (line.startsWith('data:')) {
+      const data = JSON.parse(line.substring(6));
+      console.log('Datos:', data);
+      
+      // Manejar según tipo de evento
+      if (eventType === 'vote') {
+        // Nuevo voto recibido
+        agregarVotoALaUI(data);
+      }
+    }
+  }
+}
+```
+
+--- FORMATO DE EVENTOS ---
+
+Evento: connected
+```
+event: connected
+data: {"message": "Conectado a votación", "voting_id": 1}
+```
+
+Evento: vote (precarga o nuevo voto)
+```
+event: vote
+data: {
+  "id": 1,
+  "voting_id": 1,
+  "resident_id": 10,
+  "voting_option_id": 1,
+  "voted_at": "2025-03-05T14:30:00Z",
+  "ip_address": "192.168.1.100",
+  "user_agent": "Mozilla/5.0",
+  "notes": ""
+}
+```
+
+Evento: preload_complete
+```
+event: preload_complete
+data: {"message": "Precarga completada", "total_votes": 5}
+```
+
+Evento: heartbeat
+```
+event: heartbeat
+data: {"timestamp": "2025-03-05T14:35:00Z"}
+```
+
+--- EJEMPLO CURL (Conexión básica) ---
+curl -N -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  "http://localhost:3050/api/v1/horizontal-properties/14/voting-groups/1/votings/1/stream"
+
+NOTA: Usa la opción -N para desactivar el buffering y ver eventos en tiempo real
+
+
+================================================================================
+3. LISTAR VOTOS DE UNA VOTACIÓN
+================================================================================
+Method: GET
+URL: /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/votes
+
+--- PARAMS PATH ---
+- hp_id (number): ID de la propiedad horizontal
+- group_id (number): ID del grupo de votación
+- voting_id (number): ID de la votación
+
+NOTA: En votaciones secretas (is_secret: true), la información del residente
+podría estar oculta o anonimizada según la implementación del backend.
+
+--- RESPONSE 200 (SUCCESS) ---
+{
+  "success": true,
+  "message": "Votos obtenidos",
+  "data": [
+    {
+      "id": 1,
+      "voting_id": 1,
+      "resident_id": 10,
+      "voting_option_id": 1,
+      "voted_at": "2025-03-05T14:30:00Z",
+      "ip_address": "192.168.1.100",
+      "user_agent": "Mozilla/5.0",
+      "notes": "Voto emitido correctamente"
+    },
+    {
+      "id": 2,
+      "voting_id": 1,
+      "resident_id": 11,
+      "voting_option_id": 2,
+      "voted_at": "2025-03-05T15:00:00Z",
+      "ip_address": "192.168.1.101",
+      "user_agent": "Chrome/120.0",
+      "notes": ""
+    }
+  ]
+}
+
+--- RESPONSE 400 (BAD REQUEST) ---
+{
+  "success": false,
+  "message": "id inválido",
+  "error": "Debe ser numérico"
+}
+
+--- RESPONSE 500 (INTERNAL SERVER ERROR) ---
+{
+  "success": false,
+  "message": "Error listando votos",
+  "error": "database error"
+}
+
+--- EJEMPLO CURL ---
+curl -X GET "http://localhost:3050/api/v1/horizontal-properties/1/voting-groups/1/votings/1/votes"
+
+
+################################################################################
+# CÓDIGOS DE ESTADO HTTP
+################################################################################
+
+200 OK          - Operación exitosa
+201 Created     - Recurso creado exitosamente
+400 Bad Request - Datos inválidos o campos requeridos faltantes
+404 Not Found   - Recurso no encontrado
+500 Internal    - Error interno del servidor
+
+
+################################################################################
+# FLUJO COMPLETO DE VOTACIÓN
+################################################################################
+
+1. CREAR GRUPO DE VOTACIÓN (Asamblea)
+   POST /horizontal-properties/{hp_id}/voting-groups
+   → Define el periodo y configuración general
+
+2. CREAR VOTACIONES dentro del grupo
+   POST /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings
+   → Define cada tema a votar (ej: presupuesto, reglamento, obras)
+
+3. CREAR OPCIONES para cada votación
+   POST /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/options
+   → Define las opciones de voto (Sí/No, Opción A/B/C, etc)
+
+4. CONECTAR AL STREAM EN TIEMPO REAL (Opcional)
+   GET /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/stream
+   → Recibir votos en tiempo real mientras la votación está activa
+
+5. REGISTRAR VOTOS de los residentes
+   POST /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/votes
+   → Residentes emiten sus votos
+   → Los votos se publican automáticamente en el stream SSE
+
+6. CONSULTAR RESULTADOS (Endpoint tradicional)
+   GET /horizontal-properties/{hp_id}/voting-groups/{group_id}/votings/{voting_id}/votes
+   → Ver todos los votos registrados en un solo request
+
+
+################################################################################
+# TIPOS DE VOTACIÓN (voting_type)
+################################################################################
+
+"simple"      - Mayoría simple (más del 50%)
+"majority"    - Mayoría calificada (2/3 o porcentaje específico)
+"unanimity"   - Unanimidad (100% de aprobación)
+
+
+################################################################################
+# VALIDACIONES IMPORTANTES
+################################################################################
+
+1. FECHAS:
+   - voting_end_date debe ser posterior a voting_start_date
+   - No se pueden registrar votos fuera del periodo establecido
+
+2. QUÓRUM:
+   - Si requires_quorum es true, debe especificarse quorum_percentage
+   - El sistema valida que se alcance el quórum antes de cerrar la votación
+
+3. VOTOS:
+   - Un residente solo puede votar una vez por votación
+   - Las opciones deben pertenecer a la votación especificada
+
+4. VOTACIONES SECRETAS:
+   - Si is_secret es true, la información del votante puede estar protegida
+   - Los votos se cuentan pero la identidad puede estar oculta
+
+5. ABSTENCIÓN:
+   - Si allow_abstention es true, debe crearse una opción específica de "Abstención"
+   - Si es false, el sistema no permite votos en blanco
+
+
+################################################################################
+# NOTAS ADICIONALES
+################################################################################
+
+1. AUTENTICACIÓN:
+   - Todos los endpoints requieren autenticación JWT
+
+2. PERMISOS:
+   - Solo usuarios con permisos de administración pueden crear/modificar grupos y votaciones
+   - Los residentes solo pueden registrar votos
+
+3. FORMATO DE FECHAS:
+   - Usar formato ISO 8601: "2025-03-01T08:00:00Z"
+
+4. SOFT DELETE:
+   - Las desactivaciones (DELETE) son lógicas, no físicas
+   - Los registros se marcan como inactivos (is_active: false)
+
+5. ORDEN DE VISUALIZACIÓN:
+   - display_order permite ordenar las votaciones y opciones
+   - Debe ser un número entero positivo
+
+6. AUDITORIA:
+   - Los votos registran ip_address y user_agent para auditoría
+   - voted_at registra la fecha/hora exacta del voto
+
+
+################################################################################
+# SISTEMA DE VOTACIÓN EN TIEMPO REAL (SSE)
+################################################################################
+
+DESCRIPCIÓN:
+El sistema implementa Server-Sent Events (SSE) para proporcionar actualizaciones
+en tiempo real de las votaciones. Esto permite mostrar los resultados mientras
+los residentes están votando.
+
+CARACTERÍSTICAS:
+
+1. PRECARGA AUTOMÁTICA:
+   - Al conectarse, recibe todos los votos existentes
+   - Útil cuando te conectas tarde a una votación en curso
+   - Los votos se envían uno por uno como eventos
+
+2. ACTUALIZACIONES EN TIEMPO REAL:
+   - Cada vez que alguien vota, todos los clientes conectados reciben el voto
+   - Sin necesidad de hacer polling
+   - Latencia muy baja (milisegundos)
+
+3. CACHE EN MEMORIA:
+   - Los votos se almacenan en cache por voting_id
+   - El cache se inicializa con votos de la BD si está vacío
+   - Múltiples clientes pueden conectarse simultáneamente
+
+4. HEARTBEAT:
+   - Cada 30 segundos se envía un heartbeat
+   - Previene timeouts de conexión
+   - Permite detectar desconexiones
+
+5. RECONEXIÓN AUTOMÁTICA:
+   - Si te desconectas y vuelves a conectar
+   - Recibes automáticamente el estado actual
+   - No pierdes información
+
+VENTAJAS VS POLLING:
+
+- ✅ Menor latencia (tiempo real vs polling cada X segundos)
+- ✅ Menor carga en el servidor (1 conexión vs múltiples requests)
+- ✅ Menor consumo de red (solo se envían nuevos datos)
+- ✅ Experiencia de usuario mejorada (actualizaciones instantáneas)
+
+LIMITACIONES:
+
+- ⚠️ Requiere mantener conexión HTTP abierta
+- ⚠️ El número de conexiones simultáneas está limitado por el servidor
+- ⚠️ EventSource nativo no permite headers (usar fetch API)
+
+EJEMPLO COMPLETO EN REACT/NEXT.JS:
+
+```typescript
+import { useEffect, useState } from 'react';
+
+interface Vote {
+  id: number;
+  voting_id: number;
+  resident_id: number;
+  voting_option_id: number;
+  voted_at: string;
+}
+
+export function VotingResults({ votingId, groupId, hpId }) {
+  const [votes, setVotes] = useState<Vote[]>([]);
+  const [isConnected, setIsConnected] = useState(false);
+  const [totalVotes, setTotalVotes] = useState(0);
+
+  useEffect(() => {
+    const token = localStorage.getItem('jwt_token');
+    const url = `http://localhost:3050/api/v1/horizontal-properties/${hpId}/voting-groups/${groupId}/votings/${votingId}/stream`;
+
+    let eventType = '';
+
+    fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    }).then(async (response) => {
+      const reader = response.body!.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('event:')) {
+            eventType = line.substring(7).trim();
+          }
+
+          if (line.startsWith('data:')) {
+            try {
+              const data = JSON.parse(line.substring(6));
+
+              switch (eventType) {
+                case 'connected':
+                  console.log('✅ Conectado a votación:', data);
+                  setIsConnected(true);
+                  break;
+
+                case 'vote':
+                  console.log('📊 Nuevo voto:', data);
+                  setVotes(prev => [...prev, data]);
+                  setTotalVotes(prev => prev + 1);
+                  break;
+
+                case 'preload_complete':
+                  console.log('✅ Precarga completada:', data.total_votes, 'votos');
+                  setTotalVotes(data.total_votes);
+                  break;
+
+                case 'heartbeat':
+                  console.log('💓 Heartbeat:', data.timestamp);
+                  break;
+              }
+            } catch (err) {
+              console.error('Error parseando evento:', err);
+            }
+          }
+        }
+      }
+    }).catch(err => {
+      console.error('Error en SSE:', err);
+      setIsConnected(false);
+    });
+
+    // Cleanup al desmontar
+    return () => {
+      // La conexión se cerrará automáticamente
+    };
+  }, [votingId, groupId, hpId]);
+
+  return (
+    <div>
+      <h2>Resultados en Tiempo Real</h2>
+      <p>Estado: {isConnected ? '🟢 Conectado' : '🔴 Desconectado'}</p>
+      <p>Total de votos: {totalVotes}</p>
+      
+      <div>
+        {votes.map(vote => (
+          <div key={vote.id}>
+            Residente #{vote.resident_id} votó opción #{vote.voting_option_id}
+            en {new Date(vote.voted_at).toLocaleTimeString()}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+```
+
+CACHE Y RENDIMIENTO:
+
+1. INICIALIZACIÓN:
+   - Primera conexión carga votos desde BD
+   - Cache se inicializa automáticamente
+   - Conexiones subsecuentes usan el cache
+
+2. MEMORIA:
+   - El cache se mantiene mientras hay suscriptores
+   - Se limpia automáticamente cuando no hay conexiones
+   - Cada votación tiene su propio cache independiente
+
+3. CONCURRENCIA:
+   - Thread-safe con sync.RWMutex
+   - Soporta múltiples lectores simultáneos
+   - Operaciones de escritura son atómicas
+
+4. LÍMITES:
+   - Buffer de 100 votos por canal
+   - Si se excede, los votos antiguos se descartan (protección contra clientes lentos)
+   - Conexiones inactivas se cierran automáticamente
+
+CASOS DE USO:
+
+1. PANTALLA DE RESULTADOS EN VIVO:
+   - Conectar al SSE cuando se abre la pantalla
+   - Mostrar votos en tiempo real mientras la asamblea transcurre
+   - Actualizar gráficos y contadores automáticamente
+
+2. MÚLTIPLES PANTALLAS:
+   - Pantalla grande en la asamblea
+   - Cada residente en su celular
+   - Todos ven los mismos resultados en tiempo real
+
+3. MONITOREO:
+   - Administradores pueden monitorear participación
+   - Ver en tiempo real cuántos han votado
+   - Detectar problemas técnicos rápidamente
+
+
+################################################################################
+# FIN DE LA DOCUMENTACIÓN
+################################################################################
+

@@ -1,32 +1,6 @@
 version: "3.8"
 
 services:
-  website:
-    image: public.ecr.aws/d3a6d4r1/cam/reserve:website-latest
-    container_name: reserve-website-1
-    environment:
-      PUBLIC_API_BASE_URL: "http://central_reserve:3050"
-    networks:
-      - app-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    deploy:
-      resources:
-        limits:
-          cpus: "0.50"
-          memory: 256M
-        reservations:
-          cpus: "0.25"
-          memory: 128M
 
   frontend:
     platform: linux/arm64
@@ -34,8 +8,8 @@ services:
     container_name: frontend_prod
     ports:
       - "8080:80"
-    environment:
-      REACT_APP_API_BASE_URL: "${REACT_APP_API_BASE_URL}"
+    env_file:
+    - .env 
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/"]
@@ -85,18 +59,18 @@ services:
       FROM_EMAIL:          "${FROM_EMAIL:-}"
       SMTP_USE_STARTTLS:   "${SMTP_USE_STARTTLS}"
       SMTP_USE_TLS:        "${SMTP_USE_TLS}"
+      # S3 y media
+      S3_BUCKET:           "${S3_BUCKET}"
+      S3_REGION:           "${S3_REGION}"
+      S3_KEY:              "${S3_KEY}"
+      S3_SECRET:           "${S3_SECRET}"
+      URL_BASE_DOMAIN_S3:  "${URL_BASE_DOMAIN_S3}"
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3050/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+  
     networks:
       - app-network
     depends_on:
       - postgres
-      - db_migrator
     logging:
       driver: "json-file"
       options:
@@ -140,45 +114,6 @@ services:
         reservations:
           memory: 512M
 
-  db_migrator:
-    image: public.ecr.aws/d3a6d4r1/cam/reserve:migrator-latest
-    container_name: db_migrator_prod
-    env_file:
-      - .env
-    environment:
-      DB_HOST:      "postgres"
-      DB_PORT:      "5432"
-      DB_NAME:      "${DB_NAME}"
-      DB_USER:      "${DB_USER}"
-      DB_PASS:      "${DB_PASSWORD}"
-      DB_LOG_LEVEL: "${DB_LOG_LEVEL}"
-      PGSSLMODE:    "${DB_SSLMODE}"
-      APP_ENV:      "${APP_ENV}"
-      HTTP_PORT:    "8080"
-      LOG_LEVEL:    "${LOG_LEVEL}"
-      JWT_SECRET:   "${JWT_SECRET}"
-      USER_PASS_DEFAULT:  "${USER_PASS_DEFAULT}"
-      EMAIL_USER_DEFAULT:  "${EMAIL_USER_DEFAULT}"
-
-
-    restart: "no"
-    depends_on:
-      - postgres
-    networks:
-      - app-network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "2"
-    deploy:
-      resources:
-        limits:
-          cpus: "0.25"
-          memory: 128M
-        reservations:
-          memory: 64M
-
   nginx:
     image: public.ecr.aws/d3a6d4r1/cam/reserve:nginx-latest
     container_name: nginx_prod
@@ -196,6 +131,34 @@ services:
     networks:
       - app-network
     restart: unless-stopped
+
+  calculate-flow-print:
+    image: public.ecr.aws/d3a6d4r1/cam/reserve:dtf-calculator
+    container_name: alculate_flow_print_prod
+    env_file:
+      - .env.flow
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+    networks:
+      - app-network
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+
+  
 
 networks:
   app-network:

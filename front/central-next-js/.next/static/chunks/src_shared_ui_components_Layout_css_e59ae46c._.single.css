@@ -1,0 +1,42 @@
+/* [project]/src/shared/ui/components/Layout.css [app-client] (css) */
+.layout {
+  background-color: #f8f9fa;
+  min-height: 100vh;
+  display: flex;
+}
+
+.main-content {
+  background-color: #f8f9fa;
+  flex: 1;
+  min-height: 100vh;
+  margin-left: 70px;
+  transition: margin-left .3s;
+}
+
+.content-wrapper {
+  min-height: 100vh;
+  padding: 0;
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 70px;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    margin-left: 0;
+  }
+
+  .sidebar {
+    transition: transform .3s;
+    transform: translateX(-100%);
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+}
+
+/*# sourceMappingURL=src_shared_ui_components_Layout_css_e59ae46c._.single.css.map*/

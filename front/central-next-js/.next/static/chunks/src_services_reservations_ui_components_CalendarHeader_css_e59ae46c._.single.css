@@ -1,0 +1,70 @@
+/* [project]/src/services/reservations/ui/components/CalendarHeader.css [app-client] (css) */
+.calendar-header {
+  z-index: 2;
+  border: 1px solid color-mix(in srgb, var(--primary-color), #fff 80%);
+  background: #fff;
+  border-radius: 16px;
+  justify-content: space-between;
+  align-items: flex-start;
+  max-width: 1200px;
+  margin: 24px auto 0;
+  padding: 32px;
+  display: flex;
+  position: relative;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, .1);
+}
+
+.title-section .calendar-title {
+  color: var(--foreground);
+  margin: 0 0 8px;
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+
+.title-section .calendar-subtitle {
+  color: color-mix(in srgb, var(--foreground), #fff 30%);
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 400;
+}
+
+.calendar-stats {
+  align-items: center;
+  gap: 16px;
+  display: flex;
+}
+
+.stat-item {
+  text-align: center;
+  border: 1px solid color-mix(in srgb, var(--primary-color), #fff 80%);
+  background: #fff;
+  border-radius: 12px;
+  min-width: 110px;
+  padding: 16px 20px;
+  transition: all .3s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+}
+
+.stat-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
+}
+
+.stat-number {
+  color: var(--primary-color);
+  margin-bottom: 4px;
+  font-size: 1.8rem;
+  font-weight: 700;
+  display: block;
+}
+
+.stat-label {
+  color: color-mix(in srgb, var(--foreground), #fff 30%);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-top: 4px;
+  font-size: .8rem;
+  display: block;
+}
+
+/*# sourceMappingURL=src_services_reservations_ui_components_CalendarHeader_css_e59ae46c._.single.css.map*/

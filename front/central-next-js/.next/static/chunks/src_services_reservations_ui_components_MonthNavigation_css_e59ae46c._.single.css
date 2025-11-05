@@ -1,0 +1,101 @@
+/* [project]/src/services/reservations/ui/components/MonthNavigation.css [app-client] (css) */
+.month-nav {
+  background: #fff;
+  border-radius: 12px;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  display: flex;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .1);
+}
+
+.nav-left {
+  align-items: center;
+  gap: 16px;
+  display: flex;
+}
+
+.nav-left button {
+  color: #495057;
+  cursor: pointer;
+  background: #f8f9fa;
+  border: none;
+  border-radius: 8px;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  transition: all .3s;
+  display: flex;
+}
+
+.nav-left button:hover {
+  background: #e9ecef;
+  transform: translateY(-1px);
+}
+
+.nav-left h2 {
+  color: #2c3e50;
+  text-align: center;
+  min-width: 140px;
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.nav-right {
+  align-items: center;
+  gap: 16px;
+  display: flex;
+}
+
+.btn-today {
+  background: var(--secondary-color);
+  color: #fff;
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-weight: 500;
+  transition: all .3s;
+}
+
+.btn-today:hover {
+  background: var(--primary-color);
+  transform: translateY(-2px);
+}
+
+.view-selector {
+  background: #e9ecef;
+  border-radius: 8px;
+  padding: 4px;
+  display: flex;
+}
+
+.view-selector button {
+  color: #495057;
+  cursor: pointer;
+  opacity: .7;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-weight: 500;
+  transition: all .3s;
+}
+
+.view-selector button.active {
+  background: var(--primary-color);
+  color: #fff;
+  opacity: 1;
+}
+
+.view-selector button:hover:not(.active) {
+  opacity: 1;
+  background: #dee2e6;
+}
+
+/*# sourceMappingURL=src_services_reservations_ui_components_MonthNavigation_css_e59ae46c._.single.css.map*/

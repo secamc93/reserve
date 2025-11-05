@@ -1,0 +1,527 @@
+package domain
+
+import (
+	"mime/multipart"
+	"time"
+)
+
+type LoginRequest struct {
+	Email    string
+	Password string
+}
+
+type LoginResponse struct {
+	Success               bool
+	Message               string
+	User                  UserInfo
+	Token                 string
+	RequirePasswordChange bool
+	Businesses            []BusinessInfo
+	Scope                 string // Scope del usuario (platform, business, etc.)
+	IsSuperAdmin          bool   // Indica si es super admin (scope platform o scope_id 1)
+}
+
+type UserInfo struct {
+	ID          uint
+	Name        string
+	Email       string
+	Phone       string
+	AvatarURL   string
+	IsActive    bool
+	LastLoginAt *time.Time
+}
+
+type UserAuthInfo struct {
+	ID          uint
+	Name        string
+	Email       string
+	Password    string
+	Phone       string
+	AvatarURL   string
+	IsActive    bool
+	LastLoginAt *time.Time
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	DeletedAt   *time.Time
+}
+
+type BusinessInfo struct {
+	ID                 uint
+	Name               string
+	Code               string
+	BusinessTypeID     uint
+	BusinessType       BusinessTypeInfo
+	Timezone           string
+	Address            string
+	Description        string
+	LogoURL            string
+	PrimaryColor       string
+	SecondaryColor     string
+	TertiaryColor      string
+	QuaternaryColor    string
+	NavbarImageURL     string
+	CustomDomain       string
+	IsActive           bool
+	EnableDelivery     bool
+	EnablePickup       bool
+	EnableReservations bool
+}
+
+type BusinessTypeInfo struct {
+	ID          uint
+	Name        string
+	Code        string
+	Description string
+	Icon        string
+}
+
+type UserRolesPermissionsResponse struct {
+	Success          bool
+	Message          string
+	UserID           uint
+	Email            string
+	IsSuper          bool
+	BusinessID       uint
+	BusinessName     string
+	BusinessTypeID   uint
+	BusinessTypeName string
+	Role             RoleInfo
+	Permissions      []PermissionInfo
+}
+
+type RoleInfo struct {
+	ID          uint
+	Name        string
+	Code        string
+	Description string
+	Level       int
+	IsSystem    bool
+	Scope       string
+}
+
+type PermissionInfo struct {
+	ID          uint
+	Name        string
+	Code        string
+	Description string
+	Resource    string
+	Action      string
+	Scope       string
+	Active      bool // Indica si el recurso está activo para el business
+}
+
+type ChangePasswordRequest struct {
+	UserID          uint
+	CurrentPassword string
+	NewPassword     string
+}
+
+type ChangePasswordResponse struct {
+	Success bool
+	Message string
+}
+
+type GeneratePasswordRequest struct {
+	UserID uint
+}
+
+type GeneratePasswordResponse struct {
+	Success  bool
+	Email    string
+	Password string
+	Message  string
+}
+
+type GenerateAPIKeyRequest struct {
+	UserID      uint
+	BusinessID  uint
+	Name        string
+	Description string
+	RequesterID uint
+}
+
+type GenerateAPIKeyResponse struct {
+	Success    bool
+	Message    string
+	APIKey     string
+	APIKeyInfo APIKeyInfo
+}
+
+type ValidateAPIKeyRequest struct {
+	APIKey string
+}
+
+type ValidateAPIKeyResponse struct {
+	Success    bool
+	Message    string
+	UserID     uint
+	Email      string
+	BusinessID uint
+	Roles      []string
+	APIKeyID   uint
+}
+
+// RoleDTO representa un rol para casos de uso
+type RoleDTO struct {
+	ID               uint
+	Name             string
+	Code             string
+	Description      string
+	Level            int
+	IsSystem         bool
+	ScopeID          uint
+	ScopeName        string // Nombre del scope para mostrar
+	ScopeCode        string // Código del scope para mostrar
+	BusinessTypeID   uint   // ID del tipo de business
+	BusinessTypeName string // Nombre del tipo de business
+}
+
+// RoleFilters representa los filtros para la consulta de roles
+type RoleFilters struct {
+	BusinessTypeID *uint
+	ScopeID        *uint
+	IsSystem       *bool
+	Name           *string
+	Level          *int
+}
+
+// CreateRoleDTO representa los datos para crear un nuevo rol
+type CreateRoleDTO struct {
+	Name           string
+	Description    string
+	Level          int
+	IsSystem       bool
+	ScopeID        uint
+	BusinessTypeID uint
+}
+
+// UpdateRoleDTO representa los datos para actualizar un rol existente
+type UpdateRoleDTO struct {
+	Name           *string
+	Description    *string
+	Level          *int
+	IsSystem       *bool
+	ScopeID        *uint
+	BusinessTypeID *uint
+}
+
+// PermissionDTO representa un permiso para casos de uso
+type PermissionDTO struct {
+	ID               uint
+	Name             string
+	Code             string
+	Description      string
+	Resource         string
+	Action           string
+	ScopeID          uint
+	ScopeName        string // Nombre del scope para mostrar
+	ScopeCode        string // Código del scope para mostrar
+	BusinessTypeID   uint   // ID del tipo de business
+	BusinessTypeName string // Nombre del tipo de business
+}
+
+// CreatePermissionDTO representa los datos para crear un permiso
+type CreatePermissionDTO struct {
+	Name           string
+	Code           string // Opcional, se genera automáticamente si no se proporciona
+	Description    string
+	ResourceID     uint // ID del resource
+	ActionID       uint // ID de la action
+	ScopeID        uint
+	BusinessTypeID *uint // Opcional, nil = genérico
+}
+
+// UpdatePermissionDTO representa los datos para actualizar un permiso
+type UpdatePermissionDTO struct {
+	Name           string
+	Code           string
+	Description    string
+	ResourceID     uint // ID del resource
+	ActionID       uint // ID de la action
+	ScopeID        uint
+	BusinessTypeID *uint // Opcional, nil = genérico
+}
+
+// PermissionListDTO representa una lista de permisos
+type PermissionListDTO struct {
+	Permissions []PermissionDTO
+	Total       int
+}
+
+// ScopeDTO representa un scope para casos de uso
+type ScopeDTO struct {
+	ID          uint
+	Name        string
+	Code        string
+	Description string
+	IsSystem    bool
+}
+
+// CreateScopeDTO representa los datos para crear un scope
+type CreateScopeDTO struct {
+	Name        string
+	Code        string
+	Description string
+	IsSystem    bool
+}
+
+// UpdateScopeDTO representa los datos para actualizar un scope
+type UpdateScopeDTO struct {
+	Name        string
+	Code        string
+	Description string
+	IsSystem    bool
+}
+
+// ScopeListDTO representa una lista de scopes
+type ScopeListDTO struct {
+	Scopes []ScopeDTO
+	Total  int
+}
+
+// UserQueryDTO representa un usuario para consultas sin relaciones
+type UserQueryDTO struct {
+	ID          uint
+	Name        string
+	Email       string
+	Phone       string
+	AvatarURL   string
+	IsActive    bool
+	LastLoginAt *time.Time
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	DeletedAt   *time.Time
+}
+
+// UserDTO representa un usuario para casos de uso
+type UserDTO struct {
+	ID                      uint
+	Name                    string
+	Email                   string
+	Phone                   string
+	AvatarURL               string
+	IsActive                bool
+	LastLoginAt             *time.Time
+	IsSuperUser             bool                             // Indica si es super usuario (scope platform)
+	BusinessRoleAssignments []BusinessRoleAssignmentDetailed // Parejas business-rol con información completa
+	Roles                   []RoleDTO                        // Mantener por compatibilidad
+	Businesses              []BusinessDTO                    // Mantener por compatibilidad
+	CreatedAt               time.Time
+	UpdatedAt               time.Time
+	DeletedAt               *time.Time
+}
+
+// BusinessRoleAssignment representa una asignación de rol a un negocio específico
+type BusinessRoleAssignment struct {
+	BusinessID uint
+	RoleID     uint
+}
+
+// BusinessRoleAssignmentDetailed representa una asignación con información completa para respuestas
+type BusinessRoleAssignmentDetailed struct {
+	BusinessID   uint   `json:"business_id"`
+	BusinessName string `json:"business_name,omitempty"`
+	RoleID       uint   `json:"role_id"`
+	RoleName     string `json:"role_name,omitempty"`
+}
+
+// BusinessStaffRelation representa la relación completa desde business_staff (user-business-role)
+type BusinessStaffRelation struct {
+	UserID     uint
+	BusinessID *uint               // NULL para super usuarios
+	RoleID     *uint               // NULL si aún no tiene rol asignado
+	Business   *BusinessInfoEntity // Info del business si business_id no es NULL
+}
+
+// CreateUserDTO representa los datos para crear un usuario
+type CreateUserDTO struct {
+	Name        string
+	Email       string
+	Password    string
+	Phone       string
+	AvatarURL   string                // URL completa (para compatibilidad)
+	AvatarFile  *multipart.FileHeader // Archivo de imagen para subir a S3
+	IsActive    bool
+	BusinessIDs []uint // Businesses a relacionar con el usuario
+}
+
+// UpdateUserDTO representa los datos para actualizar un usuario
+type UpdateUserDTO struct {
+	Name         string
+	Email        string
+	Phone        string
+	AvatarURL    string                // URL completa (para compatibilidad)
+	AvatarFile   *multipart.FileHeader // Archivo de imagen para subir a S3
+	RemoveAvatar bool
+	IsActive     bool
+	BusinessIDs  []uint // Businesses a mantener (sobrescribe relaciones)
+}
+
+// BusinessDTO representa un business para el DTO de usuario
+type BusinessDTO struct {
+	ID                 uint
+	Name               string
+	Code               string
+	BusinessTypeID     uint
+	Timezone           string
+	Address            string
+	Description        string
+	LogoURL            string
+	PrimaryColor       string
+	SecondaryColor     string
+	TertiaryColor      string
+	QuaternaryColor    string
+	NavbarImageURL     string
+	CustomDomain       string
+	IsActive           bool
+	EnableDelivery     bool
+	EnablePickup       bool
+	EnableReservations bool
+	BusinessTypeName   string
+	BusinessTypeCode   string
+	Role               *RoleDTO // Rol del usuario en este business (desde business_staff)
+}
+
+// UserListDTO representa una lista paginada de usuarios
+type UserListDTO struct {
+	Users      []UserDTO
+	Total      int64
+	Page       int
+	PageSize   int
+	TotalPages int
+}
+
+// UserFilters representa los filtros para la consulta de usuarios
+type UserFilters struct {
+	Page       int
+	PageSize   int
+	Name       string
+	Email      string
+	Phone      string
+	UserIDs    []uint // Lista de IDs de usuarios
+	IsActive   *bool
+	RoleID     *uint
+	BusinessID *uint
+	CreatedAt  string // formato: "2024-01-01" o "2024-01-01,2024-12-31"
+	SortBy     string // "id", "name", "email", "created_at", etc.
+	SortOrder  string // "asc" o "desc"
+}
+
+type JWTClaims struct {
+	UserID    uint
+	TokenType string
+}
+
+// BusinessTokenClaims representa los claims del token de business
+type BusinessTokenClaims struct {
+	UserID         uint
+	BusinessID     uint
+	BusinessTypeID uint
+	RoleID         uint
+	TokenType      string
+}
+
+// ResourceDTO representa un recurso para casos de uso
+type ResourceDTO struct {
+	ID               uint
+	Name             string
+	Description      string
+	BusinessTypeID   uint
+	BusinessTypeName string
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+}
+
+// CreateResourceDTO representa los datos para crear un recurso
+type CreateResourceDTO struct {
+	Name           string
+	Description    string
+	BusinessTypeID *uint // Opcional, nil = genérico
+}
+
+// UpdateResourceDTO representa los datos para actualizar un recurso
+type UpdateResourceDTO struct {
+	Name           string
+	Description    string
+	BusinessTypeID *uint // Opcional, nil = genérico
+}
+
+// ResourceListDTO representa una lista paginada de recursos
+type ResourceListDTO struct {
+	Resources  []ResourceDTO
+	Total      int64
+	Page       int
+	PageSize   int
+	TotalPages int
+}
+
+// Role representa la entidad de rol en el dominio
+type Role struct {
+	ID               uint
+	Name             string
+	Description      string
+	Level            int
+	IsSystem         bool
+	ScopeID          uint
+	ScopeName        string
+	ScopeCode        string
+	BusinessTypeID   uint
+	BusinessTypeName string
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+}
+
+// ResourceFilters representa los filtros para la consulta de recursos
+type ResourceFilters struct {
+	Page           int
+	PageSize       int
+	Name           string
+	Description    string
+	BusinessTypeID *uint  // Filtrar por tipo de business (null = genérico, aplica a todos)
+	SortBy         string // "name", "created_at", etc.
+	SortOrder      string // "asc" o "desc"
+}
+
+// AssignPermissionsToRoleDTO representa los datos para asignar permisos a un rol
+type AssignPermissionsToRoleDTO struct {
+	PermissionIDs []uint
+}
+
+// GetRolePermissionsResponse representa la respuesta con los permisos de un rol
+type GetRolePermissionsResponse struct {
+	Success     bool
+	Message     string
+	RoleID      uint
+	RoleName    string
+	Permissions []PermissionDTO
+}
+
+// ActionDTO representa un action en la respuesta
+type ActionDTO struct {
+	ID          uint
+	Name        string
+	Description string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+}
+
+// CreateActionDTO representa los datos para crear un action
+type CreateActionDTO struct {
+	Name        string
+	Description string
+}
+
+// UpdateActionDTO representa los datos para actualizar un action
+type UpdateActionDTO struct {
+	Name        string
+	Description string
+}
+
+// ActionListDTO representa una lista paginada de actions
+type ActionListDTO struct {
+	Actions    []ActionDTO
+	Total      int64
+	Page       int
+	PageSize   int
+	TotalPages int
+}

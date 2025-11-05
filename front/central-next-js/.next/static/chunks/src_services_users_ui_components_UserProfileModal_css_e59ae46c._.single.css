@@ -1,0 +1,417 @@
+/* [project]/src/services/users/ui/components/UserProfileModal.css [app-client] (css) */
+.modal-overlay {
+  z-index: 1000;
+  -webkit-backdrop-filter: blur(6px) saturate(120%);
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  display: flex;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.modal-overlay:before {
+  content: "";
+  background: linear-gradient(135deg, var(--primary-color, #3b82f6) 0%, var(--secondary-color, #8b5cf6) 100%);
+  opacity: .35;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.modal-container {
+  background: rgba(255, 255, 255, .9);
+  border: 1px solid rgba(0, 0, 0, .06);
+  border-radius: 16px;
+  width: min(92vw, 600px);
+  max-height: 90vh;
+  animation: .25s ease-out modalSlideIn;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .15);
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px)scale(.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0)scale(1);
+  }
+}
+
+.modal-header {
+  color: #fff;
+  border-radius: 16px 16px 0 0;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 22px;
+  display: flex;
+  background: linear-gradient(135deg, var(--primary-color, #3b82f6) 0%, var(--secondary-color, #8b5cf6) 100%) !important;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.close-btn {
+  color: #fff;
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  justify-content: center;
+  align-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 8px;
+  font-size: 1.5rem;
+  transition: background-color .2s;
+  display: flex;
+}
+
+.close-btn:hover {
+  background-color: rgba(255, 255, 255, .1);
+}
+
+.modal-content {
+  padding: 22px;
+}
+
+.user-profile-info {
+  border-bottom: 1px solid #e5e7eb;
+  grid-template-columns: 64px 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  display: grid;
+}
+
+.profile-avatar {
+  border: 3px solid #f3f4f6;
+  border-radius: 50%;
+  width: 64px;
+  height: 64px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .08);
+}
+
+.profile-avatar img {
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+}
+
+.avatar-placeholder {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: #fff;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  font-size: 1.25rem;
+  font-weight: 700;
+  display: flex;
+}
+
+.profile-details {
+  flex: 1;
+}
+
+.profile-details h3 {
+  color: #111827;
+  margin: 0 0 4px;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.user-email {
+  color: #6b7280;
+  margin: 0;
+  font-size: .9rem;
+}
+
+.user-phone {
+  color: #6b7280;
+  margin: 2px 0 10px;
+  font-size: .9rem;
+}
+
+.user-status {
+  margin-top: 8px;
+}
+
+.status-badge {
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: .75rem;
+  font-weight: 600;
+}
+
+.status-badge.active {
+  color: #065f46;
+  background-color: #d1fae5;
+}
+
+.status-badge.inactive {
+  color: #991b1b;
+  background-color: #fee2e2;
+}
+
+.user-roles-section, .user-businesses-section {
+  margin-bottom: 24px;
+}
+
+.user-roles-section h4, .user-businesses-section h4 {
+  color: #374151;
+  margin: 0 0 12px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.tags-container {
+  flex-wrap: wrap;
+  gap: 8px;
+  display: flex;
+}
+
+.tag {
+  white-space: nowrap;
+  border-radius: 16px;
+  padding: 6px 12px;
+  font-size: .75rem;
+  font-weight: 500;
+}
+
+.role-tag {
+  background-color: var(--primary-color);
+  color: #fff;
+}
+
+.business-tag {
+  background-color: var(--secondary-color);
+  color: #111827;
+}
+
+.no-data {
+  color: #9ca3af;
+  margin: 0;
+  font-size: .875rem;
+  font-style: italic;
+}
+
+.user-timestamps {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.timestamp-item {
+  border-bottom: 1px solid #e5e7eb;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  display: flex;
+}
+
+.timestamp-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.timestamp-item:first-child {
+  padding-top: 0;
+}
+
+.timestamp-label {
+  color: #374151;
+  font-weight: 500;
+}
+
+.timestamp-value {
+  color: #6b7280;
+}
+
+@media (max-width: 640px) {
+  .modal-container {
+    width: 95%;
+    margin: 10px;
+  }
+
+  .modal-header {
+    padding: 16px 20px;
+  }
+
+  .modal-content {
+    padding: 20px;
+  }
+
+  .user-profile-info {
+    grid-template-columns: 56px 1fr;
+    gap: 12px;
+  }
+
+  .profile-avatar {
+    width: 56px;
+    height: 56px;
+  }
+
+  .avatar-placeholder {
+    font-size: 2.5rem;
+  }
+
+  .timestamp-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .timestamp-value {
+    text-align: left;
+  }
+}
+
+.user-profile-info, .user-roles-section, .user-businesses-section, .user-timestamps {
+  animation: .4s ease-out fadeInUp;
+}
+
+.user-roles-section {
+  animation-delay: .1s;
+}
+
+.user-businesses-section {
+  animation-delay: .2s;
+}
+
+.user-timestamps {
+  animation-delay: .3s;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.user-card {
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, .06);
+  border-radius: 12px;
+  margin-bottom: 16px;
+  padding: 14px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .06);
+}
+
+.business-card {
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, .08);
+  border-radius: 12px;
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .08);
+}
+
+.business-card-header {
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  display: flex;
+}
+
+.business-logo-wrap {
+  background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+  border-radius: 10px;
+  justify-content: center;
+  align-items: center;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  overflow: hidden;
+}
+
+.business-logo-wrap img {
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+}
+
+.business-logo-placeholder {
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.business-title h4 {
+  color: #111827;
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.business-code {
+  color: #6b7280;
+  font-size: .85rem;
+}
+
+.business-body .business-desc {
+  color: #4b5563;
+  margin: 6px 0 10px;
+  font-size: .95rem;
+}
+
+.business-meta {
+  flex-wrap: wrap;
+  gap: 6px;
+  display: flex;
+}
+
+.badge {
+  background: var(--primary-color);
+  color: #fff;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: .75rem;
+}
+
+.badge.subtle {
+  color: #1f2937;
+  background: #eef2ff;
+}
+
+.role-chip {
+  background: var(--secondary-color);
+  color: #111827;
+  border-radius: 999px;
+  margin-left: 8px;
+  padding: 2px 8px;
+  font-size: .75rem;
+  font-weight: 600;
+}
+
+.user-card-roles {
+  margin-top: 10px;
+}
+
+.user-card-roles .tag {
+  border: 1px solid rgba(0, 0, 0, .05);
+}
+
+/*# sourceMappingURL=src_services_users_ui_components_UserProfileModal_css_e59ae46c._.single.css.map*/

@@ -1,0 +1,68 @@
+package handlervote
+
+import (
+	"fmt"
+	"net/http"
+	"os"
+	"strconv"
+
+	"central_reserve/services/horizontalproperty/internal/domain"
+	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlervote/mapper"
+	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlervote/request"
+	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlervote/response"
+
+	"github.com/gin-gonic/gin"
+)
+
+// UpdateVotingGroup godoc
+//
+//	@Summary		Actualizar un grupo de votación
+//	@Description	Actualiza los datos de un grupo de votación existente
+//	@Tags			Votaciones
+//	@Security		BearerAuth
+//	@Accept			json
+//	@Produce		json
+//	@Param			group_id		path		int									true	"ID del grupo de votación"
+//	@Param			voting_group	body		request.CreateVotingGroupRequest	true	"Datos actualizados del grupo"
+//	@Success		200				{object}	object
+//	@Failure		400				{object}	object
+//	@Failure		404				{object}	object
+//	@Failure		500				{object}	object
+//	@Router			/horizontal-properties/voting-groups/{group_id} [put]
+func (h *VotingHandler) UpdateVotingGroup(c *gin.Context) {
+	idParam := c.Param("group_id")
+	id64, err := strconv.ParseUint(idParam, 10, 32)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "[ERROR] handlervote/update-voting-group.go - Error en handler: %v\n", err)
+		h.logger.Error().Err(err).Str("group_id", idParam).Msg("Error parseando ID de grupo de votación")
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "id inválido", Error: "Debe ser numérico"})
+		return
+	}
+	var req request.CreateVotingGroupRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		fmt.Fprintf(os.Stderr, "[ERROR] handlervote/update-voting-group.go - Error en handler: %v\n", err)
+		h.logger.Error().Err(err).Uint("group_id", uint(id64)).Msg("Error validando datos del request")
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "Datos inválidos", Error: err.Error()})
+		return
+	}
+	dto := domain.CreateVotingGroupDTO{
+		Name:             req.Name,
+		Description:      req.Description,
+		VotingStartDate:  req.VotingStartDate,
+		VotingEndDate:    req.VotingEndDate,
+		RequiresQuorum:   req.RequiresQuorum,
+		QuorumPercentage: req.QuorumPercentage,
+		Notes:            req.Notes,
+	}
+	updated, err := h.votingUseCase.UpdateVotingGroup(c.Request.Context(), uint(id64), dto)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "[ERROR] handlervote/update-voting-group.go - Error en handler: %v\n", err)
+		h.logger.Error().Err(err).Uint("group_id", uint(id64)).Str("name", req.Name).Msg("Error actualizando grupo de votación")
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "No se pudo actualizar", Error: err.Error()})
+		return
+	}
+
+	// Mapear DTO a response
+	responseData := mapper.MapVotingGroupDTOToResponse(updated)
+	c.JSON(http.StatusOK, response.VotingGroupSuccess{Success: true, Message: "Grupo actualizado", Data: responseData})
+}

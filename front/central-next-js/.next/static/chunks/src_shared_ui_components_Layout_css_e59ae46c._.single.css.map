@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["turbopack:///[project]/src/shared/ui/components/Layout.css"],"sourcesContent":["/* Layout.css */\n.layout {\n    display: flex;\n    min-height: 100vh;\n    background-color: #f8f9fa;\n}\n\n.main-content {\n    flex: 1;\n    margin-left: 70px;\n    /* Ajustado para el sidebar colapsado */\n    min-height: 100vh;\n    background-color: #f8f9fa;\n    transition: margin-left 0.3s ease;\n}\n\n.content-wrapper {\n    padding: 0;\n    min-height: 100vh;\n}\n\n/* Responsive */\n@media (max-width: 768px) {\n    .main-content {\n        margin-left: 70px;\n    }\n}\n\n@media (max-width: 480px) {\n    .main-content {\n        margin-left: 0;\n    }\n\n    .sidebar {\n        transform: translateX(-100%);\n        transition: transform 0.3s ease;\n    }\n\n    .sidebar.mobile-open {\n        transform: translateX(0);\n    }\n} "],"names":[],"mappings":"AACA;;;;;;AAMA;;;;;;;;AASA;;;;;AAMA;EACI;;;;;AAKJ;EACI;;;;EAIA;;;;;EAKA"}}]
+}

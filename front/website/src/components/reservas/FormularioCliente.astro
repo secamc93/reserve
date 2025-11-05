@@ -4,72 +4,167 @@ const { mostrar } = Astro.props;
 
 <div
   id="modalCliente"
-  class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+  class="hidden fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4"
 >
   <div
-    class="bg-white rounded-xl p-6 w-full max-w-2xl grid grid-cols-1 md:grid-cols-2 gap-6 text-center relative animate-fade-in"
+    class="bg-white rounded-3xl p-8 w-full max-w-4xl grid grid-cols-1 lg:grid-cols-2 gap-8 relative animate-fade-in-up shadow-2xl border border-white/20"
   >
+    <!-- Close button -->
+    <button
+      id="cerrarFormulario"
+      class="absolute top-4 right-4 w-10 h-10 bg-gray-100 hover:bg-red-100 text-gray-600 hover:text-red-600 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 z-10"
+    >
+      <i class="fas fa-times text-lg"></i>
+    </button>
+
     <!-- Resumen -->
-    <div class="bg-gray-100 rounded-xl p-4">
-      <h3 class="text-lg font-semibold text-[#4e563f] mb-3">Tu Reserva</h3>
-      <ul class="text-left text-sm space-y-2">
-        <li><strong>Personas:</strong> <span id="resumenPersonas">-</span></li>
-        <li><strong>Fecha:</strong> <span id="resumenFecha">-</span></li>
-        <li><strong>Hora:</strong> <span id="resumenHora">-</span></li>
-      </ul>
+    <div
+      class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 border border-amber-200"
+    >
+      <div class="text-center mb-6">
+        <div
+          class="w-16 h-16 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg"
+        >
+          <i class="fas fa-calendar-check text-white text-2xl"></i>
+        </div>
+        <h3 class="text-2xl font-bold text-gray-800 mb-2">
+          Resumen de tu Reserva
+        </h3>
+        <p class="text-gray-600">Confirma los detalles antes de continuar</p>
+      </div>
+
+      <div class="space-y-4">
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-amber-200">
+          <div class="flex items-center space-x-3">
+            <div
+              class="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center"
+            >
+              <i class="fas fa-users text-white"></i>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500 font-medium">Personas</p>
+              <p class="text-lg font-bold text-gray-800">
+                <span id="resumenPersonas">-</span> invitados
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-amber-200">
+          <div class="flex items-center space-x-3">
+            <div
+              class="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center"
+            >
+              <i class="fas fa-calendar-alt text-white"></i>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500 font-medium">Fecha</p>
+              <p class="text-lg font-bold text-gray-800">
+                <span id="resumenFecha">-</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-amber-200">
+          <div class="flex items-center space-x-3">
+            <div
+              class="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center"
+            >
+              <i class="fas fa-clock text-white"></i>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500 font-medium">Hora</p>
+              <p class="text-lg font-bold text-gray-800">
+                <span id="resumenHora">-</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="mt-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200"
+      >
+        <div class="flex items-center space-x-2">
+          <i class="fas fa-check-circle text-green-600 text-xl"></i>
+          <p class="text-sm text-green-700 font-medium">
+            ¡Perfecto! Solo falta completar tus datos
+          </p>
+        </div>
+      </div>
     </div>
 
     <!-- Formulario cliente -->
-    <div>
-      <h2 class="text-2xl mb-4 text-[#4e563f]">Datos del Cliente</h2>
+    <div class="space-y-6">
+      <div class="text-center">
+        <h2 class="text-3xl font-bold text-gray-800 mb-2">Datos del Cliente</h2>
+        <p class="text-gray-600">
+          Completa tus datos para confirmar la reserva
+        </p>
+      </div>
 
-      <form id="formularioCliente" class="grid gap-4 text-left">
-        <div>
-          <label class="text-sm">Nombre completo</label>
+      <form id="formularioCliente" class="space-y-6">
+        <div class="space-y-2">
+          <label class="text-sm font-semibold text-gray-700 flex items-center">
+            <i class="fas fa-user mr-2 text-amber-600"></i>
+            Nombre completo
+          </label>
           <input
             type="text"
             name="nombre"
             required
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e9d8a6]"
+            class="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/20 transition-all duration-300 text-gray-700 placeholder-gray-400"
+            placeholder="Ingresa tu nombre completo"
           />
         </div>
 
-        <div>
-          <label class="text-sm">Teléfono</label>
+        <div class="space-y-2">
+          <label class="text-sm font-semibold text-gray-700 flex items-center">
+            <i class="fas fa-phone mr-2 text-amber-600"></i>
+            Teléfono
+          </label>
           <input
             type="tel"
             name="telefono"
             required
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e9d8a6]"
+            class="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/20 transition-all duration-300 text-gray-700 placeholder-gray-400"
+            placeholder="Ingresa tu número de teléfono"
           />
         </div>
 
-        <div>
-          <label class="text-sm">Email</label>
+        <div class="space-y-2">
+          <label class="text-sm font-semibold text-gray-700 flex items-center">
+            <i class="fas fa-envelope mr-2 text-amber-600"></i>
+            Email
+          </label>
           <input
             type="email"
             name="email"
             required
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e9d8a6]"
+            class="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/20 transition-all duration-300 text-gray-700 placeholder-gray-400"
+            placeholder="Ingresa tu correo electrónico"
           />
         </div>
 
-        <div class="flex justify-between items-center mt-4">
+        <div class="flex flex-col sm:flex-row gap-4 pt-4">
           <button
             type="button"
             id="cerrarFormulario"
-            class="text-sm text-red-500 hover:underline"
+            class="flex-1 px-6 py-3 border-2 border-red-500 text-red-600 font-semibold rounded-xl hover:bg-red-500 hover:text-white transition-all duration-300 transform hover:scale-105"
           >
+            <i class="fas fa-times mr-2"></i>
             Cancelar
           </button>
-        </div>
 
-        <button
-          type="submit"
-          class="mt-4 bg-[#e9d8a6] text-black px-6 py-2 rounded hover:bg-[#4e563f] hover:text-white transition"
-        >
-          Enviar
-        </button>
+          <button
+            type="submit"
+            class="flex-1 px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold rounded-xl hover:from-amber-600 hover:to-amber-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
+          >
+            <i class="fas fa-check mr-2"></i>
+            Confirmar Reserva
+          </button>
+        </div>
       </form>
     </div>
   </div>
@@ -112,28 +207,25 @@ const { mostrar } = Astro.props;
           name: formData.get("nombre"),
           phone: formData.get("telefono"),
           email: formData.get("email"),
-          dni: "No aplica", // Asignar "No aplica" como valor por defecto
+          dni: "No aplica",
         };
 
         const reserva = window.datosReserva || {};
 
-        // 🚫 Ya no convertir a UTC. Solo crea fecha local directa
         const [year, month, day] = reserva.fecha.split("-");
         const [hora, minuto] = reserva.hora.split(":");
 
-        // Crea fecha directamente en hora local del navegador (no UTC)
         const startInColombia = new Date(
           Number(year),
-          Number(month) - 1, // Mes empieza desde 0
+          Number(month) - 1,
           Number(day),
           Number(hora),
           Number(minuto),
-          0
+          0,
         );
 
-        // Fin: dos horas después
         const endInColombia = new Date(
-          startInColombia.getTime() + 2 * 60 * 60 * 1000
+          startInColombia.getTime() + 2 * 60 * 60 * 1000,
         );
 
         if (isNaN(startInColombia.getTime())) {
@@ -152,17 +244,17 @@ const { mostrar } = Astro.props;
         console.log("✅ Enviando al backend:", datosReserva);
 
         try {
-          // Usar la URL del servidor de producción
-          const apiUrl = "http://3.220.183.29:3050/api/v1/reserves";
-            
-          const response = await fetch(
-            apiUrl,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(datosReserva),
-            }
-          );
+          const apiUrl = "https://www.xn--rup-joa.com/api/v1/reserves";
+
+          const response = await fetch(apiUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-API-Key":
+                "ak_344031d3bd06dc63dbfb5704a0fd8b6126dc089d9038fb01c59fafbf00bbce7b",
+            },
+            body: JSON.stringify(datosReserva),
+          });
 
           if (!response.ok) {
             const errorData = await response.json().catch(() => ({
@@ -172,17 +264,122 @@ const { mostrar } = Astro.props;
             throw new Error(
               `Error ${response.status}: ${
                 errorData.message || "No se pudo crear la reserva"
-              }`
+              }`,
             );
           }
 
-          alert("✅ Reserva registrada exitosamente");
+          // ✅ RESERVA EXITOSA - Mostrar modal de WhatsApp
           cerrarModal();
+          mostrarModalWhatsApp(cliente, reserva);
         } catch (err) {
           console.error("❌ Error al enviar la reserva:", err);
           alert("Hubo un problema al registrar tu reserva.");
         }
       });
+
+      // Función para mostrar modal de WhatsApp
+      function mostrarModalWhatsApp(cliente, reserva) {
+        // Crear el modal de WhatsApp
+        const modalWhatsApp = document.createElement("div");
+        modalWhatsApp.id = "modalWhatsApp";
+        modalWhatsApp.className =
+          "fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4";
+
+        // Formatear fecha para mostrar
+        const fecha = new Date(reserva.fecha);
+        const fechaFormateada = fecha.toLocaleDateString("es-ES", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+
+        // Formatear hora para mostrar
+        const horaFormateada = reserva.hora.replace(":00", "");
+
+        // Crear mensaje de WhatsApp
+        const mensaje = `¡Hola! Quiero confirmar mi reserva en Trattoria La Bella:
+
+👤 *Cliente:* ${cliente.name}
+📱 *Teléfono:* ${cliente.phone}
+📧 *Email:* ${cliente.email}
+👥 *Personas:* ${reserva.personas}
+📅 *Fecha:* ${fechaFormateada}
+🕐 *Hora:* ${horaFormateada}
+
+¿Podrían confirmar mi reserva? ¡Gracias! 🍝`;
+
+        const mensajeCodificado = encodeURIComponent(mensaje);
+        const numeroWhatsApp = "573112064619"; // Número real del restaurante
+        const urlWhatsApp = `https://wa.me/${numeroWhatsApp}?text=${mensajeCodificado}`;
+
+        modalWhatsApp.innerHTML = `
+          <div class="bg-white rounded-3xl p-8 w-full max-w-md relative animate-fade-in-up shadow-2xl border border-white/20">
+            <!-- Close button -->
+            <button
+              id="cerrarWhatsApp"
+              class="absolute top-4 right-4 w-10 h-10 bg-gray-100 hover:bg-red-100 text-gray-600 hover:text-red-600 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 z-10"
+            >
+              <i class="fas fa-times text-lg"></i>
+            </button>
+
+            <!-- Content -->
+            <div class="text-center">
+              <!-- Success Icon -->
+              <div class="w-20 h-20 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg animate-bounce">
+                <i class="fas fa-check text-white text-3xl"></i>
+              </div>
+
+              <!-- Title -->
+              <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                ¡Reserva Confirmada!
+              </h2>
+
+              <!-- Message -->
+              <p class="text-gray-600 mb-6">
+                Tu reserva ha sido registrada exitosamente. Ahora confirma con el restaurante vía WhatsApp para completar el proceso.
+              </p>
+
+              <!-- WhatsApp Button -->
+              <a
+                href="${urlWhatsApp}"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white font-bold text-lg rounded-full hover:from-green-600 hover:to-green-700 transform hover:scale-110 transition-all duration-300 shadow-2xl hover:shadow-green-500/30 mb-4 w-full"
+              >
+                <i class="fab fa-whatsapp text-2xl mr-3"></i>
+                Confirmar vía WhatsApp
+              </a>
+
+              <!-- Info -->
+              <div class="bg-green-50 rounded-xl p-4 border border-green-200">
+                <div class="flex items-center space-x-2">
+                  <i class="fas fa-info-circle text-green-600"></i>
+                  <p class="text-sm text-green-700">
+                    Se abrirá WhatsApp con un mensaje pre-escrito con los datos de tu reserva
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        // Agregar al DOM
+        document.body.appendChild(modalWhatsApp);
+
+        // Event listeners
+        const cerrarWhatsApp = document.getElementById("cerrarWhatsApp");
+        cerrarWhatsApp?.addEventListener("click", () => {
+          document.body.removeChild(modalWhatsApp);
+        });
+
+        // Cerrar al hacer clic fuera del modal
+        modalWhatsApp.addEventListener("click", (e) => {
+          if (e.target === modalWhatsApp) {
+            document.body.removeChild(modalWhatsApp);
+          }
+        });
+      }
     });
   </script>
 </div>
