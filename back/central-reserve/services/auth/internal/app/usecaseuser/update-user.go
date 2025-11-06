@@ -13,9 +13,13 @@ func (uc *UserUseCase) UpdateUser(ctx context.Context, id uint, userDTO domain.U
 
 	// Verificar que el usuario existe
 	existingUser, err := uc.repository.GetUserByID(ctx, id)
-	if err != nil || existingUser == nil {
+	if err != nil {
+		uc.log.Error().Err(err).Uint("id", id).Msg("Error al buscar usuario")
+		return "", fmt.Errorf("error al buscar usuario: %w", err)
+	}
+	if existingUser == nil {
 		uc.log.Error().Uint("id", id).Msg("Usuario no encontrado")
-		return "", fmt.Errorf("usuario no encontrado")
+		return "", domain.ErrUserNotFound
 	}
 
 	// Normalizar email a minúsculas si se proporciona
@@ -27,9 +31,13 @@ func (uc *UserUseCase) UpdateUser(ctx context.Context, id uint, userDTO domain.U
 	// Verificar que el email no esté en uso por otro usuario
 	if normalizedEmail != "" && normalizedEmail != strings.ToLower(existingUser.Email) {
 		userWithEmail, err := uc.repository.GetUserByEmail(ctx, normalizedEmail)
-		if err == nil && userWithEmail != nil && userWithEmail.ID != id {
+		if err != nil {
+			uc.log.Error().Err(err).Str("email", normalizedEmail).Msg("Error al verificar email existente")
+			return "", fmt.Errorf("error al verificar email: %w", err)
+		}
+		if userWithEmail != nil && userWithEmail.ID != id {
 			uc.log.Error().Str("email", normalizedEmail).Msg("Email ya existe en otro usuario")
-			return "", fmt.Errorf("el email ya está registrado por otro usuario")
+			return "", domain.ErrUserEmailExists
 		}
 	}
 
@@ -43,7 +51,7 @@ func (uc *UserUseCase) UpdateUser(ctx context.Context, id uint, userDTO domain.U
 		avatarPath, err := uc.s3.UploadImage(ctx, userDTO.AvatarFile, "avatars")
 		if err != nil {
 			uc.log.Error().Err(err).Uint("user_id", id).Msg("Error al subir nueva imagen de avatar")
-			return "", fmt.Errorf("error al subir nueva imagen de avatar: %w", err)
+			return "", fmt.Errorf("%w: %v", domain.ErrUserAvatarUploadFailed, err)
 		}
 
 		// Guardar solo el path relativo en la base de datos
@@ -90,7 +98,11 @@ func (uc *UserUseCase) UpdateUser(ctx context.Context, id uint, userDTO domain.U
 	message, err := uc.repository.UpdateUser(ctx, id, user)
 	if err != nil {
 		uc.log.Error().Uint("id", id).Err(err).Msg("Error al actualizar usuario desde el repositorio")
-		return "", err
+		// Verificar si es un error de duplicado de email
+		if strings.Contains(err.Error(), "duplicate key") && strings.Contains(err.Error(), "email") {
+			return "", domain.ErrUserEmailExists
+		}
+		return "", fmt.Errorf("error al actualizar usuario: %w", err)
 	}
 
 	// Actualizar relación de businesses
@@ -98,7 +110,10 @@ func (uc *UserUseCase) UpdateUser(ctx context.Context, id uint, userDTO domain.U
 		uc.log.Info().Uint("user_id", id).Any("business_ids", userDTO.BusinessIDs).Msg("Actualizando businesses del usuario")
 		if err := uc.repository.AssignBusinessesToUser(ctx, id, userDTO.BusinessIDs); err != nil {
 			uc.log.Error().Err(err).Uint("user_id", id).Any("business_ids", userDTO.BusinessIDs).Msg("Error al asignar businesses al usuario")
-			return "", err
+			if strings.Contains(err.Error(), "algunos businesses no existen") {
+				return "", domain.ErrBusinessesNotFound
+			}
+			return "", fmt.Errorf("error al asignar businesses: %w", err)
 		}
 		uc.log.Info().Uint("user_id", id).Int("businesses_count", len(userDTO.BusinessIDs)).Msg("Businesses actualizados exitosamente")
 	}
