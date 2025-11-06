@@ -74,6 +74,9 @@ export function BusinessSelector({ businesses, isOpen, onClose, showSuperAdminBu
         // Guardar business token
         TokenStorage.setBusinessToken(result.data.token);
         
+        // Limpiar permisos anteriores para forzar recarga con nuevo business
+        TokenStorage.removeUserPermissions();
+        
         // Guardar datos del negocio seleccionado
         TokenStorage.setActiveBusiness(business.id);
         TokenStorage.setBusinessesData([business]);
@@ -166,6 +169,7 @@ export function BusinessSelector({ businesses, isOpen, onClose, showSuperAdminBu
 
       if (result.success && result.data) {
         TokenStorage.setBusinessToken(result.data.token);
+        TokenStorage.removeUserPermissions(); // Limpiar permisos anteriores
         TokenStorage.setActiveBusiness(0);
         
         // Redirigir al dashboard principal (solo si no se omite la redirección)

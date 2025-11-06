@@ -55,11 +55,11 @@ export class GetRolesAndPermissionsRepository {
         throw new Error('Respuesta inválida del servidor');
       }
 
-      const { is_super, roles, resources } = backendResponse.data;
+      const { is_super, role, resources } = backendResponse.data;
 
       return {
         isSuperAdmin: is_super,
-        roles: roles,
+        roles: [role], // Convertir role singular a array para mantener compatibilidad
         resources: resources,
       };
     } catch (error) {
