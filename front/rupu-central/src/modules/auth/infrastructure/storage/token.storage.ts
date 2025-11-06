@@ -12,6 +12,7 @@ const BUSINESS_IDS_KEY = 'auth_business_ids';
 const BUSINESSES_DATA_KEY = 'auth_businesses_data';
 const ACTIVE_BUSINESS_KEY = 'auth_active_business';
 const BUSINESS_COLORS_KEY = 'business_colors';
+const USER_PERMISSIONS_KEY = 'user_permissions';
 
 export interface BusinessColors {
   primary: string;
@@ -465,7 +466,46 @@ export class TokenStorage {
   }
 
   /**
-   * Limpia toda la sesión (todos los tokens + usuario + business IDs + datos + negocio activo + colores)
+   * Guarda los permisos del usuario en localStorage
+   */
+  static setUserPermissions(permissions: import('../../domain/entities/permissions.entity').UserPermissions): void {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem(USER_PERMISSIONS_KEY, JSON.stringify(permissions));
+    } catch (error) {
+      console.error('Error guardando permisos del usuario:', error);
+    }
+  }
+
+  /**
+   * Obtiene los permisos del usuario de localStorage
+   */
+  static getUserPermissions(): import('../../domain/entities/permissions.entity').UserPermissions | null {
+    if (typeof window === 'undefined') return null;
+    try {
+      const data = localStorage.getItem(USER_PERMISSIONS_KEY);
+      if (!data) return null;
+      return JSON.parse(data);
+    } catch (error) {
+      console.error('Error obteniendo permisos del usuario:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Elimina los permisos del usuario
+   */
+  static removeUserPermissions(): void {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.removeItem(USER_PERMISSIONS_KEY);
+    } catch (error) {
+      console.error('Error eliminando permisos del usuario:', error);
+    }
+  }
+
+  /**
+   * Limpia toda la sesión (todos los tokens + usuario + business IDs + datos + negocio activo + colores + permisos)
    */
   static clearSession(): void {
     this.removeSessionToken();
@@ -475,6 +515,7 @@ export class TokenStorage {
     this.removeBusinessesData();
     this.removeActiveBusiness();
     this.removeBusinessColors();
+    this.removeUserPermissions();
   }
 }
 

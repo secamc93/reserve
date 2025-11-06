@@ -29,32 +29,32 @@ func (r *Repository) GetUserByEmailForAuth(ctx context.Context, email string) (*
 }
 
 func (r *Repository) GetUserRoles(ctx context.Context, userID uint) ([]domain.Role, error) {
-	var user models.User
+	var userRoles []models.BusinessStaff
 	var roles []domain.Role
 
 	err := r.database.Conn(ctx).
-		Model(&models.User{}).
-		Preload("Roles.Scope").
-		Where("id = ?", userID).
-		First(&user).Error
+		Model(&models.BusinessStaff{}).
+		Preload("Role.Scope").
+		Where("user_id = ?", userID).
+		Find(&userRoles).Error
 
 	if err != nil {
 		r.logger.Error().Uint("user_id", userID).Msg("Error al obtener roles del usuario")
 		return nil, err
 	}
 
-	for _, role := range user.Roles {
+	for _, role := range userRoles {
 		roles = append(roles, domain.Role{
-			ID:          role.Model.ID,
-			Name:        role.Name,
-			Description: role.Description,
-			Level:       role.Level,
-			IsSystem:    role.IsSystem,
-			ScopeID:     role.ScopeID,
-			ScopeName:   role.Scope.Name,
-			ScopeCode:   role.Scope.Code,
-			CreatedAt:   role.Model.CreatedAt,
-			UpdatedAt:   role.Model.UpdatedAt,
+			ID:          role.Role.ID,
+			Name:        role.Role.Name,
+			Description: role.Role.Description,
+			Level:       role.Role.Level,
+			IsSystem:    role.Role.IsSystem,
+			ScopeID:     role.Role.ScopeID,
+			ScopeName:   role.Role.Scope.Name,
+			ScopeCode:   role.Role.Scope.Code,
+			CreatedAt:   role.Role.CreatedAt,
+			UpdatedAt:   role.Role.UpdatedAt,
 		})
 	}
 

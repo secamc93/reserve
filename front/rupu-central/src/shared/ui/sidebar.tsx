@@ -10,6 +10,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { TokenStorage } from '@shared/config';
 import { UserInfoModal } from '@modules/auth';
+import { usePermissions } from '@modules/auth/ui/hooks';
 
 interface SidebarProps {
   user: {
@@ -26,6 +27,7 @@ export function Sidebar({ user }: SidebarProps) {
   const pathname = usePathname();
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [showUserModal, setShowUserModal] = useState(false);
+  const { hasResource, hasRouteAccess } = usePermissions();
 
   const handleLogout = () => {
     TokenStorage.clearSession();
@@ -36,6 +38,10 @@ export function Sidebar({ user }: SidebarProps) {
 
   // Helper para determinar si un link está activo
   const isActive = (path: string) => pathname === path;
+
+  // Verificar permisos para mostrar items
+  const canAccessProperties = hasResource('Propiedades') || hasResource('Residentes') || hasRouteAccess('/properties');
+  const canAccessIAM = hasResource('Usuarios') || hasResource('Roles') || hasResource('Permisos') || hasResource('Recursos') || hasResource('Tipos de Negocio') || hasResource('Negocios');
 
   return (
     <>
@@ -117,67 +123,70 @@ export function Sidebar({ user }: SidebarProps) {
               </li>
 
               {/* Item Propiedades */}
-              <li>
-                <Link
-                  href="/properties"
-                  className={`
-                    flex items-center gap-3 p-3 rounded-lg transition-all duration-300
-                    ${isActive('/properties') 
-                      ? 'bg-white/20 text-white shadow-lg scale-105' 
-                      : 'text-white/80 hover:bg-white/10 hover:text-white hover:scale-105'
-                    }
-                  `}
-                >
-                  {/* Indicador activo (barra lateral) */}
-                  {isActive('/properties') && (
-                    <div 
-                      className="absolute left-0 w-1 h-8 rounded-r-full"
-                      style={{ backgroundColor: 'var(--color-tertiary)' }}
-                    />
-                  )}
-                  
-                  <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                  {sidebarExpanded && (
-                    <span className="text-sm font-medium transition-opacity duration-300">
-                      Propiedades
-                    </span>
-                  )}
-                </Link>
-              </li>
+              {canAccessProperties && (
+                <li>
+                  <Link
+                    href="/properties"
+                    className={`
+                      flex items-center gap-3 p-3 rounded-lg transition-all duration-300
+                      ${isActive('/properties') || pathname.startsWith('/properties') 
+                        ? 'bg-white/20 text-white shadow-lg scale-105' 
+                        : 'text-white/80 hover:bg-white/10 hover:text-white hover:scale-105'
+                      }
+                    `}
+                  >
+                    {/* Indicador activo (barra lateral) */}
+                    {(isActive('/properties') || pathname.startsWith('/properties')) && (
+                      <div 
+                        className="absolute left-0 w-1 h-8 rounded-r-full"
+                        style={{ backgroundColor: 'var(--color-tertiary)' }}
+                      />
+                    )}
+                    
+                    <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                    {sidebarExpanded && (
+                      <span className="text-sm font-medium transition-opacity duration-300">
+                        Propiedades
+                      </span>
+                    )}
+                  </Link>
+                </li>
+              )}
 
               {/* Item IAM */}
-              <li>
-                <Link
-                  href="/iam"
-                  className={`
-                    flex items-center gap-3 p-3 rounded-lg transition-all duration-300
-                    ${isActive('/iam') || pathname.startsWith('/iam') 
-                      ? 'bg-white/20 text-white shadow-lg scale-105' 
-                      : 'text-white/80 hover:bg-white/10 hover:text-white hover:scale-105'
-                    }
-                  `}
-                >
-                  {/* Indicador activo (barra lateral) */}
-                  {(isActive('/iam') || pathname.startsWith('/iam')) && (
-                    <div 
-                      className="absolute left-0 w-1 h-8 rounded-r-full"
-                      style={{ backgroundColor: 'var(--color-tertiary)' }}
-                    />
-                  )}
-                  
-                  <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
-                  {sidebarExpanded && (
-                    <span className="text-sm font-medium transition-opacity duration-300">
-                      IAM
-                    </span>
-                  )}
-                </Link>
-                
-              </li>
+              {canAccessIAM && (
+                <li>
+                  <Link
+                    href="/iam"
+                    className={`
+                      flex items-center gap-3 p-3 rounded-lg transition-all duration-300
+                      ${isActive('/iam') || pathname.startsWith('/iam') 
+                        ? 'bg-white/20 text-white shadow-lg scale-105' 
+                        : 'text-white/80 hover:bg-white/10 hover:text-white hover:scale-105'
+                      }
+                    `}
+                  >
+                    {/* Indicador activo (barra lateral) */}
+                    {(isActive('/iam') || pathname.startsWith('/iam')) && (
+                      <div 
+                        className="absolute left-0 w-1 h-8 rounded-r-full"
+                        style={{ backgroundColor: 'var(--color-tertiary)' }}
+                      />
+                    )}
+                    
+                    <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    {sidebarExpanded && (
+                      <span className="text-sm font-medium transition-opacity duration-300">
+                        IAM
+                      </span>
+                    )}
+                  </Link>
+                </li>
+              )}
             </ul>
           </nav>
 

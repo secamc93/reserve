@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { usePermissions } from '@modules/auth/ui/hooks';
 
 interface PropertyNavigationProps {
   businessId: number;
@@ -17,43 +18,52 @@ export function PropertyNavigation({
   groupId 
 }: PropertyNavigationProps) {
   const pathname = usePathname();
+  const { hasResource } = usePermissions();
   
-  const navigationItems = [
+  const allNavigationItems = [
     {
       name: 'Dashboard',
       href: `/properties/${businessId}`,
       icon: '🏠',
+      resource: 'Propiedades', // El dashboard es parte de Propiedades
       current: currentSection === 'dashboard' || pathname === `/properties/${businessId}`
     },
     {
       name: 'Unidades',
       href: `/properties/${businessId}/units`,
       icon: '🏢',
+      resource: 'Unidades',
       current: currentSection === 'units' || pathname === `/properties/${businessId}/units`
     },
     {
       name: 'Residentes',
       href: `/properties/${businessId}/residents`,
       icon: '👥',
+      resource: 'Residentes',
       current: currentSection === 'residents' || pathname === `/properties/${businessId}/residents`
     },
     {
       name: 'Votaciones',
       href: `/properties/${businessId}/voting-groups`,
       icon: '🗳️',
+      resource: 'Votaciones',
       current: currentSection === 'voting-groups' || pathname.startsWith(`/properties/${businessId}/voting-groups`)
     }
   ];
 
   // Add attendance navigation if we're in attendance section
   if (currentSection === 'attendance' && groupId) {
-    navigationItems.push({
+    allNavigationItems.push({
       name: 'Asistencia',
       href: `/properties/${businessId}/voting-groups/${groupId}/attendance`,
       icon: '✅',
+      resource: 'Asistencia',
       current: true
     });
   }
+
+  // Filtrar items según permisos
+  const navigationItems = allNavigationItems.filter(item => hasResource(item.resource));
 
   return (
     <div className="bg-white shadow-sm border-b border-gray-200">

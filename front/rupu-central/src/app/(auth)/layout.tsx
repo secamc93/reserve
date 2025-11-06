@@ -53,6 +53,7 @@ export default function AuthLayout({
             const result = await businessTokenAction({ business_id: 0 }, sessionToken);
             if (result.success && result.data) {
               TokenStorage.setBusinessToken(result.data.token);
+              TokenStorage.removeUserPermissions(); // Limpiar permisos anteriores
               TokenStorage.setActiveBusiness(0);
               console.log('✅ Business token generado para super admin');
               window.location.reload();

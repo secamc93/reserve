@@ -1,6 +1,7 @@
 package userhandler
 
 import (
+	"central_reserve/services/auth/internal/domain"
 	"central_reserve/services/auth/internal/infra/primary/controllers/userhandler/mapper"
 	"central_reserve/services/auth/internal/infra/primary/controllers/userhandler/request"
 	"central_reserve/services/auth/internal/infra/primary/controllers/userhandler/response"
@@ -129,18 +130,32 @@ func (h *UserHandler) UpdateUserHandler(c *gin.Context) {
 		statusCode := http.StatusInternalServerError
 		errorMessage := "Error interno del servidor"
 
-		if err.Error() == "usuario no encontrado" {
+		// Manejar errores de dominio usando errors.Is()
+		switch {
+		case errors.Is(err, domain.ErrUserNotFound):
 			statusCode = http.StatusNotFound
-			errorMessage = "Usuario no encontrado"
-		} else if err.Error() == "el email ya está registrado" {
+			errorMessage = domain.ErrUserNotFound.Error()
+		case errors.Is(err, domain.ErrUserEmailExists):
 			statusCode = http.StatusConflict
-			errorMessage = "El email ya está registrado"
-		} else if strings.Contains(err.Error(), "algunos businesses no existen") {
+			errorMessage = domain.ErrUserEmailExists.Error()
+		case errors.Is(err, domain.ErrBusinessesNotFound):
 			statusCode = http.StatusBadRequest
-			errorMessage = "Algunos businesses no existen"
-		} else if strings.Contains(err.Error(), "algunos roles no existen") {
+			errorMessage = domain.ErrBusinessesNotFound.Error()
+		case errors.Is(err, domain.ErrRolesNotFound):
 			statusCode = http.StatusBadRequest
-			errorMessage = "Algunos roles no existen"
+			errorMessage = domain.ErrRolesNotFound.Error()
+		case errors.Is(err, domain.ErrUserAvatarUploadFailed):
+			statusCode = http.StatusInternalServerError
+			errorMessage = "Error al subir la imagen de avatar"
+		default:
+			// Para errores wrapped, verificar el mensaje
+			if strings.Contains(err.Error(), "algunos businesses no existen") {
+				statusCode = http.StatusBadRequest
+				errorMessage = "Algunos businesses no existen"
+			} else if strings.Contains(err.Error(), "algunos roles no existen") {
+				statusCode = http.StatusBadRequest
+				errorMessage = "Algunos roles no existen"
+			}
 		}
 
 		c.JSON(statusCode, response.UserErrorResponse{
