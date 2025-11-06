@@ -3,48 +3,59 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { UsersIcon, ShieldCheckIcon, KeyIcon, CubeTransparentIcon, BuildingOfficeIcon, ShoppingBagIcon } from '@heroicons/react/24/outline';
+import { usePermissions } from '@modules/auth/ui/hooks';
 
 export function IAMNavigation() {
   const pathname = usePathname();
+  const { hasResource } = usePermissions();
   
-  const navigationItems = [
+  const allNavigationItems = [
     {
       name: 'Usuarios',
       href: '/iam/users',
       icon: UsersIcon,
+      resource: 'Usuarios',
       current: pathname === '/iam/users' || pathname.startsWith('/iam/users')
     },
     {
       name: 'Roles',
       href: '/iam/roles',
       icon: ShieldCheckIcon,
+      resource: 'Roles',
       current: pathname === '/iam/roles' || pathname.startsWith('/iam/roles')
     },
     {
       name: 'Permisos',
       href: '/iam/permissions',
       icon: KeyIcon,
+      resource: 'Permisos',
       current: pathname === '/iam/permissions' || pathname.startsWith('/iam/permissions')
     },
     {
       name: 'Recursos',
       href: '/iam/resources',
       icon: CubeTransparentIcon,
+      resource: 'Recursos',
       current: pathname === '/iam/resources' || pathname.startsWith('/iam/resources')
     },
     {
       name: 'Tipos de Negocio',
       href: '/iam/business-types',
       icon: BuildingOfficeIcon,
+      resource: 'Tipos de Negocio',
       current: pathname === '/iam/business-types' || pathname.startsWith('/iam/business-types')
     },
     {
       name: 'Negocios',
       href: '/iam/businesses',
       icon: ShoppingBagIcon,
+      resource: 'Negocios',
       current: pathname === '/iam/businesses' || pathname.startsWith('/iam/businesses')
     }
   ];
+
+  // Filtrar items según permisos
+  const navigationItems = allNavigationItems.filter(item => hasResource(item.resource));
 
   return (
     <div className="bg-white shadow-sm border-b border-gray-200">

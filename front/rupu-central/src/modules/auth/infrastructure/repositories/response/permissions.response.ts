@@ -17,7 +17,11 @@ export interface ResourcePermission {
 
 export interface PermissionsData {
   is_super: boolean;
-  roles: Role[];
+  business_id: number;
+  business_name: string;
+  business_type_id: number;
+  business_type_name: string;
+  role: Role;
   resources: ResourcePermission[];
 }
 

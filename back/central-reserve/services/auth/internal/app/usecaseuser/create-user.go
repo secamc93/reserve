@@ -58,16 +58,20 @@ func (uc *UserUseCase) CreateUser(ctx context.Context, userDTO domain.CreateUser
 
 	// Validar que el email no exista (buscar en minúsculas)
 	existingUser, err := uc.repository.GetUserByEmail(ctx, normalizedEmail)
-	if err == nil && existingUser != nil {
+	if err != nil {
+		uc.log.Error().Err(err).Str("email", normalizedEmail).Msg("Error al verificar email existente")
+		return "", "", "", fmt.Errorf("error al verificar email: %w", err)
+	}
+	if existingUser != nil {
 		uc.log.Error().Str("email", normalizedEmail).Msg("Email ya existe")
-		return "", "", "", fmt.Errorf("el email ya está registrado")
+		return "", "", "", domain.ErrUserEmailExists
 	}
 
 	// Generar contraseña aleatoria
 	generatedPassword, err := generateRandomPassword(12)
 	if err != nil {
 		uc.log.Error().Err(err).Msg("Error al generar contraseña aleatoria")
-		return "", "", "", fmt.Errorf("error al generar contraseña")
+		return "", "", "", fmt.Errorf("%w: %v", domain.ErrUserPasswordError, err)
 	}
 	uc.log.Info().Str("email", normalizedEmail).Msg("Contraseña aleatoria generada exitosamente")
 
@@ -81,7 +85,7 @@ func (uc *UserUseCase) CreateUser(ctx context.Context, userDTO domain.CreateUser
 		avatarPath, err := uc.s3.UploadImage(ctx, userDTO.AvatarFile, "avatars")
 		if err != nil {
 			uc.log.Error().Err(err).Str("email", userDTO.Email).Msg("Error al subir imagen de avatar")
-			return "", "", "", fmt.Errorf("error al subir imagen de avatar: %w", err)
+			return "", "", "", fmt.Errorf("%w: %v", domain.ErrUserAvatarUploadFailed, err)
 		}
 
 		// Guardar solo el path relativo en la base de datos
@@ -103,7 +107,11 @@ func (uc *UserUseCase) CreateUser(ctx context.Context, userDTO domain.CreateUser
 	userID, err := uc.repository.CreateUser(ctx, user)
 	if err != nil {
 		uc.log.Error().Err(err).Msg("Error al crear usuario desde el repositorio")
-		return "", "", "", err
+		// Verificar si es un error de duplicado de email
+		if strings.Contains(err.Error(), "duplicate key") && strings.Contains(err.Error(), "email") {
+			return "", "", "", domain.ErrUserEmailExists
+		}
+		return "", "", "", fmt.Errorf("error al crear usuario: %w", err)
 	}
 
 	uc.log.Info().Uint("user_id", userID).Msg("Usuario creado exitosamente, asignando businesses")
@@ -112,7 +120,10 @@ func (uc *UserUseCase) CreateUser(ctx context.Context, userDTO domain.CreateUser
 		uc.log.Info().Uint("user_id", userID).Any("business_ids", userDTO.BusinessIDs).Msg("Asignando businesses al usuario")
 		if err := uc.repository.AssignBusinessesToUser(ctx, userID, userDTO.BusinessIDs); err != nil {
 			uc.log.Error().Err(err).Uint("user_id", userID).Any("business_ids", userDTO.BusinessIDs).Msg("Error al asignar businesses al usuario")
-			return "", "", "", err
+			if strings.Contains(err.Error(), "algunos businesses no existen") {
+				return "", "", "", domain.ErrBusinessesNotFound
+			}
+			return "", "", "", fmt.Errorf("error al asignar businesses: %w", err)
 		}
 		uc.log.Info().Uint("user_id", userID).Int("businesses_count", len(userDTO.BusinessIDs)).Msg("Businesses asignados exitosamente")
 	}

@@ -130,6 +130,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
                 );
                 if (businessTokenResult.success && businessTokenResult.data) {
                   TokenStorage.setBusinessToken(businessTokenResult.data.token);
+                  TokenStorage.removeUserPermissions(); // Limpiar permisos anteriores
                   TokenStorage.setActiveBusiness(0);
                   console.log('✅ Business token generado para super admin');
                 }
