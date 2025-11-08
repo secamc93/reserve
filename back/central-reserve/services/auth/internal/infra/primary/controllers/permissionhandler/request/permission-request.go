@@ -14,7 +14,7 @@ type CreatePermissionRequest struct {
 // UpdatePermissionRequest representa la solicitud para actualizar un permiso
 type UpdatePermissionRequest struct {
 	Name           string `json:"name" binding:"required" example:"Crear usuarios"`
-	Code           string `json:"code" binding:"required" example:"users:create"`
+	Code           string `json:"code" example:"users:create"`
 	Description    string `json:"description" example:"Permite crear nuevos usuarios en el sistema"`
 	ResourceID     uint   `json:"resource_id" binding:"required" example:"1"` // ID del resource
 	ActionID       uint   `json:"action_id" binding:"required" example:"1"`   // ID de la action

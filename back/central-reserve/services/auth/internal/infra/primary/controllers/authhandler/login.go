@@ -6,6 +6,7 @@ import (
 	"central_reserve/services/auth/internal/infra/primary/controllers/authhandler/request"
 	"central_reserve/services/auth/internal/infra/primary/controllers/authhandler/response"
 	"central_reserve/shared/log"
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -55,15 +56,16 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 		statusCode := http.StatusInternalServerError
 		errorMessage := "Error interno del servidor"
 
-		if err.Error() == "credenciales inválidas" {
+		switch {
+		case errors.Is(err, domain.ErrInvalidCredentials):
 			statusCode = http.StatusUnauthorized
-			errorMessage = "Credenciales inválidas"
-		} else if err.Error() == "usuario inactivo" {
+			errorMessage = domain.ErrInvalidCredentials.Error()
+		case errors.Is(err, domain.ErrUserInactive):
 			statusCode = http.StatusForbidden
-			errorMessage = "Usuario inactivo"
-		} else if err.Error() == "email y contraseña son requeridos" {
+			errorMessage = domain.ErrUserInactive.Error()
+		case errors.Is(err, domain.ErrEmailPasswordRequired):
 			statusCode = http.StatusBadRequest
-			errorMessage = "Email y contraseña son requeridos"
+			errorMessage = domain.ErrEmailPasswordRequired.Error()
 		}
 
 		c.JSON(statusCode, response.LoginErrorResponse{

@@ -34,6 +34,8 @@ func entityToPermissionDTO(permission domain.Permission) domain.PermissionDTO {
 		Description:      permission.Description,
 		Resource:         permission.Resource,
 		Action:           permission.Action,
+		ResourceID:       permission.ResourceID,
+		ActionID:         permission.ActionID,
 		ScopeID:          permission.ScopeID,
 		ScopeName:        permission.ScopeName,
 		ScopeCode:        permission.ScopeCode,

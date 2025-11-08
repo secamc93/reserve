@@ -213,6 +213,8 @@ type PermissionDTO struct {
 	Description      string
 	Resource         string
 	Action           string
+	ResourceID       uint
+	ActionID         uint
 	ScopeID          uint
 	ScopeName        string // Nombre del scope para mostrar
 	ScopeCode        string // Código del scope para mostrar

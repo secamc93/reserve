@@ -18,62 +18,38 @@ func (uc *AuthUseCase) Login(ctx context.Context, request domain.LoginRequest) (
 	// Validar que el email y contraseña no estén vacíos
 	if normalizedEmail == "" || request.Password == "" {
 		uc.log.Error().Msg("Email o contraseña vacíos")
-		return nil, fmt.Errorf("email y contraseña son requeridos")
+		return nil, domain.ErrEmailPasswordRequired
 	}
 
 	// Obtener usuario por email (normalizado)
 	userAuth, err := uc.repository.GetUserByEmail(ctx, normalizedEmail)
 	if err != nil {
 		uc.log.Error().Err(err).Str("email", request.Email).Msg("Error al obtener usuario por email")
-		return nil, fmt.Errorf("credenciales inválidas")
+		return nil, fmt.Errorf("error al obtener usuario por email: %w", err)
 	}
 
 	if userAuth == nil {
 		uc.log.Error().Str("email", normalizedEmail).Msg("Usuario no encontrado")
-		return nil, fmt.Errorf("credenciales inválidas")
+		return nil, domain.ErrInvalidCredentials
 	}
 
 	// Verificar que el usuario esté activo
 	if !userAuth.IsActive {
 		uc.log.Error().Str("email", request.Email).Msg("Usuario inactivo")
-		return nil, fmt.Errorf("usuario inactivo")
+		return nil, domain.ErrUserInactive
 	}
 
 	// Validar contraseña
 	uc.log.Debug().
 		Str("email", request.Email).
-		Str("stored_password_length", fmt.Sprintf("%d", len(userAuth.Password))).
-		Str("input_password_length", fmt.Sprintf("%d", len(request.Password))).
-		Str("stored_password_preview", userAuth.Password[:func() int {
-			if len(userAuth.Password) < 10 {
-				return len(userAuth.Password)
-			}
-			return 10
-		}()]).
-		Str("stored_password_starts_with_bcrypt", fmt.Sprintf("%t", len(userAuth.Password) >= 7 && userAuth.Password[:7] == "$2a$")).
-		Str("stored_password_first_7_chars", userAuth.Password[:func() int {
-			if len(userAuth.Password) < 7 {
-				return len(userAuth.Password)
-			}
-			return 7
-		}()]).
-		Msg("Comparando contraseñas")
-
-		// Verificar contraseña
-	uc.log.Debug().
-		Str("email", request.Email).
-		Str("input_password", request.Password).
-		Str("stored_password_hash", userAuth.Password).
-		Msg("Comparando contraseñas")
+		Msg("Validando contraseña con bcrypt")
 
 	if err := bcrypt.CompareHashAndPassword([]byte(userAuth.Password), []byte(request.Password)); err != nil {
 		uc.log.Error().
 			Err(err).
 			Str("email", request.Email).
-			Str("input_password", request.Password).
-			Str("stored_password_hash", userAuth.Password).
 			Msg("Contraseña inválida")
-		return nil, fmt.Errorf("credenciales inválidas")
+		return nil, domain.ErrInvalidCredentials
 	}
 
 	// Obtener roles del usuario para el token

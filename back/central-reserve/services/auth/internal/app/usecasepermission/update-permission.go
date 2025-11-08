@@ -53,9 +53,6 @@ func validateUpdatePermission(permission domain.UpdatePermissionDTO) error {
 	if permission.Name == "" {
 		return fmt.Errorf("el nombre del permiso es requerido")
 	}
-	if permission.Code == "" {
-		return fmt.Errorf("el código del permiso es requerido")
-	}
 	if permission.ResourceID == 0 {
 		return fmt.Errorf("el resource ID del permiso es requerido")
 	}

@@ -41,6 +41,8 @@ func ToPermissionResponse(dto domain.PermissionDTO) response.PermissionResponse 
 		Description:      dto.Description,
 		Resource:         dto.Resource,
 		Action:           dto.Action,
+		ResourceID:       dto.ResourceID,
+		ActionID:         dto.ActionID,
 		ScopeID:          dto.ScopeID,
 		ScopeName:        dto.ScopeName,
 		ScopeCode:        dto.ScopeCode,
