@@ -8,6 +8,8 @@ type PermissionResponse struct {
 	Description      string `json:"description" example:"Permite crear nuevos usuarios en el sistema"`
 	Resource         string `json:"resource" example:"users"`
 	Action           string `json:"action" example:"create"`
+	ResourceID       uint   `json:"resource_id" example:"3"`
+	ActionID         uint   `json:"action_id" example:"5"`
 	ScopeID          uint   `json:"scope_id" example:"1"`
 	ScopeName        string `json:"scope_name" example:"Sistema"`
 	ScopeCode        string `json:"scope_code" example:"system"`
