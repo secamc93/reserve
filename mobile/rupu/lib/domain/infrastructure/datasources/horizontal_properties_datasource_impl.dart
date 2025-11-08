@@ -7,7 +7,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:image/image.dart' as img;
-import 'package:launchdarkly_event_source_client/launchdarkly_event_source_client.dart';
+import 'package:sse/sse.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
 import 'package:rupu/config/constants/secure_storage/token_storage.dart';
@@ -667,7 +667,7 @@ class HorizontalPropertiesDatasourceImpl
     // ---- headers ----
     final controller = StreamController<Map<String, dynamic>>();
     StreamSubscription? subscription;
-    SSEClient? client;
+    SseClient? client;
     bool closed = false;
 
     Future<void> closeResources() async {
@@ -695,24 +695,23 @@ class HorizontalPropertiesDatasourceImpl
 
         debugPrint('[SSE] Headers: $headers');
 
-        client = SSEClient(resolved, {'message'}, headers: headers);
+        client = SseClient.connect(
+          resolved,
+          headers: headers,
+        );
 
         subscription = client!.stream.listen(
           (event) {
             if (closed) return;
-            if (event is MessageEvent) {
-              final data = event.data;
-              debugPrint('[SSE] MessageEvent data: $data');
-              if (data != null) {
-                final parsed = _parseEventPayload(data);
-                if (parsed != null) {
-                  controller.add(parsed);
-                } else {
-                  debugPrint('[SSE] payload no parseable, se ignora');
-                }
+            final data = event.data;
+            debugPrint('[SSE] Evento recibido: $data');
+            if (data != null && data.isNotEmpty) {
+              final parsed = _parseEventPayload(data);
+              if (parsed != null) {
+                controller.add(parsed);
+              } else {
+                debugPrint('[SSE] payload no parseable, se ignora');
               }
-            } else {
-              debugPrint('[SSE] Otro evento: $event');
             }
           },
           onError: (e, st) async {

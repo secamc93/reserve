@@ -577,26 +577,46 @@ class HorizontalPropertiesRepositoryImpl
     Map<String, dynamic> payload,
   ) {
     try {
-      final data = payload['data'];
-      if (data is! Map<String, dynamic>) {
-        debugPrint('LiveData payload sin data válida: $payload');
-        return null;
-      }
+      final data = _asMap(payload['data']) ?? payload;
 
       final unitsData = data['units'];
       final units = unitsData is List
           ? unitsData
-                .whereType<Map<String, dynamic>>()
-                .map(_liveUnitFromMap)
-                .whereType<HorizontalPropertyVotingLiveUnit>()
-                .toList(growable: false)
+              .whereType<Map<String, dynamic>>()
+              .map(_liveUnitFromMap)
+              .whereType<HorizontalPropertyVotingLiveUnit>()
+              .toList(growable: false)
           : const <HorizontalPropertyVotingLiveUnit>[];
+
+      final resultsData = data['results'];
+      final hasResultsSnapshot = resultsData is List;
+      final results = hasResultsSnapshot
+          ? resultsData
+              .whereType<Map<String, dynamic>>()
+              .map(_liveResultFromMap)
+              .whereType<HorizontalPropertyVotingLiveResult>()
+              .toList(growable: false)
+          : const <HorizontalPropertyVotingLiveResult>[];
+
+      final votesData = data['votes'];
+      final hasVotesSnapshot = votesData is List;
+      final votes = hasVotesSnapshot
+          ? votesData
+              .whereType<Map<String, dynamic>>()
+              .map(_liveVoteFromMap)
+              .whereType<HorizontalPropertyVotingVote>()
+              .toList(growable: false)
+          : const <HorizontalPropertyVotingVote>[];
 
       return HorizontalPropertyVotingGroupLiveData(
         totalUnits: _toInt(data['total_units']) ?? units.length,
         unitsPending: _toInt(data['units_pending']) ?? 0,
         unitsVoted: _toInt(data['units_voted']) ?? 0,
         units: units,
+        results: results,
+        votes: votes,
+        hasResultsSnapshot: hasResultsSnapshot,
+        hasVotesSnapshot: hasVotesSnapshot,
       );
     } catch (e, st) {
       debugPrint('Error parseando liveData: $e');
@@ -604,6 +624,13 @@ class HorizontalPropertiesRepositoryImpl
       debugPrint('Payload problemático: $payload');
       return null;
     }
+  }
+
+  Map<String, dynamic>? _asMap(dynamic value) {
+    if (value is Map<String, dynamic>) {
+      return value;
+    }
+    return null;
   }
 
   HorizontalPropertyVotingLiveUnit? _liveUnitFromMap(
@@ -628,6 +655,58 @@ class HorizontalPropertiesRepositoryImpl
       optionColor: json['option_color'] as String?,
       votedAt: _parseDate(json['voted_at'] as String?),
     );
+  }
+
+  HorizontalPropertyVotingLiveResult? _liveResultFromMap(
+    Map<String, dynamic> json,
+  ) {
+    final optionId = _toInt(json['voting_option_id']);
+    if (optionId == null) {
+      return null;
+    }
+
+    return HorizontalPropertyVotingLiveResult(
+      votingOptionId: optionId,
+      optionText: (json['option_text'] as String?)?.trim() ?? '',
+      optionCode: (json['option_code'] as String?)?.trim() ?? '',
+      color: json['color'] as String?,
+      voteCount: _toInt(json['vote_count']) ?? 0,
+      percentage: _toInt(json['percentage']) ?? 0,
+    );
+  }
+
+  HorizontalPropertyVotingVote? _liveVoteFromMap(
+    Map<String, dynamic> json,
+  ) {
+    final id = _toInt(json['id']);
+    final votingId = _toInt(json['voting_id']);
+    final propertyUnitId = _toInt(json['property_unit_id']);
+    final votingOptionId = _toInt(json['voting_option_id']);
+    if (id == null ||
+        votingId == null ||
+        propertyUnitId == null ||
+        votingOptionId == null) {
+      return null;
+    }
+
+    return HorizontalPropertyVotingVote(
+      id: id,
+      votingId: votingId,
+      propertyUnitId: propertyUnitId,
+      votingOptionId: votingOptionId,
+      votedAt: _parseDateTime(json['voted_at']),
+      ipAddress: json['ip_address'] as String?,
+      userAgent: json['user_agent'] as String?,
+    );
+  }
+
+  DateTime? _parseDateTime(dynamic value) {
+    if (value == null) return null;
+    if (value is DateTime) return value;
+    if (value is String && value.isNotEmpty) {
+      return DateTime.tryParse(value);
+    }
+    return null;
   }
 
   double? _toDouble(dynamic value) {

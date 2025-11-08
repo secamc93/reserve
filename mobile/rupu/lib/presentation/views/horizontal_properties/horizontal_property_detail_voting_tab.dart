@@ -2398,6 +2398,9 @@ class VotingLiveController extends GetxController {
   List<HorizontalPropertyVotingLiveUnit> get liveUnits =>
       liveData.value?.units ?? const [];
 
+  List<HorizontalPropertyVotingLiveResult> get liveResults =>
+      liveData.value?.results ?? const [];
+
   List<HorizontalPropertyVotingLiveUnit> get filteredUnits {
     final query = filter.value.trim().toLowerCase();
     final units = liveUnits;
@@ -2433,6 +2436,13 @@ class VotingLiveController extends GetxController {
           liveData.value = event;
           isConnecting.value = false;
           errorMessage.value = null;
+          if (event.hasVotesSnapshot) {
+            parent.syncVotesFromLive(
+              groupId: groupId,
+              votingId: votingId,
+              votes: event.votes,
+            );
+          }
         });
       },
       onError: (Object error, StackTrace stackTrace) {

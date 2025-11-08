@@ -170,17 +170,43 @@ class HorizontalPropertyVotingGroup {
   });
 }
 
+class HorizontalPropertyVotingLiveResult {
+  final int votingOptionId;
+  final String optionText;
+  final String optionCode;
+  final String? color;
+  final int voteCount;
+  final int percentage;
+
+  const HorizontalPropertyVotingLiveResult({
+    required this.votingOptionId,
+    required this.optionText,
+    required this.optionCode,
+    this.color,
+    required this.voteCount,
+    required this.percentage,
+  });
+}
+
 class HorizontalPropertyVotingGroupLiveData {
   final int totalUnits;
   final int unitsPending;
   final int unitsVoted;
   final List<HorizontalPropertyVotingLiveUnit> units;
+  final List<HorizontalPropertyVotingLiveResult> results;
+  final List<HorizontalPropertyVotingVote> votes;
+  final bool hasResultsSnapshot;
+  final bool hasVotesSnapshot;
 
   const HorizontalPropertyVotingGroupLiveData({
     required this.totalUnits,
     required this.unitsPending,
     required this.unitsVoted,
     required this.units,
+    this.results = const [],
+    this.votes = const [],
+    this.hasResultsSnapshot = false,
+    this.hasVotesSnapshot = false,
   });
 }
 

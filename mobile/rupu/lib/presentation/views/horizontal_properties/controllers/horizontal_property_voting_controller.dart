@@ -540,6 +540,17 @@ class HorizontalPropertyVotingController extends GetxController {
     return detail?.votes.length ?? 0;
   }
 
+  void syncVotesFromLive({
+    required int groupId,
+    required int votingId,
+    required List<HorizontalPropertyVotingVote> votes,
+  }) {
+    final detailState = _ensureVotingState(groupId, votingId);
+    detailState.votes.assignAll(votes);
+    detailState.votesLoading.value = false;
+    detailState.votesError.value = null;
+  }
+
   Map<int, int> voteSummary(int groupId, int votingId) {
     final detail = votingDetailState(groupId, votingId);
     if (detail == null) return const {};
