@@ -10,6 +10,7 @@ import 'package:image/image.dart' as img;
 import 'package:launchdarkly_event_source_client/launchdarkly_event_source_client.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
+import 'package:rupu/config/constants/secure_storage/token_storage.dart';
 import 'package:rupu/config/dio/authenticated_dio.dart';
 import 'package:rupu/domain/datasource/horizontal_properties_datasource.dart';
 import 'package:rupu/domain/infrastructure/models/horizontal_properties_response_model.dart';
@@ -664,50 +665,84 @@ class HorizontalPropertiesDatasourceImpl
     debugPrint('[SSE] URL final: $resolved');
 
     // ---- headers ----
-    final headers = <String, String>{};
-    _dio.options.headers.forEach((k, v) {
-      if (v != null) headers[k] = v.toString();
-    });
-    headers.putIfAbsent('Accept', () => 'text/event-stream');
-
-    debugPrint('[SSE] Headers: $headers');
-
-    final client = SSEClient(resolved, {'message'}, headers: headers);
-
     final controller = StreamController<Map<String, dynamic>>();
+    StreamSubscription? subscription;
+    SSEClient? client;
+    bool closed = false;
 
-    final sub = client.stream.listen(
-      (event) {
-        if (event is MessageEvent) {
-          final data = event.data;
-          debugPrint('[SSE] MessageEvent data: $data');
-          if (data != null) {
-            final parsed = _parseEventPayload(data);
-            if (parsed != null) {
-              controller.add(parsed);
-            } else {
-              debugPrint('[SSE] payload no parseable, se ignora');
-            }
-          }
-        } else {
-          debugPrint('[SSE] Otro evento: $event');
+    Future<void> closeResources() async {
+      if (closed) return;
+      closed = true;
+      debugPrint('[SSE] Cerrando recursos');
+      await subscription?.cancel();
+      await client?.close();
+      await controller.close();
+    }
+
+    Future<void> startClient() async {
+      try {
+        final token = await TokenStorage().readBusinessToken();
+        if (token == null || token.isEmpty) {
+          throw StateError('Token de negocio no disponible para SSE.');
         }
-      },
-      onError: (e, st) {
-        debugPrint('[SSE] onError: $e');
-        controller.addError(e, st);
-      },
-      onDone: () {
-        debugPrint('[SSE] onDone');
-        controller.close();
-      },
-      cancelOnError: false,
-    );
+
+        final headers = <String, String>{};
+        _dio.options.headers.forEach((k, v) {
+          if (v != null) headers[k] = v.toString();
+        });
+        headers['Authorization'] = 'Bearer $token';
+        headers.putIfAbsent('Accept', () => 'text/event-stream');
+
+        debugPrint('[SSE] Headers: $headers');
+
+        client = SSEClient(resolved, {'message'}, headers: headers);
+
+        subscription = client!.stream.listen(
+          (event) {
+            if (closed) return;
+            if (event is MessageEvent) {
+              final data = event.data;
+              debugPrint('[SSE] MessageEvent data: $data');
+              if (data != null) {
+                final parsed = _parseEventPayload(data);
+                if (parsed != null) {
+                  controller.add(parsed);
+                } else {
+                  debugPrint('[SSE] payload no parseable, se ignora');
+                }
+              }
+            } else {
+              debugPrint('[SSE] Otro evento: $event');
+            }
+          },
+          onError: (e, st) async {
+            debugPrint('[SSE] onError: $e');
+            if (!closed) {
+              controller.addError(e, st);
+            }
+            await closeResources();
+          },
+          onDone: () async {
+            debugPrint('[SSE] onDone');
+            await closeResources();
+          },
+          cancelOnError: false,
+        );
+      } catch (error, stackTrace) {
+        debugPrint('[SSE] Error inicializando SSE: $error');
+        if (!closed) {
+          controller.addError(error, stackTrace);
+        }
+        await closeResources();
+      }
+    }
+
+    controller.onListen = () {
+      Future.microtask(startClient);
+    };
 
     controller.onCancel = () async {
-      debugPrint('[SSE] onCancel: cerrando sub y cliente');
-      await sub.cancel();
-      await client.close();
+      await closeResources();
     };
 
     return controller.stream;

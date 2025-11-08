@@ -2017,7 +2017,8 @@ class _VotingLiveBottomSheet extends StatefulWidget {
 
 class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
   late final String _liveTag;
-  late final VotingLiveController _controller;
+  VotingLiveController? _controller;
+  String? _initError;
   late final TextEditingController _searchCtrl;
 
   @override
@@ -2025,22 +2026,31 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
     super.initState();
     _liveTag =
         '${widget.controllerTag}-${widget.group.id}-${widget.voting.id}-live';
-    _controller = Get.put(
-      VotingLiveController(
-        parent: Get.find<HorizontalPropertyVotingController>(
-          tag: widget.controllerTag,
+    try {
+      final parent = Get.find<HorizontalPropertyVotingController>(
+        tag: widget.controllerTag,
+      );
+      _controller = Get.put(
+        VotingLiveController(
+          parent: parent,
+          groupId: widget.group.id,
+          votingId: widget.voting.id,
         ),
-        groupId: widget.group.id,
-        votingId: widget.voting.id,
-      ),
-      tag: _liveTag,
-    );
+        tag: _liveTag,
+      );
+    } catch (error, stackTrace) {
+      debugPrint('No se pudo inicializar VotingLiveController: $error');
+      debugPrint('Stack: $stackTrace');
+      _initError =
+          'No se pudo iniciar la transmisión en vivo. Inténtalo más tarde.';
+    }
     _searchCtrl = TextEditingController();
   }
 
   @override
   void dispose() {
-    if (Get.isRegistered<VotingLiveController>(tag: _liveTag)) {
+    if (_controller != null &&
+        Get.isRegistered<VotingLiveController>(tag: _liveTag)) {
       Get.delete<VotingLiveController>(tag: _liveTag);
     }
     _searchCtrl.dispose();
@@ -2048,6 +2058,15 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
   }
 
   Future<void> _openVoteSheet({HorizontalPropertyVotingLiveUnit? unit}) async {
+    final controller = _controller;
+    if (controller == null) {
+      _showSnack(
+        'Acción no disponible',
+        _initError ?? 'No se pudo preparar la votación en vivo.',
+        isError: true,
+      );
+      return;
+    }
     final result = await showModalBottomSheet<bool>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -2065,9 +2084,19 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
   }
 
   Future<void> _confirmDeleteVote(HorizontalPropertyVotingLiveUnit unit) async {
-    final vote = _controller.parent.voteForUnit(
-      groupId: _controller.groupId,
-      votingId: _controller.votingId,
+    final controller = _controller;
+    if (controller == null) {
+      _showSnack(
+        'Acción no disponible',
+        _initError ?? 'No se pudo preparar la votación en vivo.',
+        isError: true,
+      );
+      return;
+    }
+
+    final vote = controller.parent.voteForUnit(
+      groupId: controller.groupId,
+      votingId: controller.votingId,
       propertyUnitId: unit.propertyUnitId,
     );
     if (vote == null) {
@@ -2102,7 +2131,7 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
 
     if (confirmed != true) return;
 
-    final result = await _controller.removeVote(
+    final result = await controller.removeVote(
       propertyUnitId: unit.propertyUnitId,
     );
     if (result.success) {
@@ -2156,153 +2185,156 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
                   const SizedBox(height: 12),
                   const _SheetHandle(),
                   Expanded(
-                    child: Obx(() {
-                      final liveData = _controller.liveData.value;
-                      final isConnecting = _controller.isConnecting.value;
-                      final error = _controller.errorMessage.value;
-                      final filter = _controller.filter.value;
-                      final units = _controller.filteredUnits;
+                    child: _controller == null
+                        ? _LiveErrorContent(message: _initError)
+                        : Obx(() {
+                            final controller = _controller!;
+                            final liveData = controller.liveData.value;
+                            final isConnecting = controller.isConnecting.value;
+                            final error = controller.errorMessage.value;
+                            final filter = controller.filter.value;
+                            final units = controller.filteredUnits;
 
-                      return SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(24, 10, 24, 24),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                            return SingleChildScrollView(
+                              padding: const EdgeInsets.fromLTRB(24, 10, 24, 24),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
                                     children: [
-                                      Text(
-                                        widget.voting.title,
-                                        style: tt.titleLarge?.copyWith(
-                                          fontWeight: FontWeight.w800,
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              widget.voting.title,
+                                              style: tt.titleLarge?.copyWith(
+                                                fontWeight: FontWeight.w800,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              widget.group.name,
+                                              style: tt.bodyMedium?.copyWith(
+                                                color: cs.onSurfaceVariant,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        widget.group.name,
-                                        style: tt.bodyMedium?.copyWith(
-                                          color: cs.onSurfaceVariant,
-                                        ),
+                                      IconButton(
+                                        onPressed: () =>
+                                            Navigator.of(context).maybePop(),
+                                        icon: const Icon(Icons.close),
+                                        tooltip: 'Cerrar',
                                       ),
                                     ],
                                   ),
-                                ),
-                                IconButton(
-                                  onPressed: () =>
-                                      Navigator.of(context).maybePop(),
-                                  icon: const Icon(Icons.close),
-                                  tooltip: 'Cerrar',
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-                            Row(
-                              children: [
-                                _LiveStatChip(
-                                  label: 'Unidades',
-                                  value: liveData?.totalUnits ?? 0,
-                                  icon: Icons.apartment_outlined,
-                                ),
-                                const SizedBox(width: 12),
-                                _LiveStatChip(
-                                  label: 'Votaron',
-                                  value: liveData?.unitsVoted ?? 0,
-                                  icon: Icons.how_to_vote_outlined,
-                                  color: cs.primary,
-                                ),
-                                const SizedBox(width: 12),
-                                _LiveStatChip(
-                                  label: 'Pendientes',
-                                  value: liveData?.unitsPending ?? 0,
-                                  icon: Icons.pending_actions_outlined,
-                                  color: cs.tertiary,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-                            TextField(
-                              controller: _searchCtrl,
-                              decoration: InputDecoration(
-                                labelText: 'Buscar unidad o residente',
-                                prefixIcon: const Icon(Icons.search),
-                                suffixIcon: filter.isNotEmpty
-                                    ? IconButton(
-                                        onPressed: () {
-                                          _searchCtrl.clear();
-                                          _controller.clearFilter();
-                                        },
-                                        icon: const Icon(Icons.close),
-                                      )
-                                    : null,
-                                filled: true,
-                                fillColor: cs.surfaceContainerHighest,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                              ),
-                              onChanged: _controller.setFilter,
-                            ),
-                            const SizedBox(height: 12),
-                            FilledButton.icon(
-                              onPressed: () => _openVoteSheet(),
-                              icon: const Icon(Icons.add_outlined),
-                              label: const Text('Registrar voto'),
-                            ),
-                            const SizedBox(height: 16),
-                            if (isConnecting && liveData == null)
-                              const Center(
-                                child: Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 24),
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2.6,
+                                  const SizedBox(height: 20),
+                                  Row(
+                                    children: [
+                                      _LiveStatChip(
+                                        label: 'Unidades',
+                                        value: liveData?.totalUnits ?? 0,
+                                        icon: Icons.apartment_outlined,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      _LiveStatChip(
+                                        label: 'Votaron',
+                                        value: liveData?.unitsVoted ?? 0,
+                                        icon: Icons.how_to_vote_outlined,
+                                        color: cs.primary,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      _LiveStatChip(
+                                        label: 'Pendientes',
+                                        value: liveData?.unitsPending ?? 0,
+                                        icon: Icons.pending_actions_outlined,
+                                        color: cs.tertiary,
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              )
-                            else if (error != null)
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _InlineError(message: error),
+                                  const SizedBox(height: 20),
+                                  TextField(
+                                    controller: _searchCtrl,
+                                    decoration: InputDecoration(
+                                      labelText: 'Buscar unidad o residente',
+                                      prefixIcon: const Icon(Icons.search),
+                                      suffixIcon: filter.isNotEmpty
+                                          ? IconButton(
+                                              onPressed: () {
+                                                _searchCtrl.clear();
+                                                controller.clearFilter();
+                                              },
+                                              icon: const Icon(Icons.close),
+                                            )
+                                          : null,
+                                      filled: true,
+                                      fillColor: cs.surfaceContainerHighest,
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                    ),
+                                    onChanged: controller.setFilter,
+                                  ),
                                   const SizedBox(height: 12),
-                                  OutlinedButton.icon(
-                                    onPressed: _controller.reconnect,
-                                    icon: const Icon(Icons.refresh_outlined),
-                                    label: const Text('Reintentar'),
+                                  FilledButton.icon(
+                                    onPressed: () => _openVoteSheet(),
+                                    icon: const Icon(Icons.add_outlined),
+                                    label: const Text('Registrar voto'),
                                   ),
-                                ],
-                              )
-                            else if (units.isEmpty)
-                              const Text(
-                                'No hay unidades registradas en este grupo.',
-                              )
-                            else
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: units
-                                    .map(
-                                      (unit) => _UnitVoteChip(
-                                        unit: unit,
-                                        isProcessing: _controller.isProcessing(
-                                          unit.propertyUnitId,
+                                  const SizedBox(height: 16),
+                                  if (isConnecting && liveData == null)
+                                    const Center(
+                                      child: Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 24),
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.6,
                                         ),
-                                        onVote: () =>
-                                            _openVoteSheet(unit: unit),
-                                        onRemove: unit.hasVoted
-                                            ? () => _confirmDeleteVote(unit)
-                                            : null,
                                       ),
                                     )
-                                    .toList(),
+                                  else if (error != null)
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        _InlineError(message: error),
+                                        const SizedBox(height: 12),
+                                        OutlinedButton.icon(
+                                          onPressed: controller.reconnect,
+                                          icon: const Icon(Icons.refresh_outlined),
+                                          label: const Text('Reintentar'),
+                                        ),
+                                      ],
+                                    )
+                                  else if (units.isEmpty)
+                                    const Text(
+                                      'No hay unidades registradas en este grupo.',
+                                    )
+                                  else
+                                    Wrap(
+                                      spacing: 8,
+                                      runSpacing: 8,
+                                      children: units
+                                          .map(
+                                            (unit) => _UnitVoteChip(
+                                              unit: unit,
+                                              isProcessing: controller.isProcessing(
+                                                unit.propertyUnitId,
+                                              ),
+                                              onVote: () =>
+                                                  _openVoteSheet(unit: unit),
+                                              onRemove: unit.hasVoted
+                                                  ? () => _confirmDeleteVote(unit)
+                                                  : null,
+                                            ),
+                                          )
+                                          .toList(),
+                                    ),
+                                ],
                               ),
-                          ],
-                        ),
-                      );
-                    }),
+                            );
+                          }),
                   ),
                 ],
               ),
@@ -2339,9 +2371,28 @@ class VotingLiveController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    parent.loadVotingOptions(groupId: groupId, votingId: votingId, force: true);
-    parent.loadVotingVotes(groupId: groupId, votingId: votingId, force: true);
-    _subscribe();
+    Future.microtask(() async {
+      if (isClosed) return;
+      try {
+        await Future.wait([
+          parent.loadVotingOptions(
+            groupId: groupId,
+            votingId: votingId,
+            force: true,
+          ),
+          parent.loadVotingVotes(
+            groupId: groupId,
+            votingId: votingId,
+            force: true,
+          ),
+        ]);
+      } catch (error, stackTrace) {
+        debugPrint('Error preparando datos de votación en vivo: $error');
+        debugPrint('Stack: $stackTrace');
+      }
+      if (isClosed) return;
+      _subscribe();
+    });
   }
 
   List<HorizontalPropertyVotingLiveUnit> get liveUnits =>
@@ -2377,32 +2428,38 @@ class VotingLiveController extends GetxController {
 
     _subscription = stream.listen(
       (event) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
+        Future.microtask(() {
           if (isClosed) return;
           liveData.value = event;
           isConnecting.value = false;
+          errorMessage.value = null;
         });
       },
       onError: (Object error, StackTrace stackTrace) {
-        // 👇 log para ver qué está pasando realmente
         debugPrint('SSE error: $error');
         debugPrint('SSE stack: $stackTrace');
 
-        WidgetsBinding.instance.addPostFrameCallback((_) {
+        Future.microtask(() {
           if (isClosed) return;
           isConnecting.value = false;
-          errorMessage.value =
-              'No se pudo conectar con la transmisión en vivo.';
+          errorMessage.value = _describeStreamError(error);
         });
       },
       onDone: () {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
+        Future.microtask(() {
           if (isClosed) return;
           isConnecting.value = false;
         });
       },
       cancelOnError: false,
     );
+  }
+
+  String _describeStreamError(Object error) {
+    if (error is StateError && error.message.isNotEmpty) {
+      return error.message;
+    }
+    return 'No se pudo conectar con la transmisión en vivo.';
   }
 
   void setFilter(String value) {
@@ -2479,6 +2536,44 @@ class VotingLiveController extends GetxController {
   void onClose() {
     _subscription?.cancel();
     super.onClose();
+  }
+}
+
+class _LiveErrorContent extends StatelessWidget {
+  final String? message;
+  const _LiveErrorContent({this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final tt = theme.textTheme;
+    final text = message ??
+        'No se pudo iniciar la transmisión en vivo. Inténtalo nuevamente más tarde.';
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.wifi_off_outlined, size: 48, color: cs.error),
+            const SizedBox(height: 16),
+            Text(
+              'Sin conexión en vivo',
+              style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              text,
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -2614,7 +2709,8 @@ class _VoteCreationBottomSheet extends StatefulWidget {
 }
 
 class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
-  late final VotingLiveController _controller;
+  VotingLiveController? _controller;
+  String? _initError;
   late final TextEditingController _searchCtrl;
   HorizontalPropertyVotingLiveUnit? _selectedUnit;
   int? _selectedOptionId;
@@ -2624,7 +2720,14 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
   @override
   void initState() {
     super.initState();
-    _controller = Get.find<VotingLiveController>(tag: widget.liveControllerTag);
+    try {
+      _controller = Get.find<VotingLiveController>(tag: widget.liveControllerTag);
+    } catch (error, stackTrace) {
+      debugPrint('No se encontró VotingLiveController: $error');
+      debugPrint('Stack: $stackTrace');
+      _initError =
+          'No pudimos preparar el registro de votos. Cierra e intenta nuevamente.';
+    }
     _searchCtrl = TextEditingController();
     _selectedUnit = widget.initialUnit;
   }
@@ -2637,7 +2740,9 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
 
   List<HorizontalPropertyVotingLiveUnit> get _units {
     final query = _searchCtrl.text.trim().toLowerCase();
-    final units = _controller.liveUnits;
+    final controller = _controller;
+    if (controller == null) return const [];
+    final units = controller.liveUnits;
     if (query.isEmpty) return units;
     return units
         .where((unit) {
@@ -2650,6 +2755,7 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
 
   Future<void> _handleSubmit() async {
     if (_submitting) return;
+    final controller = _controller;
     if (_selectedUnit == null) {
       setState(() {
         _errorMessage = 'Selecciona una unidad para registrar el voto.';
@@ -2662,13 +2768,20 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
       });
       return;
     }
+    if (controller == null) {
+      setState(() {
+        _errorMessage =
+            _initError ?? 'No fue posible registrar el voto en este momento.';
+      });
+      return;
+    }
 
     setState(() {
       _submitting = true;
       _errorMessage = null;
     });
 
-    final result = await _controller.castVote(
+    final result = await controller.castVote(
       propertyUnitId: _selectedUnit!.propertyUnitId,
       optionId: _selectedOptionId!,
     );
@@ -2709,7 +2822,43 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final viewInsets = MediaQuery.viewInsetsOf(context);
-    final options = _controller.options;
+    final controller = _controller;
+    final options = controller?.options ?? const <HorizontalPropertyVotingOption>[];
+
+    if (controller == null) {
+      return FractionallySizedBox(
+        heightFactor: 0.9,
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(16, 0, 16, viewInsets.bottom + 16),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: cs.surface,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(32),
+                  topRight: Radius.circular(32),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: .18),
+                    blurRadius: 28,
+                    offset: const Offset(0, 22),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(32),
+                  topRight: Radius.circular(32),
+                ),
+                child: _LiveErrorContent(message: _initError),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     return FractionallySizedBox(
       heightFactor: 0.9,
