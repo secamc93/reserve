@@ -55,6 +55,8 @@ dependencies:
   image: ^4.2.0
   image_picker: ^1.0.7
   flex_color_picker: ^3.7.1
+  launchdarkly_event_source_client: ^2.0.1
+  
 
 dev_dependencies:
   flutter_test:

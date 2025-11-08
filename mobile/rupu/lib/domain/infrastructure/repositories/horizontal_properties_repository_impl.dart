@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:rupu/domain/datasource/horizontal_properties_datasource.dart';
 import 'package:rupu/domain/entities/horizontal_properties_page.dart';
@@ -19,9 +20,9 @@ class HorizontalPropertiesRepositoryImpl
     extends HorizontalPropertiesRepository {
   final HorizontalPropertiesDatasource datasource;
 
-  HorizontalPropertiesRepositoryImpl({HorizontalPropertiesDatasource? datasource})
-      : datasource =
-            datasource ?? HorizontalPropertiesDatasourceImpl();
+  HorizontalPropertiesRepositoryImpl({
+    HorizontalPropertiesDatasource? datasource,
+  }) : datasource = datasource ?? HorizontalPropertiesDatasourceImpl();
 
   @override
   Future<HorizontalPropertiesPage> getHorizontalProperties({
@@ -195,9 +196,8 @@ class HorizontalPropertiesRepositoryImpl
   }
 
   @override
-  Future<HorizontalPropertyVotingGroupsResult> getHorizontalPropertyVotingGroups({
-    required int id,
-  }) async {
+  Future<HorizontalPropertyVotingGroupsResult>
+  getHorizontalPropertyVotingGroups({required int id}) async {
     final response = await datasource.getHorizontalPropertyVotingGroups(
       id: id,
       query: _withBusinessQuery({'business_id': id}),
@@ -207,7 +207,7 @@ class HorizontalPropertiesRepositoryImpl
 
   @override
   Future<HorizontalPropertyVotingGroupActionResult>
-      createHorizontalPropertyVotingGroup({
+  createHorizontalPropertyVotingGroup({
     required int businessId,
     required Map<String, dynamic> data,
   }) async {
@@ -229,7 +229,7 @@ class HorizontalPropertiesRepositoryImpl
 
   @override
   Future<HorizontalPropertyVotingGroupActionResult>
-      updateHorizontalPropertyVotingGroup({
+  updateHorizontalPropertyVotingGroup({
     required int businessId,
     required int groupId,
     required Map<String, dynamic> data,
@@ -399,7 +399,7 @@ class HorizontalPropertiesRepositoryImpl
 
   @override
   Future<HorizontalPropertyVotingOptionListResult>
-      getHorizontalPropertyVotingOptions({
+  getHorizontalPropertyVotingOptions({
     required int businessId,
     required int groupId,
     required int votingId,
@@ -422,7 +422,7 @@ class HorizontalPropertiesRepositoryImpl
 
   @override
   Future<HorizontalPropertyVotingOptionActionResult>
-      createHorizontalPropertyVotingOption({
+  createHorizontalPropertyVotingOption({
     required int businessId,
     required int groupId,
     required int votingId,
@@ -544,39 +544,66 @@ class HorizontalPropertiesRepositoryImpl
     required int votingId,
   }) {
     final query = _withBusinessQuery({'business_id': businessId});
-    final stream = datasource.subscribeToVotingLiveData(
+
+    // 1) Obtenemos el stream crudo del datasource
+    final raw = datasource.subscribeToVotingLiveData(
       groupId: groupId,
       votingId: votingId,
       query: query,
     );
-    return stream
-        .map(_liveDataFromPayload)
-        .whereType<HorizontalPropertyVotingGroupLiveData>();
+
+    // 2) Mapeo + filtrado de nulos
+    final mapped = raw
+        .map(_liveDataFromPayload) // HorizontalPropertyVotingGroupLiveData?
+        .where((e) => e != null)
+        .cast<HorizontalPropertyVotingGroupLiveData>();
+
+    // 3) Hacerlo broadcast para múltiples oyentes sin error
+    return mapped.asBroadcastStream(
+      onListen: (sub) {}, // no-ops
+      onCancel: (sub) {},
+    );
+  }
+
+  int? _toInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value);
+    return null;
   }
 
   HorizontalPropertyVotingGroupLiveData? _liveDataFromPayload(
     Map<String, dynamic> payload,
   ) {
-    final data = payload['data'];
-    if (data is! Map<String, dynamic>) {
+    try {
+      final data = payload['data'];
+      if (data is! Map<String, dynamic>) {
+        debugPrint('LiveData payload sin data válida: $payload');
+        return null;
+      }
+
+      final unitsData = data['units'];
+      final units = unitsData is List
+          ? unitsData
+                .whereType<Map<String, dynamic>>()
+                .map(_liveUnitFromMap)
+                .whereType<HorizontalPropertyVotingLiveUnit>()
+                .toList(growable: false)
+          : const <HorizontalPropertyVotingLiveUnit>[];
+
+      return HorizontalPropertyVotingGroupLiveData(
+        totalUnits: _toInt(data['total_units']) ?? units.length,
+        unitsPending: _toInt(data['units_pending']) ?? 0,
+        unitsVoted: _toInt(data['units_voted']) ?? 0,
+        units: units,
+      );
+    } catch (e, st) {
+      debugPrint('Error parseando liveData: $e');
+      debugPrint('Stack: $st');
+      debugPrint('Payload problemático: $payload');
       return null;
     }
-
-    final unitsData = data['units'];
-    final units = unitsData is List
-        ? unitsData
-            .whereType<Map<String, dynamic>>()
-            .map(_liveUnitFromMap)
-            .whereType<HorizontalPropertyVotingLiveUnit>()
-            .toList(growable: false)
-        : const <HorizontalPropertyVotingLiveUnit>[];
-
-    return HorizontalPropertyVotingGroupLiveData(
-      totalUnits: data['total_units'] as int? ?? units.length,
-      unitsPending: data['units_pending'] as int? ?? 0,
-      unitsVoted: data['units_voted'] as int? ?? 0,
-      units: units,
-    );
   }
 
   HorizontalPropertyVotingLiveUnit? _liveUnitFromMap(
@@ -591,8 +618,7 @@ class HorizontalPropertiesRepositoryImpl
     return HorizontalPropertyVotingLiveUnit(
       propertyUnitId: unitId,
       unitNumber: unitNumber,
-      participationCoefficient:
-          _toDouble(json['participation_coefficient']),
+      participationCoefficient: _toDouble(json['participation_coefficient']),
       residentId: json['resident_id'] as int?,
       residentName: json['resident_name'] as String?,
       hasVoted: json['has_voted'] as bool? ?? false,
@@ -616,8 +642,9 @@ class HorizontalPropertiesRepositoryImpl
   }
 
   Map<String, dynamic>? _withBusinessQuery([Map<String, dynamic>? query]) {
-    final loginController =
-        Get.isRegistered<LoginController>() ? Get.find<LoginController>() : null;
+    final loginController = Get.isRegistered<LoginController>()
+        ? Get.find<LoginController>()
+        : null;
 
     final baseQuery = query == null
         ? <String, dynamic>{}

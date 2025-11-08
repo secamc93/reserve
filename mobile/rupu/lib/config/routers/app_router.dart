@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:get/get.dart';
 import 'package:rupu/config/routers/app_bindings.dart';
+import 'package:rupu/domain/entities/horizontal_property_voting.dart';
 import 'package:rupu/domain/entities/horizontal_property_voting_groups.dart';
 import 'package:rupu/presentation/widgets/shared/custom_bottom_navigation.dart';
 import '../../presentation/screens/screens.dart';
@@ -27,9 +28,7 @@ Widget _guardAccess({
       : null;
 
   if (home == null) {
-    return const Scaffold(
-      body: Center(child: Text('No autorizado')),
-    );
+    return const Scaffold(body: Center(child: Text('No autorizado')));
   }
 
   if (home.isSuper) {
@@ -37,9 +36,7 @@ Widget _guardAccess({
   }
 
   if (home.rolesPermisos.value == null) {
-    return const Scaffold(
-      body: Center(child: CircularProgressIndicator()),
-    );
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 
   final hasAccess = home.canAccessResource(
@@ -49,9 +46,7 @@ Widget _guardAccess({
   );
 
   if (!hasAccess) {
-    return const Scaffold(
-      body: Center(child: Text('No autorizado')),
-    );
+    return const Scaffold(body: Center(child: Text('No autorizado')));
   }
 
   return builder(home);
@@ -63,9 +58,9 @@ HorizontalPropertyVotingGroup? _resolveVotingGroup({
 }) {
   final tag = HorizontalPropertyVotingController.tagFor(propertyId);
   if (Get.isRegistered<HorizontalPropertyVotingController>(tag: tag)) {
-    return Get.find<HorizontalPropertyVotingController>(tag: tag)
-        .groups
-        .firstWhereOrNull((g) => g.id == groupId);
+    return Get.find<HorizontalPropertyVotingController>(
+      tag: tag,
+    ).groups.firstWhereOrNull((g) => g.id == groupId);
   }
   return null;
 }
@@ -162,9 +157,7 @@ final appRouter = GoRouter(
                 ? Get.find<HomeController>()
                 : null;
             if (home == null || !home.canAccessHorizontalPropertiesMenu) {
-              return const Scaffold(
-                body: Center(child: Text('No autorizado')),
-              );
+              return const Scaffold(body: Center(child: Text('No autorizado')));
             }
             final page = int.parse(state.pathParameters['page']!);
             return HorizontalPropertiesScreen(pageIndex: page);
@@ -178,9 +171,7 @@ final appRouter = GoRouter(
                 ? Get.find<HomeController>()
                 : null;
             if (home == null || !home.canAccessHorizontalPropertiesMenu) {
-              return const Scaffold(
-                body: Center(child: Text('No autorizado')),
-              );
+              return const Scaffold(body: Center(child: Text('No autorizado')));
             }
             final page = int.parse(state.pathParameters['page']!);
             final id = int.tryParse(state.pathParameters['id'] ?? '');
@@ -204,14 +195,11 @@ final appRouter = GoRouter(
                 ? Get.find<HomeController>()
                 : null;
             if (home == null || !home.canAccessHorizontalPropertiesMenu) {
-              return const Scaffold(
-                body: Center(child: Text('No autorizado')),
-              );
+              return const Scaffold(body: Center(child: Text('No autorizado')));
             }
 
             final page = int.tryParse(state.pathParameters['page'] ?? '0') ?? 0;
-            final propertyId =
-                int.tryParse(state.pathParameters['id'] ?? '');
+            final propertyId = int.tryParse(state.pathParameters['id'] ?? '');
             final groupId = int.tryParse(state.pathParameters['groupId'] ?? '');
             if (propertyId == null || groupId == null) {
               return const Scaffold(
@@ -230,10 +218,13 @@ final appRouter = GoRouter(
               }
             }
 
-            group ??=
-                _resolveVotingGroup(propertyId: propertyId, groupId: groupId);
+            group ??= _resolveVotingGroup(
+              propertyId: propertyId,
+              groupId: groupId,
+            );
 
-            final businessId = group?.businessId ??
+            final businessId =
+                group?.businessId ??
                 int.tryParse(state.uri.queryParameters['business_id'] ?? '') ??
                 (Get.isRegistered<LoginController>()
                     ? Get.find<LoginController>().selectedBusinessId
@@ -263,9 +254,7 @@ final appRouter = GoRouter(
                 ? Get.find<HomeController>()
                 : null;
             if (home == null || !home.isSuper) {
-              return const Scaffold(
-                body: Center(child: Text('No autorizado')),
-              );
+              return const Scaffold(body: Center(child: Text('No autorizado')));
             }
             final page = int.parse(state.pathParameters['page']!);
             return UsersPermissionsScreen(pageIndex: page);
@@ -278,9 +267,7 @@ final appRouter = GoRouter(
             CreateUserBinding.register();
             final home = Get.find<HomeController>();
             if (!home.isSuper) {
-              return const Scaffold(
-                body: Center(child: Text('No autorizado')),
-              );
+              return const Scaffold(body: Center(child: Text('No autorizado')));
             }
             return const CreateUserView();
           },

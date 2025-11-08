@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:rupu/domain/entities/horizontal_property_voting.dart';
 import 'package:rupu/domain/entities/horizontal_property_voting_groups.dart';
 
 import '../../presentation/views/views.dart';
@@ -102,8 +103,9 @@ class HorizontalPropertyDetailBinding {
         tag: tag,
       );
     }
-    final detailController =
-        Get.find<HorizontalPropertyDetailController>(tag: tag);
+    final detailController = Get.find<HorizontalPropertyDetailController>(
+      tag: tag,
+    );
 
     final unitsTag = HorizontalPropertyUnitsController.tagFor(propertyId);
     if (!Get.isRegistered<HorizontalPropertyUnitsController>(tag: unitsTag)) {
@@ -116,10 +118,12 @@ class HorizontalPropertyDetailBinding {
       );
     }
 
-    final residentsTag =
-        HorizontalPropertyResidentsController.tagFor(propertyId);
+    final residentsTag = HorizontalPropertyResidentsController.tagFor(
+      propertyId,
+    );
     if (!Get.isRegistered<HorizontalPropertyResidentsController>(
-        tag: residentsTag)) {
+      tag: residentsTag,
+    )) {
       Get.put(
         HorizontalPropertyResidentsController(
           propertyId: propertyId,
@@ -140,10 +144,12 @@ class HorizontalPropertyDetailBinding {
       );
     }
 
-    final dashboardTag =
-        HorizontalPropertyDashboardController.tagFor(propertyId);
+    final dashboardTag = HorizontalPropertyDashboardController.tagFor(
+      propertyId,
+    );
     if (!Get.isRegistered<HorizontalPropertyDashboardController>(
-        tag: dashboardTag)) {
+      tag: dashboardTag,
+    )) {
       Get.put(
         HorizontalPropertyDashboardController(
           propertyId: propertyId,
@@ -198,8 +204,10 @@ class AttendanceManagementBinding {
     required int businessId,
     HorizontalPropertyVotingGroup? group,
   }) {
-    final tag =
-        AttendanceManagementController.tagFor(propertyId: propertyId, votingGroupId: votingGroupId);
+    final tag = AttendanceManagementController.tagFor(
+      propertyId: propertyId,
+      votingGroupId: votingGroupId,
+    );
     if (Get.isRegistered<AttendanceManagementController>(tag: tag)) {
       return;
     }
@@ -209,11 +217,15 @@ class AttendanceManagementBinding {
 
     if (resolvedGroup == null || resolvedBusinessId <= 0) {
       final votingTag = HorizontalPropertyVotingController.tagFor(propertyId);
-      if (Get.isRegistered<HorizontalPropertyVotingController>(tag: votingTag)) {
-        final votingController =
-            Get.find<HorizontalPropertyVotingController>(tag: votingTag);
-        resolvedGroup ??=
-            votingController.groups.firstWhereOrNull((g) => g.id == votingGroupId);
+      if (Get.isRegistered<HorizontalPropertyVotingController>(
+        tag: votingTag,
+      )) {
+        final votingController = Get.find<HorizontalPropertyVotingController>(
+          tag: votingTag,
+        );
+        resolvedGroup ??= votingController.groups.firstWhereOrNull(
+          (g) => g.id == votingGroupId,
+        );
         resolvedBusinessId = resolvedGroup?.businessId ?? resolvedBusinessId;
       }
     }

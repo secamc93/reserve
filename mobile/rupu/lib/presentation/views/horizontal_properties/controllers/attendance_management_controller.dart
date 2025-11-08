@@ -4,6 +4,7 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:rupu/domain/entities/attendance.dart';
+import 'package:rupu/domain/entities/horizontal_property_voting.dart';
 import 'package:rupu/domain/entities/horizontal_property_voting_groups.dart';
 import 'package:rupu/domain/infrastructure/repositories/attendance_repository_impl.dart';
 import 'package:rupu/domain/repositories/attendance_repository.dart';

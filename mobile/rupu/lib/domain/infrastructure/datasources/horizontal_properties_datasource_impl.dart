@@ -1,12 +1,14 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:image/image.dart' as img;
+import 'package:launchdarkly_event_source_client/launchdarkly_event_source_client.dart';
 import 'package:mime/mime.dart';
-import 'package:eventsource/eventsource.dart';
 import 'package:path/path.dart' as p;
 import 'package:rupu/config/dio/authenticated_dio.dart';
 import 'package:rupu/domain/datasource/horizontal_properties_datasource.dart';
@@ -328,7 +330,7 @@ class HorizontalPropertiesDatasourceImpl
 
   @override
   Future<HorizontalPropertyUnitDetailResponseModel>
-      createHorizontalPropertyUnit({
+  createHorizontalPropertyUnit({
     required Map<String, dynamic> data,
     Map<String, dynamic>? query,
   }) async {
@@ -344,7 +346,7 @@ class HorizontalPropertiesDatasourceImpl
 
   @override
   Future<HorizontalPropertyUnitDetailResponseModel>
-      updateHorizontalPropertyUnit({
+  updateHorizontalPropertyUnit({
     required int unitId,
     required Map<String, dynamic> data,
     Map<String, dynamic>? query,
@@ -368,9 +370,7 @@ class HorizontalPropertiesDatasourceImpl
       '/horizontal-properties/property-units/$unitId',
       queryParameters: query,
     );
-    return SimpleResponseModel.fromJson(
-      response.data as Map<String, dynamic>,
-    );
+    return SimpleResponseModel.fromJson(response.data as Map<String, dynamic>);
   }
 
   @override
@@ -405,7 +405,7 @@ class HorizontalPropertiesDatasourceImpl
 
   @override
   Future<HorizontalPropertyVotingGroupActionResponseModel>
-      createHorizontalPropertyVotingGroup({
+  createHorizontalPropertyVotingGroup({
     required Map<String, dynamic> data,
     Map<String, dynamic>? query,
   }) async {
@@ -421,7 +421,7 @@ class HorizontalPropertiesDatasourceImpl
 
   @override
   Future<HorizontalPropertyVotingGroupActionResponseModel>
-      updateHorizontalPropertyVotingGroup({
+  updateHorizontalPropertyVotingGroup({
     required int groupId,
     required Map<String, dynamic> data,
     Map<String, dynamic>? query,
@@ -445,9 +445,7 @@ class HorizontalPropertiesDatasourceImpl
       '/horizontal-properties/voting-groups/$groupId',
       queryParameters: query,
     );
-    return SimpleResponseModel.fromJson(
-      response.data as Map<String, dynamic>,
-    );
+    return SimpleResponseModel.fromJson(response.data as Map<String, dynamic>);
   }
 
   @override
@@ -466,7 +464,7 @@ class HorizontalPropertiesDatasourceImpl
 
   @override
   Future<HorizontalPropertyVotingActionResponseModel>
-      createHorizontalPropertyVoting({
+  createHorizontalPropertyVoting({
     required int groupId,
     required Map<String, dynamic> data,
     Map<String, dynamic>? query,
@@ -483,7 +481,7 @@ class HorizontalPropertiesDatasourceImpl
 
   @override
   Future<HorizontalPropertyVotingActionResponseModel>
-      updateHorizontalPropertyVoting({
+  updateHorizontalPropertyVoting({
     required int groupId,
     required int votingId,
     required Map<String, dynamic> data,
@@ -509,9 +507,7 @@ class HorizontalPropertiesDatasourceImpl
       '/horizontal-properties/voting-groups/$groupId/votings/$votingId',
       queryParameters: query,
     );
-    return SimpleResponseModel.fromJson(
-      response.data as Map<String, dynamic>,
-    );
+    return SimpleResponseModel.fromJson(response.data as Map<String, dynamic>);
   }
 
   @override
@@ -524,9 +520,7 @@ class HorizontalPropertiesDatasourceImpl
       '/horizontal-properties/voting-groups/$groupId/votings/$votingId/activate',
       queryParameters: query,
     );
-    return SimpleResponseModel.fromJson(
-      response.data as Map<String, dynamic>,
-    );
+    return SimpleResponseModel.fromJson(response.data as Map<String, dynamic>);
   }
 
   @override
@@ -539,14 +533,12 @@ class HorizontalPropertiesDatasourceImpl
       '/horizontal-properties/voting-groups/$groupId/votings/$votingId/deactivate',
       queryParameters: query,
     );
-    return SimpleResponseModel.fromJson(
-      response.data as Map<String, dynamic>,
-    );
+    return SimpleResponseModel.fromJson(response.data as Map<String, dynamic>);
   }
 
   @override
   Future<HorizontalPropertyVotingOptionsResponseModel>
-      getHorizontalPropertyVotingOptions({
+  getHorizontalPropertyVotingOptions({
     required int groupId,
     required int votingId,
     Map<String, dynamic>? query,
@@ -562,7 +554,7 @@ class HorizontalPropertiesDatasourceImpl
 
   @override
   Future<HorizontalPropertyVotingOptionActionResponseModel>
-      createHorizontalPropertyVotingOption({
+  createHorizontalPropertyVotingOption({
     required int groupId,
     required int votingId,
     required Map<String, dynamic> data,
@@ -589,14 +581,12 @@ class HorizontalPropertiesDatasourceImpl
       '/horizontal-properties/voting-groups/$groupId/votings/$votingId/options/$optionId',
       queryParameters: query,
     );
-    return SimpleResponseModel.fromJson(
-      response.data as Map<String, dynamic>,
-    );
+    return SimpleResponseModel.fromJson(response.data as Map<String, dynamic>);
   }
 
   @override
   Future<HorizontalPropertyVotingVotesResponseModel>
-      getHorizontalPropertyVotingVotes({
+  getHorizontalPropertyVotingVotes({
     required int groupId,
     required int votingId,
     Map<String, dynamic>? query,
@@ -622,9 +612,7 @@ class HorizontalPropertiesDatasourceImpl
       data: data,
       queryParameters: query,
     );
-    return SimpleResponseModel.fromJson(
-      response.data as Map<String, dynamic>,
-    );
+    return SimpleResponseModel.fromJson(response.data as Map<String, dynamic>);
   }
 
   @override
@@ -638,9 +626,7 @@ class HorizontalPropertiesDatasourceImpl
       '/horizontal-properties/voting-groups/$groupId/votings/$votingId/votes/$voteId',
       queryParameters: query,
     );
-    return SimpleResponseModel.fromJson(
-      response.data as Map<String, dynamic>,
-    );
+    return SimpleResponseModel.fromJson(response.data as Map<String, dynamic>);
   }
 
   @override
@@ -648,46 +634,83 @@ class HorizontalPropertiesDatasourceImpl
     required int groupId,
     required int votingId,
     Map<String, dynamic>? query,
-  }) async* {
+  }) {
+    // ---- construir query ----
     Map<String, String>? queryParameters;
     if (query != null && query.isNotEmpty) {
-      queryParameters = <String, String>{};
-      query.forEach((key, value) {
-        if (value != null) {
-          queryParameters![key] = value.toString();
-        }
+      queryParameters = {};
+      query.forEach((k, v) {
+        if (v != null) queryParameters![k] = v.toString();
       });
+
+      // 👇 Si no quieres que vaya business_id en la URL del SSE:
+      queryParameters?.remove('business_id');
+
       if (queryParameters.isEmpty) {
         queryParameters = null;
       }
     }
+
+    // ---- URL ----
     final baseUri = Uri.parse(_dio.options.baseUrl);
     final uri = baseUri.resolve(
       '/horizontal-properties/voting-groups/$groupId/votings/$votingId/stream',
     );
+
     final resolved = queryParameters == null
         ? uri
         : uri.replace(queryParameters: queryParameters);
 
+    debugPrint('[SSE] URL final: $resolved');
+
+    // ---- headers ----
     final headers = <String, String>{};
-    _dio.options.headers.forEach((key, value) {
-      if (value != null) {
-        headers[key] = value.toString();
-      }
+    _dio.options.headers.forEach((k, v) {
+      if (v != null) headers[k] = v.toString();
     });
     headers.putIfAbsent('Accept', () => 'text/event-stream');
 
-    final eventSource = await EventSource.connect(
-      resolved.toString(),
-      headers: headers,
+    debugPrint('[SSE] Headers: $headers');
+
+    final client = SSEClient(resolved, {'message'}, headers: headers);
+
+    final controller = StreamController<Map<String, dynamic>>();
+
+    final sub = client.stream.listen(
+      (event) {
+        if (event is MessageEvent) {
+          final data = event.data;
+          debugPrint('[SSE] MessageEvent data: $data');
+          if (data != null) {
+            final parsed = _parseEventPayload(data);
+            if (parsed != null) {
+              controller.add(parsed);
+            } else {
+              debugPrint('[SSE] payload no parseable, se ignora');
+            }
+          }
+        } else {
+          debugPrint('[SSE] Otro evento: $event');
+        }
+      },
+      onError: (e, st) {
+        debugPrint('[SSE] onError: $e');
+        controller.addError(e, st);
+      },
+      onDone: () {
+        debugPrint('[SSE] onDone');
+        controller.close();
+      },
+      cancelOnError: false,
     );
 
-    yield* eventSource.map((event) {
-      final data = event.data;
-      if (data == null) return <String, dynamic>{};
-      final parsed = _parseEventPayload(data);
-      return parsed ?? <String, dynamic>{};
-    });
+    controller.onCancel = () async {
+      debugPrint('[SSE] onCancel: cerrando sub y cliente');
+      await sub.cancel();
+      await client.close();
+    };
+
+    return controller.stream;
   }
 
   Map<String, dynamic>? _parseEventPayload(String data) {
