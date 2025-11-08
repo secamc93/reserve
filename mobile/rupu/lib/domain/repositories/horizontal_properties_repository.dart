@@ -6,6 +6,7 @@ import 'package:rupu/domain/entities/horizontal_property_residents_page.dart';
 import 'package:rupu/domain/entities/horizontal_property_unit_detail.dart';
 import 'package:rupu/domain/entities/horizontal_property_units_page.dart';
 import 'package:rupu/domain/entities/horizontal_property_update_result.dart';
+import 'package:rupu/domain/entities/horizontal_property_voting.dart';
 import 'package:rupu/domain/entities/horizontal_property_voting_groups.dart';
 
 abstract class HorizontalPropertiesRepository {
@@ -66,5 +67,103 @@ abstract class HorizontalPropertiesRepository {
 
   Future<HorizontalPropertyVotingGroupsResult> getHorizontalPropertyVotingGroups({
     required int id,
+  });
+
+  Future<HorizontalPropertyVotingGroupActionResult> createHorizontalPropertyVotingGroup({
+    required int businessId,
+    required Map<String, dynamic> data,
+  });
+
+  Future<HorizontalPropertyVotingGroupActionResult> updateHorizontalPropertyVotingGroup({
+    required int businessId,
+    required int groupId,
+    required Map<String, dynamic> data,
+  });
+
+  Future<HorizontalPropertyActionResult> deleteHorizontalPropertyVotingGroup({
+    required int businessId,
+    required int groupId,
+  });
+
+  Future<HorizontalPropertyVotingListResult> getHorizontalPropertyVotings({
+    required int businessId,
+    required int groupId,
+  });
+
+  Future<HorizontalPropertyVotingActionResult> createHorizontalPropertyVoting({
+    required int businessId,
+    required int groupId,
+    required Map<String, dynamic> data,
+  });
+
+  Future<HorizontalPropertyVotingActionResult> updateHorizontalPropertyVoting({
+    required int businessId,
+    required int groupId,
+    required int votingId,
+    required Map<String, dynamic> data,
+  });
+
+  Future<HorizontalPropertyActionResult> deleteHorizontalPropertyVoting({
+    required int businessId,
+    required int groupId,
+    required int votingId,
+  });
+
+  Future<HorizontalPropertyActionResult> activateHorizontalPropertyVoting({
+    required int businessId,
+    required int groupId,
+    required int votingId,
+  });
+
+  Future<HorizontalPropertyActionResult> deactivateHorizontalPropertyVoting({
+    required int businessId,
+    required int groupId,
+    required int votingId,
+  });
+
+  Future<HorizontalPropertyVotingOptionListResult> getHorizontalPropertyVotingOptions({
+    required int businessId,
+    required int groupId,
+    required int votingId,
+  });
+
+  Future<HorizontalPropertyVotingOptionActionResult> createHorizontalPropertyVotingOption({
+    required int businessId,
+    required int groupId,
+    required int votingId,
+    required Map<String, dynamic> data,
+  });
+
+  Future<HorizontalPropertyActionResult> deleteHorizontalPropertyVotingOption({
+    required int businessId,
+    required int groupId,
+    required int votingId,
+    required int optionId,
+  });
+
+  Future<HorizontalPropertyVotingVotesResult> getHorizontalPropertyVotingVotes({
+    required int businessId,
+    required int groupId,
+    required int votingId,
+  });
+
+  Future<HorizontalPropertyActionResult> createHorizontalPropertyVote({
+    required int businessId,
+    required int groupId,
+    required int votingId,
+    required Map<String, dynamic> data,
+  });
+
+  Future<HorizontalPropertyActionResult> deleteHorizontalPropertyVote({
+    required int businessId,
+    required int groupId,
+    required int votingId,
+    required int voteId,
+  });
+
+  Stream<HorizontalPropertyVotingGroupLiveData> subscribeToVotingLiveData({
+    required int businessId,
+    required int groupId,
+    required int votingId,
   });
 }

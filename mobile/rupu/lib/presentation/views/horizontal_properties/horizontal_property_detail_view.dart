@@ -1,13 +1,19 @@
 library horizontal_property_detail_view;
 
+import 'dart:async';
+
+import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:rupu/domain/entities/horizontal_property_action_result.dart';
 import 'package:rupu/domain/entities/horizontal_property_residents_page.dart';
 import 'package:rupu/domain/entities/horizontal_property_unit_detail.dart';
 import 'package:rupu/domain/entities/horizontal_property_units_page.dart';
+import 'package:rupu/domain/entities/horizontal_property_voting.dart';
 import 'package:rupu/domain/entities/horizontal_property_voting_groups.dart';
+import 'package:rupu/domain/repositories/horizontal_properties_repository.dart';
 
 import 'controllers/horizontal_property_dashboard_controller.dart';
 import 'controllers/horizontal_property_residents_controller.dart';

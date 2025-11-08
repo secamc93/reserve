@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 
@@ -5,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:image/image.dart' as img;
 import 'package:mime/mime.dart';
+import 'package:eventsource/eventsource.dart';
 import 'package:path/path.dart' as p;
 import 'package:rupu/config/dio/authenticated_dio.dart';
 import 'package:rupu/domain/datasource/horizontal_properties_datasource.dart';
@@ -14,6 +16,7 @@ import 'package:rupu/domain/infrastructure/models/horizontal_property_residents_
 import 'package:rupu/domain/infrastructure/models/horizontal_property_unit_detail_response_model.dart';
 import 'package:rupu/domain/infrastructure/models/horizontal_property_units_response_model.dart';
 import 'package:rupu/domain/infrastructure/models/horizontal_property_voting_groups_response_model.dart';
+import 'package:rupu/domain/infrastructure/models/horizontal_property_voting_models.dart';
 import 'package:rupu/domain/infrastructure/models/simple_response_model.dart';
 
 class HorizontalPropertiesDatasourceImpl
@@ -398,6 +401,323 @@ class HorizontalPropertiesDatasourceImpl
     return HorizontalPropertyVotingGroupsResponseModel.fromJson(
       response.data as Map<String, dynamic>,
     );
+  }
+
+  @override
+  Future<HorizontalPropertyVotingGroupActionResponseModel>
+      createHorizontalPropertyVotingGroup({
+    required Map<String, dynamic> data,
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await _dio.post(
+      '/horizontal-properties/voting-groups',
+      data: data,
+      queryParameters: query,
+    );
+    return HorizontalPropertyVotingGroupActionResponseModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<HorizontalPropertyVotingGroupActionResponseModel>
+      updateHorizontalPropertyVotingGroup({
+    required int groupId,
+    required Map<String, dynamic> data,
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await _dio.put(
+      '/horizontal-properties/voting-groups/$groupId',
+      data: data,
+      queryParameters: query,
+    );
+    return HorizontalPropertyVotingGroupActionResponseModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<SimpleResponseModel> deleteHorizontalPropertyVotingGroup({
+    required int groupId,
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await _dio.delete(
+      '/horizontal-properties/voting-groups/$groupId',
+      queryParameters: query,
+    );
+    return SimpleResponseModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<HorizontalPropertyVotingsResponseModel> getHorizontalPropertyVotings({
+    required int groupId,
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await _dio.get(
+      '/horizontal-properties/voting-groups/$groupId/votings',
+      queryParameters: query,
+    );
+    return HorizontalPropertyVotingsResponseModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<HorizontalPropertyVotingActionResponseModel>
+      createHorizontalPropertyVoting({
+    required int groupId,
+    required Map<String, dynamic> data,
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await _dio.post(
+      '/horizontal-properties/voting-groups/$groupId/votings',
+      data: data,
+      queryParameters: query,
+    );
+    return HorizontalPropertyVotingActionResponseModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<HorizontalPropertyVotingActionResponseModel>
+      updateHorizontalPropertyVoting({
+    required int groupId,
+    required int votingId,
+    required Map<String, dynamic> data,
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await _dio.put(
+      '/horizontal-properties/voting-groups/$groupId/votings/$votingId',
+      data: data,
+      queryParameters: query,
+    );
+    return HorizontalPropertyVotingActionResponseModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<SimpleResponseModel> deleteHorizontalPropertyVoting({
+    required int groupId,
+    required int votingId,
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await _dio.delete(
+      '/horizontal-properties/voting-groups/$groupId/votings/$votingId',
+      queryParameters: query,
+    );
+    return SimpleResponseModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<SimpleResponseModel> activateHorizontalPropertyVoting({
+    required int groupId,
+    required int votingId,
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await _dio.patch(
+      '/horizontal-properties/voting-groups/$groupId/votings/$votingId/activate',
+      queryParameters: query,
+    );
+    return SimpleResponseModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<SimpleResponseModel> deactivateHorizontalPropertyVoting({
+    required int groupId,
+    required int votingId,
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await _dio.patch(
+      '/horizontal-properties/voting-groups/$groupId/votings/$votingId/deactivate',
+      queryParameters: query,
+    );
+    return SimpleResponseModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<HorizontalPropertyVotingOptionsResponseModel>
+      getHorizontalPropertyVotingOptions({
+    required int groupId,
+    required int votingId,
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await _dio.get(
+      '/horizontal-properties/voting-groups/$groupId/votings/$votingId/options',
+      queryParameters: query,
+    );
+    return HorizontalPropertyVotingOptionsResponseModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<HorizontalPropertyVotingOptionActionResponseModel>
+      createHorizontalPropertyVotingOption({
+    required int groupId,
+    required int votingId,
+    required Map<String, dynamic> data,
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await _dio.post(
+      '/horizontal-properties/voting-groups/$groupId/votings/$votingId/options',
+      data: data,
+      queryParameters: query,
+    );
+    return HorizontalPropertyVotingOptionActionResponseModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<SimpleResponseModel> deleteHorizontalPropertyVotingOption({
+    required int groupId,
+    required int votingId,
+    required int optionId,
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await _dio.delete(
+      '/horizontal-properties/voting-groups/$groupId/votings/$votingId/options/$optionId',
+      queryParameters: query,
+    );
+    return SimpleResponseModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<HorizontalPropertyVotingVotesResponseModel>
+      getHorizontalPropertyVotingVotes({
+    required int groupId,
+    required int votingId,
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await _dio.get(
+      '/horizontal-properties/voting-groups/$groupId/votings/$votingId/votes',
+      queryParameters: query,
+    );
+    return HorizontalPropertyVotingVotesResponseModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<SimpleResponseModel> createHorizontalPropertyVote({
+    required int groupId,
+    required int votingId,
+    required Map<String, dynamic> data,
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await _dio.post(
+      '/horizontal-properties/voting-groups/$groupId/votings/$votingId/votes',
+      data: data,
+      queryParameters: query,
+    );
+    return SimpleResponseModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<SimpleResponseModel> deleteHorizontalPropertyVote({
+    required int groupId,
+    required int votingId,
+    required int voteId,
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await _dio.delete(
+      '/horizontal-properties/voting-groups/$groupId/votings/$votingId/votes/$voteId',
+      queryParameters: query,
+    );
+    return SimpleResponseModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Stream<Map<String, dynamic>> subscribeToVotingLiveData({
+    required int groupId,
+    required int votingId,
+    Map<String, dynamic>? query,
+  }) async* {
+    Map<String, String>? queryParameters;
+    if (query != null && query.isNotEmpty) {
+      queryParameters = <String, String>{};
+      query.forEach((key, value) {
+        if (value != null) {
+          queryParameters![key] = value.toString();
+        }
+      });
+      if (queryParameters.isEmpty) {
+        queryParameters = null;
+      }
+    }
+    final baseUri = Uri.parse(_dio.options.baseUrl);
+    final uri = baseUri.resolve(
+      '/horizontal-properties/voting-groups/$groupId/votings/$votingId/stream',
+    );
+    final resolved = queryParameters == null
+        ? uri
+        : uri.replace(queryParameters: queryParameters);
+
+    final headers = <String, String>{};
+    _dio.options.headers.forEach((key, value) {
+      if (value != null) {
+        headers[key] = value.toString();
+      }
+    });
+    headers.putIfAbsent('Accept', () => 'text/event-stream');
+
+    final eventSource = await EventSource.connect(
+      resolved.toString(),
+      headers: headers,
+    );
+
+    yield* eventSource.map((event) {
+      final data = event.data;
+      if (data == null) return <String, dynamic>{};
+      final parsed = _parseEventPayload(data);
+      return parsed ?? <String, dynamic>{};
+    });
+  }
+
+  Map<String, dynamic>? _parseEventPayload(String data) {
+    String normalized = data.trim();
+    if (normalized.isEmpty) return null;
+    if (normalized.startsWith('data:')) {
+      normalized = normalized.substring(5).trim();
+    }
+
+    Map<String, dynamic>? decode(String value) {
+      try {
+        final decoded = jsonDecode(value);
+        if (decoded is Map<String, dynamic>) {
+          return decoded;
+        }
+      } catch (_) {
+        // ignore malformed payloads
+      }
+      return null;
+    }
+
+    final direct = decode(normalized);
+    if (direct != null) return direct;
+
+    final braceIndex = normalized.indexOf('{');
+    if (braceIndex >= 0) {
+      final candidate = decode(normalized.substring(braceIndex));
+      if (candidate != null) return candidate;
+    }
+    return null;
   }
 }
 

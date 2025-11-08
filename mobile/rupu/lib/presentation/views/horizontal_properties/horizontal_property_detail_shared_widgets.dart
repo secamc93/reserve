@@ -801,6 +801,7 @@ class _CardActions extends StatelessWidget {
   final bool isEditDisabled;
   final bool isDeleteDisabled;
   final bool showDeleteLoader;
+  final String viewLabel;
   const _CardActions({
     this.onView,
     this.onEdit,
@@ -808,6 +809,7 @@ class _CardActions extends StatelessWidget {
     this.isEditDisabled = false,
     this.isDeleteDisabled = false,
     this.showDeleteLoader = false,
+    this.viewLabel = 'Ver',
   });
 
   ButtonStyle _primaryStyle(BuildContext context) {
@@ -849,7 +851,7 @@ class _CardActions extends StatelessWidget {
           style: _primaryStyle(context),
           onPressed: onView,
           icon: const Icon(Icons.visibility_outlined, size: 18),
-          label: const Text('Ver'),
+          label: Text(viewLabel),
         ),
         FilledButton.tonalIcon(
           style: _tonalStyle(context),

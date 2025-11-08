@@ -7,6 +7,7 @@ import 'package:rupu/domain/entities/horizontal_property_residents_page.dart';
 import 'package:rupu/domain/entities/horizontal_property_unit_detail.dart';
 import 'package:rupu/domain/entities/horizontal_property_units_page.dart';
 import 'package:rupu/domain/entities/horizontal_property_update_result.dart';
+import 'package:rupu/domain/entities/horizontal_property_voting.dart';
 import 'package:rupu/domain/entities/horizontal_property_voting_groups.dart';
 
 import '../models/horizontal_properties_response_model.dart';
@@ -15,6 +16,7 @@ import '../models/horizontal_property_residents_response_model.dart';
 import '../models/horizontal_property_unit_detail_response_model.dart';
 import '../models/horizontal_property_units_response_model.dart';
 import '../models/horizontal_property_voting_groups_response_model.dart';
+import '../models/horizontal_property_voting_models.dart';
 import '../models/simple_response_model.dart';
 
 class HorizontalPropertiesMapper {
@@ -241,6 +243,121 @@ class HorizontalPropertiesMapper {
       createdByUserId: model.createdByUserId,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
+    );
+  }
+
+  static HorizontalPropertyVotingGroupActionResult
+      votingGroupActionResponseToEntity(
+    HorizontalPropertyVotingGroupActionResponseModel model,
+  ) {
+    return HorizontalPropertyVotingGroupActionResult(
+      success: model.success,
+      message: model.message.isNotEmpty ? model.message : null,
+      group: model.data != null ? votingGroupModelToEntity(model.data!) : null,
+    );
+  }
+
+  static HorizontalPropertyVotingListResult votingsResponseToEntity(
+    HorizontalPropertyVotingsResponseModel model,
+  ) {
+    return HorizontalPropertyVotingListResult(
+      success: model.success,
+      message: model.message.isNotEmpty ? model.message : null,
+      votings: model.data
+          .map(votingModelToEntity)
+          .toList(growable: false),
+    );
+  }
+
+  static HorizontalPropertyVoting votingModelToEntity(
+    HorizontalPropertyVotingModel model,
+  ) {
+    return HorizontalPropertyVoting(
+      id: model.id,
+      votingGroupId: model.votingGroupId,
+      title: model.title,
+      description: model.description,
+      votingType: model.votingType,
+      isSecret: model.isSecret,
+      allowAbstention: model.allowAbstention,
+      isActive: model.isActive,
+      displayOrder: model.displayOrder,
+      requiredPercentage: model.requiredPercentage,
+      createdAt: model.createdAt,
+      updatedAt: model.updatedAt,
+    );
+  }
+
+  static HorizontalPropertyVotingActionResult votingActionResponseToEntity(
+    HorizontalPropertyVotingActionResponseModel model,
+  ) {
+    return HorizontalPropertyVotingActionResult(
+      success: model.success,
+      message: model.message.isNotEmpty ? model.message : null,
+      voting: model.data != null ? votingModelToEntity(model.data!) : null,
+    );
+  }
+
+  static HorizontalPropertyVotingOptionListResult votingOptionsResponseToEntity(
+    HorizontalPropertyVotingOptionsResponseModel model,
+  ) {
+    return HorizontalPropertyVotingOptionListResult(
+      success: model.success,
+      message: model.message.isNotEmpty ? model.message : null,
+      options: model.data
+          .map(votingOptionModelToEntity)
+          .toList(growable: false),
+    );
+  }
+
+  static HorizontalPropertyVotingOption votingOptionModelToEntity(
+    HorizontalPropertyVotingOptionModel model,
+  ) {
+    return HorizontalPropertyVotingOption(
+      id: model.id,
+      votingId: model.votingId,
+      optionText: model.optionText,
+      optionCode: model.optionCode,
+      color: model.color,
+      displayOrder: model.displayOrder,
+      isActive: model.isActive,
+    );
+  }
+
+  static HorizontalPropertyVotingOptionActionResult
+      votingOptionActionResponseToEntity(
+    HorizontalPropertyVotingOptionActionResponseModel model,
+  ) {
+    return HorizontalPropertyVotingOptionActionResult(
+      success: model.success,
+      message: model.message.isNotEmpty ? model.message : null,
+      option:
+          model.data != null ? votingOptionModelToEntity(model.data!) : null,
+    );
+  }
+
+  static HorizontalPropertyVotingVotesResult votingVotesResponseToEntity(
+    HorizontalPropertyVotingVotesResponseModel model,
+  ) {
+    return HorizontalPropertyVotingVotesResult(
+      success: model.success,
+      message: model.message.isNotEmpty ? model.message : null,
+      votes:
+          model.data.map(votingVoteModelToEntity).toList(growable: false),
+    );
+  }
+
+  static HorizontalPropertyVotingVote votingVoteModelToEntity(
+    HorizontalPropertyVotingVoteModel model,
+  ) {
+    return HorizontalPropertyVotingVote(
+      id: model.id,
+      votingId: model.votingId,
+      propertyUnitId: model.propertyUnitId,
+      votingOptionId: model.votingOptionId,
+      votedAt: model.votedAt,
+      ipAddress: model.ipAddress,
+      userAgent: model.userAgent,
     );
   }
 
