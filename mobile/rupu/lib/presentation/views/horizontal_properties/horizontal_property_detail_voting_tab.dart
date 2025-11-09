@@ -1411,6 +1411,7 @@ class _VotingGroupFormBottomSheetState
       ),
     );
   }
+
 }
 
 class _VotingFormBottomSheet extends StatefulWidget {
@@ -1688,6 +1689,7 @@ class _VotingFormBottomSheetState extends State<_VotingFormBottomSheet> {
       ),
     );
   }
+
 }
 
 class _VotingOptionFormBottomSheet extends StatefulWidget {
@@ -2073,7 +2075,7 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
       useRootNavigator: true,
       isScrollControlled: true,
       builder: (_) => _VoteCreationBottomSheet(
-        liveControllerTag: _liveTag,
+        controller: controller,
         initialUnit: unit,
       ),
     );
@@ -2255,6 +2257,26 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
                                       ),
                                     ],
                                   ),
+                                  if (liveData?.timestamp != null) ...[
+                                    const SizedBox(height: 12),
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.schedule_outlined,
+                                          size: 18,
+                                          color: cs.onSurfaceVariant,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'Último evento · ${_formatLiveTimestamp(liveData!.timestamp!)}',
+                                          style: tt.bodySmall?.copyWith(
+                                            color: cs.onSurfaceVariant,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                   const SizedBox(height: 20),
                                   TextField(
                                     controller: _searchCtrl,
@@ -2343,6 +2365,11 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
         ),
       ),
     );
+  }
+
+  String _formatLiveTimestamp(DateTime timestamp) {
+    final formatter = DateFormat('dd/MM/yyyy · HH:mm:ss');
+    return formatter.format(timestamp.toLocal());
   }
 }
 
@@ -2705,11 +2732,11 @@ class _UnitVoteChip extends StatelessWidget {
 }
 
 class _VoteCreationBottomSheet extends StatefulWidget {
-  final String liveControllerTag;
+  final VotingLiveController controller;
   final HorizontalPropertyVotingLiveUnit? initialUnit;
 
   const _VoteCreationBottomSheet({
-    required this.liveControllerTag,
+    required this.controller,
     this.initialUnit,
   });
 
@@ -2719,8 +2746,7 @@ class _VoteCreationBottomSheet extends StatefulWidget {
 }
 
 class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
-  VotingLiveController? _controller;
-  String? _initError;
+  late final VotingLiveController _controller;
   late final TextEditingController _searchCtrl;
   HorizontalPropertyVotingLiveUnit? _selectedUnit;
   int? _selectedOptionId;
@@ -2730,14 +2756,7 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
   @override
   void initState() {
     super.initState();
-    try {
-      _controller = Get.find<VotingLiveController>(tag: widget.liveControllerTag);
-    } catch (error, stackTrace) {
-      debugPrint('No se encontró VotingLiveController: $error');
-      debugPrint('Stack: $stackTrace');
-      _initError =
-          'No pudimos preparar el registro de votos. Cierra e intenta nuevamente.';
-    }
+    _controller = widget.controller;
     _searchCtrl = TextEditingController();
     _selectedUnit = widget.initialUnit;
   }
@@ -2750,9 +2769,7 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
 
   List<HorizontalPropertyVotingLiveUnit> get _units {
     final query = _searchCtrl.text.trim().toLowerCase();
-    final controller = _controller;
-    if (controller == null) return const [];
-    final units = controller.liveUnits;
+    final units = _controller.liveUnits;
     if (query.isEmpty) return units;
     return units
         .where((unit) {
@@ -2765,7 +2782,6 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
 
   Future<void> _handleSubmit() async {
     if (_submitting) return;
-    final controller = _controller;
     if (_selectedUnit == null) {
       setState(() {
         _errorMessage = 'Selecciona una unidad para registrar el voto.';
@@ -2778,20 +2794,13 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
       });
       return;
     }
-    if (controller == null) {
-      setState(() {
-        _errorMessage =
-            _initError ?? 'No fue posible registrar el voto en este momento.';
-      });
-      return;
-    }
 
     setState(() {
       _submitting = true;
       _errorMessage = null;
     });
 
-    final result = await controller.castVote(
+    final result = await _controller.castVote(
       propertyUnitId: _selectedUnit!.propertyUnitId,
       optionId: _selectedOptionId!,
     );
@@ -2832,43 +2841,7 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final viewInsets = MediaQuery.viewInsetsOf(context);
-    final controller = _controller;
-    final options = controller?.options ?? const <HorizontalPropertyVotingOption>[];
-
-    if (controller == null) {
-      return FractionallySizedBox(
-        heightFactor: 0.9,
-        child: SafeArea(
-          top: false,
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(16, 0, 16, viewInsets.bottom + 16),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: cs.surface,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(32),
-                  topRight: Radius.circular(32),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: .18),
-                    blurRadius: 28,
-                    offset: const Offset(0, 22),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(32),
-                  topRight: Radius.circular(32),
-                ),
-                child: _LiveErrorContent(message: _initError),
-              ),
-            ),
-          ),
-        ),
-      );
-    }
+    final options = _controller.options;
 
     return FractionallySizedBox(
       heightFactor: 0.9,

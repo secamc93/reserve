@@ -617,6 +617,7 @@ class HorizontalPropertiesRepositoryImpl
         votes: votes,
         hasResultsSnapshot: hasResultsSnapshot,
         hasVotesSnapshot: hasVotesSnapshot,
+        timestamp: _parseDateTime(data['timestamp']),
       );
     } catch (e, st) {
       debugPrint('Error parseando liveData: $e');

@@ -197,6 +197,7 @@ class HorizontalPropertyVotingGroupLiveData {
   final List<HorizontalPropertyVotingVote> votes;
   final bool hasResultsSnapshot;
   final bool hasVotesSnapshot;
+  final DateTime? timestamp;
 
   const HorizontalPropertyVotingGroupLiveData({
     required this.totalUnits,
@@ -207,6 +208,7 @@ class HorizontalPropertyVotingGroupLiveData {
     this.votes = const [],
     this.hasResultsSnapshot = false,
     this.hasVotesSnapshot = false,
+    this.timestamp,
   });
 }
 
