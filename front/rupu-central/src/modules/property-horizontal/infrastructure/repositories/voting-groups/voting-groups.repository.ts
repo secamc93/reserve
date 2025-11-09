@@ -16,10 +16,10 @@ import { BackendGetVotingGroupsResponse, BackendCreateVotingGroupResponse, Backe
 export class VotingGroupsRepository implements IVotingGroupsRepository {
   async getVotingGroups(params: GetVotingGroupsParams): Promise<VotingGroupsList> {
     const { token, businessId } = params;
-    // Nueva URL: listar grupos con business_id como query param
-    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups?${
-      businessId !== undefined ? `business_id=${businessId}` : ''
-    }`;
+    if (businessId == null) {
+      throw new Error('businessId es requerido para obtener los grupos de votación');
+    }
+    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups?business_id=${businessId}`;
     const startTime = Date.now();
 
     logHttpRequest({
@@ -85,8 +85,10 @@ export class VotingGroupsRepository implements IVotingGroupsRepository {
 
   async createVotingGroup(params: CreateVotingGroupParams): Promise<VotingGroup> {
     const { token, businessId, data } = params;
-    // Nueva URL: crear grupo, business_id va en el body
-    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups`;
+    if (businessId == null) {
+      throw new Error('businessId es requerido para crear un grupo de votación');
+    }
+    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups?business_id=${businessId}`;
     const startTime = Date.now();
 
     // Solo incluir campos que no sean undefined
@@ -169,8 +171,10 @@ export class VotingGroupsRepository implements IVotingGroupsRepository {
 
   async updateVotingGroup(params: UpdateVotingGroupParams): Promise<VotingGroup> {
     const { token, businessId, groupId, data } = params;
-    // Nueva URL: actualizar grupo, business_id por body
-    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${groupId}`;
+    if (businessId == null) {
+      throw new Error('businessId es requerido para actualizar un grupo de votación');
+    }
+    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${groupId}?business_id=${businessId}`;
     const startTime = Date.now();
 
     // Solo incluir campos que no sean undefined
@@ -251,10 +255,10 @@ export class VotingGroupsRepository implements IVotingGroupsRepository {
 
   async deleteVotingGroup(params: DeleteVotingGroupParams): Promise<string> {
     const { token, businessId, groupId } = params;
-    // Nueva URL: eliminar grupo, business_id por query opcional
-    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${groupId}${
-      businessId !== undefined ? `?business_id=${businessId}` : ''
-    }`;
+    if (businessId == null) {
+      throw new Error('businessId es requerido para eliminar un grupo de votación');
+    }
+    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${groupId}?business_id=${businessId}`;
     const startTime = Date.now();
 
     logHttpRequest({

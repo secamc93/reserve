@@ -7,11 +7,12 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 // Using CSS classes for buttons instead of Button component
-import { createAttendanceListAction, generateAttendanceListAction, listAttendanceListsAction } from '../../infrastructure/actions/attendance';
+import { createAttendanceListAction, generateAttendanceListAction, listAttendanceListsAction, removeAttendanceListAction } from '../../infrastructure/actions/attendance';
 import { AttendanceList } from '../../domain/entities/attendance';
 import { CreateAttendanceListModal } from './create-attendance-list-modal';
 import { AttendanceListModal } from './attendance-list-modal';
 import { AttendanceSummaryModal } from './attendance-summary-modal';
+import { ConfirmModal } from '@shared/ui';
 
 interface AttendanceManagementProps {
   votingGroupId: number;
@@ -36,6 +37,8 @@ export function AttendanceManagement({
   const [selectedAttendanceList, setSelectedAttendanceList] = useState<AttendanceList | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [attendanceListToDelete, setAttendanceListToDelete] = useState<AttendanceList | null>(null);
 
   // Cargar listas existentes al abrir
   useEffect(() => {
@@ -229,6 +232,15 @@ export function AttendanceManagement({
                   >
                     📊 Resumen
                   </button>
+                  <button
+                    onClick={() => {
+                      setAttendanceListToDelete(list);
+                      setShowDeleteConfirm(true);
+                    }}
+                    className="btn btn-error btn-sm flex items-center gap-2"
+                  >
+                    🗑️ Eliminar
+                  </button>
                 </div>
               </div>
             </div>
@@ -285,6 +297,44 @@ export function AttendanceManagement({
           token={token}
         />
       )}
+
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        title="Eliminar lista de asistencia"
+        message="Esta acción eliminará de forma permanente la lista de asistencia seleccionada. ¿Deseas continuar?"
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        type="danger"
+        onClose={() => {
+          setShowDeleteConfirm(false);
+          setAttendanceListToDelete(null);
+        }}
+        onConfirm={async () => {
+          if (!attendanceListToDelete) return;
+          setLoading(true);
+          setError(null);
+          try {
+            const result = await removeAttendanceListAction({
+              token,
+              id: attendanceListToDelete.id,
+              businessId,
+            });
+
+            if (result.success) {
+              setAttendanceLists(prev => prev.filter(list => list.id !== attendanceListToDelete.id));
+              setShowDeleteConfirm(false);
+              setAttendanceListToDelete(null);
+            } else {
+              setError(result.error || 'Error al eliminar la lista de asistencia');
+            }
+          } catch (err) {
+            console.error('Error deleting attendance list:', err);
+            setError('Error inesperado al eliminar la lista de asistencia');
+          } finally {
+            setLoading(false);
+          }
+        }}
+      />
     </div>
   );
 }

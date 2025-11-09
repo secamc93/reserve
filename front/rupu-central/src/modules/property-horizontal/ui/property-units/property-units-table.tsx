@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Table, Badge, Spinner, Alert, ConfirmModal } from '@shared/ui';
 import { getPropertyUnitsAction, deletePropertyUnitAction } from '../../infrastructure/actions';
 import { PropertyUnit, UNIT_TYPE_LABELS } from '../../domain';
@@ -18,20 +18,13 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState<PropertyUnit | null>(null);
+  const isFirstLoadRef = useRef(true);
   
   // Estados para alertas y confirmación
   const [alert, setAlert] = useState<{ type: 'success' | 'error' | 'warning' | 'info'; message: string } | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [unitToDelete, setUnitToDelete] = useState<number | null>(null);
   
-  // Estados para filtros
-  const [filters, setFilters] = useState({
-    number: undefined as string | undefined,
-    unitType: undefined as string | undefined,
-    floor: undefined as number | undefined,
-    block: undefined as string | undefined,
-    isActive: undefined as boolean | undefined,
-  });
   const [filterInputs, setFilterInputs] = useState({
     number: '',
     unitType: '',
@@ -39,9 +32,57 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
     block: '',
     isActive: '',
   });
+  const [debouncedFilters, setDebouncedFilters] = useState({
+    number: undefined as string | undefined,
+    unitType: undefined as string | undefined,
+    floor: undefined as number | undefined,
+    block: undefined as string | undefined,
+    isActive: undefined as boolean | undefined,
+  });
+  const [isRefetching, setIsRefetching] = useState(false);
 
-  const loadUnits = async () => {
-    setLoading(true);
+  const normalizeFilters = useCallback((inputs: typeof filterInputs) => {
+    return {
+      number: inputs.number.trim() || undefined,
+      unitType: inputs.unitType || undefined,
+      floor: inputs.floor ? Number(inputs.floor) : undefined,
+      block: inputs.block.trim() || undefined,
+      isActive: inputs.isActive ? inputs.isActive === 'true' : undefined,
+    };
+  }, []);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      const newFilters = normalizeFilters(filterInputs);
+      setDebouncedFilters((prev) => {
+        const isEqual =
+          prev.number === newFilters.number &&
+          prev.unitType === newFilters.unitType &&
+          prev.floor === newFilters.floor &&
+          prev.block === newFilters.block &&
+          prev.isActive === newFilters.isActive;
+
+        if (isEqual) {
+          return prev;
+        }
+
+        if (currentPage !== 1) {
+          setCurrentPage(1);
+        }
+
+        return newFilters;
+      });
+    }, 300);
+
+    return () => clearTimeout(handler);
+  }, [filterInputs, normalizeFilters, currentPage]);
+
+  const loadUnits = useCallback(async ({ keepData = false }: { keepData?: boolean } = {}) => {
+    if (keepData) {
+      setIsRefetching(true);
+    } else {
+      setLoading(true);
+    }
     try {
       const token = TokenStorage.getToken();
       if (!token) throw new Error('No token found');
@@ -51,7 +92,7 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
         token,
         page: currentPage,
         pageSize: 10,
-        ...filters, // Aplicar filtros activos
+        ...debouncedFilters,
       });
 
       setUnits(data.units);
@@ -61,24 +102,21 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
       setAlert({ type: 'error', message: 'Error al cargar las unidades' });
       setTimeout(() => setAlert(null), 5000);
     } finally {
-      setLoading(false);
+      if (keepData) {
+        setIsRefetching(false);
+      } else {
+        setLoading(false);
+      }
     }
-  };
+  }, [businessId, currentPage, debouncedFilters]);
 
   useEffect(() => {
-    loadUnits();
-  }, [currentPage, filters]);
-
-  const handleApplyFilters = () => {
-    setFilters({
-      number: filterInputs.number.trim() || undefined,
-      unitType: filterInputs.unitType || undefined,
-      floor: filterInputs.floor ? Number(filterInputs.floor) : undefined,
-      block: filterInputs.block.trim() || undefined,
-      isActive: filterInputs.isActive ? filterInputs.isActive === 'true' : undefined,
-    });
-    setCurrentPage(1);
-  };
+    const keepData = !isFirstLoadRef.current;
+    loadUnits({ keepData });
+    if (isFirstLoadRef.current) {
+      isFirstLoadRef.current = false;
+    }
+  }, [loadUnits]);
 
   const handleClearFilters = () => {
     setFilterInputs({
@@ -88,17 +126,10 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
       block: '',
       isActive: '',
     });
-    setFilters({
-      number: undefined,
-      unitType: undefined,
-      floor: undefined,
-      block: undefined,
-      isActive: undefined,
-    });
     setCurrentPage(1);
   };
 
-  const hasActiveFilters = Object.values(filters).some(f => f !== undefined);
+  const hasActiveFilters = Object.values(debouncedFilters).some(f => f !== undefined);
 
   const handleDeleteClick = (unitId: number) => {
     setUnitToDelete(unitId);
@@ -113,7 +144,7 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
       if (!token) throw new Error('No token found');
 
       await deletePropertyUnitAction({ businessId, unitId: unitToDelete, token });
-      await loadUnits();
+      await loadUnits({ keepData: false });
       
       setAlert({ type: 'success', message: 'Unidad eliminada correctamente' });
       setTimeout(() => setAlert(null), 3000);
@@ -263,13 +294,7 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
             </select>
           </div>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={handleApplyFilters}
-            className="btn btn-primary btn-sm"
-          >
-            🔍 Aplicar Filtros
-          </button>
+        <div className="flex gap-2 items-center">
           {hasActiveFilters && (
             <button
               onClick={handleClearFilters}
@@ -278,15 +303,23 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
               ✖️ Limpiar Filtros
             </button>
           )}
-          {hasActiveFilters && (
-            <span className="text-xs text-gray-600 flex items-center ml-2">
-              ℹ️ Filtros activos
-            </span>
-          )}
+          <span className="text-xs text-gray-500">
+            ℹ️ Los filtros se aplican automáticamente al escribir.
+          </span>
+          <span className="ml-auto text-xs text-gray-500">
+            {isRefetching ? 'Actualizando resultados...' : `Página ${currentPage} • ${units.length} resultados`}
+          </span>
         </div>
       </div>
 
-      <Table columns={columns} data={data} />
+      <div className="relative">
+        {isRefetching && (
+          <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center z-10">
+            <Spinner size="md" />
+          </div>
+        )}
+        <Table columns={columns} data={data} />
+      </div>
 
       {totalPages > 1 && (
         <div className="pagination-alt">
@@ -316,7 +349,7 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
           onClose={() => setShowCreateModal(false)}
           onSuccess={() => {
             setShowCreateModal(false);
-            loadUnits();
+            loadUnits({ keepData: false });
           }}
         />
       )}
@@ -332,7 +365,7 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
           onSuccess={() => {
             setShowEditModal(false);
             setSelectedUnit(null);
-            loadUnits();
+            loadUnits({ keepData: false });
           }}
         />
       )}

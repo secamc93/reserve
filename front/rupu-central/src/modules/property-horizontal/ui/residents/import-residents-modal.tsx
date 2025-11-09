@@ -62,6 +62,14 @@ export function ImportResidentsModal({ isOpen, onClose, onSuccess, businessId }:
       return;
     }
 
+    const effectiveBusinessId =
+      Number.isFinite(businessId) && businessId > 0 ? businessId : TokenStorage.getActiveBusiness() ?? undefined;
+
+    if (!effectiveBusinessId) {
+      setError('No se encontró un negocio activo para importar residentes.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setSuccess(null);
@@ -77,7 +85,7 @@ export function ImportResidentsModal({ isOpen, onClose, onSuccess, businessId }:
 
       const result = await importResidentsFromExcelAction({
         token,
-        businessId,
+        businessId: effectiveBusinessId,
         file: selectedFile,
       });
 

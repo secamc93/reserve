@@ -4,9 +4,9 @@
 
 export interface BackendUpdatePermissionRequest {
   name: string;
-  code: string;
   description?: string;
-  resource: string;
-  action: string;
+  resource_id: number;
+  action_id: number;
   scope_id: number;
+  business_type_id?: number;
 }

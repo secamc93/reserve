@@ -35,6 +35,7 @@ export interface UpdateAttendanceListParams {
 export interface DeleteAttendanceListParams {
   token: string;
   id: number;
+  businessId: number;
 }
 
 export interface ListAttendanceListsParams {

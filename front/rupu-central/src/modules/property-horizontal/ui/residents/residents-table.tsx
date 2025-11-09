@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Table, Badge, Spinner, Alert, ConfirmModal } from '@shared/ui';
 import { getResidentsAction, deleteResidentAction } from '../../infrastructure/actions';
 import { Resident } from '../../domain';
@@ -15,6 +15,7 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalResidents, setTotalResidents] = useState(0);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
@@ -46,11 +47,7 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
   const [units, setUnits] = useState<Array<{ id: number; number: string }>>([]);
   const [unitSearchTerm, setUnitSearchTerm] = useState('');
   const [showUnitDropdown, setShowUnitDropdown] = useState(false);
-
-  // Filtrar unidades en memoria
-  const filteredUnits = units.filter(unit => 
-    unit.number.toLowerCase().includes(unitSearchTerm.toLowerCase())
-  );
+  const [unitLoading, setUnitLoading] = useState(false);
 
   // Cerrar dropdown al hacer clic fuera
   useEffect(() => {
@@ -70,21 +67,45 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
     };
   }, [showUnitDropdown]);
 
-  // Cargar unidades para el filtro
-  useEffect(() => {
-    const loadUnits = async () => {
-      try {
-        const token = TokenStorage.getToken();
-        if (!token) return;
-        const { getPropertyUnitsAction } = await import('../../infrastructure/actions');
-        const data = await getPropertyUnitsAction({ businessId, token, page: 1, pageSize: 100 });
-        setUnits(data.units.map(u => ({ id: u.id, number: u.number })));
-      } catch (error) {
-        console.error('Error loading units:', error);
-      }
-    };
-    loadUnits();
+  const fetchUnits = useCallback(async (searchTerm: string) => {
+    try {
+      setUnitLoading(true);
+      const token = TokenStorage.getToken();
+      if (!token) return;
+      const { getPropertyUnitsAction } = await import('../../infrastructure/actions');
+      const data = await getPropertyUnitsAction({
+        businessId,
+        token,
+        page: 1,
+        pageSize: 10,
+        number: searchTerm ? searchTerm.trim() : undefined,
+      });
+      setUnits(data.units.map(u => ({ id: u.id, number: u.number })));
+    } catch (error) {
+      console.error('Error loading units:', error);
+      setUnits([]);
+    } finally {
+      setUnitLoading(false);
+    }
   }, [businessId]);
+
+  // Buscar unidades cada vez que cambia el término (con debounce)
+  useEffect(() => {
+    if (!showUnitDropdown) return;
+
+    const timeout = setTimeout(() => {
+      fetchUnits(unitSearchTerm);
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [unitSearchTerm, fetchUnits, showUnitDropdown]);
+
+  // Cargar unidades iniciales cuando se abre el dropdown y no hay resultados
+  useEffect(() => {
+    if (showUnitDropdown && units.length === 0 && !unitLoading) {
+      fetchUnits('');
+    }
+  }, [showUnitDropdown, units.length, unitLoading, fetchUnits]);
 
   const loadResidents = async () => {
     setLoading(true);
@@ -102,6 +123,7 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
 
       setResidents(data.residents);
       setTotalPages(data.totalPages);
+      setTotalResidents(data.total);
     } catch (error) {
       console.error('Error al cargar residentes:', error);
       setAlert({ type: 'error', message: 'Error al cargar los residentes' });
@@ -301,7 +323,7 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
-              {showUnitDropdown && unitSearchTerm && (
+              {showUnitDropdown && (
                 <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto">
                   <div
                     className="px-3 py-2 text-xs text-gray-600 cursor-pointer hover:bg-gray-50"
@@ -313,7 +335,12 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
                   >
                     Todas las unidades
                   </div>
-                  {filteredUnits.map(unit => (
+                  {unitLoading && (
+                    <div className="px-3 py-2 text-xs text-gray-500">
+                      Buscando unidades...
+                    </div>
+                  )}
+                  {!unitLoading && units.map(unit => (
                     <div
                       key={unit.id}
                       className="px-3 py-2 text-xs text-gray-700 cursor-pointer hover:bg-gray-50"
@@ -326,7 +353,7 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
                       {unit.number}
                     </div>
                   ))}
-                  {filteredUnits.length === 0 && unitSearchTerm && (
+                  {!unitLoading && units.length === 0 && (
                     <div className="px-3 py-2 text-xs text-gray-500">
                       No se encontraron unidades
                     </div>
@@ -409,7 +436,7 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
             ← Anterior
           </button>
           <span className="pagination-info">
-            Página {currentPage} de {totalPages}
+            Página {currentPage} de {totalPages} • {totalResidents} {totalResidents === 1 ? 'residente' : 'residentes'}
           </span>
           <button
             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}

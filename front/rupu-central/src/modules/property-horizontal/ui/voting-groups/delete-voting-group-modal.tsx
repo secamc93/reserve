@@ -89,7 +89,7 @@ export function DeleteVotingGroupModal({
                 ¿Estás seguro de eliminar este grupo?
               </h3>
               <p className="text-sm text-red-600 mt-1">
-                Esta acción no se puede deshacer
+                La eliminación es permanente y también borra todas las votaciones asociadas.
               </p>
             </div>
           </div>
@@ -160,9 +160,9 @@ export function DeleteVotingGroupModal({
               </h3>
               <div className="mt-2 text-sm text-yellow-700">
                 <ul className="list-disc list-inside space-y-1">
-                  <li>Se desactivará el grupo de votación</li>
-                  <li>Las votaciones asociadas se mantendrán pero no podrán ser modificadas</li>
-                  <li>Esta acción no se puede deshacer</li>
+                  <li>Se eliminará definitivamente el grupo de votación.</li>
+                  <li>Todas las votaciones y participaciones dentro del grupo serán removidas.</li>
+                  <li>No existe manera de recuperar la información eliminada.</li>
                 </ul>
               </div>
             </div>

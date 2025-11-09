@@ -49,6 +49,14 @@ export function CreateVotingGroupModal({ isOpen, onClose, onSuccess, businessId 
       return;
     }
 
+    const effectiveBusinessId =
+      Number.isFinite(businessId) && businessId > 0 ? businessId : TokenStorage.getActiveBusiness() ?? undefined;
+
+    if (!effectiveBusinessId) {
+      setError('No se encontró un negocio activo para crear el grupo de votación.');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -66,7 +74,7 @@ export function CreateVotingGroupModal({ isOpen, onClose, onSuccess, businessId 
 
       const result = await createVotingGroupAction({
         token,
-        businessId,
+        businessId: effectiveBusinessId,
         data: {
           name: name.trim(),
           description: description.trim(),

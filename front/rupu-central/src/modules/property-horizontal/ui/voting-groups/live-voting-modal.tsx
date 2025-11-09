@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Badge, Spinner, Modal } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
 import { generatePublicUrlAction } from '@/modules/property-horizontal/infrastructure/actions/public-voting';
@@ -31,6 +31,188 @@ interface Voting {
   updatedAt: string;
 }
 
+interface PieChartOverlayProps {
+  slices: PieChartSlice[];
+  onClose: () => void;
+  votingTitle: string;
+}
+
+function PieChartOverlay({ slices, onClose, votingTitle }: PieChartOverlayProps) {
+  const percentFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat('es-CO', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 1,
+      }),
+    []
+  );
+
+  const coefficientFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat('es-CO', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      }),
+    []
+  );
+
+  const slicesForChart = slices.filter((slice) => slice.percentage > 0);
+  const totalForChart = slicesForChart.reduce((sum, slice) => sum + slice.percentage, 0);
+  const participationPercentage = slices
+    .filter((slice) => slice.id !== -1)
+    .reduce((sum, slice) => sum + slice.percentage, 0);
+  const notVotedSlice = slices.find((slice) => slice.id === -1);
+  const totalUnits = slices.reduce((sum, slice) => sum + slice.votes, 0);
+  const totalVotesCast = slices
+    .filter((slice) => slice.id !== -1)
+    .reduce((sum, slice) => sum + slice.votes, 0);
+  const sortedSlices = [...slices].sort((a, b) => b.percentage - a.percentage);
+
+  let cumulativePercent = 0;
+  const radius = 15.91549430918954;
+
+  const chartSegments =
+    totalForChart > 0
+      ? slicesForChart.map((slice) => {
+          const slicePercent = slice.percentage / totalForChart;
+          const dashArray = `${(slicePercent * 100).toFixed(3)} ${(100 - slicePercent * 100).toFixed(3)}`;
+          const dashOffset = 25 - cumulativePercent * 100;
+          cumulativePercent += slicePercent;
+
+          return (
+            <circle
+              key={`${slice.id}-${slice.label}`}
+              r={radius}
+              cx="21"
+              cy="21"
+              fill="transparent"
+              stroke={slice.color}
+              strokeWidth="6"
+              strokeDasharray={dashArray}
+              strokeDashoffset={dashOffset}
+              strokeLinecap="butt"
+            />
+          );
+        })
+      : null;
+
+  return (
+    <div className="fixed inset-0 z-[70] bg-white">
+      <div className="flex flex-col h-full">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
+          <div className="flex items-center gap-3">
+            <button onClick={onClose} className="btn btn-outline btn-sm">
+              ← Ver panel
+            </button>
+            <div>
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Resultados en torta</p>
+              <h2 className="text-xl font-semibold text-gray-900">{votingTitle}</h2>
+            </div>
+          </div>
+          <div className="text-sm text-gray-500">
+            Coeficiente participado:{' '}
+            <span className="font-semibold text-gray-900">{percentFormatter.format(participationPercentage)}%</span>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-6">
+          {totalForChart > 0 ? (
+            <div className="max-w-6xl mx-auto flex flex-col gap-12 lg:flex-row lg:items-start">
+              <div className="flex-1 flex flex-col items-center gap-6">
+                <div className="relative w-full max-w-md">
+                  <svg viewBox="0 0 42 42" className="w-full h-auto">
+                    <circle
+                      r={radius}
+                      cx="21"
+                      cy="21"
+                      fill="transparent"
+                      stroke="#E5E7EB"
+                      strokeWidth="6"
+                    />
+                    {chartSegments}
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span className="text-xs uppercase tracking-wide text-gray-500">Participación</span>
+                    <span className="text-3xl font-semibold text-gray-900">
+                      {percentFormatter.format(participationPercentage)}%
+                    </span>
+                    {notVotedSlice && (
+                      <span className="mt-1 text-xs text-gray-400">
+                        No votado: {percentFormatter.format(notVotedSlice.percentage)}%
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-600">
+                  <div>
+                    <span className="font-semibold text-gray-900">{totalUnits}</span> unidades totales
+                  </div>
+                  <div>
+                    <span className="font-semibold text-gray-900">{totalVotesCast}</span> unidades con voto registrado
+                  </div>
+                  {notVotedSlice && (
+                    <div>
+                      <span className="font-semibold text-gray-900">{notVotedSlice.votes}</span> unidades sin votar
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex-1 space-y-4">
+                {sortedSlices.map((slice) => (
+                  <div
+                    key={`${slice.id}-${slice.label}`}
+                    className="flex items-center gap-4 p-4 bg-white border border-gray-200 rounded-xl shadow-sm"
+                  >
+                    <span
+                      className="flex-shrink-0 w-3 h-3 rounded-full"
+                      style={{ backgroundColor: slice.color }}
+                      aria-hidden="true"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between gap-4">
+                        <p className="text-sm font-semibold text-gray-900">{slice.label}</p>
+                        <span className="text-sm font-semibold text-gray-900">
+                          {percentFormatter.format(slice.percentage)}%
+                        </span>
+                      </div>
+                      <div className="mt-2 text-xs text-gray-500 flex flex-wrap gap-4">
+                        <span>
+                          Coeficiente:{' '}
+                          <span className="font-medium text-gray-800">
+                            {coefficientFormatter.format(slice.coefficientSum)}%
+                          </span>
+                        </span>
+                        <span>
+                          Unidades:{' '}
+                          <span className="font-medium text-gray-800">{slice.votes}</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="h-full flex flex-col items-center justify-center text-center gap-4 text-gray-500">
+              <div className="text-6xl">📊</div>
+              <div>
+                <p className="text-lg font-semibold text-gray-700">Aún no hay datos suficientes para graficar</p>
+                <p className="mt-1 text-sm text-gray-500 max-w-md">
+                  Cuando se registren votos con coeficiente de participación, verás aquí la distribución en formato de torta.
+                </p>
+              </div>
+              <button onClick={onClose} className="btn btn-primary">
+                Volver al panel
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface VotingOption {
   id: number;
   votingId: number;
@@ -39,6 +221,15 @@ interface VotingOption {
   displayOrder: number;
   isActive: boolean;
   color?: string; // Color personalizado para la opción (hex)
+}
+
+interface PieChartSlice {
+  id: number;
+  label: string;
+  percentage: number;
+  votes: number;
+  coefficientSum: number;
+  color: string;
 }
 
 // Interfaz para votos del SSE (formato del backend)
@@ -81,6 +272,7 @@ export function LiveVotingModal({
   const [selectedUnitForDelete, setSelectedUnitForDelete] = useState<ResidentialUnit | null>(null);
   const [deletingVote, setDeletingVote] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
+  const [showPieChart, setShowPieChart] = useState(false);
   const [isLive, setIsLive] = useState(true);
   const [useRealTime, setUseRealTime] = useState(true);
   const [qrData, setQrData] = useState<string>('');
@@ -718,6 +910,28 @@ export function LiveVotingModal({
     }
   ].sort((a, b) => b.coefficientSum - a.coefficientSum); // Ordenar por coeficiente
 
+  const pieChartData: PieChartSlice[] = allStats.map((stat) => {
+    const percentage =
+      typeof stat.percentageByCoefficient === 'number' && Number.isFinite(stat.percentageByCoefficient)
+        ? Math.max(stat.percentageByCoefficient, 0)
+        : 0;
+    const votesCount = (stat as { votes?: number }).votes ?? 0;
+    const coefficientSumValue = (stat as { coefficientSum?: number }).coefficientSum ?? 0;
+    const optionColorValue =
+      stat.id === -1
+        ? '#9CA3AF'
+        : getOptionColor(stat.id as number, (stat as { color?: string }).color);
+
+    return {
+      id: stat.id as number,
+      label: stat.optionText,
+      percentage,
+      votes: votesCount,
+      coefficientSum: coefficientSumValue,
+      color: optionColorValue,
+    };
+  });
+
   // Obtener unidades residenciales desde el endpoint
   const residentialUnits = convertToResidentialUnits();
 
@@ -871,6 +1085,12 @@ export function LiveVotingModal({
             </div>
             <div className="flex gap-3">
               <button
+                onClick={() => setShowPieChart(true)}
+                className="btn btn-outline"
+              >
+                🍰 Ver torta
+              </button>
+              <button
                 onClick={() => setIsLive(!isLive)}
                 className={`btn ${isLive ? 'btn-outline' : 'btn-primary'}`}
               >
@@ -964,6 +1184,14 @@ export function LiveVotingModal({
           </div>
         </div>
       </div>
+
+      {showPieChart && (
+        <PieChartOverlay
+          slices={pieChartData}
+          onClose={() => setShowPieChart(false)}
+          votingTitle={voting.title}
+        />
+      )}
 
       {/* Modal de Voto */}
       {voting && (

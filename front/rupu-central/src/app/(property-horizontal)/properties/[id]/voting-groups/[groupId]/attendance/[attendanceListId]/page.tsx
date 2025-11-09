@@ -67,7 +67,11 @@ export default function AttendanceListPage() {
     setDeleting(true);
     setError(null);
     try {
-      const result = await removeAttendanceListAction({ token, id: attendanceList.id });
+      const result = await removeAttendanceListAction({
+        token,
+        id: attendanceList.id,
+        businessId,
+      });
       if (result.success) {
         router.push(`/properties/${businessId}/voting-groups/${groupId}/attendance`);
       } else {

@@ -7,4 +7,5 @@ export * from './resources-table';
 export * from './permissions-table';
 export * from './create-resource-modal';
 export * from './edit-resource-modal';
+export * from './edit-permission-modal';
 

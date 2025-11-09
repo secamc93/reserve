@@ -12,13 +12,16 @@ import { PermissionsRepository } from '../../../infrastructure/repositories/perm
 interface PermissionData {
   id: number;
   name: string;
-  code: string;
   description: string;
   resource: string;
+  resourceId: number;
   action: string;
+  actionId: number;
   scopeId: number;
   scopeName: string;
   scopeCode: string;
+  businessTypeId?: number;
+  businessTypeName?: string;
 }
 
 export interface GetPermissionsListResult {
