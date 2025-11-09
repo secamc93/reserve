@@ -6,10 +6,12 @@ import (
 	"os"
 	"strconv"
 
+	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/internal/domain"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlervote/mapper"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlervote/request"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlervote/response"
+	"central_reserve/shared/log"
 
 	"github.com/gin-gonic/gin"
 )
@@ -28,25 +30,44 @@ import (
 //	@Failure		500				{object}	object
 //	@Router			/horizontal-properties/voting-groups [post]
 func (h *VotingHandler) CreateVotingGroup(c *gin.Context) {
+	ctx := log.WithFunctionCtx(c.Request.Context(), "CreateVotingGroup")
+
 	var req request.CreateVotingGroupRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		fmt.Fprintf(os.Stderr, "[ERROR] handlervote/create-voting-group.go - Error en handler: %v\n", err)
-		h.logger.Error().Err(err).Msg("Error validando datos del request")
+		h.logger.Error(ctx).Err(err).Msg("Error validando datos del request")
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "Datos inválidos", Error: err.Error()})
 		return
 	}
 
-	idParam := c.Param("hp_id")
-	id64, err := strconv.ParseUint(idParam, 10, 32)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] handlervote/create-voting-group.go - Error en handler: %v\n", err)
-		h.logger.Error().Err(err).Str("hp_id", idParam).Msg("Error parseando ID de propiedad horizontal")
-		c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "id inválido", Error: "Debe ser numérico"})
-		return
+	var businessID uint
+	isSuper := middleware.IsSuperAdmin(c)
+	if isSuper {
+		bidParam := c.Query("business_id")
+		if bidParam == "" {
+			h.logger.Error(ctx).Msg("business_id requerido para super admin")
+			c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "business_id requerido", Error: "Proporcione ?business_id"})
+			return
+		}
+		bid64, err := strconv.ParseUint(bidParam, 10, 32)
+		if err != nil || bid64 == 0 {
+			h.logger.Error(ctx).Str("business_id", bidParam).Msg("Business ID inválido")
+			c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "business_id inválido", Error: "Debe ser numérico y > 0"})
+			return
+		}
+		businessID = uint(bid64)
+	} else {
+		bid, ok := middleware.GetBusinessID(c)
+		if !ok || bid == 0 {
+			h.logger.Error(ctx).Msg("Business ID no disponible en token")
+			c.JSON(http.StatusUnauthorized, response.ErrorResponse{Success: false, Message: "token inválido", Error: "business_id no encontrado"})
+			return
+		}
+		businessID = bid
 	}
 
 	dto := domain.CreateVotingGroupDTO{
-		BusinessID:       uint(id64),
+		BusinessID:       businessID,
 		Name:             req.Name,
 		Description:      req.Description,
 		VotingStartDate:  req.VotingStartDate,
@@ -60,7 +81,7 @@ func (h *VotingHandler) CreateVotingGroup(c *gin.Context) {
 	created, err := h.votingUseCase.CreateVotingGroup(c.Request.Context(), dto)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[ERROR] handlervote/create-voting-group.go - Error en handler: %v\n", err)
-		h.logger.Error().Err(err).Uint("hp_id", uint(id64)).Str("name", req.Name).Msg("Error creando grupo de votación")
+		h.logger.Error(ctx).Err(err).Uint("business_id", businessID).Str("name", req.Name).Msg("Error creando grupo de votación")
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "No se pudo crear el grupo", Error: err.Error()})
 		return
 	}

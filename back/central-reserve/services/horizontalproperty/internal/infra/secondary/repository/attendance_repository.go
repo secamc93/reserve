@@ -107,11 +107,17 @@ func (r *Repository) UpdateAttendanceList(ctx context.Context, id uint, attendan
 }
 
 func (r *Repository) DeleteAttendanceList(ctx context.Context, id uint) error {
-	if err := r.db.Conn(ctx).Delete(&models.AttendanceList{}, id).Error; err != nil {
-		r.logger.Error().Err(err).Uint("id", id).Msg("Error eliminando lista de asistencia")
-		return fmt.Errorf("error eliminando lista de asistencia: %w", err)
-	}
-	return nil
+	return r.db.Conn(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Unscoped().Where("attendance_list_id = ?", id).Delete(&models.AttendanceRecord{}).Error; err != nil {
+			r.logger.Error().Err(err).Uint("id", id).Msg("Error eliminando registros de asistencia antes de eliminar la lista")
+			return fmt.Errorf("error eliminando registros asociados: %w", err)
+		}
+		if err := tx.Unscoped().Delete(&models.AttendanceList{}, id).Error; err != nil {
+			r.logger.Error().Err(err).Uint("id", id).Msg("Error eliminando lista de asistencia")
+			return fmt.Errorf("error eliminando lista de asistencia: %w", err)
+		}
+		return nil
+	})
 }
 
 // ───────────────────────────────────────────
@@ -187,7 +193,7 @@ func (r *Repository) ListProxies(ctx context.Context, businessID uint, filters m
 	var m []models.Proxy
 
 	query := r.db.Conn(ctx)
-	
+
 	// Filtrar por business_id solo si existe en filters o si businessID es válido
 	if businessID, ok := filters["business_id"].(uint); ok && businessID != 0 {
 		query = query.Where("business_id = ?", businessID)
@@ -331,21 +337,29 @@ func (r *Repository) GetAttendanceRecordsByList(ctx context.Context, attendanceL
 
 	var result []domain.AttendanceRecord
 	for _, item := range rows {
-		// Log simple para debug
-		fmt.Printf("DEBUG REPO: Unidad %s, Coeficiente: %s\n", item.UnitNumber, item.ParticipationCoefficient)
-
-		rec := mapper.MapAttendanceRecordToDomain(&item.AttendanceRecord)
-		rec.ResidentName = item.ResidentName
-		rec.ProxyName = item.ProxyName
-		rec.UnitNumber = item.UnitNumber
-
-		// Asignar coeficiente como string
-		rec.ParticipationCoefficient = item.ParticipationCoefficient
-
-		// Log para verificar que se asignó correctamente
-		fmt.Printf("DEBUG REPO FINAL: Unidad %s, Coeficiente asignado: %s\n", rec.UnitNumber, rec.ParticipationCoefficient)
-
-		result = append(result, *rec)
+		result = append(result, domain.AttendanceRecord{
+			ID:                       item.ID,
+			AttendanceListID:         item.AttendanceListID,
+			PropertyUnitID:           item.PropertyUnitID,
+			ResidentID:               item.ResidentID,
+			ProxyID:                  item.ProxyID,
+			AttendedAsOwner:          item.AttendedAsOwner,
+			AttendedAsProxy:          item.AttendedAsProxy,
+			Signature:                item.Signature,
+			SignatureDate:            item.SignatureDate,
+			SignatureMethod:          item.SignatureMethod,
+			VerifiedBy:               item.VerifiedBy,
+			VerificationDate:         item.VerificationDate,
+			VerificationNotes:        item.VerificationNotes,
+			Notes:                    item.Notes,
+			IsValid:                  item.IsValid,
+			CreatedAt:                item.CreatedAt,
+			UpdatedAt:                item.UpdatedAt,
+			ResidentName:             item.ResidentName,
+			ProxyName:                item.ProxyName,
+			UnitNumber:               item.UnitNumber,
+			ParticipationCoefficient: item.ParticipationCoefficient,
+		})
 	}
 	return result, nil
 }
@@ -610,12 +624,19 @@ func (r *Repository) DeleteAttendanceRecordsByList(ctx context.Context, attendan
 }
 
 func (r *Repository) GenerateAttendanceListForVotingGroup(ctx context.Context, votingGroupID uint) ([]domain.AttendanceRecord, error) {
-	// Obtener todas las unidades de la propiedad horizontal asociada al grupo de votación
-	var units []models.PropertyUnit
+	// Obtener todas las unidades de la propiedad horizontal asociada al grupo de votación junto con su residente principal (si existe)
+	type unitRow struct {
+		UnitID     uint
+		ResidentID *uint
+	}
+
+	rows := []unitRow{}
 	if err := r.db.Conn(ctx).
-		Joins("JOIN horizontal_property.voting_groups vg ON vg.business_id = property_units.business_id").
+		Table("horizontal_property.property_units pu").
+		Select("pu.id AS unit_id, (SELECT ru.resident_id FROM horizontal_property.resident_units ru WHERE ru.property_unit_id = pu.id AND ru.deleted_at IS NULL ORDER BY ru.is_main_resident DESC, ru.id ASC LIMIT 1) AS resident_id").
+		Joins("JOIN horizontal_property.voting_groups vg ON vg.business_id = pu.business_id").
 		Where("vg.id = ?", votingGroupID).
-		Find(&units).Error; err != nil {
+		Scan(&rows).Error; err != nil {
 		r.logger.Error().Err(err).Uint("voting_group_id", votingGroupID).Msg("Error obteniendo unidades para lista de asistencia")
 		return nil, fmt.Errorf("error obteniendo unidades: %w", err)
 	}
@@ -629,10 +650,11 @@ func (r *Repository) GenerateAttendanceListForVotingGroup(ctx context.Context, v
 
 	// Crear registros de asistencia para cada unidad
 	var records []domain.AttendanceRecord
-	for _, unit := range units {
+	for _, row := range rows {
 		records = append(records, domain.AttendanceRecord{
 			AttendanceListID: attendanceList.ID,
-			PropertyUnitID:   unit.ID,
+			PropertyUnitID:   row.UnitID,
+			ResidentID:       row.ResidentID,
 			AttendedAsOwner:  false,
 			AttendedAsProxy:  false,
 			IsValid:          false, // La asistencia no está confirmada aún
@@ -650,7 +672,6 @@ func (r *Repository) GetAttendanceSummary(ctx context.Context, attendanceListID 
 		AttendedAsProxy int64 `json:"attended_as_proxy"`
 	}
 
-	// Contar total de unidades
 	if err := r.db.Conn(ctx).Model(&models.AttendanceRecord{}).
 		Where("attendance_list_id = ?", attendanceListID).
 		Count(&result.TotalUnits).Error; err != nil {
@@ -658,72 +679,64 @@ func (r *Repository) GetAttendanceSummary(ctx context.Context, attendanceListID 
 		return nil, fmt.Errorf("error obteniendo resumen de asistencia: %w", err)
 	}
 
-	// Contar unidades que asistieron
 	if err := r.db.Conn(ctx).Model(&models.AttendanceRecord{}).
-		Where("attendance_list_id = ? AND (attended_as_owner = ? OR attended_as_proxy = ?)",
-			attendanceListID, true, true).
+		Where("attendance_list_id = ? AND (attended_as_owner = ? OR attended_as_proxy = ?)", attendanceListID, true, true).
 		Count(&result.AttendedUnits).Error; err != nil {
 		r.logger.Error().Err(err).Uint("attendance_list_id", attendanceListID).Msg("Error contando unidades que asistieron")
 		return nil, fmt.Errorf("error obteniendo resumen de asistencia: %w", err)
 	}
 
-	// Contar asistencias como propietario (proxy_id IS NULL)
 	if err := r.db.Conn(ctx).Model(&models.AttendanceRecord{}).
-		Where("attendance_list_id = ? AND (attended_as_owner = ? OR attended_as_proxy = ?) AND proxy_id IS NULL",
-			attendanceListID, true, true).
+		Where("attendance_list_id = ? AND (attended_as_owner = ? OR attended_as_proxy = ?) AND proxy_id IS NULL", attendanceListID, true, true).
 		Count(&result.AttendedAsOwner).Error; err != nil {
 		r.logger.Error().Err(err).Uint("attendance_list_id", attendanceListID).Msg("Error contando asistencias como propietario")
 		return nil, fmt.Errorf("error obteniendo resumen de asistencia: %w", err)
 	}
 
-	// Contar asistencias como apoderado (proxy_id IS NOT NULL)
 	if err := r.db.Conn(ctx).Model(&models.AttendanceRecord{}).
-		Where("attendance_list_id = ? AND (attended_as_owner = ? OR attended_as_proxy = ?) AND proxy_id IS NOT NULL",
-			attendanceListID, true, true).
+		Where("attendance_list_id = ? AND (attended_as_owner = ? OR attended_as_proxy = ?) AND proxy_id IS NOT NULL", attendanceListID, true, true).
 		Count(&result.AttendedAsProxy).Error; err != nil {
 		r.logger.Error().Err(err).Uint("attendance_list_id", attendanceListID).Msg("Error contando asistencias como apoderado")
 		return nil, fmt.Errorf("error obteniendo resumen de asistencia: %w", err)
 	}
 
-	// Calcular porcentajes por cantidad de casas
-	var attendanceRate, absenceRate float64
+	attendanceRate := 0.0
+	absenceRate := 0.0
 	if result.TotalUnits > 0 {
 		attendanceRate = float64(result.AttendedUnits) / float64(result.TotalUnits) * 100
 		absenceRate = float64(result.TotalUnits-result.AttendedUnits) / float64(result.TotalUnits) * 100
 	}
 
-	// Calcular porcentajes por coeficiente de participación
-	var totalCoefficient, attendedCoefficient float64
-
-	// Obtener coeficiente total de todas las unidades
-	if err := r.db.Conn(ctx).Model(&models.AttendanceRecord{}).
-		Joins("JOIN horizontal_property.property_units pu ON pu.id = attendance_records.property_unit_id").
-		Where("attendance_records.attendance_list_id = ? AND pu.participation_coefficient IS NOT NULL", attendanceListID).
+	var totalCoefficient float64
+	if err := r.db.Conn(ctx).
+		Table("horizontal_property.attendance_records ar").
 		Select("COALESCE(SUM(pu.participation_coefficient), 0)").
+		Joins("JOIN horizontal_property.property_units pu ON pu.id = ar.property_unit_id").
+		Where("ar.attendance_list_id = ? AND pu.participation_coefficient IS NOT NULL", attendanceListID).
 		Scan(&totalCoefficient).Error; err != nil {
-		r.logger.Error().Err(err).Uint("attendance_list_id", attendanceListID).Msg("Error calculando coeficiente total")
-		return nil, fmt.Errorf("error calculando coeficiente total: %w", err)
+		r.logger.Error().Err(err).Uint("attendance_list_id", attendanceListID).Msg("Error obteniendo coeficiente total")
+		return nil, fmt.Errorf("error obteniendo resumen de asistencia: %w", err)
 	}
 
-	// Obtener coeficiente de unidades que asistieron
-	if err := r.db.Conn(ctx).Model(&models.AttendanceRecord{}).
-		Joins("JOIN horizontal_property.property_units pu ON pu.id = attendance_records.property_unit_id").
-		Where("attendance_records.attendance_list_id = ? AND (attendance_records.attended_as_owner = ? OR attendance_records.attended_as_proxy = ?) AND pu.participation_coefficient IS NOT NULL",
-			attendanceListID, true, true).
+	var attendedCoefficient float64
+	if err := r.db.Conn(ctx).
+		Table("horizontal_property.attendance_records ar").
 		Select("COALESCE(SUM(pu.participation_coefficient), 0)").
+		Joins("JOIN horizontal_property.property_units pu ON pu.id = ar.property_unit_id").
+		Where("ar.attendance_list_id = ? AND (ar.attended_as_owner = ? OR ar.attended_as_proxy = ?) AND pu.participation_coefficient IS NOT NULL", attendanceListID, true, true).
 		Scan(&attendedCoefficient).Error; err != nil {
-		r.logger.Error().Err(err).Uint("attendance_list_id", attendanceListID).Msg("Error calculando coeficiente de asistencia")
-		return nil, fmt.Errorf("error calculando coeficiente de asistencia: %w", err)
+		r.logger.Error().Err(err).Uint("attendance_list_id", attendanceListID).Msg("Error obteniendo coeficiente asistido")
+		return nil, fmt.Errorf("error obteniendo resumen de asistencia: %w", err)
 	}
 
-	// Calcular porcentajes por coeficiente
-	var attendanceRateByCoef, absenceRateByCoef float64
+	attendanceRateByCoef := 0.0
+	absenceRateByCoef := 0.0
 	if totalCoefficient > 0 {
-		attendanceRateByCoef = (attendedCoefficient / totalCoefficient) * 100
-		absenceRateByCoef = ((totalCoefficient - attendedCoefficient) / totalCoefficient) * 100
+		attendanceRateByCoef = attendedCoefficient / totalCoefficient * 100
+		absenceRateByCoef = (totalCoefficient - attendedCoefficient) / totalCoefficient * 100
 	}
 
-	return &domain.AttendanceSummaryDTO{
+	summary := &domain.AttendanceSummaryDTO{
 		TotalUnits:           int(result.TotalUnits),
 		AttendedUnits:        int(result.AttendedUnits),
 		AbsentUnits:          int(result.TotalUnits - result.AttendedUnits),
@@ -733,49 +746,42 @@ func (r *Repository) GetAttendanceSummary(ctx context.Context, attendanceListID 
 		AbsenceRate:          absenceRate,
 		AttendanceRateByCoef: attendanceRateByCoef,
 		AbsenceRateByCoef:    absenceRateByCoef,
-	}, nil
+	}
+
+	return summary, nil
 }
 
-// GetVotingGroupTitleByListID - obtiene el título del grupo de votación para la lista
 func (r *Repository) GetVotingGroupTitleByListID(ctx context.Context, attendanceListID uint) (string, error) {
 	var title string
-	err := r.db.Conn(ctx).
+	if err := r.db.Conn(ctx).
 		Table("horizontal_property.attendance_lists al").
 		Select("vg.name").
 		Joins("JOIN horizontal_property.voting_groups vg ON vg.id = al.voting_group_id").
 		Where("al.id = ?", attendanceListID).
-		Scan(&title).Error
-	if err != nil {
-		return "", fmt.Errorf("error obteniendo título del grupo: %w", err)
+		Scan(&title).Error; err != nil {
+		r.logger.Error().Err(err).Uint("attendance_list_id", attendanceListID).Msg("Error obteniendo título del grupo de votación")
+		return "", fmt.Errorf("error obteniendo título del grupo de votación: %w", err)
+	}
+	if title == "" {
+		return "", fmt.Errorf("grupo de votación no encontrado para la lista %d", attendanceListID)
 	}
 	return title, nil
 }
 
-// UpdateAttendanceRecordsByPropertyUnit - actualiza registros de asistencia para una unidad de propiedad específica
 func (r *Repository) UpdateAttendanceRecordsByPropertyUnit(ctx context.Context, propertyUnitID uint, proxyID *uint) error {
-	r.logger.Info().
-		Uint("property_unit_id", propertyUnitID).
-		Interface("proxy_id", proxyID).
-		Msg("Actualizando registros de asistencia por unidad de propiedad")
-
-	// Actualizar todos los registros de asistencia para esta unidad
-	result := r.db.Conn(ctx).Model(&models.AttendanceRecord{}).
-		Where("property_unit_id = ?", propertyUnitID).
-		Update("proxy_id", proxyID)
-
-	if result.Error != nil {
-		r.logger.Error().Err(result.Error).
-			Uint("property_unit_id", propertyUnitID).
-			Interface("proxy_id", proxyID).
-			Msg("Error actualizando registros de asistencia por unidad")
-		return fmt.Errorf("error actualizando registros de asistencia: %w", result.Error)
+	updates := map[string]interface{}{}
+	if proxyID != nil {
+		updates["proxy_id"] = *proxyID
+	} else {
+		updates["proxy_id"] = gorm.Expr("NULL")
 	}
+	updates["updated_at"] = time.Now()
 
-	r.logger.Info().
-		Uint("property_unit_id", propertyUnitID).
-		Interface("proxy_id", proxyID).
-		Int64("rows_affected", result.RowsAffected).
-		Msg("Registros de asistencia actualizados exitosamente")
-
+	if err := r.db.Conn(ctx).Model(&models.AttendanceRecord{}).
+		Where("property_unit_id = ?", propertyUnitID).
+		Updates(updates).Error; err != nil {
+		r.logger.Error().Err(err).Uint("property_unit_id", propertyUnitID).Msg("Error actualizando registros de asistencia por unidad")
+		return fmt.Errorf("error actualizando registros de asistencia: %w", err)
+	}
 	return nil
 }

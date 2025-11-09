@@ -77,43 +77,41 @@ func (r *Repository) GetUserRoleByBusiness(ctx context.Context, userID uint, bus
 		return nil, err
 	}
 
-	// Buscar roles del usuario que coincidan con el tipo de business
-	var userRoles []models.Role
-	err := r.database.Conn(ctx).
-		Preload("Scope").
-		Preload("BusinessType").
-		Joins("JOIN user_roles ON user_roles.role_id = role.id").
-		Where("user_roles.user_id = ? AND (role.business_type_id = ? OR role.business_type_id IS NULL)", userID, business.BusinessTypeID).
-		Find(&userRoles).Error
-
-	if err != nil {
+	// Buscar roles del usuario que coincidan con el tipo de business usando business_staff
+	var staffEntries []models.BusinessStaff
+	if err := r.database.Conn(ctx).
+		Preload("Role.Scope").
+		Preload("Role.BusinessType").
+		Where("user_id = ? AND business_id = ?", userID, businessID).
+		Find(&staffEntries).Error; err != nil {
 		r.logger.Error().
 			Uint("user_id", userID).
 			Uint("business_id", businessID).
 			Err(err).
-			Msg("Error al obtener roles del usuario desde user_roles")
+			Msg("Error al obtener roles del usuario desde business_staff")
 		return nil, err
 	}
 
-	if len(userRoles) == 0 {
-		return nil, nil // No tiene roles válidos para este tipo de business
+	if len(staffEntries) == 0 {
+		return nil, nil // No tiene asociación en business_staff
 	}
 
-	// Tomar el primer rol válido (priorizar roles específicos del tipo de business)
-	var selectedRole models.Role
-	for _, role := range userRoles {
+	var selectedRole *models.Role
+	for _, entry := range staffEntries {
+		role := entry.Role
+		if role.ID == 0 {
+			continue
+		}
 		if role.BusinessTypeID != nil && *role.BusinessTypeID == business.BusinessTypeID {
-			selectedRole = role
+			selectedRole = &role
 			break
+		}
+		if selectedRole == nil {
+			selectedRole = &role
 		}
 	}
 
-	// Si no hay rol específico, tomar el primero
-	if selectedRole.ID == 0 && len(userRoles) > 0 {
-		selectedRole = userRoles[0]
-	}
-
-	if selectedRole.ID == 0 {
+	if selectedRole == nil {
 		return nil, nil
 	}
 

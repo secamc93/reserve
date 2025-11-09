@@ -13,7 +13,7 @@ func (h *VotingHandler) RegisterRoutes(router *gin.RouterGroup) {
 		groups.POST("", middleware.JWT(), h.CreateVotingGroup)
 		groups.GET("", middleware.JWT(), h.ListVotingGroups)
 		groups.PUT("/:group_id", middleware.JWT(), h.UpdateVotingGroup)
-		groups.DELETE("/:group_id", middleware.JWT(), h.DeactivateVotingGroup)
+		groups.DELETE("/:group_id", middleware.JWT(), h.DeleteVotingGroup)
 
 		votings := groups.Group("/:group_id/votings")
 		{

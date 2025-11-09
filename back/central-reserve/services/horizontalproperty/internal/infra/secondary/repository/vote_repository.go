@@ -94,6 +94,67 @@ func (r *Repository) DeactivateVotingGroup(ctx context.Context, id uint) error {
 	return nil
 }
 
+func (r *Repository) DeleteVotingGroup(ctx context.Context, id uint) error {
+	return r.db.Conn(ctx).Transaction(func(tx *gorm.DB) error {
+		var group models.VotingGroup
+		if err := tx.First(&group, id).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return fmt.Errorf("grupo de votación no encontrado")
+			}
+			r.logger.Error().Err(err).Uint("id", id).Msg("Error obteniendo grupo de votación para eliminación")
+			return fmt.Errorf("error obteniendo grupo de votación: %w", err)
+		}
+
+		var votingIDs []uint
+		if err := tx.Model(&models.Voting{}).Where("voting_group_id = ?", id).Pluck("id", &votingIDs).Error; err != nil {
+			r.logger.Error().Err(err).Uint("group_id", id).Msg("Error obteniendo votaciones del grupo para eliminación")
+			return fmt.Errorf("error obteniendo votaciones del grupo: %w", err)
+		}
+
+		if len(votingIDs) > 0 {
+			if err := tx.Where("voting_id IN ?", votingIDs).Delete(&models.Vote{}).Error; err != nil {
+				r.logger.Error().Err(err).Uint("group_id", id).Msg("Error eliminando votos del grupo")
+				return fmt.Errorf("error eliminando votos del grupo: %w", err)
+			}
+
+			if err := tx.Where("voting_id IN ?", votingIDs).Delete(&models.VotingOption{}).Error; err != nil {
+				r.logger.Error().Err(err).Uint("group_id", id).Msg("Error eliminando opciones del grupo")
+				return fmt.Errorf("error eliminando opciones del grupo: %w", err)
+			}
+
+			if err := tx.Where("id IN ?", votingIDs).Delete(&models.Voting{}).Error; err != nil {
+				r.logger.Error().Err(err).Uint("group_id", id).Msg("Error eliminando votaciones del grupo")
+				return fmt.Errorf("error eliminando votaciones del grupo: %w", err)
+			}
+		}
+
+		var attendanceListIDs []uint
+		if err := tx.Model(&models.AttendanceList{}).Where("voting_group_id = ?", id).Pluck("id", &attendanceListIDs).Error; err != nil {
+			r.logger.Error().Err(err).Uint("group_id", id).Msg("Error obteniendo listas de asistencia del grupo")
+			return fmt.Errorf("error obteniendo listas de asistencia del grupo: %w", err)
+		}
+
+		if len(attendanceListIDs) > 0 {
+			if err := tx.Where("attendance_list_id IN ?", attendanceListIDs).Delete(&models.AttendanceRecord{}).Error; err != nil {
+				r.logger.Error().Err(err).Uint("group_id", id).Msg("Error eliminando registros de asistencia del grupo")
+				return fmt.Errorf("error eliminando registros de asistencia del grupo: %w", err)
+			}
+
+			if err := tx.Where("id IN ?", attendanceListIDs).Delete(&models.AttendanceList{}).Error; err != nil {
+				r.logger.Error().Err(err).Uint("group_id", id).Msg("Error eliminando listas de asistencia del grupo")
+				return fmt.Errorf("error eliminando listas de asistencia del grupo: %w", err)
+			}
+		}
+
+		if err := tx.Delete(&models.VotingGroup{}, id).Error; err != nil {
+			r.logger.Error().Err(err).Uint("group_id", id).Msg("Error eliminando grupo de votación")
+			return fmt.Errorf("error eliminando grupo de votación: %w", err)
+		}
+
+		return nil
+	})
+}
+
 // ───────────────────────────────────────────
 // Votings
 // ───────────────────────────────────────────
