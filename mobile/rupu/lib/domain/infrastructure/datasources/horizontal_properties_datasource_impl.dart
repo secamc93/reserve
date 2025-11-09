@@ -5,9 +5,10 @@ import 'dart:math' as math;
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_client_sse/constants/sse_request_type_enum.dart';
+import 'package:flutter_client_sse/flutter_client_sse.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:image/image.dart' as img;
-import 'package:sse/sse.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
 import 'package:rupu/config/constants/secure_storage/token_storage.dart';
@@ -630,6 +631,9 @@ class HorizontalPropertiesDatasourceImpl
     return SimpleResponseModel.fromJson(response.data as Map<String, dynamic>);
   }
 
+  // ---------------------------------------------------------------------------
+  //  SSE – FLUTTER CLIENT SSE (con BEARER HARDCODEADO PARA PRUEBAS)
+  // ---------------------------------------------------------------------------
   @override
   Stream<Map<String, dynamic>> subscribeToVotingLiveData({
     required int groupId,
@@ -644,8 +648,8 @@ class HorizontalPropertiesDatasourceImpl
         if (v != null) queryParameters![k] = v.toString();
       });
 
-      // 👇 Si no quieres que vaya business_id en la URL del SSE:
-      queryParameters?.remove('business_id');
+      // No queremos business_id en la URL del SSE
+      queryParameters.remove('business_id');
 
       if (queryParameters.isEmpty) {
         queryParameters = null;
@@ -654,56 +658,84 @@ class HorizontalPropertiesDatasourceImpl
 
     // ---- URL ----
     final baseUri = Uri.parse(_dio.options.baseUrl);
-    final uri = baseUri.resolve(
-      '/horizontal-properties/voting-groups/$groupId/votings/$votingId/stream',
-    );
+
+    // Normalizamos el path base: sin / al final
+    final basePath = baseUri.path.endsWith('/')
+        ? baseUri.path.substring(0, baseUri.path.length - 1)
+        : baseUri.path;
+
+    // Añadimos el path del SSE respetando lo que ya tenga baseUrl (/api, /api/v1, etc.)
+    final fullPath =
+        '$basePath/horizontal-properties/voting-groups/$groupId/votings/$votingId/stream';
+
+    final uri = baseUri.replace(path: fullPath);
 
     final resolved = queryParameters == null
         ? uri
         : uri.replace(queryParameters: queryParameters);
 
-    debugPrint('[SSE] URL final: $resolved');
-
-    // ---- headers ----
     final controller = StreamController<Map<String, dynamic>>();
-    StreamSubscription? subscription;
-    SseClient? client;
+    StreamSubscription<SSEModel>? subscription;
     bool closed = false;
 
     Future<void> closeResources() async {
       if (closed) return;
       closed = true;
-      debugPrint('[SSE] Cerrando recursos');
       await subscription?.cancel();
-      await client?.close();
       await controller.close();
     }
 
     Future<void> startClient() async {
       try {
+        // =========================================================
+        //  TOKEN HARDCODEADO SOLO PARA PRUEBA
+        // =========================================================
         final token = await TokenStorage().readBusinessToken();
-        if (token == null || token.isEmpty) {
-          throw StateError('Token de negocio no disponible para SSE.');
+
+        if (token == "") {
+          throw StateError('Token hardcodeado vacío para SSE.');
         }
 
-        final headers = <String, String>{};
+        // Construir headers
+        final headers = <String, String>{
+          'Authorization': 'Bearer $token',
+          'Accept': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+        };
+
+        // (Opcional) Copiar otros headers de Dio si los necesitas
         _dio.options.headers.forEach((k, v) {
-          if (v != null) headers[k] = v.toString();
+          if (v != null && !headers.containsKey(k)) {
+            headers[k] = v.toString();
+          }
         });
-        headers['Authorization'] = 'Bearer $token';
-        headers.putIfAbsent('Accept', () => 'text/event-stream');
 
-        debugPrint('[SSE] Headers: $headers');
+        debugPrint('[SSE] Headers finales: $headers');
 
-        client = SseClient.connect(
-          resolved,
-          headers: headers,
+        final stream = SSEClient.subscribeToSSE(
+          method: SSERequestType.GET,
+          url: resolved.toString(),
+          header: headers,
         );
 
-        subscription = client!.stream.listen(
+        subscription = stream.listen(
           (event) {
             if (closed) return;
             final data = event.data;
+
+            // Detectamos si el servidor sigue devolviendo HTML (login/SPA/error)
+            if (data != null && data.trimLeft().startsWith('<!DOCTYPE html')) {
+              debugPrint(
+                '[SSE][ERROR] El endpoint SSE está devolviendo HTML (probable login o frontend).',
+              );
+              controller.addError(
+                StateError(
+                  'SSE endpoint returned HTML instead of text/event-stream',
+                ),
+              );
+              return;
+            }
+
             debugPrint('[SSE] Evento recibido: $data');
             if (data != null && data.isNotEmpty) {
               final parsed = _parseEventPayload(data);
