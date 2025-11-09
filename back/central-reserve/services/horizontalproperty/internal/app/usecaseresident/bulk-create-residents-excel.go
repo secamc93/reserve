@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"central_reserve/services/horizontalproperty/internal/domain"
 	"central_reserve/shared/log"
@@ -124,12 +125,6 @@ func (uc *residentUseCase) ImportResidentsFromExcel(ctx context.Context, busines
 			continue
 		}
 
-		if dni == "" {
-			errMsg := fmt.Sprintf("Fila %d (Unidad %s): el DNI está vacío", i+1, unitNumber)
-			result.Errors = append(result.Errors, errMsg)
-			continue
-		}
-
 		// Guardar para crear después
 		residentsToCreate = append(residentsToCreate, ResidentData{Row: i + 1, PropertyUnitNumber: unitNumber, Name: name, Dni: dni})
 		unitNumbers = append(unitNumbers, unitNumber)
@@ -208,7 +203,9 @@ func (uc *residentUseCase) ImportResidentsFromExcel(ctx context.Context, busines
 	// Deduplicar DNIs del Excel para consultar BD una sola vez
 	dniSet := make(map[string]bool)
 	for _, rd := range residentsToCreate {
-		dniSet[rd.Dni] = true
+		if rd.Dni != "" {
+			dniSet[rd.Dni] = true
+		}
 	}
 	dniList := make([]string, 0, len(dniSet))
 	for dni := range dniSet {
@@ -243,7 +240,11 @@ func (uc *residentUseCase) ImportResidentsFromExcel(ctx context.Context, busines
 	dniToAgg := make(map[string]*aggregated)
 	for _, rd := range residentsToCreate {
 		unitID := unitMap[rd.PropertyUnitNumber]
-		if agg, ok := dniToAgg[rd.Dni]; ok {
+		key := rd.Dni
+		if key == "" {
+			key = fmt.Sprintf("__empty__row_%d", rd.Row)
+		}
+		if agg, ok := dniToAgg[key]; ok {
 			agg.units = append(agg.units, struct {
 				unitID uint
 				isMain bool
@@ -254,37 +255,49 @@ func (uc *residentUseCase) ImportResidentsFromExcel(ctx context.Context, busines
 				unitID uint
 				isMain bool
 			}{unitID: unitID, isMain: true})
-			dniToAgg[rd.Dni] = first
+			dniToAgg[key] = first
 		}
 	}
 
 	// 4.2 Preparar creación: 1 residente por DNI nuevo; para existentes solo pivotes
 	toCreate := make([]*domain.Resident, 0, len(dniToAgg))
 	toPivot := make([]domain.ResidentUnit, 0, len(residentsToCreate))
+	type blankEntry struct {
+		agg *aggregated
+	}
+	blankEntries := make([]blankEntry, 0)
 
-	for dni, agg := range dniToAgg {
+	for key, agg := range dniToAgg {
+		dni := key
+		if strings.HasPrefix(dni, "__empty__row_") {
+			blankEntries = append(blankEntries, blankEntry{agg: agg})
+			continue
+		}
+
 		if existingID, ok := existingByDni[dni]; ok {
-			// Solo crear pivotes para todas sus unidades
 			for _, u := range agg.units {
 				toPivot = append(toPivot, domain.ResidentUnit{BusinessID: businessID, ResidentID: existingID, PropertyUnitID: u.unitID, IsMainResident: u.isMain})
 			}
 			continue
 		}
-		// Crear un residente nuevo por DNI
-		email := fmt.Sprintf("%s@residente.local", dni)
+
+		emailSeed := strings.ReplaceAll(dni, " ", "")
+		if emailSeed == "" {
+			emailSeed = fmt.Sprintf("sin_dni_%d", time.Now().UnixNano())
+		}
+
 		toCreate = append(toCreate, &domain.Resident{
 			BusinessID:     businessID,
 			ResidentTypeID: residentTypeID,
 			Name:           agg.name,
-			Email:          email,
+			Email:          fmt.Sprintf("%s@residente.local", emailSeed),
 			Dni:            dni,
 			IsActive:       true,
 		})
 	}
 
-	fmt.Printf("   DNIs únicos a crear: %d\n", len(toCreate))
+	fmt.Printf("   DNIs únicos a crear (no vacíos): %d\n", len(toCreate))
 
-	// 4.3 Crear residentes nuevos (si hay)
 	if len(toCreate) > 0 {
 		if err := uc.repo.CreateResidentsInBatch(ctx, toCreate); err != nil {
 			fmt.Fprintf(os.Stderr, "[ERROR] usecaseresident/bulk-create - Error creando residentes: %v\n", err)
@@ -294,13 +307,16 @@ func (uc *residentUseCase) ImportResidentsFromExcel(ctx context.Context, busines
 		}
 		result.Created += len(toCreate)
 
-		// Reconsultar IDs de los DNIs que acabamos de crear
 		newDnis := make([]string, 0, len(dniToAgg))
-		for dni := range dniToAgg {
-			if _, exists := existingByDni[dni]; !exists {
-				newDnis = append(newDnis, dni)
+		for key := range dniToAgg {
+			if strings.HasPrefix(key, "__empty__row_") {
+				continue
+			}
+			if _, exists := existingByDni[key]; !exists {
+				newDnis = append(newDnis, key)
 			}
 		}
+
 		createdMap, err := uc.repo.GetResidentIDsByDni(ctx, businessID, newDnis)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "[ERROR] usecaseresident/bulk-create - Error releyendo IDs de DNIs creados: %v\n", err)
@@ -308,9 +324,11 @@ func (uc *residentUseCase) ImportResidentsFromExcel(ctx context.Context, busines
 			return result, nil
 		}
 
-		// Construir pivotes para los recién creados (todas sus unidades)
-		for dni, agg := range dniToAgg {
-			if id, ok := createdMap[dni]; ok {
+		for key, agg := range dniToAgg {
+			if strings.HasPrefix(key, "__empty__row_") {
+				continue
+			}
+			if id, ok := createdMap[key]; ok {
 				for _, u := range agg.units {
 					toPivot = append(toPivot, domain.ResidentUnit{BusinessID: businessID, ResidentID: id, PropertyUnitID: u.unitID, IsMainResident: u.isMain})
 				}
@@ -318,7 +336,40 @@ func (uc *residentUseCase) ImportResidentsFromExcel(ctx context.Context, busines
 		}
 	}
 
-	// 4.4 Crear todas las asociaciones pivote (existentes + nuevos)
+	for _, entry := range blankEntries {
+		agg := entry.agg
+		if len(agg.units) == 0 {
+			continue
+		}
+		firstUnit := agg.units[0]
+		emailSeed := fmt.Sprintf("sin_dni_%d", time.Now().UnixNano())
+		createDTO := domain.CreateResidentDTO{
+			BusinessID:       businessID,
+			PropertyUnitID:   firstUnit.unitID,
+			ResidentTypeID:   residentTypeID,
+			Name:             agg.name,
+			Email:            fmt.Sprintf("%s@residente.local", emailSeed),
+			Dni:              "",
+			IsMainResident:   firstUnit.isMain,
+			AllowEmptyDni:    true,
+			EmergencyContact: "",
+		}
+
+		created, err := uc.CreateResident(ctx, createDTO)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "[ERROR] usecaseresident/bulk-create - Error creando residente sin DNI: %v\n", err)
+			result.Errors = append(result.Errors, fmt.Sprintf("Error creando residente sin DNI (unidad %d): %v", firstUnit.unitID, err))
+			return result, nil
+		}
+		result.Created++
+
+		if len(agg.units) > 1 {
+			for _, u := range agg.units[1:] {
+				toPivot = append(toPivot, domain.ResidentUnit{BusinessID: businessID, ResidentID: created.ID, PropertyUnitID: u.unitID, IsMainResident: u.isMain})
+			}
+		}
+	}
+
 	if len(toPivot) > 0 {
 		if err := uc.repo.CreateResidentUnitsInBatch(ctx, toPivot); err != nil {
 			fmt.Fprintf(os.Stderr, "[ERROR] usecaseresident/bulk-create - Error creando pivotes: %v\n", err)

@@ -57,8 +57,82 @@ func (uc *residentUseCase) BulkUpdateResidents(ctx context.Context, businessID u
 		}
 
 		if len(residents.Residents) == 0 {
-			result.ErrorDetails = append(result.ErrorDetails, domain.BulkUpdateErrorDetail{Row: 0, PropertyUnitNumber: residentItem.PropertyUnitNumber, Error: "No se encontró residente en la unidad"})
-			result.Errors++
+			// Si no existe residente asociado a la unidad, intentar crearlo con los datos proporcionados
+			if residentItem.Name == nil || strings.TrimSpace(*residentItem.Name) == "" || residentItem.Dni == nil || strings.TrimSpace(*residentItem.Dni) == "" {
+				result.ErrorDetails = append(result.ErrorDetails, domain.BulkUpdateErrorDetail{Row: 0, PropertyUnitNumber: residentItem.PropertyUnitNumber, Error: "No se encontró residente en la unidad y se requieren nombre y DNI para crearlo"})
+				result.Errors++
+				continue
+			}
+
+			name := strings.TrimSpace(*residentItem.Name)
+			dni := strings.TrimSpace(*residentItem.Dni)
+
+			// Si el DNI ya existe, actualizar el residente existente y asociarlo a la unidad
+			existingByDni, err := uc.repo.GetResidentIDsByDni(ctx, businessID, []string{dni})
+			if err != nil {
+				result.ErrorDetails = append(result.ErrorDetails, domain.BulkUpdateErrorDetail{Row: 0, PropertyUnitNumber: residentItem.PropertyUnitNumber, Error: fmt.Sprintf("Error buscando residente por DNI: %v", err)})
+				result.Errors++
+				continue
+			}
+
+			if existingID, ok := existingByDni[dni]; ok {
+				updateDTO := domain.UpdateResidentDTO{Name: &name}
+				if _, err := uc.UpdateResident(ctx, existingID, updateDTO); err != nil {
+					result.ErrorDetails = append(result.ErrorDetails, domain.BulkUpdateErrorDetail{Row: 0, PropertyUnitNumber: residentItem.PropertyUnitNumber, Error: fmt.Sprintf("Error actualizando residente existente: %v", err)})
+					result.Errors++
+					continue
+				}
+
+				pivot := domain.ResidentUnit{
+					BusinessID:     businessID,
+					ResidentID:     existingID,
+					PropertyUnitID: unitID,
+					IsMainResident: true,
+				}
+
+				if err := uc.repo.CreateResidentUnitsInBatch(ctx, []domain.ResidentUnit{pivot}); err != nil && !isDuplicatePivotError(err) {
+					result.ErrorDetails = append(result.ErrorDetails, domain.BulkUpdateErrorDetail{Row: 0, PropertyUnitNumber: residentItem.PropertyUnitNumber, Error: fmt.Sprintf("Error asociando residente existente a la unidad: %v", err)})
+					result.Errors++
+					continue
+				}
+
+				result.Updated++
+				uc.logger.Info().
+					Uint("business_id", businessID).
+					Uint("resident_id", existingID).
+					Str("unit_number", residentItem.PropertyUnitNumber).
+					Msg("Residente existente asociado y actualizado durante edición masiva")
+				continue
+			}
+
+			email := fmt.Sprintf("%s@residente.local", strings.ReplaceAll(dni, " ", ""))
+
+			createDTO := domain.CreateResidentDTO{
+				BusinessID:       businessID,
+				PropertyUnitID:   unitID,
+				ResidentTypeID:   1, // Propietario por defecto
+				Name:             name,
+				Email:            email,
+				Phone:            "",
+				Dni:              dni,
+				IsMainResident:   true,
+				EmergencyContact: "",
+				AllowEmptyDni:    dni == "",
+			}
+
+			createdResident, err := uc.CreateResident(ctx, createDTO)
+			if err != nil {
+				result.ErrorDetails = append(result.ErrorDetails, domain.BulkUpdateErrorDetail{Row: 0, PropertyUnitNumber: residentItem.PropertyUnitNumber, Error: fmt.Sprintf("Error creando residente: %v", err)})
+				result.Errors++
+				continue
+			}
+
+			result.Updated++
+			uc.logger.Info().
+				Uint("business_id", businessID).
+				Uint("resident_id", createdResident.ID).
+				Str("unit_number", residentItem.PropertyUnitNumber).
+				Msg("Residente creado durante edición masiva")
 			continue
 		}
 
@@ -81,8 +155,9 @@ func (uc *residentUseCase) BulkUpdateResidents(ctx context.Context, businessID u
 			updateDTO.Name = residentItem.Name
 		}
 
-		if residentItem.Dni != nil && strings.TrimSpace(*residentItem.Dni) != "" {
-			updateDTO.Dni = residentItem.Dni
+		if residentItem.Dni != nil {
+			dniValue := strings.TrimSpace(*residentItem.Dni)
+			updateDTO.Dni = &dniValue
 		}
 
 		// Si no hay campos para actualizar, saltar
@@ -93,9 +168,12 @@ func (uc *residentUseCase) BulkUpdateResidents(ctx context.Context, businessID u
 		}
 
 		// Si el DNI cambia y ya existe en el negocio, no actualizar DNI (evitamos violar índice único)
-		if updateDTO.Dni != nil && *updateDTO.Dni != existingResident.Dni {
-			if exists, err := uc.repo.ExistsResidentByDni(ctx, businessID, *updateDTO.Dni, existingResident.ID); err == nil && exists {
-				updateDTO.Dni = nil
+		if updateDTO.Dni != nil {
+			newDni := strings.TrimSpace(*updateDTO.Dni)
+			if newDni != "" && newDni != existingResident.Dni {
+				if exists, err := uc.repo.ExistsResidentByDni(ctx, businessID, newDni, existingResident.ID); err == nil && exists {
+					updateDTO.Dni = nil
+				}
 			}
 		}
 
@@ -123,4 +201,11 @@ func (uc *residentUseCase) BulkUpdateResidents(ctx context.Context, businessID u
 		Msg("Edición masiva de residentes completada")
 
 	return result, nil
+}
+
+func isDuplicatePivotError(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "duplicate key value") || strings.Contains(err.Error(), "violates unique constraint")
 }

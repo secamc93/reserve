@@ -20,7 +20,7 @@ func (uc *residentUseCase) CreateResident(ctx context.Context, dto domain.Create
 		uc.logger.Error(ctx).Str("email", dto.Email).Msg("Email de residente requerido")
 		return nil, domain.ErrResidentEmailRequired
 	}
-	if dto.Dni == "" {
+	if dto.Dni == "" && !dto.AllowEmptyDni {
 		uc.logger.Error(ctx).Str("dni", dto.Dni).Msg("DNI de residente requerido")
 		return nil, domain.ErrResidentDniRequired
 	}
@@ -37,14 +37,16 @@ func (uc *residentUseCase) CreateResident(ctx context.Context, dto domain.Create
 	}
 
 	// Verificar DNI único por propiedad
-	dniExists, err := uc.repo.ExistsResidentByDni(ctx, dto.BusinessID, dto.Dni, 0)
-	if err != nil {
-		uc.logger.Error(ctx).Err(err).Uint("business_id", dto.BusinessID).Str("dni", dto.Dni).Msg("Error verificando DNI existente")
-		return nil, err
-	}
-	if dniExists {
-		uc.logger.Warn(ctx).Uint("business_id", dto.BusinessID).Str("dni", dto.Dni).Msg("DNI de residente ya existe")
-		return nil, domain.ErrResidentDniExists
+	if dto.Dni != "" {
+		dniExists, err := uc.repo.ExistsResidentByDni(ctx, dto.BusinessID, dto.Dni, 0)
+		if err != nil {
+			uc.logger.Error(ctx).Err(err).Uint("business_id", dto.BusinessID).Str("dni", dto.Dni).Msg("Error verificando DNI existente")
+			return nil, err
+		}
+		if dniExists {
+			uc.logger.Warn(ctx).Uint("business_id", dto.BusinessID).Str("dni", dto.Dni).Msg("DNI de residente ya existe")
+			return nil, domain.ErrResidentDniExists
+		}
 	}
 
 	// Crear entidad

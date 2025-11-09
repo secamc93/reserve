@@ -41,6 +41,9 @@ func (h *ResidentHandler) BulkUpdateResidents(c *gin.Context) {
 	if isSuperAdmin {
 		// Super admin: puede usar el business_id del form o del token
 		businessIDParam := c.PostForm("business_id")
+		if businessIDParam == "" {
+			businessIDParam = c.Query("business_id")
+		}
 		if businessIDParam != "" {
 			businessIDFromForm, err := strconv.ParseUint(businessIDParam, 10, 32)
 			if err != nil {

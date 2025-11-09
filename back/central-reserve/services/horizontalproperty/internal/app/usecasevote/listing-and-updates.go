@@ -82,6 +82,18 @@ func (u *votingUseCase) DeactivateVotingGroup(ctx context.Context, id uint) erro
 	return u.repo.DeactivateVotingGroup(ctx, id)
 }
 
+func (u *votingUseCase) DeleteVotingGroup(ctx context.Context, id uint) error {
+	ctx = log.WithFunctionCtx(ctx, "DeleteVotingGroup")
+
+	if err := u.repo.DeleteVotingGroup(ctx, id); err != nil {
+		u.logger.Error(ctx).Err(err).Uint("group_id", id).Msg("Error eliminando grupo de votación")
+		return err
+	}
+
+	u.logger.Info(ctx).Uint("group_id", id).Msg("Grupo de votación eliminado permanentemente")
+	return nil
+}
+
 func (u *votingUseCase) ListVotingsByGroup(ctx context.Context, groupID uint) ([]domain.VotingDTO, error) {
 	votings, err := u.repo.ListVotingsByGroup(ctx, groupID)
 	if err != nil {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"central_reserve/services/horizontalproperty/internal/domain"
 	"central_reserve/shared/log"
@@ -123,6 +124,8 @@ func (uc *residentUseCase) BulkUpdateResidentsFromExcel(ctx context.Context, bus
 	// Construir lista de pares a actualizar (validación previa sin efectos)
 	fmt.Printf("📝 [PASO 6] Validando filas y preparando actualizaciones...\n")
 	var toUpdate []domain.ResidentUpdatePair
+	directUpdates := 0
+	pendingDni := make(map[string]uint)
 	result.TotalProcessed = len(rows) - 1
 
 	// Precargar residentes principales por unidad para no consultar por fila
@@ -133,6 +136,12 @@ func (uc *residentUseCase) BulkUpdateResidentsFromExcel(ctx context.Context, bus
 	mainResidentsByUnit, err := uc.repo.GetMainResidentsByUnitIDs(ctx, businessID, unitIDs)
 	if err != nil {
 		return nil, fmt.Errorf("error precargando residentes principales: %w", err)
+	}
+
+	for _, resident := range mainResidentsByUnit {
+		if resident.Dni != "" {
+			pendingDni[strings.TrimSpace(resident.Dni)] = resident.ID
+		}
 	}
 
 	for i := 1; i < len(rows); i++ {
@@ -171,7 +180,7 @@ func (uc *residentUseCase) BulkUpdateResidentsFromExcel(ctx context.Context, bus
 		}
 
 		// Verificar que hay al menos un campo para actualizar
-		if name == nil && dni == nil {
+		if (name == nil || strings.TrimSpace(*name) == "") && (dni == nil || strings.TrimSpace(*dni) == "") {
 			result.ErrorDetails = append(result.ErrorDetails, domain.BulkUpdateErrorDetail{Row: rowNum, PropertyUnitNumber: unitNumber, Error: "No hay campos para actualizar (nombre o dni)"})
 			result.Errors++
 			continue
@@ -185,12 +194,170 @@ func (uc *residentUseCase) BulkUpdateResidentsFromExcel(ctx context.Context, bus
 			continue
 		}
 
-		// Traer residente principal desde cache preload
+		// Intentar obtener residente principal desde cache/prefetch
 		existingResident, ok := mainResidentsByUnit[unitID]
 		if !ok {
-			result.ErrorDetails = append(result.ErrorDetails, domain.BulkUpdateErrorDetail{Row: rowNum, PropertyUnitNumber: unitNumber, Error: "No se encontró residente principal en la unidad"})
-			result.Errors++
+			// Fallback: buscar cualquier residente asociado a la unidad
+			filters := domain.ResidentFiltersDTO{
+				BusinessID:     businessID,
+				PropertyUnitID: &unitID,
+				Page:           1,
+				PageSize:       1,
+			}
+			residentsList, err := uc.repo.ListResidents(ctx, filters)
+			if err != nil {
+				result.ErrorDetails = append(result.ErrorDetails, domain.BulkUpdateErrorDetail{Row: rowNum, PropertyUnitNumber: unitNumber, Error: fmt.Sprintf("Error buscando residente en la unidad: %v", err)})
+				result.Errors++
+				continue
+			}
+
+			if len(residentsList.Residents) > 0 {
+				detail, err := uc.repo.GetResidentByID(ctx, residentsList.Residents[0].ID)
+				if err != nil {
+					result.ErrorDetails = append(result.ErrorDetails, domain.BulkUpdateErrorDetail{Row: rowNum, PropertyUnitNumber: unitNumber, Error: fmt.Sprintf("Error obteniendo residente asociado: %v", err)})
+					result.Errors++
+					continue
+				}
+				existingResident = *detail
+				mainResidentsByUnit[unitID] = existingResident
+				ok = true
+			}
+		}
+
+		if !ok {
+			nameValue := ""
+			if name != nil {
+				nameValue = strings.TrimSpace(*name)
+			}
+
+			if nameValue == "" {
+				result.ErrorDetails = append(result.ErrorDetails, domain.BulkUpdateErrorDetail{Row: rowNum, PropertyUnitNumber: unitNumber, Error: "No se encontró residente y falta nombre para crearlo"})
+				result.Errors++
+				continue
+			}
+
+			var dniValue string
+			if dni != nil {
+				dniValue = strings.TrimSpace(*dni)
+			}
+
+			if dniValue != "" {
+				existingByDni, err := uc.repo.GetResidentIDsByDni(ctx, businessID, []string{dniValue})
+				if err != nil {
+					result.ErrorDetails = append(result.ErrorDetails, domain.BulkUpdateErrorDetail{Row: rowNum, PropertyUnitNumber: unitNumber, Error: fmt.Sprintf("Error buscando residente por DNI: %v", err)})
+					result.Errors++
+					continue
+				}
+
+				if existingID, exists := existingByDni[dniValue]; exists {
+					if assignedID, present := pendingDni[dniValue]; present && assignedID != existingID {
+						result.ErrorDetails = append(result.ErrorDetails, domain.BulkUpdateErrorDetail{Row: rowNum, PropertyUnitNumber: unitNumber, Error: "El DNI ya está asignado a otro residente en esta importación"})
+						result.Errors++
+						continue
+					}
+
+					updateDTO := domain.UpdateResidentDTO{}
+					if nameValue != "" {
+						updateDTO.Name = &nameValue
+					}
+
+					if _, err := uc.UpdateResident(ctx, existingID, updateDTO); err != nil {
+						result.ErrorDetails = append(result.ErrorDetails, domain.BulkUpdateErrorDetail{Row: rowNum, PropertyUnitNumber: unitNumber, Error: fmt.Sprintf("Error actualizando residente existente: %v", err)})
+						result.Errors++
+						continue
+					}
+
+					pivot := domain.ResidentUnit{
+						BusinessID:     businessID,
+						ResidentID:     existingID,
+						PropertyUnitID: unitID,
+						IsMainResident: true,
+					}
+
+					if err := uc.repo.CreateResidentUnitsInBatch(ctx, []domain.ResidentUnit{pivot}); err != nil && !isDuplicatePivotError(err) {
+						result.ErrorDetails = append(result.ErrorDetails, domain.BulkUpdateErrorDetail{Row: rowNum, PropertyUnitNumber: unitNumber, Error: fmt.Sprintf("Error asociando residente existente a la unidad: %v", err)})
+						result.Errors++
+						continue
+					}
+
+					if detail, err := uc.repo.GetResidentByID(ctx, existingID); err == nil {
+						mainResidentsByUnit[unitID] = *detail
+						existingResident = *detail
+						ok = true
+					}
+
+					pendingDni[dniValue] = existingID
+					directUpdates++
+					uc.logger.Info().
+						Uint("business_id", businessID).
+						Uint("resident_id", existingID).
+						Str("unit_number", unitNumber).
+						Msg("Residente existente asociado durante edición masiva desde Excel")
+
+					continue
+				}
+			}
+
+			newDni := dniValue
+			allowEmptyDni := newDni == ""
+
+			if newDni != "" {
+				if assignedID, present := pendingDni[newDni]; present && assignedID != 0 {
+					result.ErrorDetails = append(result.ErrorDetails, domain.BulkUpdateErrorDetail{Row: rowNum, PropertyUnitNumber: unitNumber, Error: "El DNI ya está asignado a otro residente en esta importación"})
+					result.Errors++
+					continue
+				}
+			}
+
+			emailSeed := newDni
+			if emailSeed == "" {
+				emailSeed = fmt.Sprintf("sin_dni_%d_%d", businessID, unitID)
+			} else {
+				emailSeed = strings.ReplaceAll(newDni, " ", "")
+			}
+
+			createDTO := domain.CreateResidentDTO{
+				BusinessID:       businessID,
+				PropertyUnitID:   unitID,
+				ResidentTypeID:   1,
+				Name:             nameValue,
+				Email:            fmt.Sprintf("%s_%d@residente.local", emailSeed, time.Now().UnixNano()),
+				Phone:            "",
+				Dni:              newDni,
+				IsMainResident:   true,
+				EmergencyContact: "",
+				AllowEmptyDni:    allowEmptyDni,
+			}
+
+			created, err := uc.CreateResident(ctx, createDTO)
+			if err != nil {
+				result.ErrorDetails = append(result.ErrorDetails, domain.BulkUpdateErrorDetail{Row: rowNum, PropertyUnitNumber: unitNumber, Error: fmt.Sprintf("Error creando residente: %v", err)})
+				result.Errors++
+				continue
+			}
+
+			mainResidentsByUnit[unitID] = *created
+			if newDni != "" {
+				pendingDni[newDni] = created.ID
+			}
+			directUpdates++
+			uc.logger.Info().
+				Uint("business_id", businessID).
+				Uint("resident_id", created.ID).
+				Str("unit_number", unitNumber).
+				Msg("Residente creado durante edición masiva desde Excel")
 			continue
+		}
+
+		// A partir de aquí siempre tenemos un residente asociado (existingResident)
+
+		if existingResident.Dni != "" {
+			dniKey := strings.TrimSpace(existingResident.Dni)
+			if dniKey != "" {
+				if assignedID, exists := pendingDni[dniKey]; !exists || assignedID == existingResident.ID {
+					pendingDni[dniKey] = existingResident.ID
+				}
+			}
 		}
 
 		// Crear DTO de actualización
@@ -202,46 +369,88 @@ func (uc *residentUseCase) BulkUpdateResidentsFromExcel(ctx context.Context, bus
 		}
 
 		if dni != nil {
-			updateDTO.Dni = dni
+			dniValue := strings.TrimSpace(*dni)
+			updateDTO.Dni = &dniValue
 		}
 
 		// Si el DNI cambia y ya existe en el negocio (otra persona/unidad), no lo actualizamos para evitar violar el índice único.
-		if updateDTO.Dni != nil && *updateDTO.Dni != existingResident.Dni {
-			exists, err := uc.repo.ExistsResidentByDni(ctx, businessID, *updateDTO.Dni, existingResident.ID)
-			if err == nil && exists {
-				// No es error: mantenemos el DNI actual y solo actualizamos otros campos (p.ej. nombre)
-				updateDTO.Dni = nil
+		if updateDTO.Dni != nil {
+			newDni := strings.TrimSpace(*updateDTO.Dni)
+			if newDni != "" && newDni != strings.TrimSpace(existingResident.Dni) {
+				exists, err := uc.repo.ExistsResidentByDni(ctx, businessID, newDni, existingResident.ID)
+				if err != nil {
+					result.ErrorDetails = append(result.ErrorDetails, domain.BulkUpdateErrorDetail{Row: rowNum, PropertyUnitNumber: unitNumber, Error: fmt.Sprintf("Error validando DNI: %v", err)})
+					result.Errors++
+					continue
+				}
+				if exists {
+					updateDTO.Dni = nil
+				}
+			}
+		}
+
+		if updateDTO.Dni != nil {
+			newDni := strings.TrimSpace(*updateDTO.Dni)
+			if newDni != "" {
+				if assignedID, present := pendingDni[newDni]; present && assignedID != existingResident.ID {
+					result.ErrorDetails = append(result.ErrorDetails, domain.BulkUpdateErrorDetail{Row: rowNum, PropertyUnitNumber: unitNumber, Error: "El DNI ya está asignado a otro residente en esta importación"})
+					result.Errors++
+					continue
+				}
+				pendingDni[newDni] = existingResident.ID
 			}
 		}
 
 		toUpdate = append(toUpdate, domain.ResidentUpdatePair{ID: existingResident.ID, UpdateDTO: updateDTO})
 	}
 
-	// Si hay errores, abortar sin aplicar cambios
+	// Aplicar actualizaciones batched (si hay)
+	if len(toUpdate) > 0 {
+		if err := uc.repo.UpdateResidentsInBatch(ctx, toUpdate); err != nil {
+			return nil, fmt.Errorf("error aplicando actualización masiva: %w", err)
+		}
+	}
+
+	result.Updated = len(toUpdate) + directUpdates
+
 	if result.Errors > 0 {
-		fmt.Printf("\n⛔ Se encontraron %d errores. No se aplicaron cambios.\n", result.Errors)
-		uc.logger.Warn().Uint("business_id", businessID).Int("errors", result.Errors).Msg("Bulk update abortado por errores")
-		return result, nil
+		fmt.Printf("\n⚠️  Se encontraron %d errores. Se aplicaron cambios parciales.\n", result.Errors)
+	} else {
+		fmt.Printf("\n✅ [EDICION MASIVA EXCEL COMPLETADA]\n")
 	}
-
-	// Aplicar en una sola transacción
-	if err := uc.repo.UpdateResidentsInBatch(ctx, toUpdate); err != nil {
-		return nil, fmt.Errorf("error aplicando actualización masiva: %w", err)
-	}
-	result.Updated = len(toUpdate)
-
-	fmt.Printf("\n✅ [EDICION MASIVA EXCEL COMPLETADA]\n")
 	fmt.Printf("   Total procesados: %d\n", result.TotalProcessed)
-	fmt.Printf("   Actualizados: %d\n", result.Updated)
+	fmt.Printf("   Actualizados/creados: %d\n", result.Updated)
 	fmt.Printf("   Errores: %d\n\n", result.Errors)
 
-	uc.logger.Info().
-		Uint("business_id", businessID).
-		Str("file_path", filePath).
-		Int("total_processed", result.TotalProcessed).
-		Int("updated", result.Updated).
-		Int("errors", result.Errors).
-		Msg("Edición masiva de residentes desde Excel completada")
+	if result.Errors > 0 {
+		uc.logger.Warn().
+			Uint("business_id", businessID).
+			Str("file_path", filePath).
+			Int("total_processed", result.TotalProcessed).
+			Int("updated", result.Updated).
+			Int("errors", result.Errors).
+			Msg("Edición masiva de residentes desde Excel completada con errores")
+	} else {
+		uc.logger.Info().
+			Uint("business_id", businessID).
+			Str("file_path", filePath).
+			Int("total_processed", result.TotalProcessed).
+			Int("updated", result.Updated).
+			Int("errors", result.Errors).
+			Msg("Edición masiva de residentes desde Excel completada")
+	}
 
 	return result, nil
+}
+
+func generateTempDni(businessID, unitID uint, pending map[string]uint) string {
+	for {
+		temp := fmt.Sprintf("TMP-%d-%d-%d", businessID%1000, unitID%1000, time.Now().UnixNano()%1_000_000_000)
+		if len(temp) > 30 {
+			temp = temp[len(temp)-30:]
+		}
+		if _, exists := pending[temp]; !exists {
+			return temp
+		}
+	}
 }

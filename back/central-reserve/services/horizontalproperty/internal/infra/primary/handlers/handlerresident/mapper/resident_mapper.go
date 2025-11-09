@@ -21,6 +21,7 @@ func MapCreateRequestToDTO(req request.CreateResidentRequest, businessID uint) d
 		LeaseStartDate:   req.LeaseStartDate,
 		LeaseEndDate:     req.LeaseEndDate,
 		MonthlyRent:      req.MonthlyRent,
+		AllowEmptyDni:    false,
 	}
 }
 

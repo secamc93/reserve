@@ -453,6 +453,7 @@ type CreateResidentDTO struct {
 	LeaseStartDate   *time.Time
 	LeaseEndDate     *time.Time
 	MonthlyRent      *float64
+	AllowEmptyDni    bool
 }
 
 // UpdateResidentDTO - DTO para actualizar residente

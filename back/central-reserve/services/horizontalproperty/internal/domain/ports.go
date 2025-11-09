@@ -64,6 +64,7 @@ type VotingRepository interface {
 	ListVotingGroupsByBusiness(ctx context.Context, businessID uint) ([]VotingGroup, error)
 	UpdateVotingGroup(ctx context.Context, id uint, group *VotingGroup) (*VotingGroup, error)
 	DeactivateVotingGroup(ctx context.Context, id uint) error
+	DeleteVotingGroup(ctx context.Context, id uint) error
 
 	// Votings
 	CreateVoting(ctx context.Context, voting *Voting) (*Voting, error)
@@ -102,6 +103,7 @@ type VotingUseCase interface {
 	ListVotingGroupsByBusiness(ctx context.Context, businessID uint) ([]VotingGroupDTO, error)
 	UpdateVotingGroup(ctx context.Context, id uint, dto CreateVotingGroupDTO) (*VotingGroupDTO, error)
 	DeactivateVotingGroup(ctx context.Context, id uint) error
+	DeleteVotingGroup(ctx context.Context, id uint) error
 
 	// Votings
 	CreateVoting(ctx context.Context, dto CreateVotingDTO) (*VotingDTO, error)

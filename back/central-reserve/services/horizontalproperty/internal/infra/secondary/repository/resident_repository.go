@@ -26,6 +26,14 @@ func (r *Repository) CreateResident(ctx context.Context, resident *domain.Reside
 		return nil, fmt.Errorf("error creando residente: %w", err)
 	}
 
+	if resident.Dni == "" {
+		if err := tx.Model(&models.Resident{}).Where("id = ?", model.ID).Update("dni", gorm.Expr("NULL")).Error; err != nil {
+			tx.Rollback()
+			return nil, fmt.Errorf("error limpiando DNI vacío: %w", err)
+		}
+		model.Dni = ""
+	}
+
 	// Asignar relación con unidad en tabla pivote (unidad principal por defecto si viene en DTO)
 	if resident.PropertyUnitID != 0 {
 		pivot := &models.ResidentUnit{
@@ -175,11 +183,38 @@ func (r *Repository) ListResidents(ctx context.Context, filters domain.ResidentF
 }
 
 func (r *Repository) UpdateResident(ctx context.Context, id uint, resident *domain.Resident) (*domain.Resident, error) {
-	// Actualiza datos del residente (campos propios)
-	model := &models.Resident{ResidentTypeID: resident.ResidentTypeID,
-		Name: resident.Name, Email: resident.Email, Phone: resident.Phone, Dni: resident.Dni,
-		EmergencyContact: resident.EmergencyContact, IsActive: resident.IsActive}
-	if err := r.db.Conn(ctx).Model(&models.Resident{}).Where("id = ?", id).Updates(model).Error; err != nil {
+	updates := map[string]interface{}{
+		"resident_type_id":  resident.ResidentTypeID,
+		"name":              resident.Name,
+		"email":             resident.Email,
+		"phone":             resident.Phone,
+		"emergency_contact": resident.EmergencyContact,
+		"is_active":         resident.IsActive,
+	}
+
+	if resident.Dni == "" {
+		updates["dni"] = gorm.Expr("NULL")
+	} else {
+		updates["dni"] = resident.Dni
+	}
+
+	if resident.MoveInDate != nil {
+		updates["move_in_date"] = resident.MoveInDate
+	}
+	if resident.MoveOutDate != nil {
+		updates["move_out_date"] = resident.MoveOutDate
+	}
+	if resident.LeaseStartDate != nil {
+		updates["lease_start_date"] = resident.LeaseStartDate
+	}
+	if resident.LeaseEndDate != nil {
+		updates["lease_end_date"] = resident.LeaseEndDate
+	}
+	if resident.MonthlyRent != nil {
+		updates["monthly_rent"] = resident.MonthlyRent
+	}
+
+	if err := r.db.Conn(ctx).Model(&models.Resident{}).Where("id = ?", id).Updates(updates).Error; err != nil {
 		return nil, fmt.Errorf("error actualizando: %w", err)
 	}
 	var updated models.Resident
