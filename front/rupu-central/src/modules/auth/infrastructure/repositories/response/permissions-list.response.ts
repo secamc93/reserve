@@ -5,10 +5,11 @@
 export interface BackendPermission {
   id: number;
   name: string;
-  code: string;
   description: string;
   resource: string;
+  resource_id: number;
   action: string;
+  action_id: number;
   scope_id: number;
   scope_name: string;
   scope_code: string;

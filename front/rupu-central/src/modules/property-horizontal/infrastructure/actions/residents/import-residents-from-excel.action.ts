@@ -36,6 +36,7 @@ export async function importResidentsFromExcelAction(
     // Crear FormData para enviar el archivo
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('business_id', businessId.toString());
 
     logHttpRequest({
       method: 'POST',

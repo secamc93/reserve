@@ -372,6 +372,7 @@ export class ResidentsRepository implements IResidentsRepository {
 
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('business_id', businessId.toString());
 
     logHttpRequest({
       method: 'PUT',

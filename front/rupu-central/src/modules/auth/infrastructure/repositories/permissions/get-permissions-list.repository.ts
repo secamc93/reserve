@@ -64,10 +64,11 @@ export class GetPermissionsListRepository {
       const permissions = backendResponse.data.map(permission => ({
         id: permission.id,
         name: permission.name,
-        code: permission.code,
         description: permission.description,
         resource: permission.resource,
+        resourceId: permission.resource_id,
         action: permission.action,
+        actionId: permission.action_id,
         scopeId: permission.scope_id,
         scopeName: permission.scope_name,
         scopeCode: permission.scope_code,

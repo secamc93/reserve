@@ -6,6 +6,7 @@ import { logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
 export interface RemoveAttendanceListInput {
   token: string;
   id: number;
+  businessId: number;
 }
 
 export interface RemoveAttendanceListResult {
@@ -18,7 +19,7 @@ export async function removeAttendanceListAction(
   input: RemoveAttendanceListInput
 ): Promise<RemoveAttendanceListResult> {
   const startTime = Date.now();
-  const url = `${process.env.API_BASE_URL}/attendance/lists/${input.id}`;
+  const url = `${process.env.API_BASE_URL}/attendance/lists/${input.id}?business_id=${input.businessId}`;
 
   logHttpRequest({
     method: 'DELETE',
@@ -28,7 +29,7 @@ export async function removeAttendanceListAction(
 
   try {
     const repository = new AttendanceListRepository();
-    await repository.deleteAttendanceList({ token: input.token, id: input.id });
+    await repository.deleteAttendanceList({ token: input.token, id: input.id, businessId: input.businessId });
 
     logHttpSuccess({
       status: 200,

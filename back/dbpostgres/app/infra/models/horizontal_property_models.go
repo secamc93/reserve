@@ -92,14 +92,14 @@ func (ResidentType) TableName() string {
 // ───────────────────────────────────────────
 type Resident struct {
 	gorm.Model
-	BusinessID       uint       `gorm:"not null;index;uniqueIndex:idx_business_resident_dni,priority:1"` // Propiedad horizontal
-	ResidentTypeID   uint       `gorm:"not null;index"`                                                  // Tipo de residente
-	Name             string     `gorm:"size:255;not null"`                                               // Nombre completo
-	Email            string     `gorm:"size:255;uniqueIndex:idx_business_resident_email,priority:2"`     // Email (único por negocio)
-	Phone            string     `gorm:"size:20"`                                                         // Teléfono
-	Dni              string     `gorm:"size:30;uniqueIndex:idx_business_resident_dni,priority:2"`        // Documento de identidad (único por propiedad)
-	EmergencyContact string     `gorm:"size:255"`                                                        // Contacto de emergencia
-	IsActive         bool       `gorm:"default:true"`                                                    // Si está activo
+	BusinessID       uint       `gorm:"not null;index;uniqueIndex:idx_business_resident_dni,priority:1"`       // Propiedad horizontal
+	ResidentTypeID   uint       `gorm:"not null;index"`                                                        // Tipo de residente
+	Name             string     `gorm:"size:255;not null"`                                                     // Nombre completo
+	Email            string     `gorm:"size:255;uniqueIndex:idx_business_resident_email,priority:2"`           // Email (único por negocio)
+	Phone            string     `gorm:"size:20"`                                                               // Teléfono
+	Dni              string     `gorm:"size:30;uniqueIndex:idx_business_resident_dni,priority:2;default:null"` // Documento de identidad (puede ser nulo, único por propiedad cuando existe)
+	EmergencyContact string     `gorm:"size:255"`                                                              // Contacto de emergencia
+	IsActive         bool       `gorm:"default:true"`                                                          // Si está activo
 	MoveInDate       *time.Time // Fecha de ingreso (compatibilidad: nivel residente)
 	MoveOutDate      *time.Time // Fecha de salida (opcional, compatibilidad)
 
@@ -258,18 +258,18 @@ func (CommitteeMember) TableName() string {
 // ───────────────────────────────────────────
 type PropertyStaff struct {
 	gorm.Model
-	BusinessID     uint       `gorm:"not null;index;uniqueIndex:idx_business_staff_dni,priority:1"` // Propiedad horizontal
-	StaffTypeID    uint       `gorm:"not null;index"`                                               // Tipo de empleado
-	Name           string     `gorm:"size:255;not null"`                                            // Nombre completo
-	Email          string     `gorm:"size:255;unique"`                                              // Email único
-	Phone          string     `gorm:"size:20"`                                                      // Teléfono
-	Dni            string     `gorm:"size:30;uniqueIndex:idx_business_staff_dni,priority:2"`        // Documento de identidad
-	ProfessionalID *string    `gorm:"size:50"`                                                      // Número de matrícula profesional (para contadores, etc.)
-	CompanyName    *string    `gorm:"size:255"`                                                     // Nombre de empresa (si es externo)
-	Address        string     `gorm:"size:255"`                                                     // Dirección
-	IsExternal     bool       `gorm:"default:false"`                                                // Si es empleado externo/contratista
-	IsActive       bool       `gorm:"default:true"`                                                 // Si está activo
-	HireDate       time.Time  `gorm:"not null"`                                                     // Fecha de contratación
+	BusinessID     uint       `gorm:"not null;index;uniqueIndex:idx_business_staff_dni,priority:1"`       // Propiedad horizontal
+	StaffTypeID    uint       `gorm:"not null;index"`                                                     // Tipo de empleado
+	Name           string     `gorm:"size:255;not null"`                                                  // Nombre completo
+	Email          string     `gorm:"size:255;unique"`                                                    // Email único
+	Phone          string     `gorm:"size:20"`                                                            // Teléfono
+	Dni            string     `gorm:"size:30;uniqueIndex:idx_business_staff_dni,priority:2;default:null"` // Documento de identidad (puede ser nulo)
+	ProfessionalID *string    `gorm:"size:50"`                                                            // Número de matrícula profesional (para contadores, etc.)
+	CompanyName    *string    `gorm:"size:255"`                                                           // Nombre de empresa (si es externo)
+	Address        string     `gorm:"size:255"`                                                           // Dirección
+	IsExternal     bool       `gorm:"default:false"`                                                      // Si es empleado externo/contratista
+	IsActive       bool       `gorm:"default:true"`                                                       // Si está activo
+	HireDate       time.Time  `gorm:"not null"`                                                           // Fecha de contratación
 	EndDate        *time.Time // Fecha de terminación (null si está activo)
 	MonthlySalary  *float64   `gorm:"type:decimal(12,2)"` // Salario mensual
 	Notes          string     `gorm:"size:1000"`          // Notas adicionales

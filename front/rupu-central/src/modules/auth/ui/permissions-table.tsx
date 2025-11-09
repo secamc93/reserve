@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { getPermissionsListAction, deletePermissionAction } from '@modules/auth/infrastructure/actions';
 import { Table, TableColumn, Spinner, Badge, Button, Input, ConfirmModal } from '@shared/ui';
-import { PencilIcon, TrashIcon, EyeIcon, KeyIcon } from '@heroicons/react/24/outline';
+import { PencilIcon, TrashIcon, EyeIcon } from '@heroicons/react/24/outline';
+import { EditPermissionModal } from './components';
 
 interface PermissionsTableProps {
   token: string;
@@ -12,10 +13,11 @@ interface PermissionsTableProps {
 interface Permission {
   id: number;
   name: string;
-  code: string;
   description: string;
   resource: string;
+  resourceId: number;
   action: string;
+  actionId: number;
   scopeId: number;
   scopeName: string;
   scopeCode: string;
@@ -30,6 +32,8 @@ export function PermissionsTable({ token }: PermissionsTableProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [permissionToDelete, setPermissionToDelete] = useState<Permission | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [permissionToEdit, setPermissionToEdit] = useState<Permission | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const loadPermissions = async () => {
     setLoading(true);
@@ -57,13 +61,22 @@ export function PermissionsTable({ token }: PermissionsTableProps) {
 
   const filteredPermissions = permissions.filter(permission =>
     permission.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    permission.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    permission.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     permission.resource.toLowerCase().includes(searchTerm.toLowerCase()) ||
     permission.action.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleDeleteClick = (permission: Permission) => {
     setPermissionToDelete(permission);
+  };
+
+  const handleEditClick = (permission: Permission) => {
+    setPermissionToEdit(permission);
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditSuccess = () => {
+    loadPermissions();
   };
 
   const handleDeleteConfirm = async () => {
@@ -145,7 +158,10 @@ export function PermissionsTable({ token }: PermissionsTableProps) {
           <Button className="btn-outline btn-sm">
             <EyeIcon className="w-4 h-4" />
           </Button>
-          <Button className="btn-outline btn-sm">
+          <Button
+            className="btn-outline btn-sm"
+            onClick={() => handleEditClick(permission)}
+          >
             <PencilIcon className="w-4 h-4" />
           </Button>
           <Button 
@@ -219,6 +235,32 @@ export function PermissionsTable({ token }: PermissionsTableProps) {
         confirmText="Eliminar"
         cancelText="Cancelar"
         type="danger"
+      />
+
+      <EditPermissionModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setPermissionToEdit(null);
+        }}
+        onSuccess={handleEditSuccess}
+        token={token}
+        permission={
+          permissionToEdit
+            ? {
+                id: permissionToEdit.id,
+                name: permissionToEdit.name,
+                resourceId: permissionToEdit.resourceId,
+                actionId: permissionToEdit.actionId,
+                description: permissionToEdit.description,
+                resource: permissionToEdit.resource,
+                action: permissionToEdit.action,
+                scopeId: permissionToEdit.scopeId,
+                businessTypeId: permissionToEdit.businessTypeId,
+                businessTypeName: permissionToEdit.businessTypeName,
+              }
+            : null
+        }
       />
     </div>
   );

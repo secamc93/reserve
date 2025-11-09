@@ -72,6 +72,14 @@ export function BulkEditResidentsModal({ isOpen, onClose, onSuccess, businessId 
       return;
     }
 
+    const effectiveBusinessId =
+      Number.isFinite(businessId) && businessId > 0 ? businessId : TokenStorage.getActiveBusiness() ?? undefined;
+
+    if (!effectiveBusinessId) {
+      setError('No se encontró un negocio activo para procesar la edición masiva.');
+      return;
+    }
+
     const token = TokenStorage.getToken();
     if (!token) {
       setError('No se encontró el token de autenticación');
@@ -83,7 +91,7 @@ export function BulkEditResidentsModal({ isOpen, onClose, onSuccess, businessId 
     try {
       const result = await bulkUpdateResidentsAction({
         token,
-        businessId,
+        businessId: effectiveBusinessId,
         file: selectedFile,
       });
 
@@ -109,8 +117,9 @@ export function BulkEditResidentsModal({ isOpen, onClose, onSuccess, businessId 
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Edición Masiva de Residentes por Excel" size="md">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="space-y-4">
+      <form onSubmit={handleSubmit} className="flex flex-col max-h-[70vh]">
+        <div className="flex-1 overflow-y-auto space-y-6 pr-1">
+          <div className="space-y-4">
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <h4 className="text-sm font-medium text-blue-800 mb-2">📝 Instrucciones</h4>
             <ul className="text-xs text-blue-700 space-y-1">
@@ -212,11 +221,12 @@ export function BulkEditResidentsModal({ isOpen, onClose, onSuccess, businessId 
               )}
             </div>
           )}
-        </div>
 
-        {/* Alertas */}
-        {error && <Alert type="error">{error}</Alert>}
-        {success && <Alert type="success">{success}</Alert>}
+          {/* Alertas */}
+          {error && <Alert type="error">{error}</Alert>}
+          {success && <Alert type="success">{success}</Alert>}
+          </div>
+        </div>
 
         {/* Botones */}
         <div className="flex justify-end gap-3 pt-4 border-t">

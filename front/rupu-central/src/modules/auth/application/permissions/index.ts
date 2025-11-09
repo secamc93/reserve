@@ -5,3 +5,5 @@
 export * from './get-permissions-list.use-case';
 export * from './get-permissions.use-case';
 export * from './delete-permission.use-case';
+export * from './update-permission.use-case';
+export * from './get-permission-by-id.use-case';

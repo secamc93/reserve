@@ -32,11 +32,16 @@ export async function bulkUpdateResidentsAction(
     const repository = new ResidentsRepository();
     const useCase = new BulkUpdateResidentsUseCase(repository);
 
-    // TODO: Parse the file to extract residents data
-    // For now, return a placeholder response
+    const response = await useCase.execute({
+      token: input.token,
+      businessId: input.businessId,
+      file: input.file,
+    });
+
     return {
-      success: false,
-      error: 'File parsing not implemented yet',
+      success: response.success,
+      message: response.message,
+      data: response.data,
     };
   } catch (error) {
     console.error('❌ Error en bulkUpdateResidentsAction:', error);

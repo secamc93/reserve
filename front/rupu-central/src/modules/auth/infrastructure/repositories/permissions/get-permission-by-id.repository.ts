@@ -57,18 +57,19 @@ export class GetPermissionByIdRepository {
         throw new Error('Respuesta inválida del servidor');
       }
 
-      const permission = backendResponse.data;
-
       return {
-        id: permission.id,
-        name: permission.name,
-        code: permission.code,
-        description: permission.description,
-        resource: permission.resource,
-        action: permission.action,
-        scope_id: permission.scope_id,
-        scope_name: permission.scope_name,
-        scope_code: permission.scope_code,
+        id: backendResponse.data.id,
+        name: backendResponse.data.name,
+        description: backendResponse.data.description,
+        resource: backendResponse.data.resource,
+        resource_id: backendResponse.data.resource_id,
+        action: backendResponse.data.action,
+        action_id: backendResponse.data.action_id,
+        scope_id: backendResponse.data.scope_id,
+        scope_name: backendResponse.data.scope_name,
+        scope_code: backendResponse.data.scope_code,
+        business_type_id: backendResponse.data.business_type_id,
+        business_type_name: backendResponse.data.business_type_name,
       };
     } catch (error) {
       console.error('Error obteniendo permiso por ID:', error);

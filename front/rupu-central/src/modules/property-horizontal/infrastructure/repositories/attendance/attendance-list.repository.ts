@@ -32,13 +32,18 @@ export class AttendanceListRepository implements IAttendanceListRepository {
       const duration = Date.now() - startTime;
 
       if (!response.ok) {
+        const errorData = data as { error?: unknown; message?: unknown };
+        const errorMessage =
+          (typeof errorData.error === 'string' && errorData.error) ||
+          (typeof errorData.message === 'string' && errorData.message) ||
+          `Error ${response.status}`;
         logHttpError({
           status: response.status,
           statusText: response.statusText,
           duration,
           data,
         });
-        throw new Error(data.error || data.message || `Error ${response.status}`);
+        throw new Error(errorMessage);
       }
 
       logHttpSuccess({
@@ -86,13 +91,18 @@ export class AttendanceListRepository implements IAttendanceListRepository {
       const duration = Date.now() - startTime;
 
       if (!response.ok) {
+        const errorData = data as { error?: unknown; message?: unknown };
+        const errorMessage =
+          (typeof errorData.error === 'string' && errorData.error) ||
+          (typeof errorData.message === 'string' && errorData.message) ||
+          `Error ${response.status}`;
         logHttpError({
           status: response.status,
           statusText: response.statusText,
           duration,
           data,
         });
-        throw new Error(data.error || data.message || `Error ${response.status}`);
+        throw new Error(errorMessage);
       }
 
       logHttpSuccess({
@@ -149,33 +159,43 @@ export class AttendanceListRepository implements IAttendanceListRepository {
 
   async deleteAttendanceList(params: DeleteAttendanceListParams): Promise<void> {
     const startTime = Date.now();
-    const url = `${process.env.API_BASE_URL}/attendance/lists/${params.id}`;
+    const url = new URL(`${process.env.API_BASE_URL}/attendance/lists/${params.id}`);
+    url.searchParams.set('business_id', params.businessId.toString());
 
     logHttpRequest({
       method: 'DELETE',
-      url,
+      url: url.toString(),
       token: params.token.substring(0, 20) + '...',
     });
 
     try {
-      const response = await fetch(url, {
+      const response = await fetch(url.toString(), {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${params.token}`,
         },
       });
 
-      const data = await response.json().catch(() => ({}));
       const duration = Date.now() - startTime;
+      let data: Record<string, unknown> = {};
+
+      if (response.status !== 204) {
+        data = await response.json().catch(() => ({}));
+      }
 
       if (!response.ok) {
+        const errorData = data as { error?: unknown; message?: unknown };
+        const errorMessage =
+          (typeof errorData.error === 'string' && errorData.error) ||
+          (typeof errorData.message === 'string' && errorData.message) ||
+          `Error ${response.status}`;
         logHttpError({
           status: response.status,
           statusText: response.statusText,
           duration,
           data,
         });
-        throw new Error(data.error || data.message || `Error ${response.status}`);
+        throw new Error(errorMessage);
       }
 
       logHttpSuccess({
