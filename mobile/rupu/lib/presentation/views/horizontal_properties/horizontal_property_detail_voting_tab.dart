@@ -2095,6 +2095,7 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
   VotingLiveController? _controller;
   String? _initError;
   late final TextEditingController _searchCtrl;
+  late final FocusNode _searchFocus;
 
   @override
   void initState() {
@@ -2120,6 +2121,12 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
           'No se pudo iniciar la transmisión en vivo. Inténtalo más tarde.';
     }
     _searchCtrl = TextEditingController();
+    _searchFocus = FocusNode();
+    _searchFocus.addListener(() {
+      if (!_searchFocus.hasFocus) {
+        _controller?.clearResidentSuggestions();
+      }
+    });
   }
 
   @override
@@ -2128,6 +2135,8 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
         Get.isRegistered<VotingLiveController>(tag: _liveTag)) {
       Get.delete<VotingLiveController>(tag: _liveTag);
     }
+    _controller?.clearResidentSuggestions();
+    _searchFocus.dispose();
     _searchCtrl.dispose();
     super.dispose();
   }
@@ -2310,29 +2319,6 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
                                     ],
                                   ),
                                   const SizedBox(height: 20),
-                                  Row(
-                                    children: [
-                                      _LiveStatChip(
-                                        label: 'Unidades',
-                                        value: controller.totalUnits,
-                                        icon: Icons.apartment_outlined,
-                                      ),
-                                      const SizedBox(width: 12),
-                                      _LiveStatChip(
-                                        label: 'Votaron',
-                                        value: controller.unitsVoted,
-                                        icon: Icons.how_to_vote_outlined,
-                                        color: cs.primary,
-                                      ),
-                                      const SizedBox(width: 12),
-                                      _LiveStatChip(
-                                        label: 'Pendientes',
-                                        value: controller.unitsPending,
-                                        icon: Icons.pending_actions_outlined,
-                                        color: cs.tertiary,
-                                      ),
-                                    ],
-                                  ),
                                   if (liveData?.timestamp != null) ...[
                                     const SizedBox(height: 12),
                                     Row(
@@ -2358,6 +2344,7 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
                                   const SizedBox(height: 20),
                                   TextField(
                                     controller: _searchCtrl,
+                                    focusNode: _searchFocus,
                                     decoration: InputDecoration(
                                       labelText: 'Buscar unidad o residente',
                                       prefixIcon: const Icon(Icons.search),
@@ -2366,6 +2353,8 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
                                               onPressed: () {
                                                 _searchCtrl.clear();
                                                 controller.clearFilter();
+                                                controller
+                                                    .clearResidentSuggestions();
                                               },
                                               icon: const Icon(Icons.close),
                                             )
@@ -2376,9 +2365,55 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
                                         borderRadius: BorderRadius.circular(14),
                                       ),
                                     ),
-                                    onChanged: controller.setFilter,
+                                    onChanged: (value) {
+                                      controller.setFilter(value);
+                                      controller.searchResidents(value);
+                                    },
                                   ),
-                                  const SizedBox(height: 12),
+                                  Obx(() {
+                                    final shouldShow = _searchFocus.hasFocus &&
+                                        _searchCtrl.text.trim().length >= 2;
+                                    if (!shouldShow) {
+                                      return const SizedBox(height: 12);
+                                    }
+                                    final loading =
+                                        controller.residentSuggestionsLoading.value;
+                                    final suggestions =
+                                        controller.residentSuggestions.toList();
+                                    return Column(
+                                      children: [
+                                        const SizedBox(height: 8),
+                                        _LiveSuggestionCard(
+                                          loading: loading,
+                                          emptyLabel:
+                                              'No se encontraron residentes para la búsqueda.',
+                                          children: suggestions
+                                              .map(
+                                                (resident) => _ResidentSuggestionTile(
+                                                  resident: resident,
+                                                  onTap: () {
+                                                    controller.setFilter(
+                                                      resident.propertyUnitNumber,
+                                                    );
+                                                    _searchCtrl
+                                                      ..text = resident.name
+                                                      ..selection = TextSelection
+                                                          .collapsed(
+                                                        offset:
+                                                            _searchCtrl.text.length,
+                                                      );
+                                                    controller
+                                                        .clearResidentSuggestions();
+                                                    _searchFocus.unfocus();
+                                                  },
+                                                ),
+                                              )
+                                              .toList(growable: false),
+                                        ),
+                                        const SizedBox(height: 12),
+                                      ],
+                                    );
+                                  }),
                                   FilledButton.icon(
                                     onPressed: widget.voting.isActive
                                         ? () => _openVoteSheet()
@@ -2479,6 +2514,10 @@ class VotingLiveController extends GetxController {
   final liveData = Rxn<HorizontalPropertyVotingGroupLiveData>();
   final filter = ''.obs;
   final RxSet<int> _processingUnitIds = <int>{}.obs;
+  final residentSuggestions = <HorizontalPropertyResidentItem>[].obs;
+  final unitSuggestions = <_UnitSearchSuggestion>[].obs;
+  final residentSuggestionsLoading = false.obs;
+  final unitSuggestionsLoading = false.obs;
 
   HorizontalPropertiesRepository get repository => _repository;
 
@@ -2551,6 +2590,42 @@ class VotingLiveController extends GetxController {
 
   int get totalVotes => parent.totalVotesFor(groupId, votingId);
 
+  int get totalVotesFromUnits =>
+      liveUnits.where((unit) => unit.hasVoted).length;
+
+  int countForOption(int optionId) {
+    final units = liveUnits;
+    if (units.isNotEmpty) {
+      return units
+          .where((unit) => unit.votingOptionId == optionId)
+          .length;
+    }
+    return voteSummary[optionId] ?? 0;
+  }
+
+  double get totalCoefficient => liveUnits.fold<double>(
+        0,
+        (value, unit) =>
+            value + (unit.participationCoefficient ?? 0.0),
+      );
+
+  double coefficientForOption(int optionId) {
+    final units = liveUnits;
+    if (units.isEmpty) return 0;
+    return units
+        .where((unit) => unit.votingOptionId == optionId)
+        .fold<double>(0, (value, unit) =>
+            value + (unit.participationCoefficient ?? 0.0));
+  }
+
+  double get votedCoefficient => liveUnits.fold<double>(
+        0,
+        (value, unit) =>
+            unit.hasVoted ? value + (unit.participationCoefficient ?? 0.0) : value,
+      );
+
+  double get pendingCoefficient => totalCoefficient - votedCoefficient;
+
   HorizontalPropertyVotingLiveResult? resultForOption(int optionId) {
     for (final result in liveResults) {
       if (result.votingOptionId == optionId) {
@@ -2576,7 +2651,7 @@ class VotingLiveController extends GetxController {
       (event) {
         Future.microtask(() {
           if (isClosed) return;
-          liveData.value = event;
+          _ingestLiveEvent(event);
           isConnecting.value = false;
           errorMessage.value = null;
           if (event.hasVotesSnapshot) {
@@ -2608,6 +2683,139 @@ class VotingLiveController extends GetxController {
     );
   }
 
+  void _ingestLiveEvent(HorizontalPropertyVotingGroupLiveData event) {
+    final previous = liveData.value;
+
+    final mergedUnits = event.hasUnitsSnapshot
+        ? event.units
+        : _mergeUnits(previous?.units ?? const [], event.units);
+
+    final mergedResults = event.hasResultsSnapshot
+        ? event.results
+        : _mergeResults(previous?.results ?? const [], event.results);
+
+    final mergedVotes = event.hasVotesSnapshot
+        ? event.votes
+        : _mergeVotes(previous?.votes ?? const [], event.votes);
+
+    final providedUnits = event.hasUnitsSnapshot || event.units.isNotEmpty;
+    final computedUnitsVoted = providedUnits
+        ? mergedUnits.where((unit) => unit.hasVoted).length
+        : (event.unitsVoted >= 0
+            ? event.unitsVoted
+            : previous?.unitsVoted ?? mergedVotes.length);
+
+    final computedTotalUnits = () {
+      if (providedUnits) {
+        if (event.totalUnits >= 0) {
+          return event.totalUnits;
+        }
+        if (mergedUnits.isNotEmpty) {
+          return mergedUnits.length;
+        }
+      }
+      if (event.totalUnits >= 0) {
+        return event.totalUnits;
+      }
+      return previous?.totalUnits ?? mergedUnits.length;
+    }();
+
+    final computedPending = () {
+      if (providedUnits) {
+        final pending = computedTotalUnits - computedUnitsVoted;
+        return pending < 0 ? 0 : pending;
+      }
+      if (event.unitsPending >= 0) {
+        return event.unitsPending;
+      }
+      return previous?.unitsPending ??
+          (computedTotalUnits - computedUnitsVoted).clamp(0, computedTotalUnits);
+    }();
+
+    final timestamp = event.timestamp ?? DateTime.now();
+
+    liveData.value = HorizontalPropertyVotingGroupLiveData(
+      totalUnits: computedTotalUnits,
+      unitsPending: computedPending,
+      unitsVoted: computedUnitsVoted,
+      units: mergedUnits,
+      results: mergedResults,
+      votes: mergedVotes,
+      hasResultsSnapshot: event.hasResultsSnapshot,
+      hasVotesSnapshot: event.hasVotesSnapshot,
+      hasUnitsSnapshot: event.hasUnitsSnapshot,
+      timestamp: timestamp,
+    );
+  }
+
+  List<HorizontalPropertyVotingLiveUnit> _mergeUnits(
+    List<HorizontalPropertyVotingLiveUnit> base,
+    List<HorizontalPropertyVotingLiveUnit> updates,
+  ) {
+    if (updates.isEmpty) {
+      return List<HorizontalPropertyVotingLiveUnit>.of(base);
+    }
+    if (base.isEmpty) {
+      return updates;
+    }
+
+    final map = {
+      for (final unit in base) unit.propertyUnitId: unit,
+    };
+    final order = List<int>.of(map.keys);
+
+    for (final unit in updates) {
+      if (!map.containsKey(unit.propertyUnitId)) {
+        order.add(unit.propertyUnitId);
+      }
+      map[unit.propertyUnitId] = unit;
+    }
+
+    return [for (final id in order) map[id]!];
+  }
+
+  List<HorizontalPropertyVotingLiveResult> _mergeResults(
+    List<HorizontalPropertyVotingLiveResult> base,
+    List<HorizontalPropertyVotingLiveResult> updates,
+  ) {
+    if (updates.isEmpty) {
+      return List<HorizontalPropertyVotingLiveResult>.of(base);
+    }
+    if (base.isEmpty) {
+      return updates;
+    }
+
+    final map = {
+      for (final result in base) result.votingOptionId: result,
+    };
+    for (final result in updates) {
+      map[result.votingOptionId] = result;
+    }
+    return map.values.toList(growable: false);
+  }
+
+  List<HorizontalPropertyVotingVote> _mergeVotes(
+    List<HorizontalPropertyVotingVote> base,
+    List<HorizontalPropertyVotingVote> updates,
+  ) {
+    if (updates.isEmpty) {
+      return List<HorizontalPropertyVotingVote>.of(base);
+    }
+    if (base.isEmpty) {
+      return updates;
+    }
+
+    final map = {
+      for (final vote in base) vote.id: vote,
+    };
+    for (final vote in updates) {
+      map[vote.id] = vote;
+    }
+    final merged = map.values.toList(growable: false);
+    merged.sort((a, b) => a.id.compareTo(b.id));
+    return merged;
+  }
+
   Future<void> _loadInitialDetails() async {
     try {
       final result = await _repository.getHorizontalPropertyVotingDetails(
@@ -2629,6 +2837,7 @@ class VotingLiveController extends GetxController {
         votes: current?.votes ?? const [],
         hasResultsSnapshot: current?.hasResultsSnapshot ?? false,
         hasVotesSnapshot: current?.hasVotesSnapshot ?? false,
+        hasUnitsSnapshot: true,
         timestamp: DateTime.now(),
       );
     } catch (error, stackTrace) {
@@ -2657,6 +2866,85 @@ class VotingLiveController extends GetxController {
   Future<void> reconnect() async {
     await _subscription?.cancel();
     _subscribe();
+  }
+
+  Future<void> searchResidents(String query) async {
+    final trimmed = query.trim();
+    if (trimmed.length < 2) {
+      residentSuggestions.clear();
+      residentSuggestionsLoading.value = false;
+      return;
+    }
+    residentSuggestionsLoading.value = true;
+    try {
+      final result = await repository.getHorizontalPropertyResidents(
+        id: parent.propertyId,
+        query: {
+          'search': trimmed,
+          'page': '1',
+          'page_size': '8',
+        },
+      );
+      residentSuggestions.assignAll(result.residents);
+    } catch (error, stackTrace) {
+      debugPrint('Error buscando residentes: $error');
+      debugPrint('Stack: $stackTrace');
+      residentSuggestions.clear();
+    } finally {
+      residentSuggestionsLoading.value = false;
+    }
+  }
+
+  void clearResidentSuggestions() {
+    residentSuggestions.clear();
+    residentSuggestionsLoading.value = false;
+  }
+
+  Future<void> searchUnits(String query) async {
+    final trimmed = query.trim();
+    if (trimmed.length < 2) {
+      unitSuggestions.clear();
+      unitSuggestionsLoading.value = false;
+      return;
+    }
+    unitSuggestionsLoading.value = true;
+    try {
+      final response = await repository.getHorizontalPropertyUnits(
+        id: parent.propertyId,
+        query: {
+          'search': trimmed,
+          'page': '1',
+          'page_size': '8',
+          'include_residents': 'true',
+        },
+      );
+      unitSuggestions.assignAll(response.units
+          .map(
+            (unit) => _UnitSearchSuggestion(
+              id: unit.id,
+              unitNumber: unit.number,
+              residentName: unit.mainResidentName ??
+                  liveUnits
+                      .firstWhereOrNull(
+                        (item) => item.propertyUnitId == unit.id,
+                      )
+                      ?.residentName,
+              isMain: unit.mainResidentIsMain,
+            ),
+          )
+          .toList(growable: false));
+    } catch (error, stackTrace) {
+      debugPrint('Error buscando unidades: $error');
+      debugPrint('Stack: $stackTrace');
+      unitSuggestions.clear();
+    } finally {
+      unitSuggestionsLoading.value = false;
+    }
+  }
+
+  void clearUnitSuggestions() {
+    unitSuggestions.clear();
+    unitSuggestionsLoading.value = false;
   }
 
   Future<HorizontalPropertyActionResult> castVote({
@@ -2777,6 +3065,225 @@ Color? _tryParseHexColor(String? value) {
   return null;
 }
 
+class _UnitSearchSuggestion {
+  final int id;
+  final String unitNumber;
+  final String? residentName;
+  final bool? isMain;
+
+  const _UnitSearchSuggestion({
+    required this.id,
+    required this.unitNumber,
+    this.residentName,
+    this.isMain,
+  });
+}
+
+class _LiveSuggestionCard extends StatelessWidget {
+  final bool loading;
+  final String emptyLabel;
+  final List<Widget> children;
+
+  const _LiveSuggestionCard({
+    required this.loading,
+    required this.emptyLabel,
+    required this.children,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    if (loading) {
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: cs.outlineVariant),
+        ),
+        child: const Padding(
+          padding: EdgeInsets.symmetric(vertical: 18),
+          child: Center(
+            child: SizedBox(
+              height: 22,
+              width: 22,
+              child: CircularProgressIndicator(strokeWidth: 2.4),
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (children.isEmpty) {
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: cs.outlineVariant),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Text(
+            emptyLabel,
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ),
+      );
+    }
+
+    final childrenWithDividers = <Widget>[];
+    for (var i = 0; i < children.length; i++) {
+      childrenWithDividers.add(children[i]);
+      if (i != children.length - 1) {
+        childrenWithDividers.add(Divider(
+          height: 1,
+          thickness: 1,
+          color: cs.outlineVariant,
+        ));
+      }
+    }
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: cs.outlineVariant),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: childrenWithDividers,
+      ),
+    );
+  }
+}
+
+class _ResidentSuggestionTile extends StatelessWidget {
+  final HorizontalPropertyResidentItem resident;
+  final VoidCallback onTap;
+
+  const _ResidentSuggestionTile({
+    required this.resident,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      resident.name,
+                      style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${resident.propertyUnitNumber} · ${resident.residentTypeName}',
+                      style:
+                          tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              ),
+              if (resident.isMainResident)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: cs.primary.withValues(alpha: .12),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    'Principal',
+                    style: tt.labelSmall?.copyWith(color: cs.primary),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _UnitSuggestionTile extends StatelessWidget {
+  final _UnitSearchSuggestion suggestion;
+  final VoidCallback onTap;
+
+  const _UnitSuggestionTile({
+    required this.suggestion,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      suggestion.unitNumber,
+                      style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    if (suggestion.residentName?.isNotEmpty == true) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        suggestion.residentName!,
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              if (suggestion.isMain == true)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: cs.primary.withValues(alpha: .12),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    'Principal',
+                    style: tt.labelSmall?.copyWith(color: cs.primary),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _LiveOptionsSummary extends StatelessWidget {
   final VotingLiveController controller;
 
@@ -2784,78 +3291,48 @@ class _LiveOptionsSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final options = controller.options;
-    if (options.isEmpty) {
-      return const SizedBox.shrink();
-    }
+    final optionsPanel = _LiveOptionsBoard(controller: controller);
+    final summaryCard = _LiveSummaryCard(controller: controller);
 
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final percentFormat = NumberFormat('##0.0#');
-    final voteSummary = controller.voteSummary;
-    final totalVotes = controller.totalVotes;
-
-    final children = <Widget>[];
-    for (var i = 0; i < options.length; i++) {
-      final option = options[i];
-      final result = controller.resultForOption(option.id);
-      final count = result?.voteCount ?? voteSummary[option.id] ?? 0;
-      final percentageValue = result?.percentage ??
-          (totalVotes == 0 ? 0.0 : (count / totalVotes) * 100.0);
-      final progress = (percentageValue / 100).clamp(0.0, 1.0);
-      final color =
-          _tryParseHexColor(result?.color ?? option.color) ?? cs.primary;
-
-      children.add(
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          child: Column(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= 720;
+        if (isWide) {
+          return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      option.optionText,
-                      style: tt.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    '${percentFormat.format(percentageValue)}%',
-                    style: tt.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: LinearProgressIndicator(
-                  value: progress.isFinite ? progress : 0.0,
-                  minHeight: 8,
-                  backgroundColor: cs.surfaceContainerHighest,
-                  valueColor: AlwaysStoppedAnimation(color),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '$count voto${count == 1 ? '' : 's'}',
-                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              Expanded(child: optionsPanel),
+              const SizedBox(width: 16),
+              SizedBox(
+                width: 280,
+                child: summaryCard,
               ),
             ],
-          ),
-        ),
-      );
-
-      if (i < options.length - 1) {
-        children.add(
-          Divider(height: 1, thickness: 1, color: cs.outlineVariant),
+          );
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            optionsPanel,
+            const SizedBox(height: 16),
+            summaryCard,
+          ],
         );
-      }
-    }
+      },
+    );
+  }
+}
+
+class _LiveOptionsBoard extends StatelessWidget {
+  final VotingLiveController controller;
+
+  const _LiveOptionsBoard({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    final options = controller.options;
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2865,77 +3342,345 @@ class _LiveOptionsSummary extends StatelessWidget {
           style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 12),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            color: cs.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: cs.outlineVariant),
+        if (options.isEmpty)
+          Text(
+            'Aún no se han configurado opciones para esta votación.',
+            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+          )
+        else
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: options
+                  .map(
+                    (option) => Padding(
+                      padding: const EdgeInsets.only(right: 12),
+                      child: _LiveOptionCardWidget(
+                        controller: controller,
+                        option: option,
+                      ),
+                    ),
+                  )
+                  .toList(growable: false),
+            ),
           ),
-          child: Column(children: children),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Total de votos: ${controller.totalVotes}',
-          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-        ),
       ],
     );
   }
 }
 
-class _LiveStatChip extends StatelessWidget {
-  final String label;
-  final int value;
-  final IconData icon;
-  final Color? color;
+class _LiveOptionCardWidget extends StatelessWidget {
+  final VotingLiveController controller;
+  final HorizontalPropertyVotingOption option;
 
-  const _LiveStatChip({
-    required this.label,
-    required this.value,
-    required this.icon,
-    this.color,
+  const _LiveOptionCardWidget({
+    required this.controller,
+    required this.option,
   });
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final bg = color?.withValues(alpha: .12) ?? cs.surfaceContainerHighest;
-    final fg = color ?? cs.primary;
+    final percentFormat = NumberFormat('##0.0#');
+    final coefficientFormat = NumberFormat('##0.0#');
 
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 6),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: fg.withValues(alpha: .3)),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: fg),
-            const SizedBox(width: 6),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$value',
-                  style: tt.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: fg,
-                  ),
+    final result = controller.resultForOption(option.id);
+    final count = controller.countForOption(option.id);
+    final totalVotes = controller.unitsVoted;
+    final votePercent = totalVotes == 0
+        ? 0.0
+        : (count / totalVotes).clamp(0.0, 1.0) * 100;
+
+    final coefficientValue = controller.coefficientForOption(option.id);
+    final totalCoefficient = controller.totalCoefficient;
+    final coefficientPercent = totalCoefficient <= 0
+        ? 0.0
+        : (coefficientValue / totalCoefficient) * 100;
+
+    final color =
+        _tryParseHexColor(result?.color ?? option.color) ?? cs.primary;
+
+    return Container(
+      width: 220,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .08),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: color.withValues(alpha: .3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
                 ),
-                Text(
-                  label,
-                  style: tt.bodySmall?.copyWith(
-                    color: fg.withValues(alpha: .9),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  option.optionText,
+                  style: tt.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            '$count',
+            style: tt.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          Text(
+            'voto${count == 1 ? '' : 's'}',
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+          const SizedBox(height: 16),
+          _LiveOptionStat(
+            label: 'Porcentaje',
+            value: '${percentFormat.format(votePercent)}%',
+          ),
+          const SizedBox(height: 6),
+          _LiveOptionStat(
+            label: 'Por coef.',
+            value: totalCoefficient <= 0
+                ? '--'
+                : '${percentFormat.format(coefficientPercent)}%',
+            caption: totalCoefficient <= 0
+                ? null
+                : '${coefficientFormat.format(coefficientValue)} pts',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LiveOptionStat extends StatelessWidget {
+  final String label;
+  final String value;
+  final String? caption;
+
+  const _LiveOptionStat({
+    required this.label,
+    required this.value,
+    this.caption,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: tt.bodySmall?.copyWith(
+                  color: cs.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              if (caption != null) ...[
+                const SizedBox(height: 2),
+                Text(
+                  caption!,
+                  style:
+                      tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],
+            ],
+          ),
+        ),
+        Text(
+          value,
+          style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+        ),
+      ],
+    );
+  }
+}
+
+class _LiveSummaryCard extends StatelessWidget {
+  final VotingLiveController controller;
+
+  const _LiveSummaryCard({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final countFormat = NumberFormat('#,##0');
+    final percentFormat = NumberFormat('##0.0#');
+    final coefficientFormat = NumberFormat('##0.###');
+
+    final totalUnits = controller.totalUnits;
+    final votedUnits = controller.unitsVoted;
+    final pendingUnits = controller.unitsPending;
+    final totalVotes = controller.totalVotesFromUnits;
+
+    final votePercent = totalUnits == 0
+        ? 0.0
+        : (votedUnits / totalUnits) * 100;
+    final pendingPercent = totalUnits == 0
+        ? 0.0
+        : (pendingUnits / totalUnits) * 100;
+
+    final totalCoefficient = controller.totalCoefficient;
+    final votedCoefficient = controller.votedCoefficient;
+    final pendingCoefficient = controller.pendingCoefficient < 0
+        ? 0.0
+        : controller.pendingCoefficient;
+    final votedCoefPercent = totalCoefficient <= 0
+        ? 0.0
+        : (votedCoefficient / totalCoefficient) * 100;
+    final pendingCoefPercent = totalCoefficient <= 0
+        ? 0.0
+        : (pendingCoefficient / totalCoefficient) * 100;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: cs.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Resumen',
+              style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 12),
+            _SummaryMetricLine(
+              label: 'Total',
+              value: countFormat.format(totalUnits),
+              caption: 'Unidades / residentes',
+            ),
+            const SizedBox(height: 10),
+            _SummaryMetricLine(
+              label: 'Votaron',
+              value: countFormat.format(votedUnits),
+              trailing: '${percentFormat.format(votePercent)}%',
+            ),
+            const SizedBox(height: 10),
+            _SummaryMetricLine(
+              label: 'Pendientes',
+              value: countFormat.format(pendingUnits),
+              trailing: '${percentFormat.format(pendingPercent)}%',
+            ),
+            const SizedBox(height: 10),
+            _SummaryMetricLine(
+              label: 'Registros',
+              value: countFormat.format(totalVotes),
+              caption: 'Votos emitidos',
+            ),
+            const SizedBox(height: 16),
+            Divider(height: 1, color: cs.outlineVariant),
+            const SizedBox(height: 16),
+            _SummaryMetricLine(
+              label: 'Coef. total',
+              value: coefficientFormat.format(totalCoefficient),
+              trailing: totalCoefficient <= 0 ? null : '100%',
+            ),
+            const SizedBox(height: 10),
+            _SummaryMetricLine(
+              label: 'Coef. votado',
+              value: coefficientFormat.format(votedCoefficient),
+              trailing: totalCoefficient <= 0
+                  ? null
+                  : '${percentFormat.format(votedCoefPercent)}%',
+            ),
+            const SizedBox(height: 10),
+            _SummaryMetricLine(
+              label: 'Coef. pendiente',
+              value: coefficientFormat.format(pendingCoefficient),
+              trailing: totalCoefficient <= 0
+                  ? null
+                  : '${percentFormat.format(pendingCoefPercent)}%',
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _SummaryMetricLine extends StatelessWidget {
+  final String label;
+  final String value;
+  final String? caption;
+  final String? trailing;
+
+  const _SummaryMetricLine({
+    required this.label,
+    required this.value,
+    this.caption,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: tt.bodySmall?.copyWith(
+                  color: cs.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              if (caption != null) ...[
+                const SizedBox(height: 2),
+                Text(
+                  caption!,
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ],
+            ],
+          ),
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              value,
+              style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            if (trailing != null) ...[
+              const SizedBox(height: 2),
+              Text(
+                trailing!,
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              ),
+            ],
+          ],
+        ),
+      ],
     );
   }
 }
@@ -2993,110 +3738,118 @@ class _UnitVoteChip extends StatelessWidget {
         child: InkWell(
           onTap: (!voted && !isProcessing) ? onVote : null,
           borderRadius: BorderRadius.circular(18),
-          child: Ink(
+          child: SizedBox(
             width: 150,
-            constraints: const BoxConstraints(minHeight: 92),
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: background,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: voted
-                    ? background.withOpacity(.6)
-                    : cs.outlineVariant,
-              ),
-              boxShadow: voted
-                  ? [
-                      BoxShadow(
-                        color: background.withOpacity(.28),
-                        blurRadius: 16,
-                        offset: const Offset(0, 10),
-                      ),
-                    ]
-                  : null,
-            ),
-            child: Stack(
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      unit.unitNumber,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: foreground,
-                        fontSize: 16,
-                      ),
-                    ),
-                    if (unit.residentName?.isNotEmpty == true)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Text(
-                          unit.residentName!,
-                          style: TextStyle(
-                            color: foreground.withOpacity(.85),
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          voted
-                              ? Icons.how_to_vote
-                              : Icons.person_add_alt_1,
-                          size: 18,
-                          color: foreground,
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            voted
-                                ? (unit.optionText ?? 'Registrado')
-                                : 'Disponible',
-                            style: TextStyle(
-                              color: foreground,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+            child: Ink(
+              decoration: BoxDecoration(
+                color: background,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: voted
+                      ? background.withOpacity(.6)
+                      : cs.outlineVariant,
                 ),
-                if (onRemove != null && voted)
-                  Positioned(
-                    top: -4,
-                    right: -4,
-                    child: IconButton(
-                      onPressed: isProcessing ? null : onRemove,
-                      icon: const Icon(Icons.delete_outline, size: 18),
-                      color: foreground,
-                      tooltip: 'Eliminar voto',
-                    ),
-                  ),
-                if (isProcessing)
-                  Positioned.fill(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(.12),
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: const Center(
-                        child: SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                boxShadow: voted
+                    ? [
+                        BoxShadow(
+                          color: background.withOpacity(.28),
+                          blurRadius: 16,
+                          offset: const Offset(0, 10),
                         ),
+                      ]
+                    : null,
+              ),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 92),
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Stack(
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            unit.unitNumber,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: foreground,
+                              fontSize: 16,
+                            ),
+                          ),
+                          if (unit.residentName?.isNotEmpty == true)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                unit.residentName!,
+                                style: TextStyle(
+                                  color: foreground.withOpacity(.85),
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                voted
+                                    ? Icons.how_to_vote
+                                    : Icons.person_add_alt_1,
+                                size: 18,
+                                color: foreground,
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  voted
+                                      ? (unit.optionText ?? 'Registrado')
+                                      : 'Disponible',
+                                  style: TextStyle(
+                                    color: foreground,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 12,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                    ),
+                      if (onRemove != null && voted)
+                        Positioned(
+                          top: -4,
+                          right: -4,
+                          child: IconButton(
+                            onPressed: isProcessing ? null : onRemove,
+                            icon: const Icon(Icons.delete_outline, size: 18),
+                            color: foreground,
+                            tooltip: 'Eliminar voto',
+                          ),
+                        ),
+                      if (isProcessing)
+                        Positioned.fill(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(.12),
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                            child: const Center(
+                              child: SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
-              ],
+                ),
+              ),
             ),
           ),
         ),
@@ -3119,6 +3872,7 @@ class _VoteCreationBottomSheet extends StatefulWidget {
 class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
   late final VotingLiveController _controller;
   late final TextEditingController _searchCtrl;
+  late final FocusNode _searchFocus;
   HorizontalPropertyVotingLiveUnit? _selectedUnit;
   int? _selectedOptionId;
   bool _submitting = false;
@@ -3129,11 +3883,19 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
     super.initState();
     _controller = widget.controller;
     _searchCtrl = TextEditingController();
+    _searchFocus = FocusNode();
+    _searchFocus.addListener(() {
+      if (!_searchFocus.hasFocus) {
+        _controller.clearUnitSuggestions();
+      }
+    });
     _selectedUnit = widget.initialUnit;
   }
 
   @override
   void dispose() {
+    _searchFocus.dispose();
+    _controller.clearUnitSuggestions();
     _searchCtrl.dispose();
     super.dispose();
   }
@@ -3141,14 +3903,25 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
   List<HorizontalPropertyVotingLiveUnit> get _units {
     final query = _searchCtrl.text.trim().toLowerCase();
     final units = _controller.liveUnits;
-    if (query.isEmpty) return units;
-    return units
-        .where((unit) {
-          final unitNumber = unit.unitNumber.toLowerCase();
-          final resident = unit.residentName?.toLowerCase() ?? '';
-          return unitNumber.contains(query) || resident.contains(query);
-        })
-        .toList(growable: false);
+    List<HorizontalPropertyVotingLiveUnit> filtered;
+    if (query.isEmpty) {
+      filtered = List<HorizontalPropertyVotingLiveUnit>.of(units);
+    } else {
+      filtered = units
+          .where((unit) {
+            final unitNumber = unit.unitNumber.toLowerCase();
+            final resident = unit.residentName?.toLowerCase() ?? '';
+            return unitNumber.contains(query) || resident.contains(query);
+          })
+          .toList(growable: false);
+    }
+    final selected = _selectedUnit;
+    if (selected != null &&
+        filtered.every((unit) => unit.propertyUnitId != selected.propertyUnitId)) {
+      filtered = List<HorizontalPropertyVotingLiveUnit>.of(filtered)
+        ..add(selected);
+    }
+    return filtered;
   }
 
   Future<void> _handleSubmit() async {
@@ -3266,18 +4039,96 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
                           const SizedBox(height: 20),
                           TextField(
                             controller: _searchCtrl,
+                            focusNode: _searchFocus,
                             decoration: InputDecoration(
                               labelText: 'Buscar unidad',
                               prefixIcon: const Icon(Icons.search),
+                              suffixIcon: _searchCtrl.text.isNotEmpty
+                                  ? IconButton(
+                                      onPressed: () {
+                                        _searchCtrl.clear();
+                                        _controller.clearUnitSuggestions();
+                                        setState(() {});
+                                      },
+                                      icon: const Icon(Icons.close),
+                                    )
+                                  : null,
                               filled: true,
                               fillColor: cs.surfaceContainerHighest,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(14),
                               ),
                             ),
-                            onChanged: (_) => setState(() {}),
+                            onChanged: (value) {
+                              setState(() {});
+                              _controller.searchUnits(value);
+                            },
                           ),
-                          const SizedBox(height: 12),
+                          Obx(() {
+                            final shouldShow = _searchFocus.hasFocus &&
+                                _searchCtrl.text.trim().length >= 2;
+                            if (!shouldShow) {
+                              return const SizedBox(height: 12);
+                            }
+                            final loading =
+                                _controller.unitSuggestionsLoading.value;
+                            final suggestions =
+                                _controller.unitSuggestions.toList();
+                            return Column(
+                              children: [
+                                const SizedBox(height: 8),
+                                _LiveSuggestionCard(
+                                  loading: loading,
+                                  emptyLabel:
+                                      'No se encontraron unidades para la búsqueda.',
+                                  children: suggestions
+                                      .map(
+                                        (suggestion) => _UnitSuggestionTile(
+                                          suggestion: suggestion,
+                                          onTap: () {
+                                            final match = _controller.liveUnits
+                                                .firstWhereOrNull(
+                                              (unit) =>
+                                                  unit.propertyUnitId ==
+                                                  suggestion.id,
+                                            );
+                                            setState(() {
+                                              _selectedUnit = match ??
+                                                  HorizontalPropertyVotingLiveUnit(
+                                                    propertyUnitId:
+                                                        suggestion.id,
+                                                    unitNumber:
+                                                        suggestion.unitNumber,
+                                                    participationCoefficient:
+                                                        null,
+                                                    residentId: null,
+                                                    residentName:
+                                                        suggestion.residentName,
+                                                    hasVoted: false,
+                                                    votingOptionId: null,
+                                                    optionText: null,
+                                                    optionCode: null,
+                                                    optionColor: null,
+                                                    votedAt: null,
+                                                  );
+                                              _searchCtrl
+                                                ..text = suggestion.unitNumber
+                                                ..selection =
+                                                    TextSelection.collapsed(
+                                                  offset: _searchCtrl.text.length,
+                                                );
+                                            });
+                                            _controller.clearUnitSuggestions();
+                                            _searchFocus.unfocus();
+                                          },
+                                        ),
+                                      )
+                                      .toList(growable: false),
+                                ),
+                                const SizedBox(height: 12),
+                              ],
+                            );
+                          }),
                           DecoratedBox(
                             decoration: BoxDecoration(
                               color: cs.surfaceContainerHighest,

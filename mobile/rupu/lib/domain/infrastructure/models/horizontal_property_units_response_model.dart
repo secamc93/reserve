@@ -63,6 +63,9 @@ class HorizontalPropertyUnitItemModel {
   final String unitType;
   final double? participationCoefficient;
   final bool isActive;
+  final int? mainResidentId;
+  final String? mainResidentName;
+  final bool? mainResidentIsMain;
 
   HorizontalPropertyUnitItemModel({
     required this.id,
@@ -71,6 +74,9 @@ class HorizontalPropertyUnitItemModel {
     required this.unitType,
     required this.participationCoefficient,
     required this.isActive,
+    this.mainResidentId,
+    this.mainResidentName,
+    this.mainResidentIsMain,
   });
 
   factory HorizontalPropertyUnitItemModel.fromJson(Map<String, dynamic> json) {
@@ -84,6 +90,9 @@ class HorizontalPropertyUnitItemModel {
           ? participation.toDouble()
           : double.tryParse(participation?.toString() ?? ''),
       isActive: json['is_active'] as bool? ?? false,
+      mainResidentId: json['main_resident_id'] as int?,
+      mainResidentName: json['main_resident_name'] as String?,
+      mainResidentIsMain: json['main_resident_is_main'] as bool?,
     );
   }
 }

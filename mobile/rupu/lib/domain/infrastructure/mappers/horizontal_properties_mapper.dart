@@ -182,6 +182,9 @@ class HorizontalPropertiesMapper {
       unitType: model.unitType,
       participationCoefficient: model.participationCoefficient,
       isActive: model.isActive,
+      mainResidentId: model.mainResidentId,
+      mainResidentName: model.mainResidentName,
+      mainResidentIsMain: model.mainResidentIsMain,
     );
   }
 

@@ -27,6 +27,9 @@ class HorizontalPropertyUnitItem {
   final String unitType;
   final double? participationCoefficient;
   final bool isActive;
+  final int? mainResidentId;
+  final String? mainResidentName;
+  final bool? mainResidentIsMain;
 
   const HorizontalPropertyUnitItem({
     required this.id,
@@ -35,5 +38,8 @@ class HorizontalPropertyUnitItem {
     required this.unitType,
     required this.participationCoefficient,
     required this.isActive,
+    this.mainResidentId,
+    this.mainResidentName,
+    this.mainResidentIsMain,
   });
 }

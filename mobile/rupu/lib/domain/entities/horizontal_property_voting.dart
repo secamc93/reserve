@@ -215,6 +215,7 @@ class HorizontalPropertyVotingGroupLiveData {
   final List<HorizontalPropertyVotingVote> votes;
   final bool hasResultsSnapshot;
   final bool hasVotesSnapshot;
+  final bool hasUnitsSnapshot;
   final DateTime? timestamp;
 
   const HorizontalPropertyVotingGroupLiveData({
@@ -226,8 +227,35 @@ class HorizontalPropertyVotingGroupLiveData {
     this.votes = const [],
     this.hasResultsSnapshot = false,
     this.hasVotesSnapshot = false,
+    this.hasUnitsSnapshot = false,
     this.timestamp,
   });
+
+  HorizontalPropertyVotingGroupLiveData copyWith({
+    int? totalUnits,
+    int? unitsPending,
+    int? unitsVoted,
+    List<HorizontalPropertyVotingLiveUnit>? units,
+    List<HorizontalPropertyVotingLiveResult>? results,
+    List<HorizontalPropertyVotingVote>? votes,
+    bool? hasResultsSnapshot,
+    bool? hasVotesSnapshot,
+    bool? hasUnitsSnapshot,
+    DateTime? timestamp,
+  }) {
+    return HorizontalPropertyVotingGroupLiveData(
+      totalUnits: totalUnits ?? this.totalUnits,
+      unitsPending: unitsPending ?? this.unitsPending,
+      unitsVoted: unitsVoted ?? this.unitsVoted,
+      units: units ?? this.units,
+      results: results ?? this.results,
+      votes: votes ?? this.votes,
+      hasResultsSnapshot: hasResultsSnapshot ?? this.hasResultsSnapshot,
+      hasVotesSnapshot: hasVotesSnapshot ?? this.hasVotesSnapshot,
+      hasUnitsSnapshot: hasUnitsSnapshot ?? this.hasUnitsSnapshot,
+      timestamp: timestamp ?? this.timestamp,
+    );
+  }
 }
 
 class HorizontalPropertyVotingLiveUnit {

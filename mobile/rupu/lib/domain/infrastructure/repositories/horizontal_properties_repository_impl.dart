@@ -606,7 +606,8 @@ class HorizontalPropertiesRepositoryImpl
       final data = _asMap(payload['data']) ?? payload;
 
       final unitsData = data['units'];
-      final units = unitsData is List
+      final hasUnitsSnapshot = unitsData is List;
+      final units = hasUnitsSnapshot
           ? unitsData
               .whereType<Map<String, dynamic>>()
               .map(_liveUnitFromMap)
@@ -634,15 +635,26 @@ class HorizontalPropertiesRepositoryImpl
               .toList(growable: false)
           : const <HorizontalPropertyVotingVote>[];
 
+      final totalUnits = data.containsKey('total_units')
+          ? (_toInt(data['total_units']) ?? 0)
+          : -1;
+      final unitsPending = data.containsKey('units_pending')
+          ? (_toInt(data['units_pending']) ?? 0)
+          : -1;
+      final unitsVoted = data.containsKey('units_voted')
+          ? (_toInt(data['units_voted']) ?? 0)
+          : -1;
+
       return HorizontalPropertyVotingGroupLiveData(
-        totalUnits: _toInt(data['total_units']) ?? units.length,
-        unitsPending: _toInt(data['units_pending']) ?? 0,
-        unitsVoted: _toInt(data['units_voted']) ?? 0,
+        totalUnits: totalUnits >= 0 ? totalUnits : units.length,
+        unitsPending: unitsPending,
+        unitsVoted: unitsVoted,
         units: units,
         results: results,
         votes: votes,
         hasResultsSnapshot: hasResultsSnapshot,
         hasVotesSnapshot: hasVotesSnapshot,
+        hasUnitsSnapshot: hasUnitsSnapshot,
         timestamp: _parseDateTime(data['timestamp']),
       );
     } catch (e, st) {
