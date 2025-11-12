@@ -768,52 +768,64 @@ class _VotingItemCard extends StatelessWidget {
                                     votingId: voting.id,
                                     optionId: vote.votingOptionId,
                                   );
-                                  return DecoratedBox(
-                                    decoration: BoxDecoration(
-                                      color: cs.surfaceContainerHighest,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: ListTile(
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                            vertical: 4,
+                                  return Column(
+                                    children: [
+                                      DecoratedBox(
+                                        decoration: BoxDecoration(
+                                          color: cs.surfaceContainerHighest,
+                                          borderRadius: BorderRadius.circular(
+                                            12,
                                           ),
-                                      title: Text(
-                                        option?.optionText ??
-                                            'Opción ${vote.votingOptionId}',
+                                        ),
+                                        child: ListTile(
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                horizontal: 16,
+                                                vertical: 4,
+                                              ),
+                                          title: Text(
+                                            option?.optionText ??
+                                                'Opción ${vote.votingOptionId}',
+                                          ),
+                                          subtitle: Text(
+                                            'Unidad ${vote.propertyUnitId} · ${vote.id} · ${_formatDateTime(vote.votedAt)}',
+                                          ),
+                                          trailing: IconButton(
+                                            tooltip: 'Eliminar voto',
+                                            onPressed:
+                                                _controller.isDeletingVote(
+                                                  group.id,
+                                                  voting.id,
+                                                  vote.id,
+                                                )
+                                                ? null
+                                                : () => _deleteVote(
+                                                    context,
+                                                    vote,
+                                                  ),
+                                            icon:
+                                                _controller.isDeletingVote(
+                                                  group.id,
+                                                  voting.id,
+                                                  vote.id,
+                                                )
+                                                ? SizedBox(
+                                                    width: 18,
+                                                    height: 18,
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                          strokeWidth: 2.2,
+                                                          color: cs.error,
+                                                        ),
+                                                  )
+                                                : const Icon(
+                                                    Icons.delete_outline,
+                                                  ),
+                                          ),
+                                        ),
                                       ),
-                                      subtitle: Text(
-                                        'Unidad ${vote.propertyUnitId} · ${vote.id} · ${_formatDateTime(vote.votedAt)}',
-                                      ),
-                                      trailing: IconButton(
-                                        tooltip: 'Eliminar voto',
-                                        onPressed:
-                                            _controller.isDeletingVote(
-                                              group.id,
-                                              voting.id,
-                                              vote.id,
-                                            )
-                                            ? null
-                                            : () => _deleteVote(context, vote),
-                                        icon:
-                                            _controller.isDeletingVote(
-                                              group.id,
-                                              voting.id,
-                                              vote.id,
-                                            )
-                                            ? SizedBox(
-                                                width: 18,
-                                                height: 18,
-                                                child:
-                                                    CircularProgressIndicator(
-                                                      strokeWidth: 2.2,
-                                                      color: cs.error,
-                                                    ),
-                                              )
-                                            : const Icon(Icons.delete_outline),
-                                      ),
-                                    ),
+                                      SizedBox(height: 10),
+                                    ],
                                   );
                                 }),
                             ],
@@ -1411,7 +1423,6 @@ class _VotingGroupFormBottomSheetState
       ),
     );
   }
-
 }
 
 class _VotingFormBottomSheet extends StatefulWidget {
@@ -1689,7 +1700,6 @@ class _VotingFormBottomSheetState extends State<_VotingFormBottomSheet> {
       ),
     );
   }
-
 }
 
 class _VotingOptionFormBottomSheet extends StatefulWidget {
@@ -2074,10 +2084,8 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
       backgroundColor: Colors.transparent,
       useRootNavigator: true,
       isScrollControlled: true,
-      builder: (_) => _VoteCreationBottomSheet(
-        controller: controller,
-        initialUnit: unit,
-      ),
+      builder: (_) =>
+          _VoteCreationBottomSheet(controller: controller, initialUnit: unit),
     );
 
     if (result == true) {
@@ -2198,7 +2206,12 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
                             final units = controller.filteredUnits;
 
                             return SingleChildScrollView(
-                              padding: const EdgeInsets.fromLTRB(24, 10, 24, 24),
+                              padding: const EdgeInsets.fromLTRB(
+                                24,
+                                10,
+                                24,
+                                24,
+                              ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -2310,7 +2323,9 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
                                   if (isConnecting && liveData == null)
                                     const Center(
                                       child: Padding(
-                                        padding: EdgeInsets.symmetric(vertical: 24),
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: 24,
+                                        ),
                                         child: CircularProgressIndicator(
                                           strokeWidth: 2.6,
                                         ),
@@ -2318,13 +2333,16 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
                                     )
                                   else if (error != null)
                                     Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         _InlineError(message: error),
                                         const SizedBox(height: 12),
                                         OutlinedButton.icon(
                                           onPressed: controller.reconnect,
-                                          icon: const Icon(Icons.refresh_outlined),
+                                          icon: const Icon(
+                                            Icons.refresh_outlined,
+                                          ),
                                           label: const Text('Reintentar'),
                                         ),
                                       ],
@@ -2341,13 +2359,15 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
                                           .map(
                                             (unit) => _UnitVoteChip(
                                               unit: unit,
-                                              isProcessing: controller.isProcessing(
-                                                unit.propertyUnitId,
-                                              ),
+                                              isProcessing: controller
+                                                  .isProcessing(
+                                                    unit.propertyUnitId,
+                                                  ),
                                               onVote: () =>
                                                   _openVoteSheet(unit: unit),
                                               onRemove: unit.hasVoted
-                                                  ? () => _confirmDeleteVote(unit)
+                                                  ? () =>
+                                                        _confirmDeleteVote(unit)
                                                   : null,
                                             ),
                                           )
@@ -2585,7 +2605,8 @@ class _LiveErrorContent extends StatelessWidget {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final tt = theme.textTheme;
-    final text = message ??
+    final text =
+        message ??
         'No se pudo iniciar la transmisión en vivo. Inténtalo nuevamente más tarde.';
 
     return Center(
@@ -2735,10 +2756,7 @@ class _VoteCreationBottomSheet extends StatefulWidget {
   final VotingLiveController controller;
   final HorizontalPropertyVotingLiveUnit? initialUnit;
 
-  const _VoteCreationBottomSheet({
-    required this.controller,
-    this.initialUnit,
-  });
+  const _VoteCreationBottomSheet({required this.controller, this.initialUnit});
 
   @override
   State<_VoteCreationBottomSheet> createState() =>
