@@ -2561,9 +2561,7 @@ class VotingLiveController extends GetxController {
   final filter = ''.obs;
   final RxSet<int> _processingUnitIds = <int>{}.obs;
   final residentSuggestions = <HorizontalPropertyResidentItem>[].obs;
-  final unitSuggestions = <_UnitSearchSuggestion>[].obs;
   final residentSuggestionsLoading = false.obs;
-  final unitSuggestionsLoading = false.obs;
 
   HorizontalPropertiesRepository get repository => _repository;
 
@@ -2791,6 +2789,18 @@ class VotingLiveController extends GetxController {
   void _ingestLiveEvent(HorizontalPropertyVotingGroupLiveData event) {
     final previous = liveData.value;
 
+    final previousResultsById = {
+      for (final result
+          in previous?.results ?? const <HorizontalPropertyVotingLiveResult>[])
+        result.votingOptionId: result,
+    };
+
+    final previousVotesByUnit = {
+      for (final vote
+          in previous?.votes ?? const <HorizontalPropertyVotingVote>[])
+        vote.propertyUnitId: vote,
+    };
+
     var mergedUnits = event.hasUnitsSnapshot
         ? event.units
         : _mergeUnits(previous?.units ?? const [], event.units);
@@ -2807,6 +2817,48 @@ class VotingLiveController extends GetxController {
       mergedVotes = mergedVotes
           .where((vote) => vote.id != event.removedVoteId)
           .toList(growable: false);
+    }
+
+    final incomingResultsById = {
+      for (final result in event.results)
+        result.votingOptionId: result,
+    };
+
+    if (!event.hasVotesSnapshot && event.votes.isNotEmpty) {
+      final removedUnitIds = <int>{};
+      for (final vote in event.votes) {
+        final previousVote = previousVotesByUnit[vote.propertyUnitId];
+        if (previousVote == null) continue;
+        if (previousVote.id == vote.id) continue;
+
+        final sameOption = previousVote.votingOptionId == vote.votingOptionId;
+        final previousCount = previousResultsById[previousVote.votingOptionId]
+            ?.voteCount;
+        final newCount = incomingResultsById[vote.votingOptionId]?.voteCount;
+        final countsDecreased = previousCount != null &&
+            newCount != null &&
+            newCount < previousCount;
+        final pendingIncreased = () {
+          final previousPending = previous?.unitsPending;
+          final nextPending = event.unitsPending;
+          if (previousPending == null ||
+              previousPending < 0 ||
+              nextPending < 0) {
+            return false;
+          }
+          return nextPending > previousPending;
+        }();
+
+        if ((sameOption && (countsDecreased || pendingIncreased)) ||
+            (!sameOption && countsDecreased)) {
+          removedUnitIds.add(vote.propertyUnitId);
+        }
+      }
+      if (removedUnitIds.isNotEmpty) {
+        mergedVotes = mergedVotes
+            .where((vote) => !removedUnitIds.contains(vote.propertyUnitId))
+            .toList(growable: false);
+      }
     }
 
     final votesByUnit = <int, HorizontalPropertyVotingVote>{};
@@ -2999,6 +3051,21 @@ class VotingLiveController extends GetxController {
     }
   }
 
+  Future<void> refreshUnitsSnapshot({bool refreshVotes = false}) async {
+    await _loadInitialDetails();
+    if (!refreshVotes || isClosed) return;
+    try {
+      await parent.loadVotingVotes(
+        groupId: groupId,
+        votingId: votingId,
+        force: true,
+      );
+    } catch (error, stackTrace) {
+      debugPrint('Error refrescando votos en vivo: $error');
+      debugPrint('Stack: $stackTrace');
+    }
+  }
+
   String _describeStreamError(Object error) {
     if (error is StateError && error.message.isNotEmpty) {
       return error.message;
@@ -3051,59 +3118,6 @@ class VotingLiveController extends GetxController {
   void clearResidentSuggestions() {
     residentSuggestions.clear();
     residentSuggestionsLoading.value = false;
-  }
-
-  Future<void> searchUnits(String query) async {
-    final trimmed = query.trim();
-    if (trimmed.length < 2) {
-      unitSuggestions.clear();
-      unitSuggestionsLoading.value = false;
-      return;
-    }
-    unitSuggestionsLoading.value = true;
-    try {
-      final response = await repository.getHorizontalPropertyUnits(
-        id: parent.propertyId,
-        query: {
-          'search': trimmed,
-          'page': '1',
-          'page_size': '8',
-          'include_residents': 'true',
-        },
-      );
-      final votedIds = {
-        for (final unit in liveUnits)
-          if (unit.hasVoted) unit.propertyUnitId
-      };
-      final suggestions = response.units
-          .map(
-            (unit) => _UnitSearchSuggestion(
-              id: unit.id,
-              unitNumber: unit.number,
-              residentName: unit.mainResidentName ??
-                  liveUnits
-                      .firstWhereOrNull(
-                        (item) => item.propertyUnitId == unit.id,
-                      )
-                      ?.residentName,
-              isMain: unit.mainResidentIsMain,
-            ),
-          )
-          .where((suggestion) => !votedIds.contains(suggestion.id))
-          .toList(growable: false);
-      unitSuggestions.assignAll(suggestions);
-    } catch (error, stackTrace) {
-      debugPrint('Error buscando unidades: $error');
-      debugPrint('Stack: $stackTrace');
-      unitSuggestions.clear();
-    } finally {
-      unitSuggestionsLoading.value = false;
-    }
-  }
-
-  void clearUnitSuggestions() {
-    unitSuggestions.clear();
-    unitSuggestionsLoading.value = false;
   }
 
   Future<HorizontalPropertyActionResult> castVote({
@@ -3224,19 +3238,6 @@ Color? _tryParseHexColor(String? value) {
   return null;
 }
 
-class _UnitSearchSuggestion {
-  final int id;
-  final String unitNumber;
-  final String? residentName;
-  final bool? isMain;
-
-  const _UnitSearchSuggestion({
-    required this.id,
-    required this.unitNumber,
-    this.residentName,
-    this.isMain,
-  });
-}
 
 class _LiveSuggestionCard extends StatelessWidget {
   final bool loading;
@@ -3625,69 +3626,6 @@ class _PendingUnitSuggestionTile extends StatelessWidget {
   }
 }
 
-class _UnitSuggestionTile extends StatelessWidget {
-  final _UnitSearchSuggestion suggestion;
-  final VoidCallback onTap;
-
-  const _UnitSuggestionTile({
-    required this.suggestion,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      suggestion.unitNumber,
-                      style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-                    ),
-                    if (suggestion.residentName?.isNotEmpty == true) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        suggestion.residentName!,
-                        style: tt.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              if (suggestion.isMain == true)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: cs.primary.withValues(alpha: .12),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    'Principal',
-                    style: tt.labelSmall?.copyWith(color: cs.primary),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _LiveOptionStat extends StatelessWidget {
   final String label;
@@ -4099,32 +4037,40 @@ class _VoteCreationBottomSheet extends StatefulWidget {
 class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
   late final VotingLiveController _controller;
   late final TextEditingController _searchCtrl;
-  late final FocusNode _searchFocus;
   HorizontalPropertyVotingLiveUnit? _selectedUnit;
   int? _selectedOptionId;
   bool _submitting = false;
   String? _errorMessage;
+  bool _refreshingUnits = false;
 
   @override
   void initState() {
     super.initState();
     _controller = widget.controller;
     _searchCtrl = TextEditingController();
-    _searchFocus = FocusNode();
-    _searchFocus.addListener(() {
-      if (!_searchFocus.hasFocus) {
-        _controller.clearUnitSuggestions();
-      }
-    });
     _selectedUnit = widget.initialUnit;
+    Future.microtask(_refreshLatestUnits);
   }
 
   @override
   void dispose() {
-    _searchFocus.dispose();
-    _controller.clearUnitSuggestions();
     _searchCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _refreshLatestUnits() async {
+    if (!mounted) return;
+    setState(() {
+      _refreshingUnits = true;
+    });
+    try {
+      await _controller.refreshUnitsSnapshot(refreshVotes: true);
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _refreshingUnits = false;
+      });
+    }
   }
 
   List<HorizontalPropertyVotingLiveUnit> get _units {
@@ -4290,9 +4236,8 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
                             ),
                           ),
                           const SizedBox(height: 20),
-                          TextField(
+                                                    TextField(
                             controller: _searchCtrl,
-                            focusNode: _searchFocus,
                             decoration: InputDecoration(
                               labelText: 'Buscar unidad',
                               prefixIcon: const Icon(Icons.search),
@@ -4300,7 +4245,6 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
                                   ? IconButton(
                                       onPressed: () {
                                         _searchCtrl.clear();
-                                        _controller.clearUnitSuggestions();
                                         setState(() {});
                                       },
                                       icon: const Icon(Icons.close),
@@ -4314,119 +4258,26 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
                             ),
                             onChanged: (value) {
                               setState(() {});
-                              _controller.searchUnits(value);
                             },
                           ),
-                          Obx(() {
-                            final hasFocus = _searchFocus.hasFocus;
-                            final query = _searchCtrl.text.trim();
-                            final loadingValue =
-                                _controller.unitSuggestionsLoading.value;
-                            final suggestionsValue =
-                                _controller.unitSuggestions.toList();
-                            final pendingUnits = _controller.pendingUnits;
-
-                            if (!hasFocus) {
-                              return const SizedBox(height: 12);
-                            }
-
-                            if (query.length < 2) {
-                              return Column(
-                                children: [
-                                  const SizedBox(height: 8),
-                                  _LiveSuggestionCard(
-                                    loading: false,
-                                    emptyLabel:
-                                        'No hay unidades pendientes de votar.',
-                                    children: pendingUnits
-                                        .map(
-                                          (unit) => _PendingUnitSuggestionTile(
-                                            unit: unit,
-                                            onTap: () {
-                                              setState(() {
-                                                _selectedUnit = unit;
-                                              });
-                                              _searchCtrl
-                                                ..text = unit.unitNumber
-                                                ..selection =
-                                                    TextSelection.collapsed(
-                                                  offset: _searchCtrl.text.length,
-                                                );
-                                              _controller.clearUnitSuggestions();
-                                              _searchFocus.unfocus();
-                                            },
-                                          ),
-                                        )
-                                        .toList(growable: false),
-                                  ),
-                                  const SizedBox(height: 12),
-                                ],
-                              );
-                            }
-
-                            final loading = loadingValue;
-                            final suggestions = suggestionsValue;
-
-                            return Column(
-                              children: [
-                                const SizedBox(height: 8),
-                                _LiveSuggestionCard(
-                                  loading: loading,
-                                  emptyLabel:
-                                      'No se encontraron unidades para la búsqueda.',
-                                  children: suggestions
-                                      .map(
-                                        (suggestion) => _UnitSuggestionTile(
-                                          suggestion: suggestion,
-                                          onTap: () {
-                                            final match = _controller.liveUnits
-                                                .firstWhereOrNull(
-                                              (unit) =>
-                                                  unit.propertyUnitId ==
-                                                  suggestion.id,
-                                            );
-                                            setState(() {
-                                              _selectedUnit = match ??
-                                                  HorizontalPropertyVotingLiveUnit(
-                                                    propertyUnitId:
-                                                        suggestion.id,
-                                                    unitNumber:
-                                                        suggestion.unitNumber,
-                                                    participationCoefficient:
-                                                        null,
-                                                    residentId: null,
-                                                    residentName:
-                                                        suggestion.residentName,
-                                                    hasVoted: false,
-                                                    votingOptionId: null,
-                                                    optionText: null,
-                                                    optionCode: null,
-                                                    optionColor: null,
-                                                    votedAt: null,
-                                                  );
-                                              _searchCtrl
-                                                ..text = suggestion.unitNumber
-                                                ..selection =
-                                                    TextSelection.collapsed(
-                                                  offset: _searchCtrl.text.length,
-                                                );
-                                            });
-                                            _controller.clearUnitSuggestions();
-                                            _searchFocus.unfocus();
-                                          },
-                                        ),
-                                      )
-                                      .toList(growable: false),
-                                ),
-                                const SizedBox(height: 12),
-                              ],
-                            );
-                          }),
+                          const SizedBox(height: 12),
                           Obx(() {
                             _controller.liveData.value;
                             final units = _units;
 
                             if (units.isEmpty) {
+                              if (_refreshingUnits) {
+                                return const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 24),
+                                  child: Center(
+                                    child: SizedBox(
+                                      height: 22,
+                                      width: 22,
+                                      child: CircularProgressIndicator(strokeWidth: 2.4),
+                                    ),
+                                  ),
+                                );
+                              }
                               return DecoratedBox(
                                 decoration: BoxDecoration(
                                   color: cs.surfaceContainerHighest,
