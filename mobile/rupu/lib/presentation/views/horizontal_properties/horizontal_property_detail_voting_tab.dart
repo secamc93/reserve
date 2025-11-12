@@ -2601,8 +2601,23 @@ class VotingLiveController extends GetxController {
   List<HorizontalPropertyVotingLiveResult> get liveResults =>
       liveData.value?.results ?? const [];
 
-  int get totalUnits =>
-      liveData.value?.totalUnits ?? liveUnits.length;
+  int get totalUnits {
+    final provided = liveData.value?.totalUnits;
+    if (provided != null && provided >= 0) {
+      return provided;
+    }
+    final units = liveUnits;
+    if (units.isNotEmpty) {
+      return units.length;
+    }
+    final pending = liveData.value?.unitsPending;
+    if (pending != null && pending >= 0) {
+      final fromResults =
+          liveResults.fold<int>(0, (sum, item) => sum + item.voteCount);
+      return fromResults + pending;
+    }
+    return 0;
+  }
 
   List<HorizontalPropertyVotingLiveUnit> get pendingUnits {
     final units = liveUnits
@@ -2612,8 +2627,20 @@ class VotingLiveController extends GetxController {
     return units;
   }
 
-  int get unitsVoted => liveData.value?.unitsVoted ??
-      liveUnits.where((unit) => unit.hasVoted).length;
+  int get unitsVoted {
+    final provided = liveData.value?.unitsVoted;
+    if (provided != null && provided >= 0) {
+      return provided;
+    }
+    final votes = liveData.value?.votes;
+    if (votes != null && votes.isNotEmpty) {
+      return votes.length;
+    }
+    if (liveResults.isNotEmpty) {
+      return liveResults.fold<int>(0, (sum, item) => sum + item.voteCount);
+    }
+    return liveUnits.where((unit) => unit.hasVoted).length;
+  }
 
   int get unitsPending {
     final pendingFromData = liveData.value?.unitsPending;
@@ -2629,7 +2656,7 @@ class VotingLiveController extends GetxController {
     final units = liveUnits;
     Iterable<HorizontalPropertyVotingLiveUnit> filtered;
     if (query.isEmpty) {
-      filtered = units.where((unit) => !unit.hasVoted);
+      filtered = units;
     } else {
       filtered = units.where((unit) {
         final unitNumber = unit.unitNumber.toLowerCase();
@@ -2638,7 +2665,14 @@ class VotingLiveController extends GetxController {
       });
     }
     final list = filtered.toList(growable: false);
-    list.sort((a, b) => a.unitNumber.compareTo(b.unitNumber));
+    list.sort((a, b) {
+      final pendingComparison =
+          (a.hasVoted ? 1 : 0).compareTo(b.hasVoted ? 1 : 0);
+      if (pendingComparison != 0) {
+        return pendingComparison;
+      }
+      return a.unitNumber.compareTo(b.unitNumber);
+    });
     return list;
   }
 
@@ -2649,8 +2683,20 @@ class VotingLiveController extends GetxController {
 
   int get totalVotes => parent.totalVotesFor(groupId, votingId);
 
-  int get totalVotesFromUnits =>
-      liveUnits.where((unit) => unit.hasVoted).length;
+  int get totalVotesFromUnits {
+    final votes = liveData.value?.votes;
+    if (votes != null && votes.isNotEmpty) {
+      return votes.length;
+    }
+    if (liveResults.isNotEmpty) {
+      return liveResults.fold<int>(0, (sum, item) => sum + item.voteCount);
+    }
+    final units = liveUnits;
+    if (units.isNotEmpty) {
+      return units.where((unit) => unit.hasVoted).length;
+    }
+    return parent.totalVotesFor(groupId, votingId);
+  }
 
   int countForOption(int optionId) {
     final units = liveUnits;
@@ -3272,6 +3318,196 @@ class _LiveSuggestionCard extends StatelessWidget {
   }
 }
 
+class _LiveOptionsSummary extends StatelessWidget {
+  final VotingLiveController controller;
+
+  const _LiveOptionsSummary({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final _ = controller.liveData.value;
+      final optionsPanel = _LiveOptionsBoard(controller: controller);
+      final summaryCard = _LiveSummaryCard(controller: controller);
+
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth >= 720;
+          if (isWide) {
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: optionsPanel),
+                const SizedBox(width: 16),
+                SizedBox(
+                  width: 280,
+                  child: summaryCard,
+                ),
+              ],
+            );
+          }
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              optionsPanel,
+              const SizedBox(height: 16),
+              summaryCard,
+            ],
+          );
+        },
+      );
+    });
+  }
+}
+
+class _LiveOptionsBoard extends StatelessWidget {
+  final VotingLiveController controller;
+
+  const _LiveOptionsBoard({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final _ = controller.liveData.value;
+      final options = controller.options;
+      final tt = Theme.of(context).textTheme;
+      final cs = Theme.of(context).colorScheme;
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Opciones de votación',
+            style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 12),
+          if (options.isEmpty)
+            Text(
+              'Aún no se han configurado opciones para esta votación.',
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+            )
+          else
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: options
+                    .map(
+                      (option) => Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: _LiveOptionCardWidget(
+                          controller: controller,
+                          option: option,
+                        ),
+                      ),
+                    )
+                    .toList(growable: false),
+              ),
+            ),
+        ],
+      );
+    });
+  }
+}
+
+class _LiveOptionCardWidget extends StatelessWidget {
+  final VotingLiveController controller;
+  final HorizontalPropertyVotingOption option;
+
+  const _LiveOptionCardWidget({
+    required this.controller,
+    required this.option,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Obx(() {
+      final percentFormat = NumberFormat('##0.0#');
+      final coefficientFormat = NumberFormat('##0.0#');
+
+      final result = controller.resultForOption(option.id);
+      final count = controller.countForOption(option.id);
+      final totalVotes = controller.unitsVoted;
+      final votePercent = totalVotes == 0
+          ? 0.0
+          : (count / totalVotes).clamp(0.0, 1.0) * 100;
+
+      final coefficientValue = controller.coefficientForOption(option.id);
+      final totalCoefficient = controller.totalCoefficient;
+      final coefficientPercent = totalCoefficient <= 0
+          ? 0.0
+          : (coefficientValue / totalCoefficient) * 100;
+
+      final color =
+          _tryParseHexColor(result?.color ?? option.color) ?? cs.primary;
+
+      return Container(
+        width: 220,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: .08),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: color.withValues(alpha: .3)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    option.optionText,
+                    style: tt.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '$count',
+              style: tt.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            Text(
+              'voto${count == 1 ? '' : 's'}',
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(height: 16),
+            _LiveOptionStat(
+              label: 'Porcentaje',
+              value: '${percentFormat.format(votePercent)}%',
+            ),
+            const SizedBox(height: 6),
+            _LiveOptionStat(
+              label: 'Por coef.',
+              value: totalCoefficient <= 0
+                  ? '--'
+                  : '${percentFormat.format(coefficientPercent)}%',
+              caption: totalCoefficient <= 0
+                  ? null
+                  : '${coefficientFormat.format(coefficientValue)} pts',
+            ),
+          ],
+        ),
+      );
+    });
+  }
+}
+
 class _ResidentLookupTile extends StatelessWidget {
   final HorizontalPropertyResidentItem resident;
   final VoidCallback onTap;
@@ -3453,187 +3689,6 @@ class _UnitSuggestionTile extends StatelessWidget {
   }
 }
 
-class _LiveOptionsSummary extends StatelessWidget {
-  final VotingLiveController controller;
-
-  const _LiveOptionsSummary({required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    final optionsPanel = _LiveOptionsBoard(controller: controller);
-    final summaryCard = _LiveSummaryCard(controller: controller);
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isWide = constraints.maxWidth >= 720;
-        if (isWide) {
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: optionsPanel),
-              const SizedBox(width: 16),
-              SizedBox(
-                width: 280,
-                child: summaryCard,
-              ),
-            ],
-          );
-        }
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            optionsPanel,
-            const SizedBox(height: 16),
-            summaryCard,
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _LiveOptionsBoard extends StatelessWidget {
-  final VotingLiveController controller;
-
-  const _LiveOptionsBoard({required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    final options = controller.options;
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Opciones de votación',
-          style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-        ),
-        const SizedBox(height: 12),
-        if (options.isEmpty)
-          Text(
-            'Aún no se han configurado opciones para esta votación.',
-            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-          )
-        else
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: options
-                  .map(
-                    (option) => Padding(
-                      padding: const EdgeInsets.only(right: 12),
-                      child: _LiveOptionCardWidget(
-                        controller: controller,
-                        option: option,
-                      ),
-                    ),
-                  )
-                  .toList(growable: false),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _LiveOptionCardWidget extends StatelessWidget {
-  final VotingLiveController controller;
-  final HorizontalPropertyVotingOption option;
-
-  const _LiveOptionCardWidget({
-    required this.controller,
-    required this.option,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final percentFormat = NumberFormat('##0.0#');
-    final coefficientFormat = NumberFormat('##0.0#');
-
-    final result = controller.resultForOption(option.id);
-    final count = controller.countForOption(option.id);
-    final totalVotes = controller.unitsVoted;
-    final votePercent = totalVotes == 0
-        ? 0.0
-        : (count / totalVotes).clamp(0.0, 1.0) * 100;
-
-    final coefficientValue = controller.coefficientForOption(option.id);
-    final totalCoefficient = controller.totalCoefficient;
-    final coefficientPercent = totalCoefficient <= 0
-        ? 0.0
-        : (coefficientValue / totalCoefficient) * 100;
-
-    final color =
-        _tryParseHexColor(result?.color ?? option.color) ?? cs.primary;
-
-    return Container(
-      width: 220,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: .08),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: color.withValues(alpha: .3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  option.optionText,
-                  style: tt.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            '$count',
-            style: tt.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          Text(
-            'voto${count == 1 ? '' : 's'}',
-            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-          ),
-          const SizedBox(height: 16),
-          _LiveOptionStat(
-            label: 'Porcentaje',
-            value: '${percentFormat.format(votePercent)}%',
-          ),
-          const SizedBox(height: 6),
-          _LiveOptionStat(
-            label: 'Por coef.',
-            value: totalCoefficient <= 0
-                ? '--'
-                : '${percentFormat.format(coefficientPercent)}%',
-            caption: totalCoefficient <= 0
-                ? null
-                : '${coefficientFormat.format(coefficientValue)} pts',
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _LiveOptionStat extends StatelessWidget {
   final String label;
   final String value;
@@ -3693,101 +3748,104 @@ class _LiveSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final countFormat = NumberFormat('#,##0');
-    final percentFormat = NumberFormat('##0.0#');
-    final coefficientFormat = NumberFormat('##0.###');
 
-    final totalUnits = controller.totalUnits;
-    final votedUnits = controller.unitsVoted;
-    final pendingUnits = controller.unitsPending;
-    final totalVotes = controller.totalVotesFromUnits;
+    return Obx(() {
+      final countFormat = NumberFormat('#,##0');
+      final percentFormat = NumberFormat('##0.0#');
+      final coefficientFormat = NumberFormat('##0.###');
 
-    final votePercent = totalUnits == 0
-        ? 0.0
-        : (votedUnits / totalUnits) * 100;
-    final pendingPercent = totalUnits == 0
-        ? 0.0
-        : (pendingUnits / totalUnits) * 100;
+      final totalUnits = controller.totalUnits;
+      final votedUnits = controller.unitsVoted;
+      final pendingUnits = controller.unitsPending;
+      final totalVotes = controller.totalVotesFromUnits;
 
-    final totalCoefficient = controller.totalCoefficient;
-    final votedCoefficient = controller.votedCoefficient;
-    final pendingCoefficient = controller.pendingCoefficient < 0
-        ? 0.0
-        : controller.pendingCoefficient;
-    final votedCoefPercent = totalCoefficient <= 0
-        ? 0.0
-        : (votedCoefficient / totalCoefficient) * 100;
-    final pendingCoefPercent = totalCoefficient <= 0
-        ? 0.0
-        : (pendingCoefficient / totalCoefficient) * 100;
+      final votePercent = totalUnits == 0
+          ? 0.0
+          : (votedUnits / totalUnits) * 100;
+      final pendingPercent = totalUnits == 0
+          ? 0.0
+          : (pendingUnits / totalUnits) * 100;
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: cs.outlineVariant),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Resumen',
-              style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 12),
-            _SummaryMetricLine(
-              label: 'Total',
-              value: countFormat.format(totalUnits),
-              caption: 'Unidades / residentes',
-            ),
-            const SizedBox(height: 10),
-            _SummaryMetricLine(
-              label: 'Votaron',
-              value: countFormat.format(votedUnits),
-              trailing: '${percentFormat.format(votePercent)}%',
-            ),
-            const SizedBox(height: 10),
-            _SummaryMetricLine(
-              label: 'Pendientes',
-              value: countFormat.format(pendingUnits),
-              trailing: '${percentFormat.format(pendingPercent)}%',
-            ),
-            const SizedBox(height: 10),
-            _SummaryMetricLine(
-              label: 'Registros',
-              value: countFormat.format(totalVotes),
-              caption: 'Votos emitidos',
-            ),
-            const SizedBox(height: 16),
-            Divider(height: 1, color: cs.outlineVariant),
-            const SizedBox(height: 16),
-            _SummaryMetricLine(
-              label: 'Coef. total',
-              value: coefficientFormat.format(totalCoefficient),
-              trailing: totalCoefficient <= 0 ? null : '100%',
-            ),
-            const SizedBox(height: 10),
-            _SummaryMetricLine(
-              label: 'Coef. votado',
-              value: coefficientFormat.format(votedCoefficient),
-              trailing: totalCoefficient <= 0
-                  ? null
-                  : '${percentFormat.format(votedCoefPercent)}%',
-            ),
-            const SizedBox(height: 10),
-            _SummaryMetricLine(
-              label: 'Coef. pendiente',
-              value: coefficientFormat.format(pendingCoefficient),
-              trailing: totalCoefficient <= 0
-                  ? null
-                  : '${percentFormat.format(pendingCoefPercent)}%',
-            ),
-          ],
+      final totalCoefficient = controller.totalCoefficient;
+      final votedCoefficient = controller.votedCoefficient;
+      final pendingCoefficient = controller.pendingCoefficient < 0
+          ? 0.0
+          : controller.pendingCoefficient;
+      final votedCoefPercent = totalCoefficient <= 0
+          ? 0.0
+          : (votedCoefficient / totalCoefficient) * 100;
+      final pendingCoefPercent = totalCoefficient <= 0
+          ? 0.0
+          : (pendingCoefficient / totalCoefficient) * 100;
+
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: cs.outlineVariant),
         ),
-      ),
-    );
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Resumen',
+                style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 12),
+              _SummaryMetricLine(
+                label: 'Total',
+                value: countFormat.format(totalUnits),
+                caption: 'Unidades / residentes',
+              ),
+              const SizedBox(height: 10),
+              _SummaryMetricLine(
+                label: 'Votaron',
+                value: countFormat.format(votedUnits),
+                trailing: '${percentFormat.format(votePercent)}%',
+              ),
+              const SizedBox(height: 10),
+              _SummaryMetricLine(
+                label: 'Pendientes',
+                value: countFormat.format(pendingUnits),
+                trailing: '${percentFormat.format(pendingPercent)}%',
+              ),
+              const SizedBox(height: 10),
+              _SummaryMetricLine(
+                label: 'Registros',
+                value: countFormat.format(totalVotes),
+                caption: 'Votos emitidos',
+              ),
+              const SizedBox(height: 16),
+              Divider(height: 1, color: cs.outlineVariant),
+              const SizedBox(height: 16),
+              _SummaryMetricLine(
+                label: 'Coef. total',
+                value: coefficientFormat.format(totalCoefficient),
+                trailing: totalCoefficient <= 0 ? null : '100%',
+              ),
+              const SizedBox(height: 10),
+              _SummaryMetricLine(
+                label: 'Coef. votado',
+                value: coefficientFormat.format(votedCoefficient),
+                trailing: totalCoefficient <= 0
+                    ? null
+                    : '${percentFormat.format(votedCoefPercent)}%',
+              ),
+              const SizedBox(height: 10),
+              _SummaryMetricLine(
+                label: 'Coef. pendiente',
+                value: coefficientFormat.format(pendingCoefficient),
+                trailing: totalCoefficient <= 0
+                    ? null
+                    : '${percentFormat.format(pendingCoefPercent)}%',
+              ),
+            ],
+          ),
+        ),
+      );
+    });
   }
 }
 
@@ -4072,13 +4130,35 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
   List<HorizontalPropertyVotingLiveUnit> get _units {
     final query = _searchCtrl.text.trim().toLowerCase();
     final units = _controller.liveUnits;
+    HorizontalPropertyVotingLiveUnit? effectiveSelected = _selectedUnit;
+    if (effectiveSelected != null) {
+      final selectedId = effectiveSelected.propertyUnitId;
+      final match = units.firstWhereOrNull(
+        (unit) => unit.propertyUnitId == selectedId,
+      );
+      if (match != null) {
+        if (match.hasVoted) {
+          effectiveSelected = null;
+          _selectedUnit = null;
+        } else if (!identical(match, effectiveSelected)) {
+          effectiveSelected = match;
+          _selectedUnit = match;
+        }
+      } else if (effectiveSelected.hasVoted) {
+        effectiveSelected = null;
+        _selectedUnit = null;
+      }
+    }
+
+    final pendingUnits = units
+        .where((unit) => !unit.hasVoted)
+        .toList(growable: false);
+
     List<HorizontalPropertyVotingLiveUnit> filtered;
     if (query.isEmpty) {
-      filtered = units
-          .where((unit) => !unit.hasVoted)
-          .toList(growable: false);
+      filtered = pendingUnits;
     } else {
-      filtered = units
+      filtered = pendingUnits
           .where((unit) {
             final unitNumber = unit.unitNumber.toLowerCase();
             final resident = unit.residentName?.toLowerCase() ?? '';
@@ -4087,7 +4167,8 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
           .toList(growable: false);
     }
     filtered.sort((a, b) => a.unitNumber.compareTo(b.unitNumber));
-    final selected = _selectedUnit;
+
+    final selected = effectiveSelected;
     if (selected != null &&
         filtered.every((unit) => unit.propertyUnitId != selected.propertyUnitId)) {
       filtered = List<HorizontalPropertyVotingLiveUnit>.of(filtered)
@@ -4341,85 +4422,52 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
                               ],
                             );
                           }),
-                          DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: cs.surfaceContainerHighest,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: cs.outlineVariant),
-                            ),
-                            child: ListView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: _units.length,
-                              itemBuilder: (context, index) {
-                                final unit = _units[index];
-                                final isSelected = _selectedUnit
-                                        ?.propertyUnitId ==
-                                    unit.propertyUnitId;
-                                final isDisabled = unit.hasVoted;
+                          Obx(() {
+                            _controller.liveData.value;
+                            final units = _units;
 
-                                return Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    onTap: isDisabled
-                                        ? null
-                                        : () {
-                                            setState(() {
-                                              if (isSelected) {
-                                                _selectedUnit = null;
-                                              } else {
-                                                _selectedUnit = unit;
-                                              }
-                                            });
-                                          },
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 6,
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                unit.unitNumber,
-                                                style: tt.titleSmall?.copyWith(
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                              if (unit.residentName
-                                                      ?.isNotEmpty ==
-                                                  true)
-                                                Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                          top: 2),
-                                                  child: Text(
-                                                    unit.residentName!,
-                                                    style: tt.bodySmall?.copyWith(
-                                                      color:
-                                                          cs.onSurfaceVariant,
-                                                    ),
-                                                  ),
-                                                ),
-                                            ],
-                                          ),
-                                        ),
-                                        if (isDisabled)
-                                          const Icon(
-                                            Icons.how_to_vote,
-                                            color: Colors.green,
-                                          )
-                                        else
-                                          Radio<int>(
-                                            value: unit.propertyUnitId,
-                                            groupValue:
-                                                _selectedUnit
-                                                    ?.propertyUnitId,
-                                            onChanged: (_) {
+                            if (units.isEmpty) {
+                              return DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: cs.surfaceContainerHighest,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: cs.outlineVariant),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Text(
+                                    'Todas las unidades han registrado su voto.',
+                                    style: tt.bodyMedium?.copyWith(
+                                      color: cs.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }
+
+                            return DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: cs.surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: cs.outlineVariant),
+                              ),
+                              child: ListView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: units.length,
+                                itemBuilder: (context, index) {
+                                  final unit = units[index];
+                                  final isSelected = _selectedUnit
+                                          ?.propertyUnitId ==
+                                      unit.propertyUnitId;
+                                  final isDisabled = unit.hasVoted;
+
+                                  return Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: isDisabled
+                                          ? null
+                                          : () {
                                               setState(() {
                                                 if (isSelected) {
                                                   _selectedUnit = null;
@@ -4428,14 +4476,71 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
                                                 }
                                               });
                                             },
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 6,
                                         ),
-                                      ],
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    unit.unitNumber,
+                                                    style: tt.titleSmall?.copyWith(
+                                                      fontWeight: FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                  if (unit.residentName
+                                                          ?.isNotEmpty ==
+                                                      true)
+                                                    Padding(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                              top: 2),
+                                                      child: Text(
+                                                        unit.residentName!,
+                                                        style: tt.bodySmall?.copyWith(
+                                                          color: cs
+                                                              .onSurfaceVariant,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                ],
+                                              ),
+                                            ),
+                                            if (isDisabled)
+                                              const Icon(
+                                                Icons.how_to_vote,
+                                                color: Colors.green,
+                                              )
+                                            else
+                                              Radio<int>(
+                                                value: unit.propertyUnitId,
+                                                groupValue: _selectedUnit
+                                                    ?.propertyUnitId,
+                                                onChanged: (_) {
+                                                  setState(() {
+                                                    if (isSelected) {
+                                                      _selectedUnit = null;
+                                                    } else {
+                                                      _selectedUnit = unit;
+                                                    }
+                                                  });
+                                                },
+                                              ),
+                                          ],
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
+                                  );
+                                },
+                              ),
+                            );
+                          }),
                           const SizedBox(height: 20),
                           Text(
                             'Opciones de votación',
