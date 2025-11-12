@@ -672,7 +672,7 @@ class HorizontalPropertiesRepositoryImpl
       optionCode: (json['option_code'] as String?)?.trim() ?? '',
       color: json['color'] as String?,
       voteCount: _toInt(json['vote_count']) ?? 0,
-      percentage: _toInt(json['percentage']) ?? 0,
+      percentage: _toDouble(json['percentage']) ?? 0,
     );
   }
 
