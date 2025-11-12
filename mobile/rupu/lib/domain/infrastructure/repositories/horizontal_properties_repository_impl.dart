@@ -603,7 +603,26 @@ class HorizontalPropertiesRepositoryImpl
     Map<String, dynamic> payload,
   ) {
     try {
-      final data = _asMap(payload['data']) ?? payload;
+      final rawData = payload['data'];
+      if (rawData is List) {
+        final units = rawData
+            .whereType<Map<String, dynamic>>()
+            .map(_liveUnitFromMap)
+            .whereType<HorizontalPropertyVotingLiveUnit>()
+            .map((unit) => unit.copyWith(hasVoted: false))
+            .toList(growable: false);
+
+        return HorizontalPropertyVotingGroupLiveData(
+          totalUnits: -1,
+          unitsPending: units.length,
+          unitsVoted: -1,
+          units: units,
+          hasUnitsSnapshot: false,
+          timestamp: _parseDateTime(payload['timestamp']),
+        );
+      }
+
+      final data = _asMap(rawData) ?? payload;
 
       final unitsData = data['units'];
       final hasUnitsSnapshot = unitsData is List;
@@ -627,13 +646,25 @@ class HorizontalPropertiesRepositoryImpl
 
       final votesData = data['votes'];
       final hasVotesSnapshot = votesData is List;
-      final votes = hasVotesSnapshot
-          ? votesData
+      final votePayloads = <Map<String, dynamic>>[];
+      if (hasVotesSnapshot) {
+        votePayloads.addAll(
+          votesData
               .whereType<Map<String, dynamic>>()
-              .map(_liveVoteFromMap)
-              .whereType<HorizontalPropertyVotingVote>()
-              .toList(growable: false)
-          : const <HorizontalPropertyVotingVote>[];
+              .map(_normalizeVotePayload)
+              .whereType<Map<String, dynamic>>(),
+        );
+      } else {
+        final directVote = _extractVoteMap(data);
+        if (directVote != null) {
+          votePayloads.add(directVote);
+        }
+      }
+
+      final votes = votePayloads
+          .map(_liveVoteFromMap)
+          .whereType<HorizontalPropertyVotingVote>()
+          .toList(growable: false);
 
       final totalUnits = data.containsKey('total_units')
           ? (_toInt(data['total_units']) ?? 0)
@@ -644,6 +675,9 @@ class HorizontalPropertiesRepositoryImpl
       final unitsVoted = data.containsKey('units_voted')
           ? (_toInt(data['units_voted']) ?? 0)
           : -1;
+
+      final removedVoteId = _toInt(data['vote_id']);
+      final removedVoteVotingId = _toInt(data['voting_id']);
 
       return HorizontalPropertyVotingGroupLiveData(
         totalUnits: totalUnits >= 0 ? totalUnits : units.length,
@@ -656,6 +690,8 @@ class HorizontalPropertiesRepositoryImpl
         hasVotesSnapshot: hasVotesSnapshot,
         hasUnitsSnapshot: hasUnitsSnapshot,
         timestamp: _parseDateTime(data['timestamp']),
+        removedVoteId: removedVoteId,
+        removedVoteVotingId: removedVoteVotingId,
       );
     } catch (e, st) {
       debugPrint('Error parseando liveData: $e');
@@ -675,8 +711,9 @@ class HorizontalPropertiesRepositoryImpl
   HorizontalPropertyVotingLiveUnit? _liveUnitFromMap(
     Map<String, dynamic> json,
   ) {
-    final unitId = json['property_unit_id'] as int?;
-    final unitNumber = json['property_unit_number'] as String?;
+    final unitId = _toInt(json['property_unit_id'] ?? json['unit_id']);
+    final unitNumber =
+        (json['property_unit_number'] ?? json['unit_number']) as String?;
     if (unitId == null || unitNumber == null) {
       return null;
     }
@@ -684,15 +721,21 @@ class HorizontalPropertiesRepositoryImpl
     return HorizontalPropertyVotingLiveUnit(
       propertyUnitId: unitId,
       unitNumber: unitNumber,
-      participationCoefficient: _toDouble(json['participation_coefficient']),
-      residentId: json['resident_id'] as int?,
+      participationCoefficient: _toDouble(
+        json['participation_coefficient'] ?? json['coefficient'],
+      ),
+      residentId: _toInt(json['resident_id']),
       residentName: json['resident_name'] as String?,
-      hasVoted: json['has_voted'] as bool? ?? false,
-      votingOptionId: json['voting_option_id'] as int?,
-      optionText: json['option_text'] as String?,
-      optionCode: json['option_code'] as String?,
-      optionColor: json['option_color'] as String?,
-      votedAt: _parseDate(json['voted_at'] as String?),
+      hasVoted: json['has_voted'] as bool? ??
+          (json['voting_option_id'] != null ||
+              json['votingOptionId'] != null),
+      votingOptionId:
+          _toInt(json['voting_option_id'] ?? json['votingOptionId']),
+      optionText: (json['option_text'] ?? json['optionText']) as String?,
+      optionCode: (json['option_code'] ?? json['optionCode']) as String?,
+      optionColor: (json['option_color'] ?? json['optionColor']) as String?,
+      votedAt: _parseDate(json['voted_at'] as String?) ??
+          _parseDate(json['votedAt'] as String?),
     );
   }
 
@@ -718,9 +761,11 @@ class HorizontalPropertiesRepositoryImpl
     Map<String, dynamic> json,
   ) {
     final id = _toInt(json['id']);
-    final votingId = _toInt(json['voting_id']);
-    final propertyUnitId = _toInt(json['property_unit_id']);
-    final votingOptionId = _toInt(json['voting_option_id']);
+    final votingId = _toInt(json['voting_id'] ?? json['votingId']);
+    final propertyUnitId =
+        _toInt(json['property_unit_id'] ?? json['propertyUnitId']);
+    final votingOptionId =
+        _toInt(json['voting_option_id'] ?? json['votingOptionId']);
     if (id == null ||
         votingId == null ||
         propertyUnitId == null ||
@@ -733,10 +778,38 @@ class HorizontalPropertiesRepositoryImpl
       votingId: votingId,
       propertyUnitId: propertyUnitId,
       votingOptionId: votingOptionId,
-      votedAt: _parseDateTime(json['voted_at']),
-      ipAddress: json['ip_address'] as String?,
-      userAgent: json['user_agent'] as String?,
+      votedAt:
+          _parseDateTime(json['voted_at']) ?? _parseDateTime(json['votedAt']),
+      ipAddress: (json['ip_address'] ?? json['ipAddress']) as String?,
+      userAgent: (json['user_agent'] ?? json['userAgent']) as String?,
     );
+  }
+
+  Map<String, dynamic>? _normalizeVotePayload(
+    Map<String, dynamic> json,
+  ) {
+    if (json.containsKey('voting_option_id') ||
+        json.containsKey('votingOptionId') ||
+        json.containsKey('property_unit_id') ||
+        json.containsKey('propertyUnitId')) {
+      return json;
+    }
+    return null;
+  }
+
+  Map<String, dynamic>? _extractVoteMap(Map<String, dynamic> json) {
+    final vote = json['vote'];
+    if (vote is Map<String, dynamic>) {
+      return _normalizeVotePayload(vote);
+    }
+    if (_normalizeVotePayload(json) != null) {
+      return json;
+    }
+    final data = json['data'];
+    if (data is Map<String, dynamic>) {
+      return _normalizeVotePayload(data);
+    }
+    return null;
   }
 
   DateTime? _parseDateTime(dynamic value) {

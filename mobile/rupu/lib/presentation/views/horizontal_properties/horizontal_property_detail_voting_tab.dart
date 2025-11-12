@@ -2371,15 +2371,57 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
                                     },
                                   ),
                                   Obx(() {
-                                    final shouldShow = _searchFocus.hasFocus &&
-                                        _searchCtrl.text.trim().length >= 2;
-                                    if (!shouldShow) {
+                                    final hasFocus = _searchFocus.hasFocus;
+                                    final query = _searchCtrl.text.trim();
+                                    final loadingValue = controller
+                                        .residentSuggestionsLoading.value;
+                                    final suggestionsValue =
+                                        controller.residentSuggestions.toList();
+                                    final pendingUnits = controller.pendingUnits;
+
+                                    if (!hasFocus) {
                                       return const SizedBox(height: 12);
                                     }
-                                    final loading =
-                                        controller.residentSuggestionsLoading.value;
-                                    final suggestions =
-                                        controller.residentSuggestions.toList();
+
+                                    if (query.length < 2) {
+                                      return Column(
+                                        children: [
+                                          const SizedBox(height: 8),
+                                          _LiveSuggestionCard(
+                                            loading: false,
+                                            emptyLabel:
+                                                'No hay unidades pendientes de votar.',
+                                            children: pendingUnits
+                                                .map(
+                                                  (unit) =>
+                                                      _PendingUnitSuggestionTile(
+                                                    unit: unit,
+                                                    onTap: () {
+                                                      controller
+                                                          .setFilter(unit.unitNumber);
+                                                      _searchCtrl
+                                                        ..text = unit.unitNumber
+                                                        ..selection =
+                                                            TextSelection.collapsed(
+                                                          offset:
+                                                              _searchCtrl.text.length,
+                                                        );
+                                                      controller
+                                                          .clearResidentSuggestions();
+                                                      _searchFocus.unfocus();
+                                                    },
+                                                  ),
+                                                )
+                                                .toList(growable: false),
+                                          ),
+                                          const SizedBox(height: 12),
+                                        ],
+                                      );
+                                    }
+
+                                    final loading = loadingValue;
+                                    final suggestions = suggestionsValue;
+
                                     return Column(
                                       children: [
                                         const SizedBox(height: 8),
@@ -2389,16 +2431,17 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
                                               'No se encontraron residentes para la búsqueda.',
                                           children: suggestions
                                               .map(
-                                                (resident) => _ResidentSuggestionTile(
+                                                (resident) => _ResidentLookupTile(
                                                   resident: resident,
                                                   onTap: () {
                                                     controller.setFilter(
                                                       resident.propertyUnitNumber,
                                                     );
                                                     _searchCtrl
-                                                      ..text = resident.name
-                                                      ..selection = TextSelection
-                                                          .collapsed(
+                                                      ..text =
+                                                          resident.propertyUnitNumber
+                                                      ..selection =
+                                                          TextSelection.collapsed(
                                                         offset:
                                                             _searchCtrl.text.length,
                                                       );
@@ -2450,8 +2493,11 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
                                       ],
                                     )
                                   else if (units.isEmpty)
-                                    const Text(
-                                      'No hay unidades registradas en este grupo.',
+                                    Text(
+                                      controller.liveUnits.isEmpty
+                                          ? 'No hay unidades registradas en este grupo.'
+                                          : 'Todas las unidades han registrado su voto.',
+                                      style: tt.bodyMedium,
                                     )
                                   else
                                     Wrap(
@@ -2558,6 +2604,14 @@ class VotingLiveController extends GetxController {
   int get totalUnits =>
       liveData.value?.totalUnits ?? liveUnits.length;
 
+  List<HorizontalPropertyVotingLiveUnit> get pendingUnits {
+    final units = liveUnits
+        .where((unit) => !unit.hasVoted)
+        .toList(growable: false);
+    units.sort((a, b) => a.unitNumber.compareTo(b.unitNumber));
+    return units;
+  }
+
   int get unitsVoted => liveData.value?.unitsVoted ??
       liveUnits.where((unit) => unit.hasVoted).length;
 
@@ -2573,14 +2627,19 @@ class VotingLiveController extends GetxController {
   List<HorizontalPropertyVotingLiveUnit> get filteredUnits {
     final query = filter.value.trim().toLowerCase();
     final units = liveUnits;
-    if (query.isEmpty) return units;
-    return units
-        .where((unit) {
-          final unitNumber = unit.unitNumber.toLowerCase();
-          final resident = unit.residentName?.toLowerCase() ?? '';
-          return unitNumber.contains(query) || resident.contains(query);
-        })
-        .toList(growable: false);
+    Iterable<HorizontalPropertyVotingLiveUnit> filtered;
+    if (query.isEmpty) {
+      filtered = units.where((unit) => !unit.hasVoted);
+    } else {
+      filtered = units.where((unit) {
+        final unitNumber = unit.unitNumber.toLowerCase();
+        final resident = unit.residentName?.toLowerCase() ?? '';
+        return unitNumber.contains(query) || resident.contains(query);
+      });
+    }
+    final list = filtered.toList(growable: false);
+    list.sort((a, b) => a.unitNumber.compareTo(b.unitNumber));
+    return list;
   }
 
   List<HorizontalPropertyVotingOption> get options =>
@@ -2686,7 +2745,7 @@ class VotingLiveController extends GetxController {
   void _ingestLiveEvent(HorizontalPropertyVotingGroupLiveData event) {
     final previous = liveData.value;
 
-    final mergedUnits = event.hasUnitsSnapshot
+    var mergedUnits = event.hasUnitsSnapshot
         ? event.units
         : _mergeUnits(previous?.units ?? const [], event.units);
 
@@ -2694,16 +2753,62 @@ class VotingLiveController extends GetxController {
         ? event.results
         : _mergeResults(previous?.results ?? const [], event.results);
 
-    final mergedVotes = event.hasVotesSnapshot
+    var mergedVotes = event.hasVotesSnapshot
         ? event.votes
         : _mergeVotes(previous?.votes ?? const [], event.votes);
 
+    if (event.removedVoteId != null) {
+      mergedVotes = mergedVotes
+          .where((vote) => vote.id != event.removedVoteId)
+          .toList(growable: false);
+    }
+
+    final votesByUnit = <int, HorizontalPropertyVotingVote>{};
+    for (final vote in mergedVotes) {
+      votesByUnit[vote.propertyUnitId] = vote;
+    }
+
+    final optionsById = {
+      for (final option in parent.optionsForVoting(groupId, votingId))
+        option.id: option,
+    };
+
+    mergedUnits = mergedUnits
+        .map((unit) {
+          final vote = votesByUnit[unit.propertyUnitId];
+          if (vote != null) {
+            final option = optionsById[vote.votingOptionId];
+            return unit.copyWith(
+              hasVoted: true,
+              votingOptionId: vote.votingOptionId,
+              optionText: option?.optionText ?? unit.optionText,
+              optionCode: option?.optionCode ?? unit.optionCode,
+              optionColor: option?.color ?? unit.optionColor,
+              votedAt: vote.votedAt ?? unit.votedAt,
+            );
+          }
+          return unit.copyWith(
+            hasVoted: false,
+            votingOptionId: null,
+            optionText: null,
+            optionCode: null,
+            optionColor: null,
+            votedAt: null,
+          );
+        })
+        .toList(growable: false);
+
     final providedUnits = event.hasUnitsSnapshot || event.units.isNotEmpty;
-    final computedUnitsVoted = providedUnits
-        ? mergedUnits.where((unit) => unit.hasVoted).length
-        : (event.unitsVoted >= 0
-            ? event.unitsVoted
-            : previous?.unitsVoted ?? mergedVotes.length);
+
+    final computedUnitsVoted = () {
+      if (votesByUnit.isNotEmpty) {
+        return votesByUnit.length;
+      }
+      if (event.unitsVoted >= 0) {
+        return event.unitsVoted;
+      }
+      return previous?.unitsVoted ?? 0;
+    }();
 
     final computedTotalUnits = () {
       if (providedUnits) {
@@ -2721,15 +2826,11 @@ class VotingLiveController extends GetxController {
     }();
 
     final computedPending = () {
-      if (providedUnits) {
-        final pending = computedTotalUnits - computedUnitsVoted;
-        return pending < 0 ? 0 : pending;
-      }
       if (event.unitsPending >= 0) {
         return event.unitsPending;
       }
-      return previous?.unitsPending ??
-          (computedTotalUnits - computedUnitsVoted).clamp(0, computedTotalUnits);
+      final pending = computedTotalUnits - computedUnitsVoted;
+      return pending < 0 ? 0 : pending;
     }();
 
     final timestamp = event.timestamp ?? DateTime.now();
@@ -2745,6 +2846,12 @@ class VotingLiveController extends GetxController {
       hasVotesSnapshot: event.hasVotesSnapshot,
       hasUnitsSnapshot: event.hasUnitsSnapshot,
       timestamp: timestamp,
+    );
+
+    parent.syncVotesFromLive(
+      groupId: groupId,
+      votingId: votingId,
+      votes: mergedVotes,
     );
   }
 
@@ -2918,7 +3025,11 @@ class VotingLiveController extends GetxController {
           'include_residents': 'true',
         },
       );
-      unitSuggestions.assignAll(response.units
+      final votedIds = {
+        for (final unit in liveUnits)
+          if (unit.hasVoted) unit.propertyUnitId
+      };
+      final suggestions = response.units
           .map(
             (unit) => _UnitSearchSuggestion(
               id: unit.id,
@@ -2932,7 +3043,9 @@ class VotingLiveController extends GetxController {
               isMain: unit.mainResidentIsMain,
             ),
           )
-          .toList(growable: false));
+          .where((suggestion) => !votedIds.contains(suggestion.id))
+          .toList(growable: false);
+      unitSuggestions.assignAll(suggestions);
     } catch (error, stackTrace) {
       debugPrint('Error buscando unidades: $error');
       debugPrint('Stack: $stackTrace');
@@ -3159,11 +3272,11 @@ class _LiveSuggestionCard extends StatelessWidget {
   }
 }
 
-class _ResidentSuggestionTile extends StatelessWidget {
+class _ResidentLookupTile extends StatelessWidget {
   final HorizontalPropertyResidentItem resident;
   final VoidCallback onTap;
 
-  const _ResidentSuggestionTile({
+  const _ResidentLookupTile({
     required this.resident,
     required this.onTap,
   });
@@ -3192,9 +3305,10 @@ class _ResidentSuggestionTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${resident.propertyUnitNumber} · ${resident.residentTypeName}',
-                      style:
-                          tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                      resident.propertyUnitNumber,
+                      style: tt.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -3212,6 +3326,61 @@ class _ResidentSuggestionTile extends StatelessWidget {
                     style: tt.labelSmall?.copyWith(color: cs.primary),
                   ),
                 ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PendingUnitSuggestionTile extends StatelessWidget {
+  final HorizontalPropertyVotingLiveUnit unit;
+  final VoidCallback onTap;
+
+  const _PendingUnitSuggestionTile({
+    required this.unit,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      unit.unitNumber,
+                      style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    if (unit.residentName?.isNotEmpty == true) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        unit.residentName!,
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.pending_actions_outlined,
+                color: cs.primary,
+              ),
             ],
           ),
         ),
@@ -3905,7 +4074,9 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
     final units = _controller.liveUnits;
     List<HorizontalPropertyVotingLiveUnit> filtered;
     if (query.isEmpty) {
-      filtered = List<HorizontalPropertyVotingLiveUnit>.of(units);
+      filtered = units
+          .where((unit) => !unit.hasVoted)
+          .toList(growable: false);
     } else {
       filtered = units
           .where((unit) {
@@ -3915,6 +4086,7 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
           })
           .toList(growable: false);
     }
+    filtered.sort((a, b) => a.unitNumber.compareTo(b.unitNumber));
     final selected = _selectedUnit;
     if (selected != null &&
         filtered.every((unit) => unit.propertyUnitId != selected.propertyUnitId)) {
@@ -4065,15 +4237,55 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
                             },
                           ),
                           Obx(() {
-                            final shouldShow = _searchFocus.hasFocus &&
-                                _searchCtrl.text.trim().length >= 2;
-                            if (!shouldShow) {
+                            final hasFocus = _searchFocus.hasFocus;
+                            final query = _searchCtrl.text.trim();
+                            final loadingValue =
+                                _controller.unitSuggestionsLoading.value;
+                            final suggestionsValue =
+                                _controller.unitSuggestions.toList();
+                            final pendingUnits = _controller.pendingUnits;
+
+                            if (!hasFocus) {
                               return const SizedBox(height: 12);
                             }
-                            final loading =
-                                _controller.unitSuggestionsLoading.value;
-                            final suggestions =
-                                _controller.unitSuggestions.toList();
+
+                            if (query.length < 2) {
+                              return Column(
+                                children: [
+                                  const SizedBox(height: 8),
+                                  _LiveSuggestionCard(
+                                    loading: false,
+                                    emptyLabel:
+                                        'No hay unidades pendientes de votar.',
+                                    children: pendingUnits
+                                        .map(
+                                          (unit) => _PendingUnitSuggestionTile(
+                                            unit: unit,
+                                            onTap: () {
+                                              setState(() {
+                                                _selectedUnit = unit;
+                                              });
+                                              _searchCtrl
+                                                ..text = unit.unitNumber
+                                                ..selection =
+                                                    TextSelection.collapsed(
+                                                  offset: _searchCtrl.text.length,
+                                                );
+                                              _controller.clearUnitSuggestions();
+                                              _searchFocus.unfocus();
+                                            },
+                                          ),
+                                        )
+                                        .toList(growable: false),
+                                  ),
+                                  const SizedBox(height: 12),
+                                ],
+                              );
+                            }
+
+                            final loading = loadingValue;
+                            final suggestions = suggestionsValue;
+
                             return Column(
                               children: [
                                 const SizedBox(height: 8),
@@ -4141,31 +4353,85 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
                               itemCount: _units.length,
                               itemBuilder: (context, index) {
                                 final unit = _units[index];
-                                final voted = unit.hasVoted;
-                                return RadioListTile<
-                                  HorizontalPropertyVotingLiveUnit
-                                >(
-                                  value: unit,
-                                  groupValue: _selectedUnit,
-                                  dense: true,
-                                  onChanged: voted
-                                      ? null
-                                      : (value) {
-                                          setState(() {
-                                            _selectedUnit = value;
-                                          });
-                                        },
-                                  title: Text(unit.unitNumber),
-                                  subtitle:
-                                      unit.residentName?.isNotEmpty == true
-                                      ? Text(unit.residentName!)
-                                      : null,
-                                  secondary: voted
-                                      ? const Icon(
-                                          Icons.how_to_vote,
-                                          color: Colors.green,
-                                        )
-                                      : null,
+                                final isSelected = _selectedUnit
+                                        ?.propertyUnitId ==
+                                    unit.propertyUnitId;
+                                final isDisabled = unit.hasVoted;
+
+                                return Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: isDisabled
+                                        ? null
+                                        : () {
+                                            setState(() {
+                                              if (isSelected) {
+                                                _selectedUnit = null;
+                                              } else {
+                                                _selectedUnit = unit;
+                                              }
+                                            });
+                                          },
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                unit.unitNumber,
+                                                style: tt.titleSmall?.copyWith(
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                              if (unit.residentName
+                                                      ?.isNotEmpty ==
+                                                  true)
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          top: 2),
+                                                  child: Text(
+                                                    unit.residentName!,
+                                                    style: tt.bodySmall?.copyWith(
+                                                      color:
+                                                          cs.onSurfaceVariant,
+                                                    ),
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
+                                        ),
+                                        if (isDisabled)
+                                          const Icon(
+                                            Icons.how_to_vote,
+                                            color: Colors.green,
+                                          )
+                                        else
+                                          Radio<int>(
+                                            value: unit.propertyUnitId,
+                                            groupValue:
+                                                _selectedUnit
+                                                    ?.propertyUnitId,
+                                            onChanged: (_) {
+                                              setState(() {
+                                                if (isSelected) {
+                                                  _selectedUnit = null;
+                                                } else {
+                                                  _selectedUnit = unit;
+                                                }
+                                              });
+                                            },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 );
                               },
                             ),

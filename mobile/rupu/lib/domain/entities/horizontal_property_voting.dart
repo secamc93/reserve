@@ -217,6 +217,8 @@ class HorizontalPropertyVotingGroupLiveData {
   final bool hasVotesSnapshot;
   final bool hasUnitsSnapshot;
   final DateTime? timestamp;
+  final int? removedVoteId;
+  final int? removedVoteVotingId;
 
   const HorizontalPropertyVotingGroupLiveData({
     required this.totalUnits,
@@ -229,6 +231,8 @@ class HorizontalPropertyVotingGroupLiveData {
     this.hasVotesSnapshot = false,
     this.hasUnitsSnapshot = false,
     this.timestamp,
+    this.removedVoteId,
+    this.removedVoteVotingId,
   });
 
   HorizontalPropertyVotingGroupLiveData copyWith({
@@ -242,6 +246,8 @@ class HorizontalPropertyVotingGroupLiveData {
     bool? hasVotesSnapshot,
     bool? hasUnitsSnapshot,
     DateTime? timestamp,
+    int? removedVoteId,
+    int? removedVoteVotingId,
   }) {
     return HorizontalPropertyVotingGroupLiveData(
       totalUnits: totalUnits ?? this.totalUnits,
@@ -254,6 +260,9 @@ class HorizontalPropertyVotingGroupLiveData {
       hasVotesSnapshot: hasVotesSnapshot ?? this.hasVotesSnapshot,
       hasUnitsSnapshot: hasUnitsSnapshot ?? this.hasUnitsSnapshot,
       timestamp: timestamp ?? this.timestamp,
+      removedVoteId: removedVoteId ?? this.removedVoteId,
+      removedVoteVotingId:
+          removedVoteVotingId ?? this.removedVoteVotingId,
     );
   }
 }
@@ -284,4 +293,31 @@ class HorizontalPropertyVotingLiveUnit {
     this.optionColor,
     this.votedAt,
   });
+
+  HorizontalPropertyVotingLiveUnit copyWith({
+    double? participationCoefficient,
+    int? residentId,
+    String? residentName,
+    bool? hasVoted,
+    int? votingOptionId,
+    String? optionText,
+    String? optionCode,
+    String? optionColor,
+    DateTime? votedAt,
+  }) {
+    return HorizontalPropertyVotingLiveUnit(
+      propertyUnitId: propertyUnitId,
+      unitNumber: unitNumber,
+      participationCoefficient:
+          participationCoefficient ?? this.participationCoefficient,
+      residentId: residentId ?? this.residentId,
+      residentName: residentName ?? this.residentName,
+      hasVoted: hasVoted ?? this.hasVoted,
+      votingOptionId: votingOptionId ?? this.votingOptionId,
+      optionText: optionText ?? this.optionText,
+      optionCode: optionCode ?? this.optionCode,
+      optionColor: optionColor ?? this.optionColor,
+      votedAt: votedAt ?? this.votedAt,
+    );
+  }
 }
