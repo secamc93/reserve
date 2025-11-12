@@ -3,6 +3,7 @@ import '../infrastructure/models/horizontal_property_detail_response_model.dart'
 import '../infrastructure/models/horizontal_property_residents_response_model.dart';
 import '../infrastructure/models/horizontal_property_unit_detail_response_model.dart';
 import '../infrastructure/models/horizontal_property_units_response_model.dart';
+import '../infrastructure/models/horizontal_property_voting_details_response_model.dart';
 import '../infrastructure/models/horizontal_property_voting_groups_response_model.dart';
 import '../infrastructure/models/horizontal_property_voting_models.dart';
 import '../infrastructure/models/simple_response_model.dart';
@@ -154,6 +155,13 @@ abstract class HorizontalPropertiesDatasource {
   });
 
   Future<HorizontalPropertyVotingVotesResponseModel> getHorizontalPropertyVotingVotes({
+    required int groupId,
+    required int votingId,
+    Map<String, dynamic>? query,
+  });
+
+  Future<HorizontalPropertyVotingDetailsResponseModel>
+      getHorizontalPropertyVotingDetails({
     required int groupId,
     required int votingId,
     Map<String, dynamic>? query,

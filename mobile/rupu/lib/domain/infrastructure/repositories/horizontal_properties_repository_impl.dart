@@ -492,6 +492,32 @@ class HorizontalPropertiesRepositoryImpl
   }
 
   @override
+  Future<HorizontalPropertyVotingDetailsResult>
+      getHorizontalPropertyVotingDetails({
+    required int businessId,
+    required int groupId,
+    required int votingId,
+  }) async {
+    try {
+      final response = await datasource.getHorizontalPropertyVotingDetails(
+        groupId: groupId,
+        votingId: votingId,
+        query: _withBusinessQuery({'business_id': businessId}),
+      );
+      return HorizontalPropertiesMapper.votingDetailsResponseToEntity(response);
+    } catch (_) {
+      return const HorizontalPropertyVotingDetailsResult(
+        success: false,
+        message: 'No se pudo obtener el detalle de la votación.',
+        totalUnits: 0,
+        unitsPending: 0,
+        unitsVoted: 0,
+        units: [],
+      );
+    }
+  }
+
+  @override
   Future<HorizontalPropertyActionResult> createHorizontalPropertyVote({
     required int businessId,
     required int groupId,
@@ -672,7 +698,7 @@ class HorizontalPropertiesRepositoryImpl
       optionCode: (json['option_code'] as String?)?.trim() ?? '',
       color: json['color'] as String?,
       voteCount: _toInt(json['vote_count']) ?? 0,
-      percentage: _toInt(json['percentage']) ?? 0,
+      percentage: _toDouble(json['percentage']) ?? 0.0,
     );
   }
 

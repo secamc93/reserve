@@ -19,6 +19,7 @@ import 'package:rupu/domain/infrastructure/models/horizontal_property_detail_res
 import 'package:rupu/domain/infrastructure/models/horizontal_property_residents_response_model.dart';
 import 'package:rupu/domain/infrastructure/models/horizontal_property_unit_detail_response_model.dart';
 import 'package:rupu/domain/infrastructure/models/horizontal_property_units_response_model.dart';
+import 'package:rupu/domain/infrastructure/models/horizontal_property_voting_details_response_model.dart';
 import 'package:rupu/domain/infrastructure/models/horizontal_property_voting_groups_response_model.dart';
 import 'package:rupu/domain/infrastructure/models/horizontal_property_voting_models.dart';
 import 'package:rupu/domain/infrastructure/models/simple_response_model.dart';
@@ -598,6 +599,22 @@ class HorizontalPropertiesDatasourceImpl
       queryParameters: query,
     );
     return HorizontalPropertyVotingVotesResponseModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<HorizontalPropertyVotingDetailsResponseModel>
+      getHorizontalPropertyVotingDetails({
+    required int groupId,
+    required int votingId,
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await _dio.get(
+      '/horizontal-properties/voting-groups/$groupId/votings/$votingId/voting-details',
+      queryParameters: query,
+    );
+    return HorizontalPropertyVotingDetailsResponseModel.fromJson(
       response.data as Map<String, dynamic>,
     );
   }

@@ -109,9 +109,20 @@ class _VotingTab extends GetWidget<HorizontalPropertyVotingController> {
 
     if (result.success) {
       final name = result.group?.name ?? 'grupo de votación';
+      final createdAt = result.group?.createdAt;
+      final formattedTimestamp = createdAt != null
+          ? DateFormat('yyyy-MM-dd – HH:mm:ss').format(createdAt.toLocal())
+          : null;
+      final baseMessage = result.message ??
+          (group == null
+              ? 'Grupo de votación creado'
+              : 'Grupo de votación actualizado');
+      final detailMessage = formattedTimestamp != null
+          ? '$baseMessage · $formattedTimestamp'
+          : baseMessage;
       _showSnack(
         group == null ? 'Grupo creado' : 'Grupo actualizado',
-        'El $name se ${group == null ? 'creó' : 'actualizó'} correctamente.',
+        'El $name se ${group == null ? 'creó' : 'actualizó'} correctamente.\n$detailMessage',
       );
     } else {
       _showSnack(
@@ -391,10 +402,7 @@ class _VotingGroupCard extends StatelessWidget {
 
   String _formatDate(DateTime? date) {
     if (date == null) return '--';
-    final day = date.day.toString().padLeft(2, '0');
-    final month = date.month.toString().padLeft(2, '0');
-    final year = date.year.toString();
-    return '$day/$month/$year';
+    return DateFormat('dd/MM/yyyy · HH:mm').format(date.toLocal());
   }
 }
 
@@ -523,7 +531,8 @@ class _VotingItemCard extends StatelessWidget {
                 runSpacing: 8,
                 children: [
                   FilledButton.icon(
-                    onPressed: () => _openLiveVoting(context),
+                    onPressed:
+                        voting.isActive ? () => _openLiveVoting(context) : null,
                     icon: const Icon(Icons.podcasts_outlined, size: 18),
                     label: const Text('Votación en vivo'),
                   ),
@@ -692,12 +701,13 @@ class _VotingItemCard extends StatelessWidget {
                                 const Text('Aún no se han registrado votos.')
                               else
                                 ...options.map((option) {
+                                  final percentFormatter = NumberFormat('##0.0#');
                                   final int count = summary[option.id] ?? 0;
                                   final double percentage = totalVotes == 0
                                       ? 0.0
                                       : (count / totalVotes)
-                                            .clamp(0.0, 1.0)
-                                            .toDouble();
+                                          .clamp(0.0, 1.0)
+                                          .toDouble();
                                   return Padding(
                                     padding: const EdgeInsets.only(bottom: 12),
                                     child: Column(
@@ -710,15 +720,13 @@ class _VotingItemCard extends StatelessWidget {
                                               child: Text(option.optionText),
                                             ),
                                             Text(
-                                              '${(percentage * 100).toStringAsFixed(0)}%',
+                                              '${percentFormatter.format(percentage * 100)}%',
                                             ),
                                           ],
                                         ),
                                         const SizedBox(height: 6),
                                         ClipRRect(
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
+                                          borderRadius: BorderRadius.circular(8),
                                           child: LinearProgressIndicator(
                                             value: percentage,
                                             minHeight: 8,
@@ -1122,10 +1130,10 @@ class _VotingGroupFormBottomSheetState
   late final TextEditingController _nameCtrl;
   late final TextEditingController _descriptionCtrl;
   late final TextEditingController _notesCtrl;
-  late final TextEditingController _quorumCtrl;
-  late final TextEditingController _createdByCtrl;
-  DateTime? _startDate;
-  DateTime? _endDate;
+  LoginController? _loginController;
+  DateTime? _startDateTime;
+  DateTime? _endDateTime;
+  int _quorumValue = 50;
   bool _requiresQuorum = false;
   bool _saving = false;
   String? _errorMessage;
@@ -1137,15 +1145,16 @@ class _VotingGroupFormBottomSheetState
     _nameCtrl = TextEditingController(text: group?.name ?? '');
     _descriptionCtrl = TextEditingController(text: group?.description ?? '');
     _notesCtrl = TextEditingController();
-    _quorumCtrl = TextEditingController(
-      text: group?.quorumPercentage?.toString() ?? '',
-    );
-    _createdByCtrl = TextEditingController(
-      text: group?.createdByUserId?.toString() ?? '',
-    );
-    _startDate = group?.votingStartDate;
-    _endDate = group?.votingEndDate;
+    if (Get.isRegistered<LoginController>()) {
+      _loginController = Get.find<LoginController>();
+    }
+    _startDateTime = group?.votingStartDate?.toLocal();
+    _endDateTime = group?.votingEndDate?.toLocal();
     _requiresQuorum = group?.requiresQuorum ?? false;
+    final initialQuorum = group?.quorumPercentage;
+    if (initialQuorum != null) {
+      _quorumValue = initialQuorum.clamp(0, 100).toInt();
+    }
   }
 
   @override
@@ -1153,26 +1162,44 @@ class _VotingGroupFormBottomSheetState
     _nameCtrl.dispose();
     _descriptionCtrl.dispose();
     _notesCtrl.dispose();
-    _quorumCtrl.dispose();
-    _createdByCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _pickDate({required bool isStart}) async {
-    final current = isStart ? _startDate : _endDate;
-    final initialDate = current ?? DateTime.now();
-    final picked = await showDatePicker(
+  Future<void> _pickDateTime({required bool isStart}) async {
+    final current = isStart ? _startDateTime : _endDateTime;
+    final now = DateTime.now();
+    final initialDate = current ?? now;
+    final pickedDate = await showDatePicker(
       context: context,
       initialDate: initialDate,
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
-    if (picked == null) return;
+    if (pickedDate == null) return;
+
+    final initialTime = TimeOfDay.fromDateTime(current ?? now);
+    final pickedTime = await showTimePicker(
+      context: context,
+      initialTime: initialTime,
+    );
+    if (pickedTime == null) return;
+
+    final withTime = DateTime(
+      pickedDate.year,
+      pickedDate.month,
+      pickedDate.day,
+      pickedTime.hour,
+      pickedTime.minute,
+      current?.second ?? 0,
+      current?.millisecond ?? 0,
+      current?.microsecond ?? 0,
+    );
+
     setState(() {
       if (isStart) {
-        _startDate = picked;
+        _startDateTime = withTime;
       } else {
-        _endDate = picked;
+        _endDateTime = withTime;
       }
     });
   }
@@ -1184,21 +1211,33 @@ class _VotingGroupFormBottomSheetState
       'notes': _emptyToNull(_notesCtrl.text.trim()),
       'requires_quorum': _requiresQuorum,
     };
-    final quorum = int.tryParse(_quorumCtrl.text.trim());
-    if (_requiresQuorum && quorum != null) {
-      payload['quorum_percentage'] = quorum;
+    if (_requiresQuorum) {
+      payload['quorum_percentage'] = _quorumValue;
     }
-    if (_startDate != null) {
-      payload['voting_start_date'] = _startDate!.toIso8601String();
+    if (_startDateTime != null) {
+      payload['voting_start_date'] = _formatIsoWithOffset(_startDateTime!);
     }
-    if (_endDate != null) {
-      payload['voting_end_date'] = _endDate!.toIso8601String();
+    if (_endDateTime != null) {
+      payload['voting_end_date'] = _formatIsoWithOffset(_endDateTime!);
     }
-    final createdBy = int.tryParse(_createdByCtrl.text.trim());
+    final createdBy =
+        _loginController?.sessionModel.value?.data.user.id;
     if (createdBy != null) {
       payload['created_by_user_id'] = createdBy;
     }
     return payload;
+  }
+
+  String _formatIsoWithOffset(DateTime date) {
+    final local = date.toLocal();
+    final nanos = local.millisecond * 1000000 + local.microsecond * 1000;
+    final nanoString = nanos.toString().padLeft(9, '0');
+    final base = DateFormat('yyyy-MM-dd\'T\'HH:mm:ss').format(local);
+    final offset = local.timeZoneOffset;
+    final sign = offset.isNegative ? '-' : '+';
+    final hours = offset.inHours.abs().toString().padLeft(2, '0');
+    final minutes = (offset.inMinutes.abs() % 60).toString().padLeft(2, '0');
+    return '$base.$nanoString$sign$hours:$minutes';
   }
 
   String? _emptyToNull(String? value) {
@@ -1211,13 +1250,6 @@ class _VotingGroupFormBottomSheetState
     if (_saving) return;
     final form = _formKey.currentState;
     if (form == null || !form.validate()) return;
-
-    if (_requiresQuorum && _quorumCtrl.text.trim().isEmpty) {
-      setState(() {
-        _errorMessage = 'Debes ingresar el porcentaje de quórum requerido.';
-      });
-      return;
-    }
 
     FocusScope.of(context).unfocus();
     setState(() {
@@ -1348,6 +1380,9 @@ class _VotingGroupFormBottomSheetState
                               onChanged: (value) {
                                 setState(() {
                                   _requiresQuorum = value;
+                                  if (value && _quorumValue <= 0) {
+                                    _quorumValue = 50;
+                                  }
                                 });
                               },
                               title: const Text('Requiere quórum'),
@@ -1355,10 +1390,34 @@ class _VotingGroupFormBottomSheetState
                             ),
                             if (_requiresQuorum) ...[
                               const SizedBox(height: 12),
-                              TextFormField(
-                                controller: _quorumCtrl,
-                                decoration: decoration('Porcentaje de quórum'),
-                                keyboardType: TextInputType.number,
+                              Text(
+                                'Porcentaje de quórum',
+                                style: tt.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Slider.adaptive(
+                                value: _quorumValue.toDouble(),
+                                min: 0,
+                                max: 100,
+                                divisions: 100,
+                                label: '$_quorumValue%',
+                                onChanged: (value) {
+                                  setState(() {
+                                    _quorumValue =
+                                        value.round().clamp(0, 100).toInt();
+                                  });
+                                },
+                              ),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: Text(
+                                  '$_quorumValue%',
+                                  style: tt.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
                               ),
                             ],
                             const SizedBox(height: 12),
@@ -1367,27 +1426,19 @@ class _VotingGroupFormBottomSheetState
                                 Expanded(
                                   child: _DateField(
                                     label: 'Fecha inicio',
-                                    date: _startDate,
-                                    onTap: () => _pickDate(isStart: true),
+                                    date: _startDateTime,
+                                    onTap: () => _pickDateTime(isStart: true),
                                   ),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: _DateField(
                                     label: 'Fecha fin',
-                                    date: _endDate,
-                                    onTap: () => _pickDate(isStart: false),
+                                    date: _endDateTime,
+                                    onTap: () => _pickDateTime(isStart: false),
                                   ),
                                 ),
                               ],
-                            ),
-                            const SizedBox(height: 12),
-                            TextFormField(
-                              controller: _createdByCtrl,
-                              decoration: decoration(
-                                'ID de usuario que crea el grupo',
-                              ),
-                              keyboardType: TextInputType.number,
                             ),
                             const SizedBox(height: 16),
                             if (_errorMessage != null)
@@ -1395,20 +1446,32 @@ class _VotingGroupFormBottomSheetState
                                 padding: const EdgeInsets.only(bottom: 12),
                                 child: _InlineError(message: _errorMessage!),
                               ),
-                            SizedBox(
-                              width: double.infinity,
-                              child: FilledButton(
-                                onPressed: _saving ? null : _handleSubmit,
-                                child: _saving
-                                    ? const SizedBox(
-                                        height: 22,
-                                        width: 22,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2.4,
-                                        ),
-                                      )
-                                    : Text(widget.actionLabel),
-                              ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: _saving
+                                        ? null
+                                        : () => Navigator.of(context).maybePop(),
+                                    child: const Text('Cancelar'),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: FilledButton(
+                                    onPressed: _saving ? null : _handleSubmit,
+                                    child: _saving
+                                        ? const SizedBox(
+                                            height: 22,
+                                            width: 22,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2.4,
+                                            ),
+                                          )
+                                        : Text(widget.actionLabel),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -1981,7 +2044,7 @@ class _DateField extends StatelessWidget {
 
     final value = date == null
         ? 'Sin definir'
-        : DateFormat('dd/MM/yyyy').format(date!);
+        : DateFormat('dd/MM/yyyy · HH:mm').format(date!.toLocal());
 
     return InkWell(
       onTap: onTap,
@@ -2251,20 +2314,20 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
                                     children: [
                                       _LiveStatChip(
                                         label: 'Unidades',
-                                        value: liveData?.totalUnits ?? 0,
+                                        value: controller.totalUnits,
                                         icon: Icons.apartment_outlined,
                                       ),
                                       const SizedBox(width: 12),
                                       _LiveStatChip(
                                         label: 'Votaron',
-                                        value: liveData?.unitsVoted ?? 0,
+                                        value: controller.unitsVoted,
                                         icon: Icons.how_to_vote_outlined,
                                         color: cs.primary,
                                       ),
                                       const SizedBox(width: 12),
                                       _LiveStatChip(
                                         label: 'Pendientes',
-                                        value: liveData?.unitsPending ?? 0,
+                                        value: controller.unitsPending,
                                         icon: Icons.pending_actions_outlined,
                                         color: cs.tertiary,
                                       ),
@@ -2290,6 +2353,8 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
                                       ],
                                     ),
                                   ],
+                                  const SizedBox(height: 16),
+                                  _LiveOptionsSummary(controller: controller),
                                   const SizedBox(height: 20),
                                   TextField(
                                     controller: _searchCtrl,
@@ -2315,7 +2380,9 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
                                   ),
                                   const SizedBox(height: 12),
                                   FilledButton.icon(
-                                    onPressed: () => _openVoteSheet(),
+                                    onPressed: widget.voting.isActive
+                                        ? () => _openVoteSheet()
+                                        : null,
                                     icon: const Icon(Icons.add_outlined),
                                     label: const Text('Registrar voto'),
                                   ),
@@ -2432,6 +2499,7 @@ class VotingLiveController extends GetxController {
             votingId: votingId,
             force: true,
           ),
+          _loadInitialDetails(),
         ]);
       } catch (error, stackTrace) {
         debugPrint('Error preparando datos de votación en vivo: $error');
@@ -2448,6 +2516,21 @@ class VotingLiveController extends GetxController {
   List<HorizontalPropertyVotingLiveResult> get liveResults =>
       liveData.value?.results ?? const [];
 
+  int get totalUnits =>
+      liveData.value?.totalUnits ?? liveUnits.length;
+
+  int get unitsVoted => liveData.value?.unitsVoted ??
+      liveUnits.where((unit) => unit.hasVoted).length;
+
+  int get unitsPending {
+    final pendingFromData = liveData.value?.unitsPending;
+    if (pendingFromData != null && pendingFromData >= 0) {
+      return pendingFromData;
+    }
+    final pending = totalUnits - unitsVoted;
+    return pending < 0 ? 0 : pending;
+  }
+
   List<HorizontalPropertyVotingLiveUnit> get filteredUnits {
     final query = filter.value.trim().toLowerCase();
     final units = liveUnits;
@@ -2463,6 +2546,19 @@ class VotingLiveController extends GetxController {
 
   List<HorizontalPropertyVotingOption> get options =>
       parent.optionsForVoting(groupId, votingId);
+
+  Map<int, int> get voteSummary => parent.voteSummary(groupId, votingId);
+
+  int get totalVotes => parent.totalVotesFor(groupId, votingId);
+
+  HorizontalPropertyVotingLiveResult? resultForOption(int optionId) {
+    for (final result in liveResults) {
+      if (result.votingOptionId == optionId) {
+        return result;
+      }
+    }
+    return null;
+  }
 
   void _subscribe() {
     isConnecting.value = true;
@@ -2510,6 +2606,35 @@ class VotingLiveController extends GetxController {
       },
       cancelOnError: false,
     );
+  }
+
+  Future<void> _loadInitialDetails() async {
+    try {
+      final result = await _repository.getHorizontalPropertyVotingDetails(
+        businessId: parent.propertyId,
+        groupId: groupId,
+        votingId: votingId,
+      );
+      if (isClosed) return;
+      if (!result.success && result.units.isEmpty) {
+        return;
+      }
+      final current = liveData.value;
+      liveData.value = HorizontalPropertyVotingGroupLiveData(
+        totalUnits: result.totalUnits,
+        unitsPending: result.unitsPending,
+        unitsVoted: result.unitsVoted,
+        units: result.units,
+        results: current?.results ?? const [],
+        votes: current?.votes ?? const [],
+        hasResultsSnapshot: current?.hasResultsSnapshot ?? false,
+        hasVotesSnapshot: current?.hasVotesSnapshot ?? false,
+        timestamp: DateTime.now(),
+      );
+    } catch (error, stackTrace) {
+      debugPrint('Error obteniendo detalles de votación: $error');
+      debugPrint('Stack: $stackTrace');
+    }
   }
 
   String _describeStreamError(Object error) {
@@ -2635,6 +2760,129 @@ class _LiveErrorContent extends StatelessWidget {
   }
 }
 
+Color? _tryParseHexColor(String? value) {
+  if (value == null || value.isEmpty) return null;
+  try {
+    final hex = value.replaceFirst('#', '');
+    final colorValue = int.parse(hex, radix: 16);
+    if (hex.length == 6) {
+      return Color(0xFF000000 | colorValue);
+    }
+    if (hex.length == 8) {
+      return Color(colorValue);
+    }
+  } catch (_) {
+    return null;
+  }
+  return null;
+}
+
+class _LiveOptionsSummary extends StatelessWidget {
+  final VotingLiveController controller;
+
+  const _LiveOptionsSummary({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    final options = controller.options;
+    if (options.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final percentFormat = NumberFormat('##0.0#');
+    final voteSummary = controller.voteSummary;
+    final totalVotes = controller.totalVotes;
+
+    final children = <Widget>[];
+    for (var i = 0; i < options.length; i++) {
+      final option = options[i];
+      final result = controller.resultForOption(option.id);
+      final count = result?.voteCount ?? voteSummary[option.id] ?? 0;
+      final percentageValue = result?.percentage ??
+          (totalVotes == 0 ? 0.0 : (count / totalVotes) * 100.0);
+      final progress = (percentageValue / 100).clamp(0.0, 1.0);
+      final color =
+          _tryParseHexColor(result?.color ?? option.color) ?? cs.primary;
+
+      children.add(
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      option.optionText,
+                      style: tt.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '${percentFormat.format(percentageValue)}%',
+                    style: tt.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: LinearProgressIndicator(
+                  value: progress.isFinite ? progress : 0.0,
+                  minHeight: 8,
+                  backgroundColor: cs.surfaceContainerHighest,
+                  valueColor: AlwaysStoppedAnimation(color),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '$count voto${count == 1 ? '' : 's'}',
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      if (i < options.length - 1) {
+        children.add(
+          Divider(height: 1, thickness: 1, color: cs.outlineVariant),
+        );
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Opciones de votación',
+          style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 12),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: cs.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: cs.outlineVariant),
+          ),
+          child: Column(children: children),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Total de votos: ${controller.totalVotes}',
+          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+        ),
+      ],
+    );
+  }
+}
+
 class _LiveStatChip extends StatelessWidget {
   final String label;
   final int value;
@@ -2709,45 +2957,150 @@ class _UnitVoteChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final voted = unit.hasVoted;
-    final background = voted ? cs.primaryContainer : cs.surfaceContainerHighest;
-    final foreground = voted ? cs.onPrimaryContainer : cs.onSurface;
-    final icon = isProcessing
-        ? const SizedBox(
-            width: 18,
-            height: 18,
-            child: CircularProgressIndicator(strokeWidth: 2.2),
-          )
-        : Icon(
-            voted ? Icons.how_to_vote : Icons.add_task_outlined,
-            color: foreground,
-          );
+    final background = voted
+        ? _tryParseHexColor(unit.optionColor) ?? cs.primaryContainer
+        : Colors.white;
+    final brightness = ThemeData.estimateBrightnessForColor(background);
+    final foreground = brightness == Brightness.dark
+        ? Colors.white
+        : cs.onSurface;
+    final buffer = StringBuffer(unit.unitNumber);
+    if (unit.residentName?.isNotEmpty == true) {
+      buffer.writeln('\nResidente: ${unit.residentName}');
+    }
+    if (unit.participationCoefficient != null) {
+      final coefficient = NumberFormat('##0.###')
+          .format(unit.participationCoefficient);
+      buffer.writeln('Coeficiente: $coefficient');
+    }
+    if (voted) {
+      final option = unit.optionText ?? unit.optionCode ?? 'Registrado';
+      buffer.writeln('Estado: Voto registrado ($option)');
+      if (unit.votedAt != null) {
+        buffer.writeln(
+          'Registrado: ${DateFormat('dd/MM/yyyy HH:mm').format(unit.votedAt!.toLocal())}',
+        );
+      }
+    } else {
+      buffer.writeln('Estado: Pendiente de votar');
+    }
 
-    return InputChip(
-      backgroundColor: background,
-      avatar: icon,
-      label: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            unit.unitNumber,
-            style: TextStyle(fontWeight: FontWeight.w700, color: foreground),
-          ),
-          if (unit.residentName?.isNotEmpty == true)
-            Text(
-              unit.residentName!,
-              style: TextStyle(
-                color: foreground.withValues(alpha: .8),
-                fontSize: 11,
+    return Tooltip(
+      message: buffer.toString(),
+      waitDuration: const Duration(milliseconds: 400),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: (!voted && !isProcessing) ? onVote : null,
+          borderRadius: BorderRadius.circular(18),
+          child: Ink(
+            width: 150,
+            constraints: const BoxConstraints(minHeight: 92),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: background,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: voted
+                    ? background.withOpacity(.6)
+                    : cs.outlineVariant,
               ),
+              boxShadow: voted
+                  ? [
+                      BoxShadow(
+                        color: background.withOpacity(.28),
+                        blurRadius: 16,
+                        offset: const Offset(0, 10),
+                      ),
+                    ]
+                  : null,
             ),
-        ],
+            child: Stack(
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      unit.unitNumber,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: foreground,
+                        fontSize: 16,
+                      ),
+                    ),
+                    if (unit.residentName?.isNotEmpty == true)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          unit.residentName!,
+                          style: TextStyle(
+                            color: foreground.withOpacity(.85),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          voted
+                              ? Icons.how_to_vote
+                              : Icons.person_add_alt_1,
+                          size: 18,
+                          color: foreground,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            voted
+                                ? (unit.optionText ?? 'Registrado')
+                                : 'Disponible',
+                            style: TextStyle(
+                              color: foreground,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                if (onRemove != null && voted)
+                  Positioned(
+                    top: -4,
+                    right: -4,
+                    child: IconButton(
+                      onPressed: isProcessing ? null : onRemove,
+                      icon: const Icon(Icons.delete_outline, size: 18),
+                      color: foreground,
+                      tooltip: 'Eliminar voto',
+                    ),
+                  ),
+                if (isProcessing)
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(.12),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: const Center(
+                        child: SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
       ),
-      labelPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      onPressed: isProcessing || voted ? null : onVote,
-      onDeleted: voted && !isProcessing && onRemove != null ? onRemove : null,
-      deleteIcon: const Icon(Icons.cancel_outlined),
-      deleteIconColor: foreground,
     );
   }
 }

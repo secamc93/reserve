@@ -15,6 +15,7 @@ import '../models/horizontal_property_detail_response_model.dart';
 import '../models/horizontal_property_residents_response_model.dart';
 import '../models/horizontal_property_unit_detail_response_model.dart';
 import '../models/horizontal_property_units_response_model.dart';
+import '../models/horizontal_property_voting_details_response_model.dart';
 import '../models/horizontal_property_voting_groups_response_model.dart';
 import '../models/horizontal_property_voting_models.dart';
 import '../models/simple_response_model.dart';
@@ -246,6 +247,41 @@ class HorizontalPropertiesMapper {
     );
   }
 
+  static HorizontalPropertyVotingDetailsResult votingDetailsResponseToEntity(
+    HorizontalPropertyVotingDetailsResponseModel model,
+  ) {
+    final data = model.data;
+    if (data == null) {
+      return HorizontalPropertyVotingDetailsResult(
+        success: model.success,
+        message: model.message.isNotEmpty ? model.message : null,
+        totalUnits: 0,
+        unitsPending: 0,
+        unitsVoted: 0,
+        units: const [],
+      );
+    }
+
+    final units = data.units
+        .map(_detailUnitModelToEntity)
+        .whereType<HorizontalPropertyVotingLiveUnit>()
+        .toList(growable: false);
+
+    final computedVoted = data.unitsVoted ??
+        units.where((unit) => unit.hasVoted).length;
+    final computedPending = data.unitsPending ??
+        (data.totalUnits - computedVoted).clamp(0, data.totalUnits);
+
+    return HorizontalPropertyVotingDetailsResult(
+      success: model.success,
+      message: model.message.isNotEmpty ? model.message : null,
+      totalUnits: data.totalUnits,
+      unitsPending: computedPending,
+      unitsVoted: computedVoted,
+      units: units,
+    );
+  }
+
   static HorizontalPropertyVotingGroupActionResult
       votingGroupActionResponseToEntity(
     HorizontalPropertyVotingGroupActionResponseModel model,
@@ -285,6 +321,28 @@ class HorizontalPropertiesMapper {
       requiredPercentage: model.requiredPercentage,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
+    );
+  }
+
+  static HorizontalPropertyVotingLiveUnit? _detailUnitModelToEntity(
+    HorizontalPropertyVotingDetailUnitModel model,
+  ) {
+    if (model.propertyUnitId == 0 || model.propertyUnitNumber.isEmpty) {
+      return null;
+    }
+
+    return HorizontalPropertyVotingLiveUnit(
+      propertyUnitId: model.propertyUnitId,
+      unitNumber: model.propertyUnitNumber,
+      participationCoefficient: model.participationCoefficient,
+      residentId: model.residentId,
+      residentName: model.residentName,
+      hasVoted: model.hasVoted,
+      votingOptionId: model.votingOptionId,
+      optionText: model.optionText,
+      optionCode: model.optionCode,
+      optionColor: model.optionColor,
+      votedAt: model.votedAt,
     );
   }
 
