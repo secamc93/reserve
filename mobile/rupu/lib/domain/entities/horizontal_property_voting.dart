@@ -176,7 +176,7 @@ class HorizontalPropertyVotingLiveResult {
   final String optionCode;
   final String? color;
   final int voteCount;
-  final int percentage;
+  final double percentage;
 
   const HorizontalPropertyVotingLiveResult({
     required this.votingOptionId,

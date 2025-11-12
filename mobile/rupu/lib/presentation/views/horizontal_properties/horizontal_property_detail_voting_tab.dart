@@ -108,11 +108,12 @@ class _VotingTab extends GetWidget<HorizontalPropertyVotingController> {
     if (result == null) return;
 
     if (result.success) {
-      final name = result.group?.name ?? 'grupo de votación';
-      _showSnack(
-        group == null ? 'Grupo creado' : 'Grupo actualizado',
-        'El $name se ${group == null ? 'creó' : 'actualizó'} correctamente.',
-      );
+      final title = result.message ??
+          (group == null ? 'Grupo creado' : 'Grupo actualizado');
+      final detail = result.group != null
+          ? 'El grupo ${result.group!.name} se ${group == null ? 'creó' : 'actualizó'} correctamente.'
+          : 'La operación se completó correctamente.';
+      _showSnack(title, detail);
     } else {
       _showSnack(
         'No se pudo guardar',
@@ -523,7 +524,8 @@ class _VotingItemCard extends StatelessWidget {
                 runSpacing: 8,
                 children: [
                   FilledButton.icon(
-                    onPressed: () => _openLiveVoting(context),
+                    onPressed:
+                        voting.isActive ? () => _openLiveVoting(context) : null,
                     icon: const Icon(Icons.podcasts_outlined, size: 18),
                     label: const Text('Votación en vivo'),
                   ),
@@ -619,7 +621,7 @@ class _VotingItemCard extends StatelessWidget {
                                 ),
                                 leading: CircleAvatar(
                                   backgroundColor:
-                                      _parseColor(option.color) ?? cs.primary,
+                                      _parseHexColor(option.color) ?? cs.primary,
                                   child: Text(
                                     option.optionCode.toUpperCase(),
                                     style: tt.bodySmall?.copyWith(
@@ -710,7 +712,7 @@ class _VotingItemCard extends StatelessWidget {
                                               child: Text(option.optionText),
                                             ),
                                             Text(
-                                              '${(percentage * 100).toStringAsFixed(0)}%',
+                                              '${_formatOneDecimal(percentage * 100)}%',
                                             ),
                                           ],
                                         ),
@@ -725,7 +727,7 @@ class _VotingItemCard extends StatelessWidget {
                                             backgroundColor:
                                                 cs.surfaceContainerHighest,
                                             valueColor: AlwaysStoppedAnimation(
-                                              _parseColor(option.color) ??
+                                              _parseHexColor(option.color) ??
                                                   cs.primary,
                                             ),
                                           ),
@@ -1071,23 +1073,6 @@ class _VotingItemCard extends StatelessWidget {
     );
   }
 
-  Color? _parseColor(String? value) {
-    if (value == null || value.isEmpty) return null;
-    try {
-      final hex = value.replaceFirst('#', '');
-      final color = int.parse(hex, radix: 16);
-      if (hex.length == 6) {
-        return Color(0xFF000000 | color);
-      }
-      if (hex.length == 8) {
-        return Color(color);
-      }
-    } catch (_) {
-      return null;
-    }
-    return null;
-  }
-
   String _formatDateTime(DateTime? date) {
     if (date == null) return '--';
     final formatter = DateFormat('dd/MM/yyyy · HH:mm');
@@ -1122,13 +1107,13 @@ class _VotingGroupFormBottomSheetState
   late final TextEditingController _nameCtrl;
   late final TextEditingController _descriptionCtrl;
   late final TextEditingController _notesCtrl;
-  late final TextEditingController _quorumCtrl;
-  late final TextEditingController _createdByCtrl;
   DateTime? _startDate;
   DateTime? _endDate;
   bool _requiresQuorum = false;
+  double _quorumValue = 50;
   bool _saving = false;
   String? _errorMessage;
+  int? _createdByUserId;
 
   @override
   void initState() {
@@ -1137,15 +1122,14 @@ class _VotingGroupFormBottomSheetState
     _nameCtrl = TextEditingController(text: group?.name ?? '');
     _descriptionCtrl = TextEditingController(text: group?.description ?? '');
     _notesCtrl = TextEditingController();
-    _quorumCtrl = TextEditingController(
-      text: group?.quorumPercentage?.toString() ?? '',
-    );
-    _createdByCtrl = TextEditingController(
-      text: group?.createdByUserId?.toString() ?? '',
-    );
     _startDate = group?.votingStartDate;
     _endDate = group?.votingEndDate;
     _requiresQuorum = group?.requiresQuorum ?? false;
+    _quorumValue = (group?.quorumPercentage ?? _quorumValue.toInt()).toDouble();
+    final loginCtrl =
+        Get.isRegistered<LoginController>() ? Get.find<LoginController>() : null;
+    _createdByUserId =
+        group?.createdByUserId ?? loginCtrl?.sessionModel.value?.data.user.id;
   }
 
   @override
@@ -1153,26 +1137,41 @@ class _VotingGroupFormBottomSheetState
     _nameCtrl.dispose();
     _descriptionCtrl.dispose();
     _notesCtrl.dispose();
-    _quorumCtrl.dispose();
-    _createdByCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _pickDate({required bool isStart}) async {
+  Future<void> _pickDateTime({required bool isStart}) async {
     final current = isStart ? _startDate : _endDate;
-    final initialDate = current ?? DateTime.now();
-    final picked = await showDatePicker(
+    final now = DateTime.now();
+    final initialDate = current ?? now;
+    final pickedDate = await showDatePicker(
       context: context,
       initialDate: initialDate,
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
-    if (picked == null) return;
+    if (pickedDate == null) return;
+    final initialTime = TimeOfDay.fromDateTime(current ?? now);
+    final pickedTime = await showTimePicker(
+      context: context,
+      initialTime: initialTime,
+    );
+    if (pickedTime == null) return;
+    final combined = DateTime(
+      pickedDate.year,
+      pickedDate.month,
+      pickedDate.day,
+      pickedTime.hour,
+      pickedTime.minute,
+      current?.second ?? 0,
+      current?.millisecond ?? 0,
+      current?.microsecond ?? 0,
+    );
     setState(() {
       if (isStart) {
-        _startDate = picked;
+        _startDate = combined;
       } else {
-        _endDate = picked;
+        _endDate = combined;
       }
     });
   }
@@ -1184,19 +1183,17 @@ class _VotingGroupFormBottomSheetState
       'notes': _emptyToNull(_notesCtrl.text.trim()),
       'requires_quorum': _requiresQuorum,
     };
-    final quorum = int.tryParse(_quorumCtrl.text.trim());
-    if (_requiresQuorum && quorum != null) {
-      payload['quorum_percentage'] = quorum;
+    if (_requiresQuorum) {
+      payload['quorum_percentage'] = _quorumValue.round();
     }
     if (_startDate != null) {
-      payload['voting_start_date'] = _startDate!.toIso8601String();
+      payload['voting_start_date'] = _formatDateForPayload(_startDate!);
     }
     if (_endDate != null) {
-      payload['voting_end_date'] = _endDate!.toIso8601String();
+      payload['voting_end_date'] = _formatDateForPayload(_endDate!);
     }
-    final createdBy = int.tryParse(_createdByCtrl.text.trim());
-    if (createdBy != null) {
-      payload['created_by_user_id'] = createdBy;
+    if (widget.initialGroup == null && _createdByUserId != null) {
+      payload['created_by_user_id'] = _createdByUserId;
     }
     return payload;
   }
@@ -1207,17 +1204,22 @@ class _VotingGroupFormBottomSheetState
     return trimmed.isEmpty ? null : trimmed;
   }
 
+  String _formatDateForPayload(DateTime value) {
+    final local = value.toLocal();
+    final datePart = DateFormat("yyyy-MM-dd'T'HH:mm:ss").format(local);
+    final micros =
+        (local.millisecond * 1000 + local.microsecond).toString().padLeft(6, '0');
+    final offset = local.timeZoneOffset;
+    final sign = offset.isNegative ? '-' : '+';
+    final hours = offset.inHours.abs().toString().padLeft(2, '0');
+    final minutes = (offset.inMinutes.abs() % 60).toString().padLeft(2, '0');
+    return '$datePart.$micros$sign$hours:$minutes';
+  }
+
   Future<void> _handleSubmit() async {
     if (_saving) return;
     final form = _formKey.currentState;
     if (form == null || !form.validate()) return;
-
-    if (_requiresQuorum && _quorumCtrl.text.trim().isEmpty) {
-      setState(() {
-        _errorMessage = 'Debes ingresar el porcentaje de quórum requerido.';
-      });
-      return;
-    }
 
     FocusScope.of(context).unfocus();
     setState(() {
@@ -1355,10 +1357,35 @@ class _VotingGroupFormBottomSheetState
                             ),
                             if (_requiresQuorum) ...[
                               const SizedBox(height: 12),
-                              TextFormField(
-                                controller: _quorumCtrl,
-                                decoration: decoration('Porcentaje de quórum'),
-                                keyboardType: TextInputType.number,
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          'Porcentaje de quórum',
+                                          style: tt.bodyMedium?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ),
+                                      Text('${_quorumValue.round()}%'),
+                                    ],
+                                  ),
+                                  Slider.adaptive(
+                                    value: _quorumValue,
+                                    min: 0,
+                                    max: 100,
+                                    divisions: 100,
+                                    label: '${_quorumValue.round()}%',
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _quorumValue = value;
+                                      });
+                                    },
+                                  ),
+                                ],
                               ),
                             ],
                             const SizedBox(height: 12),
@@ -1368,7 +1395,7 @@ class _VotingGroupFormBottomSheetState
                                   child: _DateField(
                                     label: 'Fecha inicio',
                                     date: _startDate,
-                                    onTap: () => _pickDate(isStart: true),
+                                    onTap: () => _pickDateTime(isStart: true),
                                   ),
                                 ),
                                 const SizedBox(width: 12),
@@ -1376,18 +1403,10 @@ class _VotingGroupFormBottomSheetState
                                   child: _DateField(
                                     label: 'Fecha fin',
                                     date: _endDate,
-                                    onTap: () => _pickDate(isStart: false),
+                                    onTap: () => _pickDateTime(isStart: false),
                                   ),
                                 ),
                               ],
-                            ),
-                            const SizedBox(height: 12),
-                            TextFormField(
-                              controller: _createdByCtrl,
-                              decoration: decoration(
-                                'ID de usuario que crea el grupo',
-                              ),
-                              keyboardType: TextInputType.number,
                             ),
                             const SizedBox(height: 16),
                             if (_errorMessage != null)
@@ -1395,20 +1414,32 @@ class _VotingGroupFormBottomSheetState
                                 padding: const EdgeInsets.only(bottom: 12),
                                 child: _InlineError(message: _errorMessage!),
                               ),
-                            SizedBox(
-                              width: double.infinity,
-                              child: FilledButton(
-                                onPressed: _saving ? null : _handleSubmit,
-                                child: _saving
-                                    ? const SizedBox(
-                                        height: 22,
-                                        width: 22,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2.4,
-                                        ),
-                                      )
-                                    : Text(widget.actionLabel),
-                              ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: _saving
+                                        ? null
+                                        : () => Navigator.of(context).maybePop(),
+                                    child: const Text('Cancelar'),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: FilledButton(
+                                    onPressed: _saving ? null : _handleSubmit,
+                                    child: _saving
+                                        ? const SizedBox(
+                                            height: 22,
+                                            width: 22,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2.4,
+                                            ),
+                                          )
+                                        : Text(widget.actionLabel),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -1981,7 +2012,7 @@ class _DateField extends StatelessWidget {
 
     final value = date == null
         ? 'Sin definir'
-        : DateFormat('dd/MM/yyyy').format(date!);
+        : DateFormat('dd/MM/yyyy · HH:mm').format(date!.toLocal());
 
     return InkWell(
       onTap: onTap,
@@ -2158,6 +2189,209 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
     }
   }
 
+  Widget _buildResponsiveWrap({
+    required double maxWidth,
+    required double minItemWidth,
+    required List<Widget> items,
+    double spacing = 12,
+  }) {
+    final width = _computeItemWidth(maxWidth, minItemWidth, spacing);
+    return Wrap(
+      spacing: spacing,
+      runSpacing: spacing,
+      children:
+          items.map((child) => SizedBox(width: width, child: child)).toList(),
+    );
+  }
+
+  double _computeItemWidth(double maxWidth, double minItemWidth, double spacing) {
+    if (maxWidth.isInfinite) return minItemWidth;
+    int columns = (maxWidth / (minItemWidth + spacing)).floor();
+    if (columns < 1) columns = 1;
+    while (columns > 1) {
+      final totalSpacing = spacing * (columns - 1);
+      final candidate = (maxWidth - totalSpacing) / columns;
+      if (candidate >= minItemWidth) {
+        return candidate;
+      }
+      columns -= 1;
+    }
+    return maxWidth;
+  }
+
+  List<_LiveOptionSummaryData> _buildOptionSummaries({
+    required VotingLiveController controller,
+    required HorizontalPropertyVotingGroupLiveData? liveData,
+    required List<HorizontalPropertyVotingLiveUnit> units,
+    required ColorScheme colorScheme,
+  }) {
+    final resultsByOption = {
+      for (final result in controller.liveResults)
+        result.votingOptionId: result,
+    };
+
+    final totalUnits = liveData?.totalUnits ?? units.length;
+    final totalCoefficient = _sumCoefficients(units);
+
+    final hasData = totalUnits > 0 ||
+        controller.liveResults.isNotEmpty ||
+        units.isNotEmpty;
+    if (!hasData) {
+      return const [];
+    }
+
+    final unitsByOption = <int, List<HorizontalPropertyVotingLiveUnit>>{};
+    for (final unit in units) {
+      final optionId = unit.votingOptionId;
+      if (optionId == null) continue;
+      unitsByOption
+          .putIfAbsent(optionId, () => <HorizontalPropertyVotingLiveUnit>[])
+          .add(unit);
+    }
+
+    final summaries = <_LiveOptionSummaryData>[];
+    final options = List<HorizontalPropertyVotingOption>.of(controller.options)
+      ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
+
+    final processedOptionIds = <int>{};
+
+    for (final option in options) {
+      final optionUnits = unitsByOption[option.id] ?? const [];
+      final result = resultsByOption[option.id];
+      final count = result?.voteCount ?? optionUnits.length;
+      final coefficientSum = _sumCoefficients(optionUnits);
+      final percentage = totalUnits > 0
+          ? _calculatePercentage(count, totalUnits)
+          : (result?.percentage ?? 0);
+      final coefficientPercentage = totalCoefficient > 0
+          ? _calculatePercentage(coefficientSum, totalCoefficient)
+          : null;
+      final color = _parseHexColor(option.color) ??
+          _parseHexColor(result?.color) ??
+          colorScheme.primary;
+
+      summaries.add(
+        _LiveOptionSummaryData(
+          label: option.optionText,
+          code: option.optionCode,
+          count: count,
+          unitPercentage: percentage,
+          coefficientPercentage: coefficientPercentage,
+          accentColor: color,
+        ),
+      );
+      processedOptionIds.add(option.id);
+    }
+
+    for (final result in controller.liveResults) {
+      if (processedOptionIds.contains(result.votingOptionId)) continue;
+      final optionUnits = unitsByOption[result.votingOptionId] ?? const [];
+      final color =
+          _parseHexColor(result.color) ?? colorScheme.secondaryContainer;
+      summaries.add(
+        _LiveOptionSummaryData(
+          label: result.optionText.isNotEmpty
+              ? result.optionText
+              : 'Opción ${result.votingOptionId}',
+          code: result.optionCode,
+          count: result.voteCount,
+          unitPercentage: totalUnits > 0
+              ? _calculatePercentage(result.voteCount, totalUnits)
+              : result.percentage,
+          coefficientPercentage: totalCoefficient > 0
+              ? _calculatePercentage(
+                  _sumCoefficients(optionUnits),
+                  totalCoefficient,
+                )
+              : null,
+          accentColor: color,
+        ),
+      );
+    }
+
+    final pendingUnits = units.where((unit) => !unit.hasVoted).toList();
+    final pendingCountRaw = liveData?.unitsPending ?? pendingUnits.length;
+    final pendingCount = pendingCountRaw < 0 ? 0 : pendingCountRaw;
+    final pendingPercentage = totalUnits > 0
+        ? _calculatePercentage(pendingCount, totalUnits)
+        : 0;
+    final pendingCoefficientPercentage = totalCoefficient > 0
+        ? _calculatePercentage(
+            _sumCoefficients(pendingUnits),
+            totalCoefficient,
+          )
+        : null;
+
+    summaries.insert(
+      0,
+      _LiveOptionSummaryData(
+        label: 'No votado',
+        code: '',
+        count: pendingCount,
+        unitPercentage: pendingPercentage,
+        coefficientPercentage: pendingCoefficientPercentage,
+        accentColor: colorScheme.outline,
+        isPending: true,
+      ),
+    );
+
+    return summaries;
+  }
+
+  List<_LiveSummaryData> _buildSummaryData({
+    required HorizontalPropertyVotingGroupLiveData? liveData,
+    required List<HorizontalPropertyVotingLiveUnit> units,
+    required ColorScheme colorScheme,
+  }) {
+    if (liveData == null && units.isEmpty) return const [];
+    final totalUnits = liveData?.totalUnits ?? units.length;
+    final totalCoefficient = _sumCoefficients(units);
+    final votedCount = liveData?.unitsVoted ??
+        units.where((unit) => unit.hasVoted).length;
+    final pendingCountRaw =
+        liveData?.unitsPending ?? (totalUnits - votedCount);
+    final pendingCount = pendingCountRaw < 0 ? 0 : pendingCountRaw;
+    final votedCoefficient =
+        _sumCoefficients(units.where((unit) => unit.hasVoted));
+    final pendingCoefficient =
+        (totalCoefficient - votedCoefficient).clamp(0.0, double.infinity);
+
+    return [
+      _LiveSummaryData(
+        label: 'Total',
+        count: totalUnits,
+        unitPercentage: null,
+        coefficientPercentage: totalCoefficient > 0 ? 100.0 : null,
+        icon: Icons.apartment_outlined,
+        color: colorScheme.primary,
+      ),
+      _LiveSummaryData(
+        label: 'Participantes',
+        count: votedCount,
+        unitPercentage:
+            totalUnits > 0 ? _calculatePercentage(votedCount, totalUnits) : null,
+        coefficientPercentage: totalCoefficient > 0
+            ? _calculatePercentage(votedCoefficient, totalCoefficient)
+            : null,
+        icon: Icons.how_to_vote_outlined,
+        color: colorScheme.secondary,
+      ),
+      _LiveSummaryData(
+        label: 'Pendientes',
+        count: pendingCount,
+        unitPercentage: totalUnits > 0
+            ? _calculatePercentage(pendingCount, totalUnits)
+            : null,
+        coefficientPercentage: totalCoefficient > 0
+            ? _calculatePercentage(pendingCoefficient, totalCoefficient)
+            : null,
+        icon: Icons.pending_actions_outlined,
+        color: colorScheme.tertiary,
+      ),
+    ];
+  }
+
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -2204,6 +2438,18 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
                             final error = controller.errorMessage.value;
                             final filter = controller.filter.value;
                             final units = controller.filteredUnits;
+                            final allUnits = controller.liveUnits;
+                            final optionSummaries = _buildOptionSummaries(
+                              controller: controller,
+                              liveData: liveData,
+                              units: allUnits,
+                              colorScheme: cs,
+                            );
+                            final summaryCards = _buildSummaryData(
+                              liveData: liveData,
+                              units: allUnits,
+                              colorScheme: cs,
+                            );
 
                             return SingleChildScrollView(
                               padding: const EdgeInsets.fromLTRB(
@@ -2267,13 +2513,55 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
                                         value: liveData?.unitsPending ?? 0,
                                         icon: Icons.pending_actions_outlined,
                                         color: cs.tertiary,
-                                      ),
-                                    ],
+                                    ),
+                                  ],
+                                ),
+                                if (optionSummaries.isNotEmpty) ...[
+                                  const SizedBox(height: 20),
+                                  Text(
+                                    'Opciones de votación',
+                                    style: tt.titleSmall?.copyWith(
+                                      fontWeight: FontWeight.w800,
+                                    ),
                                   ),
-                                  if (liveData?.timestamp != null) ...[
-                                    const SizedBox(height: 12),
-                                    Row(
-                                      children: [
+                                  const SizedBox(height: 12),
+                                  LayoutBuilder(
+                                    builder: (context, constraints) {
+                                      return _buildResponsiveWrap(
+                                        maxWidth: constraints.maxWidth,
+                                        minItemWidth: 210,
+                                        items: optionSummaries
+                                            .map((data) => _LiveOptionCard(data: data))
+                                            .toList(),
+                                      );
+                                    },
+                                  ),
+                                ],
+                                if (summaryCards.isNotEmpty) ...[
+                                  const SizedBox(height: 20),
+                                  Text(
+                                    'Resumen',
+                                    style: tt.titleSmall?.copyWith(
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  LayoutBuilder(
+                                    builder: (context, constraints) {
+                                      return _buildResponsiveWrap(
+                                        maxWidth: constraints.maxWidth,
+                                        minItemWidth: 200,
+                                        items: summaryCards
+                                            .map((data) => _LiveSummaryCard(data: data))
+                                            .toList(),
+                                      );
+                                    },
+                                  ),
+                                ],
+                                if (liveData?.timestamp != null) ...[
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    children: [
                                         Icon(
                                           Icons.schedule_outlined,
                                           size: 18,
@@ -2288,12 +2576,12 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
                                           ),
                                         ),
                                       ],
-                                    ),
-                                  ],
-                                  const SizedBox(height: 20),
-                                  TextField(
-                                    controller: _searchCtrl,
-                                    decoration: InputDecoration(
+                                  ),
+                                ],
+                                const SizedBox(height: 20),
+                                TextField(
+                                  controller: _searchCtrl,
+                                  decoration: InputDecoration(
                                       labelText: 'Buscar unidad o residente',
                                       prefixIcon: const Icon(Icons.search),
                                       suffixIcon: filter.isNotEmpty
@@ -2351,13 +2639,12 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
                                     const Text(
                                       'No hay unidades registradas en este grupo.',
                                     )
-                                  else
-                                    Wrap(
-                                      spacing: 8,
-                                      runSpacing: 8,
-                                      children: units
+                                else
+                                  LayoutBuilder(
+                                    builder: (context, constraints) {
+                                      final items = units
                                           .map(
-                                            (unit) => _UnitVoteChip(
+                                            (unit) => _UnitVoteTile(
                                               unit: unit,
                                               isProcessing: controller
                                                   .isProcessing(
@@ -2371,8 +2658,14 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
                                                   : null,
                                             ),
                                           )
-                                          .toList(),
-                                    ),
+                                          .toList();
+                                      return _buildResponsiveWrap(
+                                        maxWidth: constraints.maxWidth,
+                                        minItemWidth: 160,
+                                        items: items,
+                                      );
+                                    },
+                                  ),
                                 ],
                               ),
                             );
@@ -2692,13 +2985,13 @@ class _LiveStatChip extends StatelessWidget {
   }
 }
 
-class _UnitVoteChip extends StatelessWidget {
+class _UnitVoteTile extends StatelessWidget {
   final HorizontalPropertyVotingLiveUnit unit;
   final bool isProcessing;
   final VoidCallback onVote;
   final VoidCallback? onRemove;
 
-  const _UnitVoteChip({
+  const _UnitVoteTile({
     required this.unit,
     required this.isProcessing,
     required this.onVote,
@@ -2707,49 +3000,429 @@ class _UnitVoteChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
     final voted = unit.hasVoted;
-    final background = voted ? cs.primaryContainer : cs.surfaceContainerHighest;
-    final foreground = voted ? cs.onPrimaryContainer : cs.onSurface;
-    final icon = isProcessing
-        ? const SizedBox(
-            width: 18,
-            height: 18,
-            child: CircularProgressIndicator(strokeWidth: 2.2),
-          )
-        : Icon(
-            voted ? Icons.how_to_vote : Icons.add_task_outlined,
-            color: foreground,
-          );
+    final accentColor =
+        voted ? (_parseHexColor(unit.optionColor) ?? cs.primary) : cs.primary;
+    final background = voted
+        ? accentColor.withValues(alpha: .14)
+        : cs.surfaceContainerHighest;
+    final borderColor = voted
+        ? accentColor.withValues(alpha: .6)
+        : cs.outlineVariant;
+    final iconColor = voted ? accentColor : cs.primary;
+    final residentName = unit.residentName?.isNotEmpty == true
+        ? unit.residentName!
+        : 'Sin residente';
+    final optionLabel = unit.optionText?.isNotEmpty == true
+        ? unit.optionText!
+        : null;
+    final coefficient = unit.participationCoefficient;
+    final timeLabel = unit.votedAt != null
+        ? DateFormat('dd/MM · HH:mm').format(unit.votedAt!.toLocal())
+        : null;
+    final tooltip = _unitTooltipText(unit);
 
-    return InputChip(
-      backgroundColor: background,
-      avatar: icon,
-      label: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            unit.unitNumber,
-            style: TextStyle(fontWeight: FontWeight.w700, color: foreground),
-          ),
-          if (unit.residentName?.isNotEmpty == true)
-            Text(
-              unit.residentName!,
-              style: TextStyle(
-                color: foreground.withValues(alpha: .8),
-                fontSize: 11,
-              ),
+    final content = AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: borderColor, width: 1.4),
+        boxShadow: [
+          if (voted)
+            BoxShadow(
+              color: accentColor.withValues(alpha: .12),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
             ),
         ],
       ),
-      labelPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      onPressed: isProcessing || voted ? null : onVote,
-      onDeleted: voted && !isProcessing && onRemove != null ? onRemove : null,
-      deleteIcon: const Icon(Icons.cancel_outlined),
-      deleteIconColor: foreground,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  unit.unitNumber,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: cs.onSurface,
+                  ),
+                ),
+              ),
+              if (isProcessing)
+                SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.2,
+                    color: iconColor,
+                  ),
+                )
+              else if (voted)
+                Icon(Icons.check_circle, color: iconColor, size: 20)
+              else
+                Icon(Icons.how_to_vote_outlined, color: iconColor, size: 20),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            residentName,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: cs.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          if (coefficient != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Coef.: ${_coefficientFormatter.format(coefficient)}',
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: cs.onSurfaceVariant.withValues(alpha: .9),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+          if (optionLabel != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              optionLabel,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: iconColor,
+                fontWeight: FontWeight.w700,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ] else ...[
+            const SizedBox(height: 6),
+            Text(
+              'Listo para votar',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: cs.onSurfaceVariant,
+              ),
+            ),
+          ],
+          if (timeLabel != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Registrado: $timeLabel',
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: cs.onSurfaceVariant.withValues(alpha: .75),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+
+    final stackChildren = <Widget>[content];
+    if (voted && onRemove != null) {
+      stackChildren.add(
+        Positioned(
+          top: 6,
+          right: 6,
+          child: IconButton(
+            onPressed: isProcessing ? null : onRemove,
+            icon: const Icon(Icons.close_rounded, size: 18),
+            tooltip: 'Eliminar voto',
+            style: IconButton.styleFrom(
+              foregroundColor: cs.error,
+              backgroundColor: cs.surface,
+              padding: EdgeInsets.zero,
+              minimumSize: const Size(28, 28),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Tooltip(
+      message: tooltip,
+      preferBelow: false,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: isProcessing || voted ? null : onVote,
+          borderRadius: BorderRadius.circular(18),
+          child: Stack(children: stackChildren),
+        ),
+      ),
     );
   }
+}
+
+class _LiveOptionSummaryData {
+  final String label;
+  final String code;
+  final int count;
+  final double unitPercentage;
+  final double? coefficientPercentage;
+  final Color accentColor;
+  final bool isPending;
+
+  const _LiveOptionSummaryData({
+    required this.label,
+    required this.code,
+    required this.count,
+    required this.unitPercentage,
+    required this.coefficientPercentage,
+    required this.accentColor,
+    this.isPending = false,
+  });
+}
+
+class _LiveSummaryData {
+  final String label;
+  final int count;
+  final double? unitPercentage;
+  final double? coefficientPercentage;
+  final IconData icon;
+  final Color color;
+
+  const _LiveSummaryData({
+    required this.label,
+    required this.count,
+    this.unitPercentage,
+    this.coefficientPercentage,
+    required this.icon,
+    required this.color,
+  });
+}
+
+class _LiveOptionCard extends StatelessWidget {
+  final _LiveOptionSummaryData data;
+  const _LiveOptionCard({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final background = data.isPending
+        ? cs.surfaceContainerHighest
+        : data.accentColor.withValues(alpha: .12);
+    final border = data.isPending
+        ? cs.outlineVariant
+        : data.accentColor.withValues(alpha: .6);
+    final labelColor = data.isPending ? cs.onSurface : data.accentColor;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  data.label,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: labelColor,
+                  ),
+                ),
+              ),
+              if (data.code.isNotEmpty)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: data.isPending
+                        ? cs.surface
+                        : data.accentColor.withValues(alpha: .16),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    data.code.toUpperCase(),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: labelColor,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text(
+            '${NumberFormat.decimalPattern().format(data.count)}',
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: cs.onSurface,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${_formatOneDecimal(data.unitPercentage)}% del total',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: cs.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          if (data.coefficientPercentage != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              '${_formatOneDecimal(data.coefficientPercentage!)}% por coef.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: cs.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _LiveSummaryCard extends StatelessWidget {
+  final _LiveSummaryData data;
+  const _LiveSummaryCard({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final background = data.color.withValues(alpha: .12);
+    final border = data.color.withValues(alpha: .45);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: border),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            height: 38,
+            width: 38,
+            decoration: BoxDecoration(
+              color: data.color.withValues(alpha: .14),
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: Icon(data.icon, color: data.color),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  data.label,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: data.color,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  NumberFormat.decimalPattern().format(data.count),
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: cs.onSurface,
+                  ),
+                ),
+                if (data.unitPercentage != null)
+                  Text(
+                    '${_formatOneDecimal(data.unitPercentage!)}% del total',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
+                if (data.coefficientPercentage != null)
+                  Text(
+                    '${_formatOneDecimal(data.coefficientPercentage!)}% por coef.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+final NumberFormat _oneDecimalFormatter = NumberFormat('##0.0');
+final NumberFormat _coefficientFormatter = NumberFormat('##0.###');
+
+String _formatOneDecimal(double value) {
+  final sanitized = value.isFinite ? value : 0.0;
+  return _oneDecimalFormatter.format(sanitized);
+}
+
+double _calculatePercentage(num part, num total) {
+  if (total == 0) return 0;
+  final value = (part.toDouble() / total.toDouble()) * 100;
+  if (!value.isFinite) return 0;
+  return value.clamp(0.0, 100.0);
+}
+
+double _sumCoefficients(Iterable<HorizontalPropertyVotingLiveUnit> units) {
+  return units.fold<double>(
+    0,
+    (sum, unit) => sum + (unit.participationCoefficient ?? 0.0),
+  );
+}
+
+Color? _parseHexColor(String? value) {
+  if (value == null || value.isEmpty) return null;
+  final hex = value.replaceFirst('#', '');
+  try {
+    final color = int.parse(hex, radix: 16);
+    if (hex.length == 6) {
+      return Color(0xFF000000 | color);
+    }
+    if (hex.length == 8) {
+      return Color(color);
+    }
+  } catch (_) {
+    return null;
+  }
+  return null;
+}
+
+String _unitTooltipText(HorizontalPropertyVotingLiveUnit unit) {
+  final buffer = StringBuffer();
+  final resident = unit.residentName?.isNotEmpty == true
+      ? unit.residentName!
+      : 'Sin residente';
+  buffer.writeln('Residente: $resident');
+  final coefficient = unit.participationCoefficient;
+  buffer.writeln(
+    'Coeficiente: ${coefficient != null ? _coefficientFormatter.format(coefficient) : 'N/D'}',
+  );
+  final status = unit.hasVoted
+      ? 'Votó${unit.optionText?.isNotEmpty == true ? ' · ${unit.optionText}' : ''}'
+      : 'Pendiente';
+  buffer.writeln('Estado: $status');
+  if (unit.votedAt != null) {
+    buffer.writeln(
+      'Registrado: ${DateFormat('dd/MM/yyyy HH:mm').format(unit.votedAt!.toLocal())}',
+    );
+  }
+  return buffer.toString();
 }
 
 class _VoteCreationBottomSheet extends StatefulWidget {
@@ -2835,23 +3508,6 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
             'No se pudo registrar el voto. Inténtalo nuevamente.';
       });
     }
-  }
-
-  Color? _parseColor(String? value) {
-    if (value == null || value.isEmpty) return null;
-    try {
-      final hex = value.replaceFirst('#', '');
-      final color = int.parse(hex, radix: 16);
-      if (hex.length == 6) {
-        return Color(0xFF000000 | color);
-      }
-      if (hex.length == 8) {
-        return Color(color);
-      }
-    } catch (_) {
-      return null;
-    }
-    return null;
   }
 
   @override
@@ -2997,7 +3653,7 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
                                 secondary: option.color != null
                                     ? CircleAvatar(
                                         backgroundColor:
-                                            _parseColor(option.color) ??
+                                            _parseHexColor(option.color) ??
                                             cs.primary,
                                       )
                                     : null,

@@ -14,6 +14,7 @@ import 'package:rupu/domain/entities/horizontal_property_units_page.dart';
 import 'package:rupu/domain/entities/horizontal_property_voting.dart';
 import 'package:rupu/domain/entities/horizontal_property_voting_groups.dart';
 import 'package:rupu/domain/repositories/horizontal_properties_repository.dart';
+import 'package:rupu/presentation/views/login/login_controller.dart';
 
 import 'controllers/horizontal_property_dashboard_controller.dart';
 import 'controllers/horizontal_property_residents_controller.dart';
