@@ -8,6 +8,8 @@ class Role {
   final String? scopeName;
   final String? scopeCode;
   final bool isSystem;
+  final int? businessTypeId;
+  final String? businessTypeName;
 
   const Role({
     required this.id,
@@ -19,6 +21,8 @@ class Role {
     this.scopeName,
     this.scopeCode,
     this.isSystem = false,
+    this.businessTypeId,
+    this.businessTypeName,
   });
 }
 

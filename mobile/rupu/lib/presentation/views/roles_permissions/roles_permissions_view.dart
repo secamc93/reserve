@@ -134,10 +134,12 @@ class RolesPermissionsStandaloneTab
         );
       }
 
-      final filtered =
-          tab == RolesPermissionsTab.roles ? controller.filteredRoles : controller.filteredPermissions;
+      final isRolesTab = tab == RolesPermissionsTab.roles;
+      final roles = controller.filteredRoles;
+      final perms = controller.filteredPermissions;
       final totalLabel =
-          tab == RolesPermissionsTab.roles ? 'Roles encontrados: ' : 'Permisos encontrados: ';
+          isRolesTab ? 'Roles encontrados: ' : 'Permisos encontrados: ';
+      final totalCount = isRolesTab ? roles.length : perms.length;
 
       return RefreshIndicator(
         onRefresh: controller.refreshData,
@@ -149,7 +151,7 @@ class RolesPermissionsStandaloneTab
               onChanged: controller.setSearch,
               decoration: InputDecoration(
                 labelText: 'Buscar',
-                hintText: tab == RolesPermissionsTab.roles
+                hintText: isRolesTab
                     ? 'ID, nombre, descripción…'
                     : 'ID, recurso, acción…',
                 prefixIcon: const Icon(Icons.search),
@@ -164,38 +166,39 @@ class RolesPermissionsStandaloneTab
             ),
             const SizedBox(height: 12),
             Text(
-              '$totalLabel${filtered.length}',
+              '$totalLabel$totalCount',
               style: tt.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: cs.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 12),
-            if (filtered.isEmpty)
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    tab == RolesPermissionsTab.roles
-                        ? 'No se encontraron roles con los criterios aplicados.'
-                        : 'No se encontraron permisos con los criterios aplicados.',
-                    style: tt.bodyMedium,
-                  ),
-                ),
-              )
-            else
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 250),
-                child: tab == RolesPermissionsTab.roles
-                    ? _RolesTable(
+            if (isRolesTab)
+              (roles.isEmpty)
+                  ? const _EmptyState(
+                      message:
+                          'No se encontraron roles con los criterios aplicados.',
+                    )
+                  : AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 250),
+                      child: _RolesTable(
                         key: const ValueKey('roles-tab-panel'),
-                        roles: filtered,
-                      )
-                    : _PermissionsTable(
-                        key: const ValueKey('permissions-tab-panel'),
-                        permissions: filtered,
+                        roles: roles,
                       ),
-              ),
+                    )
+            else
+              (perms.isEmpty)
+                  ? const _EmptyState(
+                      message:
+                          'No se encontraron permisos con los criterios aplicados.',
+                    )
+                  : AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 250),
+                      child: _PermissionsTable(
+                        key: const ValueKey('permissions-tab-panel'),
+                        permissions: perms,
+                      ),
+                    ),
           ],
         ),
       );
@@ -322,6 +325,7 @@ class _RolesTable extends StatelessWidget {
               DataColumn(label: Text('ID')),
               DataColumn(label: Text('Nombre')),
               DataColumn(label: Text('Descripción')),
+              DataColumn(label: Text('Tipo de negocio')),
               DataColumn(label: Text('Alcance')),
               DataColumn(label: Text('Nivel')),
               DataColumn(label: Text('Sistema')),
@@ -343,6 +347,9 @@ class _RolesTable extends StatelessWidget {
         DataCell(Text('${role.id}')),
         DataCell(Text(role.name)),
         DataCell(Text(role.description.isNotEmpty ? role.description : '-')),
+        DataCell(Text(role.businessTypeName?.isNotEmpty == true
+            ? role.businessTypeName!
+            : '-')),
         DataCell(Text(scope)),
         DataCell(Text('${role.level}')),
         DataCell(

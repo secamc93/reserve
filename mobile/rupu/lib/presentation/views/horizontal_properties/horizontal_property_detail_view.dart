@@ -1,6 +1,7 @@
 library horizontal_property_detail_view;
 
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:collection/collection.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';

@@ -24,6 +24,8 @@ class PermisosRolesMapper {
         scopeName: m.scopeName ?? m.scope,
         scopeCode: m.scopeCode,
         isSystem: m.isSystem ?? false,
+        businessTypeId: m.businessTypeId,
+        businessTypeName: m.businessTypeName,
       );
 
   static Permission permissionFromModel(PermissionModel m) => Permission(

@@ -95,6 +95,18 @@ class IamBinding {
     if (!Get.isRegistered<RolesPermissionsController>()) {
       Get.put(RolesPermissionsController());
     }
+    if (!Get.isRegistered<IamUsersController>()) {
+      Get.put(IamUsersController());
+    }
+    if (!Get.isRegistered<IamResourcesController>()) {
+      Get.put(IamResourcesController());
+    }
+    if (!Get.isRegistered<IamBusinessTypesController>()) {
+      Get.put(IamBusinessTypesController());
+    }
+    if (!Get.isRegistered<IamBusinessesController>()) {
+      Get.put(IamBusinessesController());
+    }
   }
 }
 

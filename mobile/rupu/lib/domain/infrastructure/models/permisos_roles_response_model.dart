@@ -149,6 +149,8 @@ class RoleModel {
   final String? scopeName;
   final String? scopeCode;
   final bool? isSystem;
+  final int? businessTypeId;
+  final String? businessTypeName;
 
   RoleModel({
     required this.id,
@@ -161,6 +163,8 @@ class RoleModel {
     this.scopeName,
     this.scopeCode,
     this.isSystem,
+    this.businessTypeId,
+    this.businessTypeName,
   });
 
   factory RoleModel.fromJson(Map<String, dynamic> json) {
@@ -175,6 +179,8 @@ class RoleModel {
       scopeName: json['scope_name']?.toString() ?? json['scope']?.toString(),
       scopeCode: json['scope_code']?.toString(),
       isSystem: json['is_system'] as bool?,
+      businessTypeId: (json['business_type_id'] as num?)?.toInt(),
+      businessTypeName: json['business_type_name']?.toString(),
     );
   }
 
@@ -190,6 +196,8 @@ class RoleModel {
       if (scopeName != null) 'scope_name': scopeName,
       if (scopeCode != null) 'scope_code': scopeCode,
       if (isSystem != null) 'is_system': isSystem,
+      if (businessTypeId != null) 'business_type_id': businessTypeId,
+      if (businessTypeName != null) 'business_type_name': businessTypeName,
     };
   }
 }

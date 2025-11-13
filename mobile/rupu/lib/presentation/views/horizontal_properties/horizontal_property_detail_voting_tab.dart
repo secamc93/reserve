@@ -2755,6 +2755,11 @@ class VotingLiveController extends GetxController {
   }
 
   int countForOption(int optionId) {
+    for (final result in liveResults) {
+      if (result.votingOptionId == optionId) {
+        return result.voteCount;
+      }
+    }
     final units = liveUnits;
     if (units.isNotEmpty) {
       return units.where((unit) => unit.votingOptionId == optionId).length;
@@ -2882,14 +2887,14 @@ class VotingLiveController extends GetxController {
         ? event.units
         : _mergeUnits(previous?.units ?? const [], event.units);
 
-    final mergedResults = event.hasResultsSnapshot
+    var mergedResults = event.hasResultsSnapshot
         ? event.results
         : _mergeResults(previous?.results ?? const [], event.results);
 
     final List<HorizontalPropertyVotingVote> incomingVotes =
         isDeleteEvent && !event.hasVotesSnapshot
-        ? const <HorizontalPropertyVotingVote>[]
-        : event.votes;
+            ? const <HorizontalPropertyVotingVote>[]
+            : event.votes;
 
     var mergedVotes = event.hasVotesSnapshot
         ? incomingVotes
@@ -2918,6 +2923,9 @@ class VotingLiveController extends GetxController {
     final incomingResultsById = {
       for (final result in event.results) result.votingOptionId: result,
     };
+
+    final bool shouldAdjustResults =
+        !event.hasResultsSnapshot && event.results.isEmpty;
 
     if (!isDeleteEvent && !event.hasVotesSnapshot && incomingVotes.isNotEmpty) {
       final removedUnitIds = <int>{};
@@ -2954,6 +2962,18 @@ class VotingLiveController extends GetxController {
         mergedVotes = mergedVotes
             .where((vote) => !removedUnitIds.contains(vote.propertyUnitId))
             .toList(growable: false);
+      }
+    }
+
+    if (shouldAdjustResults) {
+      if (!isDeleteEvent && !event.hasVotesSnapshot && incomingVotes.isNotEmpty) {
+        for (final vote in incomingVotes) {
+          mergedResults =
+              _applyVoteDeltaToResults(mergedResults, vote.votingOptionId, 1);
+        }
+      } else if (isDeleteEvent && deletedVote != null) {
+        mergedResults =
+            _applyVoteDeltaToResults(mergedResults, deletedVote.votingOptionId, -1);
       }
     }
 
@@ -2994,7 +3014,7 @@ class VotingLiveController extends GetxController {
 
     final providedUnits = event.hasUnitsSnapshot || event.units.isNotEmpty;
 
-    final computedUnitsVoted = () {
+    var computedUnitsVoted = () {
       if (votesByUnit.isNotEmpty) {
         return votesByUnit.length;
       }
@@ -3003,6 +3023,14 @@ class VotingLiveController extends GetxController {
       }
       return previous?.unitsVoted ?? 0;
     }();
+
+    if (event.unitsVoted < 0) {
+      if (!isDeleteEvent && !event.hasVotesSnapshot && incomingVotes.isNotEmpty) {
+        computedUnitsVoted += incomingVotes.length;
+      } else if (isDeleteEvent && deletedVote != null) {
+        computedUnitsVoted = math.max(0, computedUnitsVoted - 1);
+      }
+    }
 
     final computedTotalUnits = () {
       if (providedUnits) {
@@ -3093,6 +3121,35 @@ class VotingLiveController extends GetxController {
     for (final result in updates) {
       map[result.votingOptionId] = result;
     }
+    return map.values.toList(growable: false);
+  }
+
+  List<HorizontalPropertyVotingLiveResult> _applyVoteDeltaToResults(
+    List<HorizontalPropertyVotingLiveResult> base,
+    int optionId,
+    int delta,
+  ) {
+    if (delta == 0) return base;
+
+    final map = {for (final result in base) result.votingOptionId: result};
+    final existing = map[optionId];
+    final option = parent.optionById(
+      groupId: groupId,
+      votingId: votingId,
+      optionId: optionId,
+    );
+
+    final nextCount = math.max(0, (existing?.voteCount ?? 0) + delta);
+
+    map[optionId] = HorizontalPropertyVotingLiveResult(
+      votingOptionId: optionId,
+      optionText: existing?.optionText ?? option?.optionText ?? '',
+      optionCode: existing?.optionCode ?? option?.optionCode ?? '',
+      color: existing?.color ?? option?.color,
+      voteCount: nextCount,
+      percentage: existing?.percentage ?? 0,
+    );
+
     return map.values.toList(growable: false);
   }
 
@@ -3739,12 +3796,15 @@ class _PendingVoteSummaryCard extends StatelessWidget {
       final allowed = controller.allowedVotingUnits;
       final yesVotes = controller.countForOptionCode('si');
       final noVotes = controller.countForOptionCode('no');
-      final totalTracked = yesVotes + noVotes;
-      final pendingFromTracked = (allowed - totalTracked);
-      final normalizedTracked = pendingFromTracked < 0 ? 0 : pendingFromTracked;
-      final totalVotes = controller.totalVotesFromUnits;
-      final pendingFromTotal = (allowed - totalVotes);
-      final normalizedTotal = pendingFromTotal < 0 ? 0 : pendingFromTotal;
+      final trackedTotal = math.min(allowed, yesVotes + noVotes);
+      final pending = math.max(0, allowed - trackedTotal);
+
+      double percent(int value) {
+        if (allowed <= 0) return 0;
+        return (value / allowed) * 100;
+      }
+
+      final cs = Theme.of(context).colorScheme;
 
       return DecoratedBox(
         decoration: BoxDecoration(
@@ -3758,46 +3818,41 @@ class _PendingVoteSummaryCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Pendientes',
+                'Votos por decisión',
                 style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                countFormat(normalizedTracked),
-                style: tt.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Total permitido - (Sí + No)',
-                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
               const SizedBox(height: 12),
               Row(
                 children: [
                   Expanded(
-                    child: _LiveOptionStat(
+                    child: _DecisionCompactCard(
                       label: 'Sí',
-                      value: countFormat(yesVotes),
-                      caption: 'Votos acumulados',
+                      value: yesVotes,
+                      percent: percent(yesVotes),
+                      color: cs.primary,
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: _LiveOptionStat(
+                    child: _DecisionCompactCard(
                       label: 'No',
-                      value: countFormat(noVotes),
-                      caption: 'Votos acumulados',
+                      value: noVotes,
+                      percent: percent(noVotes),
+                      color: cs.error,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _DecisionCompactCard(
+                      label: 'Pendientes',
+                      value: pending,
+                      percent: percent(pending),
+                      color: cs.tertiary,
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
-              _SummaryMetricLine(
-                label: 'Pendientes totales',
-                value: countFormat(normalizedTotal),
-                caption: 'Basado en votos emitidos',
-              ),
-              const SizedBox(height: 10),
               _SummaryMetricLine(
                 label: 'Total permitido a votar',
                 value: countFormat(allowed),
@@ -3811,6 +3866,59 @@ class _PendingVoteSummaryCard extends StatelessWidget {
   }
 
   String countFormat(int value) => NumberFormat('#,##0').format(value);
+}
+
+class _DecisionCompactCard extends StatelessWidget {
+  final String label;
+  final int value;
+  final double percent;
+  final Color color;
+
+  const _DecisionCompactCard({
+    required this.label,
+    required this.value,
+    required this.percent,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final countFormat = NumberFormat('#,##0');
+    final percentFormat = NumberFormat('##0.0#');
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: .3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: tt.labelSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            countFormat.format(value),
+            style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            '${percentFormat.format(percent)}%',
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _LiveOptionStat extends StatelessWidget {
