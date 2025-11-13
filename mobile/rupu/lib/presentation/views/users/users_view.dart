@@ -14,10 +14,20 @@ import 'widgets/users_filters_panel.dart';
 class UsersView extends GetView<UsersController> {
   static const name = 'users';
   final int pageIndex;
-  const UsersView({super.key, required this.pageIndex});
+  final bool embedded;
+
+  const UsersView({
+    super.key,
+    required this.pageIndex,
+    this.embedded = false,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final body = _buildBody(context);
+    if (embedded) {
+      return body;
+    }
     return Scaffold(
       appBar: AppBar(title: const Text('Usuarios'), centerTitle: true),
       floatingActionButton: Obx(() {
@@ -35,118 +45,122 @@ class UsersView extends GetView<UsersController> {
           child: const Icon(Icons.add),
         );
       }),
-      body: Obx(() {
-        if (controller.isLoading.value && controller.users.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
-        }
+      body: body,
+    );
+  }
 
-        final hasError = controller.errorMessage.value != null;
+  Widget _buildBody(BuildContext context) {
+    return Obx(() {
+      if (controller.isLoading.value && controller.users.isEmpty) {
+        return const Center(child: CircularProgressIndicator());
+      }
 
-        if (!controller.canRead) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.lock_outline, size: 48),
-                  const SizedBox(height: 12),
-                  Text(
-                    controller.errorMessage.value ??
-                        'No cuentas con permisos para consultar usuarios.',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
+      final hasError = controller.errorMessage.value != null;
 
-        return RefreshIndicator(
-          onRefresh: controller.fetchUsers,
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16),
-            children: [
-              UsersFiltersPanel(controller: controller),
-              const SizedBox(height: 16),
-              if (hasError)
-                Card(
-                  color: Theme.of(context).colorScheme.errorContainer,
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Text(
-                      controller.errorMessage.value!,
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium
-                          ?.copyWith(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onErrorContainer,
-                          ),
-                    ),
-                  ),
+      if (!controller.canRead) {
+        return Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.lock_outline, size: 48),
+                const SizedBox(height: 12),
+                Text(
+                  controller.errorMessage.value ??
+                      'No cuentas con permisos para consultar usuarios.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyLarge,
                 ),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Total de usuarios: ${controller.totalCount.value}',
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                  if (controller.isLoading.value)
-                    const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              if (controller.users.isEmpty && !hasError)
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Icon(Icons.people_alt_outlined, size: 48),
-                        SizedBox(height: 8),
-                        Text(
-                          'No se encontraron usuarios con los filtros aplicados.',
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              else
-                ...controller.users
-                    .map((user) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: UserListCard(
-                            user: user,
-                            formatDate: controller.formatDate,
-                            canView: controller.canRead || controller.canUpdate,
-                            canDelete: controller.canDelete,
-                            isProcessing:
-                                controller.deletingUserId.value == user.id,
-                            onView: () => _openDetail(context, user.id),
-                            onDelete: () => _confirmDelete(context, user),
-                          ),
-                        ))
-                    .toList(),
-            ],
+              ],
+            ),
           ),
         );
-      }),
-    );
+      }
+
+      return RefreshIndicator(
+        onRefresh: controller.fetchUsers,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          children: [
+            UsersFiltersPanel(controller: controller),
+            const SizedBox(height: 16),
+            if (hasError)
+              Card(
+                color: Theme.of(context).colorScheme.errorContainer,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Text(
+                    controller.errorMessage.value!,
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onErrorContainer,
+                        ),
+                  ),
+                ),
+              ),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Total de usuarios: ${controller.totalCount.value}',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                ),
+                if (controller.isLoading.value)
+                  const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (controller.users.isEmpty && !hasError)
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(Icons.people_alt_outlined, size: 48),
+                      SizedBox(height: 8),
+                      Text(
+                        'No se encontraron usuarios con los filtros aplicados.',
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              ...controller.users
+                  .map((user) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: UserListCard(
+                          user: user,
+                          formatDate: controller.formatDate,
+                          canView: controller.canRead || controller.canUpdate,
+                          canDelete: controller.canDelete,
+                          isProcessing:
+                              controller.deletingUserId.value == user.id,
+                          onView: () => _openDetail(context, user.id),
+                          onDelete: () => _confirmDelete(context, user),
+                        ),
+                      ))
+                  .toList(),
+          ],
+        ),
+      );
+    });
   }
 
   Future<void> _openDetail(BuildContext context, int userId) async {

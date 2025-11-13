@@ -150,6 +150,37 @@ final appRouter = GoRouter(
           },
         ),
         GoRoute(
+          path: '/home/:page/iam',
+          name: IamScreen.name,
+          builder: (context, state) {
+            final home = Get.isRegistered<HomeController>()
+                ? Get.find<HomeController>()
+                : null;
+            if (home == null) {
+              return const Scaffold(
+                body: Center(child: Text('No autorizado')),
+              );
+            }
+            final canUsers = home.canAccessResource(
+              'users',
+              actions: const ['Read', 'Manage'],
+              requireActive: false,
+            );
+            final canRoles = home.canAccessResource(
+              'roles_permissions',
+              actions: const ['Manage'],
+              requireActive: false,
+            );
+            if (!home.isSuper && !canUsers && !canRoles) {
+              return const Scaffold(
+                body: Center(child: Text('No autorizado')),
+              );
+            }
+            final page = int.parse(state.pathParameters['page']!);
+            return IamScreen(pageIndex: page);
+          },
+        ),
+        GoRoute(
           path: '/home/:page/horizontal-properties',
           name: HorizontalPropertiesScreen.name,
           builder: (context, state) {

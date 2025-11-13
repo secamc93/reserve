@@ -108,6 +108,106 @@ class RolesPermissionsView extends GetView<RolesPermissionsController> {
   }
 }
 
+class RolesPermissionsStandaloneTab
+    extends GetWidget<RolesPermissionsController> {
+  final RolesPermissionsTab tab;
+
+  const RolesPermissionsStandaloneTab({super.key, required this.tab});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Obx(() {
+      final isLoading = controller.isLoading.value;
+      final error = controller.errorMessage.value;
+
+      if (isLoading && _isTabEmpty) {
+        return const Center(child: CircularProgressIndicator());
+      }
+
+      if (error != null) {
+        return _ErrorState(
+          message: error,
+          onRetry: controller.refreshData,
+        );
+      }
+
+      final filtered =
+          tab == RolesPermissionsTab.roles ? controller.filteredRoles : controller.filteredPermissions;
+      final totalLabel =
+          tab == RolesPermissionsTab.roles ? 'Roles encontrados: ' : 'Permisos encontrados: ';
+
+      return RefreshIndicator(
+        onRefresh: controller.refreshData,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(24),
+          children: [
+            TextField(
+              onChanged: controller.setSearch,
+              decoration: InputDecoration(
+                labelText: 'Buscar',
+                hintText: tab == RolesPermissionsTab.roles
+                    ? 'ID, nombre, descripción…'
+                    : 'ID, recurso, acción…',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: controller.searchText.value.isEmpty
+                    ? null
+                    : IconButton(
+                        tooltip: 'Limpiar',
+                        icon: const Icon(Icons.clear),
+                        onPressed: controller.clearSearch,
+                      ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              '$totalLabel${filtered.length}',
+              style: tt.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: cs.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (filtered.isEmpty)
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    tab == RolesPermissionsTab.roles
+                        ? 'No se encontraron roles con los criterios aplicados.'
+                        : 'No se encontraron permisos con los criterios aplicados.',
+                    style: tt.bodyMedium,
+                  ),
+                ),
+              )
+            else
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 250),
+                child: tab == RolesPermissionsTab.roles
+                    ? _RolesTable(
+                        key: const ValueKey('roles-tab-panel'),
+                        roles: filtered,
+                      )
+                    : _PermissionsTable(
+                        key: const ValueKey('permissions-tab-panel'),
+                        permissions: filtered,
+                      ),
+              ),
+          ],
+        ),
+      );
+    });
+  }
+
+  bool get _isTabEmpty =>
+      tab == RolesPermissionsTab.roles
+          ? controller.roles.isEmpty
+          : controller.permissions.isEmpty;
+}
+
 // -------------------- (resto de widgets igual que ya los tienes) --------------------
 
 class _TabsHeader extends StatelessWidget {

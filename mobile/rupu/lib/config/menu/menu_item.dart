@@ -61,17 +61,6 @@ const appMenuItems = <MenuItem>[
     ),
   ),
   MenuItem(
-    tittle: 'Usuarios',
-    subTittle: '',
-    link: '/home/0/users',
-    icon: Icons.people_alt_outlined,
-    access: MenuAccessRequirement(
-      resource: 'users',
-      actions: ['Read', 'Manage'],
-      requireActive: false,
-    ),
-  ),
-  MenuItem(
     tittle: 'Propiedades',
     subTittle: '',
     link: '/home/0/horizontal-properties',
@@ -79,15 +68,14 @@ const appMenuItems = <MenuItem>[
     superAdminOnly: true,
   ),
   MenuItem(
-    tittle: 'Usuarios y permisos',
+    tittle: 'IAM',
     subTittle: '',
-    link: '/home/0/users-permissions',
+    link: '/home/0/iam',
     icon: Icons.admin_panel_settings_outlined,
     access: MenuAccessRequirement(
-      resource: 'roles_permissions',
-      actions: ['Manage'],
+      resource: 'users',
+      actions: ['Read', 'Manage'],
       requireActive: false,
     ),
-    superAdminOnly: true,
   ),
 ];

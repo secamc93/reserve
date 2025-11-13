@@ -2141,6 +2141,7 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
   void dispose() {
     if (_controller != null &&
         Get.isRegistered<VotingLiveController>(tag: _liveTag)) {
+      _controller?.closeLiveStream();
       Get.delete<VotingLiveController>(tag: _liveTag);
     }
     _controller?.clearResidentSuggestions();
@@ -2601,6 +2602,8 @@ class VotingLiveController extends GetxController {
   final RxSet<int> _processingUnitIds = <int>{}.obs;
   final residentSuggestions = <HorizontalPropertyResidentItem>[].obs;
   final residentSuggestionsLoading = false.obs;
+  final totalUnitsAllowed = RxnInt();
+  final allowedUnitsLoading = false.obs;
 
   HorizontalPropertiesRepository get repository => _repository;
 
@@ -2611,6 +2614,7 @@ class VotingLiveController extends GetxController {
       if (isClosed) return;
       try {
         await Future.wait([
+          _loadAllowedUnitsCount(),
           parent.loadVotingOptions(
             groupId: groupId,
             votingId: votingId,
@@ -2660,6 +2664,14 @@ class VotingLiveController extends GetxController {
       return fromResults + pending;
     }
     return 0;
+  }
+
+  int get allowedVotingUnits {
+    final allowed = totalUnitsAllowed.value;
+    if (allowed != null && allowed > 0) {
+      return allowed;
+    }
+    return totalUnits;
   }
 
   List<HorizontalPropertyVotingLiveUnit> get pendingUnits {
@@ -2748,6 +2760,22 @@ class VotingLiveController extends GetxController {
       return units.where((unit) => unit.votingOptionId == optionId).length;
     }
     return voteSummary[optionId] ?? 0;
+  }
+
+  HorizontalPropertyVotingOption? optionByCode(String code) {
+    if (code.isEmpty) return null;
+    final normalized = code.trim().toLowerCase();
+    return options.firstWhereOrNull(
+      (option) =>
+          option.optionCode.toLowerCase() == normalized ||
+          option.optionText.trim().toLowerCase() == normalized,
+    );
+  }
+
+  int countForOptionCode(String code) {
+    final option = optionByCode(code);
+    if (option == null) return 0;
+    return countForOption(option.id);
   }
 
   double get totalCoefficient => liveUnits.fold<double>(
@@ -3015,6 +3043,10 @@ class VotingLiveController extends GetxController {
       eventName: event.eventName,
     );
 
+    if (totalUnitsAllowed.value == null && computedTotalUnits > 0) {
+      totalUnitsAllowed.value = computedTotalUnits;
+    }
+
     parent.syncVotesFromLive(
       groupId: groupId,
       votingId: votingId,
@@ -3082,6 +3114,24 @@ class VotingLiveController extends GetxController {
     final merged = map.values.toList(growable: false);
     merged.sort((a, b) => a.id.compareTo(b.id));
     return merged;
+  }
+
+  Future<void> _loadAllowedUnitsCount() async {
+    if (allowedUnitsLoading.value) return;
+    allowedUnitsLoading.value = true;
+    try {
+      final result = await _repository.getHorizontalPropertyUnits(
+        id: parent.propertyId,
+        query: const {'page_size': 1},
+      );
+      if (result.totalUnits > 0) {
+        totalUnitsAllowed.value = result.totalUnits;
+      }
+    } catch (_) {
+      // no-op
+    } finally {
+      allowedUnitsLoading.value = false;
+    }
   }
 
   Future<void> _loadInitialDetails() async {
@@ -3240,8 +3290,13 @@ class VotingLiveController extends GetxController {
 
   @override
   void onClose() {
-    _subscription?.cancel();
+    closeLiveStream();
     super.onClose();
+  }
+
+  void closeLiveStream() {
+    _subscription?.cancel();
+    _subscription = null;
   }
 }
 
@@ -3456,6 +3511,8 @@ class _LiveOptionsBoard extends StatelessWidget {
                     .toList(growable: false),
               ),
             ),
+          const SizedBox(height: 16),
+          _PendingVoteSummaryCard(controller: controller),
         ],
       );
     });
@@ -3668,6 +3725,94 @@ class _PendingUnitSuggestionTile extends StatelessWidget {
   }
 }
 
+class _PendingVoteSummaryCard extends StatelessWidget {
+  final VotingLiveController controller;
+
+  const _PendingVoteSummaryCard({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Obx(() {
+      final allowed = controller.allowedVotingUnits;
+      final yesVotes = controller.countForOptionCode('si');
+      final noVotes = controller.countForOptionCode('no');
+      final totalTracked = yesVotes + noVotes;
+      final pendingFromTracked = (allowed - totalTracked);
+      final normalizedTracked = pendingFromTracked < 0 ? 0 : pendingFromTracked;
+      final totalVotes = controller.totalVotesFromUnits;
+      final pendingFromTotal = (allowed - totalVotes);
+      final normalizedTotal = pendingFromTotal < 0 ? 0 : pendingFromTotal;
+
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: cs.outlineVariant),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Pendientes',
+                style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                countFormat(normalizedTracked),
+                style: tt.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Total permitido - (Sí + No)',
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _LiveOptionStat(
+                      label: 'Sí',
+                      value: countFormat(yesVotes),
+                      caption: 'Votos acumulados',
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _LiveOptionStat(
+                      label: 'No',
+                      value: countFormat(noVotes),
+                      caption: 'Votos acumulados',
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              _SummaryMetricLine(
+                label: 'Pendientes totales',
+                value: countFormat(normalizedTotal),
+                caption: 'Basado en votos emitidos',
+              ),
+              const SizedBox(height: 10),
+              _SummaryMetricLine(
+                label: 'Total permitido a votar',
+                value: countFormat(allowed),
+                caption: 'Unidades registradas',
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  String countFormat(int value) => NumberFormat('#,##0').format(value);
+}
+
 class _LiveOptionStat extends StatelessWidget {
   final String label;
   final String value;
@@ -3732,6 +3877,7 @@ class _LiveSummaryCard extends StatelessWidget {
       final percentFormat = NumberFormat('##0.0#');
       final coefficientFormat = NumberFormat('##0.###');
 
+      final allowedUnits = controller.allowedVotingUnits;
       final totalUnits = controller.totalUnits;
       final votedUnits = controller.unitsVoted;
       final pendingUnits = controller.unitsPending;
@@ -3773,9 +3919,15 @@ class _LiveSummaryCard extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               _SummaryMetricLine(
-                label: 'Total',
+                label: 'Total permitido a votar',
+                value: countFormat.format(allowedUnits),
+                caption: 'Unidades autorizadas',
+              ),
+              const SizedBox(height: 10),
+              _SummaryMetricLine(
+                label: 'Total en transmisión',
                 value: countFormat.format(totalUnits),
-                caption: 'Unidades / residentes',
+                caption: 'Unidades monitoreadas',
               ),
               const SizedBox(height: 10),
               _SummaryMetricLine(

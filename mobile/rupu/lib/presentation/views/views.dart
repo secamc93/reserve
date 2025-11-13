@@ -44,6 +44,7 @@ export 'package:rupu/presentation/views/users/user_detail_controller.dart';
 export 'package:rupu/presentation/views/users/user_detail_view.dart';
 export 'package:rupu/presentation/views/roles_permissions/roles_permissions_controller.dart';
 export 'package:rupu/presentation/views/roles_permissions/roles_permissions_view.dart';
+export 'package:rupu/presentation/views/iam/iam_view.dart';
 export 'package:rupu/presentation/views/horizontal_properties/horizontal_properties_controller.dart';
 export 'package:rupu/presentation/views/horizontal_properties/horizontal_properties_view.dart';
 export 'package:rupu/presentation/views/horizontal_properties/horizontal_property_detail_controller.dart';

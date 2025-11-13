@@ -77,6 +77,14 @@ class LoginController extends GetxController {
 
   int? get selectedBusinessId => selectedBusiness.value?.id;
 
+  String get _normalizedScope {
+    final scope = sessionModel.value?.data.scope;
+    if (scope == null || scope.isEmpty) return '';
+    return scope.toLowerCase().trim();
+  }
+
+  bool get hasBusinessScope => _normalizedScope == 'business';
+
   bool get isSuperAdmin => sessionModel.value?.data.isSuperAdmin ?? false;
 
   Future<bool> activateBusinessSession(BusinessModel business) async {

@@ -176,6 +176,13 @@ class LoginView extends GetView<LoginController> {
                                           return;
                                         }
 
+                                        if (controller.hasBusinessScope) {
+                                          GoRouter.of(context).goNamed(
+                                            BusinessSelectorScreen.name,
+                                          );
+                                          return;
+                                        }
+
                                         if (businesses.length == 1) {
                                           final activated = await controller
                                               .activateBusinessSession(

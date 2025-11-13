@@ -86,6 +86,18 @@ class UsersBinding {
   }
 }
 
+class IamBinding {
+  static void register() {
+    HomeBinding.register();
+    if (!Get.isRegistered<UsersController>()) {
+      Get.put(UsersController());
+    }
+    if (!Get.isRegistered<RolesPermissionsController>()) {
+      Get.put(RolesPermissionsController());
+    }
+  }
+}
+
 class HorizontalPropertiesBinding {
   static void register() {
     if (!Get.isRegistered<HorizontalPropertiesController>()) {

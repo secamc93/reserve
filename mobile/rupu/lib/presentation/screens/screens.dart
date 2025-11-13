@@ -12,6 +12,7 @@ export 'package:rupu/presentation/screens/settings/settings_screen.dart';
 export 'package:rupu/presentation/screens/users/users_screen.dart';
 export 'package:rupu/presentation/screens/business_selector/business_selector_screen.dart';
 export 'package:rupu/presentation/screens/users_permissions/users_permissions_screen.dart';
+export 'package:rupu/presentation/screens/users_permissions/iam_screen.dart';
 export 'package:rupu/presentation/screens/horizontal_properties/horizontal_properties_screen.dart';
 export 'package:rupu/presentation/screens/horizontal_properties/horizontal_property_detail_screen.dart';
 export 'package:rupu/presentation/screens/horizontal_properties/attendance_management_screen.dart';
