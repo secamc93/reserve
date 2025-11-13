@@ -113,7 +113,8 @@ class _VotingTab extends GetWidget<HorizontalPropertyVotingController> {
       final formattedTimestamp = createdAt != null
           ? DateFormat('yyyy-MM-dd – HH:mm:ss').format(createdAt.toLocal())
           : null;
-      final baseMessage = result.message ??
+      final baseMessage =
+          result.message ??
           (group == null
               ? 'Grupo de votación creado'
               : 'Grupo de votación actualizado');
@@ -531,8 +532,9 @@ class _VotingItemCard extends StatelessWidget {
                 runSpacing: 8,
                 children: [
                   FilledButton.icon(
-                    onPressed:
-                        voting.isActive ? () => _openLiveVoting(context) : null,
+                    onPressed: voting.isActive
+                        ? () => _openLiveVoting(context)
+                        : null,
                     icon: const Icon(Icons.podcasts_outlined, size: 18),
                     label: const Text('Votación en vivo'),
                   ),
@@ -701,13 +703,15 @@ class _VotingItemCard extends StatelessWidget {
                                 const Text('Aún no se han registrado votos.')
                               else
                                 ...options.map((option) {
-                                  final percentFormatter = NumberFormat('##0.0#');
+                                  final percentFormatter = NumberFormat(
+                                    '##0.0#',
+                                  );
                                   final int count = summary[option.id] ?? 0;
                                   final double percentage = totalVotes == 0
                                       ? 0.0
                                       : (count / totalVotes)
-                                          .clamp(0.0, 1.0)
-                                          .toDouble();
+                                            .clamp(0.0, 1.0)
+                                            .toDouble();
                                   return Padding(
                                     padding: const EdgeInsets.only(bottom: 12),
                                     child: Column(
@@ -726,7 +730,9 @@ class _VotingItemCard extends StatelessWidget {
                                         ),
                                         const SizedBox(height: 6),
                                         ClipRRect(
-                                          borderRadius: BorderRadius.circular(8),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
                                           child: LinearProgressIndicator(
                                             value: percentage,
                                             minHeight: 8,
@@ -1220,8 +1226,7 @@ class _VotingGroupFormBottomSheetState
     if (_endDateTime != null) {
       payload['voting_end_date'] = _formatIsoWithOffset(_endDateTime!);
     }
-    final createdBy =
-        _loginController?.sessionModel.value?.data.user.id;
+    final createdBy = _loginController?.sessionModel.value?.data.user.id;
     if (createdBy != null) {
       payload['created_by_user_id'] = createdBy;
     }
@@ -1405,8 +1410,10 @@ class _VotingGroupFormBottomSheetState
                                 label: '$_quorumValue%',
                                 onChanged: (value) {
                                   setState(() {
-                                    _quorumValue =
-                                        value.round().clamp(0, 100).toInt();
+                                    _quorumValue = value
+                                        .round()
+                                        .clamp(0, 100)
+                                        .toInt();
                                   });
                                 },
                               ),
@@ -1452,7 +1459,8 @@ class _VotingGroupFormBottomSheetState
                                   child: OutlinedButton(
                                     onPressed: _saving
                                         ? null
-                                        : () => Navigator.of(context).maybePop(),
+                                        : () =>
+                                              Navigator.of(context).maybePop(),
                                     child: const Text('Cancelar'),
                                   ),
                                 ),
@@ -2342,17 +2350,19 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
                                   ],
                                   const SizedBox(height: 16),
                                   AnimatedSwitcher(
-                                    duration:
-                                        const Duration(milliseconds: 250),
+                                    duration: const Duration(milliseconds: 250),
                                     child: isConnecting && liveData != null
                                         ? Padding(
-                                            key: const ValueKey('live-progress'),
+                                            key: const ValueKey(
+                                              'live-progress',
+                                            ),
                                             padding: const EdgeInsets.only(
                                               bottom: 12,
                                             ),
-                                            child: const LinearProgressIndicator(
-                                              minHeight: 3,
-                                            ),
+                                            child:
+                                                const LinearProgressIndicator(
+                                                  minHeight: 3,
+                                                ),
                                           )
                                         : const SizedBox.shrink(),
                                   ),
@@ -2368,9 +2378,9 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
                                           ? IconButton(
                                               onPressed: () {
                                                 _searchCtrl.clear();
-                                                controller.clearFilter();
-                                                controller
-                                                    .clearResidentSuggestions();
+                                                // controller.clearFilter();
+                                                // controller
+                                                //     .clearResidentSuggestions();
                                               },
                                               icon: const Icon(Icons.close),
                                             )
@@ -2390,10 +2400,13 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
                                     final hasFocus = _searchFocus.hasFocus;
                                     final query = _searchCtrl.text.trim();
                                     final loadingValue = controller
-                                        .residentSuggestionsLoading.value;
-                                    final suggestionsValue =
-                                        controller.residentSuggestions.toList();
-                                    final pendingUnits = controller.pendingUnits;
+                                        .residentSuggestionsLoading
+                                        .value;
+                                    // final suggestionsValue = controller
+                                    //     .residentSuggestions
+                                    //     .toList();
+                                    final pendingUnits =
+                                        controller.pendingUnits;
 
                                     if (!hasFocus) {
                                       return const SizedBox(height: 12);
@@ -2403,72 +2416,80 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
                                       return Column(
                                         children: [
                                           const SizedBox(height: 8),
-                                          _LiveSuggestionCard(
-                                            loading: false,
-                                            emptyLabel:
-                                                'No hay unidades pendientes de votar.',
-                                            children: pendingUnits
-                                                .map(
-                                                  (unit) =>
-                                                      _PendingUnitSuggestionTile(
-                                                    unit: unit,
-                                                    onTap: () {
-                                                      controller
-                                                          .setFilter(unit.unitNumber);
-                                                      _searchCtrl
-                                                        ..text = unit.unitNumber
-                                                        ..selection =
-                                                            TextSelection.collapsed(
-                                                          offset:
-                                                              _searchCtrl.text.length,
-                                                        );
-                                                      controller
-                                                          .clearResidentSuggestions();
-                                                      _searchFocus.unfocus();
-                                                    },
-                                                  ),
-                                                )
-                                                .toList(growable: false),
-                                          ),
+                                          // _LiveSuggestionCard(
+                                          //   loading: false,
+                                          //   emptyLabel:
+                                          //       'No hay unidades pendientes de votar.',
+                                          //   children: pendingUnits
+                                          //       .map(
+                                          //         (
+                                          //           unit,
+                                          //         ) => _PendingUnitSuggestionTile(
+                                          //           unit: unit,
+                                          //           onTap: () {
+                                          //             controller.setFilter(
+                                          //               unit.unitNumber,
+                                          //             );
+                                          //             _searchCtrl
+                                          //               ..text = unit.unitNumber
+                                          //               ..selection =
+                                          //                   TextSelection.collapsed(
+                                          //                     offset:
+                                          //                         _searchCtrl
+                                          //                             .text
+                                          //                             .length,
+                                          //                   );
+                                          //             controller
+                                          //                 .clearResidentSuggestions();
+                                          //             _searchFocus.unfocus();
+                                          //           },
+                                          //         ),
+                                          //       )
+                                          //       .toList(growable: false),
+                                          // ),
                                           const SizedBox(height: 12),
                                         ],
                                       );
                                     }
 
                                     final loading = loadingValue;
-                                    final suggestions = suggestionsValue;
+                                    // final suggestions = suggestionsValue;
 
                                     return Column(
                                       children: [
                                         const SizedBox(height: 8),
-                                        _LiveSuggestionCard(
-                                          loading: loading,
-                                          emptyLabel:
-                                              'No se encontraron residentes para la búsqueda.',
-                                          children: suggestions
-                                              .map(
-                                                (resident) => _ResidentLookupTile(
-                                                  resident: resident,
-                                                  onTap: () {
-                                                    controller.setFilter(
-                                                      resident.propertyUnitNumber,
-                                                    );
-                                                    _searchCtrl
-                                                      ..text =
-                                                          resident.propertyUnitNumber
-                                                      ..selection =
-                                                          TextSelection.collapsed(
-                                                        offset:
-                                                            _searchCtrl.text.length,
-                                                      );
-                                                    controller
-                                                        .clearResidentSuggestions();
-                                                    _searchFocus.unfocus();
-                                                  },
-                                                ),
-                                              )
-                                              .toList(growable: false),
-                                        ),
+                                        // _LiveSuggestionCard(
+                                        //   loading: loading,
+                                        //   emptyLabel:
+                                        //       'No se encontraron residentes para la búsqueda.',
+                                        //   children: suggestions
+                                        //       .map(
+                                        //         (
+                                        //           resident,
+                                        //         ) => _ResidentLookupTile(
+                                        //           resident: resident,
+                                        //           onTap: () {
+                                        //             controller.setFilter(
+                                        //               resident
+                                        //                   .propertyUnitNumber,
+                                        //             );
+                                        //             _searchCtrl
+                                        //               ..text = resident
+                                        //                   .propertyUnitNumber
+                                        //               ..selection =
+                                        //                   TextSelection.collapsed(
+                                        //                     offset: _searchCtrl
+                                        //                         .text
+                                        //                         .length,
+                                        //                   );
+                                        //             controller
+                                        //                 .clearResidentSuggestions();
+                                        //             _searchFocus.unfocus();
+                                        //           },
+                                        //         ),
+                                        //       )
+                                        //       .toList(growable: false),
+                                        // ),
                                         const SizedBox(height: 12),
                                       ],
                                     );
@@ -2632,8 +2653,10 @@ class VotingLiveController extends GetxController {
     }
     final pending = liveData.value?.unitsPending;
     if (pending != null && pending >= 0) {
-      final fromResults =
-          liveResults.fold<int>(0, (sum, item) => sum + item.voteCount);
+      final fromResults = liveResults.fold<int>(
+        0,
+        (sum, item) => sum + item.voteCount,
+      );
       return fromResults + pending;
     }
     return 0;
@@ -2686,8 +2709,9 @@ class VotingLiveController extends GetxController {
     }
     final list = filtered.toList(growable: false);
     list.sort((a, b) {
-      final pendingComparison =
-          (a.hasVoted ? 1 : 0).compareTo(b.hasVoted ? 1 : 0);
+      final pendingComparison = (a.hasVoted ? 1 : 0).compareTo(
+        b.hasVoted ? 1 : 0,
+      );
       if (pendingComparison != 0) {
         return pendingComparison;
       }
@@ -2721,33 +2745,32 @@ class VotingLiveController extends GetxController {
   int countForOption(int optionId) {
     final units = liveUnits;
     if (units.isNotEmpty) {
-      return units
-          .where((unit) => unit.votingOptionId == optionId)
-          .length;
+      return units.where((unit) => unit.votingOptionId == optionId).length;
     }
     return voteSummary[optionId] ?? 0;
   }
 
   double get totalCoefficient => liveUnits.fold<double>(
-        0,
-        (value, unit) =>
-            value + (unit.participationCoefficient ?? 0.0),
-      );
+    0,
+    (value, unit) => value + (unit.participationCoefficient ?? 0.0),
+  );
 
   double coefficientForOption(int optionId) {
     final units = liveUnits;
     if (units.isEmpty) return 0;
     return units
         .where((unit) => unit.votingOptionId == optionId)
-        .fold<double>(0, (value, unit) =>
-            value + (unit.participationCoefficient ?? 0.0));
+        .fold<double>(
+          0,
+          (value, unit) => value + (unit.participationCoefficient ?? 0.0),
+        );
   }
 
   double get votedCoefficient => liveUnits.fold<double>(
-        0,
-        (value, unit) =>
-            unit.hasVoted ? value + (unit.participationCoefficient ?? 0.0) : value,
-      );
+    0,
+    (value, unit) =>
+        unit.hasVoted ? value + (unit.participationCoefficient ?? 0.0) : value,
+  );
 
   double get pendingCoefficient => totalCoefficient - votedCoefficient;
 
@@ -2820,13 +2843,12 @@ class VotingLiveController extends GetxController {
         result.votingOptionId: result,
     };
 
-    final previousVotes = previous?.votes ?? const <HorizontalPropertyVotingVote>[];
+    final previousVotes =
+        previous?.votes ?? const <HorizontalPropertyVotingVote>[];
     final previousVotesByUnit = {
       for (final vote in previousVotes) vote.propertyUnitId: vote,
     };
-    final previousVotesById = {
-      for (final vote in previousVotes) vote.id: vote,
-    };
+    final previousVotesById = {for (final vote in previousVotes) vote.id: vote};
 
     var mergedUnits = event.hasUnitsSnapshot
         ? event.units
@@ -2838,8 +2860,8 @@ class VotingLiveController extends GetxController {
 
     final List<HorizontalPropertyVotingVote> incomingVotes =
         isDeleteEvent && !event.hasVotesSnapshot
-            ? const <HorizontalPropertyVotingVote>[]
-            : event.votes;
+        ? const <HorizontalPropertyVotingVote>[]
+        : event.votes;
 
     var mergedVotes = event.hasVotesSnapshot
         ? incomingVotes
@@ -2866,8 +2888,7 @@ class VotingLiveController extends GetxController {
     }
 
     final incomingResultsById = {
-      for (final result in event.results)
-        result.votingOptionId: result,
+      for (final result in event.results) result.votingOptionId: result,
     };
 
     if (!isDeleteEvent && !event.hasVotesSnapshot && incomingVotes.isNotEmpty) {
@@ -2878,10 +2899,11 @@ class VotingLiveController extends GetxController {
         if (previousVote.id == vote.id) continue;
 
         final sameOption = previousVote.votingOptionId == vote.votingOptionId;
-        final previousCount = previousResultsById[previousVote.votingOptionId]
-            ?.voteCount;
+        final previousCount =
+            previousResultsById[previousVote.votingOptionId]?.voteCount;
         final newCount = incomingResultsById[vote.votingOptionId]?.voteCount;
-        final countsDecreased = previousCount != null &&
+        final countsDecreased =
+            previousCount != null &&
             newCount != null &&
             newCount < previousCount;
         final pendingIncreased = () {
@@ -3011,9 +3033,7 @@ class VotingLiveController extends GetxController {
       return updates;
     }
 
-    final map = {
-      for (final unit in base) unit.propertyUnitId: unit,
-    };
+    final map = {for (final unit in base) unit.propertyUnitId: unit};
     final order = List<int>.of(map.keys);
 
     for (final unit in updates) {
@@ -3037,9 +3057,7 @@ class VotingLiveController extends GetxController {
       return updates;
     }
 
-    final map = {
-      for (final result in base) result.votingOptionId: result,
-    };
+    final map = {for (final result in base) result.votingOptionId: result};
     for (final result in updates) {
       map[result.votingOptionId] = result;
     }
@@ -3057,9 +3075,7 @@ class VotingLiveController extends GetxController {
       return updates;
     }
 
-    final map = {
-      for (final vote in base) vote.id: vote,
-    };
+    final map = {for (final vote in base) vote.id: vote};
     for (final vote in updates) {
       map[vote.id] = vote;
     }
@@ -3150,11 +3166,7 @@ class VotingLiveController extends GetxController {
     try {
       final result = await repository.getHorizontalPropertyResidents(
         id: parent.propertyId,
-        query: {
-          'search': trimmed,
-          'page': '1',
-          'page_size': '8',
-        },
+        query: {'search': trimmed, 'page': '1', 'page_size': '8'},
       );
       residentSuggestions.assignAll(result.residents);
     } catch (error, stackTrace) {
@@ -3289,7 +3301,6 @@ Color? _tryParseHexColor(String? value) {
   return null;
 }
 
-
 class _LiveSuggestionCard extends StatelessWidget {
   final bool loading;
   final String emptyLabel;
@@ -3335,10 +3346,9 @@ class _LiveSuggestionCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Text(
             emptyLabel,
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: cs.onSurfaceVariant),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
           ),
         ),
       );
@@ -3348,11 +3358,9 @@ class _LiveSuggestionCard extends StatelessWidget {
     for (var i = 0; i < children.length; i++) {
       childrenWithDividers.add(children[i]);
       if (i != children.length - 1) {
-        childrenWithDividers.add(Divider(
-          height: 1,
-          thickness: 1,
-          color: cs.outlineVariant,
-        ));
+        childrenWithDividers.add(
+          Divider(height: 1, thickness: 1, color: cs.outlineVariant),
+        );
       }
     }
 
@@ -3391,20 +3399,13 @@ class _LiveOptionsSummary extends StatelessWidget {
               children: [
                 Expanded(child: optionsPanel),
                 const SizedBox(width: 16),
-                SizedBox(
-                  width: 280,
-                  child: summaryCard,
-                ),
+                SizedBox(width: 280, child: summaryCard),
               ],
             );
           }
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              optionsPanel,
-              const SizedBox(height: 16),
-              summaryCard,
-            ],
+            children: [optionsPanel, const SizedBox(height: 16), summaryCard],
           );
         },
       );
@@ -3465,10 +3466,7 @@ class _LiveOptionCardWidget extends StatelessWidget {
   final VotingLiveController controller;
   final HorizontalPropertyVotingOption option;
 
-  const _LiveOptionCardWidget({
-    required this.controller,
-    required this.option,
-  });
+  const _LiveOptionCardWidget({required this.controller, required this.option});
 
   @override
   Widget build(BuildContext context) {
@@ -3520,9 +3518,7 @@ class _LiveOptionCardWidget extends StatelessWidget {
                 Expanded(
                   child: Text(
                     option.optionText,
-                    style: tt.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -3564,10 +3560,7 @@ class _ResidentLookupTile extends StatelessWidget {
   final HorizontalPropertyResidentItem resident;
   final VoidCallback onTap;
 
-  const _ResidentLookupTile({
-    required this.resident,
-    required this.onTap,
-  });
+  const _ResidentLookupTile({required this.resident, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -3589,22 +3582,24 @@ class _ResidentLookupTile extends StatelessWidget {
                   children: [
                     Text(
                       resident.name,
-                      style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                      style: tt.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       resident.propertyUnitNumber,
-                      style: tt.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                      ),
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
                   ],
                 ),
               ),
               if (resident.isMainResident)
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: cs.primary.withValues(alpha: .12),
                     borderRadius: BorderRadius.circular(999),
@@ -3626,10 +3621,7 @@ class _PendingUnitSuggestionTile extends StatelessWidget {
   final HorizontalPropertyVotingLiveUnit unit;
   final VoidCallback onTap;
 
-  const _PendingUnitSuggestionTile({
-    required this.unit,
-    required this.onTap,
-  });
+  const _PendingUnitSuggestionTile({required this.unit, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -3651,7 +3643,9 @@ class _PendingUnitSuggestionTile extends StatelessWidget {
                   children: [
                     Text(
                       unit.unitNumber,
-                      style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                      style: tt.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     if (unit.residentName?.isNotEmpty == true) ...[
                       const SizedBox(height: 4),
@@ -3665,10 +3659,7 @@ class _PendingUnitSuggestionTile extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(
-                Icons.pending_actions_outlined,
-                color: cs.primary,
-              ),
+              Icon(Icons.pending_actions_outlined, color: cs.primary),
             ],
           ),
         ),
@@ -3676,7 +3667,6 @@ class _PendingUnitSuggestionTile extends StatelessWidget {
     );
   }
 }
-
 
 class _LiveOptionStat extends StatelessWidget {
   final String label;
@@ -3712,8 +3702,7 @@ class _LiveOptionStat extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   caption!,
-                  style:
-                      tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],
             ],
@@ -3930,8 +3919,9 @@ class _UnitVoteChip extends StatelessWidget {
       buffer.writeln('\nResidente: ${unit.residentName}');
     }
     if (unit.participationCoefficient != null) {
-      final coefficient = NumberFormat('##0.###')
-          .format(unit.participationCoefficient);
+      final coefficient = NumberFormat(
+        '##0.###',
+      ).format(unit.participationCoefficient);
       buffer.writeln('Coeficiente: $coefficient');
     }
     if (voted) {
@@ -3961,9 +3951,7 @@ class _UnitVoteChip extends StatelessWidget {
                 color: background,
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(
-                  color: voted
-                      ? background.withOpacity(.6)
-                      : cs.outlineVariant,
+                  color: voted ? background.withOpacity(.6) : cs.outlineVariant,
                 ),
                 boxShadow: voted
                     ? [
@@ -4160,17 +4148,20 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
       return pendingUnits;
     }
 
-    var filtered = pendingUnits
-        .where((unit) {
-          final unitNumber = unit.unitNumber.toLowerCase();
-          final resident = unit.residentName?.toLowerCase() ?? '';
-          return unitNumber.contains(query) || resident.contains(query);
-        })
-        .toList(growable: false)
-      ..sort((a, b) => a.unitNumber.compareTo(b.unitNumber));
+    var filtered =
+        pendingUnits
+            .where((unit) {
+              final unitNumber = unit.unitNumber.toLowerCase();
+              final resident = unit.residentName?.toLowerCase() ?? '';
+              return unitNumber.contains(query) || resident.contains(query);
+            })
+            .toList(growable: false)
+          ..sort((a, b) => a.unitNumber.compareTo(b.unitNumber));
 
     if (selected != null &&
-        filtered.every((unit) => unit.propertyUnitId != selected.propertyUnitId)) {
+        filtered.every(
+          (unit) => unit.propertyUnitId != selected.propertyUnitId,
+        )) {
       filtered = List<HorizontalPropertyVotingLiveUnit>.of(filtered)
         ..add(selected);
     }
@@ -4290,7 +4281,7 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
                             ),
                           ),
                           const SizedBox(height: 20),
-                                                    TextField(
+                          TextField(
                             controller: _searchCtrl,
                             decoration: InputDecoration(
                               labelText: 'Buscar unidad',
@@ -4327,7 +4318,9 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
                                     child: SizedBox(
                                       height: 22,
                                       width: 22,
-                                      child: CircularProgressIndicator(strokeWidth: 2.4),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.4,
+                                      ),
                                     ),
                                   ),
                                 );
@@ -4362,8 +4355,8 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
                                 itemCount: units.length,
                                 itemBuilder: (context, index) {
                                   final unit = units[index];
-                                  final isSelected = _selectedUnit
-                                          ?.propertyUnitId ==
+                                  final isSelected =
+                                      _selectedUnit?.propertyUnitId ==
                                       unit.propertyUnitId;
                                   final isDisabled = unit.hasVoted;
 
@@ -4395,23 +4388,28 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
                                                 children: [
                                                   Text(
                                                     unit.unitNumber,
-                                                    style: tt.titleSmall?.copyWith(
-                                                      fontWeight: FontWeight.w600,
-                                                    ),
+                                                    style: tt.titleSmall
+                                                        ?.copyWith(
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
                                                   ),
-                                                  if (unit.residentName
+                                                  if (unit
+                                                          .residentName
                                                           ?.isNotEmpty ==
                                                       true)
                                                     Padding(
                                                       padding:
                                                           const EdgeInsets.only(
-                                                              top: 2),
+                                                            top: 2,
+                                                          ),
                                                       child: Text(
                                                         unit.residentName!,
-                                                        style: tt.bodySmall?.copyWith(
-                                                          color: cs
-                                                              .onSurfaceVariant,
-                                                        ),
+                                                        style: tt.bodySmall
+                                                            ?.copyWith(
+                                                              color: cs
+                                                                  .onSurfaceVariant,
+                                                            ),
                                                       ),
                                                     ),
                                                 ],

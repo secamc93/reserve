@@ -1414,22 +1414,22 @@ class _UnitDetailError extends StatelessWidget {
 
 void _showSnack(String title, String message, {bool isError = false}) {
   final cs = Get.theme.colorScheme;
-  if (Get.isSnackbarOpen) {
-    Get.closeCurrentSnackbar();
-  }
-  Get.snackbar(
-    title,
-    message,
-    snackPosition: SnackPosition.BOTTOM,
-    duration: const Duration(seconds: 3),
-    margin: const EdgeInsets.all(16),
-    backgroundColor: isError ? cs.errorContainer : cs.primaryContainer,
-    colorText: isError ? cs.onErrorContainer : cs.onPrimaryContainer,
-    icon: Icon(
-      isError ? Icons.error_outline : Icons.check_circle_outline,
-      color: isError ? cs.error : cs.primary,
-    ),
-  );
+  // if (Get.isSnackbarOpen) {
+  //   Get.closeCurrentSnackbar();
+  // }
+  // Get.snackbar(
+  //   title,
+  //   message,
+  //   snackPosition: SnackPosition.BOTTOM,
+  //   duration: const Duration(seconds: 3),
+  //   margin: const EdgeInsets.all(16),
+  //   backgroundColor: isError ? cs.errorContainer : cs.primaryContainer,
+  //   colorText: isError ? cs.onErrorContainer : cs.onPrimaryContainer,
+  //   icon: Icon(
+  //     isError ? Icons.error_outline : Icons.check_circle_outline,
+  //     color: isError ? cs.error : cs.primary,
+  //   ),
+  // );
 }
 
 class _UnitDetailContent extends StatelessWidget {
