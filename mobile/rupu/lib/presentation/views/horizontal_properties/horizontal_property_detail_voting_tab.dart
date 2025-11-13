@@ -2273,6 +2273,7 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
                             final controller = _controller!;
                             final liveData = controller.liveData.value;
                             final isConnecting = controller.isConnecting.value;
+                            final isPriming = controller.isPriming.value;
                             final error = controller.errorMessage.value;
                             final filter = controller.filter.value;
                             final units = controller.filteredUnits;
@@ -2340,6 +2341,21 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
                                     ),
                                   ],
                                   const SizedBox(height: 16),
+                                  AnimatedSwitcher(
+                                    duration:
+                                        const Duration(milliseconds: 250),
+                                    child: isConnecting && liveData != null
+                                        ? Padding(
+                                            key: const ValueKey('live-progress'),
+                                            padding: const EdgeInsets.only(
+                                              bottom: 12,
+                                            ),
+                                            child: const LinearProgressIndicator(
+                                              minHeight: 3,
+                                            ),
+                                          )
+                                        : const SizedBox.shrink(),
+                                  ),
                                   _LiveOptionsSummary(controller: controller),
                                   const SizedBox(height: 20),
                                   TextField(
@@ -2465,7 +2481,8 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
                                     label: const Text('Registrar voto'),
                                   ),
                                   const SizedBox(height: 16),
-                                  if (isConnecting && liveData == null)
+                                  if (liveData == null &&
+                                      (isPriming || isConnecting))
                                     const Center(
                                       child: Padding(
                                         padding: EdgeInsets.symmetric(
@@ -2556,6 +2573,7 @@ class VotingLiveController extends GetxController {
   StreamSubscription<HorizontalPropertyVotingGroupLiveData>? _subscription;
 
   final isConnecting = false.obs;
+  final isPriming = true.obs;
   final errorMessage = RxnString();
   final liveData = Rxn<HorizontalPropertyVotingGroupLiveData>();
   final filter = ''.obs;
@@ -2587,6 +2605,10 @@ class VotingLiveController extends GetxController {
       } catch (error, stackTrace) {
         debugPrint('Error preparando datos de votación en vivo: $error');
         debugPrint('Stack: $stackTrace');
+      } finally {
+        if (!isClosed) {
+          isPriming.value = false;
+        }
       }
       if (isClosed) return;
       _subscribe();
@@ -2789,16 +2811,21 @@ class VotingLiveController extends GetxController {
   void _ingestLiveEvent(HorizontalPropertyVotingGroupLiveData event) {
     final previous = liveData.value;
 
+    final eventName = event.eventName?.toLowerCase();
+    final isDeleteEvent = eventName == 'vote_deleted';
+
     final previousResultsById = {
       for (final result
           in previous?.results ?? const <HorizontalPropertyVotingLiveResult>[])
         result.votingOptionId: result,
     };
 
+    final previousVotes = previous?.votes ?? const <HorizontalPropertyVotingVote>[];
     final previousVotesByUnit = {
-      for (final vote
-          in previous?.votes ?? const <HorizontalPropertyVotingVote>[])
-        vote.propertyUnitId: vote,
+      for (final vote in previousVotes) vote.propertyUnitId: vote,
+    };
+    final previousVotesById = {
+      for (final vote in previousVotes) vote.id: vote,
     };
 
     var mergedUnits = event.hasUnitsSnapshot
@@ -2809,13 +2836,32 @@ class VotingLiveController extends GetxController {
         ? event.results
         : _mergeResults(previous?.results ?? const [], event.results);
 
+    final List<HorizontalPropertyVotingVote> incomingVotes =
+        isDeleteEvent && !event.hasVotesSnapshot
+            ? const <HorizontalPropertyVotingVote>[]
+            : event.votes;
+
     var mergedVotes = event.hasVotesSnapshot
-        ? event.votes
-        : _mergeVotes(previous?.votes ?? const [], event.votes);
+        ? incomingVotes
+        : _mergeVotes(previousVotes, incomingVotes);
+
+    HorizontalPropertyVotingVote? deletedVote;
+    if (isDeleteEvent) {
+      if (event.votes.isNotEmpty) {
+        deletedVote = event.votes.last;
+      } else if (event.removedVoteId != null) {
+        deletedVote = previousVotesById[event.removedVoteId!];
+      }
+    }
 
     if (event.removedVoteId != null) {
       mergedVotes = mergedVotes
           .where((vote) => vote.id != event.removedVoteId)
+          .toList(growable: false);
+    } else if (deletedVote != null) {
+      final removedUnitId = deletedVote.propertyUnitId;
+      mergedVotes = mergedVotes
+          .where((vote) => vote.propertyUnitId != removedUnitId)
           .toList(growable: false);
     }
 
@@ -2824,9 +2870,9 @@ class VotingLiveController extends GetxController {
         result.votingOptionId: result,
     };
 
-    if (!event.hasVotesSnapshot && event.votes.isNotEmpty) {
+    if (!isDeleteEvent && !event.hasVotesSnapshot && incomingVotes.isNotEmpty) {
       final removedUnitIds = <int>{};
-      for (final vote in event.votes) {
+      for (final vote in incomingVotes) {
         final previousVote = previousVotesByUnit[vote.propertyUnitId];
         if (previousVote == null) continue;
         if (previousVote.id == vote.id) continue;
@@ -2944,6 +2990,7 @@ class VotingLiveController extends GetxController {
       hasVotesSnapshot: event.hasVotesSnapshot,
       hasUnitsSnapshot: event.hasUnitsSnapshot,
       timestamp: timestamp,
+      eventName: event.eventName,
     );
 
     parent.syncVotesFromLive(
@@ -3044,6 +3091,7 @@ class VotingLiveController extends GetxController {
         hasVotesSnapshot: current?.hasVotesSnapshot ?? false,
         hasUnitsSnapshot: true,
         timestamp: DateTime.now(),
+        eventName: current?.eventName,
       );
     } catch (error, stackTrace) {
       debugPrint('Error obteniendo detalles de votación: $error');
@@ -3085,6 +3133,9 @@ class VotingLiveController extends GetxController {
 
   Future<void> reconnect() async {
     await _subscription?.cancel();
+    if (liveData.value == null) {
+      isPriming.value = true;
+    }
     _subscribe();
   }
 
@@ -4100,21 +4151,24 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
         .where((unit) => !unit.hasVoted)
         .toList(growable: false);
 
-    List<HorizontalPropertyVotingLiveUnit> filtered;
-    if (query.isEmpty) {
-      filtered = pendingUnits;
-    } else {
-      filtered = pendingUnits
-          .where((unit) {
-            final unitNumber = unit.unitNumber.toLowerCase();
-            final resident = unit.residentName?.toLowerCase() ?? '';
-            return unitNumber.contains(query) || resident.contains(query);
-          })
-          .toList(growable: false);
-    }
-    filtered.sort((a, b) => a.unitNumber.compareTo(b.unitNumber));
-
     final selected = effectiveSelected;
+    if (query.isEmpty) {
+      if (selected != null) {
+        return [selected];
+      }
+      pendingUnits.sort((a, b) => a.unitNumber.compareTo(b.unitNumber));
+      return pendingUnits;
+    }
+
+    var filtered = pendingUnits
+        .where((unit) {
+          final unitNumber = unit.unitNumber.toLowerCase();
+          final resident = unit.residentName?.toLowerCase() ?? '';
+          return unitNumber.contains(query) || resident.contains(query);
+        })
+        .toList(growable: false)
+      ..sort((a, b) => a.unitNumber.compareTo(b.unitNumber));
+
     if (selected != null &&
         filtered.every((unit) => unit.propertyUnitId != selected.propertyUnitId)) {
       filtered = List<HorizontalPropertyVotingLiveUnit>.of(filtered)

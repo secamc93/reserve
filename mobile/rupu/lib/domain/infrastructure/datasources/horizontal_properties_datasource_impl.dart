@@ -757,6 +757,11 @@ class HorizontalPropertiesDatasourceImpl
             if (data != null && data.isNotEmpty) {
               final parsed = _parseEventPayload(data);
               if (parsed != null) {
+                final eventName = event.event;
+                if (eventName != null && eventName.isNotEmpty) {
+                  parsed['event'] = parsed['event'] ?? eventName;
+                  parsed['event_name'] = parsed['event_name'] ?? eventName;
+                }
                 controller.add(parsed);
               } else {
                 debugPrint('[SSE] payload no parseable, se ignora');

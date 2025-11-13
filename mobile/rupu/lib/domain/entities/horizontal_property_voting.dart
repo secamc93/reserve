@@ -219,6 +219,7 @@ class HorizontalPropertyVotingGroupLiveData {
   final DateTime? timestamp;
   final int? removedVoteId;
   final int? removedVoteVotingId;
+  final String? eventName;
 
   const HorizontalPropertyVotingGroupLiveData({
     required this.totalUnits,
@@ -233,6 +234,7 @@ class HorizontalPropertyVotingGroupLiveData {
     this.timestamp,
     this.removedVoteId,
     this.removedVoteVotingId,
+    this.eventName,
   });
 
   HorizontalPropertyVotingGroupLiveData copyWith({
@@ -248,6 +250,7 @@ class HorizontalPropertyVotingGroupLiveData {
     DateTime? timestamp,
     int? removedVoteId,
     int? removedVoteVotingId,
+    String? eventName,
   }) {
     return HorizontalPropertyVotingGroupLiveData(
       totalUnits: totalUnits ?? this.totalUnits,
@@ -263,6 +266,7 @@ class HorizontalPropertyVotingGroupLiveData {
       removedVoteId: removedVoteId ?? this.removedVoteId,
       removedVoteVotingId:
           removedVoteVotingId ?? this.removedVoteVotingId,
+      eventName: eventName ?? this.eventName,
     );
   }
 }

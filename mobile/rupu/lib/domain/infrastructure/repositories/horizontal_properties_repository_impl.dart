@@ -604,6 +604,8 @@ class HorizontalPropertiesRepositoryImpl
   ) {
     try {
       final rawData = payload['data'];
+      final payloadEventName = (payload['event'] ?? payload['event_name']) as String?;
+
       if (rawData is List) {
         final units = rawData
             .whereType<Map<String, dynamic>>()
@@ -619,10 +621,13 @@ class HorizontalPropertiesRepositoryImpl
           units: units,
           hasUnitsSnapshot: false,
           timestamp: _parseDateTime(payload['timestamp']),
+          eventName: payloadEventName,
         );
       }
 
       final data = _asMap(rawData) ?? payload;
+      final eventName = (data['event'] ?? data['event_name']) as String? ??
+          payloadEventName;
 
       final unitsData = data['units'];
       final hasUnitsSnapshot = unitsData is List;
@@ -692,6 +697,7 @@ class HorizontalPropertiesRepositoryImpl
         timestamp: _parseDateTime(data['timestamp']),
         removedVoteId: removedVoteId,
         removedVoteVotingId: removedVoteVotingId,
+        eventName: eventName,
       );
     } catch (e, st) {
       debugPrint('Error parseando liveData: $e');
