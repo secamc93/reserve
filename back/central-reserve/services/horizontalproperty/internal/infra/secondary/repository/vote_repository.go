@@ -282,10 +282,32 @@ func (r *Repository) ListVotingOptionsByVoting(ctx context.Context, votingID uin
 	return res, nil
 }
 
-func (r *Repository) DeactivateVotingOption(ctx context.Context, id uint) error {
-	if err := r.db.Conn(ctx).Model(&models.VotingOption{}).Where("id = ?", id).Update("is_active", false).Error; err != nil {
-		r.logger.Error().Err(err).Uint("id", id).Msg("Error desactivando opción de votación")
-		return fmt.Errorf("error desactivando opción de votación: %w", err)
+func (r *Repository) GetVotingOptionByID(ctx context.Context, id uint) (*domain.VotingOption, error) {
+	var m models.VotingOption
+	if err := r.db.Conn(ctx).First(&m, id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("opción de votación no encontrada")
+		}
+		r.logger.Error().Err(err).Uint("id", id).Msg("Error obteniendo opción de votación")
+		return nil, fmt.Errorf("error obteniendo opción de votación: %w", err)
+	}
+	return r.mapVotingOptionToDomain(&m), nil
+}
+
+func (r *Repository) UpdateVotingOptionStatus(ctx context.Context, id uint, isActive bool) error {
+	if err := r.db.Conn(ctx).Model(&models.VotingOption{}).
+		Where("id = ?", id).
+		Updates(map[string]interface{}{"is_active": isActive, "updated_at": time.Now()}).Error; err != nil {
+		r.logger.Error().Err(err).Uint("id", id).Bool("is_active", isActive).Msg("Error actualizando estado de opción de votación")
+		return fmt.Errorf("error actualizando opción de votación: %w", err)
+	}
+	return nil
+}
+
+func (r *Repository) DeleteVotingOption(ctx context.Context, id uint) error {
+	if err := r.db.Conn(ctx).Unscoped().Delete(&models.VotingOption{}, id).Error; err != nil {
+		r.logger.Error().Err(err).Uint("id", id).Msg("Error eliminando opción de votación")
+		return fmt.Errorf("error eliminando opción de votación: %w", err)
 	}
 	return nil
 }

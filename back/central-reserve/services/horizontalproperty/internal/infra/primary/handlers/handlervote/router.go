@@ -32,7 +32,9 @@ func (h *VotingHandler) RegisterRoutes(router *gin.RouterGroup) {
 			{
 				options.POST("", middleware.JWT(), h.CreateVotingOption)
 				options.GET("", middleware.JWT(), h.ListVotingOptions)
-				options.DELETE("/:option_id", middleware.JWT(), h.DeactivateVotingOption)
+				options.GET("/:option_id", middleware.JWT(), h.GetVotingOptionByID)
+				options.PATCH("/:option_id/status", middleware.JWT(), h.UpdateVotingOptionStatus)
+				options.DELETE("/:option_id", middleware.JWT(), h.DeleteVotingOption)
 			}
 
 			votes := votings.Group("/:voting_id/votes")
