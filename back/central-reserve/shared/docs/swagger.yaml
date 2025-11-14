@@ -51,6 +51,22 @@ definitions:
     required:
     - permission_ids
     type: object
+  request.AssignRoleToUserBusinessRequest:
+    type: object
+  request.BusinessRoleAssignmentItem:
+    properties:
+      business_id:
+        example: 16
+        minimum: 1
+        type: integer
+      role_id:
+        example: 4
+        minimum: 1
+        type: integer
+    required:
+    - business_id
+    - role_id
+    type: object
   request.BusinessTypeRequest:
     properties:
       code:
@@ -448,6 +464,14 @@ definitions:
         description: 0 para super admin, >0 para usuarios normales
         type: integer
     type: object
+  request.GeneratePasswordRequest:
+    properties:
+      user_id:
+        description: 'Opcional: solo para super usuarios'
+        example: 10
+        minimum: 1
+        type: integer
+    type: object
   request.LoginRequest:
     properties:
       email:
@@ -571,7 +595,6 @@ definitions:
         type: integer
     required:
     - action_id
-    - code
     - name
     - resource_id
     - scope_id
@@ -803,6 +826,15 @@ definitions:
         example: true
         type: boolean
     type: object
+  response.AssignRoleToUserBusinessResponse:
+    properties:
+      message:
+        example: Rol asignado exitosamente al usuario en el business
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
   response.BusinessDetailResponse:
     properties:
       address:
@@ -954,6 +986,21 @@ definitions:
       message:
         type: string
       success:
+        type: boolean
+    type: object
+  response.GeneratePasswordResponse:
+    properties:
+      email:
+        example: usuario@ejemplo.com
+        type: string
+      message:
+        example: Nueva contraseña generada para el usuario usuario@ejemplo.com
+        type: string
+      password:
+        example: aB3$kL9mP2xQ
+        type: string
+      success:
+        example: true
         type: boolean
     type: object
   response.GetBusinessByIDResponse:
@@ -1403,12 +1450,12 @@ definitions:
     type: object
   response.UserListResponse:
     properties:
-      count:
-        type: integer
       data:
         items:
           $ref: '#/definitions/response.UserResponse'
         type: array
+      pagination:
+        $ref: '#/definitions/services_auth_internal_infra_primary_controllers_userhandler_response.PaginationInfo'
       success:
         type: boolean
     type: object
@@ -1534,6 +1581,9 @@ definitions:
       action:
         example: create
         type: string
+      action_id:
+        example: 5
+        type: integer
       business_type_id:
         example: 11
         type: integer
@@ -1555,6 +1605,9 @@ definitions:
       resource:
         example: users
         type: string
+      resource_id:
+        example: 3
+        type: integer
       scope_code:
         example: system
         type: string
@@ -1588,6 +1641,21 @@ definitions:
       scope_name:
         example: Sistema
         type: string
+    type: object
+  services_auth_internal_infra_primary_controllers_userhandler_response.PaginationInfo:
+    properties:
+      current_page:
+        type: integer
+      has_next:
+        type: boolean
+      has_prev:
+        type: boolean
+      last_page:
+        type: integer
+      per_page:
+        type: integer
+      total:
+        type: integer
     type: object
   services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.PropertyUnitResponse:
     properties:
@@ -1914,6 +1982,10 @@ paths:
         in: query
         name: is_active
         type: boolean
+      - description: Filtro por ID del grupo de votación
+        in: query
+        name: voting_group_id
+        type: integer
       produces:
       - application/json
       responses:
@@ -2526,6 +2598,54 @@ paths:
       security:
       - BearerAuth: []
       summary: Cambiar contraseña
+      tags:
+      - Auth
+  /auth/generate-password:
+    post:
+      consumes:
+      - application/json
+      description: Genera una nueva contraseña aleatoria. Si el usuario es super admin,
+        puede especificar user_id para generar contraseña de otro usuario. Si no se
+        envía user_id, se genera para el usuario autenticado. La contraseña solo se
+        muestra una vez en esta respuesta.
+      parameters:
+      - description: Request body (user_id opcional, solo para super usuarios)
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/request.GeneratePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Nueva contraseña generada exitosamente (solo se muestra una
+            vez)
+          schema:
+            $ref: '#/definitions/response.GeneratePasswordResponse'
+        "400":
+          description: Datos inválidos
+          schema:
+            $ref: '#/definitions/response.LoginErrorResponse'
+        "401":
+          description: Token de acceso requerido
+          schema:
+            $ref: '#/definitions/response.LoginErrorResponse'
+        "403":
+          description: No tienes permisos para generar contraseña de otro usuario
+            o usuario inactivo
+          schema:
+            $ref: '#/definitions/response.LoginErrorResponse'
+        "404":
+          description: Usuario no encontrado
+          schema:
+            $ref: '#/definitions/response.LoginErrorResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/response.LoginErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Generar nueva contraseña aleatoria
       tags:
       - Auth
   /auth/login:
@@ -4552,7 +4672,8 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Desactiva un grupo de votación existente
+      description: Elimina permanentemente un grupo de votación y todos sus registros
+        asociados
       parameters:
       - description: ID del grupo de votación
         in: path
@@ -4580,7 +4701,7 @@ paths:
             type: object
       security:
       - BearerAuth: []
-      summary: Desactivar un grupo de votación
+      summary: Eliminar un grupo de votación
       tags:
       - Votaciones
     put:
@@ -7455,10 +7576,6 @@ paths:
         in: formData
         name: email
         type: string
-      - description: Nueva contraseña (>=6)
-        in: formData
-        name: password
-        type: string
       - description: Teléfono (exactamente 10 dígitos)
         in: formData
         name: phone
@@ -7509,6 +7626,59 @@ paths:
       security:
       - BearerAuth: []
       summary: Actualizar usuario
+      tags:
+      - Users
+  /users/{id}/assign-role:
+    post:
+      consumes:
+      - application/json
+      description: Asigna o actualiza roles de un usuario en múltiples businesses.
+        El usuario debe estar previamente asociado a cada business. Solo se permite
+        un rol por business y cada rol debe ser del mismo tipo de business que su
+        business asociado.
+      parameters:
+      - description: ID del usuario
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Lista de asignaciones (business_id y role_id por cada asignación)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.AssignRoleToUserBusinessRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Roles asignados exitosamente
+          schema:
+            $ref: '#/definitions/response.AssignRoleToUserBusinessResponse'
+        "400":
+          description: Datos inválidos
+          schema:
+            $ref: '#/definitions/response.UserErrorResponse'
+        "401":
+          description: Token de acceso requerido
+          schema:
+            $ref: '#/definitions/response.UserErrorResponse'
+        "403":
+          description: El usuario no está asociado a algún business o algún rol no
+            corresponde al tipo de business
+          schema:
+            $ref: '#/definitions/response.UserErrorResponse'
+        "404":
+          description: Usuario, business o rol no encontrado
+          schema:
+            $ref: '#/definitions/response.UserErrorResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/response.UserErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Asignar roles a usuario en businesses
       tags:
       - Users
 securityDefinitions:

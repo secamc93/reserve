@@ -30,6 +30,10 @@ type CreateVotingOptionRequest struct {
 	DisplayOrder int    `json:"display_order" binding:"min=1"`
 }
 
+type UpdateVotingOptionStatusRequest struct {
+	IsActive *bool `json:"is_active" binding:"required"`
+}
+
 type CreateVoteRequest struct {
 	PropertyUnitID uint   `json:"property_unit_id" binding:"required"`
 	VotingOptionID uint   `json:"voting_option_id" binding:"required"`

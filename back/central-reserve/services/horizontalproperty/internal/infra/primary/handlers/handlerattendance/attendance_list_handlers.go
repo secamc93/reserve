@@ -22,6 +22,7 @@ import (
 //	@Param			business_id	query	uint	false	"ID del business (opcional para super admin)"
 //	@Param			title		query	string	false	"Filtro por título"
 //	@Param			is_active	query	bool	false	"Filtro por activo"
+//	@Param			voting_group_id	query	uint	false	"Filtro por ID del grupo de votación"
 //	@Success		200			{object}	object
 //	@Failure		400			{object}	object
 //	@Failure		500			{object}	object
@@ -64,6 +65,9 @@ func (h *AttendanceHandler) ListAttendanceLists(c *gin.Context) {
 	}
 	if v := c.Query("is_active"); v != "" {
 		filters["is_active"] = (v == "true")
+	}
+	if v := c.Query("voting_group_id"); v != "" {
+		filters["voting_group_id"] = parseUint(v)
 	}
 	lists, err := h.attendanceUseCase.ListAttendanceLists(ctx, businessID, filters)
 	if err != nil {

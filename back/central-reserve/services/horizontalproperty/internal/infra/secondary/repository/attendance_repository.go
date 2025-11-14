@@ -69,6 +69,9 @@ func (r *Repository) ListAttendanceLists(ctx context.Context, businessID uint, f
 	if isActive, ok := filters["is_active"].(bool); ok {
 		query = query.Where("attendance_lists.is_active = ?", isActive)
 	}
+	if vgID, ok := filters["voting_group_id"].(uint); ok && vgID != 0 {
+		query = query.Where("attendance_lists.voting_group_id = ?", vgID)
+	}
 
 	if err := query.Find(&m).Error; err != nil {
 		r.logger.Error().Err(err).Uint("business_id", businessID).Msg("Error listando listas de asistencia")

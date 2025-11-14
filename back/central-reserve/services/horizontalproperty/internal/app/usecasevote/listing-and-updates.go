@@ -183,8 +183,31 @@ func (u *votingUseCase) ListVotingOptionsByVoting(ctx context.Context, votingID 
 	return res, nil
 }
 
-func (u *votingUseCase) DeactivateVotingOption(ctx context.Context, id uint) error {
-	return u.repo.DeactivateVotingOption(ctx, id)
+func (u *votingUseCase) GetVotingOptionByID(ctx context.Context, id uint) (*domain.VotingOptionDTO, error) {
+	option, err := u.repo.GetVotingOptionByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return &domain.VotingOptionDTO{
+		ID:           option.ID,
+		VotingID:     option.VotingID,
+		OptionText:   option.OptionText,
+		OptionCode:   option.OptionCode,
+		Color:        option.Color,
+		DisplayOrder: option.DisplayOrder,
+		IsActive:     option.IsActive,
+	}, nil
+}
+
+func (u *votingUseCase) UpdateVotingOptionStatus(ctx context.Context, id uint, isActive bool) (*domain.VotingOptionDTO, error) {
+	if err := u.repo.UpdateVotingOptionStatus(ctx, id, isActive); err != nil {
+		return nil, err
+	}
+	return u.GetVotingOptionByID(ctx, id)
+}
+
+func (u *votingUseCase) DeleteVotingOption(ctx context.Context, id uint) error {
+	return u.repo.DeleteVotingOption(ctx, id)
 }
 
 func (u *votingUseCase) ListVotesByVoting(ctx context.Context, votingID uint) ([]domain.VoteDTO, error) {

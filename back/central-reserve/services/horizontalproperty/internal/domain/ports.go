@@ -78,7 +78,9 @@ type VotingRepository interface {
 	// Voting Options
 	CreateVotingOption(ctx context.Context, option *VotingOption) (*VotingOption, error)
 	ListVotingOptionsByVoting(ctx context.Context, votingID uint) ([]VotingOption, error)
-	DeactivateVotingOption(ctx context.Context, id uint) error
+	GetVotingOptionByID(ctx context.Context, id uint) (*VotingOption, error)
+	UpdateVotingOptionStatus(ctx context.Context, id uint, isActive bool) error
+	DeleteVotingOption(ctx context.Context, id uint) error
 
 	// Votes
 	CreateVote(ctx context.Context, vote Vote) (*Vote, error)
@@ -117,7 +119,9 @@ type VotingUseCase interface {
 	// Options
 	CreateVotingOption(ctx context.Context, dto CreateVotingOptionDTO) (*VotingOptionDTO, error)
 	ListVotingOptionsByVoting(ctx context.Context, votingID uint) ([]VotingOptionDTO, error)
-	DeactivateVotingOption(ctx context.Context, id uint) error
+	GetVotingOptionByID(ctx context.Context, id uint) (*VotingOptionDTO, error)
+	UpdateVotingOptionStatus(ctx context.Context, id uint, isActive bool) (*VotingOptionDTO, error)
+	DeleteVotingOption(ctx context.Context, id uint) error
 
 	// Votes
 	CreateVote(ctx context.Context, dto CreateVoteDTO) (*VoteDTO, error)
