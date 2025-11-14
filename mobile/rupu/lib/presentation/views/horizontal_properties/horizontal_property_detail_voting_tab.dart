@@ -2755,14 +2755,20 @@ class VotingLiveController extends GetxController {
   }
 
   int countForOption(int optionId) {
+    final units = liveUnits;
+    if (units.isNotEmpty) {
+      return units.where((unit) => unit.votingOptionId == optionId).length;
+    }
+
+    final votes = liveData.value?.votes ?? const <HorizontalPropertyVotingVote>[];
+    if (votes.isNotEmpty) {
+      return votes.where((vote) => vote.votingOptionId == optionId).length;
+    }
+
     for (final result in liveResults) {
       if (result.votingOptionId == optionId) {
         return result.voteCount;
       }
-    }
-    final units = liveUnits;
-    if (units.isNotEmpty) {
-      return units.where((unit) => unit.votingOptionId == optionId).length;
     }
     return voteSummary[optionId] ?? 0;
   }
@@ -3889,7 +3895,7 @@ class _DecisionCompactCard extends StatelessWidget {
     final percentFormat = NumberFormat('##0.0#');
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: color.withValues(alpha: .08),
         borderRadius: BorderRadius.circular(14),
@@ -3908,7 +3914,7 @@ class _DecisionCompactCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             countFormat.format(value),
-            style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 2),
           Text(

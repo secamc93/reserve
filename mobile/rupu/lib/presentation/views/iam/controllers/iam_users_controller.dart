@@ -12,38 +12,59 @@ class IamUsersController extends GetxController {
 
   final users = <IamUser>[].obs;
   final isLoading = false.obs;
+  final isLoadingMore = false.obs;
   final errorMessage = RxnString();
   final pagination = Rxn<IamPagination>();
   final searchText = ''.obs;
-  int _currentPage = 1;
-  final int perPage = 10;
+  final int perPage = 20;
+  int _nextPage = 1;
+  bool _hasMore = true;
 
   @override
   void onInit() {
     super.onInit();
-    debounce<String>(searchText, (_) => fetchUsers(page: 1),
+    debounce<String>(searchText, (_) => fetchUsers(reset: true),
         time: const Duration(milliseconds: 400));
-    fetchUsers();
+    fetchUsers(reset: true);
   }
 
-  Future<void> fetchUsers({int? page}) async {
-    if (isLoading.value) return;
-    final targetPage = page ?? _currentPage;
-    isLoading.value = true;
-    errorMessage.value = null;
+  Future<void> fetchUsers({bool reset = false}) async {
+    if (isLoading.value || isLoadingMore.value) return;
+    if (!_hasMore && !reset) return;
+
+    if (reset) {
+      isLoading.value = true;
+      errorMessage.value = null;
+      _nextPage = 1;
+      _hasMore = true;
+    } else {
+      isLoadingMore.value = true;
+    }
+
     try {
+      final query = searchText.value.trim();
       final result = await repository.getUsers(
-        page: targetPage,
-        perPage: perPage,
-        search: searchText.value.trim().isEmpty ? null : searchText.value.trim(),
+        page: _nextPage,
+        pageSize: perPage,
+        name: query.isEmpty ? null : query,
+        email: query.isEmpty ? null : query,
+        phone: query.isEmpty ? null : query,
       );
-      _currentPage = result.pagination.currentPage;
-      users.assignAll(result.users);
+
       pagination.value = result.pagination;
-    } catch (error) {
+      _hasMore = result.pagination.hasNext;
+      _nextPage = result.pagination.currentPage + 1;
+
+      if (reset) {
+        users.assignAll(result.users);
+      } else {
+        users.addAll(result.users);
+      }
+    } catch (_) {
       errorMessage.value = 'No se pudieron cargar los usuarios.';
     } finally {
       isLoading.value = false;
+      isLoadingMore.value = false;
     }
   }
 
@@ -52,18 +73,10 @@ class IamUsersController extends GetxController {
   }
 
   Future<void> refreshData() async {
-    await fetchUsers(page: _currentPage);
+    await fetchUsers(reset: true);
   }
 
-  void nextPage() {
-    final meta = pagination.value;
-    if (meta == null || !meta.hasNext) return;
-    fetchUsers(page: meta.currentPage + 1);
-  }
-
-  void previousPage() {
-    final meta = pagination.value;
-    if (meta == null || !meta.hasPrev) return;
-    fetchUsers(page: meta.currentPage - 1);
+  void loadMore() {
+    fetchUsers(reset: false);
   }
 }

@@ -7,6 +7,7 @@ import 'package:rupu/domain/entities/iam_business.dart';
 import 'package:rupu/domain/entities/iam_business_type.dart';
 import 'package:rupu/domain/entities/iam_resource.dart';
 import 'package:rupu/domain/entities/iam_user.dart';
+import 'package:rupu/domain/infrastructure/repositories/iam_repository_impl.dart';
 import 'package:rupu/presentation/views/iam/controllers/iam_business_types_controller.dart';
 import 'package:rupu/presentation/views/iam/controllers/iam_businesses_controller.dart';
 import 'package:rupu/presentation/views/iam/controllers/iam_resources_controller.dart';
@@ -127,9 +128,35 @@ class _IamViewState extends State<IamView>
   }
 
   Widget? _buildFloatingActionButton(BuildContext context) {
-    if (_tabController.index != 0) return null;
-    if (!Get.isRegistered<UsersController>()) return null;
-    return _IamUsersFab(pageIndex: widget.pageIndex);
+    final index = _tabController.index;
+    switch (index) {
+      case 0:
+        if (!Get.isRegistered<UsersController>()) return null;
+        return _IamUsersFab(pageIndex: widget.pageIndex);
+      case 1:
+        if (!Get.isRegistered<RolesPermissionsController>()) return null;
+        return FloatingActionButton(
+          onPressed: () => showRoleFormDialog(context),
+          tooltip: 'Crear rol',
+          child: const Icon(Icons.add),
+        );
+      case 2:
+        if (!Get.isRegistered<RolesPermissionsController>()) return null;
+        return FloatingActionButton(
+          onPressed: () => showPermissionFormDialog(context),
+          tooltip: 'Crear permiso',
+          child: const Icon(Icons.add),
+        );
+      case 3:
+        if (!Get.isRegistered<IamResourcesController>()) return null;
+        return FloatingActionButton(
+          onPressed: () => showResourceFormDialog(context),
+          tooltip: 'Crear recurso',
+          child: const Icon(Icons.add),
+        );
+      default:
+        return null;
+    }
   }
 }
 
@@ -229,12 +256,23 @@ class _IamUsersTab extends GetView<IamUsersController> {
         return const Center(child: CircularProgressIndicator());
       }
 
+      final totalCount = controller.pagination.value?.total ?? users.length;
+
       return RefreshIndicator(
         onRefresh: controller.refreshData,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(24),
-          children: [
+        child: NotificationListener<ScrollNotification>(
+          onNotification: (notification) {
+            if (notification.metrics.pixels >=
+                    notification.metrics.maxScrollExtent - 200 &&
+                !controller.isLoadingMore.value) {
+              controller.loadMore();
+            }
+            return false;
+          },
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(24),
+            children: [
             TextField(
               onChanged: controller.setSearch,
               decoration: InputDecoration(
@@ -254,7 +292,7 @@ class _IamUsersTab extends GetView<IamUsersController> {
               children: [
                 Expanded(
                   child: Text(
-                    'Usuarios encontrados: $total',
+                    'Usuarios encontrados: $totalCount',
                     style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                   ),
                 ),
@@ -281,22 +319,12 @@ class _IamUsersTab extends GetView<IamUsersController> {
                     padding: const EdgeInsets.only(bottom: 12),
                     child: _IamUserCard(user: user),
                   )),
-            if (controller.pagination.value != null) ...[
-              const SizedBox(height: 8),
-              _IamPaginationControls(
-                currentPage: controller.pagination.value!.currentPage,
-                lastPage: controller.pagination.value!.lastPage,
-                hasPrev: controller.pagination.value!.hasPrev,
-                hasNext: controller.pagination.value!.hasNext,
-                onPrev: controller.pagination.value!.hasPrev
-                    ? controller.previousPage
-                    : null,
-                onNext: controller.pagination.value!.hasNext
-                    ? controller.nextPage
-                    : null,
-              ),
+            if (controller.isLoadingMore.value) ...[
+              const SizedBox(height: 16),
+              const Center(child: CircularProgressIndicator()),
             ],
           ],
+        ),
         ),
       );
     });
@@ -380,6 +408,7 @@ class _IamResourcesTab extends GetView<IamResourcesController> {
                       DataColumn(label: Text('Tipo de negocio')),
                       DataColumn(label: Text('Creado')),
                       DataColumn(label: Text('Actualizado')),
+                      DataColumn(label: Text('Acciones')),
                     ],
                     rows: resources.map((resource) {
                       return DataRow(cells: [
@@ -394,9 +423,31 @@ class _IamResourcesTab extends GetView<IamResourcesController> {
                             overflow: TextOverflow.ellipsis,
                           ),
                         )),
-                        DataCell(Text(resource.businessTypeName)),
+                        DataCell(Text(
+                            resource.businessTypeName.isEmpty
+                                ? '-'
+                                : resource.businessTypeName,
+                          )),
                         DataCell(Text(_formatDate(resource.createdAt))),
                         DataCell(Text(_formatDate(resource.updatedAt))),
+                        DataCell(Row(
+                          children: [
+                            IconButton(
+                              tooltip: 'Editar',
+                              icon: const Icon(Icons.edit_outlined),
+                              onPressed: () => showResourceFormDialog(
+                                context,
+                                resource: resource,
+                              ),
+                            ),
+                            IconButton(
+                              tooltip: 'Eliminar',
+                              icon: const Icon(Icons.delete_outline),
+                              onPressed: () =>
+                                  confirmDeleteResourceDialog(context, resource),
+                            ),
+                          ],
+                        )),
                       ]);
                     }).toList(),
                   ),
@@ -422,6 +473,7 @@ class _IamResourcesTab extends GetView<IamResourcesController> {
       );
     });
   }
+
 }
 
 class _IamBusinessTypesTab extends GetView<IamBusinessTypesController> {
@@ -891,6 +943,121 @@ class _IamPaginationControls extends StatelessWidget {
 String _formatDate(DateTime? value) {
   if (value == null) return '--';
   return DateFormat('dd/MM/yyyy HH:mm').format(value.toLocal());
+}
+
+void _showIamSnackBar(BuildContext context, String message) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text(message)),
+  );
+}
+
+Future<void> showResourceFormDialog(BuildContext context, {IamResource? resource}) async {
+  if (!Get.isRegistered<IamResourcesController>()) return;
+  final controller = Get.find<IamResourcesController>();
+  final iamRepository = IamRepositoryImpl();
+  final businessTypes = await iamRepository.getBusinessTypes();
+  final formKey = GlobalKey<FormState>();
+  final nameCtrl = TextEditingController(text: resource?.name ?? '');
+  final descriptionCtrl = TextEditingController(text: resource?.description ?? '');
+  int? selectedBusinessType = resource?.businessTypeId;
+
+  await showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(resource == null ? 'Crear recurso' : 'Editar recurso'),
+      content: Form(
+        key: formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextFormField(
+              controller: nameCtrl,
+              decoration: const InputDecoration(labelText: 'Nombre del recurso'),
+              validator: (value) =>
+                  value == null || value.trim().isEmpty ? 'Campo obligatorio' : null,
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<int?>(
+              value: selectedBusinessType,
+              decoration: const InputDecoration(labelText: 'Tipo de negocio (opcional)'),
+              items: [
+                const DropdownMenuItem(value: null, child: Text('Genérico')),
+                ...businessTypes.types
+                    .map((type) => DropdownMenuItem(
+                          value: type.id,
+                          child: Text(type.name),
+                        ))
+                    .toList(),
+              ],
+              onChanged: (value) => selectedBusinessType = value,
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: descriptionCtrl,
+              decoration: const InputDecoration(labelText: 'Descripción'),
+              minLines: 2,
+              maxLines: 3,
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Cancelar')),
+        FilledButton(
+          onPressed: () async {
+            if (!formKey.currentState!.validate()) return;
+            if (resource == null) {
+              final result = await controller.createResource(
+                name: nameCtrl.text.trim(),
+                businessTypeId: selectedBusinessType,
+                description: descriptionCtrl.text.trim(),
+              );
+              if (result != null) {
+                Navigator.of(ctx).pop();
+                _showIamSnackBar(context, result.message);
+              }
+            } else {
+              final result = await controller.updateResource(
+                id: resource.id,
+                name: nameCtrl.text.trim(),
+                businessTypeId: selectedBusinessType,
+                description: descriptionCtrl.text.trim(),
+              );
+              if (result != null) {
+                Navigator.of(ctx).pop();
+                _showIamSnackBar(context, result.message);
+              }
+            }
+          },
+          child: Text(resource == null ? 'Crear recurso' : 'Guardar cambios'),
+        ),
+      ],
+    ),
+  );
+}
+
+Future<void> confirmDeleteResourceDialog(
+  BuildContext context,
+  IamResource resource,
+) async {
+  if (!Get.isRegistered<IamResourcesController>()) return;
+  final controller = Get.find<IamResourcesController>();
+  final shouldDelete = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Eliminar recurso'),
+      content: Text('¿Eliminar ${resource.name}?'),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancelar')),
+        FilledButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Eliminar')),
+      ],
+    ),
+  );
+  if (shouldDelete != true) return;
+  final result = await controller.deleteResource(resource.id);
+  if (result != null) {
+    _showIamSnackBar(context, result.message);
+  }
 }
 
 class _IamTabDefinition {

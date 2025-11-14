@@ -5,6 +5,10 @@ class Permission {
   final String description;
   final String resource;
   final String action;
+  final int? resourceId;
+  final int? actionId;
+  final int? businessTypeId;
+  final String? businessTypeName;
   final int? scopeId;
   final String? scopeName;
   final String? scopeCode;
@@ -16,6 +20,10 @@ class Permission {
     required this.description,
     required this.resource,
     required this.action,
+    this.resourceId,
+    this.actionId,
+    this.businessTypeId,
+    this.businessTypeName,
     this.scopeId,
     this.scopeName,
     this.scopeCode,

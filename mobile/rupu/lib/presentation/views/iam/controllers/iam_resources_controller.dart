@@ -11,6 +11,7 @@ class IamResourcesController extends GetxController {
 
   final resources = <IamResource>[].obs;
   final isLoading = false.obs;
+  final isProcessing = false.obs;
   final errorMessage = RxnString();
   final total = 0.obs;
   final page = 1.obs;
@@ -58,5 +59,59 @@ class IamResourcesController extends GetxController {
   void previousPage() {
     if (page.value <= 1) return;
     fetchResources(page: page.value - 1);
+  }
+
+  Future<IamResourceMutationResult?> createResource({
+    required String name,
+    int? businessTypeId,
+    String? description,
+  }) async {
+    if (isProcessing.value) return null;
+    isProcessing.value = true;
+    try {
+      final result = await repository.createResource(
+        name: name,
+        businessTypeId: businessTypeId,
+        description: description,
+      );
+      await fetchResources(page: 1);
+      return result;
+    } finally {
+      isProcessing.value = false;
+    }
+  }
+
+  Future<IamResourceMutationResult?> updateResource({
+    required int id,
+    required String name,
+    int? businessTypeId,
+    String? description,
+  }) async {
+    if (isProcessing.value) return null;
+    isProcessing.value = true;
+    try {
+      final result = await repository.updateResource(
+        id: id,
+        name: name,
+        businessTypeId: businessTypeId,
+        description: description,
+      );
+      await fetchResources(page: page.value);
+      return result;
+    } finally {
+      isProcessing.value = false;
+    }
+  }
+
+  Future<IamMessageResult?> deleteResource(int id) async {
+    if (isProcessing.value) return null;
+    isProcessing.value = true;
+    try {
+      final result = await repository.deleteResource(id);
+      await fetchResources(page: page.value);
+      return result;
+    } finally {
+      isProcessing.value = false;
+    }
   }
 }

@@ -1,3 +1,4 @@
+import 'package:rupu/domain/entities/iam_action.dart';
 import 'package:rupu/domain/entities/iam_business.dart';
 import 'package:rupu/domain/entities/iam_business_type.dart';
 import 'package:rupu/domain/entities/iam_pagination.dart';
@@ -10,6 +11,8 @@ import 'package:rupu/domain/infrastructure/models/iam/iam_resources_response_mod
     as res;
 import 'package:rupu/domain/infrastructure/models/iam/iam_users_response_model.dart'
     as iam;
+import 'package:rupu/domain/infrastructure/models/iam/iam_actions_response_model.dart'
+    as act;
 
 class IamMapper {
   static IamUsersPage usersResponseToEntity(iam.IamUsersResponseModel model) =>
@@ -59,6 +62,16 @@ class IamMapper {
         ),
       );
 
+  static IamActionsPage actionsResponseToEntity(act.IamActionsResponseModel model) =>
+      IamActionsPage(
+        success: model.success,
+        actions: model.actions.map(_actionFromModel).toList(),
+        total: model.total,
+        page: model.page,
+        pageSize: model.pageSize,
+        totalPages: model.totalPages,
+      );
+
   static IamUser _userFromModel(iam.IamUserModel model) => IamUser(
         id: model.id,
         name: model.name,
@@ -93,6 +106,9 @@ class IamMapper {
         updatedAt: model.updatedAt,
       );
 
+  static IamResource resourceFromJson(Map<String, dynamic> json) =>
+      _resourceFromModel(res.IamResourceModel.fromJson(json));
+
   static IamBusinessType _businessTypeFromModel(
           IamBusinessTypeModel model) =>
       IamBusinessType(
@@ -126,6 +142,12 @@ class IamMapper {
         businessType: model.businessType,
         createdAt: model.createdAt,
         updatedAt: model.updatedAt,
+      );
+
+  static IamAction _actionFromModel(act.IamActionModel model) => IamAction(
+        id: model.id,
+        name: model.name,
+        description: model.description,
       );
 
   static IamPagination _paginationFromModel(

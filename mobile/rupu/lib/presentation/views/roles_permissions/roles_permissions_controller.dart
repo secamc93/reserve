@@ -3,6 +3,8 @@ import 'package:dio/dio.dart';
 import 'package:get/get.dart';
 import 'package:rupu/config/helpers/string_match.dart';
 
+import 'package:rupu/domain/entities/iam_resource.dart' show IamMessageResult;
+import 'package:rupu/domain/entities/role_action_result.dart';
 import 'package:rupu/domain/entities/roles_permisos.dart';
 import 'package:rupu/domain/infrastructure/datasources/permissions_datasource_impl.dart';
 import 'package:rupu/domain/infrastructure/datasources/roles_datasource_impl.dart';
@@ -135,5 +137,76 @@ class RolesPermissionsController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  Future<RoleActionResult> crearRol(Map<String, dynamic> payload) async {
+    final result = await rolesRepository.crearRol(payload);
+    if (result.success) {
+      await _loadCatalogs();
+    }
+    return result;
+  }
+
+  Future<RoleActionResult> actualizarRol(int id, Map<String, dynamic> payload) async {
+    final result = await rolesRepository.actualizarRol(id, payload);
+    if (result.success) {
+      await _loadCatalogs();
+    }
+    return result;
+  }
+
+  Future<IamMessageResult> eliminarRol(int id) async {
+    final result = await rolesRepository.eliminarRol(id);
+    if (result.success) {
+      await _loadCatalogs();
+    }
+    return result;
+  }
+
+  Future<List<int>> obtenerPermisosAsignados(int roleId) {
+    return rolesRepository.obtenerPermisosAsignados(roleId);
+  }
+
+  Future<IamMessageResult> asignarPermisos(int roleId, List<int> permissionIds) async {
+    final result = await rolesRepository.asignarPermisos(roleId, permissionIds);
+    if (result.success) {
+      await _loadCatalogs();
+    }
+    return result;
+  }
+
+  Future<IamMessageResult> eliminarPermisoAsignado(int roleId, int permissionId) async {
+    final result = await rolesRepository.eliminarPermiso(roleId, permissionId);
+    if (result.success) {
+      await _loadCatalogs();
+    }
+    return result;
+  }
+
+  Future<PermissionActionResult> crearPermiso(Map<String, dynamic> payload) async {
+    final result = await permissionsRepository.crearPermiso(payload);
+    if (result.success) {
+      await _loadCatalogs();
+    }
+    return result;
+  }
+
+  Future<IamMessageResult> actualizarPermisoRegistro(
+    int id,
+    Map<String, dynamic> payload,
+  ) async {
+    final result = await permissionsRepository.actualizarPermiso(id, payload);
+    if (result.success) {
+      await _loadCatalogs();
+    }
+    return result;
+  }
+
+  Future<IamMessageResult> eliminarPermisoRegistro(int id) async {
+    final result = await permissionsRepository.eliminarPermiso(id);
+    if (result.success) {
+      await _loadCatalogs();
+    }
+    return result;
   }
 }

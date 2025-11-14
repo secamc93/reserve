@@ -18,6 +18,28 @@ class IamResource {
   });
 }
 
+class IamResourceMutationResult {
+  final bool success;
+  final String message;
+  final IamResource resource;
+
+  const IamResourceMutationResult({
+    required this.success,
+    required this.message,
+    required this.resource,
+  });
+}
+
+class IamMessageResult {
+  final bool success;
+  final String message;
+
+  const IamMessageResult({
+    required this.success,
+    required this.message,
+  });
+}
+
 class IamResourcesPage {
   final bool success;
   final List<IamResource> resources;

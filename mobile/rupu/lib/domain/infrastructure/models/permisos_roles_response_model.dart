@@ -210,6 +210,10 @@ class PermissionModel {
   final String description;
   final String resource;
   final String action;
+  final int? resourceId;
+  final int? actionId;
+  final int? businessTypeId;
+  final String? businessTypeName;
   final String? scope;
   final int? scopeId;
   final String? scopeName;
@@ -222,6 +226,10 @@ class PermissionModel {
     required this.description,
     required this.resource,
     required this.action,
+    this.resourceId,
+    this.actionId,
+    this.businessTypeId,
+    this.businessTypeName,
     this.scope,
     this.scopeId,
     this.scopeName,
@@ -236,6 +244,10 @@ class PermissionModel {
       description: json['description']?.toString() ?? '',
       resource: json['resource']?.toString() ?? '',
       action: json['action']?.toString() ?? '',
+      resourceId: (json['resource_id'] as num?)?.toInt(),
+      actionId: (json['action_id'] as num?)?.toInt(),
+      businessTypeId: (json['business_type_id'] as num?)?.toInt(),
+      businessTypeName: json['business_type_name']?.toString(),
       scope: json['scope']?.toString(),
       scopeId: (json['scope_id'] as num?)?.toInt(),
       scopeName: json['scope_name']?.toString() ?? json['scope']?.toString(),
