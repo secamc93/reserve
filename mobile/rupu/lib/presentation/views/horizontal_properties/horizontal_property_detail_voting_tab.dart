@@ -2912,6 +2912,14 @@ class VotingLiveController extends GetxController {
         deletedVote = event.votes.last;
       } else if (event.removedVoteId != null) {
         deletedVote = previousVotesById[event.removedVoteId!];
+      } else if (event.removedVoteVotingId != null) {
+        for (var i = mergedVotes.length - 1; i >= 0; i--) {
+          final candidate = mergedVotes[i];
+          if (candidate.votingOptionId == event.removedVoteVotingId) {
+            deletedVote = candidate;
+            break;
+          }
+        }
       }
     }
 
@@ -3185,7 +3193,10 @@ class VotingLiveController extends GetxController {
     try {
       final result = await _repository.getHorizontalPropertyUnits(
         id: parent.propertyId,
-        query: const {'page_size': 1},
+        query: {
+          'page_size': 1,
+          if (parent.propertyId > 0) 'business_id': parent.propertyId,
+        },
       );
       if (result.totalUnits > 0) {
         totalUnitsAllowed.value = result.totalUnits;

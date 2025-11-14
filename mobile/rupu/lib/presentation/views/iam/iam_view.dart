@@ -7,6 +7,7 @@ import 'package:rupu/domain/entities/iam_business.dart';
 import 'package:rupu/domain/entities/iam_business_type.dart';
 import 'package:rupu/domain/entities/iam_resource.dart';
 import 'package:rupu/domain/entities/iam_user.dart';
+import 'package:rupu/domain/entities/user_action_result.dart';
 import 'package:rupu/domain/infrastructure/repositories/iam_repository_impl.dart';
 import 'package:rupu/presentation/views/iam/controllers/iam_business_types_controller.dart';
 import 'package:rupu/presentation/views/iam/controllers/iam_businesses_controller.dart';
@@ -14,6 +15,7 @@ import 'package:rupu/presentation/views/iam/controllers/iam_resources_controller
 import 'package:rupu/presentation/views/iam/controllers/iam_users_controller.dart';
 import 'package:rupu/presentation/views/roles_permissions/roles_permissions_view.dart';
 import 'package:rupu/presentation/views/settings/views/create_user_view.dart';
+import 'package:rupu/presentation/views/users/user_detail_view.dart';
 import 'package:rupu/presentation/views/users/users_controller.dart';
 
 class IamView extends StatefulWidget {
@@ -79,11 +81,11 @@ class _IamViewState extends State<IamView>
       body: TabBarView(
         controller: _tabController,
         children: [
-          const _IamTabPage(
+          _IamTabPage(
             child: SafeArea(
               top: false,
               bottom: false,
-              child: _IamUsersTab(),
+              child: _IamUsersTab(pageIndex: widget.pageIndex),
             ),
           ),
           const _IamTabPage(
@@ -240,7 +242,9 @@ class _IamPlaceholderTab extends StatelessWidget {
 }
 
 class _IamUsersTab extends GetView<IamUsersController> {
-  const _IamUsersTab();
+  final int pageIndex;
+
+  const _IamUsersTab({required this.pageIndex});
 
   @override
   Widget build(BuildContext context) {
@@ -250,13 +254,18 @@ class _IamUsersTab extends GetView<IamUsersController> {
       final isLoading = controller.isLoading.value;
       final error = controller.errorMessage.value;
       final users = controller.users;
-      final total = controller.pagination.value?.total ?? users.length;
 
       if (isLoading && users.isEmpty) {
         return const Center(child: CircularProgressIndicator());
       }
 
       final totalCount = controller.pagination.value?.total ?? users.length;
+      final usersController = Get.isRegistered<UsersController>()
+          ? Get.find<UsersController>()
+          : null;
+      final canView =
+          (usersController?.canRead ?? false) || (usersController?.canUpdate ?? false);
+      final canDelete = usersController?.canDelete ?? false;
 
       return RefreshIndicator(
         onRefresh: controller.refreshData,
@@ -273,61 +282,129 @@ class _IamUsersTab extends GetView<IamUsersController> {
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(24),
             children: [
-            TextField(
-              onChanged: controller.setSearch,
-              decoration: InputDecoration(
-                labelText: 'Buscar',
-                hintText: 'Nombre, correo, teléfono…',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: controller.searchText.value.isEmpty
-                    ? null
-                    : IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () => controller.setSearch(''),
-                      ),
+              TextField(
+                controller: controller.searchCtrl,
+                onChanged: controller.setSearch,
+                decoration: InputDecoration(
+                  labelText: 'Buscar',
+                  hintText: 'Nombre, correo, teléfono…',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: controller.searchText.value.isEmpty
+                      ? null
+                      : IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: controller.clearSearch,
+                        ),
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Usuarios encontrados: $totalCount',
-                    style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Usuarios encontrados: $totalCount',
+                      style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  if (isLoading)
+                    const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                ],
+              ),
+              if (error != null) ...[
+                const SizedBox(height: 12),
+                _IamErrorCard(
+                  message: error,
+                  onRetry: controller.refreshData,
+                ),
+              ],
+              const SizedBox(height: 12),
+              if (users.isEmpty && !isLoading)
+                const _IamEmptyState(message: 'No se encontraron usuarios.')
+              else
+                ...users.map(
+                  (user) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _IamUserCard(
+                      user: user,
+                      canView: canView,
+                      canDelete: canDelete,
+                      isDeleting: controller.deletingUserId.value == user.id,
+                      onView: canView ? () => _openDetail(context, user.id) : null,
+                      onDelete:
+                          canDelete ? () => _confirmDelete(context, user) : null,
+                    ),
                   ),
                 ),
-                if (isLoading)
-                  const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
+              if (controller.isLoadingMore.value) ...[
+                const SizedBox(height: 16),
+                const Center(child: CircularProgressIndicator()),
               ],
-            ),
-            if (error != null) ...[
-              const SizedBox(height: 12),
-              _IamErrorCard(
-                message: error,
-                onRetry: controller.refreshData,
-              ),
             ],
-            const SizedBox(height: 12),
-            if (users.isEmpty && !isLoading)
-              const _IamEmptyState(message: 'No se encontraron usuarios.')
-            else
-              ...users.map((user) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: _IamUserCard(user: user),
-                  )),
-            if (controller.isLoadingMore.value) ...[
-              const SizedBox(height: 16),
-              const Center(child: CircularProgressIndicator()),
-            ],
-          ],
-        ),
+          ),
         ),
       );
     });
+  }
+
+  Future<void> _openDetail(BuildContext context, int userId) async {
+    final result = await GoRouter.of(context).pushNamed(
+      UserDetailView.name,
+      pathParameters: {
+        'page': '$pageIndex',
+        'id': '$userId',
+      },
+    );
+
+    if (!context.mounted) return;
+
+    if (result is UserActionResult && result.success) {
+      await controller.refreshData();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result.message ?? 'Usuario actualizado.')),
+      );
+    }
+  }
+
+  Future<void> _confirmDelete(BuildContext context, IamUser user) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Eliminar usuario'),
+        content: Text(
+          '¿Estás seguro de eliminar a ${user.name}? Esta acción no se puede deshacer.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
+    final result = await controller.deleteUser(user.id);
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          result.message ??
+              (result.success
+                  ? 'Usuario eliminado correctamente.'
+                  : 'No se pudo eliminar el usuario.'),
+        ),
+      ),
+    );
   }
 }
 
@@ -663,8 +740,20 @@ class _IamBusinessesTab extends GetView<IamBusinessesController> {
 
 class _IamUserCard extends StatelessWidget {
   final IamUser user;
+  final VoidCallback? onView;
+  final VoidCallback? onDelete;
+  final bool canView;
+  final bool canDelete;
+  final bool isDeleting;
 
-  const _IamUserCard({required this.user});
+  const _IamUserCard({
+    required this.user,
+    this.onView,
+    this.onDelete,
+    this.canView = false,
+    this.canDelete = false,
+    this.isDeleting = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -751,6 +840,36 @@ class _IamUserCard extends StatelessWidget {
                       ),
                     )
                     .toList(growable: false),
+              ),
+            const SizedBox(height: 12),
+            if (canView || canDelete)
+              Wrap(
+                spacing: 12,
+                runSpacing: 8,
+                children: [
+                  if (canView)
+                    TextButton.icon(
+                      onPressed: onView,
+                      icon: const Icon(Icons.visibility_outlined),
+                      label: const Text('Ver detalle'),
+                    ),
+                  if (canDelete)
+                    TextButton.icon(
+                      onPressed: isDeleting ? null : onDelete,
+                      icon: isDeleting
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child:
+                                  CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.delete_outline),
+                      label: Text(isDeleting ? 'Eliminando…' : 'Eliminar'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: cs.error,
+                      ),
+                    ),
+                ],
               ),
           ],
         ),
