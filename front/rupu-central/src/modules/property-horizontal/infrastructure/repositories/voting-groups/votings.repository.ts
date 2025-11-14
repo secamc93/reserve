@@ -15,6 +15,9 @@ import {
   DeactivateVotingParams,
   GetVotingOptionsParams,
   CreateVotingOptionParams,
+  GetVotingOptionByIdParams,
+  UpdateVotingOptionStatusParams,
+  DeleteVotingOptionParams,
   GetVotesParams,
   CreateVoteParams
 } from '../../../domain/ports/votings.repository';
@@ -30,6 +33,8 @@ import {
   BackendDeactivateVotingResponse,
   BackendGetVotingOptionsResponse,
   BackendCreateVotingOptionResponse,
+  BackendVotingOptionResponse,
+  BackendDeleteVotingOptionResponse,
   BackendGetVotesResponse,
   BackendCreateVoteResponse
 } from '../response';
@@ -682,6 +687,168 @@ export class VotingOptionsRepository implements IVotingOptionsRepository {
       isActive: data.data.is_active,
       color: data.data.color, // Mapear el color de la respuesta
     };
+  }
+
+  async getVotingOptionById(params: GetVotingOptionByIdParams): Promise<VotingOption> {
+    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings/${params.votingId}/options/${params.optionId}${
+      params.businessId !== undefined ? `?business_id=${params.businessId}` : ''
+    }`;
+    const startTime = Date.now();
+
+    logHttpRequest({ method: 'GET', url });
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${params.token}`,
+        },
+      });
+
+      const duration = Date.now() - startTime;
+      const data: BackendVotingOptionResponse = await response.json();
+
+      if (!response.ok) {
+        logHttpError({
+          status: response.status,
+          statusText: response.statusText,
+          duration,
+          data,
+        });
+        const errorMessage = (data as { error?: string }).error;
+        throw new Error(errorMessage || data.message || `Error ${response.status}`);
+      }
+
+      logHttpSuccess({
+        status: response.status,
+        statusText: response.statusText,
+        duration,
+        summary: `Opción obtenida: ${data.data.option_text}`,
+        data,
+      });
+
+      return {
+        id: data.data.id,
+        votingId: data.data.voting_id,
+        optionText: data.data.option_text,
+        optionCode: data.data.option_code,
+        displayOrder: data.data.display_order,
+        isActive: data.data.is_active,
+        color: data.data.color,
+      };
+    } catch (error) {
+      console.error('❌ Error obteniendo opción de votación:', error);
+      throw new Error(error instanceof Error ? error.message : 'Error al obtener opción de votación');
+    }
+  }
+
+  async updateVotingOptionStatus(params: UpdateVotingOptionStatusParams): Promise<VotingOption> {
+    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings/${params.votingId}/options/${params.optionId}/status${
+      params.businessId !== undefined ? `?business_id=${params.businessId}` : ''
+    }`;
+    const startTime = Date.now();
+
+    const body = {
+      is_active: params.isActive,
+    };
+
+    logHttpRequest({ method: 'PATCH', url, body });
+
+    try {
+      const response = await fetch(url, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${params.token}`,
+        },
+        body: JSON.stringify(body),
+      });
+
+      const duration = Date.now() - startTime;
+      const data: BackendVotingOptionResponse = await response.json();
+
+      if (!response.ok) {
+        logHttpError({
+          status: response.status,
+          statusText: response.statusText,
+          duration,
+          data,
+        });
+        const errorMessage = (data as { error?: string }).error;
+        throw new Error(errorMessage || data.message || `Error ${response.status}`);
+      }
+
+      logHttpSuccess({
+        status: response.status,
+        statusText: response.statusText,
+        duration,
+        summary: `Estado de opción actualizado: ${data.data.option_text}`,
+        data,
+      });
+
+      return {
+        id: data.data.id,
+        votingId: data.data.voting_id,
+        optionText: data.data.option_text,
+        optionCode: data.data.option_code,
+        displayOrder: data.data.display_order,
+        isActive: data.data.is_active,
+        color: data.data.color,
+      };
+    } catch (error) {
+      console.error('❌ Error actualizando estado de opción de votación:', error);
+      throw new Error(error instanceof Error ? error.message : 'Error al actualizar opción de votación');
+    }
+  }
+
+  async deleteVotingOption(params: DeleteVotingOptionParams): Promise<string> {
+    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings/${params.votingId}/options/${params.optionId}${
+      params.businessId !== undefined ? `?business_id=${params.businessId}` : ''
+    }`;
+    const startTime = Date.now();
+
+    logHttpRequest({ method: 'DELETE', url });
+
+    try {
+      const response = await fetch(url, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${params.token}`,
+        },
+      });
+
+      const duration = Date.now() - startTime;
+      const data: BackendDeleteVotingOptionResponse = await response.json().catch(() => ({
+        success: response.ok,
+        message: response.ok ? 'Opción eliminada' : 'Error eliminando opción',
+      }));
+
+      if (!response.ok) {
+        logHttpError({
+          status: response.status,
+          statusText: response.statusText,
+          duration,
+          data,
+        });
+        throw new Error(data.error || data.message || `Error ${response.status}`);
+      }
+
+      const message = data.message || `Opción eliminada (ID ${params.optionId})`;
+
+      logHttpSuccess({
+        status: response.status,
+        statusText: response.statusText,
+        duration,
+        summary: message,
+        data,
+      });
+
+      return message;
+    } catch (error) {
+      console.error('❌ Error eliminando opción de votación:', error);
+      throw new Error(error instanceof Error ? error.message : 'Error al eliminar opción de votación');
+    }
   }
 }
 

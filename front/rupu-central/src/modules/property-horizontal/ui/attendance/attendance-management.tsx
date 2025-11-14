@@ -44,7 +44,7 @@ export function AttendanceManagement({
   useEffect(() => {
     const loadLists = async () => {
       try {
-        const result = await listAttendanceListsAction({ token, businessId });
+        const result = await listAttendanceListsAction({ token, businessId, votingGroupId });
         if (result.success && result.data) {
           setAttendanceLists(result.data);
         }
@@ -52,8 +52,8 @@ export function AttendanceManagement({
         // silencioso si no está implementado en backend aún
       }
     };
-    if (token && businessId) loadLists();
-  }, [token, businessId]);
+    if (token && businessId && votingGroupId) loadLists();
+  }, [token, businessId, votingGroupId]);
 
   const handleCreateAttendanceList = async (data: {
     title: string;

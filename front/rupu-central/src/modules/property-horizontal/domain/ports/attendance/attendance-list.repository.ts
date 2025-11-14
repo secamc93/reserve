@@ -41,6 +41,7 @@ export interface DeleteAttendanceListParams {
 export interface ListAttendanceListsParams {
   token: string;
   businessId: number;
+  votingGroupId: number;
   title?: string;
   isActive?: boolean;
 }
