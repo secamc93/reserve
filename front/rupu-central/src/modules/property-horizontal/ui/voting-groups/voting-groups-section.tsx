@@ -10,7 +10,7 @@ import { CreateVotingGroupModal } from './create-voting-group-modal';
 import { EditVotingGroupModal } from './edit-voting-group-modal';
 import { DeleteVotingGroupModal } from './delete-voting-group-modal';
 import { VotingsList } from './votings-list';
-// import { AttendanceManagement } from '../attendance'; // No longer needed - using routes
+import { AttendanceManagement } from '../attendance';
 import { TokenStorage } from '@shared/config';
 import { getVotingGroupsAction } from '../../infrastructure/actions';
 
@@ -40,13 +40,21 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  // const [showAttendance, setShowAttendance] = useState(false); // No longer needed - using routes
   const [selectedGroup, setSelectedGroup] = useState<VotingGroup | null>(null); // Still needed for edit/delete modals
   const [expandedGroupId, setExpandedGroupId] = useState<number | null>(null);
+  const [attendanceGroupId, setAttendanceGroupId] = useState<number | null>(null);
+  const [userToken, setUserToken] = useState<string>('');
 
   useEffect(() => {
     loadVotingGroups();
   }, [businessId]);
+
+  useEffect(() => {
+    const token = TokenStorage.getToken();
+    if (token) {
+      setUserToken(token);
+    }
+  }, []);
 
   const loadVotingGroups = async () => {
     setLoading(true);
@@ -109,9 +117,9 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
     setSelectedGroup(null);
   };
 
-  const handleAttendanceClick = (group: VotingGroup) => {
-    // Navigate to attendance management page instead of opening modal
-    window.location.href = `/properties/${businessId}/voting-groups/${group.id}/attendance`;
+  const handleAttendanceToggle = (group: VotingGroup) => {
+    setAttendanceGroupId(prev => (prev === group.id ? null : group.id));
+    setExpandedGroupId(group.id);
   };
 
   const handleToggleGroup = (groupId: number) => {
@@ -183,114 +191,158 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
                 >
                   {/* Header del Grupo */}
                   <div
-                    className="flex justify-between items-start cursor-pointer"
+                    className="flex flex-col gap-4"
                     onClick={() => handleToggleGroup(group.id)}
                   >
-                    <div className="flex-1 pr-4">
-                      <div className="flex items-center gap-3 mb-3">
-                        <h3 className="text-xl font-semibold text-gray-900">
-                          {group.name}
-                        </h3>
-                        <Badge type={group.isActive ? 'success' : 'error'}>
-                          {group.isActive ? 'Activa' : 'Inactiva'}
-                        </Badge>
-                      </div>
-                      <p className="text-gray-600 text-sm mb-3 leading-relaxed">
-                        {group.description}
-                      </p>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                        <div className="flex items-center gap-1 text-gray-600">
-                          <span>📅</span>
-                          <span className="font-medium">Inicio:</span>
-                          <span>{new Date(group.votingStartDate).toLocaleDateString('es-ES', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric'
-                          })}</span>
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 pr-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <h3 className="text-xl font-semibold text-gray-900">
+                            {group.name}
+                          </h3>
+                          <Badge type={group.isActive ? 'success' : 'error'}>
+                            {group.isActive ? 'Activa' : 'Inactiva'}
+                          </Badge>
                         </div>
-                        <div className="flex items-center gap-1 text-gray-600">
-                          <span>📅</span>
-                          <span className="font-medium">Fin:</span>
-                          <span>{new Date(group.votingEndDate).toLocaleDateString('es-ES', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric'
-                          })}</span>
-                        </div>
-                        {group.requiresQuorum && (
+                        <p className="text-gray-600 text-sm mb-3 leading-relaxed">
+                          {group.description}
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                           <div className="flex items-center gap-1 text-gray-600">
-                            <span>📊</span>
-                            <span className="font-medium">Quórum:</span>
-                            <span>{group.quorumPercentage}%</span>
+                            <span>📅</span>
+                            <span className="font-medium">Inicio:</span>
+                            <span>{new Date(group.votingStartDate).toLocaleDateString('es-ES', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric'
+                            })}</span>
                           </div>
-                        )}
+                          <div className="flex items-center gap-1 text-gray-600">
+                            <span>📅</span>
+                            <span className="font-medium">Fin:</span>
+                            <span>{new Date(group.votingEndDate).toLocaleDateString('es-ES', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric'
+                            })}</span>
+                          </div>
+                          {group.requiresQuorum && (
+                            <div className="flex items-center gap-1 text-gray-600">
+                              <span>📊</span>
+                              <span className="font-medium">Quórum:</span>
+                              <span>{group.quorumPercentage}%</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap items-center justify-end gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditClick(group);
+                          }}
+                          className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Editar grupo"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteClick(group);
+                          }}
+                          className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Eliminar grupo"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAttendanceToggle(group);
+                          }}
+                          className={`p-2 rounded-lg transition-colors ${
+                            attendanceGroupId === group.id
+                              ? 'bg-green-100 text-green-700 border border-green-200'
+                              : 'text-green-600 hover:text-green-800 hover:bg-green-50'
+                          }`}
+                          title="Listas de asistencia"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </button>
+                        <button
+                          className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-all"
+                          style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                          title={isExpanded ? 'Contraer' : 'Expandir'}
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
                       </div>
                     </div>
-                    {/* Botones de Acciones */}
-                    <div className="flex items-center gap-2">
-                      {/* Botón Editar */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditClick(group);
-                        }}
-                        className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="Editar grupo"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                      
-                      {/* Botón Eliminar */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteClick(group);
-                        }}
-                        className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Eliminar grupo"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-
-                      {/* Botón Asistencia */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAttendanceClick(group);
-                        }}
-                        className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-lg transition-colors"
-                        title="Gestionar asistencia"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </button>
-                      
-                      {/* Botón Expandir */}
-                      <button
-                        onClick={() => handleToggleGroup(group.id)}
-                        className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-all flex-shrink-0"
-                        style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
-                        title={isExpanded ? 'Contraer' : 'Expandir'}
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
+                    <div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-gray-500">
+                      <span className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1">
+                        <span>📅</span>
+                        <span className="font-medium">Inicio:</span>
+                        <span>{new Date(group.votingStartDate).toLocaleDateString('es-ES', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })}</span>
+                      </span>
+                      <span className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1">
+                        <span>📅</span>
+                        <span className="font-medium">Fin:</span>
+                        <span>{new Date(group.votingEndDate).toLocaleDateString('es-ES', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })}</span>
+                      </span>
+                      {group.requiresQuorum && (
+                        <span className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-blue-700">
+                          <span>📊</span>
+                          <span className="font-medium">Quórum:</span>
+                          <span>{group.quorumPercentage}%</span>
+                        </span>
+                      )}
                     </div>
                   </div>
 
                   {/* Votaciones del Grupo (Expandible) */}
                   {isExpanded && (
-                    <div className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="mt-4 space-y-6 pt-4 border-t border-gray-200">
+                      {attendanceGroupId === group.id && (
+                        <div className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
+                          {userToken ? (
+                            <AttendanceManagement
+                              votingGroupId={group.id}
+                              votingGroupName={group.name}
+                              token={userToken}
+                              businessId={businessId}
+                              useRoutes={false}
+                            />
+                          ) : (
+                            <div className="text-sm text-gray-500">
+                              Selecciona un negocio para cargar las listas de asistencia.
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       <VotingsList
                         businessId={businessId}
                         groupId={group.id}
                         groupName={group.name}
+                        onToggleAttendance={() => handleAttendanceToggle(group)}
+                        isAttendanceVisible={attendanceGroupId === group.id}
                       />
                     </div>
                   )}

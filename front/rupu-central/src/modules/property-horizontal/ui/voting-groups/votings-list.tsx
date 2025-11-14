@@ -4,10 +4,16 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Badge, Spinner } from '@shared/ui';
+import { useState, useEffect, useCallback } from 'react';
+import { Badge, Spinner, ConfirmModal } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
-import { getVotingsAction, getVotingOptionsAction, getVotesAction } from '../../infrastructure/actions';
+import { 
+  getVotingsAction, 
+  getVotingOptionsAction, 
+  getVotesAction,
+  updateVotingOptionStatusAction,
+  deleteVotingOptionAction,
+} from '../../infrastructure/actions';
 import { activateVotingAction } from '../../infrastructure/actions/voting/activate-voting.action';
 import { deactivateVotingAction } from '../../infrastructure/actions/voting/deactivate-voting.action';
 import { CreateVotingModal } from './create-voting-modal';
@@ -17,6 +23,16 @@ import { CreateVotingOptionModal } from './create-voting-option-modal';
 import { VotesDetailModal } from './votes-detail-modal';
 import { VoteModal } from './vote-modal';
 import { LiveVotingModal } from './live-voting-modal';
+import {
+  PlayIcon,
+  PauseIcon,
+  TrashIcon,
+  ChartPieIcon,
+  EllipsisHorizontalIcon,
+  PlusCircleIcon,
+  UserPlusIcon,
+  PlayCircleIcon,
+} from '@heroicons/react/24/outline';
 
 interface Voting {
   id: number;
@@ -57,9 +73,17 @@ interface VotingsListProps {
   businessId: number;
   groupId: number;
   groupName: string;
+  onToggleAttendance?: () => void;
+  isAttendanceVisible?: boolean;
 }
 
-export function VotingsList({ businessId, groupId, groupName }: VotingsListProps) {
+export function VotingsList({
+  businessId,
+  groupId,
+  groupName,
+  onToggleAttendance,
+  isAttendanceVisible,
+}: VotingsListProps) {
   const [loading, setLoading] = useState(false);
   const [votings, setVotings] = useState<Voting[]>([]);
   const [votingOptions, setVotingOptions] = useState<Record<number, VotingOption[]>>({});
@@ -77,6 +101,9 @@ export function VotingsList({ businessId, groupId, groupName }: VotingsListProps
   const [selectedVotingForLive, setSelectedVotingForLive] = useState<Voting | null>(null);
   const [selectedVotingForEdit, setSelectedVotingForEdit] = useState<Voting | null>(null);
   const [selectedVotingForDelete, setSelectedVotingForDelete] = useState<Voting | null>(null);
+  const [optionStatusLoadingId, setOptionStatusLoadingId] = useState<number | null>(null);
+  const [optionToDelete, setOptionToDelete] = useState<{ votingId: number; option: VotingOption } | null>(null);
+  const [showDeleteOptionConfirm, setShowDeleteOptionConfirm] = useState(false);
 
   useEffect(() => {
     loadVotings();
@@ -103,7 +130,7 @@ export function VotingsList({ businessId, groupId, groupName }: VotingsListProps
     setLoading(false);
   };
 
-  const loadVotingOptions = async (votingId: number) => {
+  const loadVotingOptions = useCallback(async (votingId: number) => {
     try {
       const token = TokenStorage.getToken();
       if (!token) return;
@@ -120,7 +147,15 @@ export function VotingsList({ businessId, groupId, groupName }: VotingsListProps
     } catch (error) {
       console.error('❌ Error al cargar opciones:', error);
     }
-  };
+  }, [businessId, groupId]);
+
+  useEffect(() => {
+    votings.forEach((voting) => {
+      if (!votingOptions[voting.id]) {
+        loadVotingOptions(voting.id);
+      }
+    });
+  }, [votings, votingOptions, loadVotingOptions]);
 
   const loadVotes = async (votingId: number) => {
     try {
@@ -198,6 +233,79 @@ export function VotingsList({ businessId, groupId, groupName }: VotingsListProps
     // También recargar para la votación en vivo si está abierta
     if (showLiveVotingModal && selectedVotingForLive) {
       loadVotes(selectedVotingForLive.id);
+    }
+  };
+
+  const handleToggleOptionStatus = async (voting: Voting, option: VotingOption) => {
+    try {
+      const token = TokenStorage.getToken();
+      if (!token) throw new Error('Token no disponible');
+
+      setOptionStatusLoadingId(option.id);
+
+      const result = await updateVotingOptionStatusAction({
+        token,
+        businessId,
+        groupId,
+        votingId: voting.id,
+        optionId: option.id,
+        isActive: !option.isActive,
+      });
+
+      if (!result.success || !result.data) {
+        throw new Error(result.error || 'No se pudo actualizar la opción');
+      }
+
+      setVotingOptions(prev => ({
+        ...prev,
+        [voting.id]: (prev[voting.id] || []).map(opt =>
+          opt.id === option.id ? result.data! : opt
+        ),
+      }));
+    } catch (error) {
+      console.error('❌ Error al actualizar estado de la opción:', error);
+      alert(error instanceof Error ? error.message : 'Error al actualizar la opción');
+    } finally {
+      setOptionStatusLoadingId(null);
+    }
+  };
+
+  const handleDeleteOptionRequest = (voting: Voting, option: VotingOption) => {
+    setOptionToDelete({ votingId: voting.id, option });
+    setShowDeleteOptionConfirm(true);
+  };
+
+  const handleDeleteOption = async () => {
+    if (!optionToDelete) return;
+
+    try {
+      const token = TokenStorage.getToken();
+      if (!token) throw new Error('Token no disponible');
+
+      const result = await deleteVotingOptionAction({
+        token,
+        businessId,
+        groupId,
+        votingId: optionToDelete.votingId,
+        optionId: optionToDelete.option.id,
+      });
+
+      if (!result.success) {
+        throw new Error(result.error || 'No se pudo eliminar la opción');
+      }
+
+      setVotingOptions(prev => ({
+        ...prev,
+        [optionToDelete.votingId]: (prev[optionToDelete.votingId] || []).filter(
+          opt => opt.id !== optionToDelete.option.id
+        ),
+      }));
+    } catch (error) {
+      console.error('❌ Error al eliminar opción:', error);
+      alert(error instanceof Error ? error.message : 'Error al eliminar opción');
+    } finally {
+      setShowDeleteOptionConfirm(false);
+      setOptionToDelete(null);
     }
   };
 
@@ -305,6 +413,15 @@ export function VotingsList({ businessId, groupId, groupName }: VotingsListProps
     return types[type] || { label: type, type: 'primary' };
   };
 
+  const primaryActionButton =
+    'inline-flex items-center gap-2 rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60';
+  const outlineButton =
+    'inline-flex items-center gap-2 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100';
+  const dangerButton =
+    'inline-flex items-center gap-2 rounded-md border border-red-200 px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50';
+  const mutedTag =
+    'inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600';
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
@@ -315,325 +432,264 @@ export function VotingsList({ businessId, groupId, groupName }: VotingsListProps
   }
 
   return (
-    <div className="w-full space-y-4">
-      {/* Header simplificado */}
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-gray-700">
-          Votaciones ({votings.length})
-        </h3>
-        <button
-          onClick={() => setShowCreateVotingModal(true)}
-          className="btn btn-primary btn-sm"
-        >
-          + Nueva Votación
-        </button>
-      </div>
-
-      {/* Lista de Votaciones */}
-      {votings.length === 0 ? (
-        <div className="text-center py-8 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-          <p className="text-gray-500 mb-3">No hay votaciones creadas</p>
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900">
+            Votaciones ({votings.length})
+          </h3>
+          <p className="text-sm text-gray-500">
+            Gestiona las votaciones del grupo{' '}
+            <span className="font-medium text-gray-700">{groupName}</span>
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {onToggleAttendance && (
+            <button
+              onClick={onToggleAttendance}
+              className={`${outlineButton} ${isAttendanceVisible ? 'bg-gray-100 border-gray-400 text-gray-900' : ''}`}
+            >
+              <span className="text-base leading-none">🗒️</span>
+              {isAttendanceVisible ? 'Ocultar asistencia' : 'Listas de asistencia'}
+            </button>
+          )}
           <button
             onClick={() => setShowCreateVotingModal(true)}
-            className="btn btn-primary btn-sm"
+            className={primaryActionButton}
           >
-            Crear Primera Votación
+            <span className="text-base leading-none">＋</span>
+            Nueva votación
+          </button>
+        </div>
+      </div>
+
+      {votings.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 py-10 text-center">
+          <p className="mb-3 text-sm text-gray-500">
+            Aún no hay votaciones creadas para este grupo.
+          </p>
+          <button onClick={() => setShowCreateVotingModal(true)} className={primaryActionButton}>
+            Crear primera votación
           </button>
         </div>
       ) : (
-        <div className="w-full space-y-4">
+        <div className="space-y-4">
           {votings.map((voting) => {
             const isExpanded = expandedVoting === voting.id;
-            const options = votingOptions[voting.id] || [];
+            const options = votingOptions[voting.id];
+            const optionList = options ?? [];
+            const optionsLoaded = options !== undefined;
             const typeBadge = getVotingTypeBadge(voting.votingType);
 
             return (
-              <div 
+              <div
                 key={voting.id}
-                className="w-full border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow bg-white"
+                className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
               >
-                {/* Voting Header */}
-                <div className="space-y-4">
-                  <div 
-                    className="flex justify-between items-start cursor-pointer"
-                    onClick={() => handleToggleVoting(voting.id)}
-                  >
-                    <div className="flex-1 pr-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div
+                      className="flex flex-1 cursor-pointer flex-col gap-3"
+                      onClick={() => handleToggleVoting(voting.id)}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="text-lg font-semibold text-gray-900">
                             {voting.displayOrder}. {voting.title}
                           </h3>
-                          <p className="text-gray-600 text-sm leading-relaxed mb-3">
-                            {voting.description}
-                          </p>
-                        </div>
-                        <div className="flex gap-2 flex-wrap ml-4">
                           <Badge type={typeBadge.type}>{typeBadge.label}</Badge>
-                          {voting.isSecret && (
-                            <Badge type="error">Secreta</Badge>
-                          )}
-                          {!voting.isActive && (
-                            <Badge type="error">Inactiva</Badge>
-                          )}
+                          {voting.isSecret && <Badge type="error">Secreta</Badge>}
+                          {!voting.isActive && <Badge type="error">Inactiva</Badge>}
                         </div>
-                      </div>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <span className="font-medium">Requerido:</span>
-                          <span className="font-semibold text-gray-900">{voting.requiredPercentage}%</span>
-                        </div>
-                        {voting.allowAbstention && (
-                          <div className="flex items-center gap-2 text-gray-600">
-                            <span className="font-medium">Abstención:</span>
-                            <span className="font-semibold text-green-600">Permitida</span>
-                          </div>
+                        {voting.description && (
+                          <p className="mt-2 text-sm text-gray-600">{voting.description}</p>
                         )}
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <span className="font-medium">Tipo:</span>
-                          <span className="font-semibold text-gray-900">{typeBadge.label}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <span className="font-medium">Estado:</span>
-                          <span className={`font-semibold ${voting.isActive ? 'text-green-600' : 'text-red-600'}`}>
-                            {voting.isActive ? 'Activa' : 'Inactiva'}
-                          </span>
-                        </div>
                       </div>
                     </div>
-                    <button
-                      className="text-gray-400 hover:text-gray-600 transition-transform flex-shrink-0"
-                      style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
-                    >
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-                  </div>
-
-                  {/* Botones de acción */}
-                  <div className="pt-4 border-t border-gray-100">
-                    {/* Botones principales */}
-                    <div className="flex gap-2 mb-3">
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          if (voting.isActive) {
+                            handleLiveVoting(voting);
+                          } else {
+                            await handleActivateVoting(voting);
+                          }
+                        }}
+                        className="inline-flex items-center gap-2 rounded-full bg-rose-100 px-4 py-2 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-200"
+                      >
+                        <PlayCircleIcon className="h-4 w-4" />
+                        {voting.isActive ? 'Votación en vivo' : 'Iniciar votación'}
+                      </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleLiveVoting(voting);
+                          handleVote(voting);
                         }}
-                        className="btn btn-primary flex-1"
-                        disabled={!voting.isActive}
+                        className="inline-flex items-center gap-2 rounded-full border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
                       >
-                        🔴 Votación en Vivo
+                        <UserPlusIcon className="h-4 w-4" />
+                        Registrar voto
                       </button>
-                    </div>
-                    
-                    {/* Botones de administración */}
-                    <div className="flex gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewVotes(voting);
+                        }}
+                        className="inline-flex items-center gap-2 rounded-full border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
+                      >
+                        <ChartPieIcon className="h-4 w-4" />
+                        Resultados
+                      </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleEditClick(voting);
                         }}
-                        className="btn btn-secondary flex-1"
-                        title="Editar votación"
+                        className="inline-flex items-center gap-2 rounded-full border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
                       >
-                        ✏️ Editar
+                        <EllipsisHorizontalIcon className="h-4 w-4" />
+                        Acciones
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAddOption(voting.id);
+                        }}
+                        className="inline-flex items-center gap-2 rounded-full border border-blue-200 px-4 py-2 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50"
+                      >
+                        <PlusCircleIcon className="h-4 w-4" />
+                        Nueva opción
                       </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDeleteClick(voting);
                         }}
-                        className="btn btn-danger flex-1"
-                        title="Eliminar votación"
+                        className="inline-flex items-center gap-2 rounded-full border border-red-200 px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
                       >
-                        🗑️ Eliminar
+                        <TrashIcon className="h-4 w-4" />
+                        Eliminar votación
                       </button>
-                      {voting.isActive ? (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeactivateVoting(voting);
-                          }}
-                          className="btn btn-warning flex-1"
-                          title="Desactivar votación"
-                        >
-                          ⏸️ Desactivar
-                        </button>
-                      ) : (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleActivateVoting(voting);
-                          }}
-                          className="btn btn-success flex-1"
-                          title="Activar votación"
-                        >
-                          ▶️ Activar
-                        </button>
-                      )}
-                      <div className={`flex-1 px-3 py-2 rounded-lg text-center text-sm font-medium ${
-                        voting.isActive 
-                          ? 'bg-green-100 text-green-800 border border-green-200' 
-                          : 'bg-red-100 text-red-800 border border-red-200'
-                      }`}>
-                        {voting.isActive ? '✅ Activa' : '❌ Inactiva'}
-                      </div>
+                      <button
+                        className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 text-gray-500 transition-transform hover:bg-gray-50 hover:text-gray-700"
+                        style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleVoting(voting.id);
+                        }}
+                      >
+                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
                     </div>
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-gray-500">
+                    <span className={mutedTag}>
+                      <span className="text-gray-400">Requerido</span>
+                      <span className="font-semibold text-gray-700">{voting.requiredPercentage}%</span>
+                    </span>
+                    {voting.allowAbstention && (
+                      <span className={mutedTag}>
+                        <span className="text-gray-400">Abstención</span>
+                        <span className="font-semibold text-emerald-600">Permitida</span>
+                      </span>
+                    )}
+                    <span className={mutedTag}>
+                      <span className="text-gray-400">Tipo</span>
+                      <span className="font-semibold text-gray-700">{typeBadge.label}</span>
+                    </span>
+                    <span
+                      className={`${mutedTag} ${
+                        voting.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'
+                      }`}
+                    >
+                      {voting.isActive ? 'Activa' : 'Inactiva'}
+                    </span>
                   </div>
                 </div>
 
-                {/* Voting Options (Expandible) */}
                 {isExpanded && (
-                  <div className="mt-3 pt-3 border-t border-gray-200 bg-gray-50 -mx-4 px-4 -mb-4 pb-4 rounded-b-lg">
-                    <div className="flex justify-between items-center mb-3">
-                      <h4 className="text-sm font-semibold text-gray-700">
-                        Opciones de Votación ({options.length})
+                  <div className="space-y-3 rounded-xl border border-gray-100 bg-gray-50 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <h4 className="text-sm font-semibold text-gray-800">
+                        Resumen de votos ({votingVotes[voting.id]?.length || 0})
                       </h4>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleAddOption(voting.id);
+                          handleViewVotes(voting);
                         }}
-                        className="btn btn-outline btn-sm text-xs"
+                        className={outlineButton}
                       >
-                        + Agregar Opción
+                        Ver detalle
                       </button>
                     </div>
 
-                    {options.length === 0 ? (
-                      <div className="text-center py-4 bg-white rounded-lg border border-dashed border-gray-300">
-                        <p className="text-gray-500 text-sm">
-                          No hay opciones. Agrega la primera opción.
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        {options.map((option) => (
-                          <div
-                            key={option.id}
-                            className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-300 transition-colors"
-                          >
-                            <div className="flex items-center gap-3 flex-1">
-                              <span className="w-8 h-8 flex items-center justify-center bg-blue-100 text-blue-700 rounded-full font-semibold text-sm flex-shrink-0">
-                                {option.displayOrder}
-                              </span>
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium text-gray-900 text-sm truncate">
-                                  {option.optionText}
-                                </p>
-                                <p className="text-xs text-gray-500 truncate">
-                                  {option.optionCode}
-                                </p>
-                              </div>
-                            </div>
-                            {!option.isActive && (
-                              <span className="flex-shrink-0 ml-2">
-                                <Badge type="error">Inactiva</Badge>
-                              </span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Sección de Resultados */}
-                {isExpanded && (
-                  <div className="mt-4 pt-4 border-t border-gray-200 bg-gray-50 -mx-6 px-6 -mb-6 pb-6">
-                    <div className="flex justify-between items-center mb-4">
-                      <h4 className="text-sm font-semibold text-gray-700">
-                        Resultados de Votación ({votingVotes[voting.id]?.length || 0} votos)
-                      </h4>
-                    </div>
-
-                    {!votingVotes[voting.id] ? (
-                      <div className="text-center py-4 bg-white rounded-lg border border-dashed border-gray-300">
-                        <p className="text-gray-500 text-sm">
-                          No hay votos registrados aún
-                        </p>
-                      </div>
-                    ) : votingVotes[voting.id].length === 0 ? (
-                      <div className="text-center py-4 bg-white rounded-lg border border-dashed border-gray-300">
-                        <p className="text-gray-500 text-sm">
-                          No hay votos registrados aún
-                        </p>
+                    {!votingVotes[voting.id] || votingVotes[voting.id].length === 0 || !optionsLoaded ? (
+                      <div className="rounded-lg border border-dashed border-gray-300 bg-white py-6 text-center text-sm text-gray-500">
+                        {optionsLoaded ? 'No hay votos registrados aún.' : 'Cargando resultados...'}
                       </div>
                     ) : (
                       <div className="space-y-4">
-                        {/* Resumen por opción */}
-                        <div className="bg-white rounded-lg border border-gray-200 p-4">
-                          <h5 className="font-medium text-gray-900 mb-3">Resumen por Opción</h5>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                            {options.map((option) => {
-                              const optionVotes = votingVotes[voting.id].filter(vote => vote.votingOptionId === option.id);
-                              const percentage = votingVotes[voting.id].length > 0 
-                                ? ((optionVotes.length / votingVotes[voting.id].length) * 100).toFixed(1)
-                                : '0';
-                              
-                              return (
-                                <div key={option.id} className="bg-gray-50 rounded-lg p-3">
-                                  <div className="flex justify-between items-center mb-2">
-                                    <span className="font-medium text-gray-900 text-sm">
-                                      {option.optionText}
-                                    </span>
-                                    <span className="text-xs text-gray-500">
-                                      {percentage}%
-                                    </span>
-                                  </div>
-                                  <div className="w-full bg-gray-200 rounded-full h-2">
-                                    <div 
-                                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                                      style={{ width: `${percentage}%` }}
-                                    ></div>
-                                  </div>
-                                  <div className="flex justify-between items-center mt-2">
-                                    <span className="text-xs text-gray-600">
-                                      {optionVotes.length} votos
-                                    </span>
-                                  </div>
+                        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+                          {optionList.map((option) => {
+                            const totalVotes = votingVotes[voting.id]?.length ?? 0;
+                            const optionVotes = (votingVotes[voting.id] || []).filter(
+                              (vote) => vote.votingOptionId === option.id
+                            );
+                            const percentage =
+                              totalVotes > 0 ? ((optionVotes.length / totalVotes) * 100).toFixed(1) : '0';
+
+                            return (
+                              <div key={option.id} className="rounded-lg bg-gray-50 p-3">
+                                <div className="flex items-center justify-between text-sm font-medium text-gray-800">
+                                  <span className="truncate pr-2">{option.optionText}</span>
+                                  <span className="text-xs text-gray-500">{percentage}%</span>
                                 </div>
-                              );
-                            })}
-                          </div>
+                                <div className="mt-2 h-1.5 w-full rounded-full bg-gray-200">
+                                  <div
+                                    className="h-1.5 rounded-full bg-indigo-500 transition-all"
+                                    style={{ width: `${percentage}%` }}
+                                  />
+                                </div>
+                                <div className="mt-2 text-xs text-gray-500">{optionVotes.length} voto(s)</div>
+                              </div>
+                            );
+                          })}
                         </div>
 
-                        {/* Lista de votos individuales */}
-                        <div className="bg-white rounded-lg border border-gray-200 p-4">
-                          <h5 className="font-medium text-gray-900 mb-3">Votos Individuales</h5>
-                          <div className="space-y-2 max-h-60 overflow-y-auto">
-                            {votingVotes[voting.id].map((vote) => {
-                              const option = options.find(opt => opt.id === vote.votingOptionId);
-                              return (
-                                <div key={vote.id} className="flex items-center justify-between p-2 bg-gray-50 rounded border">
-                                  <div className="flex items-center gap-3">
-                                    <span className="w-6 h-6 flex items-center justify-center bg-green-100 text-green-700 rounded-full font-semibold text-xs">
-                                      {vote.id}
-                                    </span>
-                                    <div>
-                                      <p className="text-sm font-medium text-gray-900">
-                                        {option?.optionText || 'Opción no encontrada'}
-                                      </p>
-                                      <p className="text-xs text-gray-500">
-                                        {new Date(vote.votedAt).toLocaleString('es-ES')}
-                                      </p>
-                                    </div>
-                                  </div>
-                                  <div className="text-right">
-                                    <p className="text-xs text-gray-500">
-                                      Unidad #{vote.propertyUnitId}
+                        <div className="max-h-60 space-y-2 overflow-y-auto rounded-lg border border-gray-100 bg-gray-50 p-3">
+                          {(votingVotes[voting.id] || []).map((vote) => {
+                            const option = optionList.find((opt) => opt.id === vote.votingOptionId);
+                            return (
+                              <div
+                                key={vote.id}
+                                className="flex items-center justify-between rounded-md border border-gray-200 bg-white px-3 py-2 text-xs text-gray-600"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-[11px] font-semibold text-emerald-700">
+                                    {vote.id}
+                                  </span>
+                                  <div>
+                                    <p className="font-medium text-gray-800">
+                                      {option?.optionText || 'Opción no encontrada'}
                                     </p>
-                                    {vote.notes && (
-                                      <p className="text-xs text-gray-400 truncate max-w-32" title={vote.notes}>
-                                        {vote.notes}
-                                      </p>
-                                    )}
+                                    <p>{new Date(vote.votedAt).toLocaleString('es-ES')}</p>
                                   </div>
                                 </div>
-                              );
-                            })}
-                          </div>
+                                <div className="text-right">
+                                  <p>Unidad #{vote.propertyUnitId}</p>
+                                  {vote.notes && (
+                                    <p className="max-w-[160px] truncate text-gray-400" title={vote.notes}>
+                                      {vote.notes}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     )}
@@ -742,7 +798,26 @@ export function VotingsList({ businessId, groupId, groupName }: VotingsListProps
           voting={selectedVotingForDelete as any}
         />
       )}
+
+      <ConfirmModal
+        isOpen={showDeleteOptionConfirm}
+        onClose={() => {
+          setShowDeleteOptionConfirm(false);
+          setOptionToDelete(null);
+        }}
+        onConfirm={handleDeleteOption}
+        title="Eliminar opción"
+        message={
+          optionToDelete
+            ? `¿Deseas eliminar la opción "${optionToDelete.option.optionText}"? Esta acción es permanente.`
+            : '¿Deseas eliminar esta opción de votación?'
+        }
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        type="danger"
+      />
     </div>
   );
 }
+
 

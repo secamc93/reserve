@@ -90,6 +90,19 @@ export interface BackendCreateVotingOptionResponse {
   data: BackendVotingOption;
 }
 
+export interface BackendVotingOptionResponse {
+  success: boolean;
+  message: string;
+  data: BackendVotingOption;
+  error?: string;
+}
+
+export interface BackendDeleteVotingOptionResponse {
+  success: boolean;
+  message: string;
+  error?: string;
+}
+
 // ============================================
 // VOTES (Votos)
 // ============================================
