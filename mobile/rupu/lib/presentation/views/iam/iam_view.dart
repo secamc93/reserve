@@ -13,6 +13,7 @@ import 'package:rupu/presentation/views/iam/controllers/iam_business_types_contr
 import 'package:rupu/presentation/views/iam/controllers/iam_businesses_controller.dart';
 import 'package:rupu/presentation/views/iam/controllers/iam_resources_controller.dart';
 import 'package:rupu/presentation/views/iam/controllers/iam_users_controller.dart';
+import 'package:rupu/presentation/views/roles_permissions/roles_permissions_controller.dart';
 import 'package:rupu/presentation/views/roles_permissions/roles_permissions_view.dart';
 import 'package:rupu/presentation/views/settings/views/create_user_view.dart';
 import 'package:rupu/presentation/views/users/user_detail_view.dart';
@@ -27,8 +28,7 @@ class IamView extends StatefulWidget {
   State<IamView> createState() => _IamViewState();
 }
 
-class _IamViewState extends State<IamView>
-    with SingleTickerProviderStateMixin {
+class _IamViewState extends State<IamView> with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   final _tabs = const [
     _IamTabDefinition('Usuarios', Icons.people_alt_outlined),
@@ -68,12 +68,7 @@ class _IamViewState extends State<IamView>
           controller: _tabController,
           isScrollable: true,
           tabs: _tabs
-              .map(
-                (tab) => Tab(
-                  icon: Icon(tab.icon),
-                  text: tab.label,
-                ),
-              )
+              .map((tab) => Tab(icon: Icon(tab.icon), text: tab.label))
               .toList(growable: false),
         ),
       ),
@@ -107,22 +102,13 @@ class _IamViewState extends State<IamView>
             ),
           ),
           const _IamTabPage(
-            child: SafeArea(
-              top: false,
-              child: _IamResourcesTab(),
-            ),
+            child: SafeArea(top: false, child: _IamResourcesTab()),
           ),
           const _IamTabPage(
-            child: SafeArea(
-              top: false,
-              child: _IamBusinessTypesTab(),
-            ),
+            child: SafeArea(top: false, child: _IamBusinessTypesTab()),
           ),
           const _IamTabPage(
-            child: SafeArea(
-              top: false,
-              child: _IamBusinessesTab(),
-            ),
+            child: SafeArea(top: false, child: _IamBusinessesTab()),
           ),
         ],
       ),
@@ -264,7 +250,8 @@ class _IamUsersTab extends GetView<IamUsersController> {
           ? Get.find<UsersController>()
           : null;
       final canView =
-          (usersController?.canRead ?? false) || (usersController?.canUpdate ?? false);
+          (usersController?.canRead ?? false) ||
+          (usersController?.canUpdate ?? false);
       final canDelete = usersController?.canDelete ?? false;
 
       return RefreshIndicator(
@@ -303,7 +290,9 @@ class _IamUsersTab extends GetView<IamUsersController> {
                   Expanded(
                     child: Text(
                       'Usuarios encontrados: $totalCount',
-                      style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                      style: tt.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                   if (isLoading)
@@ -316,10 +305,7 @@ class _IamUsersTab extends GetView<IamUsersController> {
               ),
               if (error != null) ...[
                 const SizedBox(height: 12),
-                _IamErrorCard(
-                  message: error,
-                  onRetry: controller.refreshData,
-                ),
+                _IamErrorCard(message: error, onRetry: controller.refreshData),
               ],
               const SizedBox(height: 12),
               if (users.isEmpty && !isLoading)
@@ -333,9 +319,12 @@ class _IamUsersTab extends GetView<IamUsersController> {
                       canView: canView,
                       canDelete: canDelete,
                       isDeleting: controller.deletingUserId.value == user.id,
-                      onView: canView ? () => _openDetail(context, user.id) : null,
-                      onDelete:
-                          canDelete ? () => _confirmDelete(context, user) : null,
+                      onView: canView
+                          ? () => _openDetail(context, user.id)
+                          : null,
+                      onDelete: canDelete
+                          ? () => _confirmDelete(context, user)
+                          : null,
                     ),
                   ),
                 ),
@@ -353,10 +342,7 @@ class _IamUsersTab extends GetView<IamUsersController> {
   Future<void> _openDetail(BuildContext context, int userId) async {
     final result = await GoRouter.of(context).pushNamed(
       UserDetailView.name,
-      pathParameters: {
-        'page': '$pageIndex',
-        'id': '$userId',
-      },
+      pathParameters: {'page': '$pageIndex', 'id': '$userId'},
     );
 
     if (!context.mounted) return;
@@ -451,7 +437,9 @@ class _IamResourcesTab extends GetView<IamResourcesController> {
                 Expanded(
                   child: Text(
                     'Recursos: ${controller.total.value}',
-                    style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                    style: tt.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 if (isLoading)
@@ -464,10 +452,7 @@ class _IamResourcesTab extends GetView<IamResourcesController> {
             ),
             if (error != null) ...[
               const SizedBox(height: 12),
-              _IamErrorCard(
-                message: error,
-                onRetry: controller.fetchResources,
-              ),
+              _IamErrorCard(message: error, onRetry: controller.fetchResources),
             ],
             const SizedBox(height: 12),
             if (resources.isEmpty && !isLoading)
@@ -488,44 +473,54 @@ class _IamResourcesTab extends GetView<IamResourcesController> {
                       DataColumn(label: Text('Acciones')),
                     ],
                     rows: resources.map((resource) {
-                      return DataRow(cells: [
-                        DataCell(Text(resource.name)),
-                        DataCell(SizedBox(
-                          width: 280,
-                          child: Text(
-                            resource.description.isEmpty
-                                ? '-'
-                                : resource.description,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        )),
-                        DataCell(Text(
-                            resource.businessTypeName.isEmpty
-                                ? '-'
-                                : resource.businessTypeName,
-                          )),
-                        DataCell(Text(_formatDate(resource.createdAt))),
-                        DataCell(Text(_formatDate(resource.updatedAt))),
-                        DataCell(Row(
-                          children: [
-                            IconButton(
-                              tooltip: 'Editar',
-                              icon: const Icon(Icons.edit_outlined),
-                              onPressed: () => showResourceFormDialog(
-                                context,
-                                resource: resource,
+                      return DataRow(
+                        cells: [
+                          DataCell(Text(resource.name)),
+                          DataCell(
+                            SizedBox(
+                              width: 280,
+                              child: Text(
+                                resource.description.isEmpty
+                                    ? '-'
+                                    : resource.description,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            IconButton(
-                              tooltip: 'Eliminar',
-                              icon: const Icon(Icons.delete_outline),
-                              onPressed: () =>
-                                  confirmDeleteResourceDialog(context, resource),
+                          ),
+                          DataCell(
+                            Text(
+                              resource.businessTypeName.isEmpty
+                                  ? '-'
+                                  : resource.businessTypeName,
                             ),
-                          ],
-                        )),
-                      ]);
+                          ),
+                          DataCell(Text(_formatDate(resource.createdAt))),
+                          DataCell(Text(_formatDate(resource.updatedAt))),
+                          DataCell(
+                            Row(
+                              children: [
+                                IconButton(
+                                  tooltip: 'Editar',
+                                  icon: const Icon(Icons.edit_outlined),
+                                  onPressed: () => showResourceFormDialog(
+                                    context,
+                                    resource: resource,
+                                  ),
+                                ),
+                                IconButton(
+                                  tooltip: 'Eliminar',
+                                  icon: const Icon(Icons.delete_outline),
+                                  onPressed: () => confirmDeleteResourceDialog(
+                                    context,
+                                    resource,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      );
                     }).toList(),
                   ),
                 ),
@@ -550,7 +545,6 @@ class _IamResourcesTab extends GetView<IamResourcesController> {
       );
     });
   }
-
 }
 
 class _IamBusinessTypesTab extends GetView<IamBusinessTypesController> {
@@ -590,10 +584,7 @@ class _IamBusinessTypesTab extends GetView<IamBusinessTypesController> {
             ),
             if (error != null) ...[
               const SizedBox(height: 12),
-              _IamErrorCard(
-                message: error,
-                onRetry: controller.fetchTypes,
-              ),
+              _IamErrorCard(message: error, onRetry: controller.fetchTypes),
             ],
             const SizedBox(height: 12),
             if (types.isEmpty && !isLoading)
@@ -659,7 +650,10 @@ class _IamBusinessesTab extends GetView<IamBusinessesController> {
                     onChanged: controller.setStatusFilter,
                     underline: const SizedBox.shrink(),
                     items: const [
-                      DropdownMenuItem(value: null, child: Text('Todos los estados')),
+                      DropdownMenuItem(
+                        value: null,
+                        child: Text('Todos los estados'),
+                      ),
                       DropdownMenuItem(value: true, child: Text('Activos')),
                       DropdownMenuItem(value: false, child: Text('Inactivos')),
                     ],
@@ -698,20 +692,28 @@ class _IamBusinessesTab extends GetView<IamBusinessesController> {
                       DataColumn(label: Text('Dirección')),
                     ],
                     rows: businesses.map((business) {
-                      return DataRow(cells: [
-                        DataCell(_IamBusinessLogoCell(logoUrl: business.logoUrl)),
-                        DataCell(Text(business.name)),
-                        DataCell(Text(business.businessType)),
-                        DataCell(_IamStatusChip(active: business.isActive)),
-                        DataCell(SizedBox(
-                          width: 280,
-                          child: Text(
-                            business.address.isEmpty ? '-' : business.address,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                      return DataRow(
+                        cells: [
+                          DataCell(
+                            _IamBusinessLogoCell(logoUrl: business.logoUrl),
                           ),
-                        )),
-                      ]);
+                          DataCell(Text(business.name)),
+                          DataCell(Text(business.businessType)),
+                          DataCell(_IamStatusChip(active: business.isActive)),
+                          DataCell(
+                            SizedBox(
+                              width: 280,
+                              child: Text(
+                                business.address.isEmpty
+                                    ? '-'
+                                    : business.address,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
                     }).toList(),
                   ),
                 ),
@@ -774,8 +776,9 @@ class _IamUserCard extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 28,
-                  backgroundImage:
-                      user.avatarUrl.isNotEmpty ? NetworkImage(user.avatarUrl) : null,
+                  backgroundImage: user.avatarUrl.isNotEmpty
+                      ? NetworkImage(user.avatarUrl)
+                      : null,
                   child: user.avatarUrl.isEmpty
                       ? Text(initials, style: tt.titleMedium)
                       : null,
@@ -787,8 +790,9 @@ class _IamUserCard extends StatelessWidget {
                     children: [
                       Text(
                         user.name,
-                        style:
-                            tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                        style: tt.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(user.email, style: tt.bodyMedium),
@@ -805,15 +809,12 @@ class _IamUserCard extends StatelessWidget {
                           if (user.isSuperUser)
                             Chip(
                               label: const Text('Super usuario'),
-                              backgroundColor:
-                                  cs.secondaryContainer,
+                              backgroundColor: cs.secondaryContainer,
                               labelStyle: tt.labelSmall?.copyWith(
                                 color: cs.onSecondaryContainer,
                               ),
                             ),
-                          Chip(
-                            label: Text('Último acceso: $lastLogin'),
-                          ),
+                          Chip(label: Text('Último acceso: $lastLogin')),
                         ],
                       ),
                     ],
@@ -860,14 +861,11 @@ class _IamUserCard extends StatelessWidget {
                           ? const SizedBox(
                               width: 16,
                               height: 16,
-                              child:
-                                  CircularProgressIndicator(strokeWidth: 2),
+                              child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Icon(Icons.delete_outline),
                       label: Text(isDeleting ? 'Eliminando…' : 'Eliminar'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: cs.error,
-                      ),
+                      style: TextButton.styleFrom(foregroundColor: cs.error),
                     ),
                 ],
               ),
@@ -880,11 +878,7 @@ class _IamUserCard extends StatelessWidget {
   String _buildInitials(String name) {
     final parts = name.trim().split(RegExp(r'\s+')).where((e) => e.isNotEmpty);
     if (parts.isEmpty) return 'U';
-    return parts
-        .take(2)
-        .map((p) => p.substring(0, 1))
-        .join()
-        .toUpperCase();
+    return parts.take(2).map((p) => p.substring(0, 1)).join().toUpperCase();
   }
 }
 
@@ -908,9 +902,15 @@ class _IamBusinessTypeCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(type.icon.isEmpty ? '🏢' : type.icon, style: const TextStyle(fontSize: 28)),
+          Text(
+            type.icon.isEmpty ? '🏢' : type.icon,
+            style: const TextStyle(fontSize: 28),
+          ),
           const SizedBox(height: 8),
-          Text(type.name, style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+          Text(
+            type.name,
+            style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+          ),
           const SizedBox(height: 4),
           Text(type.description, maxLines: 3, overflow: TextOverflow.ellipsis),
           const SizedBox(height: 8),
@@ -931,10 +931,7 @@ class _IamBusinessLogoCell extends StatelessWidget {
     if (logoUrl.isEmpty) {
       return const Text('Sin logo');
     }
-    return CircleAvatar(
-      radius: 16,
-      backgroundImage: NetworkImage(logoUrl),
-    );
+    return CircleAvatar(radius: 16, backgroundImage: NetworkImage(logoUrl));
   }
 }
 
@@ -948,11 +945,10 @@ class _IamStatusChip extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return Chip(
       label: Text(active ? 'Activo' : 'Inactivo'),
-      backgroundColor:
-          active ? cs.primaryContainer : cs.errorContainer,
+      backgroundColor: active ? cs.primaryContainer : cs.errorContainer,
       labelStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: active ? cs.onPrimaryContainer : cs.onErrorContainer,
-          ),
+        color: active ? cs.onPrimaryContainer : cs.onErrorContainer,
+      ),
     );
   }
 }
@@ -975,17 +971,13 @@ class _IamErrorCard extends StatelessWidget {
           children: [
             Text(
               message,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: cs.onErrorContainer),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: cs.onErrorContainer),
             ),
             if (onRetry != null) ...[
               const SizedBox(height: 8),
-              TextButton(
-                onPressed: onRetry,
-                child: const Text('Reintentar'),
-              ),
+              TextButton(onPressed: onRetry, child: const Text('Reintentar')),
             ],
           ],
         ),
@@ -1008,10 +1000,7 @@ class _IamEmptyState extends StatelessWidget {
         children: [
           Icon(Icons.inbox_outlined, color: cs.onSurfaceVariant, size: 48),
           const SizedBox(height: 8),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-          ),
+          Text(message, textAlign: TextAlign.center),
         ],
       ),
     );
@@ -1065,19 +1054,22 @@ String _formatDate(DateTime? value) {
 }
 
 void _showIamSnackBar(BuildContext context, String message) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text(message)),
-  );
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
 }
 
-Future<void> showResourceFormDialog(BuildContext context, {IamResource? resource}) async {
+Future<void> showResourceFormDialog(
+  BuildContext context, {
+  IamResource? resource,
+}) async {
   if (!Get.isRegistered<IamResourcesController>()) return;
   final controller = Get.find<IamResourcesController>();
   final iamRepository = IamRepositoryImpl();
   final businessTypes = await iamRepository.getBusinessTypes();
   final formKey = GlobalKey<FormState>();
   final nameCtrl = TextEditingController(text: resource?.name ?? '');
-  final descriptionCtrl = TextEditingController(text: resource?.description ?? '');
+  final descriptionCtrl = TextEditingController(
+    text: resource?.description ?? '',
+  );
   int? selectedBusinessType = resource?.businessTypeId;
 
   await showDialog(
@@ -1091,21 +1083,28 @@ Future<void> showResourceFormDialog(BuildContext context, {IamResource? resource
           children: [
             TextFormField(
               controller: nameCtrl,
-              decoration: const InputDecoration(labelText: 'Nombre del recurso'),
-              validator: (value) =>
-                  value == null || value.trim().isEmpty ? 'Campo obligatorio' : null,
+              decoration: const InputDecoration(
+                labelText: 'Nombre del recurso',
+              ),
+              validator: (value) => value == null || value.trim().isEmpty
+                  ? 'Campo obligatorio'
+                  : null,
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<int?>(
               value: selectedBusinessType,
-              decoration: const InputDecoration(labelText: 'Tipo de negocio (opcional)'),
+              decoration: const InputDecoration(
+                labelText: 'Tipo de negocio (opcional)',
+              ),
               items: [
                 const DropdownMenuItem(value: null, child: Text('Genérico')),
                 ...businessTypes.types
-                    .map((type) => DropdownMenuItem(
-                          value: type.id,
-                          child: Text(type.name),
-                        ))
+                    .map(
+                      (type) => DropdownMenuItem(
+                        value: type.id,
+                        child: Text(type.name),
+                      ),
+                    )
                     .toList(),
               ],
               onChanged: (value) => selectedBusinessType = value,
@@ -1121,7 +1120,10 @@ Future<void> showResourceFormDialog(BuildContext context, {IamResource? resource
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Cancelar')),
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(),
+          child: const Text('Cancelar'),
+        ),
         FilledButton(
           onPressed: () async {
             if (!formKey.currentState!.validate()) return;
@@ -1167,8 +1169,14 @@ Future<void> confirmDeleteResourceDialog(
       title: const Text('Eliminar recurso'),
       content: Text('¿Eliminar ${resource.name}?'),
       actions: [
-        TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancelar')),
-        FilledButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Eliminar')),
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(false),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(ctx).pop(true),
+          child: const Text('Eliminar'),
+        ),
       ],
     ),
   );

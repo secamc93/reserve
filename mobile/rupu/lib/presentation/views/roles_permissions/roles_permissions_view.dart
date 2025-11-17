@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:rupu/domain/entities/iam_action.dart';
 import 'package:rupu/domain/entities/iam_business_type.dart';
 import 'package:rupu/domain/entities/iam_resource.dart';
+import 'package:rupu/domain/entities/role_action_result.dart';
 import 'package:rupu/domain/entities/roles_permisos.dart';
 import 'package:rupu/domain/infrastructure/repositories/iam_repository_impl.dart';
 import 'roles_permissions_controller.dart';
@@ -26,7 +27,7 @@ class RolesPermissionsView extends GetView<RolesPermissionsController> {
         centerTitle: true,
       ),
       floatingActionButton: Obx(() {
-        if (!controller.canCreate) return const SizedBox.shrink();
+        // if (!controller.canCreate) return const SizedBox.shrink();
         final tab = controller.selectedTab.value;
         if (tab == RolesPermissionsTab.roles) {
           return FloatingActionButton(
@@ -163,17 +164,15 @@ class RolesPermissionsStandaloneTab
       }
 
       if (error != null) {
-        return _ErrorState(
-          message: error,
-          onRetry: controller.refreshData,
-        );
+        return _ErrorState(message: error, onRetry: controller.refreshData);
       }
 
       final isRolesTab = tab == RolesPermissionsTab.roles;
       final roles = controller.filteredRoles;
       final perms = controller.filteredPermissions;
-      final totalLabel =
-          isRolesTab ? 'Roles encontrados: ' : 'Permisos encontrados: ';
+      final totalLabel = isRolesTab
+          ? 'Roles encontrados: '
+          : 'Permisos encontrados: ';
       final totalCount = isRolesTab ? roles.length : perms.length;
 
       return RefreshIndicator(
@@ -223,8 +222,7 @@ class RolesPermissionsStandaloneTab
                             showAssignPermissionsDialog(context, role),
                         onEdit: (role) =>
                             showRoleFormDialog(context, role: role),
-                        onDelete: (role) =>
-                            _confirmDeleteRole(context, role),
+                        onDelete: (role) => _confirmDeleteRole(context, role),
                       ),
                     )
             else
@@ -252,10 +250,9 @@ class RolesPermissionsStandaloneTab
     });
   }
 
-  bool get _isTabEmpty =>
-      tab == RolesPermissionsTab.roles
-          ? controller.roles.isEmpty
-          : controller.permissions.isEmpty;
+  bool get _isTabEmpty => tab == RolesPermissionsTab.roles
+      ? controller.roles.isEmpty
+      : controller.permissions.isEmpty;
 }
 
 // -------------------- (resto de widgets igual que ya los tienes) --------------------
@@ -404,33 +401,40 @@ class _RolesTable extends StatelessWidget {
         DataCell(Text('${role.id}')),
         DataCell(Text(role.name)),
         DataCell(Text(role.description.isNotEmpty ? role.description : '-')),
-        DataCell(Text(role.businessTypeName?.isNotEmpty == true
-            ? role.businessTypeName!
-            : '-')),
+        DataCell(
+          Text(
+            role.businessTypeName?.isNotEmpty == true
+                ? role.businessTypeName!
+                : '-',
+          ),
+        ),
         DataCell(Text(scope)),
         DataCell(Text('${role.level}')),
         DataCell(_RoleTypeChip(isSystem: role.isSystem)),
-        DataCell(Row(
-          children: [
-            IconButton(
-              tooltip: 'Asignar permisos',
-              icon: const Icon(Icons.fact_check_outlined),
-              onPressed:
-                  onAssignPermissions == null ? null : () => onAssignPermissions!(role),
-            ),
-            IconButton(
-              tooltip: 'Editar rol',
-              icon: const Icon(Icons.edit_outlined),
-              onPressed: onEdit == null ? null : () => onEdit!(role),
-            ),
-            if (!role.isSystem)
+        DataCell(
+          Row(
+            children: [
               IconButton(
-                tooltip: 'Eliminar rol',
-                icon: const Icon(Icons.delete_outline),
-                onPressed: onDelete == null ? null : () => onDelete!(role),
+                tooltip: 'Asignar permisos',
+                icon: const Icon(Icons.fact_check_outlined),
+                onPressed: onAssignPermissions == null
+                    ? null
+                    : () => onAssignPermissions!(role),
               ),
-          ],
-        )),
+              IconButton(
+                tooltip: 'Editar rol',
+                icon: const Icon(Icons.edit_outlined),
+                onPressed: onEdit == null ? null : () => onEdit!(role),
+              ),
+              if (!role.isSystem)
+                IconButton(
+                  tooltip: 'Eliminar rol',
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: onDelete == null ? null : () => onDelete!(role),
+                ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -488,20 +492,22 @@ class _PermissionsTable extends StatelessWidget {
         DataCell(Text(p.resource.isNotEmpty ? p.resource : '-')),
         DataCell(Text(p.action.isNotEmpty ? p.action : '-')),
         DataCell(Text(p.businessTypeName ?? '-')),
-        DataCell(Row(
-          children: [
-            IconButton(
-              tooltip: 'Editar permiso',
-              icon: const Icon(Icons.edit_outlined),
-              onPressed: onEdit == null ? null : () => onEdit!(p),
-            ),
-            IconButton(
-              tooltip: 'Eliminar permiso',
-              icon: const Icon(Icons.delete_outline),
-              onPressed: onDelete == null ? null : () => onDelete!(p),
-            ),
-          ],
-        )),
+        DataCell(
+          Row(
+            children: [
+              IconButton(
+                tooltip: 'Editar permiso',
+                icon: const Icon(Icons.edit_outlined),
+                onPressed: onEdit == null ? null : () => onEdit!(p),
+              ),
+              IconButton(
+                tooltip: 'Eliminar permiso',
+                icon: const Icon(Icons.delete_outline),
+                onPressed: onDelete == null ? null : () => onDelete!(p),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -536,7 +542,9 @@ class _RoleTypeChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final background = isSystem ? cs.tertiaryContainer : cs.primaryContainer;
-    final foreground = isSystem ? cs.onTertiaryContainer : cs.onPrimaryContainer;
+    final foreground = isSystem
+        ? cs.onTertiaryContainer
+        : cs.onPrimaryContainer;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
@@ -545,10 +553,10 @@ class _RoleTypeChip extends StatelessWidget {
       ),
       child: Text(
         isSystem ? 'Sistema' : 'Personalizado',
-        style: Theme.of(context)
-            .textTheme
-            .labelSmall
-            ?.copyWith(color: foreground, fontWeight: FontWeight.w600),
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: foreground,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -570,128 +578,168 @@ Future<void> showRoleFormDialog(BuildContext context, {Role? role}) async {
   await showDialog(
     context: context,
     builder: (ctx) {
-      return StatefulBuilder(builder: (ctx, setState) {
-        return AlertDialog(
-          title: Text(role == null ? 'Crear rol' : 'Editar rol'),
-          content: SingleChildScrollView(
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                    controller: nameCtrl,
-                    decoration: const InputDecoration(labelText: 'Nombre del rol'),
-                    validator: (value) =>
-                        value == null || value.trim().isEmpty ? 'Campo obligatorio' : null,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: codeCtrl,
-                    decoration: const InputDecoration(labelText: 'Código del rol'),
-                    validator: (value) =>
-                        value == null || value.trim().isEmpty ? 'Campo obligatorio' : null,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: descriptionCtrl,
-                    decoration: const InputDecoration(labelText: 'Descripción'),
-                    minLines: 2,
-                    maxLines: 3,
-                  ),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<int>(
-                    value: selectedLevel,
-                    decoration: const InputDecoration(labelText: 'Nivel del rol'),
-                    items: const [
-                      DropdownMenuItem(value: 1, child: Text('Nivel 1 - Básico')),
-                      DropdownMenuItem(value: 2, child: Text('Nivel 2 - Intermedio')),
-                      DropdownMenuItem(value: 3, child: Text('Nivel 3 - Avanzado')),
-                      DropdownMenuItem(value: 4, child: Text('Nivel 4 - Administrador')),
-                      DropdownMenuItem(value: 5, child: Text('Nivel 5 - Super Administrador')),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() => selectedLevel = value);
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<int>(
-                    value: selectedScope,
-                    decoration: const InputDecoration(labelText: 'Ámbito'),
-                    items: const [
-                      DropdownMenuItem(value: 1, child: Text('Plataforma')),
-                      DropdownMenuItem(value: 2, child: Text('Negocio')),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() => selectedScope = value);
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<int?>(
-                    value: selectedBusinessType,
-                    decoration: const InputDecoration(labelText: 'Business type'),
-                    items: [
-                      const DropdownMenuItem(value: null, child: Text('Genérico')),
-                      ...businessTypes.types
-                          .map((type) => DropdownMenuItem(
+      return StatefulBuilder(
+        builder: (ctx, setState) {
+          return AlertDialog(
+            title: Text(role == null ? 'Crear rol' : 'Editar rol'),
+            content: SingleChildScrollView(
+              child: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      controller: nameCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Nombre del rol',
+                      ),
+                      validator: (value) =>
+                          value == null || value.trim().isEmpty
+                          ? 'Campo obligatorio'
+                          : null,
+                    ),
+                    // const SizedBox(height: 12),
+                    // TextFormField(
+                    //   controller: codeCtrl,
+                    //   decoration: const InputDecoration(
+                    //     labelText: 'Código del rol',
+                    //   ),
+                    //   validator: (value) =>
+                    //       value == null || value.trim().isEmpty
+                    //       ? 'Campo obligatorio'
+                    //       : null,
+                    // ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: descriptionCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Descripción',
+                      ),
+                      minLines: 2,
+                      maxLines: 3,
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<int>(
+                      value: selectedLevel,
+                      decoration: const InputDecoration(
+                        labelText: 'Nivel del rol',
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                          value: 1,
+                          child: Text('Nivel 1 - Básico'),
+                        ),
+                        DropdownMenuItem(
+                          value: 2,
+                          child: Text('Nivel 2 - Intermedio'),
+                        ),
+                        DropdownMenuItem(
+                          value: 3,
+                          child: Text('Nivel 3 - Avanzado'),
+                        ),
+                        DropdownMenuItem(
+                          value: 4,
+                          child: Text('Nivel 4 - Administrador'),
+                        ),
+                        DropdownMenuItem(
+                          value: 5,
+                          child: Text('Nivel 5 - Super Administrador'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => selectedLevel = value);
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<int>(
+                      value: selectedScope,
+                      decoration: const InputDecoration(labelText: 'Ámbito'),
+                      items: const [
+                        DropdownMenuItem(value: 1, child: Text('Plataforma')),
+                        DropdownMenuItem(value: 2, child: Text('Negocio')),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => selectedScope = value);
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<int?>(
+                      value: selectedBusinessType,
+                      decoration: const InputDecoration(
+                        labelText: 'Business type',
+                      ),
+                      items: [
+                        const DropdownMenuItem(
+                          value: null,
+                          child: Text('Genérico'),
+                        ),
+                        ...businessTypes.types
+                            .map(
+                              (type) => DropdownMenuItem(
                                 value: type.id,
                                 child: Text(type.name),
-                              ))
-                          .toList(),
-                    ],
-                    onChanged: (value) => setState(() => selectedBusinessType = value),
-                  ),
-                  const SizedBox(height: 12),
-                  CheckboxListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Rol del sistema (no se puede eliminar)'),
-                    value: isSystem,
-                    onChanged: (value) => setState(() => isSystem = value ?? false),
-                  ),
-                ],
+                              ),
+                            )
+                            .toList(),
+                      ],
+                      onChanged: (value) =>
+                          setState(() => selectedBusinessType = value),
+                    ),
+                    const SizedBox(height: 12),
+                    CheckboxListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text(
+                        'Rol del sistema (no se puede eliminar)',
+                      ),
+                      value: isSystem,
+                      onChanged: (value) =>
+                          setState(() => isSystem = value ?? false),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Cancelar'),
-            ),
-            FilledButton(
-              onPressed: () async {
-                if (!formKey.currentState!.validate()) return;
-                final payload = {
-                  'name': nameCtrl.text.trim(),
-                  'code': codeCtrl.text.trim(),
-                  'description': descriptionCtrl.text.trim(),
-                  'level': selectedLevel,
-                  'scope_id': selectedScope,
-                  if (selectedBusinessType != null)
-                    'business_type_id': selectedBusinessType,
-                  'is_system': isSystem,
-                };
-                RoleActionResult result;
-                if (role == null) {
-                  result = await controller.crearRol(payload);
-                } else {
-                  result = await controller.actualizarRol(role.id, payload);
-                }
-                if (result.success) {
-                  Navigator.of(ctx).pop();
-                  _showIamSnack(context, result.message);
-                } else {
-                  _showIamSnack(context, result.message);
-                }
-              },
-              child: Text(role == null ? 'Crear rol' : 'Guardar cambios'),
-            ),
-          ],
-        );
-      });
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('Cancelar'),
+              ),
+              FilledButton(
+                onPressed: () async {
+                  if (!formKey.currentState!.validate()) return;
+                  final payload = {
+                    'name': nameCtrl.text.trim(),
+                    'code': codeCtrl.text.trim(),
+                    'description': descriptionCtrl.text.trim(),
+                    'level': selectedLevel,
+                    'scope_id': selectedScope,
+                    if (selectedBusinessType != null)
+                      'business_type_id': selectedBusinessType,
+                    'is_system': isSystem,
+                  };
+                  RoleActionResult result;
+                  if (role == null) {
+                    result = await controller.crearRol(payload);
+                  } else {
+                    result = await controller.actualizarRol(role.id, payload);
+                  }
+                  if (result.success) {
+                    Navigator.of(ctx).pop();
+                    _showIamSnack(context, result.message);
+                  } else {
+                    _showIamSnack(context, result.message);
+                  }
+                },
+                child: Text(role == null ? 'Crear rol' : 'Guardar cambios'),
+              ),
+            ],
+          );
+        },
+      );
     },
   );
 }
@@ -708,76 +756,84 @@ Future<void> showAssignPermissionsDialog(
   await showDialog(
     context: context,
     builder: (ctx) {
-      return StatefulBuilder(builder: (ctx, setState) {
-        return AlertDialog(
-          title: Text('Permisos para ${role.name}'),
-          content: SizedBox(
-            width: 420,
-            height: 420,
-            child: permissions.isEmpty
-                ? const Center(child: Text('No hay permisos disponibles.'))
-                : ListView(
-                    children: permissions.map((permission) {
-                      final isSelected = selected.contains(permission.id);
-                      final isAssigned = assigned.contains(permission.id);
-                      return CheckboxListTile(
-                        value: isSelected,
-                        onChanged: (value) {
-                          setState(() {
-                            if (value == true) {
-                              selected.add(permission.id);
-                            } else {
-                              selected.remove(permission.id);
-                            }
-                          });
-                        },
-                        title: Text(permission.name),
-                        subtitle:
-                            Text('${permission.resource} - ${permission.action}'),
-                        secondary: IconButton(
-                          icon: const Icon(Icons.remove_circle_outline),
-                          tooltip: 'Eliminar permiso del rol',
-                          onPressed: isAssigned
-                              ? () async {
-                                  final result = await controller
-                                      .eliminarPermisoAsignado(role.id, permission.id);
-                                  if (result.success) {
-                                    setState(() {
-                                      selected.remove(permission.id);
-                                      assigned.remove(permission.id);
-                                    });
-                                    _showIamSnack(context, result.message);
-                                  } else {
-                                    _showIamSnack(ctx, result.message);
+      return StatefulBuilder(
+        builder: (ctx, setState) {
+          return AlertDialog(
+            title: Text('Permisos para ${role.name}'),
+            content: SizedBox(
+              width: 420,
+              height: 420,
+              child: permissions.isEmpty
+                  ? const Center(child: Text('No hay permisos disponibles.'))
+                  : ListView(
+                      children: permissions.map((permission) {
+                        final isSelected = selected.contains(permission.id);
+                        final isAssigned = assigned.contains(permission.id);
+                        return CheckboxListTile(
+                          value: isSelected,
+                          onChanged: (value) {
+                            setState(() {
+                              if (value == true) {
+                                selected.add(permission.id);
+                              } else {
+                                selected.remove(permission.id);
+                              }
+                            });
+                          },
+                          title: Text(permission.name),
+                          subtitle: Text(
+                            '${permission.resource} - ${permission.action}',
+                          ),
+                          secondary: IconButton(
+                            icon: const Icon(Icons.remove_circle_outline),
+                            tooltip: 'Eliminar permiso del rol',
+                            onPressed: isAssigned
+                                ? () async {
+                                    final result = await controller
+                                        .eliminarPermisoAsignado(
+                                          role.id,
+                                          permission.id,
+                                        );
+                                    if (result.success) {
+                                      setState(() {
+                                        selected.remove(permission.id);
+                                        assigned.remove(permission.id);
+                                      });
+                                      _showIamSnack(context, result.message);
+                                    } else {
+                                      _showIamSnack(ctx, result.message);
+                                    }
                                   }
-                                }
-                              : null,
-                        ),
-                      );
-                    }).toList(),
-                  ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Cancelar'),
+                                : null,
+                          ),
+                        );
+                      }).toList(),
+                    ),
             ),
-            FilledButton(
-              onPressed: () async {
-                final result =
-                    await controller.asignarPermisos(role.id, selected.toList());
-                if (result.success) {
-                  Navigator.of(ctx).pop();
-                  _showIamSnack(context, result.message);
-                } else {
-                  _showIamSnack(context, result.message);
-                }
-              },
-              child: const Text('Asignar permisos'),
-            ),
-          ],
-        );
-      });
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('Cancelar'),
+              ),
+              FilledButton(
+                onPressed: () async {
+                  final result = await controller.asignarPermisos(
+                    role.id,
+                    selected.toList(),
+                  );
+                  if (result.success) {
+                    Navigator.of(ctx).pop();
+                    _showIamSnack(context, result.message);
+                  } else {
+                    _showIamSnack(context, result.message);
+                  }
+                },
+                child: const Text('Asignar permisos'),
+              ),
+            ],
+          );
+        },
+      );
     },
   );
 }
@@ -795,151 +851,189 @@ Future<void> showPermissionFormDialog(
   final formKey = GlobalKey<FormState>();
   final nameCtrl = TextEditingController(text: permission?.name ?? '');
   final codeCtrl = TextEditingController(text: permission?.code ?? '');
-  final descriptionCtrl = TextEditingController(text: permission?.description ?? '');
+  final descriptionCtrl = TextEditingController(
+    text: permission?.description ?? '',
+  );
   int? selectedBusinessType = permission?.businessTypeId;
-  int? selectedResource = permission?.resourceId ??
+  int? selectedResource =
+      permission?.resourceId ??
       (resourcesPage.resources.isNotEmpty
           ? resourcesPage.resources.first.id
           : null);
-  int? selectedAction = permission?.actionId ??
+  int? selectedAction =
+      permission?.actionId ??
       (actionsPage.actions.isNotEmpty ? actionsPage.actions.first.id : null);
   int selectedScope = permission?.scopeId ?? 1;
 
   await showDialog(
     context: context,
     builder: (ctx) {
-      return StatefulBuilder(builder: (ctx, setState) {
-        return AlertDialog(
-          title: Text(permission == null ? 'Crear permiso' : 'Editar permiso'),
-          content: SingleChildScrollView(
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                    controller: nameCtrl,
-                    decoration: const InputDecoration(labelText: 'Nombre del permiso'),
-                    validator: (value) =>
-                        value == null || value.trim().isEmpty ? 'Campo obligatorio' : null,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: codeCtrl,
-                    decoration: const InputDecoration(labelText: 'Código'),
-                    validator: (value) =>
-                        value == null || value.trim().isEmpty ? 'Campo obligatorio' : null,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: descriptionCtrl,
-                    decoration: const InputDecoration(labelText: 'Descripción'),
-                    minLines: 2,
-                    maxLines: 3,
-                  ),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<int?>(
-                    value: selectedBusinessType,
-                    decoration: const InputDecoration(labelText: 'Tipo de negocio'),
-                    items: [
-                      const DropdownMenuItem(value: null, child: Text('Genérico')),
-                      ...businessTypes.types
-                          .map((type) => DropdownMenuItem(
+      return StatefulBuilder(
+        builder: (ctx, setState) {
+          return AlertDialog(
+            title: Text(
+              permission == null ? 'Crear permiso' : 'Editar permiso',
+            ),
+            content: SingleChildScrollView(
+              child: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      controller: nameCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Nombre del permiso',
+                      ),
+                      validator: (value) =>
+                          value == null || value.trim().isEmpty
+                          ? 'Campo obligatorio'
+                          : null,
+                    ),
+                    // const SizedBox(height: 12),
+                    // TextFormField(
+                    //   controller: codeCtrl,
+                    //   decoration: const InputDecoration(labelText: 'Código'),
+                    //   validator: (value) =>
+                    //       value == null || value.trim().isEmpty
+                    //       ? 'Campo obligatorio'
+                    //       : null,
+                    // ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: descriptionCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Descripción',
+                      ),
+                      minLines: 2,
+                      maxLines: 3,
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<int?>(
+                      value: selectedBusinessType,
+                      decoration: const InputDecoration(
+                        labelText: 'Tipo de negocio',
+                      ),
+                      items: [
+                        const DropdownMenuItem(
+                          value: null,
+                          child: Text('Genérico'),
+                        ),
+                        ...businessTypes.types
+                            .map(
+                              (type) => DropdownMenuItem(
                                 value: type.id,
                                 child: Text(type.name),
-                              ))
-                          .toList(),
-                    ],
-                    onChanged: (value) => setState(() => selectedBusinessType = value),
-                  ),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<int>(
-                    value: selectedResource,
-                    decoration: const InputDecoration(labelText: 'Recursos'),
-                    items: resourcesPage.resources
-                        .map((resource) => DropdownMenuItem(
+                              ),
+                            )
+                            .toList(),
+                      ],
+                      onChanged: (value) =>
+                          setState(() => selectedBusinessType = value),
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<int>(
+                      value: selectedResource,
+                      decoration: const InputDecoration(labelText: 'Recursos'),
+                      items: resourcesPage.resources
+                          .map(
+                            (resource) => DropdownMenuItem(
                               value: resource.id,
                               child: Text(resource.name),
-                            ))
-                        .toList(),
-                    onChanged: (value) => setState(() => selectedResource = value),
-                    validator: (value) => value == null ? 'Seleccione un recurso' : null,
-                  ),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<int>(
-                    value: selectedAction,
-                    decoration: const InputDecoration(labelText: 'Acción'),
-                    items: actionsPage.actions
-                        .map((action) => DropdownMenuItem(
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) =>
+                          setState(() => selectedResource = value),
+                      validator: (value) =>
+                          value == null ? 'Seleccione un recurso' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<int>(
+                      value: selectedAction,
+                      decoration: const InputDecoration(labelText: 'Acción'),
+                      items: actionsPage.actions
+                          .map(
+                            (action) => DropdownMenuItem(
                               value: action.id,
-                              child: Text('${action.name} - ${action.description}'),
-                            ))
-                        .toList(),
-                    onChanged: (value) => setState(() => selectedAction = value),
-                    validator: (value) => value == null ? 'Seleccione una acción' : null,
-                  ),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<int>(
-                    value: selectedScope,
-                    decoration: const InputDecoration(labelText: 'Scope / Ámbito'),
-                    items: const [
-                      DropdownMenuItem(value: 1, child: Text('Plataforma')),
-                      DropdownMenuItem(value: 2, child: Text('Negocio')),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() => selectedScope = value);
-                      }
-                    },
-                  ),
-                ],
+                              child: Text(
+                                '${action.name} - ${action.description}',
+                              ),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) =>
+                          setState(() => selectedAction = value),
+                      validator: (value) =>
+                          value == null ? 'Seleccione una acción' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<int>(
+                      value: selectedScope,
+                      decoration: const InputDecoration(
+                        labelText: 'Scope / Ámbito',
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: 1, child: Text('Plataforma')),
+                        DropdownMenuItem(value: 2, child: Text('Negocio')),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => selectedScope = value);
+                        }
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Cancelar'),
-            ),
-            FilledButton(
-              onPressed: () async {
-                if (!formKey.currentState!.validate()) return;
-                final payload = {
-                  'name': nameCtrl.text.trim(),
-                  'code': codeCtrl.text.trim(),
-                  'description': descriptionCtrl.text.trim(),
-                  'resource_id': selectedResource,
-                  'action_id': selectedAction,
-                  'scope_id': selectedScope,
-                  if (selectedBusinessType != null)
-                    'business_type_id': selectedBusinessType,
-                };
-                if (permission == null) {
-                  final result = await controller.crearPermiso(payload);
-                  if (result.success) {
-                    Navigator.of(ctx).pop();
-                    _showIamSnack(context, result.message);
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('Cancelar'),
+              ),
+              FilledButton(
+                onPressed: () async {
+                  if (!formKey.currentState!.validate()) return;
+                  final payload = {
+                    'name': nameCtrl.text.trim(),
+                    'code': codeCtrl.text.trim(),
+                    'description': descriptionCtrl.text.trim(),
+                    'resource_id': selectedResource,
+                    'action_id': selectedAction,
+                    'scope_id': selectedScope,
+                    if (selectedBusinessType != null)
+                      'business_type_id': selectedBusinessType,
+                  };
+                  if (permission == null) {
+                    final result = await controller.crearPermiso(payload);
+                    if (result.success) {
+                      Navigator.of(ctx).pop();
+                      _showIamSnack(context, result.message);
+                    } else {
+                      _showIamSnack(context, result.message);
+                    }
                   } else {
-                    _showIamSnack(context, result.message);
+                    final result = await controller.actualizarPermisoRegistro(
+                      permission.id,
+                      payload,
+                    );
+                    if (result.success) {
+                      Navigator.of(ctx).pop();
+                      _showIamSnack(context, result.message);
+                    } else {
+                      _showIamSnack(context, result.message);
+                    }
                   }
-                } else {
-                  final result = await controller.actualizarPermisoRegistro(
-                    permission.id,
-                    payload,
-                  );
-                  if (result.success) {
-                    Navigator.of(ctx).pop();
-                    _showIamSnack(context, result.message);
-                  } else {
-                    _showIamSnack(context, result.message);
-                  }
-                }
-              },
-              child: Text(permission == null ? 'Crear permiso' : 'Guardar cambios'),
-            ),
-          ],
-        );
-      });
+                },
+                child: Text(
+                  permission == null ? 'Crear permiso' : 'Guardar cambios',
+                ),
+              ),
+            ],
+          );
+        },
+      );
     },
   );
 }
@@ -952,8 +1046,14 @@ Future<void> _confirmDeleteRole(BuildContext context, Role role) async {
       title: const Text('Eliminar rol'),
       content: Text('¿Deseas eliminar el rol ${role.name}?'),
       actions: [
-        TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancelar')),
-        FilledButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Eliminar')),
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(false),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(ctx).pop(true),
+          child: const Text('Eliminar'),
+        ),
       ],
     ),
   );
@@ -973,8 +1073,14 @@ Future<void> _confirmDeletePermission(
       title: const Text('Eliminar permiso'),
       content: Text('¿Eliminar ${permission.name}?'),
       actions: [
-        TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancelar')),
-        FilledButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Eliminar')),
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(false),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(ctx).pop(true),
+          child: const Text('Eliminar'),
+        ),
       ],
     ),
   );
@@ -984,9 +1090,7 @@ Future<void> _confirmDeletePermission(
 }
 
 void _showIamSnack(BuildContext context, String message) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text(message)),
-  );
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
 }
 
 class _ErrorState extends StatelessWidget {

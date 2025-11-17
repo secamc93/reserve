@@ -1819,10 +1819,11 @@ class _VotingOptionFormBottomSheetState
       'display_order': int.tryParse(_orderCtrl.text.trim()) ?? 0,
     };
     if (_selectedColor != null) {
-      payload['color'] = ColorTools.colorCode(
+      final raw = ColorTools.colorCode(
         _selectedColor!,
-        //  enableAlpha: false
+        // enableAlpha: false,  // quita el comentario si NO quieres alpha
       );
+      payload['color'] = raw.startsWith('#') ? raw : '#$raw';
     }
     return payload;
   }
@@ -2760,7 +2761,8 @@ class VotingLiveController extends GetxController {
       return units.where((unit) => unit.votingOptionId == optionId).length;
     }
 
-    final votes = liveData.value?.votes ?? const <HorizontalPropertyVotingVote>[];
+    final votes =
+        liveData.value?.votes ?? const <HorizontalPropertyVotingVote>[];
     if (votes.isNotEmpty) {
       return votes.where((vote) => vote.votingOptionId == optionId).length;
     }
@@ -2899,8 +2901,8 @@ class VotingLiveController extends GetxController {
 
     final List<HorizontalPropertyVotingVote> incomingVotes =
         isDeleteEvent && !event.hasVotesSnapshot
-            ? const <HorizontalPropertyVotingVote>[]
-            : event.votes;
+        ? const <HorizontalPropertyVotingVote>[]
+        : event.votes;
 
     var mergedVotes = event.hasVotesSnapshot
         ? incomingVotes
@@ -2980,14 +2982,22 @@ class VotingLiveController extends GetxController {
     }
 
     if (shouldAdjustResults) {
-      if (!isDeleteEvent && !event.hasVotesSnapshot && incomingVotes.isNotEmpty) {
+      if (!isDeleteEvent &&
+          !event.hasVotesSnapshot &&
+          incomingVotes.isNotEmpty) {
         for (final vote in incomingVotes) {
-          mergedResults =
-              _applyVoteDeltaToResults(mergedResults, vote.votingOptionId, 1);
+          mergedResults = _applyVoteDeltaToResults(
+            mergedResults,
+            vote.votingOptionId,
+            1,
+          );
         }
       } else if (isDeleteEvent && deletedVote != null) {
-        mergedResults =
-            _applyVoteDeltaToResults(mergedResults, deletedVote.votingOptionId, -1);
+        mergedResults = _applyVoteDeltaToResults(
+          mergedResults,
+          deletedVote.votingOptionId,
+          -1,
+        );
       }
     }
 
@@ -3039,7 +3049,9 @@ class VotingLiveController extends GetxController {
     }();
 
     if (event.unitsVoted < 0) {
-      if (!isDeleteEvent && !event.hasVotesSnapshot && incomingVotes.isNotEmpty) {
+      if (!isDeleteEvent &&
+          !event.hasVotesSnapshot &&
+          incomingVotes.isNotEmpty) {
         computedUnitsVoted += incomingVotes.length;
       } else if (isDeleteEvent && deletedVote != null) {
         computedUnitsVoted = math.max(0, computedUnitsVoted - 1);

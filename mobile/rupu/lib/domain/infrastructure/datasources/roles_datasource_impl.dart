@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:rupu/config/dio/authenticated_dio.dart';
 import 'package:rupu/domain/datasource/roles_datasource.dart';
+import 'package:rupu/domain/entities/iam_resource.dart';
 import 'package:rupu/domain/entities/role.dart';
 import 'package:rupu/domain/entities/role_action_result.dart';
 import 'package:rupu/domain/infrastructure/mappers/permisos_roles_mapper.dart';
@@ -13,9 +14,9 @@ class RolesDatasourceImpl extends RolesDatasource {
   final Dio _dio;
 
   RolesDatasourceImpl({String? baseUrl})
-      : _dio = AuthenticatedDio(
-          baseUrl: baseUrl ?? 'https://www.xn--rup-joa.com/api/v1',
-        ).dio;
+    : _dio = AuthenticatedDio(
+        baseUrl: baseUrl ?? 'https://www.xn--rup-joa.com/api/v1',
+      ).dio;
 
   @override
   Future<RolesCatalog> obtenerRoles() async {
@@ -65,7 +66,8 @@ class RolesDatasourceImpl extends RolesDatasource {
       final data = Map<String, dynamic>.from(response.data as Map);
       final roleJson = data['data'] as Map<String, dynamic>? ?? const {};
       final role = _roleFromJson(roleJson);
-      final message = data['message']?.toString() ?? 'Rol actualizado exitosamente';
+      final message =
+          data['message']?.toString() ?? 'Rol actualizado exitosamente';
       final success = data['success'] as bool? ?? true;
       return RoleActionResult(success: success, message: message, role: role);
     } on DioException catch (e) {
@@ -80,7 +82,8 @@ class RolesDatasourceImpl extends RolesDatasource {
       final response = await _dio.delete('/roles/$id');
       final data = Map<String, dynamic>.from(response.data as Map);
       final success = data['success'] as bool? ?? true;
-      final message = data['message']?.toString() ?? 'Rol eliminado exitosamente';
+      final message =
+          data['message']?.toString() ?? 'Rol eliminado exitosamente';
       return IamMessageResult(success: success, message: message);
     } on DioException catch (e) {
       debugPrint('Error eliminando rol: ${e.message}');
@@ -120,7 +123,8 @@ class RolesDatasourceImpl extends RolesDatasource {
       );
       final data = Map<String, dynamic>.from(response.data as Map);
       final success = data['success'] as bool? ?? true;
-      final message = data['message']?.toString() ?? 'Permisos asignados exitosamente';
+      final message =
+          data['message']?.toString() ?? 'Permisos asignados exitosamente';
       return IamMessageResult(success: success, message: message);
     } on DioException catch (e) {
       debugPrint('Error asignando permisos: ${e.message}');
@@ -131,11 +135,13 @@ class RolesDatasourceImpl extends RolesDatasource {
   @override
   Future<IamMessageResult> eliminarPermiso(int roleId, int permissionId) async {
     try {
-      final response =
-          await _dio.delete('/roles/$roleId/permissions/$permissionId');
+      final response = await _dio.delete(
+        '/roles/$roleId/permissions/$permissionId',
+      );
       final data = Map<String, dynamic>.from(response.data as Map);
       final success = data['success'] as bool? ?? true;
-      final message = data['message']?.toString() ?? 'Permiso eliminado exitosamente';
+      final message =
+          data['message']?.toString() ?? 'Permiso eliminado exitosamente';
       return IamMessageResult(success: success, message: message);
     } on DioException catch (e) {
       debugPrint('Error eliminando permiso: ${e.message}');
