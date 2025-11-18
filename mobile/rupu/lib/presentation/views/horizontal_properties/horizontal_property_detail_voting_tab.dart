@@ -3853,23 +3853,6 @@ class _PendingVoteSummaryCard extends StatelessWidget {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Expanded(
-                    child: _DecisionCompactCard(
-                      label: 'Sí',
-                      value: yesVotes,
-                      percent: percent(yesVotes),
-                      color: cs.primary,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _DecisionCompactCard(
-                      label: 'No',
-                      value: noVotes,
-                      percent: percent(noVotes),
-                      color: cs.error,
-                    ),
-                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: _DecisionCompactCard(
