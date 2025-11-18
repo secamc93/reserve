@@ -16,6 +16,9 @@ class HorizontalPropertyDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     HorizontalPropertyDetailBinding.register(propertyId: propertyId);
-    return HorizontalPropertyDetailView(propertyId: propertyId);
+    return HorizontalPropertyDetailView(
+      propertyId: propertyId,
+      pageIndex: pageIndex,
+    );
   }
 }

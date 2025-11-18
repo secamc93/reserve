@@ -25,8 +25,13 @@ class HorizontalPropertyDetailView
     extends GetView<HorizontalPropertyDetailController> {
   static const name = 'horizontal-property-detail';
   final int propertyId;
+  final int pageIndex;
 
-  HorizontalPropertyDetailView({super.key, required this.propertyId});
+  HorizontalPropertyDetailView({
+    super.key,
+    required this.propertyId,
+    required this.pageIndex,
+  });
 
   @override
   String? get tag => HorizontalPropertyDetailController.tagFor(propertyId);
@@ -62,7 +67,10 @@ class HorizontalPropertyDetailView
             ),
             _UnitsTab(controllerTag: unitsTag),
             _ResidentsTab(controllerTag: residentsTag),
-            _VotingTab(controllerTag: votingTag),
+            _VotingTab(
+              controllerTag: votingTag,
+              pageIndex: pageIndex,
+            ),
           ],
         ),
       ),

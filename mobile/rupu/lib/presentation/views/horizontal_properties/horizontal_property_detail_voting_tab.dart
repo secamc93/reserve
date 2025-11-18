@@ -2,7 +2,8 @@ part of 'horizontal_property_detail_view.dart';
 
 class _VotingTab extends GetWidget<HorizontalPropertyVotingController> {
   final String controllerTag;
-  const _VotingTab({required this.controllerTag});
+  final int pageIndex;
+  const _VotingTab({required this.controllerTag, required this.pageIndex});
 
   @override
   String? get tag => controllerTag;
@@ -48,12 +49,9 @@ class _VotingTab extends GetWidget<HorizontalPropertyVotingController> {
                       child: _VotingGroupCard(
                         group: group,
                         onOpenAttendance: () {
-                          final state = GoRouterState.of(context);
-                          final segments = state.uri.pathSegments;
-                          final page = segments.length > 1 ? segments[1] : '0';
                           final propertyId = controller.propertyId;
                           final path =
-                              '/home/$page/horizontal-properties/$propertyId/voting/${group.id}/attendance';
+                              '/home/$pageIndex/horizontal-properties/$propertyId/voting/${group.id}/attendance';
                           context.push(path, extra: group);
                         },
                       ),
