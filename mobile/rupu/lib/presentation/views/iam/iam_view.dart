@@ -1065,12 +1065,16 @@ Future<void> showResourceFormDialog(
   final controller = Get.find<IamResourcesController>();
   final iamRepository = IamRepositoryImpl();
   final businessTypes = await iamRepository.getBusinessTypes();
+  int? normalizeBusinessTypeId(int? value) {
+    if (value == null || value <= 0) return null;
+    return value;
+  }
   final formKey = GlobalKey<FormState>();
   final nameCtrl = TextEditingController(text: resource?.name ?? '');
   final descriptionCtrl = TextEditingController(
     text: resource?.description ?? '',
   );
-  int? selectedBusinessType = resource?.businessTypeId;
+  int? selectedBusinessType = normalizeBusinessTypeId(resource?.businessTypeId);
 
   await showDialog(
     context: context,
@@ -1130,7 +1134,7 @@ Future<void> showResourceFormDialog(
             if (resource == null) {
               final result = await controller.createResource(
                 name: nameCtrl.text.trim(),
-                businessTypeId: selectedBusinessType,
+                businessTypeId: normalizeBusinessTypeId(selectedBusinessType),
                 description: descriptionCtrl.text.trim(),
               );
               if (result != null) {
@@ -1141,7 +1145,7 @@ Future<void> showResourceFormDialog(
               final result = await controller.updateResource(
                 id: resource.id,
                 name: nameCtrl.text.trim(),
-                businessTypeId: selectedBusinessType,
+                businessTypeId: normalizeBusinessTypeId(selectedBusinessType),
                 description: descriptionCtrl.text.trim(),
               );
               if (result != null) {

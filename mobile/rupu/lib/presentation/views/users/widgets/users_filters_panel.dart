@@ -22,6 +22,16 @@ class UsersFiltersPanel extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
+            TextField(
+              controller: controller.searchCtrl,
+              textInputAction: TextInputAction.search,
+              decoration: const InputDecoration(
+                labelText: 'Búsqueda rápida',
+                hintText: 'Nombre, correo o teléfono',
+                prefixIcon: Icon(Icons.search),
+              ),
+            ),
+            const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(

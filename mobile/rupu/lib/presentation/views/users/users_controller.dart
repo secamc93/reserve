@@ -25,6 +25,7 @@ class UsersController extends GetxController {
   // Filters
   final pageCtrl = TextEditingController(text: '1');
   final pageSizeCtrl = TextEditingController(text: '10');
+  final searchCtrl = TextEditingController();
   final nameCtrl = TextEditingController();
   final emailCtrl = TextEditingController();
   final phoneCtrl = TextEditingController();
@@ -64,6 +65,7 @@ class UsersController extends GetxController {
   void onClose() {
     pageCtrl.dispose();
     pageSizeCtrl.dispose();
+    searchCtrl.dispose();
     nameCtrl.dispose();
     emailCtrl.dispose();
     phoneCtrl.dispose();
@@ -91,6 +93,9 @@ class UsersController extends GetxController {
       final pageSize = int.tryParse(pageSizeCtrl.text);
       if (page != null) query['page'] = page;
       if (pageSize != null) query['page_size'] = pageSize;
+      if (searchCtrl.text.trim().isNotEmpty) {
+        query['search'] = searchCtrl.text.trim();
+      }
       if (nameCtrl.text.isNotEmpty) query['name'] = nameCtrl.text.trim();
       if (emailCtrl.text.isNotEmpty) query['email'] = emailCtrl.text.trim();
       if (phoneCtrl.text.isNotEmpty) query['phone'] = phoneCtrl.text.trim();
@@ -175,6 +180,7 @@ class UsersController extends GetxController {
   void clearFilters() {
     pageCtrl.text = '1';
     pageSizeCtrl.text = '10';
+    searchCtrl.clear();
     nameCtrl.clear();
     emailCtrl.clear();
     phoneCtrl.clear();

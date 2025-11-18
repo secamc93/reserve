@@ -271,6 +271,8 @@ class HorizontalPropertyVotingGroupLiveData {
   }
 }
 
+const _undefined = Object();
+
 class HorizontalPropertyVotingLiveUnit {
   final int propertyUnitId;
   final String unitNumber;
@@ -299,29 +301,44 @@ class HorizontalPropertyVotingLiveUnit {
   });
 
   HorizontalPropertyVotingLiveUnit copyWith({
-    double? participationCoefficient,
-    int? residentId,
-    String? residentName,
+    Object? participationCoefficient = _undefined,
+    Object? residentId = _undefined,
+    Object? residentName = _undefined,
     bool? hasVoted,
-    int? votingOptionId,
-    String? optionText,
-    String? optionCode,
-    String? optionColor,
-    DateTime? votedAt,
+    Object? votingOptionId = _undefined,
+    Object? optionText = _undefined,
+    Object? optionCode = _undefined,
+    Object? optionColor = _undefined,
+    Object? votedAt = _undefined,
   }) {
     return HorizontalPropertyVotingLiveUnit(
       propertyUnitId: propertyUnitId,
       unitNumber: unitNumber,
-      participationCoefficient:
-          participationCoefficient ?? this.participationCoefficient,
-      residentId: residentId ?? this.residentId,
-      residentName: residentName ?? this.residentName,
+      participationCoefficient: identical(participationCoefficient, _undefined)
+          ? this.participationCoefficient
+          : participationCoefficient as double?,
+      residentId: identical(residentId, _undefined)
+          ? this.residentId
+          : residentId as int?,
+      residentName: identical(residentName, _undefined)
+          ? this.residentName
+          : residentName as String?,
       hasVoted: hasVoted ?? this.hasVoted,
-      votingOptionId: votingOptionId ?? this.votingOptionId,
-      optionText: optionText ?? this.optionText,
-      optionCode: optionCode ?? this.optionCode,
-      optionColor: optionColor ?? this.optionColor,
-      votedAt: votedAt ?? this.votedAt,
+      votingOptionId: identical(votingOptionId, _undefined)
+          ? this.votingOptionId
+          : votingOptionId as int?,
+      optionText: identical(optionText, _undefined)
+          ? this.optionText
+          : optionText as String?,
+      optionCode: identical(optionCode, _undefined)
+          ? this.optionCode
+          : optionCode as String?,
+      optionColor: identical(optionColor, _undefined)
+          ? this.optionColor
+          : optionColor as String?,
+      votedAt: identical(votedAt, _undefined)
+          ? this.votedAt
+          : votedAt as DateTime?,
     );
   }
 }
