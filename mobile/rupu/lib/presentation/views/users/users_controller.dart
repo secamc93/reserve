@@ -34,6 +34,8 @@ class UsersController extends GetxController {
   final sortByCtrl = TextEditingController(text: 'created_at');
   final sortOrderCtrl = TextEditingController(text: 'desc');
   final isActive = RxnBool();
+  final quickSearchCtrl = TextEditingController();
+  final quickSearchText = ''.obs;
 
   final _dateFormat = DateFormat('dd/MM/yyyy HH:mm');
 
@@ -72,7 +74,34 @@ class UsersController extends GetxController {
     createdAtCtrl.dispose();
     sortByCtrl.dispose();
     sortOrderCtrl.dispose();
+    quickSearchCtrl.dispose();
     super.onClose();
+  }
+
+  void setQuickSearch(String value) => quickSearchText.value = value;
+
+  List<UserListItem> get filteredUsers {
+    final query = quickSearchText.value.trim().toLowerCase();
+    if (query.isEmpty) return users;
+    return users
+        .where((user) {
+          final name = user.name.toLowerCase();
+          final email = user.email.toLowerCase();
+          final phone = user.phone.toLowerCase();
+          final idMatch = '${user.id}'.contains(query);
+          final businessNames = user.businesses
+              .map((b) => b.name.toLowerCase())
+              .join(' ');
+          final roleNames =
+              user.roles.map((r) => r.name.toLowerCase()).join(' ');
+          return name.contains(query) ||
+              email.contains(query) ||
+              phone.contains(query) ||
+              businessNames.contains(query) ||
+              roleNames.contains(query) ||
+              idMatch;
+        })
+        .toList(growable: false);
   }
 
   Future<void> fetchUsers() async {
@@ -185,5 +214,7 @@ class UsersController extends GetxController {
     sortOrderCtrl.text = 'desc';
     isActive.value = null;
     errorMessage.value = null;
+    quickSearchCtrl.clear();
+    quickSearchText.value = '';
   }
 }

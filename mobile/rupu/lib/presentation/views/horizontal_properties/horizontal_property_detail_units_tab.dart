@@ -207,7 +207,11 @@ class _UnitsFiltersContent
             ),
             Obx(
               () => DropdownButtonFormField<bool?>(
-                initialValue: controller.unitsIsActive.value,
+                value: controller.unitsIsActive.value == true
+                    ? true
+                    : controller.unitsIsActive.value == false
+                        ? false
+                        : null,
                 decoration: _filterDecoration(context, 'Estado'),
                 items: const [
                   DropdownMenuItem<bool?>(value: null, child: Text('Todos')),

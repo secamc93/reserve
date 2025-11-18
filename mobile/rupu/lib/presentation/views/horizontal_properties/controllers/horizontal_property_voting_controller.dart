@@ -21,6 +21,7 @@ class HorizontalPropertyVotingController extends GetxController {
   final isLoading = false.obs;
   final errorMessage = RxnString();
 
+  int get totalGroups => groups.length;
   int? get firstVotingGroupId =>
       groups.isNotEmpty ? groups.first.id : null;
 

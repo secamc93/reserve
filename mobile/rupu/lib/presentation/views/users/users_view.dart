@@ -69,6 +69,30 @@ class UsersView extends GetView<UsersController> {
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(16),
             children: [
+              Obx(
+                () {
+                  final hasText = controller.quickSearchText.value.isNotEmpty;
+                  return TextField(
+                    controller: controller.quickSearchCtrl,
+                    decoration: InputDecoration(
+                      labelText: 'Búsqueda rápida (nombre, correo, teléfono)',
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon: hasText
+                          ? IconButton(
+                              onPressed: () {
+                                controller.quickSearchCtrl.clear();
+                                controller.setQuickSearch('');
+                              },
+                              icon: const Icon(Icons.clear),
+                              tooltip: 'Limpiar búsqueda',
+                            )
+                          : null,
+                    ),
+                    onChanged: controller.setQuickSearch,
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
               UsersFiltersPanel(controller: controller),
               const SizedBox(height: 16),
               if (hasError)
@@ -89,59 +113,67 @@ class UsersView extends GetView<UsersController> {
                     ),
                   ),
                 ),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Total de usuarios: ${controller.totalCount.value}',
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w600),
+              Obx(() {
+                final visible = controller.filteredUsers.length;
+                return Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Total de usuarios: ${controller.totalCount.value} · Coincidencias: $visible',
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w600),
+                      ),
                     ),
-                  ),
-                  if (controller.isLoading.value)
-                    const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                ],
-              ),
+                    if (controller.isLoading.value)
+                      const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                  ],
+                );
+              }),
               const SizedBox(height: 12),
-              if (controller.users.isEmpty && !hasError)
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Icon(Icons.people_alt_outlined, size: 48),
-                        SizedBox(height: 8),
-                        Text(
-                          'No se encontraron usuarios con los filtros aplicados.',
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              else
-                ...controller.users
-                    .map((user) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: UserListCard(
-                            user: user,
-                            formatDate: controller.formatDate,
-                            canView: controller.canRead || controller.canUpdate,
-                            canDelete: controller.canDelete,
-                            isProcessing:
-                                controller.deletingUserId.value == user.id,
-                            onView: () => _openDetail(context, user.id),
-                            onDelete: () => _confirmDelete(context, user),
+              Obx(() {
+                final visibleUsers = controller.filteredUsers;
+                if (visibleUsers.isEmpty && !hasError) {
+                  return Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          Icon(Icons.people_alt_outlined, size: 48),
+                          SizedBox(height: 8),
+                          Text(
+                            'No se encontraron usuarios con los filtros aplicados.',
+                            textAlign: TextAlign.center,
                           ),
-                        ))
-                    .toList(),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+                return Column(
+                  children: visibleUsers
+                      .map((user) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: UserListCard(
+                              user: user,
+                              formatDate: controller.formatDate,
+                              canView: controller.canRead || controller.canUpdate,
+                              canDelete: controller.canDelete,
+                              isProcessing:
+                                  controller.deletingUserId.value == user.id,
+                              onView: () => _openDetail(context, user.id),
+                              onDelete: () => _confirmDelete(context, user),
+                            ),
+                          ))
+                      .toList(),
+                );
+              }),
             ],
           ),
         );

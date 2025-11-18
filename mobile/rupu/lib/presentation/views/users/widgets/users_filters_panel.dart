@@ -76,7 +76,11 @@ class UsersFiltersPanel extends StatelessWidget {
             const SizedBox(height: 12),
             Obx(
               () => DropdownButtonFormField<bool?>(
-                initialValue: controller.isActive.value,
+                value: controller.isActive.value == true
+                    ? true
+                    : controller.isActive.value == false
+                        ? false
+                        : null,
                 decoration: const InputDecoration(
                   labelText: 'Estado',
                   prefixIcon: Icon(Icons.verified_user_outlined),

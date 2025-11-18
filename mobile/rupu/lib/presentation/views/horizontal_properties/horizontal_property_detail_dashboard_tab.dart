@@ -62,10 +62,9 @@ class _DashboardTab extends GetWidget<HorizontalPropertyDashboardController> {
                   MetricItem(
                     icon: Icons.how_to_vote_outlined,
                     title: 'Grupos votación',
-                    value: votingController.firstVotingGroupId?.toDouble() ?? 0,
-                    suffix: votingController.firstVotingGroupId == null
-                        ? '--'
-                        : null,
+                    value: votingController.totalGroups.toDouble(),
+                    suffix:
+                        votingController.totalGroups == 0 ? '--' : null,
                     accent: cs.tertiary,
                   ),
                   MetricItem(

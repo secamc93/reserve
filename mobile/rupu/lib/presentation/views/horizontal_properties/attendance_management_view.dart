@@ -623,14 +623,42 @@ class _SummaryGrid extends StatelessWidget {
       );
     }
 
+    String _formatCountWithShare(int count, int total) {
+      if (total <= 0) return '$count (0.0%)';
+      final ratio = (count / total) * 100;
+      return '$count (${_formatPercent(ratio)})';
+    }
+
+    String _formatOptionShare(int count, int pendingBase, int totalUnits) {
+      final base = pendingBase > 0 ? pendingBase : totalUnits;
+      if (base <= 0) return '$count (0.0%)';
+      final ratio = (count / base).clamp(0.0, 1.0) * 100;
+      return '$count (${_formatPercent(ratio)})';
+    }
+
+    final pendingVotes = s.totalUnits - s.attendedUnits;
+    final safePending = pendingVotes < 0 ? 0 : pendingVotes;
+
     final items = [
       ('Total unidades', (s.totalUnits).toString(), Icons.apartment_outlined),
-      ('Asistieron', (s.attendedUnits).toString(), Icons.people_alt_outlined),
-      ('Ausentes', (s.absentUnits).toString(), Icons.person_off_outlined),
-      ('Propietario', (s.attendedAsOwner).toString(), Icons.person_outline),
+      (
+        'Asistieron',
+        _formatCountWithShare(s.attendedUnits, s.totalUnits),
+        Icons.people_alt_outlined,
+      ),
+      (
+        'Ausentes',
+        _formatCountWithShare(s.absentUnits, s.totalUnits),
+        Icons.person_off_outlined,
+      ),
+      (
+        'Propietario',
+        _formatOptionShare(s.attendedAsOwner, safePending, s.totalUnits),
+        Icons.person_outline,
+      ),
       (
         'Apoderado',
-        (s.attendedAsProxy).toString(),
+        _formatOptionShare(s.attendedAsProxy, safePending, s.totalUnits),
         Icons.assignment_ind_outlined,
       ),
       (
@@ -767,7 +795,7 @@ class _FiltersSection extends StatelessWidget {
                 child: Obx(() {
                   final selected = controller.attendanceFilter.value;
                   return DropdownButtonFormField<String?>(
-                    initialValue: selected,
+                    value: selected,
                     style: Theme.of(
                       context,
                     ).textTheme.bodyMedium?.copyWith(fontSize: 12),

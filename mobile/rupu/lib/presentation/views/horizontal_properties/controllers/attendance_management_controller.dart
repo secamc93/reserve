@@ -419,13 +419,85 @@ class AttendanceManagementController extends GetxController {
     final idx = records.indexWhere((e) => e.id == updated.id);
     if (idx >= 0) {
       final current = records[idx];
-      records[idx] = _mergeRecords(current, updated);
+      final merged = _mergeRecords(current, updated);
+      records[idx] = merged;
       records.refresh();
+      _applySummaryDelta(previous: current, updated: merged);
     } else {
       // opcional: agrega o ignora
       // records.insert(0, updated);
       // records.refresh();
     }
+  }
+
+  void _applySummaryDelta({
+    required AttendanceRecord previous,
+    required AttendanceRecord updated,
+  }) {
+    final currentSummary = summary.value;
+    if (currentSummary == null) return;
+
+    int attendedUnits = currentSummary.attendedUnits;
+    int absentUnits = currentSummary.absentUnits;
+    int ownerVotes = currentSummary.attendedAsOwner;
+    int proxyVotes = currentSummary.attendedAsProxy;
+
+    bool _attended(AttendanceRecord record) =>
+        record.attendedAsOwner || record.attendedAsProxy;
+
+    final wasAttended = _attended(previous);
+    final isAttended = _attended(updated);
+
+    if (!wasAttended && isAttended) {
+      attendedUnits = _bounded(attendedUnits + 1, currentSummary.totalUnits);
+      absentUnits = _bounded(absentUnits - 1, currentSummary.totalUnits,
+          lowerBound: 0);
+    } else if (wasAttended && !isAttended) {
+      attendedUnits = _bounded(attendedUnits - 1, currentSummary.totalUnits,
+          lowerBound: 0);
+      absentUnits = _bounded(absentUnits + 1, currentSummary.totalUnits);
+    }
+
+    ownerVotes = _bounded(
+      ownerVotes + _delta(previous.attendedAsOwner, updated.attendedAsOwner),
+      currentSummary.totalUnits,
+    );
+    proxyVotes = _bounded(
+      proxyVotes + _delta(previous.attendedAsProxy, updated.attendedAsProxy),
+      currentSummary.totalUnits,
+    );
+
+    final totalUnits = currentSummary.totalUnits;
+    final attendanceRate = totalUnits == 0
+        ? 0.0
+        : (attendedUnits / totalUnits) * 100;
+    final absenceRate = totalUnits == 0
+        ? 0.0
+        : (absentUnits / totalUnits) * 100;
+
+    summary.value = AttendanceSummary(
+      totalUnits: totalUnits,
+      attendedUnits: attendedUnits,
+      absentUnits: absentUnits,
+      attendedAsOwner: ownerVotes,
+      attendedAsProxy: proxyVotes,
+      attendanceRate: attendanceRate,
+      absenceRate: absenceRate,
+      attendanceRateByCoef: currentSummary.attendanceRateByCoef,
+      absenceRateByCoef: currentSummary.absenceRateByCoef,
+    );
+  }
+
+  int _bounded(int value, int maxValue, {int lowerBound = 0}) {
+    if (value < lowerBound) return lowerBound;
+    if (value > maxValue) return maxValue;
+    return value;
+  }
+
+  int _delta(bool previous, bool current) {
+    final prev = previous ? 1 : 0;
+    final next = current ? 1 : 0;
+    return next - prev;
   }
 
   AttendanceRecord _mergeRecords(

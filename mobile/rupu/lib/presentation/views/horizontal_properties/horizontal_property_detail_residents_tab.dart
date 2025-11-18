@@ -205,7 +205,11 @@ class _ResidentsFiltersContent
             ),
             Obx(
               () => DropdownButtonFormField<bool?>(
-                initialValue: controller.residentsIsMain.value,
+                value: controller.residentsIsMain.value == true
+                    ? true
+                    : controller.residentsIsMain.value == false
+                        ? false
+                        : null,
                 decoration: _filterDecoration(
                   context,
                   'Es residente principal',
@@ -222,7 +226,11 @@ class _ResidentsFiltersContent
             ),
             Obx(
               () => DropdownButtonFormField<bool?>(
-                initialValue: controller.residentsIsActive.value,
+                value: controller.residentsIsActive.value == true
+                    ? true
+                    : controller.residentsIsActive.value == false
+                        ? false
+                        : null,
                 decoration: _filterDecoration(context, 'Estado'),
                 items: const [
                   DropdownMenuItem<bool?>(value: null, child: Text('Todos')),
