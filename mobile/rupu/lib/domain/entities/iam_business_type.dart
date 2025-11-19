@@ -29,3 +29,15 @@ class IamBusinessTypesResult {
     required this.types,
   });
 }
+
+class IamBusinessTypeMutationResult {
+  final bool success;
+  final String message;
+  final IamBusinessType? type;
+
+  const IamBusinessTypeMutationResult({
+    required this.success,
+    required this.message,
+    this.type,
+  });
+}

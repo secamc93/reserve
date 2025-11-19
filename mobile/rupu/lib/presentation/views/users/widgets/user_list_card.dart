@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:rupu/domain/entities/user_list_item.dart';
+import 'package:rupu/presentation/widgets/image_preview_dialog.dart';
 
 class UserListCard extends StatelessWidget {
   final UserListItem user;
@@ -25,12 +26,22 @@ class UserListCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final avatar = user.avatarUrl.isNotEmpty
+    Widget avatar = user.avatarUrl.isNotEmpty
         ? CircleAvatar(
             radius: 28,
             backgroundImage: NetworkImage(user.avatarUrl),
           )
         : CircleAvatar(radius: 28, child: Text(_initialsFromName(user.name)));
+    if (user.avatarUrl.isNotEmpty) {
+      avatar = GestureDetector(
+        onTap: () => showImagePreviewDialog(
+          context,
+          imageUrl: user.avatarUrl,
+          title: user.name,
+        ),
+        child: avatar,
+      );
+    }
 
     final statusColor = user.isActive
         ? theme.colorScheme.secondaryContainer

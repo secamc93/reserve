@@ -5,10 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
+import 'package:rupu/domain/entities/iam_business.dart';
 import 'package:rupu/domain/entities/user_action_result.dart';
 import 'package:rupu/domain/entities/user_detail.dart';
+import 'package:rupu/domain/entities/user_list_item.dart';
 import 'package:rupu/domain/infrastructure/datasources/users_management_datasource_impl.dart';
+import 'package:rupu/domain/infrastructure/repositories/iam_repository_impl.dart';
 import 'package:rupu/domain/infrastructure/repositories/users_repository_impl.dart';
+import 'package:rupu/domain/repositories/iam_repository.dart';
 import 'package:rupu/domain/repositories/users_repository.dart';
 import 'package:rupu/presentation/views/home/home_controller.dart';
 import 'package:rupu/presentation/views/settings/models/avatar_file_data.dart';
@@ -17,8 +21,10 @@ import 'package:rupu/presentation/views/users/users_controller.dart';
 
 class UserDetailController extends GetxController {
   final UsersRepository repository;
-  UserDetailController()
-      : repository = UsersRepositoryImpl(UsersManagementDatasourceImpl());
+  final IamRepository iamRepository;
+  UserDetailController({IamRepository? iamRepository})
+      : repository = UsersRepositoryImpl(UsersManagementDatasourceImpl()),
+        iamRepository = iamRepository ?? IamRepositoryImpl();
 
   final HomeController _homeController = Get.find<HomeController>();
 
@@ -26,9 +32,7 @@ class UserDetailController extends GetxController {
   final nameCtrl = TextEditingController();
   final emailCtrl = TextEditingController();
   final phoneCtrl = TextEditingController();
-  final passwordCtrl = TextEditingController();
   final roleIdsCtrl = TextEditingController();
-  final businessIdsCtrl = TextEditingController();
   final avatarUrlCtrl = TextEditingController();
 
   final isActive = true.obs;
@@ -41,6 +45,10 @@ class UserDetailController extends GetxController {
   final avatarFile = Rxn<AvatarFileData>();
   final user = Rxn<UserDetail>();
   final errorMessage = RxnString();
+  final selectedBusinesses = <UserBusinessSummary>[].obs;
+  final businessSuggestions = <IamBusiness>[].obs;
+  final businessSuggestionsLoading = false.obs;
+  final businessSuggestionsError = RxnString();
 
   int? _userId;
 
@@ -71,6 +79,7 @@ class UserDetailController extends GetxController {
     errorMessage.value = null;
     avatarFile.value = null;
     hasAvatarUrl.value = false;
+    selectedBusinesses.clear();
 
     try {
       final detail = await repository.getUserDetail(id: id);
@@ -92,12 +101,11 @@ class UserDetailController extends GetxController {
     nameCtrl.text = detail.name;
     emailCtrl.text = detail.email;
     phoneCtrl.text = detail.phone;
-    passwordCtrl.clear();
     roleIdsCtrl.text = detail.roles.map((r) => r.id).join(',');
-    businessIdsCtrl.text = detail.businesses.map((b) => b.id).join(',');
     avatarUrlCtrl.text = detail.avatarUrl;
     hasAvatarUrl.value = false;
     isActive.value = detail.isActive;
+    selectedBusinesses.assignAll(detail.businesses);
   }
 
   List<int> _parseIds(String input) {
@@ -222,16 +230,14 @@ class UserDetailController extends GetxController {
     try {
       final avatarData = avatarFile.value;
       final avatarUrl = avatarUrlCtrl.text.trim();
-      final password = passwordCtrl.text.trim();
       final result = await repository.updateUser(
         id: _userId!,
         name: nameCtrl.text.trim(),
         email: emailCtrl.text.trim(),
-        password: password.isEmpty ? null : password,
         phone: phoneCtrl.text.trim().isEmpty ? null : phoneCtrl.text.trim(),
         isActive: isActive.value,
         roleIds: _parseIds(roleIdsCtrl.text),
-        businessIds: _parseIds(businessIdsCtrl.text),
+        businessIds: selectedBusinesses.map((biz) => biz.id).toList(),
         avatarUrl: avatarUrl.isEmpty ? null : avatarUrl,
         avatarPath: avatarData?.path,
         avatarFileName: avatarData?.fileName,
@@ -252,7 +258,6 @@ class UserDetailController extends GetxController {
         }
       }
 
-      passwordCtrl.clear();
       avatarFile.value = null;
 
       return result;
@@ -308,10 +313,55 @@ class UserDetailController extends GetxController {
     nameCtrl.dispose();
     emailCtrl.dispose();
     phoneCtrl.dispose();
-    passwordCtrl.dispose();
     roleIdsCtrl.dispose();
-    businessIdsCtrl.dispose();
     avatarUrlCtrl.dispose();
     super.onClose();
+  }
+
+  Future<void> searchBusinesses(String query) async {
+    if (!canUpdate) return;
+    businessSuggestionsLoading.value = true;
+    businessSuggestionsError.value = null;
+    try {
+      final page = await iamRepository.getBusinesses(
+        page: 1,
+        perPage: 20,
+        name: query.trim().isEmpty ? null : query.trim(),
+      );
+      businessSuggestions.assignAll(page.businesses);
+    } catch (_) {
+      businessSuggestions.assignAll(const []);
+      businessSuggestionsError.value =
+          'No se pudieron cargar los negocios disponibles.';
+    } finally {
+      businessSuggestionsLoading.value = false;
+    }
+  }
+
+  void addBusinessFromCatalog(IamBusiness business) {
+    if (selectedBusinesses.any((b) => b.id == business.id)) return;
+    selectedBusinesses.add(_summaryFromBusiness(business));
+    selectedBusinesses.sort((a, b) => a.name.compareTo(b.name));
+  }
+
+  void removeBusiness(int businessId) {
+    selectedBusinesses.removeWhere((biz) => biz.id == businessId);
+  }
+
+  UserBusinessSummary _summaryFromBusiness(IamBusiness business) {
+    return UserBusinessSummary(
+      id: business.id,
+      name: business.name,
+      code: business.code,
+      businessTypeId: business.businessTypeId,
+      address: business.address.isEmpty ? null : business.address,
+      description: business.description.isEmpty ? null : business.description,
+      logoUrl: business.logoUrl.isEmpty ? null : business.logoUrl,
+      isActive: business.isActive,
+      businessTypeName:
+          business.businessType.isEmpty ? null : business.businessType,
+      businessTypeCode:
+          business.businessType.isEmpty ? null : business.businessType,
+    );
   }
 }

@@ -22,14 +22,29 @@ class UsersFiltersPanel extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            TextField(
-              controller: controller.searchCtrl,
-              textInputAction: TextInputAction.search,
-              decoration: const InputDecoration(
-                labelText: 'Búsqueda rápida',
-                hintText: 'Nombre, correo o teléfono',
-                prefixIcon: Icon(Icons.search),
-              ),
+            ValueListenableBuilder<TextEditingValue>(
+              valueListenable: controller.searchCtrl,
+              builder: (_, value, __) {
+                return TextField(
+                  controller: controller.searchCtrl,
+                  textInputAction: TextInputAction.search,
+                  onSubmitted: (_) => controller.fetchUsers(),
+                  decoration: InputDecoration(
+                    labelText: 'Búsqueda rápida',
+                    hintText: 'Nombre, correo o teléfono',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: value.text.isEmpty
+                        ? null
+                        : IconButton(
+                            onPressed: () {
+                              controller.searchCtrl.clear();
+                              controller.fetchUsers();
+                            },
+                            icon: const Icon(Icons.clear),
+                          ),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 12),
             Row(

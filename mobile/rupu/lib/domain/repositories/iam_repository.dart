@@ -28,6 +28,25 @@ abstract class IamRepository {
 
   Future<IamBusinessTypesResult> getBusinessTypes();
 
+  Future<IamBusinessTypeMutationResult> createBusinessType({
+    required String name,
+    required String code,
+    String? description,
+    required String icon,
+    bool isActive,
+  });
+
+  Future<IamBusinessTypeMutationResult> updateBusinessType({
+    required int id,
+    required String name,
+    required String code,
+    String? description,
+    required String icon,
+    bool isActive,
+  });
+
+  Future<IamMessageResult> deleteBusinessType(int id);
+
   Future<IamBusinessesPage> getBusinesses({
     int page,
     int perPage,
@@ -56,4 +75,18 @@ abstract class IamRepository {
   });
 
   Future<IamMessageResult> deleteResource(int id);
+
+  Future<List<IamBusinessConfiguredResource>> getBusinessConfiguredResources(
+    int businessId,
+  );
+
+  Future<IamMessageResult> activateBusinessConfiguredResource(
+    int resourceId, {
+    int? businessId,
+  });
+
+  Future<IamMessageResult> deactivateBusinessConfiguredResource(
+    int resourceId, {
+    int? businessId,
+  });
 }

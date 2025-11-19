@@ -7,6 +7,8 @@ import 'package:rupu/domain/entities/iam_user.dart';
 import 'package:rupu/domain/infrastructure/models/iam/iam_business_types_response_model.dart';
 import 'package:rupu/domain/infrastructure/models/iam/iam_businesses_response_model.dart'
     as biz;
+import 'package:rupu/domain/infrastructure/models/iam/iam_configured_resources_response_model.dart'
+    as conf;
 import 'package:rupu/domain/infrastructure/models/iam/iam_resources_response_model.dart'
     as res;
 import 'package:rupu/domain/infrastructure/models/iam/iam_users_response_model.dart'
@@ -109,6 +111,9 @@ class IamMapper {
   static IamResource resourceFromJson(Map<String, dynamic> json) =>
       _resourceFromModel(res.IamResourceModel.fromJson(json));
 
+  static IamBusinessType businessTypeFromJson(Map<String, dynamic> json) =>
+      _businessTypeFromModel(IamBusinessTypeModel.fromJson(json));
+
   static IamBusinessType _businessTypeFromModel(
           IamBusinessTypeModel model) =>
       IamBusinessType(
@@ -126,6 +131,7 @@ class IamMapper {
       IamBusiness(
         id: model.id,
         name: model.name,
+        code: model.code,
         description: model.description,
         address: model.address,
         phone: model.phone,
@@ -142,6 +148,18 @@ class IamMapper {
         businessType: model.businessType,
         createdAt: model.createdAt,
         updatedAt: model.updatedAt,
+      );
+
+  static IamBusinessConfiguredResource configuredResourceFromModel(
+          conf.IamConfiguredResourceModel model) =>
+      IamBusinessConfiguredResource(
+        id: model.id,
+        resourceId: model.resourceId,
+        businessId: model.businessId,
+        name: model.name,
+        code: model.code,
+        description: model.description,
+        isActive: model.isActive,
       );
 
   static IamAction _actionFromModel(act.IamActionModel model) => IamAction(

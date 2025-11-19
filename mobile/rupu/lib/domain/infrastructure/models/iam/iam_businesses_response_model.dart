@@ -33,6 +33,7 @@ class IamBusinessesResponseModel {
 class IamBusinessModel {
   final int id;
   final String name;
+  final String code;
   final String description;
   final String address;
   final String phone;
@@ -53,6 +54,7 @@ class IamBusinessModel {
   IamBusinessModel({
     required this.id,
     required this.name,
+    required this.code,
     required this.description,
     required this.address,
     required this.phone,
@@ -75,6 +77,7 @@ class IamBusinessModel {
       IamBusinessModel(
         id: json['id'] as int,
         name: json['name'] as String? ?? '',
+        code: json['code'] as String? ?? '',
         description: json['description'] as String? ?? '',
         address: json['address'] as String? ?? '',
         phone: json['phone'] as String? ?? '',

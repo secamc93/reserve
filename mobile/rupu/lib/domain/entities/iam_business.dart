@@ -3,6 +3,7 @@ import 'iam_pagination.dart';
 class IamBusiness {
   final int id;
   final String name;
+  final String code;
   final String description;
   final String address;
   final String phone;
@@ -23,6 +24,7 @@ class IamBusiness {
   const IamBusiness({
     required this.id,
     required this.name,
+    required this.code,
     required this.description,
     required this.address,
     required this.phone,
@@ -40,6 +42,38 @@ class IamBusiness {
     this.createdAt,
     this.updatedAt,
   });
+}
+
+class IamBusinessConfiguredResource {
+  final int id;
+  final int resourceId;
+  final int businessId;
+  final String name;
+  final String? code;
+  final String? description;
+  final bool isActive;
+
+  const IamBusinessConfiguredResource({
+    required this.id,
+    required this.resourceId,
+    required this.businessId,
+    required this.name,
+    this.code,
+    this.description,
+    required this.isActive,
+  });
+
+  IamBusinessConfiguredResource copyWith({bool? isActive}) {
+    return IamBusinessConfiguredResource(
+      id: id,
+      resourceId: resourceId,
+      businessId: businessId,
+      name: name,
+      code: code,
+      description: description,
+      isActive: isActive ?? this.isActive,
+    );
+  }
 }
 
 class IamBusinessesPage {

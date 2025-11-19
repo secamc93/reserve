@@ -4,6 +4,7 @@ import 'package:rupu/domain/datasource/iam_datasource.dart';
 import 'package:rupu/domain/infrastructure/models/iam/iam_actions_response_model.dart';
 import 'package:rupu/domain/infrastructure/models/iam/iam_business_types_response_model.dart';
 import 'package:rupu/domain/infrastructure/models/iam/iam_businesses_response_model.dart';
+import 'package:rupu/domain/infrastructure/models/iam/iam_configured_resources_response_model.dart';
 import 'package:rupu/domain/infrastructure/models/iam/iam_resources_response_model.dart';
 import 'package:rupu/domain/infrastructure/models/iam/iam_users_response_model.dart';
 
@@ -39,10 +40,34 @@ class IamDatasourceImpl extends IamDatasource {
   Future<IamBusinessTypesResponseModel> getBusinessTypes({
     Map<String, dynamic>? query,
   }) async {
-    final response = await _dio.get('/business-types', queryParameters: _clean(query));
+    final response =
+        await _dio.get('/business-types', queryParameters: _clean(query));
     return IamBusinessTypesResponseModel.fromJson(
       Map<String, dynamic>.from(response.data as Map),
     );
+  }
+
+  @override
+  Future<Map<String, dynamic>> createBusinessType(
+    Map<String, dynamic> data,
+  ) async {
+    final response = await _dio.post('/business-types', data: data);
+    return Map<String, dynamic>.from(response.data as Map);
+  }
+
+  @override
+  Future<Map<String, dynamic>> updateBusinessType(
+    int id,
+    Map<String, dynamic> data,
+  ) async {
+    final response = await _dio.put('/business-types/$id', data: data);
+    return Map<String, dynamic>.from(response.data as Map);
+  }
+
+  @override
+  Future<Map<String, dynamic>> deleteBusinessType(int id) async {
+    final response = await _dio.delete('/business-types/$id');
+    return Map<String, dynamic>.from(response.data as Map);
   }
 
   @override
@@ -82,6 +107,45 @@ class IamDatasourceImpl extends IamDatasource {
   @override
   Future<Map<String, dynamic>> deleteResource(int id) async {
     final response = await _dio.delete('/resources/$id');
+    return Map<String, dynamic>.from(response.data as Map);
+  }
+
+  @override
+  Future<IamConfiguredResourcesResponseModel> getBusinessConfiguredResources({
+    required int businessId,
+  }) async {
+    final response =
+        await _dio.get('/businesses/$businessId/configured-resources');
+    return IamConfiguredResourcesResponseModel.fromJson(
+      Map<String, dynamic>.from(response.data as Map),
+    );
+  }
+
+  @override
+  Future<Map<String, dynamic>> activateBusinessConfiguredResource(
+    int resourceId, {
+    int? businessId,
+  }) async {
+    final response = await _dio.put(
+      '/businesses/configured-resources/$resourceId/activate',
+      queryParameters: _clean({
+        if (businessId != null) 'business_id': businessId,
+      }),
+    );
+    return Map<String, dynamic>.from(response.data as Map);
+  }
+
+  @override
+  Future<Map<String, dynamic>> deactivateBusinessConfiguredResource(
+    int resourceId, {
+    int? businessId,
+  }) async {
+    final response = await _dio.put(
+      '/businesses/configured-resources/$resourceId/deactivate',
+      queryParameters: _clean({
+        if (businessId != null) 'business_id': businessId,
+      }),
+    );
     return Map<String, dynamic>.from(response.data as Map);
   }
 

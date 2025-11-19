@@ -125,6 +125,24 @@ class HorizontalPropertyVotingController extends GetxController {
       await Future.wait(expandedGroupIds.map(
         (groupId) => loadGroupVotings(groupId, force: true),
       ));
+      for (final groupId in expandedGroupIds) {
+        final groupState = _groupStates[groupId];
+        if (groupState == null) continue;
+        for (final votingId in groupState.expandedVotingIds) {
+          await Future.wait([
+            loadVotingOptions(
+              groupId: groupId,
+              votingId: votingId,
+              force: true,
+            ),
+            loadVotingVotes(
+              groupId: groupId,
+              votingId: votingId,
+              force: true,
+            ),
+          ]);
+        }
+      }
     } catch (_) {
       groups.clear();
       errorMessage.value =

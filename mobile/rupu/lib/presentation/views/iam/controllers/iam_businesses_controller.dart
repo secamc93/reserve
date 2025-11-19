@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:rupu/domain/entities/iam_business.dart';
 import 'package:rupu/domain/entities/iam_pagination.dart';
+import 'package:rupu/domain/entities/iam_resource.dart';
 import 'package:rupu/domain/infrastructure/repositories/iam_repository_impl.dart';
 import 'package:rupu/domain/repositories/iam_repository.dart';
 
@@ -73,5 +74,27 @@ class IamBusinessesController extends GetxController {
     final meta = pagination.value;
     if (meta == null || !meta.hasPrev) return;
     fetchBusinesses(page: meta.currentPage - 1);
+  }
+
+  Future<List<IamBusinessConfiguredResource>> getConfiguredResources(
+    int businessId,
+  ) async {
+    return repository.getBusinessConfiguredResources(businessId);
+  }
+
+  Future<IamMessageResult> toggleConfiguredResource({
+    required int resourceId,
+    required bool activate,
+    required int businessId,
+  }) {
+    return activate
+        ? repository.activateBusinessConfiguredResource(
+            resourceId,
+            businessId: businessId,
+          )
+        : repository.deactivateBusinessConfiguredResource(
+            resourceId,
+            businessId: businessId,
+          );
   }
 }

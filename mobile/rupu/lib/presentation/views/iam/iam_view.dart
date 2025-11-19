@@ -142,6 +142,13 @@ class _IamViewState extends State<IamView> with SingleTickerProviderStateMixin {
           tooltip: 'Crear recurso',
           child: const Icon(Icons.add),
         );
+      case 4:
+        if (!Get.isRegistered<IamBusinessTypesController>()) return null;
+        return FloatingActionButton(
+          onPressed: () => showBusinessTypeFormDialog(context),
+          tooltip: 'Crear tipo de negocio',
+          child: const Icon(Icons.add_business),
+        );
       default:
         return null;
     }
@@ -495,8 +502,8 @@ class _IamResourcesTab extends GetView<IamResourcesController> {
                                   : resource.businessTypeName,
                             ),
                           ),
-                          DataCell(Text(_formatDate(resource.createdAt))),
-                          DataCell(Text(_formatDate(resource.updatedAt))),
+                          DataCell(Text(_formatFriendlyDate(resource.createdAt))),
+                          DataCell(Text(_formatFriendlyDate(resource.updatedAt))),
                           DataCell(
                             Row(
                               children: [
@@ -545,6 +552,186 @@ class _IamResourcesTab extends GetView<IamResourcesController> {
       );
     });
   }
+
+  Future<void> _showConfiguredResourcesDialog(
+    BuildContext context,
+    IamBusiness business,
+  ) async {
+    final resources = <IamBusinessConfiguredResource>[];
+    final togglingIds = <int>{};
+    bool isLoading = true;
+    String? error;
+    bool initialized = false;
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogCtx) {
+        return StatefulBuilder(
+          builder: (dialogCtx, setState) {
+            Future<void> load() async {
+              setState(() {
+                isLoading = true;
+                error = null;
+              });
+              try {
+                final data =
+                    await controller.getConfiguredResources(business.id);
+                setState(() {
+                  resources
+                    ..clear()
+                    ..addAll(data);
+                  isLoading = false;
+                });
+              } catch (_) {
+                setState(() {
+                  error =
+                      'No se pudieron cargar los recursos configurados. Intenta nuevamente.';
+                  isLoading = false;
+                });
+              }
+            }
+
+            Future<void> toggleResource(
+              IamBusinessConfiguredResource resource,
+            ) async {
+              if (togglingIds.contains(resource.id)) return;
+              setState(() => togglingIds.add(resource.id));
+              final activate = !resource.isActive;
+              final result = await controller.toggleConfiguredResource(
+                resourceId: resource.id,
+                activate: activate,
+                businessId: business.id,
+              );
+              if (!dialogCtx.mounted) return;
+              setState(() {
+                togglingIds.remove(resource.id);
+                if (result.success) {
+                  final index = resources.indexWhere((r) => r.id == resource.id);
+                  if (index >= 0) {
+                    resources[index] = resources[index].copyWith(
+                      isActive: activate,
+                    );
+                  }
+                }
+              });
+              if (context.mounted) {
+                _showIamSnackBar(context, result.message);
+              }
+            }
+
+            if (!initialized) {
+              initialized = true;
+              Future.microtask(load);
+            }
+
+            Widget content;
+            if (isLoading) {
+              content = const SizedBox(
+                height: 220,
+                width: 420,
+                child: Center(child: CircularProgressIndicator()),
+              );
+            } else if (error != null) {
+              content = SizedBox(
+                width: 420,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      error!,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    FilledButton.tonal(
+                      onPressed: load,
+                      child: const Text('Reintentar'),
+                    ),
+                  ],
+                ),
+              );
+            } else if (resources.isEmpty) {
+              content = const SizedBox(
+                width: 420,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: Text(
+                    'No hay recursos configurados para este negocio.',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              );
+            } else {
+              content = SizedBox(
+                width: 460,
+                height: 360,
+                child: ListView.separated(
+                  itemCount: resources.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (_, index) {
+                    final resource = resources[index];
+                    final isToggling = togglingIds.contains(resource.id);
+                    final isActive = resource.isActive;
+                    final theme = Theme.of(dialogCtx);
+                    final cs = theme.colorScheme;
+                    final buttonColor = isActive ? Colors.green : cs.error;
+                    final textColor = isActive ? Colors.white : cs.onError;
+                    return ListTile(
+                      title: Text(resource.name),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            resource.description?.isNotEmpty == true
+                                ? resource.description!
+                                : 'Sin descripción',
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            isActive
+                                ? 'Toca el botón para desactivar este recurso.'
+                                : 'Toca el botón para activar este recurso.',
+                            style: theme.textTheme.bodySmall
+                                ?.copyWith(color: cs.onSurfaceVariant),
+                          ),
+                        ],
+                      ),
+                      trailing: FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: buttonColor,
+                          foregroundColor: textColor,
+                        ),
+                        onPressed:
+                            isToggling ? null : () => toggleResource(resource),
+                        child: isToggling
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : Text(isActive ? 'Activo' : 'Inactivo'),
+                      ),
+                    );
+                  },
+                ),
+              );
+            }
+
+            return AlertDialog(
+              title: Text('Recursos de ${business.name}'),
+              content: content,
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogCtx).pop(),
+                  child: const Text('Cerrar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 }
 
 class _IamBusinessTypesTab extends GetView<IamBusinessTypesController> {
@@ -592,18 +779,74 @@ class _IamBusinessTypesTab extends GetView<IamBusinessTypesController> {
                 message: 'No se encontraron tipos de negocio.',
               )
             else
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: types
-                    .map((type) => _IamBusinessTypeCard(type: type))
-                    .toList(growable: false),
+              Card(
+                clipBehavior: Clip.antiAlias,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.all(16),
+                  child: DataTable(
+                    columns: const [
+                      DataColumn(label: Text('Nombre')),
+                      DataColumn(label: Text('Código')),
+                      DataColumn(label: Text('Icono')),
+                      DataColumn(label: Text('Estado')),
+                      DataColumn(label: Text('Creado')),
+                      DataColumn(label: Text('Acciones')),
+                    ],
+                    rows: types
+                        .map(
+                          (type) => DataRow(
+                            cells: [
+                              DataCell(Text(type.name)),
+                              DataCell(Text(type.code)),
+                              DataCell(Text(type.icon)),
+                              DataCell(_IamStatusChip(active: type.isActive)),
+                              DataCell(Text(_formatFriendlyDate(type.createdAt))),
+                              DataCell(Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    tooltip: 'Editar',
+                                    onPressed: () =>
+                                        showBusinessTypeFormDialog(context, type: type),
+                                    icon: const Icon(Icons.edit_outlined),
+                                  ),
+                                  Obx(() {
+                                    final isDeleting = controller.deletingTypeIds
+                                        .contains(type.id);
+                                    return IconButton(
+                                      tooltip: 'Eliminar',
+                                      onPressed: isDeleting
+                                          ? null
+                                          : () =>
+                                              confirmDeleteBusinessTypeDialog(
+                                                  context, type),
+                                      icon: isDeleting
+                                          ? const SizedBox(
+                                              width: 16,
+                                              height: 16,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                              ),
+                                            )
+                                          : const Icon(Icons.delete_outline),
+                                    );
+                                  }),
+                                ],
+                              )),
+                            ],
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ),
               ),
           ],
         ),
       );
     });
   }
+
 }
 
 class _IamBusinessesTab extends GetView<IamBusinessesController> {
@@ -690,6 +933,8 @@ class _IamBusinessesTab extends GetView<IamBusinessesController> {
                       DataColumn(label: Text('Tipo de negocio')),
                       DataColumn(label: Text('Estado')),
                       DataColumn(label: Text('Dirección')),
+                      DataColumn(label: Text('Creado')),
+                      DataColumn(label: Text('Acciones')),
                     ],
                     rows: businesses.map((business) {
                       return DataRow(
@@ -710,6 +955,15 @@ class _IamBusinessesTab extends GetView<IamBusinessesController> {
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
+                            ),
+                          ),
+                          DataCell(Text(_formatFriendlyDate(business.createdAt))),
+                          DataCell(
+                            IconButton(
+                              tooltip: 'Ver recursos configurados',
+                              icon: const Icon(Icons.widgets_outlined),
+                              onPressed: () =>
+                                  _showConfiguredResourcesDialog(context, business),
                             ),
                           ),
                         ],
@@ -762,7 +1016,7 @@ class _IamUserCard extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final initials = _buildInitials(user.name);
-    final lastLogin = _formatDate(user.lastLoginAt);
+    final lastLogin = _formatFriendlyDateTime(user.lastLoginAt);
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -882,45 +1136,6 @@ class _IamUserCard extends StatelessWidget {
   }
 }
 
-class _IamBusinessTypeCard extends StatelessWidget {
-  final IamBusinessType type;
-
-  const _IamBusinessTypeCard({required this.type});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return Container(
-      width: 220,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cs.outlineVariant),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            type.icon.isEmpty ? '🏢' : type.icon,
-            style: const TextStyle(fontSize: 28),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            type.name,
-            style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 4),
-          Text(type.description, maxLines: 3, overflow: TextOverflow.ellipsis),
-          const SizedBox(height: 8),
-          _IamStatusChip(active: type.isActive),
-        ],
-      ),
-    );
-  }
-}
-
 class _IamBusinessLogoCell extends StatelessWidget {
   final String logoUrl;
 
@@ -948,6 +1163,57 @@ class _IamStatusChip extends StatelessWidget {
       backgroundColor: active ? cs.primaryContainer : cs.errorContainer,
       labelStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
         color: active ? cs.onPrimaryContainer : cs.onErrorContainer,
+      ),
+    );
+  }
+}
+
+class _BusinessTypeInfoCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    const tips = [
+      'El código debe ser único y en minúsculas',
+      'El icono se mostrará en la interfaz de usuario',
+      'Los tipos inactivos no aparecerán en las listas de selección',
+    ];
+    return Card(
+      color: cs.secondaryContainer,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Información importante',
+              style: tt.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: cs.onSecondaryContainer,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ...tips.map(
+              (tip) => Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('• '),
+                    Expanded(
+                      child: Text(
+                        tip,
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSecondaryContainer,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1048,9 +1314,18 @@ class _IamPaginationControls extends StatelessWidget {
   }
 }
 
-String _formatDate(DateTime? value) {
+final DateFormat _friendlyDateFormat = DateFormat('d MMM yyyy', 'es');
+final DateFormat _friendlyDateTimeFormat =
+    DateFormat('d MMM yyyy HH:mm', 'es');
+
+String _formatFriendlyDate(DateTime? value) {
   if (value == null) return '--';
-  return DateFormat('dd/MM/yyyy HH:mm').format(value.toLocal());
+  return _friendlyDateFormat.format(value.toLocal());
+}
+
+String _formatFriendlyDateTime(DateTime? value) {
+  if (value == null) return '--';
+  return _friendlyDateTimeFormat.format(value.toLocal());
 }
 
 void _showIamSnackBar(BuildContext context, String message) {
@@ -1189,6 +1464,191 @@ Future<void> confirmDeleteResourceDialog(
   if (result != null) {
     _showIamSnackBar(context, result.message);
   }
+}
+
+Future<void> showBusinessTypeFormDialog(
+  BuildContext context, {
+  IamBusinessType? type,
+}) async {
+  if (!Get.isRegistered<IamBusinessTypesController>()) return;
+  final controller = Get.find<IamBusinessTypesController>();
+  final formKey = GlobalKey<FormState>();
+  final nameCtrl = TextEditingController(text: type?.name ?? '');
+  final codeCtrl = TextEditingController(text: type?.code ?? '');
+  final descriptionCtrl = TextEditingController(text: type?.description ?? '');
+  final iconCtrl = TextEditingController(text: type?.icon ?? '');
+  bool isActive = type?.isActive ?? true;
+  bool isSaving = false;
+
+  final result = await showDialog<IamBusinessTypeMutationResult>(
+    context: context,
+    builder: (dialogCtx) {
+      return StatefulBuilder(
+        builder: (dialogCtx, setState) {
+          Future<void> submit() async {
+            if (!formKey.currentState!.validate()) return;
+            setState(() => isSaving = true);
+            final mutation = await controller.saveBusinessType(
+              id: type?.id,
+              name: nameCtrl.text.trim(),
+              code: codeCtrl.text.trim(),
+              description: descriptionCtrl.text.trim(),
+              icon: iconCtrl.text.trim(),
+              isActive: isActive,
+            );
+            if (!dialogCtx.mounted) return;
+            setState(() => isSaving = false);
+            Navigator.of(dialogCtx).pop(mutation);
+          }
+
+          return AlertDialog(
+            title: Text(
+              type == null ? 'Crear tipo de negocio' : 'Editar tipo de negocio',
+            ),
+            content: SingleChildScrollView(
+              child: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      controller: nameCtrl,
+                      decoration: const InputDecoration(labelText: 'Nombre'),
+                      validator: (value) =>
+                          (value == null || value.trim().isEmpty)
+                              ? 'Requerido'
+                              : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: codeCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Código',
+                        helperText: 'Debe ser único y en minúsculas.',
+                      ),
+                      validator: (value) =>
+                          (value == null || value.trim().isEmpty)
+                              ? 'Requerido'
+                              : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: descriptionCtrl,
+                      decoration: const InputDecoration(labelText: 'Descripción'),
+                      maxLines: 3,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: iconCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Icono',
+                        helperText: 'Selecciona uno de la lista o ingresa un emoji.',
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: controller.availableIcons
+                            .map(
+                              (icon) => ChoiceChip(
+                                label: Text(icon),
+                                selected: iconCtrl.text.trim() == icon,
+                                onSelected: (_) {
+                                  iconCtrl.text = icon;
+                                  setState(() {});
+                                },
+                              ),
+                            )
+                            .toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    CheckboxListTile(
+                      value: isActive,
+                      onChanged: (value) {
+                        setState(() => isActive = value ?? isActive);
+                      },
+                      title: const Text('¿Activo?'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    const SizedBox(height: 12),
+                    _BusinessTypeInfoCard(),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogCtx).pop(),
+                child: const Text('Cancelar'),
+              ),
+              FilledButton(
+                onPressed: isSaving ? null : submit,
+                child: isSaving
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Guardar'),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+
+  nameCtrl.dispose();
+  codeCtrl.dispose();
+  descriptionCtrl.dispose();
+  iconCtrl.dispose();
+
+  if (result != null && context.mounted) {
+    final message =
+        result.message.isNotEmpty ? result.message : 'Operación completada.';
+    _showIamSnackBar(context, message);
+  }
+}
+
+Future<void> confirmDeleteBusinessTypeDialog(
+  BuildContext context,
+  IamBusinessType type,
+) async {
+  if (!Get.isRegistered<IamBusinessTypesController>()) return;
+  final controller = Get.find<IamBusinessTypesController>();
+  final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogCtx) => AlertDialog(
+          title: const Text('Eliminar tipo de negocio'),
+          content: Text(
+            '¿Deseas eliminar ${type.name}? Esta acción no se puede deshacer.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogCtx).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogCtx).pop(true),
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(dialogCtx).colorScheme.error,
+                foregroundColor: Theme.of(dialogCtx).colorScheme.onError,
+              ),
+              child: const Text('Eliminar'),
+            ),
+          ],
+        ),
+      ) ??
+      false;
+
+  if (!confirmed) return;
+  final result = await controller.deleteBusinessType(type.id);
+  if (!context.mounted) return;
+  _showIamSnackBar(context, result.message);
 }
 
 class _IamTabDefinition {

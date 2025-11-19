@@ -6,8 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:rupu/domain/entities/create_user_result.dart';
+import 'package:rupu/domain/entities/iam_business.dart';
 import 'package:rupu/domain/infrastructure/datasources/users_management_datasource_impl.dart';
+import 'package:rupu/domain/infrastructure/repositories/iam_repository_impl.dart';
 import 'package:rupu/domain/infrastructure/repositories/users_repository_impl.dart';
+import 'package:rupu/domain/repositories/iam_repository.dart';
 import 'package:rupu/domain/repositories/users_repository.dart';
 import 'package:rupu/presentation/views/settings/models/avatar_file_data.dart';
 import 'package:rupu/presentation/views/settings/utils/avatar_file_helper.dart';
@@ -15,16 +18,16 @@ import 'package:path/path.dart' as p;
 
 class CreateUserController extends GetxController {
   final UsersRepository repository;
-  CreateUserController()
-    : repository = UsersRepositoryImpl(UsersManagementDatasourceImpl());
+  final IamRepository iamRepository;
+  CreateUserController({IamRepository? iamRepository})
+      : repository = UsersRepositoryImpl(UsersManagementDatasourceImpl()),
+        iamRepository = iamRepository ?? IamRepositoryImpl();
 
   final formKey = GlobalKey<FormState>();
   final nameCtrl = TextEditingController();
   final emailCtrl = TextEditingController();
   final phoneCtrl = TextEditingController();
   final avatarUrlCtrl = TextEditingController();
-  final roleIdsCtrl = TextEditingController();
-  final businessIdsCtrl = TextEditingController();
 
   final isActive = true.obs;
   final Rxn<AvatarFileData> avatarFile = Rxn();
@@ -33,14 +36,10 @@ class CreateUserController extends GetxController {
   final hasAvatarUrl = false.obs;
   final isSubmitting = false.obs;
   final errorMessage = RxnString();
-
-  List<int> _parseIds(String input) {
-    return input
-        .split(',')
-        .map((e) => int.tryParse(e.trim()))
-        .whereType<int>()
-        .toList();
-  }
+  final selectedBusinesses = <IamBusiness>[].obs;
+  final businessSuggestions = <IamBusiness>[].obs;
+  final businessSuggestionsLoading = false.obs;
+  final businessSuggestionsError = RxnString();
 
   Future<void> pickAvatarFromCamera() async {
     final picker = ImagePicker();
@@ -127,8 +126,7 @@ class CreateUserController extends GetxController {
         email: emailCtrl.text.trim(),
         phone: phoneCtrl.text.trim().isEmpty ? null : phoneCtrl.text.trim(),
         isActive: isActive.value,
-        roleIds: _parseIds(roleIdsCtrl.text),
-        businessIds: _parseIds(businessIdsCtrl.text),
+        businessIds: selectedBusinesses.map((biz) => biz.id).toList(),
         avatarUrl: avatarUrl.isEmpty ? null : avatarUrl,
         avatarPath: avatarData?.path,
         avatarFileName: avatarData?.fileName,
@@ -179,8 +177,35 @@ class CreateUserController extends GetxController {
     emailCtrl.dispose();
     phoneCtrl.dispose();
     avatarUrlCtrl.dispose();
-    roleIdsCtrl.dispose();
-    businessIdsCtrl.dispose();
     super.onClose();
+  }
+
+  Future<void> searchBusinesses(String query) async {
+    businessSuggestionsLoading.value = true;
+    businessSuggestionsError.value = null;
+    try {
+      final page = await iamRepository.getBusinesses(
+        page: 1,
+        perPage: 20,
+        name: query.trim().isEmpty ? null : query.trim(),
+      );
+      businessSuggestions.assignAll(page.businesses);
+    } catch (_) {
+      businessSuggestions.assignAll(const []);
+      businessSuggestionsError.value =
+          'No se pudieron cargar los negocios disponibles.';
+    } finally {
+      businessSuggestionsLoading.value = false;
+    }
+  }
+
+  void addBusinessFromCatalog(IamBusiness business) {
+    if (selectedBusinesses.any((b) => b.id == business.id)) return;
+    selectedBusinesses.add(business);
+    selectedBusinesses.sort((a, b) => a.name.compareTo(b.name));
+  }
+
+  void removeBusiness(int businessId) {
+    selectedBusinesses.removeWhere((biz) => biz.id == businessId);
   }
 }

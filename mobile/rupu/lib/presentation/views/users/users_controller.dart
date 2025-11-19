@@ -35,6 +35,7 @@ class UsersController extends GetxController {
   final sortByCtrl = TextEditingController(text: 'created_at');
   final sortOrderCtrl = TextEditingController(text: 'desc');
   final isActive = RxnBool();
+  final appliedFilters = const _UsersFilterSnapshot().obs;
 
   final _dateFormat = DateFormat('dd/MM/yyyy HH:mm');
 
@@ -87,25 +88,32 @@ class UsersController extends GetxController {
 
     isLoading.value = true;
     errorMessage.value = null;
+    final filters = _UsersFilterSnapshot.fromController(this);
     try {
       final query = <String, dynamic>{};
       final page = int.tryParse(pageCtrl.text);
       final pageSize = int.tryParse(pageSizeCtrl.text);
       if (page != null) query['page'] = page;
       if (pageSize != null) query['page_size'] = pageSize;
-      if (searchCtrl.text.trim().isNotEmpty) {
-        query['search'] = searchCtrl.text.trim();
+      if (filters.search.isNotEmpty) {
+        query['search'] = _wildcard(filters.search);
       }
-      if (nameCtrl.text.isNotEmpty) query['name'] = nameCtrl.text.trim();
-      if (emailCtrl.text.isNotEmpty) query['email'] = emailCtrl.text.trim();
-      if (phoneCtrl.text.isNotEmpty) query['phone'] = phoneCtrl.text.trim();
+      if (filters.name.isNotEmpty) {
+        query['name'] = _wildcard(filters.name);
+      }
+      if (filters.email.isNotEmpty) {
+        query['email'] = _wildcard(filters.email);
+      }
+      if (filters.phone.isNotEmpty) {
+        query['phone'] = _wildcard(filters.phone);
+      }
       if (isActive.value != null) query['is_active'] = isActive.value;
-      if (roleIdCtrl.text.isNotEmpty) {
-        final roleId = int.tryParse(roleIdCtrl.text.trim());
+      if (filters.roleQuery.isNotEmpty) {
+        final roleId = int.tryParse(filters.roleQuery);
         if (roleId != null) query['role_id'] = roleId;
       }
-      if (businessIdCtrl.text.isNotEmpty) {
-        final businessId = int.tryParse(businessIdCtrl.text.trim());
+      if (filters.businessQuery.isNotEmpty) {
+        final businessId = int.tryParse(filters.businessQuery);
         if (businessId != null) query['business_id'] = businessId;
       }
       if (createdAtCtrl.text.isNotEmpty) {
@@ -130,6 +138,7 @@ class UsersController extends GetxController {
     } catch (_) {
       errorMessage.value = 'No se pudieron cargar los usuarios';
     } finally {
+      appliedFilters.value = filters;
       isLoading.value = false;
     }
   }
@@ -191,5 +200,128 @@ class UsersController extends GetxController {
     sortOrderCtrl.text = 'desc';
     isActive.value = null;
     errorMessage.value = null;
+    appliedFilters.value = const _UsersFilterSnapshot();
+  }
+
+  List<UserListItem> get visibleUsers {
+    final filters = appliedFilters.value;
+    Iterable<UserListItem> filtered = users;
+    if (filters.search.isNotEmpty) {
+      final query = filters.search.toLowerCase();
+      filtered = filtered.where((user) => _matchesQuickSearch(user, query));
+    }
+    if (filters.name.isNotEmpty) {
+      final query = filters.name.toLowerCase();
+      filtered = filtered.where(
+        (user) => user.name.toLowerCase().contains(query),
+      );
+    }
+    if (filters.email.isNotEmpty) {
+      final query = filters.email.toLowerCase();
+      filtered = filtered.where(
+        (user) => user.email.toLowerCase().contains(query),
+      );
+    }
+    if (filters.phone.isNotEmpty) {
+      final query = filters.phone.toLowerCase();
+      filtered = filtered.where(
+        (user) => user.phone.toLowerCase().contains(query),
+      );
+    }
+    if (filters.isActive != null) {
+      filtered = filtered.where((user) => user.isActive == filters.isActive);
+    }
+    if (filters.roleQuery.isNotEmpty) {
+      final roleId = int.tryParse(filters.roleQuery);
+      if (roleId != null) {
+        filtered = filtered.where(
+          (user) => user.roles.any((role) => role.id == roleId),
+        );
+      } else {
+        final query = filters.roleQuery.toLowerCase();
+        filtered = filtered.where((user) => user.roles.any((role) {
+              final name = role.name.toLowerCase();
+              final code = role.code?.toLowerCase() ?? '';
+              return name.contains(query) || code.contains(query);
+            }));
+      }
+    }
+    if (filters.businessQuery.isNotEmpty) {
+      final businessId = int.tryParse(filters.businessQuery);
+      if (businessId != null) {
+        filtered = filtered.where(
+          (user) => user.businesses.any((biz) => biz.id == businessId),
+        );
+      } else {
+        final query = filters.businessQuery.toLowerCase();
+        filtered = filtered.where((user) => user.businesses.any((biz) {
+              final name = biz.name.toLowerCase();
+              final code = biz.code.toLowerCase();
+              return name.contains(query) || code.contains(query);
+            }));
+      }
+    }
+    return filtered.toList(growable: false);
+  }
+
+  bool _matchesQuickSearch(UserListItem user, String query) {
+    if (query.isEmpty) return true;
+    final normalizedQuery = query.toLowerCase();
+    if (user.name.toLowerCase().contains(normalizedQuery)) return true;
+    if (user.email.toLowerCase().contains(normalizedQuery)) return true;
+    if (user.phone.toLowerCase().contains(normalizedQuery)) return true;
+    if ((user.isActive ? 'activo' : 'inactivo').contains(normalizedQuery)) {
+      return true;
+    }
+    final roleMatch = user.roles.any((role) {
+      final name = role.name.toLowerCase();
+      final code = role.code?.toLowerCase() ?? '';
+      return name.contains(normalizedQuery) || code.contains(normalizedQuery);
+    });
+    if (roleMatch) return true;
+    final businessMatch = user.businesses.any((biz) {
+      final name = biz.name.toLowerCase();
+      final code = biz.code.toLowerCase();
+      return name.contains(normalizedQuery) || code.contains(normalizedQuery);
+    });
+    return businessMatch;
+  }
+
+  String _wildcard(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return trimmed;
+    return trimmed.contains('%') ? trimmed : '%$trimmed%';
+  }
+}
+
+class _UsersFilterSnapshot {
+  final String search;
+  final String name;
+  final String email;
+  final String phone;
+  final bool? isActive;
+  final String roleQuery;
+  final String businessQuery;
+
+  const _UsersFilterSnapshot({
+    this.search = '',
+    this.name = '',
+    this.email = '',
+    this.phone = '',
+    this.isActive,
+    this.roleQuery = '',
+    this.businessQuery = '',
+  });
+
+  factory _UsersFilterSnapshot.fromController(UsersController controller) {
+    return _UsersFilterSnapshot(
+      search: controller.searchCtrl.text.trim(),
+      name: controller.nameCtrl.text.trim(),
+      email: controller.emailCtrl.text.trim(),
+      phone: controller.phoneCtrl.text.trim(),
+      isActive: controller.isActive.value,
+      roleQuery: controller.roleIdCtrl.text.trim(),
+      businessQuery: controller.businessIdCtrl.text.trim(),
+    );
   }
 }

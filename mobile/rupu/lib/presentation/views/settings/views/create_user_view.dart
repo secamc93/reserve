@@ -47,19 +47,38 @@ class CreateUserView extends GetView<CreateUserController> {
               ),
             ),
             const SizedBox(height: 12),
-            TextFormField(
-              controller: controller.roleIdsCtrl,
-              decoration: const InputDecoration(
-                labelText: 'IDs de roles (comma sep)',
+            Obx(
+              () => _BusinessSelectorField(
+                selectedCount: controller.selectedBusinesses.length,
+                onTap: () => _openBusinessPicker(context, controller),
               ),
             ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: controller.businessIdsCtrl,
-              decoration: const InputDecoration(
-                labelText: 'IDs de negocios (comma sep)',
-              ),
-            ),
+            const SizedBox(height: 8),
+            Obx(() {
+              final businesses = controller.selectedBusinesses;
+              if (businesses.isEmpty) {
+                return Text(
+                  'No hay negocios asignados. Usa el selector para agregarlos.',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                );
+              }
+              return Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: businesses
+                    .map(
+                      (business) => InputChip(
+                        avatar: const Icon(Icons.storefront_outlined, size: 18),
+                        label: Text(business.name),
+                        onDeleted: () => controller.removeBusiness(business.id),
+                      ),
+                    )
+                    .toList(),
+              );
+            }),
             const SizedBox(height: 12),
             TextFormField(
               controller: controller.avatarUrlCtrl,
@@ -319,4 +338,143 @@ Future<void> _showAvatarSourceSheet(
       );
     },
   );
+}
+
+Future<void> _openBusinessPicker(
+  BuildContext context,
+  CreateUserController controller,
+) async {
+  await controller.searchBusinesses('');
+  final searchCtrl = TextEditingController();
+  await showDialog<void>(
+    context: context,
+    builder: (dialogCtx) {
+      return AlertDialog(
+        title: const Text('Seleccionar negocios'),
+        content: SizedBox(
+          width: 420,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: searchCtrl,
+                textInputAction: TextInputAction.search,
+                decoration: InputDecoration(
+                  labelText: 'Buscar negocio',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.send),
+                    onPressed: () => controller.searchBusinesses(searchCtrl.text),
+                  ),
+                ),
+                onSubmitted: (value) => controller.searchBusinesses(value),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 320,
+                child: Obx(() {
+                  final isLoading = controller.businessSuggestionsLoading.value;
+                  final error = controller.businessSuggestionsError.value;
+                  final suggestions = controller.businessSuggestions;
+                  if (isLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (error != null) {
+                    return Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(error, textAlign: TextAlign.center),
+                          const SizedBox(height: 8),
+                          FilledButton.tonal(
+                            onPressed: () => controller.searchBusinesses(searchCtrl.text),
+                            child: const Text('Reintentar'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  if (suggestions.isEmpty) {
+                    return const Center(
+                      child: Text('No se encontraron negocios con la búsqueda actual.'),
+                    );
+                  }
+                  final selectedIds =
+                      controller.selectedBusinesses.map((biz) => biz.id).toSet();
+                  return ListView.separated(
+                    itemCount: suggestions.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (_, index) {
+                      final business = suggestions[index];
+                      final isSelected = selectedIds.contains(business.id);
+                      return ListTile(
+                        enabled: !isSelected,
+                        leading: CircleAvatar(
+                          child: Text(
+                            business.name.isNotEmpty
+                                ? business.name.substring(0, 1).toUpperCase()
+                                : '?',
+                          ),
+                        ),
+                        title: Text(business.name),
+                        subtitle: Text(
+                          business.businessType.isEmpty
+                              ? 'Sin tipo registrado'
+                              : business.businessType,
+                        ),
+                        trailing: Icon(
+                          isSelected
+                              ? Icons.check_circle
+                              : Icons.add_circle_outline,
+                          color: isSelected
+                              ? Theme.of(context).colorScheme.secondary
+                              : Theme.of(context).colorScheme.primary,
+                        ),
+                        onTap: isSelected
+                            ? null
+                            : () => controller.addBusinessFromCatalog(business),
+                      );
+                    },
+                  );
+                }),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(),
+            child: const Text('Cerrar'),
+          ),
+        ],
+      );
+    },
+  );
+  searchCtrl.dispose();
+}
+
+class _BusinessSelectorField extends StatelessWidget {
+  final int selectedCount;
+  final VoidCallback onTap;
+
+  const _BusinessSelectorField({
+    required this.selectedCount,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: ListTile(
+        onTap: onTap,
+        leading: Icon(
+          Icons.store_mall_directory_outlined,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+        title: Text('Negocios seleccionados: $selectedCount'),
+        subtitle: const Text('Toca para buscar y asignar negocios al usuario.'),
+        trailing: const Icon(Icons.chevron_right),
+      ),
+    );
+  }
 }

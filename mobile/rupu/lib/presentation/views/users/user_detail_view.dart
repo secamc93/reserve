@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:rupu/domain/entities/user_detail.dart';
 
 import 'user_detail_controller.dart';
+import 'package:rupu/presentation/widgets/image_preview_dialog.dart';
 
 class UserDetailView extends GetView<UserDetailController> {
   static const name = 'user-detail';
@@ -143,15 +144,6 @@ class UserDetailView extends GetView<UserDetailController> {
                 enabled: controller.canUpdate,
               ),
               const SizedBox(height: 12),
-              _buildTextField(
-                context,
-                controller: controller.passwordCtrl,
-                label: 'Nueva contraseña',
-                enabled: controller.canUpdate,
-                obscureText: true,
-                helperText: 'Déjalo en blanco si no deseas cambiarla.',
-              ),
-              const SizedBox(height: 12),
               Obx(
                 () => SwitchListTile.adaptive(
                   title: const Text('Activo'),
@@ -160,19 +152,43 @@ class UserDetailView extends GetView<UserDetailController> {
                 ),
               ),
               const SizedBox(height: 12),
-              _buildTextField(
-                context,
-                controller: controller.roleIdsCtrl,
-                label: 'IDs de roles (coma separada)',
-                enabled: controller.canUpdate,
+              Obx(
+                () => _BusinessSelectorField(
+                  canEdit: controller.canUpdate,
+                  selectedCount: controller.selectedBusinesses.length,
+                  onTap: controller.canUpdate
+                      ? () => _openBusinessPicker(context)
+                      : null,
+                ),
               ),
-              const SizedBox(height: 12),
-              _buildTextField(
-                context,
-                controller: controller.businessIdsCtrl,
-                label: 'IDs de negocios (coma separada)',
-                enabled: controller.canUpdate,
-              ),
+              const SizedBox(height: 8),
+              Obx(() {
+                final businesses = controller.selectedBusinesses;
+                if (businesses.isEmpty) {
+                  return Text(
+                    'No hay negocios asignados. Usa el selector para agregarlos.',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodySmall
+                        ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  );
+                }
+                return Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: businesses
+                      .map(
+                        (business) => InputChip(
+                          avatar: const Icon(Icons.storefront_outlined, size: 18),
+                          label: Text(business.name),
+                          onDeleted: controller.canUpdate
+                              ? () => controller.removeBusiness(business.id)
+                              : null,
+                        ),
+                      )
+                      .toList(),
+                );
+              }),
               const SizedBox(height: 12),
               _buildTextField(
                 context,
@@ -356,6 +372,149 @@ class UserDetailView extends GetView<UserDetailController> {
       onChanged: onChanged,
     );
   }
+
+  Future<void> _openBusinessPicker(BuildContext context) async {
+    if (!controller.canUpdate) return;
+    final searchCtrl = TextEditingController();
+    await controller.searchBusinesses('');
+    await showDialog<void>(
+      context: context,
+      builder: (dialogCtx) {
+        return AlertDialog(
+          title: const Text('Seleccionar negocios'),
+          content: SizedBox(
+            width: 420,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: searchCtrl,
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    labelText: 'Buscar negocio',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.send),
+                      onPressed: () => controller.searchBusinesses(searchCtrl.text),
+                    ),
+                  ),
+                  onSubmitted: (value) => controller.searchBusinesses(value),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 320,
+                  child: Obx(() {
+                    final isLoading = controller.businessSuggestionsLoading.value;
+                    final error = controller.businessSuggestionsError.value;
+                    final suggestions = controller.businessSuggestions;
+                    if (isLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (error != null) {
+                      return Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(error, textAlign: TextAlign.center),
+                            const SizedBox(height: 8),
+                            FilledButton.tonal(
+                              onPressed: () => controller.searchBusinesses(searchCtrl.text),
+                              child: const Text('Reintentar'),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    if (suggestions.isEmpty) {
+                      return const Center(
+                        child: Text('No se encontraron negocios con la búsqueda actual.'),
+                      );
+                    }
+                    final selectedIds =
+                        controller.selectedBusinesses.map((biz) => biz.id).toSet();
+                    return ListView.separated(
+                      itemCount: suggestions.length,
+                      separatorBuilder: (_, __) => const Divider(height: 1),
+                      itemBuilder: (_, index) {
+                        final business = suggestions[index];
+                        final isSelected = selectedIds.contains(business.id);
+                        return ListTile(
+                          enabled: !isSelected,
+                          leading: CircleAvatar(
+                            child: Text(
+                              business.name.isNotEmpty
+                                  ? business.name.substring(0, 1).toUpperCase()
+                                  : '?',
+                            ),
+                          ),
+                          title: Text(business.name),
+                          subtitle: Text(
+                            business.businessType.isEmpty
+                                ? 'Sin tipo registrado'
+                                : business.businessType,
+                          ),
+                          trailing: Icon(
+                            isSelected
+                                ? Icons.check_circle
+                                : Icons.add_circle_outline,
+                            color: isSelected
+                                ? Theme.of(context).colorScheme.secondary
+                                : Theme.of(context).colorScheme.primary,
+                          ),
+                          onTap: isSelected
+                              ? null
+                              : () => controller.addBusinessFromCatalog(business),
+                        );
+                      },
+                    );
+                  }),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogCtx).pop(),
+              child: const Text('Cerrar'),
+            ),
+          ],
+        );
+      },
+    );
+    searchCtrl.dispose();
+  }
+}
+
+class _BusinessSelectorField extends StatelessWidget {
+  final bool canEdit;
+  final int selectedCount;
+  final VoidCallback? onTap;
+
+  const _BusinessSelectorField({
+    required this.canEdit,
+    required this.selectedCount,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: ListTile(
+        onTap: canEdit ? onTap : null,
+        leading: Icon(
+          Icons.store_mall_directory_outlined,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+        title: Text('Negocios seleccionados: $selectedCount'),
+        subtitle: Text(
+          canEdit
+              ? 'Toca para buscar y agregar negocios a este usuario.'
+              : 'Solo lectura.',
+        ),
+        trailing: Icon(canEdit ? Icons.chevron_right : Icons.lock_outline),
+      ),
+    );
+  }
 }
 
 class _HeaderSummary extends StatelessWidget {
@@ -388,15 +547,26 @@ class _HeaderSummary extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            CircleAvatar(
-              radius: 32,
-              backgroundImage: imageProvider,
-              child: imageProvider == null
-                  ? Text(
-                      detail.name.isNotEmpty ? detail.name.substring(0, 1).toUpperCase() : '?',
-                      style: tt.titleLarge,
-                    )
-                  : null,
+            GestureDetector(
+              onTap: imageProvider == null
+                  ? null
+                  : () => showImagePreviewDialog(
+                        context,
+                        imageProvider: imageProvider,
+                        title: detail.name,
+                      ),
+              child: CircleAvatar(
+                radius: 32,
+                backgroundImage: imageProvider,
+                child: imageProvider == null
+                    ? Text(
+                        detail.name.isNotEmpty
+                            ? detail.name.substring(0, 1).toUpperCase()
+                            : '?',
+                        style: tt.titleLarge,
+                      )
+                    : null,
+              ),
             ),
             const SizedBox(width: 16),
             Expanded(

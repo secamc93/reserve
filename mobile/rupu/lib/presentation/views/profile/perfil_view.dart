@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:rupu/config/helpers/design_helper.dart';
 import 'package:rupu/presentation/widgets/widgets.dart';
+import 'package:rupu/presentation/widgets/image_preview_dialog.dart';
 import 'perfil_controller.dart';
 
 class PerfilView extends GetView<PerfilController> {
@@ -63,14 +64,23 @@ class PerfilView extends GetView<PerfilController> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            CircleAvatar(
-                              radius: 56,
-                              backgroundImage: (ctrl.avatarUrl.isNotEmpty)
-                                  ? NetworkImage(ctrl.avatarUrl)
-                                  : null,
-                              child: ctrl.avatarUrl.isEmpty
-                                  ? const Icon(Icons.person, size: 48)
-                                  : null,
+                            GestureDetector(
+                              onTap: ctrl.avatarUrl.isEmpty
+                                  ? null
+                                  : () => showImagePreviewDialog(
+                                        context,
+                                        imageUrl: ctrl.avatarUrl,
+                                        title: ctrl.userName,
+                                      ),
+                              child: CircleAvatar(
+                                radius: 56,
+                                backgroundImage: (ctrl.avatarUrl.isNotEmpty)
+                                    ? NetworkImage(ctrl.avatarUrl)
+                                    : null,
+                                child: ctrl.avatarUrl.isEmpty
+                                    ? const Icon(Icons.person, size: 48)
+                                    : null,
+                              ),
                             ),
                             const SizedBox(height: 12),
                             Text(

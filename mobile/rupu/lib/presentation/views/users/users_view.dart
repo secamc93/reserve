@@ -56,6 +56,9 @@ class UsersView extends GetView<UsersController> {
       }
 
       final hasError = controller.errorMessage.value != null;
+      final visibleUsers = controller.visibleUsers;
+      final visibleCount = visibleUsers.length;
+      final totalCount = controller.totalCount.value;
 
       if (!controller.canRead) {
         return Center(
@@ -108,7 +111,7 @@ class UsersView extends GetView<UsersController> {
               children: [
                 Expanded(
                   child: Text(
-                    'Total de usuarios: ${controller.totalCount.value}',
+                    'Coincidencias: $visibleCount de $totalCount',
                     style: Theme.of(context)
                         .textTheme
                         .titleMedium
@@ -124,7 +127,7 @@ class UsersView extends GetView<UsersController> {
               ],
             ),
             const SizedBox(height: 12),
-            if (controller.users.isEmpty && !hasError)
+            if (visibleUsers.isEmpty && !hasError)
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -142,7 +145,7 @@ class UsersView extends GetView<UsersController> {
                 ),
               )
             else
-              ...controller.users
+              ...visibleUsers
                   .map((user) => Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: UserListCard(

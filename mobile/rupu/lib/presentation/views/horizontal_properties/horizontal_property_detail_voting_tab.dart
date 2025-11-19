@@ -589,6 +589,26 @@ class _VotingItemCard extends StatelessWidget {
                             ),
                           ),
                           const Spacer(),
+                          if (optionsLoading)
+                            const Padding(
+                              padding: EdgeInsets.only(right: 8),
+                              child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            ),
+                          IconButton(
+                            tooltip: 'Actualizar opciones',
+                            onPressed: optionsLoading
+                                ? null
+                                : () => _controller.loadVotingOptions(
+                                      groupId: group.id,
+                                      votingId: voting.id,
+                                      force: true,
+                                    ),
+                            icon: const Icon(Icons.refresh_outlined),
+                          ),
                           TextButton.icon(
                             onPressed: () => _openOptionForm(context),
                             icon: const Icon(Icons.add_outlined),

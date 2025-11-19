@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:rupu/domain/entities/iam_business_type.dart';
+import 'package:rupu/domain/entities/iam_resource.dart';
 import 'package:rupu/domain/infrastructure/repositories/iam_repository_impl.dart';
 import 'package:rupu/domain/repositories/iam_repository.dart';
 
@@ -13,6 +14,7 @@ class IamBusinessTypesController extends GetxController {
   final isLoading = false.obs;
   final errorMessage = RxnString();
   final searchText = ''.obs;
+  final RxSet<int> deletingTypeIds = <int>{}.obs;
 
   @override
   void onInit() {
@@ -46,4 +48,62 @@ class IamBusinessTypesController extends GetxController {
   }
 
   void setSearch(String value) => searchText.value = value;
+
+  List<String> get availableIcons => types
+      .map((type) => type.icon)
+      .where((icon) => icon.isNotEmpty)
+      .toSet()
+      .toList(growable: false);
+
+  Future<IamBusinessTypeMutationResult> saveBusinessType({
+    int? id,
+    required String name,
+    required String code,
+    String? description,
+    required String icon,
+    required bool isActive,
+  }) async {
+    final result = id == null
+        ? await repository.createBusinessType(
+            name: name,
+            code: code,
+            description: description,
+            icon: icon,
+            isActive: isActive,
+          )
+        : await repository.updateBusinessType(
+            id: id,
+            name: name,
+            code: code,
+            description: description,
+            icon: icon,
+            isActive: isActive,
+          );
+    if (result.success && result.type != null) {
+      final existingIndex = types.indexWhere((type) => type.id == result.type!.id);
+      if (existingIndex >= 0) {
+        types[existingIndex] = result.type!;
+      } else {
+        types.add(result.type!);
+      }
+      types.sort((a, b) => a.name.compareTo(b.name));
+    }
+    return result;
+  }
+
+  Future<IamMessageResult> deleteBusinessType(int id) async {
+    if (deletingTypeIds.contains(id)) {
+      return const IamMessageResult(success: false, message: 'Operación en curso');
+    }
+    deletingTypeIds.add(id);
+    try {
+      final result = await repository.deleteBusinessType(id);
+      if (result.success) {
+        types.removeWhere((type) => type.id == id);
+      }
+      return result;
+    } finally {
+      deletingTypeIds.remove(id);
+    }
+  }
 }

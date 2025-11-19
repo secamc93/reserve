@@ -74,6 +74,72 @@ class IamRepositoryImpl extends IamRepository {
   }
 
   @override
+  Future<IamBusinessTypeMutationResult> createBusinessType({
+    required String name,
+    required String code,
+    String? description,
+    required String icon,
+    bool isActive = true,
+  }) async {
+    final payload = {
+      'name': name,
+      'code': code.trim().toLowerCase(),
+      if (description != null && description.trim().isNotEmpty)
+        'description': description.trim(),
+      'icon': icon,
+      'is_active': isActive,
+    };
+    final response = await datasource.createBusinessType(payload);
+    final typeJson = response['data'] as Map<String, dynamic>?;
+    final message = response['message']?.toString() ??
+        'Tipo de negocio creado correctamente.';
+    final success = response['success'] as bool? ?? true;
+    return IamBusinessTypeMutationResult(
+      success: success,
+      message: message,
+      type: typeJson == null ? null : IamMapper.businessTypeFromJson(typeJson),
+    );
+  }
+
+  @override
+  Future<IamBusinessTypeMutationResult> updateBusinessType({
+    required int id,
+    required String name,
+    required String code,
+    String? description,
+    required String icon,
+    bool isActive = true,
+  }) async {
+    final payload = {
+      'name': name,
+      'code': code.trim().toLowerCase(),
+      if (description != null && description.trim().isNotEmpty)
+        'description': description.trim(),
+      'icon': icon,
+      'is_active': isActive,
+    };
+    final response = await datasource.updateBusinessType(id, payload);
+    final typeJson = response['data'] as Map<String, dynamic>?;
+    final message = response['message']?.toString() ??
+        'Tipo de negocio actualizado correctamente.';
+    final success = response['success'] as bool? ?? true;
+    return IamBusinessTypeMutationResult(
+      success: success,
+      message: message,
+      type: typeJson == null ? null : IamMapper.businessTypeFromJson(typeJson),
+    );
+  }
+
+  @override
+  Future<IamMessageResult> deleteBusinessType(int id) async {
+    final response = await datasource.deleteBusinessType(id);
+    final success = response['success'] as bool? ?? true;
+    final message =
+        response['message']?.toString() ?? 'Tipo de negocio eliminado.';
+    return IamMessageResult(success: success, message: message);
+  }
+
+  @override
   Future<IamBusinessesPage> getBusinesses({
     int page = 1,
     int perPage = 10,
@@ -164,6 +230,44 @@ class IamRepositoryImpl extends IamRepository {
     final response = await datasource.deleteResource(id);
     final success = response['success'] as bool? ?? true;
     final message = response['message']?.toString() ?? 'Recurso eliminado';
+    return IamMessageResult(success: success, message: message);
+  }
+
+  @override
+  Future<List<IamBusinessConfiguredResource>> getBusinessConfiguredResources(
+      int businessId) async {
+    final response =
+        await datasource.getBusinessConfiguredResources(businessId: businessId);
+    return response.data
+        .map(IamMapper.configuredResourceFromModel)
+        .toList();
+  }
+
+  @override
+  Future<IamMessageResult> activateBusinessConfiguredResource(
+    int resourceId, {
+    int? businessId,
+  }) async {
+    final response = await datasource.activateBusinessConfiguredResource(
+      resourceId,
+      businessId: businessId,
+    );
+    final success = response['success'] as bool? ?? true;
+    final message = response['message']?.toString() ?? 'Recurso activado';
+    return IamMessageResult(success: success, message: message);
+  }
+
+  @override
+  Future<IamMessageResult> deactivateBusinessConfiguredResource(
+    int resourceId, {
+    int? businessId,
+  }) async {
+    final response = await datasource.deactivateBusinessConfiguredResource(
+      resourceId,
+      businessId: businessId,
+    );
+    final success = response['success'] as bool? ?? true;
+    final message = response['message']?.toString() ?? 'Recurso desactivado';
     return IamMessageResult(success: success, message: message);
   }
 }
