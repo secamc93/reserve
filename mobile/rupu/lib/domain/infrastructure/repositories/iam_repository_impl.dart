@@ -238,7 +238,7 @@ class IamRepositoryImpl extends IamRepository {
       int businessId) async {
     final response =
         await datasource.getBusinessConfiguredResources(businessId: businessId);
-    return response.data
+    return response.resources
         .map(IamMapper.configuredResourceFromModel)
         .toList();
   }

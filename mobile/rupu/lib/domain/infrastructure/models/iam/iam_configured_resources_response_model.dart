@@ -1,23 +1,39 @@
 class IamConfiguredResourcesResponseModel {
   final bool success;
-  final List<IamConfiguredResourceModel> data;
+  final List<IamConfiguredResourceModel> resources;
 
   IamConfiguredResourcesResponseModel({
     required this.success,
-    required this.data,
+    required this.resources,
   });
 
   factory IamConfiguredResourcesResponseModel.fromJson(
-      Map<String, dynamic> json) {
-    final list = json['data'];
+    Map<String, dynamic> json,
+  ) {
+    final rawData = json['data'];
+    List<dynamic> list = const [];
+    int? businessId;
+    if (rawData is List) {
+      list = rawData;
+    } else if (rawData is Map<String, dynamic>) {
+      businessId = (rawData['id'] as num?)?.toInt();
+      final nested = rawData['resources'];
+      if (nested is List) {
+        list = nested;
+      }
+    }
+
     return IamConfiguredResourcesResponseModel(
       success: json['success'] as bool? ?? false,
-      data: list is List
-          ? list
-              .whereType<Map<String, dynamic>>()
-              .map(IamConfiguredResourceModel.fromJson)
-              .toList()
-          : const [],
+      resources: list
+          .whereType<Map<String, dynamic>>()
+          .map(
+            (item) => IamConfiguredResourceModel.fromJson(
+              item,
+              businessId: businessId,
+            ),
+          )
+          .toList(),
     );
   }
 }
@@ -41,15 +57,17 @@ class IamConfiguredResourceModel {
     required this.isActive,
   });
 
-  factory IamConfiguredResourceModel.fromJson(Map<String, dynamic> json) {
+  factory IamConfiguredResourceModel.fromJson(
+    Map<String, dynamic> json, {
+    int? businessId,
+  }) {
+    final resolvedId = (json['resource_id'] as num?)?.toInt() ??
+        (json['id'] as num?)?.toInt() ??
+        0;
     return IamConfiguredResourceModel(
-      id: (json['id'] as num?)?.toInt() ??
-          (json['resource_id'] as num?)?.toInt() ??
-          0,
-      resourceId: (json['resource_id'] as num?)?.toInt() ??
-          (json['id'] as num?)?.toInt() ??
-          0,
-      businessId: (json['business_id'] as num?)?.toInt() ?? 0,
+      id: resolvedId,
+      resourceId: resolvedId,
+      businessId: (json['business_id'] as num?)?.toInt() ?? businessId ?? 0,
       name: json['resource_name'] as String? ?? json['name'] as String? ?? '',
       code: json['resource_code'] as String? ?? json['code'] as String?,
       description: json['description'] as String?,
