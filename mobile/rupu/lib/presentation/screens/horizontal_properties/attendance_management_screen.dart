@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rupu/config/routers/app_bindings.dart';
 import 'package:rupu/domain/entities/horizontal_property_voting.dart';
-import 'package:rupu/domain/entities/horizontal_property_voting_groups.dart';
 import 'package:rupu/presentation/views/horizontal_properties/attendance_management_view.dart';
 
 class AttendanceManagementScreen extends StatelessWidget {

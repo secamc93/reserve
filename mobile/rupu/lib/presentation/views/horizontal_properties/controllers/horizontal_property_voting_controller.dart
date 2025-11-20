@@ -1,8 +1,6 @@
-import 'package:collection/collection.dart';
 import 'package:get/get.dart';
 import 'package:rupu/domain/entities/horizontal_property_action_result.dart';
 import 'package:rupu/domain/entities/horizontal_property_voting.dart';
-import 'package:rupu/domain/entities/horizontal_property_voting_groups.dart';
 import 'package:rupu/domain/infrastructure/repositories/horizontal_properties_repository_impl.dart';
 import 'package:rupu/domain/repositories/horizontal_properties_repository.dart';
 
@@ -31,8 +29,7 @@ class HorizontalPropertyVotingController extends GetxController {
   final isSavingGroup = false.obs;
   final isSavingVoting = false.obs;
 
-  int? get firstVotingGroupId =>
-      groups.isNotEmpty ? groups.first.id : null;
+  int? get firstVotingGroupId => groups.isNotEmpty ? groups.first.id : null;
 
   final Map<int, _VotingGroupState> _groupStates = {};
 
@@ -68,18 +65,16 @@ class HorizontalPropertyVotingController extends GetxController {
   List<HorizontalPropertyVotingOption> optionsForVoting(
     int groupId,
     int votingId,
-  ) =>
-      List<HorizontalPropertyVotingOption>.of(
-        votingDetailState(groupId, votingId)?.options ?? const [],
-      );
+  ) => List<HorizontalPropertyVotingOption>.of(
+    votingDetailState(groupId, votingId)?.options ?? const [],
+  );
 
   List<HorizontalPropertyVotingVote> votesForVoting(
     int groupId,
     int votingId,
-  ) =>
-      List<HorizontalPropertyVotingVote>.of(
-        votingDetailState(groupId, votingId)?.votes ?? const [],
-      );
+  ) => List<HorizontalPropertyVotingVote>.of(
+    votingDetailState(groupId, votingId)?.votes ?? const [],
+  );
 
   bool optionsAreLoading(int groupId, int votingId) =>
       _ensureVotingState(groupId, votingId).optionsLoading.value;
@@ -94,14 +89,13 @@ class HorizontalPropertyVotingController extends GetxController {
       _ensureVotingState(groupId, votingId).votesError.value;
 
   bool isDeletingOption(int groupId, int votingId, int optionId) =>
-      _ensureVotingState(groupId, votingId)
-          .deletingOptionIds
-          .contains(optionId);
+      _ensureVotingState(
+        groupId,
+        votingId,
+      ).deletingOptionIds.contains(optionId);
 
   bool isDeletingVote(int groupId, int votingId, int voteId) =>
-      _ensureVotingState(groupId, votingId)
-          .deletingVoteIds
-          .contains(voteId);
+      _ensureVotingState(groupId, votingId).deletingVoteIds.contains(voteId);
 
   @override
   void onReady() {
@@ -118,13 +112,15 @@ class HorizontalPropertyVotingController extends GetxController {
       );
       groups.assignAll(result.groups);
       if (!result.success) {
-        errorMessage.value = result.message ??
-            'No se pudieron cargar los grupos de votación.';
+        errorMessage.value =
+            result.message ?? 'No se pudieron cargar los grupos de votación.';
       }
       _cleanupStates();
-      await Future.wait(expandedGroupIds.map(
-        (groupId) => loadGroupVotings(groupId, force: true),
-      ));
+      await Future.wait(
+        expandedGroupIds.map(
+          (groupId) => loadGroupVotings(groupId, force: true),
+        ),
+      );
       for (final groupId in expandedGroupIds) {
         final groupState = _groupStates[groupId];
         if (groupState == null) continue;
@@ -135,11 +131,7 @@ class HorizontalPropertyVotingController extends GetxController {
               votingId: votingId,
               force: true,
             ),
-            loadVotingVotes(
-              groupId: groupId,
-              votingId: votingId,
-              force: true,
-            ),
+            loadVotingVotes(groupId: groupId, votingId: votingId, force: true),
           ]);
         }
       }
@@ -175,7 +167,8 @@ class HorizontalPropertyVotingController extends GetxController {
       );
       state.votings.assignAll(result.votings);
       if (!result.success) {
-        state.errorMessage.value = result.message ??
+        state.errorMessage.value =
+            result.message ??
             'No se pudieron obtener las votaciones del grupo.';
       }
     } catch (_) {
@@ -200,7 +193,9 @@ class HorizontalPropertyVotingController extends GetxController {
         data: data,
       );
       if (result.success && result.group != null) {
-        final existingIndex = groups.indexWhere((g) => g.id == result.group!.id);
+        final existingIndex = groups.indexWhere(
+          (g) => g.id == result.group!.id,
+        );
         if (existingIndex >= 0) {
           groups[existingIndex] = result.group!;
         } else {
@@ -270,7 +265,9 @@ class HorizontalPropertyVotingController extends GetxController {
       );
       if (result.success && result.voting != null) {
         final state = _ensureGroupState(groupId);
-        final index = state.votings.indexWhere((v) => v.id == result.voting!.id);
+        final index = state.votings.indexWhere(
+          (v) => v.id == result.voting!.id,
+        );
         if (index >= 0) {
           state.votings[index] = result.voting!;
         } else {
@@ -413,7 +410,8 @@ class HorizontalPropertyVotingController extends GetxController {
       );
       detailState.options.assignAll(result.options);
       if (!result.success) {
-        detailState.optionsError.value = result.message ??
+        detailState.optionsError.value =
+            result.message ??
             'No se pudieron obtener las opciones de votación.';
       }
     } catch (_) {
@@ -444,8 +442,8 @@ class HorizontalPropertyVotingController extends GetxController {
       );
       detailState.votes.assignAll(result.votes);
       if (!result.success) {
-        detailState.votesError.value = result.message ??
-            'No se pudieron obtener los votos registrados.';
+        detailState.votesError.value =
+            result.message ?? 'No se pudieron obtener los votos registrados.';
       }
     } catch (_) {
       detailState.votes.clear();
@@ -574,8 +572,11 @@ class HorizontalPropertyVotingController extends GetxController {
     if (detail == null) return const {};
     final counts = <int, int>{};
     for (final vote in detail.votes) {
-      counts.update(vote.votingOptionId, (value) => value + 1,
-          ifAbsent: () => 1);
+      counts.update(
+        vote.votingOptionId,
+        (value) => value + 1,
+        ifAbsent: () => 1,
+      );
     }
     return counts;
   }
@@ -585,8 +586,10 @@ class HorizontalPropertyVotingController extends GetxController {
     required int votingId,
     required int optionId,
   }) {
-    return votingDetailState(groupId, votingId)?.options
-        .firstWhereOrNull((option) => option.id == optionId);
+    return votingDetailState(
+      groupId,
+      votingId,
+    )?.options.firstWhereOrNull((option) => option.id == optionId);
   }
 
   HorizontalPropertyVotingVote? voteForUnit({
@@ -594,8 +597,10 @@ class HorizontalPropertyVotingController extends GetxController {
     required int votingId,
     required int propertyUnitId,
   }) {
-    return votingDetailState(groupId, votingId)?.votes
-        .firstWhereOrNull((vote) => vote.propertyUnitId == propertyUnitId);
+    return votingDetailState(
+      groupId,
+      votingId,
+    )?.votes.firstWhereOrNull((vote) => vote.propertyUnitId == propertyUnitId);
   }
 
   void _cleanupStates() {

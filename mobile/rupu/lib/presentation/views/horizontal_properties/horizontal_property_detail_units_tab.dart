@@ -610,12 +610,10 @@ class _UnitCard extends StatelessWidget {
     }
 
     final resolvedDetail = detailResult;
-    if (resolvedDetail == null ||
-        !resolvedDetail.success ||
-        resolvedDetail.unit == null) {
+    if (!resolvedDetail.success || resolvedDetail.unit == null) {
       _showSnack(
         'No se pudo cargar la unidad',
-        resolvedDetail?.message ?? 'Inténtalo nuevamente en unos segundos.',
+        resolvedDetail.message ?? 'Inténtalo nuevamente en unos segundos.',
         isError: true,
       );
       return;
@@ -1413,7 +1411,6 @@ class _UnitDetailError extends StatelessWidget {
 }
 
 void _showSnack(String title, String message, {bool isError = false}) {
-  final cs = Get.theme.colorScheme;
   // if (Get.isSnackbarOpen) {
   //   Get.closeCurrentSnackbar();
   // }
@@ -1794,7 +1791,7 @@ class _MetricTile extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: cs.outlineVariant.withValues(alpha: .6)),
-        color: cs.surfaceVariant.withValues(alpha: .32),
+        color: cs.surfaceContainerHighest.withValues(alpha: .32),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2067,7 +2064,7 @@ class _ExtraAttributeTile extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: cs.outlineVariant.withValues(alpha: .5)),
-        color: cs.surfaceVariant.withValues(alpha: .25),
+        color: cs.surfaceContainerHighest.withValues(alpha: .25),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

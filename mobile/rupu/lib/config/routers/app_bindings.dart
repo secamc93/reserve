@@ -1,6 +1,5 @@
 import 'package:get/get.dart';
 import 'package:rupu/domain/entities/horizontal_property_voting.dart';
-import 'package:rupu/domain/entities/horizontal_property_voting_groups.dart';
 
 import '../../presentation/views/views.dart';
 

@@ -3,7 +3,6 @@ library horizontal_property_detail_view;
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:collection/collection.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -14,7 +13,6 @@ import 'package:rupu/domain/entities/horizontal_property_residents_page.dart';
 import 'package:rupu/domain/entities/horizontal_property_unit_detail.dart';
 import 'package:rupu/domain/entities/horizontal_property_units_page.dart';
 import 'package:rupu/domain/entities/horizontal_property_voting.dart';
-import 'package:rupu/domain/entities/horizontal_property_voting_groups.dart';
 import 'package:rupu/domain/repositories/horizontal_properties_repository.dart';
 import 'package:rupu/presentation/views/login/login_controller.dart';
 
@@ -43,10 +41,13 @@ class HorizontalPropertyDetailView
   @override
   Widget build(BuildContext context) {
     final detailTag = tag!;
-    final dashboardTag = HorizontalPropertyDashboardController.tagFor(propertyId);
+    final dashboardTag = HorizontalPropertyDashboardController.tagFor(
+      propertyId,
+    );
     final unitsTag = HorizontalPropertyUnitsController.tagFor(propertyId);
-    final residentsTag =
-        HorizontalPropertyResidentsController.tagFor(propertyId);
+    final residentsTag = HorizontalPropertyResidentsController.tagFor(
+      propertyId,
+    );
     final votingTag = HorizontalPropertyVotingController.tagFor(propertyId);
 
     return DefaultTabController(
@@ -66,9 +67,7 @@ class HorizontalPropertyDetailView
         ),
         body: TabBarView(
           children: [
-            _DashboardTab(
-              controllerTag: dashboardTag,
-            ),
+            _DashboardTab(controllerTag: dashboardTag),
             _UnitsTab(controllerTag: unitsTag),
             _ResidentsTab(controllerTag: residentsTag),
             _VotingTab(controllerTag: votingTag),
@@ -163,14 +162,12 @@ class _PillTabBar extends StatelessWidget {
         dividerColor: Colors.transparent,
         indicatorSize: TabBarIndicatorSize.label,
         labelPadding: const EdgeInsets.symmetric(horizontal: 6),
-        labelStyle: Theme.of(context)
-            .textTheme
-            .labelLarge
-            ?.copyWith(fontWeight: FontWeight.w800),
-        unselectedLabelStyle: Theme.of(context)
-            .textTheme
-            .labelLarge
-            ?.copyWith(fontWeight: FontWeight.w600),
+        labelStyle: Theme.of(
+          context,
+        ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800),
+        unselectedLabelStyle: Theme.of(
+          context,
+        ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
         labelColor: cs.onPrimaryContainer,
         unselectedLabelColor: cs.onSurfaceVariant,
         indicator: ShapeDecoration(

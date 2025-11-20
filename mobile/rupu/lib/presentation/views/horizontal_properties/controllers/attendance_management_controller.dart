@@ -1,11 +1,9 @@
 import 'dart:async';
 
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:rupu/domain/entities/attendance.dart';
 import 'package:rupu/domain/entities/horizontal_property_voting.dart';
-import 'package:rupu/domain/entities/horizontal_property_voting_groups.dart';
 import 'package:rupu/domain/infrastructure/repositories/attendance_repository_impl.dart';
 import 'package:rupu/domain/repositories/attendance_repository.dart';
 
@@ -314,7 +312,8 @@ class AttendanceManagementController extends GetxController {
     required String proxyName,
   }) async {
     final effectiveRecord =
-        records.firstWhereOrNull((element) => element.id == record.id) ?? record;
+        records.firstWhereOrNull((element) => element.id == record.id) ??
+        record;
     final proxyId = effectiveRecord.proxyId;
     final trimmedName = proxyName.trim();
     if (proxyId == null || proxyId <= 0) {
@@ -374,7 +373,8 @@ class AttendanceManagementController extends GetxController {
 
   Future<bool> deleteProxyForRecord({required AttendanceRecord record}) async {
     final effectiveRecord =
-        records.firstWhereOrNull((element) => element.id == record.id) ?? record;
+        records.firstWhereOrNull((element) => element.id == record.id) ??
+        record;
     final proxyId = effectiveRecord.proxyId;
     if (proxyId == null || proxyId <= 0) {
       _dismissSnackbarIfOpen();
@@ -443,15 +443,15 @@ class AttendanceManagementController extends GetxController {
       attendanceListId: updated.attendanceListId == 0
           ? current.attendanceListId
           : updated.attendanceListId,
-      propertyUnitId:
-          updated.propertyUnitId == 0 ? current.propertyUnitId : updated.propertyUnitId,
+      propertyUnitId: updated.propertyUnitId == 0
+          ? current.propertyUnitId
+          : updated.propertyUnitId,
       attendedAsOwner: updated.attendedAsOwner,
       attendedAsProxy: updated.attendedAsProxy,
       proxyId: updated.proxyId ?? current.proxyId,
       signature: updated.signature ?? current.signature,
       signatureMethod: updated.signatureMethod ?? current.signatureMethod,
-      verificationNotes:
-          updated.verificationNotes ?? current.verificationNotes,
+      verificationNotes: updated.verificationNotes ?? current.verificationNotes,
       notes: updated.notes ?? current.notes,
       isValid: updated.isValid,
       createdAt: updated.createdAt ?? current.createdAt,

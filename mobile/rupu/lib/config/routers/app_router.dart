@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:get/get.dart';
 import 'package:rupu/config/routers/app_bindings.dart';
 import 'package:rupu/domain/entities/horizontal_property_voting.dart';
-import 'package:rupu/domain/entities/horizontal_property_voting_groups.dart';
 import 'package:rupu/presentation/widgets/shared/custom_bottom_navigation.dart';
 import '../../presentation/screens/screens.dart';
 import '../../presentation/views/views.dart';
@@ -157,9 +156,7 @@ final appRouter = GoRouter(
                 ? Get.find<HomeController>()
                 : null;
             if (home == null) {
-              return const Scaffold(
-                body: Center(child: Text('No autorizado')),
-              );
+              return const Scaffold(body: Center(child: Text('No autorizado')));
             }
             final canUsers = home.canAccessResource(
               'users',
@@ -172,9 +169,7 @@ final appRouter = GoRouter(
               requireActive: false,
             );
             if (!home.isSuper && !canUsers && !canRoles) {
-              return const Scaffold(
-                body: Center(child: Text('No autorizado')),
-              );
+              return const Scaffold(body: Center(child: Text('No autorizado')));
             }
             final page = int.parse(state.pathParameters['page']!);
             return IamScreen(pageIndex: page);

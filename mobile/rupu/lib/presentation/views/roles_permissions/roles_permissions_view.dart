@@ -2,9 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'package:rupu/domain/entities/iam_action.dart';
-import 'package:rupu/domain/entities/iam_business_type.dart';
-import 'package:rupu/domain/entities/iam_resource.dart';
 import 'package:rupu/domain/entities/role_action_result.dart';
 import 'package:rupu/domain/entities/roles_permisos.dart';
 import 'package:rupu/domain/infrastructure/repositories/iam_repository_impl.dart';
@@ -620,7 +617,7 @@ Future<void> showRoleFormDialog(BuildContext context, {Role? role}) async {
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<int>(
-                      value: selectedLevel,
+                      initialValue: selectedLevel,
                       decoration: const InputDecoration(
                         labelText: 'Nivel del rol',
                       ),
@@ -654,7 +651,7 @@ Future<void> showRoleFormDialog(BuildContext context, {Role? role}) async {
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<int>(
-                      value: selectedScope,
+                      initialValue: selectedScope,
                       decoration: const InputDecoration(labelText: 'Ámbito'),
                       items: const [
                         DropdownMenuItem(value: 1, child: Text('Plataforma')),
@@ -668,7 +665,7 @@ Future<void> showRoleFormDialog(BuildContext context, {Role? role}) async {
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<int?>(
-                      value: selectedBusinessType,
+                      initialValue: selectedBusinessType,
                       decoration: const InputDecoration(
                         labelText: 'Business type',
                       ),
@@ -910,7 +907,7 @@ Future<void> showPermissionFormDialog(
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<int?>(
-                      value: selectedBusinessType,
+                      initialValue: selectedBusinessType,
                       decoration: const InputDecoration(
                         labelText: 'Tipo de negocio',
                       ),
@@ -933,7 +930,7 @@ Future<void> showPermissionFormDialog(
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<int>(
-                      value: selectedResource,
+                      initialValue: selectedResource,
                       decoration: const InputDecoration(labelText: 'Recursos'),
                       items: resourcesPage.resources
                           .map(
@@ -950,7 +947,7 @@ Future<void> showPermissionFormDialog(
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<int>(
-                      value: selectedAction,
+                      initialValue: selectedAction,
                       decoration: const InputDecoration(labelText: 'Acción'),
                       items: actionsPage.actions
                           .map(
@@ -969,7 +966,7 @@ Future<void> showPermissionFormDialog(
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<int>(
-                      value: selectedScope,
+                      initialValue: selectedScope,
                       decoration: const InputDecoration(
                         labelText: 'Scope / Ámbito',
                       ),

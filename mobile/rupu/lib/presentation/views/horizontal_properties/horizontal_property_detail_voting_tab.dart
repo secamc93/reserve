@@ -41,7 +41,6 @@ class _VotingTab extends GetWidget<HorizontalPropertyVotingController> {
             if (error != null) ...[
               _InlineError(message: error),
               const SizedBox(height: 16),
-              ],
             ],
             if (!isLoading && groups.isEmpty)
               const _EmptyState(
@@ -277,7 +276,9 @@ class _VotingGroupCard extends StatelessWidget {
                         viewLabel: 'Gestión de asistencia',
                         onView: onOpenAttendance,
                         onEdit: onEdit,
-                        onDelete: isDeleting ? null : () => _confirmDelete(context),
+                        onDelete: isDeleting
+                            ? null
+                            : () => _confirmDelete(context),
                         isDeleteDisabled: isDeleting,
                       ),
                       const SizedBox(height: 12),
@@ -332,7 +333,6 @@ class _VotingGroupCard extends StatelessWidget {
                     : CrossFadeState.showFirst,
                 duration: const Duration(milliseconds: 200),
               ),
-              ],
             ],
           ),
         ),
@@ -494,425 +494,427 @@ class _VotingItemCard extends StatelessWidget {
                   ),
                 ],
               ),
-                if (isExpanded) ...[
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: [
-                      _DetailLine(
-                        icon: Icons.badge_outlined,
-                        label: 'Tipo',
-                        value: voting.votingType.toUpperCase(),
-                      ),
-                      _DetailLine(
-                        icon: Icons.visibility_off_outlined,
-                        label: 'Secreta',
-                        value: voting.isSecret ? 'Sí' : 'No',
-                      ),
-                      _DetailLine(
-                        icon: Icons.how_to_vote_outlined,
-                        label: 'Permite abstención',
-                        value: voting.allowAbstention ? 'Sí' : 'No',
-                      ),
-                      _DetailLine(
-                        icon: Icons.numbers_outlined,
-                        label: 'Orden',
-                        value: voting.displayOrder.toString(),
-                      ),
-                      _DetailLine(
-                        icon: Icons.percent_outlined,
-                        label: 'Requerido',
-                        value: voting.requiredPercentage != null
-                            ? '${voting.requiredPercentage}%'
-                            : '--',
-                      ),
-                    ],
-                  ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  FilledButton.icon(
-                    onPressed: voting.isActive
-                        ? () => _openLiveVoting(context)
-                        : null,
-                    icon: const Icon(Icons.podcasts_outlined, size: 18),
-                    label: const Text('Votación en vivo'),
-                  ),
-                  FilledButton.tonalIcon(
-                    onPressed: () => _openVotingForm(context),
-                    icon: const Icon(Icons.edit_outlined, size: 18),
-                    label: const Text('Editar'),
-                  ),
-                  FilledButton.tonalIcon(
-                    onPressed: toggling
-                        ? null
-                        : () => _toggleStatus(context, !voting.isActive),
-                    icon: Icon(
-                      voting.isActive
-                          ? Icons.pause_circle_outline
-                          : Icons.play_circle_outline,
-                      size: 18,
+              if (isExpanded) ...[
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    _DetailLine(
+                      icon: Icons.badge_outlined,
+                      label: 'Tipo',
+                      value: voting.votingType.toUpperCase(),
                     ),
-                    label: Text(voting.isActive ? 'Desactivar' : 'Activar'),
-                  ),
-                  TextButton.icon(
-                    onPressed: isDeleting
-                        ? null
-                        : () => _confirmDelete(context),
-                    icon: isDeleting
-                        ? SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.2,
-                              color: cs.error,
+                    _DetailLine(
+                      icon: Icons.visibility_off_outlined,
+                      label: 'Secreta',
+                      value: voting.isSecret ? 'Sí' : 'No',
+                    ),
+                    _DetailLine(
+                      icon: Icons.how_to_vote_outlined,
+                      label: 'Permite abstención',
+                      value: voting.allowAbstention ? 'Sí' : 'No',
+                    ),
+                    _DetailLine(
+                      icon: Icons.numbers_outlined,
+                      label: 'Orden',
+                      value: voting.displayOrder.toString(),
+                    ),
+                    _DetailLine(
+                      icon: Icons.percent_outlined,
+                      label: 'Requerido',
+                      value: voting.requiredPercentage != null
+                          ? '${voting.requiredPercentage}%'
+                          : '--',
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    FilledButton.icon(
+                      onPressed: voting.isActive
+                          ? () => _openLiveVoting(context)
+                          : null,
+                      icon: const Icon(Icons.podcasts_outlined, size: 18),
+                      label: const Text('Votación en vivo'),
+                    ),
+                    FilledButton.tonalIcon(
+                      onPressed: () => _openVotingForm(context),
+                      icon: const Icon(Icons.edit_outlined, size: 18),
+                      label: const Text('Editar'),
+                    ),
+                    FilledButton.tonalIcon(
+                      onPressed: toggling
+                          ? null
+                          : () => _toggleStatus(context, !voting.isActive),
+                      icon: Icon(
+                        voting.isActive
+                            ? Icons.pause_circle_outline
+                            : Icons.play_circle_outline,
+                        size: 18,
+                      ),
+                      label: Text(voting.isActive ? 'Desactivar' : 'Activar'),
+                    ),
+                    TextButton.icon(
+                      onPressed: isDeleting
+                          ? null
+                          : () => _confirmDelete(context),
+                      icon: isDeleting
+                          ? SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.2,
+                                color: cs.error,
+                              ),
+                            )
+                          : const Icon(Icons.delete_outline, size: 18),
+                      label: Text(isDeleting ? 'Eliminando...' : 'Eliminar'),
+                    ),
+                  ],
+                ),
+                AnimatedCrossFade(
+                  firstChild: const SizedBox.shrink(),
+                  secondChild: Padding(
+                    padding: const EdgeInsets.only(top: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              'Opciones de votación',
+                              style: tt.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const Spacer(),
+                            if (optionsLoading)
+                              const Padding(
+                                padding: EdgeInsets.only(right: 8),
+                                child: SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              ),
+                            IconButton(
+                              tooltip: 'Actualizar opciones',
+                              onPressed: optionsLoading
+                                  ? null
+                                  : () => _controller.loadVotingOptions(
+                                      groupId: group.id,
+                                      votingId: voting.id,
+                                      force: true,
+                                    ),
+                              icon: const Icon(Icons.refresh_outlined),
+                            ),
+
+                            IconButton(
+                              onPressed: () => _openOptionForm(context),
+                              icon: const Icon(Icons.add_outlined),
+                              tooltip: 'Agregar opción',
+                            ),
+                          ],
+                        ),
+                        if (optionsLoading)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.2,
+                              ),
                             ),
                           )
-                        : const Icon(Icons.delete_outline, size: 18),
-                    label: Text(isDeleting ? 'Eliminando...' : 'Eliminar'),
-                  ),
-                ],
-              ),
-              AnimatedCrossFade(
-                firstChild: const SizedBox.shrink(),
-                secondChild: Padding(
-                  padding: const EdgeInsets.only(top: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            'Opciones de votación',
-                            style: tt.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          const Spacer(),
-                          if (optionsLoading)
-                            const Padding(
-                              padding: EdgeInsets.only(right: 8),
-                              child: SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              ),
-                            ),
-                          IconButton(
-                            tooltip: 'Actualizar opciones',
-                            onPressed: optionsLoading
-                                ? null
-                                : () => _controller.loadVotingOptions(
-                                      groupId: group.id,
-                                      votingId: voting.id,
-                                      force: true,
-                                    ),
-                            icon: const Icon(Icons.refresh_outlined),
-                          ),
-                          TextButton.icon(
-                            onPressed: optionsLoading
-                                ? null
-                                : () => _controller.loadVotingOptions(
-                                      groupId: group.id,
-                                      votingId: voting.id,
-                                      force: true,
-                                    ),
-                            icon: const Icon(Icons.refresh_rounded),
-                            label: const Text('Actualizar opciones'),
-                          ),
-                          TextButton.icon(
-                            onPressed: () => _openOptionForm(context),
-                            icon: const Icon(Icons.add_outlined),
-                            label: const Text('Agregar opción'),
-                          ),
-                        ],
-                      ),
-                      if (optionsLoading)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 12),
-                          child: Center(
-                            child: CircularProgressIndicator(strokeWidth: 2.2),
-                          ),
-                        )
-                      else if (optionsError != null)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _InlineError(message: optionsError!),
-                        )
-                      else if (options.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.only(bottom: 12),
-                          child: Text('Aún no se han registrado opciones.'),
-                        )
-                      else
-                        ...options.map(
-                          (option) => Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                color: cs.surface,
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(color: cs.outlineVariant),
-                              ),
-                              child: ListTile(
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 8,
+                        else if (optionsError != null)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: _InlineError(message: optionsError),
+                          )
+                        else if (options.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.only(bottom: 12),
+                            child: Text('Aún no se han registrado opciones.'),
+                          )
+                        else
+                          ...options.map(
+                            (option) => Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: cs.surface,
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(color: cs.outlineVariant),
                                 ),
-                                leading: CircleAvatar(
-                                  backgroundColor:
-                                      _parseColor(option.color) ?? cs.primary,
-                                  child: Text(
-                                    option.optionCode.toUpperCase(),
-                                    style: tt.bodySmall?.copyWith(
-                                      color: cs.onPrimary,
-                                      fontWeight: FontWeight.w700,
-                                    ),
+                                child: ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
                                   ),
-                                ),
-                                title: Text(option.optionText),
-                                subtitle: Text(
-                                  'Orden ${option.displayOrder}${option.isActive ? '' : ' · Inactiva'}',
-                                ),
-                                trailing: IconButton(
-                                  tooltip: 'Eliminar opción',
-                                  onPressed:
-                                      _controller.isDeletingOption(
-                                        group.id,
-                                        voting.id,
-                                        option.id,
-                                      )
-                                      ? null
-                                      : () => _deleteOption(context, option),
-                                  icon:
-                                      _controller.isDeletingOption(
-                                        group.id,
-                                        voting.id,
-                                        option.id,
-                                      )
-                                      ? SizedBox(
-                                          width: 18,
-                                          height: 18,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2.2,
-                                            color: cs.error,
-                                          ),
-                                        )
-                                      : const Icon(Icons.delete_outline),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Text(
-                            'Resultados de votación',
-                            style: tt.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          const Spacer(),
-                          if (votesLoading)
-                            const Padding(
-                              padding: EdgeInsets.only(right: 8),
-                              child: SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              ),
-                            ),
-                          TextButton.icon(
-                            onPressed: votesLoading
-                                ? null
-                                : () => _controller.loadVotingVotes(
-                                      groupId: group.id,
-                                      votingId: voting.id,
-                                      force: true,
-                                    ),
-                            icon: const Icon(Icons.refresh_outlined),
-                            label: const Text('Actualizar resultados'),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: cs.surface,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: cs.outlineVariant),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Resumen por opción',
-                                style: tt.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              if (totalVotes == 0)
-                                const Text('Aún no se han registrado votos.')
-                              else
-                                ...options.map((option) {
-                                  final percentFormatter = NumberFormat(
-                                    '##0.0#',
-                                  );
-                                  final int count = summary[option.id] ?? 0;
-                                  final double percentage = totalVotes == 0
-                                      ? 0.0
-                                      : (count / totalVotes)
-                                            .clamp(0.0, 1.0)
-                                            .toDouble();
-                                  return Padding(
-                                    padding: const EdgeInsets.only(bottom: 12),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: Text(option.optionText),
-                                            ),
-                                            Text(
-                                              '${percentFormatter.format(percentage * 100)}%',
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 6),
-                                        ClipRRect(
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                          child: LinearProgressIndicator(
-                                            value: percentage,
-                                            minHeight: 8,
-                                            backgroundColor:
-                                                cs.surfaceContainerHighest,
-                                            valueColor: AlwaysStoppedAnimation(
-                                              _parseColor(option.color) ??
-                                                  cs.primary,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          '$count voto${count == 1 ? '' : 's'}',
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                }),
-                              const SizedBox(height: 16),
-                              Text(
-                                'Votos individuales',
-                                style: tt.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              if (votesLoading)
-                                const Center(
-                                  child: Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 12),
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.2,
-                                    ),
-                                  ),
-                                )
-                              else if (votesError != null)
-                                _InlineError(message: votesError!)
-                              else if (votes.isEmpty)
-                                const Text(
-                                  'No se han registrado votos para esta votación.',
-                                )
-                              else
-                                ...votes.map((vote) {
-                                  final option = _controller.optionById(
-                                    groupId: group.id,
-                                    votingId: voting.id,
-                                    optionId: vote.votingOptionId,
-                                  );
-                                  return Column(
-                                    children: [
-                                      DecoratedBox(
-                                        decoration: BoxDecoration(
-                                          color: cs.surfaceContainerHighest,
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                        ),
-                                        child: ListTile(
-                                          contentPadding:
-                                              const EdgeInsets.symmetric(
-                                                horizontal: 16,
-                                                vertical: 4,
-                                              ),
-                                          title: Text(
-                                            option?.optionText ??
-                                                'Opción ${vote.votingOptionId}',
-                                          ),
-                                          subtitle: Text(
-                                            'Unidad ${vote.propertyUnitId} · ${vote.id} · ${_formatDateTime(vote.votedAt)}',
-                                          ),
-                                          trailing: IconButton(
-                                            tooltip: 'Eliminar voto',
-                                            onPressed:
-                                                _controller.isDeletingVote(
-                                                  group.id,
-                                                  voting.id,
-                                                  vote.id,
-                                                )
-                                                ? null
-                                                : () => _deleteVote(
-                                                    context,
-                                                    vote,
-                                                  ),
-                                            icon:
-                                                _controller.isDeletingVote(
-                                                  group.id,
-                                                  voting.id,
-                                                  vote.id,
-                                                )
-                                                ? SizedBox(
-                                                    width: 18,
-                                                    height: 18,
-                                                    child:
-                                                        CircularProgressIndicator(
-                                                          strokeWidth: 2.2,
-                                                          color: cs.error,
-                                                        ),
-                                                  )
-                                                : const Icon(
-                                                    Icons.delete_outline,
-                                                  ),
-                                          ),
-                                        ),
+                                  leading: CircleAvatar(
+                                    backgroundColor:
+                                        _parseColor(option.color) ?? cs.primary,
+                                    child: Text(
+                                      option.optionCode.toUpperCase(),
+                                      style: tt.bodySmall?.copyWith(
+                                        color: cs.onPrimary,
+                                        fontWeight: FontWeight.w700,
                                       ),
-                                      SizedBox(height: 10),
-                                    ],
-                                  );
-                                }),
-                            ],
+                                    ),
+                                  ),
+                                  title: Text(option.optionText),
+                                  subtitle: Text(
+                                    'Orden ${option.displayOrder}${option.isActive ? '' : ' · Inactiva'}',
+                                  ),
+                                  trailing: IconButton(
+                                    tooltip: 'Eliminar opción',
+                                    onPressed:
+                                        _controller.isDeletingOption(
+                                          group.id,
+                                          voting.id,
+                                          option.id,
+                                        )
+                                        ? null
+                                        : () => _deleteOption(context, option),
+                                    icon:
+                                        _controller.isDeletingOption(
+                                          group.id,
+                                          voting.id,
+                                          option.id,
+                                        )
+                                        ? SizedBox(
+                                            width: 18,
+                                            height: 18,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2.2,
+                                              color: cs.error,
+                                            ),
+                                          )
+                                        : const Icon(Icons.delete_outline),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Text(
+                              'Resultados de votación',
+                              style: tt.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const Spacer(),
+                            if (votesLoading)
+                              const Padding(
+                                padding: EdgeInsets.only(right: 8),
+                                child: SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              ),
+                            IconButton(
+                              onPressed: votesLoading
+                                  ? null
+                                  : () => _controller.loadVotingVotes(
+                                      groupId: group.id,
+                                      votingId: voting.id,
+                                      force: true,
+                                    ),
+                              icon: const Icon(Icons.refresh_outlined),
+                              tooltip: 'Actualizar resultados',
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: cs.surface,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: cs.outlineVariant),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Resumen por opción',
+                                  style: tt.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                if (totalVotes == 0)
+                                  const Text('Aún no se han registrado votos.')
+                                else
+                                  ...options.map((option) {
+                                    final percentFormatter = NumberFormat(
+                                      '##0.0#',
+                                    );
+                                    final int count = summary[option.id] ?? 0;
+                                    final double percentage = totalVotes == 0
+                                        ? 0.0
+                                        : (count / totalVotes)
+                                              .clamp(0.0, 1.0)
+                                              .toDouble();
+                                    return Padding(
+                                      padding: const EdgeInsets.only(
+                                        bottom: 12,
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: Text(option.optionText),
+                                              ),
+                                              Text(
+                                                '${percentFormatter.format(percentage * 100)}%',
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 6),
+                                          ClipRRect(
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                            child: LinearProgressIndicator(
+                                              value: percentage,
+                                              minHeight: 8,
+                                              backgroundColor:
+                                                  cs.surfaceContainerHighest,
+                                              valueColor:
+                                                  AlwaysStoppedAnimation(
+                                                    _parseColor(option.color) ??
+                                                        cs.primary,
+                                                  ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            '$count voto${count == 1 ? '' : 's'}',
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Votos individuales',
+                                  style: tt.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                if (votesLoading)
+                                  const Center(
+                                    child: Padding(
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 12,
+                                      ),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.2,
+                                      ),
+                                    ),
+                                  )
+                                else if (votesError != null)
+                                  _InlineError(message: votesError)
+                                else if (votes.isEmpty)
+                                  const Text(
+                                    'No se han registrado votos para esta votación.',
+                                  )
+                                else
+                                  ...votes.map((vote) {
+                                    final option = _controller.optionById(
+                                      groupId: group.id,
+                                      votingId: voting.id,
+                                      optionId: vote.votingOptionId,
+                                    );
+                                    return Column(
+                                      children: [
+                                        DecoratedBox(
+                                          decoration: BoxDecoration(
+                                            color: cs.surfaceContainerHighest,
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                          child: ListTile(
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                                  horizontal: 16,
+                                                  vertical: 4,
+                                                ),
+                                            title: Text(
+                                              option?.optionText ??
+                                                  'Opción ${vote.votingOptionId}',
+                                            ),
+                                            subtitle: Text(
+                                              'Unidad ${vote.propertyUnitId} · ${vote.id} · ${_formatDateTime(vote.votedAt)}',
+                                            ),
+                                            trailing: IconButton(
+                                              tooltip: 'Eliminar voto',
+                                              onPressed:
+                                                  _controller.isDeletingVote(
+                                                    group.id,
+                                                    voting.id,
+                                                    vote.id,
+                                                  )
+                                                  ? null
+                                                  : () => _deleteVote(
+                                                      context,
+                                                      vote,
+                                                    ),
+                                              icon:
+                                                  _controller.isDeletingVote(
+                                                    group.id,
+                                                    voting.id,
+                                                    vote.id,
+                                                  )
+                                                  ? SizedBox(
+                                                      width: 18,
+                                                      height: 18,
+                                                      child:
+                                                          CircularProgressIndicator(
+                                                            strokeWidth: 2.2,
+                                                            color: cs.error,
+                                                          ),
+                                                    )
+                                                  : const Icon(
+                                                      Icons.delete_outline,
+                                                    ),
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(height: 10),
+                                      ],
+                                    );
+                                  }),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
+                  crossFadeState: isExpanded
+                      ? CrossFadeState.showSecond
+                      : CrossFadeState.showFirst,
+                  duration: const Duration(milliseconds: 200),
                 ),
-                crossFadeState: isExpanded
-                    ? CrossFadeState.showSecond
-                    : CrossFadeState.showFirst,
-                duration: const Duration(milliseconds: 200),
-              ),
+              ],
             ],
           ),
         ),
@@ -2457,104 +2459,34 @@ class _VotingLiveBottomSheetState extends State<_VotingLiveBottomSheet> {
                                       controller.searchResidents(value);
                                     },
                                   ),
-                                  Obx(() {
-                                    final hasFocus = _searchFocus.hasFocus;
-                                    final query = _searchCtrl.text.trim();
-                                    final loadingValue = controller
-                                        .residentSuggestionsLoading
-                                        .value;
-                                    // final suggestionsValue = controller
-                                    //     .residentSuggestions
-                                    //     .toList();
-                                    final pendingUnits =
-                                        controller.pendingUnits;
+                                  // DESPUÉS
+                                  Builder(
+                                    builder: (_) {
+                                      final hasFocus = _searchFocus.hasFocus;
+                                      final query = _searchCtrl.text.trim();
 
-                                    if (!hasFocus) {
-                                      return const SizedBox(height: 12);
-                                    }
+                                      if (!hasFocus) {
+                                        return const SizedBox(height: 12);
+                                      }
 
-                                    if (query.length < 2) {
+                                      if (query.length < 2) {
+                                        return Column(
+                                          children: [
+                                            const SizedBox(height: 8),
+                                            const SizedBox(height: 12),
+                                          ],
+                                        );
+                                      }
+
                                       return Column(
                                         children: [
                                           const SizedBox(height: 8),
-                                          // _LiveSuggestionCard(
-                                          //   loading: false,
-                                          //   emptyLabel:
-                                          //       'No hay unidades pendientes de votar.',
-                                          //   children: pendingUnits
-                                          //       .map(
-                                          //         (
-                                          //           unit,
-                                          //         ) => _PendingUnitSuggestionTile(
-                                          //           unit: unit,
-                                          //           onTap: () {
-                                          //             controller.setFilter(
-                                          //               unit.unitNumber,
-                                          //             );
-                                          //             _searchCtrl
-                                          //               ..text = unit.unitNumber
-                                          //               ..selection =
-                                          //                   TextSelection.collapsed(
-                                          //                     offset:
-                                          //                         _searchCtrl
-                                          //                             .text
-                                          //                             .length,
-                                          //                   );
-                                          //             controller
-                                          //                 .clearResidentSuggestions();
-                                          //             _searchFocus.unfocus();
-                                          //           },
-                                          //         ),
-                                          //       )
-                                          //       .toList(growable: false),
-                                          // ),
                                           const SizedBox(height: 12),
                                         ],
                                       );
-                                    }
+                                    },
+                                  ),
 
-                                    final loading = loadingValue;
-                                    // final suggestions = suggestionsValue;
-
-                                    return Column(
-                                      children: [
-                                        const SizedBox(height: 8),
-                                        // _LiveSuggestionCard(
-                                        //   loading: loading,
-                                        //   emptyLabel:
-                                        //       'No se encontraron residentes para la búsqueda.',
-                                        //   children: suggestions
-                                        //       .map(
-                                        //         (
-                                        //           resident,
-                                        //         ) => _ResidentLookupTile(
-                                        //           resident: resident,
-                                        //           onTap: () {
-                                        //             controller.setFilter(
-                                        //               resident
-                                        //                   .propertyUnitNumber,
-                                        //             );
-                                        //             _searchCtrl
-                                        //               ..text = resident
-                                        //                   .propertyUnitNumber
-                                        //               ..selection =
-                                        //                   TextSelection.collapsed(
-                                        //                     offset: _searchCtrl
-                                        //                         .text
-                                        //                         .length,
-                                        //                   );
-                                        //             controller
-                                        //                 .clearResidentSuggestions();
-                                        //             _searchFocus.unfocus();
-                                        //           },
-                                        //         ),
-                                        //       )
-                                        //       .toList(growable: false),
-                                        // ),
-                                        const SizedBox(height: 12),
-                                      ],
-                                    );
-                                  }),
                                   FilledButton.icon(
                                     onPressed: widget.voting.isActive
                                         ? () => _openVoteSheet()
@@ -3501,12 +3433,12 @@ Color? _tryParseHexColor(String? value) {
   return null;
 }
 
-class _LiveSuggestionCard extends StatelessWidget {
+class LiveSuggestionCard extends StatelessWidget {
   final bool loading;
   final String emptyLabel;
   final List<Widget> children;
 
-  const _LiveSuggestionCard({
+  const LiveSuggestionCard({
     required this.loading,
     required this.emptyLabel,
     required this.children,
@@ -3758,11 +3690,11 @@ class _LiveOptionCardWidget extends StatelessWidget {
   }
 }
 
-class _ResidentLookupTile extends StatelessWidget {
+class ResidentLookupTile extends StatelessWidget {
   final HorizontalPropertyResidentItem resident;
   final VoidCallback onTap;
 
-  const _ResidentLookupTile({required this.resident, required this.onTap});
+  const ResidentLookupTile({required this.resident, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -3819,11 +3751,11 @@ class _ResidentLookupTile extends StatelessWidget {
   }
 }
 
-class _PendingUnitSuggestionTile extends StatelessWidget {
+class PendingUnitSuggestionTile extends StatelessWidget {
   final HorizontalPropertyVotingLiveUnit unit;
   final VoidCallback onTap;
 
-  const _PendingUnitSuggestionTile({required this.unit, required this.onTap});
+  const PendingUnitSuggestionTile({required this.unit, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -3877,7 +3809,6 @@ class _PendingVoteSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
     return Obx(() {
@@ -4280,12 +4211,14 @@ class _UnitVoteChip extends StatelessWidget {
                 color: background,
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(
-                  color: voted ? background.withOpacity(.6) : cs.outlineVariant,
+                  color: voted
+                      ? background.withValues(alpha: .6)
+                      : cs.outlineVariant,
                 ),
                 boxShadow: voted
                     ? [
                         BoxShadow(
-                          color: background.withOpacity(.28),
+                          color: background.withValues(alpha: .28),
                           blurRadius: 16,
                           offset: const Offset(0, 10),
                         ),
@@ -4316,7 +4249,7 @@ class _UnitVoteChip extends StatelessWidget {
                               child: Text(
                                 unit.residentName!,
                                 style: TextStyle(
-                                  color: foreground.withOpacity(.85),
+                                  color: foreground.withValues(alpha: .85),
                                   fontSize: 12,
                                 ),
                               ),
@@ -4365,7 +4298,7 @@ class _UnitVoteChip extends StatelessWidget {
                         Positioned.fill(
                           child: DecoratedBox(
                             decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(.12),
+                              color: Colors.black.withValues(alpha: .12),
                               borderRadius: BorderRadius.circular(18),
                             ),
                             child: const Center(
@@ -4636,6 +4569,7 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
                           ),
                           const SizedBox(height: 12),
                           Obx(() {
+                            // Forzamos rebuild cuando cambie liveData
                             _controller.liveData.value;
                             final units = _units;
 
@@ -4672,107 +4606,117 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
                               );
                             }
 
-                            return DecoratedBox(
-                              decoration: BoxDecoration(
-                                color: cs.surfaceContainerHighest,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: cs.outlineVariant),
-                              ),
-                              child: ListView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: units.length,
-                                itemBuilder: (context, index) {
-                                  final unit = units[index];
-                                  final isSelected =
-                                      _selectedUnit?.propertyUnitId ==
-                                      unit.propertyUnitId;
-                                  final isDisabled = unit.hasVoted;
+                            // Helpers para centralizar la selección (RadioGroup + tap en la fila)
+                            void handleSelectById(int? id) {
+                              setState(() {
+                                if (id == null) {
+                                  _selectedUnit = null;
+                                  return;
+                                }
+                                final currentId = _selectedUnit?.propertyUnitId;
+                                if (currentId == id) {
+                                  // toggle: si ya está seleccionada, la deseleccionamos
+                                  _selectedUnit = null;
+                                  return;
+                                }
+                                _selectedUnit = units.firstWhereOrNull(
+                                  (u) => u.propertyUnitId == id,
+                                );
+                              });
+                            }
 
-                                  return Material(
-                                    color: Colors.transparent,
-                                    child: InkWell(
-                                      onTap: isDisabled
-                                          ? null
-                                          : () {
-                                              setState(() {
-                                                if (isSelected) {
-                                                  _selectedUnit = null;
-                                                } else {
-                                                  _selectedUnit = unit;
-                                                }
-                                              });
-                                            },
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 6,
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    unit.unitNumber,
-                                                    style: tt.titleSmall
-                                                        ?.copyWith(
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                        ),
-                                                  ),
-                                                  if (unit
-                                                          .residentName
-                                                          ?.isNotEmpty ==
-                                                      true)
-                                                    Padding(
-                                                      padding:
-                                                          const EdgeInsets.only(
-                                                            top: 2,
+                            void handleSelectUnit(
+                              HorizontalPropertyVotingLiveUnit unit,
+                            ) {
+                              handleSelectById(unit.propertyUnitId);
+                            }
+
+                            return RadioGroup<int>(
+                              groupValue: _selectedUnit?.propertyUnitId,
+                              onChanged: handleSelectById,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: cs.surfaceContainerHighest,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: cs.outlineVariant),
+                                ),
+                                child: ListView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: units.length,
+                                  itemBuilder: (context, index) {
+                                    final unit = units[index];
+                                    final isDisabled = unit.hasVoted;
+
+                                    return Material(
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                        onTap: isDisabled
+                                            ? null
+                                            : () => handleSelectUnit(unit),
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 6,
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      unit.unitNumber,
+                                                      style: tt.titleSmall
+                                                          ?.copyWith(
+                                                            fontWeight:
+                                                                FontWeight.w600,
                                                           ),
-                                                      child: Text(
-                                                        unit.residentName!,
-                                                        style: tt.bodySmall
-                                                            ?.copyWith(
-                                                              color: cs
-                                                                  .onSurfaceVariant,
-                                                            ),
-                                                      ),
                                                     ),
-                                                ],
+                                                    if (unit
+                                                            .residentName
+                                                            ?.isNotEmpty ==
+                                                        true)
+                                                      Padding(
+                                                        padding:
+                                                            const EdgeInsets.only(
+                                                              top: 2,
+                                                            ),
+                                                        child: Text(
+                                                          unit.residentName!,
+                                                          style: tt.bodySmall
+                                                              ?.copyWith(
+                                                                color: cs
+                                                                    .onSurfaceVariant,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                  ],
+                                                ),
                                               ),
-                                            ),
-                                            if (isDisabled)
-                                              const Icon(
-                                                Icons.how_to_vote,
-                                                color: Colors.green,
-                                              )
-                                            else
-                                              Radio<int>(
-                                                value: unit.propertyUnitId,
-                                                groupValue: _selectedUnit
-                                                    ?.propertyUnitId,
-                                                onChanged: (_) {
-                                                  setState(() {
-                                                    if (isSelected) {
-                                                      _selectedUnit = null;
-                                                    } else {
-                                                      _selectedUnit = unit;
-                                                    }
-                                                  });
-                                                },
-                                              ),
-                                          ],
+                                              if (isDisabled)
+                                                const Icon(
+                                                  Icons.how_to_vote,
+                                                  color: Colors.green,
+                                                )
+                                              else
+                                                Radio<int>(
+                                                  // Sólo indicamos el valor; el groupValue/onChanged
+                                                  // lo maneja el RadioGroup ancestro.
+                                                  value: unit.propertyUnitId,
+                                                ),
+                                            ],
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  );
-                                },
+                                    );
+                                  },
+                                ),
                               ),
                             );
                           }),
+
                           const SizedBox(height: 20),
                           Text(
                             'Opciones de votación',
