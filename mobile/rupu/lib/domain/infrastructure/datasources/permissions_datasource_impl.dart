@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:rupu/config/dio/authenticated_dio.dart';
+import 'package:rupu/config/helpers/global_vars.dart';
 import 'package:rupu/domain/datasource/permissions_datasource.dart';
 import 'package:rupu/domain/entities/permission.dart';
 import 'package:rupu/domain/entities/role_action_result.dart';
@@ -14,9 +15,7 @@ class PermissionsDatasourceImpl extends PermissionsDatasource {
   final Dio _dio;
 
   PermissionsDatasourceImpl({String? baseUrl})
-      : _dio = AuthenticatedDio(
-          baseUrl: baseUrl ?? 'https://www.xn--rup-joa.com/api/v1',
-        ).dio;
+    : _dio = AuthenticatedDio(baseUrl: GlobVars.baseUrl).dio;
 
   @override
   Future<PermissionsCatalog> obtenerPermisos() async {
@@ -48,10 +47,12 @@ class PermissionsDatasourceImpl extends PermissionsDatasource {
       final response = await _dio.post('/permissions', data: payload);
       final data = Map<String, dynamic>.from(response.data as Map);
       final permissionJson = data['data'] as Map<String, dynamic>? ?? const {};
-      final permission =
-          permissionJson.isEmpty ? null : _permissionFromJson(permissionJson);
+      final permission = permissionJson.isEmpty
+          ? null
+          : _permissionFromJson(permissionJson);
       final success = data['success'] as bool? ?? true;
-      final message = data['message']?.toString() ?? 'Permiso creado exitosamente';
+      final message =
+          data['message']?.toString() ?? 'Permiso creado exitosamente';
       return PermissionActionResult(
         success: success,
         message: message,
@@ -72,7 +73,8 @@ class PermissionsDatasourceImpl extends PermissionsDatasource {
       final response = await _dio.put('/permissions/$id', data: payload);
       final data = Map<String, dynamic>.from(response.data as Map);
       final success = data['success'] as bool? ?? true;
-      final message = data['message']?.toString() ?? 'Permiso actualizado exitosamente';
+      final message =
+          data['message']?.toString() ?? 'Permiso actualizado exitosamente';
       return IamMessageResult(success: success, message: message);
     } on DioException catch (e) {
       debugPrint('Error actualizando permiso: ${e.message}');
@@ -86,7 +88,8 @@ class PermissionsDatasourceImpl extends PermissionsDatasource {
       final response = await _dio.delete('/permissions/$id');
       final data = Map<String, dynamic>.from(response.data as Map);
       final success = data['success'] as bool? ?? true;
-      final message = data['message']?.toString() ?? 'Permiso eliminado exitosamente';
+      final message =
+          data['message']?.toString() ?? 'Permiso eliminado exitosamente';
       return IamMessageResult(success: success, message: message);
     } on DioException catch (e) {
       debugPrint('Error eliminando permiso: ${e.message}');

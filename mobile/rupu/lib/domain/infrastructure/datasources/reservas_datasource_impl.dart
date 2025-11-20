@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:rupu/config/dio/authenticated_dio.dart';
+import 'package:rupu/config/helpers/global_vars.dart';
 import 'package:rupu/config/helpers/human_formats.dart';
 import 'package:rupu/domain/datasource/reserve_datasource.dart';
 import 'package:rupu/domain/entities/reserve.dart';
@@ -11,9 +12,7 @@ class ReservasDatasourceImpl extends ReserveDatasource {
   final Dio _dio;
 
   ReservasDatasourceImpl({String? baseUrl})
-    : _dio = AuthenticatedDio(
-        baseUrl: baseUrl ?? 'https://www.xn--rup-joa.com/api/v1',
-      ).dio;
+    : _dio = AuthenticatedDio(baseUrl: GlobVars.baseUrl).dio;
 
   @override
   Future<List<Reserve>> obtenerReservas({required int businessId}) async {

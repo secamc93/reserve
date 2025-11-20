@@ -1,11 +1,10 @@
 import 'package:dio/dio.dart';
+import 'package:rupu/config/helpers/global_vars.dart';
 import 'package:rupu/domain/datasource/users_datasource.dart';
 import 'package:rupu/domain/infrastructure/models/login_response_model.dart';
 
 class UserDatasource extends UsersDatasource {
-  final dio = Dio(
-    BaseOptions(baseUrl: 'https://www.xn--rup-joa.com/api/v1/auth'),
-  );
+  final dio = Dio(BaseOptions(baseUrl: '${GlobVars.baseUrl}/auth'));
 
   @override
   Future<LoginResponseModel> getUser({

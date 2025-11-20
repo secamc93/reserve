@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:rupu/config/dio/authenticated_dio.dart';
+import 'package:rupu/config/helpers/global_vars.dart';
 import 'package:rupu/domain/datasource/roles_datasource.dart';
 import 'package:rupu/domain/entities/iam_resource.dart';
 import 'package:rupu/domain/entities/role.dart';
@@ -14,9 +15,7 @@ class RolesDatasourceImpl extends RolesDatasource {
   final Dio _dio;
 
   RolesDatasourceImpl({String? baseUrl})
-    : _dio = AuthenticatedDio(
-        baseUrl: baseUrl ?? 'https://www.xn--rup-joa.com/api/v1',
-      ).dio;
+    : _dio = AuthenticatedDio(baseUrl: GlobVars.baseUrl).dio;
 
   @override
   Future<RolesCatalog> obtenerRoles() async {

@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:rupu/config/dio/authenticated_dio.dart';
+import 'package:rupu/config/helpers/global_vars.dart';
 import 'package:rupu/domain/datasource/change_password_datasource.dart';
 import 'package:rupu/domain/infrastructure/models/change_password_response_model.dart';
 
@@ -9,9 +10,7 @@ class ChangePasswordDatasourceImpl extends CambiarContrasenasDatasource {
   final Dio _dio;
 
   ChangePasswordDatasourceImpl({String? baseUrl})
-    : _dio = AuthenticatedDio(
-        baseUrl: baseUrl ?? 'https://www.xn--rup-joa.com/api/v1/auth',
-      ).dio;
+    : _dio = AuthenticatedDio(baseUrl: GlobVars.baseUrl).dio;
 
   @override
   Future changePassword({String? currentPassword, String? newPassword}) async {

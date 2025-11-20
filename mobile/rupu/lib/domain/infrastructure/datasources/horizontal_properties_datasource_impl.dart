@@ -13,6 +13,7 @@ import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
 import 'package:rupu/config/constants/secure_storage/token_storage.dart';
 import 'package:rupu/config/dio/authenticated_dio.dart';
+import 'package:rupu/config/helpers/global_vars.dart';
 import 'package:rupu/domain/datasource/horizontal_properties_datasource.dart';
 import 'package:rupu/domain/infrastructure/models/horizontal_properties_response_model.dart';
 import 'package:rupu/domain/infrastructure/models/horizontal_property_detail_response_model.dart';
@@ -33,9 +34,7 @@ class HorizontalPropertiesDatasourceImpl
   static const _minResizeDimension = 640;
 
   HorizontalPropertiesDatasourceImpl({String? baseUrl})
-    : _dio = AuthenticatedDio(
-        baseUrl: baseUrl ?? 'https://www.xn--rup-joa.com/api/v1',
-      ).dio;
+    : _dio = AuthenticatedDio(baseUrl: GlobVars.baseUrl).dio;
 
   @override
   Future<HorizontalPropertiesResponseModel> getHorizontalProperties({
@@ -605,7 +604,7 @@ class HorizontalPropertiesDatasourceImpl
 
   @override
   Future<HorizontalPropertyVotingDetailsResponseModel>
-      getHorizontalPropertyVotingDetails({
+  getHorizontalPropertyVotingDetails({
     required int groupId,
     required int votingId,
     Map<String, dynamic>? query,

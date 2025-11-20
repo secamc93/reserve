@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:rupu/config/dio/authenticated_dio.dart';
+import 'package:rupu/config/helpers/global_vars.dart';
 import 'package:rupu/domain/datasource/permisos_roles_datasource.dart';
 import 'package:rupu/domain/entities/roles_permisos.dart';
 import 'package:rupu/domain/infrastructure/mappers/permisos_roles_mapper.dart';
@@ -11,9 +12,7 @@ class PermisosRolesDatasourceImpl extends PermisosRolesDatasource {
   final Dio _dio;
 
   PermisosRolesDatasourceImpl({String? baseUrl})
-      : _dio = AuthenticatedDio(
-          baseUrl: baseUrl ?? 'https://www.xn--rup-joa.com/api/v1',
-        ).dio;
+    : _dio = AuthenticatedDio(baseUrl: GlobVars.baseUrl).dio;
 
   @override
   Future<RolesPermisos> obtenerRolesPermisos({required int businessId}) async {
@@ -35,5 +34,4 @@ class PermisosRolesDatasourceImpl extends PermisosRolesDatasource {
       rethrow;
     }
   }
-
 }

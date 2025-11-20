@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:rupu/config/dio/authenticated_dio.dart';
+import 'package:rupu/config/helpers/global_vars.dart';
 import 'package:rupu/domain/datasource/attendance_datasource.dart';
 import 'package:rupu/domain/infrastructure/models/attendance_list_response_model.dart';
 import 'package:rupu/domain/infrastructure/models/attendance_record_action_response_model.dart';
@@ -10,9 +11,7 @@ class AttendanceDatasourceImpl extends AttendanceDatasource {
   final Dio _dio;
 
   AttendanceDatasourceImpl({String? baseUrl})
-      : _dio = AuthenticatedDio(
-          baseUrl: baseUrl ?? 'https://www.xn--rup-joa.com/api/v1',
-        ).dio;
+    : _dio = AuthenticatedDio(baseUrl: GlobVars.baseUrl).dio;
 
   @override
   Future<AttendanceListResponseModel> getAttendanceLists({
@@ -55,10 +54,7 @@ class AttendanceDatasourceImpl extends AttendanceDatasource {
     String? unitNumber,
     String? attended,
   }) async {
-    final query = <String, dynamic>{
-      'page': page,
-      'page_size': pageSize,
-    };
+    final query = <String, dynamic>{'page': page, 'page_size': pageSize};
     if (unitNumber != null && unitNumber.isNotEmpty) {
       query['unit_number'] = unitNumber;
     }
@@ -118,9 +114,7 @@ class AttendanceDatasourceImpl extends AttendanceDatasource {
   }) async {
     await _dio.put(
       '/attendance/proxies/$proxyId',
-      data: {
-        'proxy_name': proxyName,
-      },
+      data: {'proxy_name': proxyName},
     );
   }
 

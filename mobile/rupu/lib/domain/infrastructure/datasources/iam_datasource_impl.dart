@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:rupu/config/dio/authenticated_dio.dart';
+import 'package:rupu/config/helpers/global_vars.dart';
 import 'package:rupu/domain/datasource/iam_datasource.dart';
 import 'package:rupu/domain/infrastructure/models/iam/iam_actions_response_model.dart';
 import 'package:rupu/domain/infrastructure/models/iam/iam_business_types_response_model.dart';
@@ -12,14 +13,10 @@ class IamDatasourceImpl extends IamDatasource {
   final Dio _dio;
 
   IamDatasourceImpl({String? baseUrl})
-      : _dio = AuthenticatedDio(
-          baseUrl: baseUrl ?? 'https://www.xn--rup-joa.com/api/v1',
-        ).dio;
+    : _dio = AuthenticatedDio(baseUrl: GlobVars.baseUrl).dio;
 
   @override
-  Future<IamUsersResponseModel> getUsers({
-    Map<String, dynamic>? query,
-  }) async {
+  Future<IamUsersResponseModel> getUsers({Map<String, dynamic>? query}) async {
     final response = await _dio.get('/users', queryParameters: _clean(query));
     return IamUsersResponseModel.fromJson(
       Map<String, dynamic>.from(response.data as Map),
@@ -30,7 +27,10 @@ class IamDatasourceImpl extends IamDatasource {
   Future<IamResourcesResponseModel> getResources({
     Map<String, dynamic>? query,
   }) async {
-    final response = await _dio.get('/resources', queryParameters: _clean(query));
+    final response = await _dio.get(
+      '/resources',
+      queryParameters: _clean(query),
+    );
     return IamResourcesResponseModel.fromJson(
       Map<String, dynamic>.from(response.data as Map),
     );
@@ -40,8 +40,10 @@ class IamDatasourceImpl extends IamDatasource {
   Future<IamBusinessTypesResponseModel> getBusinessTypes({
     Map<String, dynamic>? query,
   }) async {
-    final response =
-        await _dio.get('/business-types', queryParameters: _clean(query));
+    final response = await _dio.get(
+      '/business-types',
+      queryParameters: _clean(query),
+    );
     return IamBusinessTypesResponseModel.fromJson(
       Map<String, dynamic>.from(response.data as Map),
     );
@@ -74,16 +76,20 @@ class IamDatasourceImpl extends IamDatasource {
   Future<IamBusinessesResponseModel> getBusinesses({
     Map<String, dynamic>? query,
   }) async {
-    final response = await _dio.get('/businesses', queryParameters: _clean(query));
+    final response = await _dio.get(
+      '/businesses',
+      queryParameters: _clean(query),
+    );
     return IamBusinessesResponseModel.fromJson(
       Map<String, dynamic>.from(response.data as Map),
     );
   }
 
   @override
-  Future<IamActionsResponseModel> getActions({Map<String, dynamic>? query}) async {
-    final response =
-        await _dio.get('/actions', queryParameters: _clean(query));
+  Future<IamActionsResponseModel> getActions({
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await _dio.get('/actions', queryParameters: _clean(query));
     return IamActionsResponseModel.fromJson(
       Map<String, dynamic>.from(response.data as Map),
     );
@@ -114,8 +120,9 @@ class IamDatasourceImpl extends IamDatasource {
   Future<IamConfiguredResourcesResponseModel> getBusinessConfiguredResources({
     required int businessId,
   }) async {
-    final response =
-        await _dio.get('/businesses/$businessId/configured-resources');
+    final response = await _dio.get(
+      '/businesses/$businessId/configured-resources',
+    );
     return IamConfiguredResourcesResponseModel.fromJson(
       Map<String, dynamic>.from(response.data as Map),
     );

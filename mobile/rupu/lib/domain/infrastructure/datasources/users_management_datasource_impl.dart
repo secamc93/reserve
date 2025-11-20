@@ -7,6 +7,7 @@ import 'package:image/image.dart' as img;
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
 import 'package:rupu/config/dio/authenticated_dio.dart';
+import 'package:rupu/config/helpers/global_vars.dart';
 import 'package:rupu/domain/datasource/user_management_datasource.dart';
 import 'package:rupu/domain/infrastructure/models/create_user_response_model.dart';
 import 'package:rupu/domain/infrastructure/models/simple_response_model.dart';
@@ -17,9 +18,7 @@ class UsersManagementDatasourceImpl extends UserManagementDatasource {
   final Dio _dio;
 
   UsersManagementDatasourceImpl({String? baseUrl})
-      : _dio = AuthenticatedDio(
-          baseUrl: baseUrl ?? 'https://www.xn--rup-joa.com/api/v1',
-        ).dio;
+    : _dio = AuthenticatedDio(baseUrl: GlobVars.baseUrl).dio;
 
   @override
   Future<UsersResponseModel> getUsers({Map<String, dynamic>? query}) async {
@@ -110,9 +109,7 @@ class UsersManagementDatasourceImpl extends UserManagementDatasource {
   @override
   Future<SimpleResponseModel> deleteUser({required int id}) async {
     final response = await _dio.delete('/users/$id');
-    return SimpleResponseModel.fromJson(
-      response.data as Map<String, dynamic>,
-    );
+    return SimpleResponseModel.fromJson(response.data as Map<String, dynamic>);
   }
 
   Map<String, dynamic> _buildBasePayload({
@@ -155,8 +152,9 @@ class UsersManagementDatasourceImpl extends UserManagementDatasource {
     if (!onlyDefined || businessIdsValue != null) {
       assign('business_ids', businessIdsValue);
     }
-    final sanitizedAvatarUrl =
-        (avatarUrl == null || avatarUrl.trim().isEmpty) ? null : avatarUrl;
+    final sanitizedAvatarUrl = (avatarUrl == null || avatarUrl.trim().isEmpty)
+        ? null
+        : avatarUrl;
     if (!onlyDefined || sanitizedAvatarUrl != null) {
       assign('avatar_url', sanitizedAvatarUrl);
     }
@@ -172,7 +170,8 @@ class UsersManagementDatasourceImpl extends UserManagementDatasource {
     if (avatarPath != null && avatarPath.isNotEmpty) {
       final ensured = await _ensureAllowedImage(avatarPath, avatarFileName);
       final bytes = await File(ensured.path).readAsBytes();
-      final mime = lookupMimeType(ensured.path, headerBytes: bytes) ?? 'image/jpeg';
+      final mime =
+          lookupMimeType(ensured.path, headerBytes: bytes) ?? 'image/jpeg';
       final mediaType = MediaType.parse(mime);
 
       final file = await MultipartFile.fromFile(
@@ -190,7 +189,10 @@ class UsersManagementDatasourceImpl extends UserManagementDatasource {
 
   /// Asegura que el archivo sea .jpg/.jpeg/.png/.gif/.webp.
   /// Si la extensión no es permitida (p.ej. .heic/.bmp), lo re-encodea a JPEG.
-  Future<_EnsuredImage> _ensureAllowedImage(String path, String? preferredName) async {
+  Future<_EnsuredImage> _ensureAllowedImage(
+    String path,
+    String? preferredName,
+  ) async {
     final allowed = <String>{'.jpg', '.jpeg', '.png', '.gif', '.webp'};
     final ext = p.extension(path).toLowerCase();
 

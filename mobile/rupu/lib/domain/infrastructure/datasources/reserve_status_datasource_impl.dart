@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:rupu/config/dio/authenticated_dio.dart';
+import 'package:rupu/config/helpers/global_vars.dart';
 import 'package:rupu/domain/datasource/reserve_status_datasource.dart';
 import 'package:rupu/domain/entities/reserve_status.dart';
 import 'package:rupu/domain/infrastructure/mappers/reserve_status_mapper.dart';
@@ -10,9 +11,7 @@ class ReserveStatusDatasourceImpl extends ReserveStatusDatasource {
   final Dio _dio;
 
   ReserveStatusDatasourceImpl({String? baseUrl})
-      : _dio = AuthenticatedDio(
-          baseUrl: baseUrl ?? 'https://www.xn--rup-joa.com/api/v1',
-        ).dio;
+    : _dio = AuthenticatedDio(baseUrl: GlobVars.baseUrl).dio;
 
   @override
   Future<List<ReserveStatus>> obtenerEstados() async {
@@ -23,8 +22,10 @@ class ReserveStatusDatasourceImpl extends ReserveStatusDatasource {
       );
       return model.data.map(ReserveStatusMapper.fromModel).toList();
     } on DioException catch (e) {
-      debugPrint('Error obtener estados [${e.response?.statusCode}]: '
-          '${e.response?.data ?? e.message}');
+      debugPrint(
+        'Error obtener estados [${e.response?.statusCode}]: '
+        '${e.response?.data ?? e.message}',
+      );
       rethrow;
     }
   }
