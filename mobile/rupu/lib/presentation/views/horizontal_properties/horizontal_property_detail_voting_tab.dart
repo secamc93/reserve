@@ -41,6 +41,7 @@ class _VotingTab extends GetWidget<HorizontalPropertyVotingController> {
             if (error != null) ...[
               _InlineError(message: error),
               const SizedBox(height: 16),
+              ],
             ],
             if (!isLoading && groups.isEmpty)
               const _EmptyState(
@@ -221,6 +222,11 @@ class _VotingGroupCard extends StatelessWidget {
                       ],
                     ),
                   ),
+                  _StatusChip(
+                    label: labelChip,
+                    background: bgChip,
+                    foreground: fgChip,
+                  ),
                   IconButton(
                     onPressed: () => _toggleExpanded(),
                     icon: Icon(
@@ -231,55 +237,50 @@ class _VotingGroupCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: [
-                  _StatusChip(
-                    label: labelChip,
-                    background: bgChip,
-                    foreground: fgChip,
-                  ),
-                  _DetailLine(
-                    icon: Icons.calendar_month_outlined,
-                    label: 'Inicio',
-                    value: _formatDate(group.votingStartDate),
-                  ),
-                  _DetailLine(
-                    icon: Icons.event_outlined,
-                    label: 'Fin',
-                    value: _formatDate(group.votingEndDate),
-                  ),
-                  _DetailLine(
-                    icon: Icons.gavel_outlined,
-                    label: 'Requiere quórum',
-                    value: group.requiresQuorum ? 'Sí' : 'No',
-                  ),
-                  _DetailLine(
-                    icon: Icons.percent_outlined,
-                    label: 'Quórum',
-                    value: group.quorumPercentage != null
-                        ? '${group.quorumPercentage}%'
-                        : '--',
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              _CardActions(
-                viewLabel: 'Gestión de asistencia',
-                onView: onOpenAttendance,
-                onEdit: onEdit,
-                onDelete: isDeleting ? null : () => _confirmDelete(context),
-                isDeleteDisabled: isDeleting,
-              ),
               AnimatedCrossFade(
                 firstChild: const SizedBox.shrink(),
                 secondChild: Padding(
-                  padding: const EdgeInsets.only(top: 16),
+                  padding: const EdgeInsets.only(top: 12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: [
+                          _DetailLine(
+                            icon: Icons.calendar_month_outlined,
+                            label: 'Inicio',
+                            value: _formatDate(group.votingStartDate),
+                          ),
+                          _DetailLine(
+                            icon: Icons.event_outlined,
+                            label: 'Fin',
+                            value: _formatDate(group.votingEndDate),
+                          ),
+                          _DetailLine(
+                            icon: Icons.gavel_outlined,
+                            label: 'Requiere quórum',
+                            value: group.requiresQuorum ? 'Sí' : 'No',
+                          ),
+                          _DetailLine(
+                            icon: Icons.percent_outlined,
+                            label: 'Quórum',
+                            value: group.quorumPercentage != null
+                                ? '${group.quorumPercentage}%'
+                                : '--',
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      _CardActions(
+                        viewLabel: 'Gestión de asistencia',
+                        onView: onOpenAttendance,
+                        onEdit: onEdit,
+                        onDelete: isDeleting ? null : () => _confirmDelete(context),
+                        isDeleteDisabled: isDeleting,
+                      ),
+                      const SizedBox(height: 12),
                       if (isLoading)
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 12),
@@ -331,6 +332,7 @@ class _VotingGroupCard extends StatelessWidget {
                     : CrossFadeState.showFirst,
                 duration: const Duration(milliseconds: 200),
               ),
+              ],
             ],
           ),
         ),
@@ -492,40 +494,41 @@ class _VotingItemCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: [
-                  _DetailLine(
-                    icon: Icons.badge_outlined,
-                    label: 'Tipo',
-                    value: voting.votingType.toUpperCase(),
+                if (isExpanded) ...[
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: [
+                      _DetailLine(
+                        icon: Icons.badge_outlined,
+                        label: 'Tipo',
+                        value: voting.votingType.toUpperCase(),
+                      ),
+                      _DetailLine(
+                        icon: Icons.visibility_off_outlined,
+                        label: 'Secreta',
+                        value: voting.isSecret ? 'Sí' : 'No',
+                      ),
+                      _DetailLine(
+                        icon: Icons.how_to_vote_outlined,
+                        label: 'Permite abstención',
+                        value: voting.allowAbstention ? 'Sí' : 'No',
+                      ),
+                      _DetailLine(
+                        icon: Icons.numbers_outlined,
+                        label: 'Orden',
+                        value: voting.displayOrder.toString(),
+                      ),
+                      _DetailLine(
+                        icon: Icons.percent_outlined,
+                        label: 'Requerido',
+                        value: voting.requiredPercentage != null
+                            ? '${voting.requiredPercentage}%'
+                            : '--',
+                      ),
+                    ],
                   ),
-                  _DetailLine(
-                    icon: Icons.visibility_off_outlined,
-                    label: 'Secreta',
-                    value: voting.isSecret ? 'Sí' : 'No',
-                  ),
-                  _DetailLine(
-                    icon: Icons.how_to_vote_outlined,
-                    label: 'Permite abstención',
-                    value: voting.allowAbstention ? 'Sí' : 'No',
-                  ),
-                  _DetailLine(
-                    icon: Icons.numbers_outlined,
-                    label: 'Orden',
-                    value: voting.displayOrder.toString(),
-                  ),
-                  _DetailLine(
-                    icon: Icons.percent_outlined,
-                    label: 'Requerido',
-                    value: voting.requiredPercentage != null
-                        ? '${voting.requiredPercentage}%'
-                        : '--',
-                  ),
-                ],
-              ),
               const SizedBox(height: 16),
               Wrap(
                 spacing: 8,
@@ -608,6 +611,17 @@ class _VotingItemCard extends StatelessWidget {
                                       force: true,
                                     ),
                             icon: const Icon(Icons.refresh_outlined),
+                          ),
+                          TextButton.icon(
+                            onPressed: optionsLoading
+                                ? null
+                                : () => _controller.loadVotingOptions(
+                                      groupId: group.id,
+                                      votingId: voting.id,
+                                      force: true,
+                                    ),
+                            icon: const Icon(Icons.refresh_rounded),
+                            label: const Text('Actualizar opciones'),
                           ),
                           TextButton.icon(
                             onPressed: () => _openOptionForm(context),
@@ -694,11 +708,36 @@ class _VotingItemCard extends StatelessWidget {
                           ),
                         ),
                       const SizedBox(height: 12),
-                      Text(
-                        'Resultados de votación',
-                        style: tt.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            'Resultados de votación',
+                            style: tt.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const Spacer(),
+                          if (votesLoading)
+                            const Padding(
+                              padding: EdgeInsets.only(right: 8),
+                              child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            ),
+                          TextButton.icon(
+                            onPressed: votesLoading
+                                ? null
+                                : () => _controller.loadVotingVotes(
+                                      groupId: group.id,
+                                      votingId: voting.id,
+                                      force: true,
+                                    ),
+                            icon: const Icon(Icons.refresh_outlined),
+                            label: const Text('Actualizar resultados'),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 8),
                       DecoratedBox(
@@ -3843,9 +3882,7 @@ class _PendingVoteSummaryCard extends StatelessWidget {
 
     return Obx(() {
       final allowed = controller.allowedVotingUnits;
-      final yesVotes = controller.countForOptionCode('si');
-      final noVotes = controller.countForOptionCode('no');
-      final trackedTotal = math.min(allowed, yesVotes + noVotes);
+      final trackedTotal = math.min(allowed, controller.totalVotesFromUnits);
       final pending = math.max(0, allowed - trackedTotal);
 
       double percent(int value) {
