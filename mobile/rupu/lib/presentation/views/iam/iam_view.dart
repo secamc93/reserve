@@ -3,10 +3,13 @@ import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import 'package:flutter/services.dart';
 import 'package:rupu/domain/entities/iam_business.dart';
 import 'package:rupu/domain/entities/iam_business_type.dart';
 import 'package:rupu/domain/entities/iam_resource.dart';
 import 'package:rupu/domain/entities/iam_user.dart';
+import 'package:rupu/domain/entities/role.dart';
+import 'package:rupu/domain/entities/iam_generate_password_result.dart';
 import 'package:rupu/domain/entities/user_action_result.dart';
 import 'package:rupu/domain/infrastructure/repositories/iam_repository_impl.dart';
 import 'package:rupu/presentation/views/iam/controllers/iam_business_types_controller.dart';
@@ -1514,7 +1517,9 @@ class _IamUserCard extends StatelessWidget {
 
             if (canView || canDelete) ...[
               const SizedBox(height: 10),
-              Row(
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   if (canView)
                     TextButton.icon(
@@ -1523,13 +1528,39 @@ class _IamUserCard extends StatelessWidget {
                       label: const Text('Ver'),
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
+                          horizontal: 12,
+                          vertical: 6,
                         ),
                       ),
                     ),
-                  if (canDelete) ...[
-                    const SizedBox(width: 8),
+                  // Assign Roles button
+                  FilledButton.tonalIcon(
+                    onPressed: () => showAssignRolesDialog(context, user),
+                    icon: const Icon(
+                      Icons.admin_panel_settings_outlined,
+                      size: 18,
+                    ),
+                    label: const Text('Asignar roles'),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                    ),
+                  ),
+                  // Generate Password button
+                  FilledButton.tonalIcon(
+                    onPressed: () => showGeneratePasswordDialog(context, user),
+                    icon: const Icon(Icons.key_outlined, size: 18),
+                    label: const Text('Generar contraseña'),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                    ),
+                  ),
+                  if (canDelete)
                     TextButton.icon(
                       onPressed: isDeleting ? null : onDelete,
                       icon: isDeleting
@@ -1543,12 +1574,11 @@ class _IamUserCard extends StatelessWidget {
                       style: TextButton.styleFrom(
                         foregroundColor: cs.error,
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
+                          horizontal: 12,
+                          vertical: 6,
                         ),
                       ),
                     ),
-                  ],
                 ],
               ),
             ],
@@ -2124,6 +2154,414 @@ Future<void> confirmDeleteBusinessTypeDialog(
   final result = await controller.deleteBusinessType(type.id);
   if (!context.mounted) return;
   _showIamSnackBar(context, result.message);
+}
+
+/// Muestra diálogo para generar una nueva contraseña para el usuario
+Future<void> showGeneratePasswordDialog(
+  BuildContext context,
+  IamUser user,
+) async {
+  if (!Get.isRegistered<IamUsersController>()) return;
+  final controller = Get.find<IamUsersController>();
+
+  // 1. Confirmación
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Generar contraseña'),
+      content: Text(
+        '¿Estás seguro de generar una nueva contraseña para ${user.name}?',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(false),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(ctx).pop(true),
+          child: const Text('Confirmar'),
+        ),
+      ],
+    ),
+  );
+
+  if (confirmed != true) return;
+
+  // 2. Generar contraseña
+  if (!context.mounted) return;
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (ctx) => const Center(child: CircularProgressIndicator()),
+  );
+
+  try {
+    final result = await controller.generatePassword(user.id);
+    if (!context.mounted) return;
+    Navigator.of(context, rootNavigator: true).pop(); // Close loading
+
+    if (result.success) {
+      _showPasswordBottomSheet(context, result);
+    } else {
+      _showIamSnackBar(context, result.message);
+    }
+  } catch (e) {
+    if (!context.mounted) return;
+    Navigator.of(context, rootNavigator: true).pop(); // Close loading
+    _showIamSnackBar(context, 'Error al generar contraseña: $e');
+  }
+}
+
+void _showPasswordBottomSheet(
+  BuildContext context,
+  IamGeneratePasswordResult result,
+) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (ctx) {
+      final theme = Theme.of(ctx);
+      final cs = theme.colorScheme;
+      final tt = theme.textTheme;
+
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 40),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green, size: 28),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Contraseña generada',
+                    style: tt.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.of(ctx).pop(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Text('Correo electrónico', style: tt.labelMedium),
+            const SizedBox(height: 8),
+            _CopyableField(label: 'Correo', value: result.email),
+            const SizedBox(height: 20),
+            Text('Contraseña generada', style: tt.labelMedium),
+            const SizedBox(height: 8),
+            _CopyableField(
+              label: 'Contraseña',
+              value: result.password,
+              isPassword: true,
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: cs.errorContainer.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.warning_amber_rounded, color: cs.error, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      '⚠️ Solo se muestra una vez. Asegúrate de copiarla.',
+                      style: tt.bodySmall?.copyWith(color: cs.error),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (result.message.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Text(result.message, style: tt.bodySmall),
+            ],
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('Cerrar'),
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+class _CopyableField extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool isPassword;
+
+  const _CopyableField({
+    required this.label,
+    required this.value,
+    this.isPassword = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: cs.outlineVariant),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: SelectableText(
+              value,
+              style: const TextStyle(fontFamily: 'monospace', fontSize: 16),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.copy, size: 20),
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: value));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('$label copiado al portapapeles'),
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Muestra diálogo para asignar roles a un usuario
+Future<void> showAssignRolesDialog(BuildContext context, IamUser user) async {
+  if (!Get.isRegistered<IamUsersController>()) return;
+  final controller = Get.find<IamUsersController>();
+
+  // Group assignments by business
+  final assignmentsByBusiness = <int, List<IamBusinessRoleAssignment>>{};
+  for (final assignment in user.assignments) {
+    assignmentsByBusiness
+        .putIfAbsent(assignment.businessId, () => [])
+        .add(assignment);
+  }
+
+  final businessRoles = <int, List<Role>>{};
+
+  // Show loading
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (ctx) => const Center(child: CircularProgressIndicator()),
+  );
+
+  try {
+    for (final entry in assignmentsByBusiness.entries) {
+      final businessId = entry.key;
+      final assignments = entry.value;
+      // Assuming all assignments for the same business have the same business type
+      final businessTypeId = assignments.firstOrNull?.businessTypeId;
+
+      if (businessTypeId != null) {
+        final roles = await controller.fetchRoles(
+          businessTypeId: businessTypeId,
+        );
+        businessRoles[businessId] = roles;
+      }
+    }
+
+    if (!context.mounted) return;
+    Navigator.of(context, rootNavigator: true).pop(); // Close loading
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => _AssignRolesDialog(
+        user: user,
+        assignmentsByBusiness: assignmentsByBusiness,
+        businessRoles: businessRoles,
+      ),
+    );
+  } catch (e) {
+    if (!context.mounted) return;
+    Navigator.of(context, rootNavigator: true).pop(); // Close loading
+    _showIamSnackBar(context, 'Error al cargar roles: $e');
+  }
+}
+
+class _AssignRolesDialog extends StatefulWidget {
+  final IamUser user;
+  final Map<int, List<IamBusinessRoleAssignment>> assignmentsByBusiness;
+  final Map<int, List<Role>> businessRoles;
+
+  const _AssignRolesDialog({
+    required this.user,
+    required this.assignmentsByBusiness,
+    required this.businessRoles,
+  });
+
+  @override
+  State<_AssignRolesDialog> createState() => _AssignRolesDialogState();
+}
+
+class _AssignRolesDialogState extends State<_AssignRolesDialog> {
+  // Store selected role ID for each business
+  final Map<int, int?> _selectedRoles = {};
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize with current roles
+    for (final entry in widget.assignmentsByBusiness.entries) {
+      final businessId = entry.key;
+      final assignments = entry.value;
+      if (assignments.isNotEmpty) {
+        _selectedRoles[businessId] = assignments.first.roleId;
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final tt = theme.textTheme;
+
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: Row(
+        children: [
+          Icon(Icons.admin_panel_settings, color: cs.primary),
+          const SizedBox(width: 12),
+          const Expanded(child: Text('Asignar roles')),
+        ],
+      ),
+      content: SizedBox(
+        width: 500,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Usuario: ${widget.user.name}',
+                style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'Selecciona un rol para cada negocio asociado al usuario. Los roles se filtran automáticamente según el tipo de negocio.',
+                  style: tt.bodySmall,
+                ),
+              ),
+              const SizedBox(height: 20),
+              if (widget.assignmentsByBusiness.isEmpty)
+                const Center(
+                  child: Text('El usuario no tiene negocios asignados.'),
+                )
+              else
+                ...widget.assignmentsByBusiness.entries.map((entry) {
+                  final businessId = entry.key;
+                  final assignments = entry.value;
+                  final businessName =
+                      assignments.firstOrNull?.businessName ??
+                      'Negocio #$businessId';
+                  final roles = widget.businessRoles[businessId] ?? [];
+                  final selectedRoleId = _selectedRoles[businessId];
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          businessName,
+                          style: tt.titleSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        if (roles.isEmpty)
+                          Text(
+                            'No hay roles disponibles para este tipo de negocio.',
+                            style: tt.bodySmall?.copyWith(color: cs.error),
+                          )
+                        else
+                          DropdownButtonFormField<int>(
+                            value: roles.any((r) => r.id == selectedRoleId)
+                                ? selectedRoleId
+                                : null,
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                            ),
+                            items: roles.map((role) {
+                              return DropdownMenuItem<int>(
+                                value: role.id,
+                                child: Text(role.name),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedRoles[businessId] = value;
+                              });
+                            },
+                            hint: const Text('Seleccionar rol'),
+                          ),
+                      ],
+                    ),
+                  );
+                }),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: () {
+            // TODO: Implement API call to save roles
+            Navigator.of(context).pop();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Funcionalidad de guardado pendiente de integración',
+                ),
+              ),
+            );
+          },
+          child: const Text('Asignar Roles'),
+        ),
+      ],
+    );
+  }
 }
 
 class _IamTabDefinition {

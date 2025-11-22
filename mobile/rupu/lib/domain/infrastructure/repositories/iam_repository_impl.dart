@@ -4,6 +4,8 @@ import 'package:rupu/domain/entities/iam_business.dart';
 import 'package:rupu/domain/entities/iam_business_type.dart';
 import 'package:rupu/domain/entities/iam_resource.dart';
 import 'package:rupu/domain/entities/iam_user.dart';
+import 'package:rupu/domain/entities/role.dart';
+import 'package:rupu/domain/entities/iam_generate_password_result.dart';
 import 'package:rupu/domain/infrastructure/datasources/iam_datasource_impl.dart';
 import 'package:rupu/domain/infrastructure/mappers/iam_mapper.dart';
 import 'package:rupu/domain/repositories/iam_repository.dart';
@@ -12,7 +14,7 @@ class IamRepositoryImpl extends IamRepository {
   final IamDatasource datasource;
 
   IamRepositoryImpl({IamDatasource? datasource})
-      : datasource = datasource ?? IamDatasourceImpl();
+    : datasource = datasource ?? IamDatasourceImpl();
 
   @override
   Future<IamUsersPage> getUsers({
@@ -43,7 +45,8 @@ class IamRepositoryImpl extends IamRepository {
         if (businessId != null) 'business_id': businessId,
         if (createdAt != null && createdAt.trim().isNotEmpty)
           'created_at': createdAt.trim(),
-        if (sortBy != null && sortBy.trim().isNotEmpty) 'sort_by': sortBy.trim(),
+        if (sortBy != null && sortBy.trim().isNotEmpty)
+          'sort_by': sortBy.trim(),
         if (sortOrder != null && sortOrder.trim().isNotEmpty)
           'sort_order': sortOrder.trim(),
       },
@@ -91,7 +94,8 @@ class IamRepositoryImpl extends IamRepository {
     };
     final response = await datasource.createBusinessType(payload);
     final typeJson = response['data'] as Map<String, dynamic>?;
-    final message = response['message']?.toString() ??
+    final message =
+        response['message']?.toString() ??
         'Tipo de negocio creado correctamente.';
     final success = response['success'] as bool? ?? true;
     return IamBusinessTypeMutationResult(
@@ -120,7 +124,8 @@ class IamRepositoryImpl extends IamRepository {
     };
     final response = await datasource.updateBusinessType(id, payload);
     final typeJson = response['data'] as Map<String, dynamic>?;
-    final message = response['message']?.toString() ??
+    final message =
+        response['message']?.toString() ??
         'Tipo de negocio actualizado correctamente.';
     final success = response['success'] as bool? ?? true;
     return IamBusinessTypeMutationResult(
@@ -235,9 +240,11 @@ class IamRepositoryImpl extends IamRepository {
 
   @override
   Future<List<IamBusinessConfiguredResource>> getBusinessConfiguredResources(
-      int businessId) async {
-    final response =
-        await datasource.getBusinessConfiguredResources(businessId: businessId);
+    int businessId,
+  ) async {
+    final response = await datasource.getBusinessConfiguredResources(
+      businessId: businessId,
+    );
     return response.resources
         .map(IamMapper.configuredResourceFromModel)
         .toList();
@@ -269,5 +276,53 @@ class IamRepositoryImpl extends IamRepository {
     final success = response['success'] as bool? ?? true;
     final message = response['message']?.toString() ?? 'Recurso desactivado';
     return IamMessageResult(success: success, message: message);
+  }
+
+  @override
+  Future<RolesCatalog> getRoles({
+    int? businessTypeId,
+    int? scopeId,
+    bool? isSystem,
+    String? name,
+    int? level,
+  }) async {
+    final response = await datasource.getRoles(
+      query: {
+        if (businessTypeId != null) 'business_type_id': businessTypeId,
+        if (scopeId != null) 'scope_id': scopeId,
+        if (isSystem != null) 'is_system': isSystem,
+        if (name != null && name.trim().isNotEmpty) 'name': name.trim(),
+        if (level != null) 'level': level,
+      },
+    );
+
+    final List<dynamic> data = response['data'] ?? [];
+    final int count = response['count'] ?? 0;
+
+    final roles = data
+        .map(
+          (json) => Role(
+            id: json['id'],
+            name: json['name'],
+            code: json['code'] ?? '',
+            description: json['description'] ?? '',
+            level: json['level'],
+            scopeId: json['scope_id'],
+            scopeName: json['scope_name'],
+            scopeCode: json['scope_code'],
+            isSystem: json['is_system'] ?? false,
+            businessTypeId: json['business_type_id'],
+            businessTypeName: json['business_type_name'],
+          ),
+        )
+        .toList();
+
+    return RolesCatalog(roles: roles, count: count);
+  }
+
+  @override
+  Future<IamGeneratePasswordResult> generatePassword(int userId) async {
+    final response = await datasource.generatePassword(userId);
+    return IamGeneratePasswordResult.fromJson(response);
   }
 }

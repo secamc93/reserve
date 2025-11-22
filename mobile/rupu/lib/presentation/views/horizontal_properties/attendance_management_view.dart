@@ -63,6 +63,11 @@ class AttendanceManagementView extends GetView<AttendanceManagementController> {
                       title: 'Sin listas de asistencia',
                       description:
                           'Aún no se han generado listas para este grupo de votación.',
+                      action: OutlinedButton.icon(
+                        onPressed: controller.generateAutomaticList,
+                        icon: const Icon(Icons.auto_awesome_outlined),
+                        label: const Text('Generar lista automática'),
+                      ),
                     );
                   }
                   return _AttendanceListCard(
@@ -305,11 +310,11 @@ class _AttendanceListCard extends StatelessWidget {
               spacing: 12,
               runSpacing: 12,
               children: [
-                OutlinedButton.icon(
-                  onPressed: onCreateList,
-                  icon: const Icon(Icons.add_circle_outline),
-                  label: const Text('Crear lista'),
-                ),
+                // OutlinedButton.icon(
+                //   onPressed: onCreateList,
+                //   icon: const Icon(Icons.add_circle_outline),
+                //   label: const Text('Crear lista'),
+                // ),
                 OutlinedButton.icon(
                   onPressed: onGenerateAutomatic,
                   icon: const Icon(Icons.auto_awesome_outlined),
@@ -465,6 +470,14 @@ class _AttendanceRecordsSheetState extends State<_AttendanceRecordsSheet> {
   void initState() {
     super.initState();
     _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      controller.loadMoreRecords();
+    }
   }
 
   @override
@@ -580,6 +593,50 @@ class _AttendanceRecordsSheetState extends State<_AttendanceRecordsSheet> {
                                   record: record,
                                 );
                               },
+                            ),
+                          ),
+                        // Loading indicator for loadMoreRecords
+                        if (!loadingRecords && records.isNotEmpty)
+                          SliverToBoxAdapter(
+                            child: Padding(
+                              padding: const EdgeInsets.only(
+                                bottom: 24,
+                                top: 12,
+                              ),
+                              child: Obx(() {
+                                final canLoadMore =
+                                    controller.canLoadMoreRecords;
+                                final isLoadingMore =
+                                    controller.isLoadingRecords.value &&
+                                    controller.currentPage.value > 1;
+
+                                if (isLoadingMore) {
+                                  return const Center(
+                                    child: Padding(
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 16,
+                                      ),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.6,
+                                      ),
+                                    ),
+                                  );
+                                }
+
+                                if (!canLoadMore) {
+                                  return const Center(
+                                    child: Text(
+                                      'Ya viste todos los registros 👌',
+                                      style: TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  );
+                                }
+
+                                return const SizedBox.shrink();
+                              }),
                             ),
                           ),
                       ],
@@ -1673,10 +1730,13 @@ class _EmptyState extends StatelessWidget {
   final IconData icon;
   final String title;
   final String description;
+  final Widget? action;
+
   const _EmptyState({
     required this.icon,
     required this.title,
     required this.description,
+    this.action,
   });
 
   @override
@@ -1706,6 +1766,7 @@ class _EmptyState extends StatelessWidget {
             style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
+          if (action != null) ...[const SizedBox(height: 24), action!],
         ],
       ),
     );

@@ -19,18 +19,30 @@ class AttendanceRecordsResponseModel {
   factory AttendanceRecordsResponseModel.fromJson(Map<String, dynamic> json) {
     final data = json['data'];
     final meta = json['meta'];
+
+    // Parse pagination data directly from root if meta is null
+    AttendanceRecordsMetaModel? metaModel;
+    if (meta is Map<String, dynamic>) {
+      metaModel = AttendanceRecordsMetaModel.fromJson(meta);
+    } else {
+      // Parse from root level (API returns page, total, page_size at root)
+      metaModel = AttendanceRecordsMetaModel(
+        currentPage: json['page'] as int?,
+        total: json['total'] as int?,
+        perPage: json['page_size'] as int?,
+      );
+    }
+
     return AttendanceRecordsResponseModel(
       success: json['success'] as bool? ?? false,
       message: json['message'] as String? ?? '',
       data: data is List
           ? data
-              .whereType<Map<String, dynamic>>()
-              .map(AttendanceRecordModel.fromJson)
-              .toList()
+                .whereType<Map<String, dynamic>>()
+                .map(AttendanceRecordModel.fromJson)
+                .toList()
           : const [],
-      meta: meta is Map<String, dynamic>
-          ? AttendanceRecordsMetaModel.fromJson(meta)
-          : null,
+      meta: metaModel,
     );
   }
 }

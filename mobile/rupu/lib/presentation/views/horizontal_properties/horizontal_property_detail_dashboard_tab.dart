@@ -187,7 +187,7 @@ class _DashboardHeaderCard extends StatelessWidget {
 
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: isTablet ? 20 : 16,
+        horizontal: isTablet ? 20 : 8,
         vertical: isTablet ? 18 : 14,
       ),
       decoration: BoxDecoration(
@@ -229,7 +229,7 @@ class _DashboardHeaderCard extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 2),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -242,10 +242,10 @@ class _DashboardHeaderCard extends StatelessWidget {
                   style: tt.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: Colors.white,
-                    fontSize: isTablet ? 18 : 16,
+                    fontSize: isTablet ? 18 : 14,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 8),
                 // Tipo de negocio
                 if (businessType != null && businessType!.isNotEmpty)
                   Text(
@@ -256,7 +256,7 @@ class _DashboardHeaderCard extends StatelessWidget {
                       color: Colors.white.withValues(alpha: 0.85),
                     ),
                   ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 2),
                 // Dirección
                 Text(
                   addressText,
@@ -269,16 +269,13 @@ class _DashboardHeaderCard extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 12),
+          // const SizedBox(width: 1),
           // Pill de unidades (tipo contador de posts/seguidores)
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(999),
@@ -294,6 +291,7 @@ class _DashboardHeaderCard extends StatelessWidget {
                       style: tt.titleSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                         color: Colors.white,
+                        fontSize: isTablet ? 18 : 10,
                       ),
                     ),
                     Text(
@@ -301,6 +299,7 @@ class _DashboardHeaderCard extends StatelessWidget {
                       style: tt.labelSmall?.copyWith(
                         color: Colors.white.withValues(alpha: 0.9),
                         letterSpacing: 0.1,
+                        fontSize: isTablet ? 18 : 10,
                       ),
                     ),
                   ],

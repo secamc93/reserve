@@ -8,9 +8,7 @@ import 'package:rupu/domain/infrastructure/models/iam/iam_users_response_model.d
 abstract class IamDatasource {
   Future<IamUsersResponseModel> getUsers({Map<String, dynamic>? query});
 
-  Future<IamResourcesResponseModel> getResources({
-    Map<String, dynamic>? query,
-  });
+  Future<IamResourcesResponseModel> getResources({Map<String, dynamic>? query});
 
   Future<IamBusinessTypesResponseModel> getBusinessTypes({
     Map<String, dynamic>? query,
@@ -18,7 +16,10 @@ abstract class IamDatasource {
 
   Future<Map<String, dynamic>> createBusinessType(Map<String, dynamic> data);
 
-  Future<Map<String, dynamic>> updateBusinessType(int id, Map<String, dynamic> data);
+  Future<Map<String, dynamic>> updateBusinessType(
+    int id,
+    Map<String, dynamic> data,
+  );
 
   Future<Map<String, dynamic>> deleteBusinessType(int id);
 
@@ -50,4 +51,8 @@ abstract class IamDatasource {
     int resourceId, {
     int? businessId,
   });
+
+  Future<Map<String, dynamic>> getRoles({Map<String, dynamic>? query});
+
+  Future<Map<String, dynamic>> generatePassword(int userId);
 }

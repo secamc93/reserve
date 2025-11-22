@@ -3,6 +3,8 @@ import 'package:rupu/domain/entities/iam_business.dart';
 import 'package:rupu/domain/entities/iam_business_type.dart';
 import 'package:rupu/domain/entities/iam_resource.dart';
 import 'package:rupu/domain/entities/iam_user.dart';
+import 'package:rupu/domain/entities/role.dart';
+import 'package:rupu/domain/entities/iam_generate_password_result.dart';
 
 abstract class IamRepository {
   Future<IamUsersPage> getUsers({
@@ -20,11 +22,7 @@ abstract class IamRepository {
     String? sortOrder,
   });
 
-  Future<IamResourcesPage> getResources({
-    int page,
-    int pageSize,
-    String? name,
-  });
+  Future<IamResourcesPage> getResources({int page, int pageSize, String? name});
 
   Future<IamBusinessTypesResult> getBusinessTypes();
 
@@ -55,11 +53,7 @@ abstract class IamRepository {
     bool? isActive,
   });
 
-  Future<IamActionsPage> getActions({
-    int page,
-    int pageSize,
-    String? name,
-  });
+  Future<IamActionsPage> getActions({int page, int pageSize, String? name});
 
   Future<IamResourceMutationResult> createResource({
     required String name,
@@ -89,4 +83,14 @@ abstract class IamRepository {
     int resourceId, {
     int? businessId,
   });
+
+  Future<RolesCatalog> getRoles({
+    int? businessTypeId,
+    int? scopeId,
+    bool? isSystem,
+    String? name,
+    int? level,
+  });
+
+  Future<IamGeneratePasswordResult> generatePassword(int userId);
 }

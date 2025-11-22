@@ -10,7 +10,7 @@ class AttendanceRepositoryImpl extends AttendanceRepository {
   final AttendanceDatasource datasource;
 
   AttendanceRepositoryImpl({AttendanceDatasource? datasource})
-      : datasource = datasource ?? AttendanceDatasourceImpl();
+    : datasource = datasource ?? AttendanceDatasourceImpl();
 
   @override
   Future<AttendanceListsResult> getAttendanceLists({
@@ -95,5 +95,10 @@ class AttendanceRepositoryImpl extends AttendanceRepository {
   @override
   Future<void> deleteAttendanceProxy({required int proxyId}) {
     return datasource.deleteAttendanceProxy(proxyId: proxyId);
+  }
+
+  @override
+  Future<void> generateAutomaticList({required int votingGroupId}) {
+    return datasource.generateAutomaticList(votingGroupId: votingGroupId);
   }
 }

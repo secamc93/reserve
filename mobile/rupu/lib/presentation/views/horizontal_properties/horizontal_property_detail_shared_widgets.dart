@@ -792,6 +792,7 @@ class _CardActions extends StatelessWidget {
   final bool isDeleteDisabled;
   final bool showDeleteLoader;
   final String viewLabel;
+  final bool showViewButton;
   const _CardActions({
     this.onView,
     this.onEdit,
@@ -800,6 +801,7 @@ class _CardActions extends StatelessWidget {
     this.isDeleteDisabled = false,
     this.showDeleteLoader = false,
     this.viewLabel = 'Ver',
+    this.showViewButton = true,
   });
 
   ButtonStyle _primaryStyle(BuildContext context) {
@@ -837,12 +839,13 @@ class _CardActions extends StatelessWidget {
       spacing: 8,
       runSpacing: 8,
       children: [
-        FilledButton.icon(
-          style: _primaryStyle(context),
-          onPressed: onView,
-          icon: const Icon(Icons.visibility_outlined, size: 18),
-          label: Text(viewLabel),
-        ),
+        if (showViewButton)
+          FilledButton.icon(
+            style: _primaryStyle(context),
+            onPressed: onView,
+            icon: const Icon(Icons.visibility_outlined, size: 18),
+            label: Text(viewLabel),
+          ),
         FilledButton.tonalIcon(
           style: _tonalStyle(context),
           onPressed: isEditDisabled ? null : onEdit,
@@ -880,4 +883,32 @@ void _showActionFeedback(String title, String message) {
   //   duration: const Duration(seconds: 3),
   //   margin: const EdgeInsets.all(16),
   // );
+}
+
+class _InstagramSwitch extends StatelessWidget {
+  final String label;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const _InstagramSwitch({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: tt.bodyMedium),
+        Switch.adaptive(
+          value: value,
+          onChanged: onChanged,
+          activeColor: Colors.blue,
+        ),
+      ],
+    );
+  }
 }

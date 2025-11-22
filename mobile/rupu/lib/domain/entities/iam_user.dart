@@ -33,12 +33,14 @@ class IamBusinessRoleAssignment {
   final String? businessName;
   final int roleId;
   final String? roleName;
+  final int? businessTypeId;
 
   const IamBusinessRoleAssignment({
     required this.businessId,
     required this.roleId,
     this.businessName,
     this.roleName,
+    this.businessTypeId,
   });
 }
 

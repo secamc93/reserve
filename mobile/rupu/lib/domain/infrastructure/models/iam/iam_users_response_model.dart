@@ -21,9 +21,9 @@ class IamUsersResponseModel {
       success: json['success'] as bool? ?? false,
       data: data is List
           ? data
-              .whereType<Map<String, dynamic>>()
-              .map(IamUserModel.fromJson)
-              .toList()
+                .whereType<Map<String, dynamic>>()
+                .map(IamUserModel.fromJson)
+                .toList()
           : const [],
       pagination: IamPaginationModel.fromJson(pagination),
     );
@@ -58,21 +58,21 @@ class IamUserModel {
   });
 
   factory IamUserModel.fromJson(Map<String, dynamic> json) => IamUserModel(
-        id: json['id'] as int,
-        name: json['name'] as String? ?? '',
-        email: json['email'] as String? ?? '',
-        phone: json['phone'] as String? ?? '',
-        avatarUrl: json['avatar_url'] as String? ?? '',
-        isActive: json['is_active'] as bool? ?? false,
-        isSuperUser: json['is_super_user'] as bool? ?? false,
-        lastLoginAt: _parseDate(json['last_login_at'] as String?),
-        createdAt: _parseDate(json['created_at'] as String?),
-        updatedAt: _parseDate(json['updated_at'] as String?),
-        assignments: (json['business_role_assignments'] as List<dynamic>? ?? [])
-            .whereType<Map<String, dynamic>>()
-            .map(IamAssignmentModel.fromJson)
-            .toList(),
-      );
+    id: json['id'] as int,
+    name: json['name'] as String? ?? '',
+    email: json['email'] as String? ?? '',
+    phone: json['phone'] as String? ?? '',
+    avatarUrl: json['avatar_url'] as String? ?? '',
+    isActive: json['is_active'] as bool? ?? false,
+    isSuperUser: json['is_super_user'] as bool? ?? false,
+    lastLoginAt: _parseDate(json['last_login_at'] as String?),
+    createdAt: _parseDate(json['created_at'] as String?),
+    updatedAt: _parseDate(json['updated_at'] as String?),
+    assignments: (json['business_role_assignments'] as List<dynamic>? ?? [])
+        .whereType<Map<String, dynamic>>()
+        .map(IamAssignmentModel.fromJson)
+        .toList(),
+  );
 }
 
 class IamAssignmentModel {
@@ -80,12 +80,14 @@ class IamAssignmentModel {
   final String? businessName;
   final int roleId;
   final String? roleName;
+  final int? businessTypeId;
 
   IamAssignmentModel({
     required this.businessId,
     required this.businessName,
     required this.roleId,
     required this.roleName,
+    this.businessTypeId,
   });
 
   factory IamAssignmentModel.fromJson(Map<String, dynamic> json) =>
@@ -94,6 +96,7 @@ class IamAssignmentModel {
         businessName: json['business_name'] as String?,
         roleId: (json['role_id'] as num?)?.toInt() ?? 0,
         roleName: json['role_name'] as String?,
+        businessTypeId: (json['business_type_id'] as num?)?.toInt(),
       );
 }
 

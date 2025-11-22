@@ -7,9 +7,7 @@ abstract class AttendanceRepository {
     bool? isActive,
   });
 
-  Future<AttendanceSummary> getAttendanceSummary({
-    required int listId,
-  });
+  Future<AttendanceSummary> getAttendanceSummary({required int listId});
 
   Future<AttendanceRecordsPage> getAttendanceRecords({
     required int listId,
@@ -19,13 +17,9 @@ abstract class AttendanceRepository {
     String? attended,
   });
 
-  Future<AttendanceRecord> markAttendance({
-    required int recordId,
-  });
+  Future<AttendanceRecord> markAttendance({required int recordId});
 
-  Future<AttendanceRecord> unmarkAttendance({
-    required int recordId,
-  });
+  Future<AttendanceRecord> unmarkAttendance({required int recordId});
 
   Future<void> createAttendanceProxy({
     required int businessId,
@@ -38,7 +32,7 @@ abstract class AttendanceRepository {
     required String proxyName,
   });
 
-  Future<void> deleteAttendanceProxy({
-    required int proxyId,
-  });
+  Future<void> deleteAttendanceProxy({required int proxyId});
+
+  Future<void> generateAutomaticList({required int votingGroupId});
 }

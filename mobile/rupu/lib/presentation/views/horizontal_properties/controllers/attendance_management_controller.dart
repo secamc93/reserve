@@ -161,6 +161,8 @@ class AttendanceManagementController extends GetxController {
   Future<void> fetchRecords({int page = 1}) async {
     final list = selectedList.value;
     if (list == null) return;
+
+    // Always set loading state to prevent multiple simultaneous calls
     isLoadingRecords.value = true;
     recordsError.value = null;
     try {
@@ -173,19 +175,35 @@ class AttendanceManagementController extends GetxController {
             : unitFilterCtrl.text.trim(),
         attended: attendanceFilter.value,
       );
-      records.assignAll(result.records);
+
+      if (page == 1) {
+        records.assignAll(result.records);
+      } else {
+        records.addAll(result.records);
+      }
+
       currentPage.value = result.currentPage ?? page;
       totalRecords.value = result.total ?? result.records.length;
+
       if (!result.success && result.message?.isNotEmpty == true) {
         recordsError.value = result.message;
       }
     } catch (_) {
-      records.clear();
+      if (page == 1) {
+        records.clear();
+      }
       recordsError.value =
           'No se pudieron obtener los registros de asistencia.';
     } finally {
       isLoadingRecords.value = false;
     }
+  }
+
+  bool get canLoadMoreRecords => records.length < totalRecords.value;
+
+  Future<void> loadMoreRecords() async {
+    if (isLoadingRecords.value || !canLoadMoreRecords) return;
+    await fetchRecords(page: currentPage.value + 1);
   }
 
   void applyFilters() {
@@ -413,6 +431,32 @@ class AttendanceManagementController extends GetxController {
       return false;
     } finally {
       _setProxyProcessing(record.id, false);
+    }
+  }
+
+  Future<void> generateAutomaticList() async {
+    isLoadingLists.value = true;
+    try {
+      await repository.generateAutomaticList(votingGroupId: votingGroupId);
+      _dismissSnackbarIfOpen();
+      // Get.snackbar(
+      //   'Gestión de asistencia',
+      //   'Lista generada correctamente.',
+      //   snackPosition: SnackPosition.BOTTOM,
+      //   duration: const Duration(seconds: 3),
+      //   margin: const EdgeInsets.all(16),
+      // );
+      await fetchLists();
+    } catch (_) {
+      isLoadingLists.value = false;
+      _dismissSnackbarIfOpen();
+      Get.snackbar(
+        'Gestión de asistencia',
+        'No se pudo generar la lista automática. Intenta nuevamente.',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+        margin: const EdgeInsets.all(16),
+      );
     }
   }
 

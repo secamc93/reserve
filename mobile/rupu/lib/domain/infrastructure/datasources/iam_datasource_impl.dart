@@ -156,6 +156,21 @@ class IamDatasourceImpl extends IamDatasource {
     return Map<String, dynamic>.from(response.data as Map);
   }
 
+  @override
+  Future<Map<String, dynamic>> getRoles({Map<String, dynamic>? query}) async {
+    final response = await _dio.get('/roles', queryParameters: _clean(query));
+    return Map<String, dynamic>.from(response.data as Map);
+  }
+
+  @override
+  Future<Map<String, dynamic>> generatePassword(int userId) async {
+    final response = await _dio.post(
+      '/auth/generate-password',
+      data: {'user_id': userId},
+    );
+    return Map<String, dynamic>.from(response.data as Map);
+  }
+
   Map<String, dynamic>? _clean(Map<String, dynamic>? query) {
     if (query == null) return null;
     final map = Map<String, dynamic>.from(query);

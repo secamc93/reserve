@@ -122,4 +122,12 @@ class AttendanceDatasourceImpl extends AttendanceDatasource {
   Future<void> deleteAttendanceProxy({required int proxyId}) async {
     await _dio.delete('/attendance/proxies/$proxyId');
   }
+
+  @override
+  Future<void> generateAutomaticList({required int votingGroupId}) async {
+    await _dio.post(
+      '/attendance/lists/generate',
+      queryParameters: {'voting_group_id': votingGroupId},
+    );
+  }
 }

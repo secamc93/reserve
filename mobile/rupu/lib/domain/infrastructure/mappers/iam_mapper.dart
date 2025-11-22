@@ -21,39 +21,6 @@ class IamMapper {
       IamUsersPage(
         success: model.success,
         users: model.data.map(_userFromModel).toList(),
-        pagination: _paginationFromModel(model.pagination.currentPage,
-            model.pagination.perPage, model.pagination.total,
-            lastPage: model.pagination.lastPage,
-            hasNext: model.pagination.hasNext,
-            hasPrev: model.pagination.hasPrev),
-      );
-
-  static IamResourcesPage resourcesResponseToEntity(
-    res.IamResourcesResponseModel model,
-  ) =>
-      IamResourcesPage(
-        success: model.success,
-        resources: model.resources.map(_resourceFromModel).toList(),
-        total: model.total,
-        page: model.page,
-        pageSize: model.pageSize,
-        totalPages: model.totalPages,
-      );
-
-  static IamBusinessTypesResult businessTypesToEntity(
-    IamBusinessTypesResponseModel model,
-  ) =>
-      IamBusinessTypesResult(
-        success: model.success,
-        types: model.data.map(_businessTypeFromModel).toList(),
-      );
-
-  static IamBusinessesPage businessesResponseToEntity(
-    biz.IamBusinessesResponseModel model,
-  ) =>
-      IamBusinessesPage(
-        success: model.success,
-        businesses: model.data.map(_businessFromModel).toList(),
         pagination: _paginationFromModel(
           model.pagination.currentPage,
           model.pagination.perPage,
@@ -64,38 +31,73 @@ class IamMapper {
         ),
       );
 
-  static IamActionsPage actionsResponseToEntity(act.IamActionsResponseModel model) =>
-      IamActionsPage(
-        success: model.success,
-        actions: model.actions.map(_actionFromModel).toList(),
-        total: model.total,
-        page: model.page,
-        pageSize: model.pageSize,
-        totalPages: model.totalPages,
-      );
+  static IamResourcesPage resourcesResponseToEntity(
+    res.IamResourcesResponseModel model,
+  ) => IamResourcesPage(
+    success: model.success,
+    resources: model.resources.map(_resourceFromModel).toList(),
+    total: model.total,
+    page: model.page,
+    pageSize: model.pageSize,
+    totalPages: model.totalPages,
+  );
+
+  static IamBusinessTypesResult businessTypesToEntity(
+    IamBusinessTypesResponseModel model,
+  ) => IamBusinessTypesResult(
+    success: model.success,
+    types: model.data.map(_businessTypeFromModel).toList(),
+  );
+
+  static IamBusinessesPage businessesResponseToEntity(
+    biz.IamBusinessesResponseModel model,
+  ) => IamBusinessesPage(
+    success: model.success,
+    businesses: model.data.map(_businessFromModel).toList(),
+    pagination: _paginationFromModel(
+      model.pagination.currentPage,
+      model.pagination.perPage,
+      model.pagination.total,
+      lastPage: model.pagination.lastPage,
+      hasNext: model.pagination.hasNext,
+      hasPrev: model.pagination.hasPrev,
+    ),
+  );
+
+  static IamActionsPage actionsResponseToEntity(
+    act.IamActionsResponseModel model,
+  ) => IamActionsPage(
+    success: model.success,
+    actions: model.actions.map(_actionFromModel).toList(),
+    total: model.total,
+    page: model.page,
+    pageSize: model.pageSize,
+    totalPages: model.totalPages,
+  );
 
   static IamUser _userFromModel(iam.IamUserModel model) => IamUser(
-        id: model.id,
-        name: model.name,
-        email: model.email,
-        phone: model.phone,
-        avatarUrl: model.avatarUrl,
-        isActive: model.isActive,
-        isSuperUser: model.isSuperUser,
-        lastLoginAt: model.lastLoginAt,
-        createdAt: model.createdAt,
-        updatedAt: model.updatedAt,
-        assignments: model.assignments.map(_assignmentFromModel).toList(),
-      );
+    id: model.id,
+    name: model.name,
+    email: model.email,
+    phone: model.phone,
+    avatarUrl: model.avatarUrl,
+    isActive: model.isActive,
+    isSuperUser: model.isSuperUser,
+    lastLoginAt: model.lastLoginAt,
+    createdAt: model.createdAt,
+    updatedAt: model.updatedAt,
+    assignments: model.assignments.map(_assignmentFromModel).toList(),
+  );
 
   static IamBusinessRoleAssignment _assignmentFromModel(
-          iam.IamAssignmentModel model) =>
-      IamBusinessRoleAssignment(
-        businessId: model.businessId,
-        businessName: model.businessName,
-        roleId: model.roleId,
-        roleName: model.roleName,
-      );
+    iam.IamAssignmentModel model,
+  ) => IamBusinessRoleAssignment(
+    businessId: model.businessId,
+    businessName: model.businessName,
+    roleId: model.roleId,
+    roleName: model.roleName,
+    businessTypeId: model.businessTypeId,
+  );
 
   static IamResource _resourceFromModel(res.IamResourceModel model) =>
       IamResource(
@@ -114,8 +116,7 @@ class IamMapper {
   static IamBusinessType businessTypeFromJson(Map<String, dynamic> json) =>
       _businessTypeFromModel(IamBusinessTypeModel.fromJson(json));
 
-  static IamBusinessType _businessTypeFromModel(
-          IamBusinessTypeModel model) =>
+  static IamBusinessType _businessTypeFromModel(IamBusinessTypeModel model) =>
       IamBusinessType(
         id: model.id,
         name: model.name,
@@ -151,22 +152,19 @@ class IamMapper {
       );
 
   static IamBusinessConfiguredResource configuredResourceFromModel(
-          conf.IamConfiguredResourceModel model) =>
-      IamBusinessConfiguredResource(
-        id: model.id,
-        resourceId: model.resourceId,
-        businessId: model.businessId,
-        name: model.name,
-        code: model.code,
-        description: model.description,
-        isActive: model.isActive,
-      );
+    conf.IamConfiguredResourceModel model,
+  ) => IamBusinessConfiguredResource(
+    id: model.id,
+    resourceId: model.resourceId,
+    businessId: model.businessId,
+    name: model.name,
+    code: model.code,
+    description: model.description,
+    isActive: model.isActive,
+  );
 
-  static IamAction _actionFromModel(act.IamActionModel model) => IamAction(
-        id: model.id,
-        name: model.name,
-        description: model.description,
-      );
+  static IamAction _actionFromModel(act.IamActionModel model) =>
+      IamAction(id: model.id, name: model.name, description: model.description);
 
   static IamPagination _paginationFromModel(
     int current,
@@ -175,13 +173,12 @@ class IamMapper {
     required int lastPage,
     bool? hasNext,
     bool? hasPrev,
-  }) =>
-      IamPagination(
-        currentPage: current,
-        perPage: perPage,
-        total: total,
-        lastPage: lastPage,
-        hasNext: hasNext ?? (current < lastPage),
-        hasPrev: hasPrev ?? (current > 1),
-      );
+  }) => IamPagination(
+    currentPage: current,
+    perPage: perPage,
+    total: total,
+    lastPage: lastPage,
+    hasNext: hasNext ?? (current < lastPage),
+    hasPrev: hasPrev ?? (current > 1),
+  );
 }

@@ -34,8 +34,8 @@ class _ResidentsTab extends GetWidget<HorizontalPropertyResidentsController> {
           final crossAxis = width >= 1200
               ? 3
               : width >= 840
-                  ? 2
-                  : 1;
+              ? 2
+              : 1;
 
           final listContent = RefreshIndicator(
             onRefresh: controller.refresh,
@@ -145,11 +145,11 @@ class _ResidentsTab extends GetWidget<HorizontalPropertyResidentsController> {
                           : SliverGrid(
                               gridDelegate:
                                   SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: crossAxis,
-                                mainAxisSpacing: 16,
-                                crossAxisSpacing: 16,
-                                mainAxisExtent: 340,
-                              ),
+                                    crossAxisCount: crossAxis,
+                                    mainAxisSpacing: 16,
+                                    crossAxisSpacing: 16,
+                                    mainAxisExtent: 340,
+                                  ),
                               delegate: SliverChildBuilderDelegate(
                                 (context, index) => _ResidentCard(
                                   resident: residents[index],
@@ -171,11 +171,11 @@ class _ResidentsTab extends GetWidget<HorizontalPropertyResidentsController> {
                                   ),
                                 )
                               : (!controller.canLoadMoreResidents &&
-                                      residents.isNotEmpty
-                                  ? const Text(
-                                      'Ya viste todos los residentes 👌',
-                                    )
-                                  : const SizedBox.shrink()),
+                                        residents.isNotEmpty
+                                    ? const Text(
+                                        'Ya viste todos los residentes 👌',
+                                      )
+                                    : const SizedBox.shrink()),
                         ),
                       ),
                     ),
@@ -766,7 +766,7 @@ class _ResidentCard extends StatelessWidget {
             _MainResidenceIndicator(isMain: resident.isMainResident),
             const SizedBox(height: 12),
             _CardActions(
-              viewLabel: 'Ver perfil',
+              showViewButton: false,
               onView: () => _showActionFeedback(
                 'Ver residente',
                 'Funcionalidad disponible próximamente.',
@@ -787,10 +787,25 @@ class _ResidentCard extends StatelessWidget {
     final controller = Get.find<HorizontalPropertyResidentsController>(
       tag: controllerTag,
     );
-    Get.dialog(
-      const Center(child: CircularProgressIndicator()),
+
+    // Use a Completer to wait explicitly for the dialog context
+    final dialogCompleter = Completer<BuildContext>();
+
+    showDialog(
+      context: context,
       barrierDismissible: false,
+      builder: (ctx) {
+        // Complete the completer when the builder runs
+        if (!dialogCompleter.isCompleted) {
+          dialogCompleter.complete(ctx);
+        }
+        return const Center(child: CircularProgressIndicator());
+      },
     );
+
+    // Wait for the dialog to be built and get its context
+    final dialogContext = await dialogCompleter.future;
+
     HorizontalPropertyResidentDetailResult? detail;
     try {
       detail = await controller.fetchResidentDetail(resident.id);
@@ -800,8 +815,9 @@ class _ResidentCard extends StatelessWidget {
         message: 'No se pudo cargar la información del residente.',
       );
     } finally {
-      if (Get.isDialogOpen ?? false) {
-        Get.back();
+      // Close loader - we're guaranteed to have the context
+      if (dialogContext.mounted) {
+        Navigator.of(dialogContext).pop();
       }
     }
 
@@ -815,6 +831,8 @@ class _ResidentCard extends StatelessWidget {
     }
 
     await controller.loadUnitsOptions();
+
+    if (!context.mounted) return;
 
     final result = await showDialog<HorizontalPropertyResidentDetailResult>(
       context: context,
@@ -850,7 +868,7 @@ class _ResidentFormDialog extends StatefulWidget {
   final Future<HorizontalPropertyResidentDetailResult> Function(
     Map<String, dynamic> data,
   )
-      onSubmit;
+  onSubmit;
 
   const _ResidentFormDialog({
     required this.controller,
@@ -894,7 +912,8 @@ class _ResidentFormDialogState extends State<_ResidentFormDialog> {
     final detail = widget.initialDetail;
     final fallback = widget.fallback;
     _selectedUnitId = detail?.propertyUnitId;
-    _unitCtrl.text = detail?.propertyUnitNumber ?? fallback?.propertyUnitNumber ?? '';
+    _unitCtrl.text =
+        detail?.propertyUnitNumber ?? fallback?.propertyUnitNumber ?? '';
     _residentTypeId = detail?.residentTypeId;
     _nameCtrl.text = detail?.name ?? fallback?.name ?? '';
     _emailCtrl.text = detail?.email ?? fallback?.email ?? '';
@@ -922,132 +941,216 @@ class _ResidentFormDialogState extends State<_ResidentFormDialog> {
     final tt = Theme.of(context).textTheme;
     final viewInsets = MediaQuery.viewInsetsOf(context);
 
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: Text(widget.title),
-      content: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 620),
-        child: Padding(
-          padding: EdgeInsets.only(bottom: viewInsets.bottom),
-          child: SingleChildScrollView(
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+    return Dialog(
+      insetPadding: const EdgeInsets.all(16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      backgroundColor: cs.surface,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 500),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // HEADER
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _unitAutocomplete(),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<int>(
-                    value: _residentTypeId,
-                    decoration: _fieldDecoration('Tipo de residente'),
-                    items: _residentTypes.entries
-                        .map(
-                          (entry) => DropdownMenuItem<int>(
-                            value: entry.key,
-                            child: Text(entry.value),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (value) => setState(() => _residentTypeId = value),
-                    validator: (value) =>
-                        value == null ? 'Selecciona el tipo de residente' : null,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _nameCtrl,
-                    decoration: _fieldDecoration('Nombre completo'),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Ingresa el nombre del residente';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _emailCtrl,
-                    decoration: _fieldDecoration('Email'),
-                    keyboardType: TextInputType.emailAddress,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _dniCtrl,
-                    decoration: _fieldDecoration('Documento de identidad'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _phoneCtrl,
-                    decoration: _fieldDecoration('Teléfono'),
-                    keyboardType: TextInputType.phone,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _emergencyCtrl,
-                    decoration: _fieldDecoration('Contacto de emergencia'),
-                  ),
-                  const SizedBox(height: 8),
-                  CheckboxListTile(
-                    value: _isMain,
-                    onChanged: (value) => setState(() => _isMain = value ?? true),
-                    title: const Text('Residente principal'),
-                    controlAffinity: ListTileControlAffinity.leading,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                  if (widget.showActiveSwitch)
-                    CheckboxListTile(
-                      value: _isActive,
-                      onChanged: (value) =>
-                          setState(() => _isActive = value ?? true),
-                      title: const Text('Activo'),
-                      controlAffinity: ListTileControlAffinity.leading,
-                      contentPadding: EdgeInsets.zero,
+                  TextButton(
+                    onPressed: _saving
+                        ? null
+                        : () => Navigator.of(context).pop(),
+                    style: TextButton.styleFrom(
+                      foregroundColor: cs.onSurface,
+                      textStyle: tt.bodyMedium,
                     ),
-                  if (_error != null) ...[
-                    const SizedBox(height: 4),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        _error!,
-                        style: tt.bodySmall?.copyWith(color: cs.error),
+                    child: const Text('Cancelar'),
+                  ),
+                  Text(
+                    widget.title,
+                    style: tt.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _saving ? null : _submit,
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.blue,
+                      textStyle: tt.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                  ],
+                    child: _saving
+                        ? SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.blue,
+                            ),
+                          )
+                        : const Text('Guardar'),
+                  ),
                 ],
               ),
             ),
-          ),
+            const Divider(height: 1),
+
+            // CONTENT
+            Flexible(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                  24,
+                  24,
+                  24,
+                  24 + viewInsets.bottom,
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      // AVATAR PLACEHOLDER
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: cs.surfaceContainerHigh,
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: Icon(
+                          Icons.person_outline,
+                          size: 40,
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      _unitAutocomplete(cs, tt),
+                      const SizedBox(height: 16),
+
+                      DropdownButtonFormField<int>(
+                        value: _residentTypeId,
+                        decoration: _instagramDecoration(
+                          cs,
+                          'Tipo de residente',
+                        ),
+                        items: _residentTypes.entries
+                            .map(
+                              (entry) => DropdownMenuItem<int>(
+                                value: entry.key,
+                                child: Text(entry.value),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) =>
+                            setState(() => _residentTypeId = value),
+                        validator: (value) =>
+                            value == null ? 'Requerido' : null,
+                      ),
+                      const SizedBox(height: 16),
+
+                      TextFormField(
+                        controller: _nameCtrl,
+                        decoration: _instagramDecoration(cs, 'Nombre completo'),
+                        validator: (value) => (value?.trim().isEmpty ?? true)
+                            ? 'Requerido'
+                            : null,
+                      ),
+                      const SizedBox(height: 16),
+
+                      TextFormField(
+                        controller: _emailCtrl,
+                        decoration: _instagramDecoration(cs, 'Email'),
+                        keyboardType: TextInputType.emailAddress,
+                      ),
+                      const SizedBox(height: 16),
+
+                      TextFormField(
+                        controller: _dniCtrl,
+                        decoration: _instagramDecoration(
+                          cs,
+                          'Documento de identidad',
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      TextFormField(
+                        controller: _phoneCtrl,
+                        decoration: _instagramDecoration(cs, 'Teléfono'),
+                        keyboardType: TextInputType.phone,
+                      ),
+                      const SizedBox(height: 16),
+
+                      TextFormField(
+                        controller: _emergencyCtrl,
+                        decoration: _instagramDecoration(
+                          cs,
+                          'Contacto de emergencia',
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // SWITCHES
+                      _InstagramSwitch(
+                        label: 'Residente principal',
+                        value: _isMain,
+                        onChanged: (v) => setState(() => _isMain = v),
+                      ),
+                      if (widget.showActiveSwitch) ...[
+                        const SizedBox(height: 12),
+                        _InstagramSwitch(
+                          label: 'Activo',
+                          value: _isActive,
+                          onChanged: (v) => setState(() => _isActive = v),
+                        ),
+                      ],
+
+                      if (_error != null) ...[
+                        const SizedBox(height: 16),
+                        Text(
+                          _error!,
+                          style: tt.bodySmall?.copyWith(color: cs.error),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _saving ? null : () => Navigator.of(context).pop(),
-          child: const Text('Cancelar'),
-        ),
-        FilledButton(
-          onPressed: _saving ? null : _submit,
-          child: _saving
-              ? SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                    color: cs.onPrimary,
-                    strokeWidth: 2,
-                  ),
-                )
-              : Text(widget.actionLabel),
-        ),
-      ],
     );
   }
 
-  InputDecoration _fieldDecoration(String label) {
+  InputDecoration _instagramDecoration(ColorScheme cs, String label) {
     return InputDecoration(
       labelText: label,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      filled: true,
+      fillColor: cs.surfaceContainerLow,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: cs.outline.withOpacity(0.5), width: 1),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: cs.error.withOpacity(0.5), width: 1),
+      ),
     );
   }
 
-  Widget _unitAutocomplete() {
+  Widget _unitAutocomplete(ColorScheme cs, TextTheme tt) {
     final options = widget.controller.unitsOptions;
     return Obx(() {
       final loading = widget.controller.unitsOptionsLoading.value;
@@ -1057,33 +1160,24 @@ class _ResidentFormDialogState extends State<_ResidentFormDialog> {
           Autocomplete<HorizontalPropertyUnitItem>(
             displayStringForOption: (option) => option.number,
             initialValue: TextEditingValue(text: _unitCtrl.text),
-            optionsBuilder: (text) {
-              return widget.controller.filterUnits(text.text);
-            },
+            optionsBuilder: (text) => widget.controller.filterUnits(text.text),
             onSelected: (option) {
               _selectedUnitId = option.id;
               _unitCtrl.text = option.number;
             },
-            fieldViewBuilder: (
-              context,
-              textEditingController,
-              focusNode,
-              onFieldSubmitted,
-            ) {
-              textEditingController.text = _unitCtrl.text;
-              _unitCtrl.value = textEditingController.value;
+            fieldViewBuilder: (ctx, textCtrl, focusNode, onSubmitted) {
+              textCtrl.text = _unitCtrl.text;
+              _unitCtrl.value = textCtrl.value;
               return TextFormField(
-                controller: textEditingController,
+                controller: textCtrl,
                 focusNode: focusNode,
-                decoration: _fieldDecoration('Unidad'),
-                onFieldSubmitted: (_) => onFieldSubmitted(),
+                decoration: _instagramDecoration(cs, 'Unidad'),
+                onFieldSubmitted: (_) => onSubmitted(),
                 validator: (value) {
-                  if ((value ?? '').trim().isEmpty) {
-                    return 'Selecciona la unidad';
-                  }
+                  if ((value ?? '').trim().isEmpty) return 'Requerido';
                   if (_selectedUnitId == null &&
                       !_matchUnit(value ?? '', options)) {
-                    return 'Selecciona una unidad válida';
+                    return 'Unidad inválida';
                   }
                   return null;
                 },
@@ -1093,17 +1187,10 @@ class _ResidentFormDialogState extends State<_ResidentFormDialog> {
           ),
           if (loading)
             Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Row(
-                children: const [
-                  SizedBox(
-                    width: 14,
-                    height: 14,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  SizedBox(width: 8),
-                  Text('Cargando unidades...'),
-                ],
+              padding: const EdgeInsets.only(top: 6, left: 4),
+              child: Text(
+                'Cargando unidades...',
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
             ),
         ],
@@ -1166,7 +1253,7 @@ class _ResidentFormDialogState extends State<_ResidentFormDialog> {
       if (!result.success) {
         setState(() {
           _saving = false;
-          _error = result.message ?? 'No se pudo completar la acción.';
+          _error = result.message ?? 'Error al guardar.';
         });
         return;
       }
@@ -1175,7 +1262,7 @@ class _ResidentFormDialogState extends State<_ResidentFormDialog> {
       if (!mounted) return;
       setState(() {
         _saving = false;
-        _error = 'Ocurrió un error al procesar la solicitud.';
+        _error = 'Error inesperado.';
       });
     }
   }

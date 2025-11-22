@@ -41,7 +41,7 @@ abstract class AttendanceDatasource {
     required String proxyName,
   });
 
-  Future<void> deleteAttendanceProxy({
-    required int proxyId,
-  });
+  Future<void> deleteAttendanceProxy({required int proxyId});
+
+  Future<void> generateAutomaticList({required int votingGroupId});
 }

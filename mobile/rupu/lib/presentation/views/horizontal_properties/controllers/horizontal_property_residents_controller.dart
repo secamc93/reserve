@@ -105,8 +105,7 @@ class HorizontalPropertyResidentsController extends GetxController {
 
   Map<String, dynamic> _buildResidentsQuery({int? pageOverride}) {
     final query = <String, dynamic>{};
-    final page =
-        pageOverride ?? int.tryParse(residentsPageCtrl.text.trim());
+    final page = pageOverride ?? int.tryParse(residentsPageCtrl.text.trim());
     final pageSize = int.tryParse(residentsPageSizeCtrl.text.trim());
     if (page != null && page > 0) query['page'] = page;
     if (pageSize != null && pageSize > 0) query['page_size'] = pageSize;
@@ -160,8 +159,8 @@ class HorizontalPropertyResidentsController extends GetxController {
     try {
       final basePage = append
           ? (residentsPage.value?.page ??
-              int.tryParse(residentsPageCtrl.text.trim()) ??
-              1)
+                int.tryParse(residentsPageCtrl.text.trim()) ??
+                1)
           : int.tryParse(residentsPageCtrl.text.trim()) ?? 1;
       final pageToRequest = basePage < 1 ? 1 : basePage;
       final query = _buildResidentsQuery(
@@ -190,7 +189,8 @@ class HorizontalPropertyResidentsController extends GetxController {
       if (append) {
         residentsLoadingMore.value = false;
       } else {
-      residentsLoading.value = false;
+        residentsLoading.value = false;
+      }
     }
   }
 
@@ -201,10 +201,7 @@ class HorizontalPropertyResidentsController extends GetxController {
     try {
       final result = await repository.getHorizontalPropertyUnits(
         id: propertyId,
-        query: _withBusinessId({
-          'page': 1,
-          'page_size': 200,
-        }),
+        query: _withBusinessId({'page': 1, 'page_size': 200}),
       );
       unitsOptions.assignAll(result.units);
       _unitsLoaded = true;
@@ -219,9 +216,7 @@ class HorizontalPropertyResidentsController extends GetxController {
     final normalized = query.trim().toLowerCase();
     if (normalized.isEmpty) return List.of(unitsOptions);
     return unitsOptions
-        .where(
-          (unit) => unit.number.toLowerCase().contains(normalized),
-        )
+        .where((unit) => unit.number.toLowerCase().contains(normalized))
         .toList(growable: false);
   }
 
@@ -231,10 +226,7 @@ class HorizontalPropertyResidentsController extends GetxController {
     final cached = _residentDetailsCache[residentId];
     if (cached != null) {
       return Future.value(
-        HorizontalPropertyResidentDetailResult(
-          success: true,
-          resident: cached,
-        ),
+        HorizontalPropertyResidentDetailResult(success: true, resident: cached),
       );
     }
 
@@ -246,18 +238,19 @@ class HorizontalPropertyResidentsController extends GetxController {
     final future = repository
         .getHorizontalPropertyResidentDetail(residentId: residentId)
         .then((result) {
-      if (result.success && result.resident != null) {
-        _residentDetailsCache[residentId] = result.resident!;
-      }
-      _residentDetailRequests.remove(residentId);
-      return result;
-    }).catchError((_) {
-      _residentDetailRequests.remove(residentId);
-      return const HorizontalPropertyResidentDetailResult(
-        success: false,
-        message: 'No se pudo cargar el residente.',
-      );
-    });
+          if (result.success && result.resident != null) {
+            _residentDetailsCache[residentId] = result.resident!;
+          }
+          _residentDetailRequests.remove(residentId);
+          return result;
+        })
+        .catchError((_) {
+          _residentDetailRequests.remove(residentId);
+          return const HorizontalPropertyResidentDetailResult(
+            success: false,
+            message: 'No se pudo cargar el residente.',
+          );
+        });
 
     _residentDetailRequests[residentId] = future;
     return future;
@@ -311,7 +304,8 @@ class HorizontalPropertyResidentsController extends GetxController {
       );
       if (result.success) {
         await refresh();
-        _residentDetailsCache[residentId] = result.resident ??
+        _residentDetailsCache[residentId] =
+            result.resident ??
             _residentDetailsCache[residentId] ??
             HorizontalPropertyResidentDetail(
               id: residentId,
@@ -384,8 +378,9 @@ class HorizontalPropertyResidentsController extends GetxController {
 
     final detailTag = HorizontalPropertyDetailController.tagFor(propertyId);
     if (Get.isRegistered<HorizontalPropertyDetailController>(tag: detailTag)) {
-      final detailController =
-          Get.find<HorizontalPropertyDetailController>(tag: detailTag);
+      final detailController = Get.find<HorizontalPropertyDetailController>(
+        tag: detailTag,
+      );
       final detailId = detailController.detail.value?.id;
       if (detailId != null && detailId > 0) {
         return detailId;

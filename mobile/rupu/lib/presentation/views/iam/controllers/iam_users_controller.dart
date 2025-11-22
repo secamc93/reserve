@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:rupu/domain/entities/iam_pagination.dart';
 import 'package:rupu/domain/entities/iam_user.dart';
+import 'package:rupu/domain/entities/role.dart';
+import 'package:rupu/domain/entities/iam_generate_password_result.dart';
 import 'package:rupu/domain/entities/user_action_result.dart';
 import 'package:rupu/domain/infrastructure/repositories/iam_repository_impl.dart';
 import 'package:rupu/domain/repositories/iam_repository.dart';
@@ -11,7 +13,7 @@ class IamUsersController extends GetxController {
   final IamRepository repository;
 
   IamUsersController({IamRepository? repository})
-      : repository = repository ?? IamRepositoryImpl();
+    : repository = repository ?? IamRepositoryImpl();
 
   final users = <IamUser>[].obs;
   final isLoading = false.obs;
@@ -31,8 +33,11 @@ class IamUsersController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    debounce<String>(searchText, (_) => fetchUsers(reset: true),
-        time: const Duration(milliseconds: 400));
+    debounce<String>(
+      searchText,
+      (_) => fetchUsers(reset: true),
+      time: const Duration(milliseconds: 400),
+    );
     fetchUsers(reset: true);
   }
 
@@ -155,6 +160,19 @@ class IamUsersController extends GetxController {
   void onClose() {
     searchCtrl.dispose();
     super.onClose();
+  }
+
+  Future<List<Role>> fetchRoles({int? businessTypeId}) async {
+    try {
+      final result = await repository.getRoles(businessTypeId: businessTypeId);
+      return result.roles;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<IamGeneratePasswordResult> generatePassword(int userId) async {
+    return await repository.generatePassword(userId);
   }
 }
 

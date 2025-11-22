@@ -317,32 +317,37 @@ class _VotingGroupCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Información en chips compactos
                       Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
+                        spacing: 8,
+                        runSpacing: 8,
                         children: [
-                          _DetailLine(
+                          _ColoredInfoChip(
                             icon: Icons.calendar_month_outlined,
-                            label: 'Inicio',
-                            value: _formatDate(group.votingStartDate),
+                            label:
+                                'Inicio: ${_formatDate(group.votingStartDate)}',
+                            color: cs.primary,
                           ),
-                          _DetailLine(
+                          _ColoredInfoChip(
                             icon: Icons.event_outlined,
-                            label: 'Fin',
-                            value: _formatDate(group.votingEndDate),
+                            label: 'Fin: ${_formatDate(group.votingEndDate)}',
+                            color: cs.secondary,
                           ),
-                          _DetailLine(
+                          _ColoredInfoChip(
                             icon: Icons.gavel_outlined,
-                            label: 'Requiere quórum',
-                            value: group.requiresQuorum ? 'Sí' : 'No',
+                            label: group.requiresQuorum
+                                ? 'Requiere quórum'
+                                : 'Sin quórum',
+                            color: group.requiresQuorum
+                                ? cs.tertiary
+                                : cs.outline,
                           ),
-                          _DetailLine(
-                            icon: Icons.percent_outlined,
-                            label: 'Quórum',
-                            value: group.quorumPercentage != null
-                                ? '${group.quorumPercentage}%'
-                                : '--',
-                          ),
+                          if (group.quorumPercentage != null)
+                            _ColoredInfoChip(
+                              icon: Icons.percent_outlined,
+                              label: 'Quórum: ${group.quorumPercentage}%',
+                              color: cs.primary,
+                            ),
                         ],
                       ),
                       const SizedBox(height: 16),
@@ -5717,6 +5722,47 @@ class _VoteCreationBottomSheetState extends State<_VoteCreationBottomSheet> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// Compact info chip widget for voting group details
+class _ColoredInfoChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  const _ColoredInfoChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return Chip(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      visualDensity: VisualDensity.compact,
+      backgroundColor: color.withValues(alpha: 0.12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(999),
+        side: BorderSide(color: color.withValues(alpha: 0.3)),
+      ),
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: tt.labelSmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }

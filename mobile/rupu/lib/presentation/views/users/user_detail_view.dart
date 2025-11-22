@@ -40,7 +40,8 @@ class UserDetailView extends GetView<UserDetailController> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              result.message ?? 'No se pudo eliminar el usuario.',
+                              result.message ??
+                                  'No se pudo eliminar el usuario.',
                             ),
                           ),
                         );
@@ -62,7 +63,8 @@ class UserDetailView extends GetView<UserDetailController> {
           return const Center(child: CircularProgressIndicator());
         }
 
-        if (controller.errorMessage.value != null && controller.user.value == null) {
+        if (controller.errorMessage.value != null &&
+            controller.user.value == null) {
           return _ErrorPlaceholder(
             message: controller.errorMessage.value!,
             onRetry: controller.canRead
@@ -75,7 +77,9 @@ class UserDetailView extends GetView<UserDetailController> {
         if (detail == null) {
           return _ErrorPlaceholder(
             message: 'No hay información disponible.',
-            onRetry: controller.canRead ? () => controller.loadUser(userId) : null,
+            onRetry: controller.canRead
+                ? () => controller.loadUser(userId)
+                : null,
           );
         }
 
@@ -148,7 +152,9 @@ class UserDetailView extends GetView<UserDetailController> {
                 () => SwitchListTile.adaptive(
                   title: const Text('Activo'),
                   value: controller.isActive.value,
-                  onChanged: controller.canUpdate ? (v) => controller.isActive.value = v : null,
+                  onChanged: controller.canUpdate
+                      ? (v) => controller.isActive.value = v
+                      : null,
                 ),
               ),
               const SizedBox(height: 12),
@@ -167,10 +173,9 @@ class UserDetailView extends GetView<UserDetailController> {
                 if (businesses.isEmpty) {
                   return Text(
                     'No hay negocios asignados. Usa el selector para agregarlos.',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   );
                 }
                 return Wrap(
@@ -179,7 +184,10 @@ class UserDetailView extends GetView<UserDetailController> {
                   children: businesses
                       .map(
                         (business) => InputChip(
-                          avatar: const Icon(Icons.storefront_outlined, size: 18),
+                          avatar: const Icon(
+                            Icons.storefront_outlined,
+                            size: 18,
+                          ),
                           label: Text(business.name),
                           onDeleted: controller.canUpdate
                               ? () => controller.removeBusiness(business.id)
@@ -195,7 +203,8 @@ class UserDetailView extends GetView<UserDetailController> {
                 controller: controller.avatarUrlCtrl,
                 label: 'URL de avatar',
                 onChanged: controller.onAvatarUrlChanged,
-                enabled: controller.canUpdate && !controller.avatarProcessing.value,
+                enabled:
+                    controller.canUpdate && !controller.avatarProcessing.value,
               ),
               const SizedBox(height: 12),
               Obx(() {
@@ -203,7 +212,9 @@ class UserDetailView extends GetView<UserDetailController> {
                 final file = controller.avatarFile.value;
                 final hasUrl = controller.hasAvatarUrl.value;
                 return ListTile(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   title: Text(
                     processing
                         ? 'Procesando imagen...'
@@ -212,10 +223,10 @@ class UserDetailView extends GetView<UserDetailController> {
                   subtitle: processing
                       ? const Text('Comprimiendo archivo')
                       : file != null
-                          ? Text(controller.formatFileSize(file.sizeInBytes))
-                          : hasUrl
-                              ? const Text('Se usará la URL proporcionada')
-                              : const Text('Formatos permitidos: JPG, PNG, WEBP'),
+                      ? Text(controller.formatFileSize(file.sizeInBytes))
+                      : hasUrl
+                      ? const Text('Se usará la URL proporcionada')
+                      : const Text('Formatos permitidos: JPG, PNG, WEBP'),
                   trailing: processing
                       ? const SizedBox(
                           width: 20,
@@ -258,10 +269,9 @@ class UserDetailView extends GetView<UserDetailController> {
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
                           controller.avatarError.value!,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall
-                              ?.copyWith(color: Colors.red),
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodySmall?.copyWith(color: Colors.red),
                         ),
                       )
                     : const SizedBox.shrink(),
@@ -272,10 +282,9 @@ class UserDetailView extends GetView<UserDetailController> {
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Text(
                     controller.errorMessage.value!,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(color: Theme.of(context).colorScheme.error),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                   ),
                 ),
               if (controller.canUpdate)
@@ -290,7 +299,8 @@ class UserDetailView extends GetView<UserDetailController> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    result.message ?? 'Usuario actualizado correctamente.',
+                                    result.message ??
+                                        'Usuario actualizado correctamente.',
                                   ),
                                 ),
                               );
@@ -331,7 +341,9 @@ class UserDetailView extends GetView<UserDetailController> {
           context: context,
           builder: (ctx) => AlertDialog(
             title: const Text('Eliminar usuario'),
-            content: const Text('Esta acción eliminará el usuario de forma permanente.'),
+            content: const Text(
+              'Esta acción eliminará el usuario de forma permanente.',
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(false),
@@ -375,113 +387,149 @@ class UserDetailView extends GetView<UserDetailController> {
 
   Future<void> _openBusinessPicker(BuildContext context) async {
     if (!controller.canUpdate) return;
-    final searchCtrl = TextEditingController();
-    await controller.searchBusinesses('');
     await showDialog<void>(
       context: context,
-      builder: (dialogCtx) {
-        return AlertDialog(
-          title: const Text('Seleccionar negocios'),
-          content: SizedBox(
-            width: 420,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: searchCtrl,
-                  textInputAction: TextInputAction.search,
-                  decoration: InputDecoration(
-                    labelText: 'Buscar negocio',
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: IconButton(
-                      icon: const Icon(Icons.send),
-                      onPressed: () => controller.searchBusinesses(searchCtrl.text),
-                    ),
-                  ),
-                  onSubmitted: (value) => controller.searchBusinesses(value),
+      builder: (dialogCtx) => _BusinessPickerDialog(controller: controller),
+    );
+  }
+}
+
+class _BusinessPickerDialog extends StatefulWidget {
+  final UserDetailController controller;
+
+  const _BusinessPickerDialog({required this.controller});
+
+  @override
+  State<_BusinessPickerDialog> createState() => _BusinessPickerDialogState();
+}
+
+class _BusinessPickerDialogState extends State<_BusinessPickerDialog> {
+  late final TextEditingController _searchCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchCtrl = TextEditingController();
+    widget.controller.searchBusinesses('');
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Seleccionar negocios'),
+      content: SizedBox(
+        width: 420,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _searchCtrl,
+              textInputAction: TextInputAction.search,
+              decoration: InputDecoration(
+                labelText: 'Buscar negocio',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.send),
+                  onPressed: () =>
+                      widget.controller.searchBusinesses(_searchCtrl.text),
                 ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  height: 320,
-                  child: Obx(() {
-                    final isLoading = controller.businessSuggestionsLoading.value;
-                    final error = controller.businessSuggestionsError.value;
-                    final suggestions = controller.businessSuggestions;
-                    if (isLoading) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (error != null) {
-                      return Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(error, textAlign: TextAlign.center),
-                            const SizedBox(height: 8),
-                            FilledButton.tonal(
-                              onPressed: () => controller.searchBusinesses(searchCtrl.text),
-                              child: const Text('Reintentar'),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-                    if (suggestions.isEmpty) {
-                      return const Center(
-                        child: Text('No se encontraron negocios con la búsqueda actual.'),
-                      );
-                    }
-                    final selectedIds =
-                        controller.selectedBusinesses.map((biz) => biz.id).toSet();
-                    return ListView.separated(
-                      itemCount: suggestions.length,
-                      separatorBuilder: (_, __) => const Divider(height: 1),
-                      itemBuilder: (_, index) {
-                        final business = suggestions[index];
-                        final isSelected = selectedIds.contains(business.id);
-                        return ListTile(
-                          enabled: !isSelected,
-                          leading: CircleAvatar(
-                            child: Text(
-                              business.name.isNotEmpty
-                                  ? business.name.substring(0, 1).toUpperCase()
-                                  : '?',
-                            ),
-                          ),
-                          title: Text(business.name),
-                          subtitle: Text(
-                            business.businessType.isEmpty
-                                ? 'Sin tipo registrado'
-                                : business.businessType,
-                          ),
-                          trailing: Icon(
-                            isSelected
-                                ? Icons.check_circle
-                                : Icons.add_circle_outline,
-                            color: isSelected
-                                ? Theme.of(context).colorScheme.secondary
-                                : Theme.of(context).colorScheme.primary,
-                          ),
-                          onTap: isSelected
-                              ? null
-                              : () => controller.addBusinessFromCatalog(business),
-                        );
-                      },
-                    );
-                  }),
-                ),
-              ],
+              ),
+              onSubmitted: (value) => widget.controller.searchBusinesses(value),
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogCtx).pop(),
-              child: const Text('Cerrar'),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 320,
+              child: Obx(() {
+                final isLoading =
+                    widget.controller.businessSuggestionsLoading.value;
+                final error = widget.controller.businessSuggestionsError.value;
+                final suggestions = widget.controller.businessSuggestions;
+
+                if (isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (error != null) {
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(error, textAlign: TextAlign.center),
+                        const SizedBox(height: 8),
+                        FilledButton.tonal(
+                          onPressed: () => widget.controller.searchBusinesses(
+                            _searchCtrl.text,
+                          ),
+                          child: const Text('Reintentar'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                if (suggestions.isEmpty) {
+                  return const Center(
+                    child: Text(
+                      'No se encontraron negocios con la búsqueda actual.',
+                    ),
+                  );
+                }
+                final selectedIds = widget.controller.selectedBusinesses
+                    .map((biz) => biz.id)
+                    .toSet();
+                return ListView.separated(
+                  itemCount: suggestions.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (_, index) {
+                    final business = suggestions[index];
+                    final isSelected = selectedIds.contains(business.id);
+                    return ListTile(
+                      enabled: !isSelected,
+                      leading: CircleAvatar(
+                        child: Text(
+                          business.name.isNotEmpty
+                              ? business.name.substring(0, 1).toUpperCase()
+                              : '?',
+                        ),
+                      ),
+                      title: Text(business.name),
+                      subtitle: Text(
+                        business.businessType.isEmpty
+                            ? 'Sin tipo registrado'
+                            : business.businessType,
+                      ),
+                      trailing: Icon(
+                        isSelected
+                            ? Icons.check_circle
+                            : Icons.add_circle_outline,
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.secondary
+                            : Theme.of(context).colorScheme.primary,
+                      ),
+                      onTap: isSelected
+                          ? null
+                          : () => widget.controller.addBusinessFromCatalog(
+                              business,
+                            ),
+                    );
+                  },
+                );
+              }),
             ),
           ],
-        );
-      },
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cerrar'),
+        ),
+      ],
     );
-    searchCtrl.dispose();
   }
 }
 
@@ -551,10 +599,10 @@ class _HeaderSummary extends StatelessWidget {
               onTap: imageProvider == null
                   ? null
                   : () => showImagePreviewDialog(
-                        context,
-                        imageProvider: imageProvider,
-                        title: detail.name,
-                      ),
+                      context,
+                      imageProvider: imageProvider,
+                      title: detail.name,
+                    ),
               child: CircleAvatar(
                 radius: 32,
                 backgroundImage: imageProvider,
@@ -589,7 +637,10 @@ class _HeaderSummary extends StatelessWidget {
                     runSpacing: 6,
                     children: [
                       Chip(
-                        avatar: const Icon(Icons.verified_user_outlined, size: 18),
+                        avatar: const Icon(
+                          Icons.verified_user_outlined,
+                          size: 18,
+                        ),
                         label: Text(detail.isActive ? 'Activo' : 'Inactivo'),
                         backgroundColor: detail.isActive
                             ? cs.secondaryContainer
@@ -598,7 +649,9 @@ class _HeaderSummary extends StatelessWidget {
                       if (detail.lastLoginAt != null)
                         Chip(
                           avatar: const Icon(Icons.schedule_outlined, size: 18),
-                          label: Text('Último acceso: ${dateFormat.format(detail.lastLoginAt!.toLocal())}'),
+                          label: Text(
+                            'Último acceso: ${dateFormat.format(detail.lastLoginAt!.toLocal())}',
+                          ),
                         ),
                     ],
                   ),

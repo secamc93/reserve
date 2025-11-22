@@ -663,10 +663,25 @@ class _UnitCard extends StatelessWidget {
     final controller = Get.find<HorizontalPropertyUnitsController>(
       tag: controllerTag,
     );
-    Get.dialog(
-      const Center(child: CircularProgressIndicator()),
+
+    // Use a Completer to wait explicitly for the dialog context
+    final dialogCompleter = Completer<BuildContext>();
+
+    showDialog(
+      context: context,
       barrierDismissible: false,
+      builder: (ctx) {
+        // Complete the completer when the builder runs
+        if (!dialogCompleter.isCompleted) {
+          dialogCompleter.complete(ctx);
+        }
+        return const Center(child: CircularProgressIndicator());
+      },
     );
+
+    // Wait for the dialog to be built and get its context
+    final dialogContext = await dialogCompleter.future;
+
     HorizontalPropertyUnitDetailResult? detailResult;
     try {
       detailResult = await controller.fetchUnitDetail(unit.id);
@@ -677,8 +692,9 @@ class _UnitCard extends StatelessWidget {
             'No se pudo cargar el detalle de la unidad. Inténtalo nuevamente.',
       );
     } finally {
-      if (Get.isDialogOpen ?? false) {
-        Get.back();
+      // Close loader - we're guaranteed to have the context
+      if (dialogContext.mounted) {
+        Navigator.of(dialogContext).pop();
       }
     }
 
@@ -692,11 +708,13 @@ class _UnitCard extends StatelessWidget {
       return;
     }
 
+    if (!context.mounted) return;
+
     final result = await showDialog<HorizontalPropertyUnitDetailResult>(
       context: context,
       barrierDismissible: false,
       builder: (_) => _UnitEditDialog(
-        initialDetail: resolvedDetail.unit,
+        initialDetail: resolvedDetail.unit!,
         fallback: unit,
         onSubmit: (payload) =>
             controller.updateUnit(unitId: unit.id, data: payload),
@@ -1518,17 +1536,17 @@ class _UnitFormBottomSheetState extends State<_UnitFormBottomSheet> {
 }
 
 class _UnitEditDialog extends StatefulWidget {
-  final HorizontalPropertyUnitDetail? initialDetail;
+  final HorizontalPropertyUnitDetail initialDetail;
   final HorizontalPropertyUnitItem? fallback;
   final Future<HorizontalPropertyUnitDetailResult> Function(
     Map<String, dynamic> data,
   )
-      onSubmit;
+  onSubmit;
 
   const _UnitEditDialog({
-    this.initialDetail,
-    this.fallback,
+    required this.initialDetail,
     required this.onSubmit,
+    this.fallback,
   });
 
   @override
@@ -1537,15 +1555,10 @@ class _UnitEditDialog extends StatefulWidget {
 
 class _UnitEditDialogState extends State<_UnitEditDialog> {
   final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _numberCtrl;
-  late final TextEditingController _typeCtrl;
-  late final TextEditingController _floorCtrl;
-  late final TextEditingController _blockCtrl;
-  late final TextEditingController _areaCtrl;
-  late final TextEditingController _bedroomsCtrl;
-  late final TextEditingController _bathroomsCtrl;
-  late final TextEditingController _coefficientCtrl;
-  late final TextEditingController _descriptionCtrl;
+  final TextEditingController _numberCtrl = TextEditingController();
+  final TextEditingController _blockCtrl = TextEditingController();
+  final TextEditingController _typeCtrl = TextEditingController();
+  final TextEditingController _coefCtrl = TextEditingController();
   bool _isActive = true;
   bool _saving = false;
   String? _error;
@@ -1555,49 +1568,27 @@ class _UnitEditDialogState extends State<_UnitEditDialog> {
     super.initState();
     final detail = widget.initialDetail;
     final fallback = widget.fallback;
-    _numberCtrl = TextEditingController(
-      text: detail?.number ?? fallback?.number ?? '',
+    _numberCtrl.text = detail.number;
+    _blockCtrl.text = detail.block ?? fallback?.block ?? '';
+    _typeCtrl.text = detail.unitType ?? fallback?.unitType ?? '';
+    _coefCtrl.text = _formatCoefficient(
+      detail.participationCoefficient ?? fallback?.participationCoefficient,
     );
-    _typeCtrl = TextEditingController(
-      text: detail?.unitType ?? fallback?.unitType ?? '',
-    );
-    _floorCtrl = TextEditingController(
-      text: detail?.floor?.toString() ?? '',
-    );
-    _blockCtrl = TextEditingController(
-      text: detail?.block ?? fallback?.block ?? fallback?.tower ?? '',
-    );
-    _areaCtrl = TextEditingController(
-      text: _doubleToText(detail?.area ?? fallback?.area),
-    );
-    _bedroomsCtrl = TextEditingController(
-      text: detail?.bedrooms?.toString() ?? fallback?.bedrooms?.toString() ?? '',
-    );
-    _bathroomsCtrl = TextEditingController(
-      text: detail?.bathrooms?.toString() ?? fallback?.bathrooms?.toString() ?? '',
-    );
-    _coefficientCtrl = TextEditingController(
-      text: _doubleToText(
-        detail?.participationCoefficient ?? fallback?.participationCoefficient,
-      ),
-    );
-    _descriptionCtrl = TextEditingController(
-      text: detail?.description ?? fallback?.description ?? '',
-    );
-    _isActive = detail?.isActive ?? fallback?.isActive ?? true;
+    _isActive = detail.isActive ?? fallback?.isActive ?? true;
+  }
+
+  String _formatCoefficient(double? value) {
+    if (value == null) return '';
+    final hasDecimals = value.truncateToDouble() != value;
+    return hasDecimals ? value.toStringAsFixed(2) : value.toStringAsFixed(0);
   }
 
   @override
   void dispose() {
     _numberCtrl.dispose();
-    _typeCtrl.dispose();
-    _floorCtrl.dispose();
     _blockCtrl.dispose();
-    _areaCtrl.dispose();
-    _bedroomsCtrl.dispose();
-    _bathroomsCtrl.dispose();
-    _coefficientCtrl.dispose();
-    _descriptionCtrl.dispose();
+    _typeCtrl.dispose();
+    _coefCtrl.dispose();
     super.dispose();
   }
 
@@ -1607,209 +1598,196 @@ class _UnitEditDialogState extends State<_UnitEditDialog> {
     final tt = Theme.of(context).textTheme;
     final viewInsets = MediaQuery.viewInsetsOf(context);
 
-    InputDecoration decoration(String label, {String? hint}) {
-      return InputDecoration(
-        labelText: label,
-        hintText: hint,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      );
-    }
-
-    Widget numericField({
-      required String label,
-      required TextEditingController controller,
-      String? hint,
-      TextInputType keyboardType = TextInputType.number,
-    }) {
-      return TextFormField(
-        controller: controller,
-        decoration: decoration(label, hint: hint),
-        keyboardType: keyboardType,
-        validator: (value) {
-          if (value == null || value.trim().isEmpty) return null;
-          return double.tryParse(value.replaceAll(',', '.')) == null
-              ? 'Ingresa un número válido'
-              : null;
-        },
-      );
-    }
-
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: const Text('Editar unidad'),
-      content: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 560),
-        child: Padding(
-          padding: EdgeInsets.only(bottom: viewInsets.bottom),
-          child: SingleChildScrollView(
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+    return Dialog(
+      insetPadding: const EdgeInsets.all(16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      backgroundColor: cs.surface,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 500),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // HEADER
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  TextFormField(
-                    controller: _numberCtrl,
-                    decoration: decoration('Número de unidad'),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Ingresa el número de la unidad';
-                      }
-                      return null;
-                    },
+                  TextButton(
+                    onPressed: _saving
+                        ? null
+                        : () => Navigator.of(context).pop(),
+                    style: TextButton.styleFrom(
+                      foregroundColor: cs.onSurface,
+                      textStyle: tt.bodyMedium,
+                    ),
+                    child: const Text('Cancelar'),
                   ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _typeCtrl,
-                    decoration: decoration('Tipo de unidad'),
+                  Text(
+                    'Editar unidad',
+                    style: tt.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _floorCtrl,
-                    decoration: decoration('Piso'),
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) return null;
-                      return int.tryParse(value) == null
-                          ? 'Ingresa un piso válido'
-                          : null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _blockCtrl,
-                    decoration: decoration('Bloque / Torre'),
-                  ),
-                  const SizedBox(height: 12),
-                  numericField(
-                    label: 'Área (m²)',
-                    controller: _areaCtrl,
-                    hint: 'Ej: 85.5',
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _bedroomsCtrl,
-                    decoration: decoration('Habitaciones'),
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) return null;
-                      return int.tryParse(value) == null
-                          ? 'Ingresa un número válido'
-                          : null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _bathroomsCtrl,
-                    decoration: decoration('Baños'),
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) return null;
-                      return int.tryParse(value) == null
-                          ? 'Ingresa un número válido'
-                          : null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  numericField(
-                    label: 'Coeficiente de participación',
-                    controller: _coefficientCtrl,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _descriptionCtrl,
-                    decoration: decoration('Descripción'),
-                    maxLines: 3,
-                  ),
-                  const SizedBox(height: 8),
-                  CheckboxListTile(
-                    value: _isActive,
-                    onChanged: (value) {
-                      setState(() => _isActive = value ?? true);
-                    },
-                    title: const Text('Unidad activa'),
-                    controlAffinity: ListTileControlAffinity.leading,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                  if (_error != null) ...[
-                    const SizedBox(height: 4),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        _error!,
-                        style: tt.bodySmall?.copyWith(color: cs.error),
+                  TextButton(
+                    onPressed: _saving ? null : _submit,
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.blue,
+                      textStyle: tt.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                  ],
+                    child: _saving
+                        ? SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.blue,
+                            ),
+                          )
+                        : const Text('Guardar'),
+                  ),
                 ],
               ),
             ),
-          ),
+            const Divider(height: 1),
+
+            // CONTENT
+            Flexible(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                  24,
+                  24,
+                  24,
+                  24 + viewInsets.bottom,
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      // ICON PLACEHOLDER
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: cs.surfaceContainerHigh,
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: Icon(
+                          Icons.apartment_outlined,
+                          size: 40,
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      TextFormField(
+                        controller: _numberCtrl,
+                        decoration: _instagramDecoration(
+                          cs,
+                          'Número de unidad',
+                        ),
+                        validator: (value) => (value?.trim().isEmpty ?? true)
+                            ? 'Requerido'
+                            : null,
+                      ),
+                      const SizedBox(height: 16),
+
+                      TextFormField(
+                        controller: _blockCtrl,
+                        decoration: _instagramDecoration(cs, 'Bloque / Torre'),
+                      ),
+                      const SizedBox(height: 16),
+
+                      TextFormField(
+                        controller: _typeCtrl,
+                        decoration: _instagramDecoration(cs, 'Tipo de unidad'),
+                      ),
+                      const SizedBox(height: 16),
+
+                      TextFormField(
+                        controller: _coefCtrl,
+                        decoration: _instagramDecoration(cs, 'Coeficiente'),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // SWITCH
+                      _InstagramSwitch(
+                        label: 'Unidad activa',
+                        value: _isActive,
+                        onChanged: (v) => setState(() => _isActive = v),
+                      ),
+
+                      if (_error != null) ...[
+                        const SizedBox(height: 16),
+                        Text(
+                          _error!,
+                          style: tt.bodySmall?.copyWith(color: cs.error),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _saving ? null : () => Navigator.of(context).pop(),
-          child: const Text('Cancelar'),
-        ),
-        FilledButton.icon(
-          onPressed: _saving ? null : _submit,
-          icon: _saving
-              ? SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: cs.onPrimary,
-                  ),
-                )
-              : const Icon(Icons.save_outlined),
-          label: const Text('Actualizar unidad'),
-        ),
-      ],
     );
   }
 
-  String _doubleToText(double? value) {
-    if (value == null) return '';
-    if (value.truncateToDouble() == value) {
-      return value.toStringAsFixed(0);
-    }
-    return value.toString();
-  }
-
-  int? _parseInt(String value) {
-    if (value.isEmpty) return null;
-    return int.tryParse(value);
-  }
-
-  double? _parseDouble(String value) {
-    if (value.isEmpty) return null;
-    final normalized = value.replaceAll(',', '.');
-    return double.tryParse(normalized);
+  InputDecoration _instagramDecoration(ColorScheme cs, String label) {
+    return InputDecoration(
+      labelText: label,
+      filled: true,
+      fillColor: cs.surfaceContainerLow,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: cs.outline.withOpacity(0.5), width: 1),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: cs.error.withOpacity(0.5), width: 1),
+      ),
+    );
   }
 
   Map<String, dynamic> _buildPayload() {
-    final payload = <String, dynamic>{
+    return {
       'number': _numberCtrl.text.trim(),
-      'unit_type': _typeCtrl.text.trim(),
-      'floor': _parseInt(_floorCtrl.text.trim()),
-      'block': _blockCtrl.text.trim().isEmpty ? null : _blockCtrl.text.trim(),
-      'area': _parseDouble(_areaCtrl.text.trim()),
-      'bedrooms': _parseInt(_bedroomsCtrl.text.trim()),
-      'bathrooms': _parseInt(_bathroomsCtrl.text.trim()),
-      'participation_coefficient': _parseDouble(_coefficientCtrl.text.trim()),
-      'description':
-          _descriptionCtrl.text.trim().isEmpty ? null : _descriptionCtrl.text,
+      'block': _nullable(_blockCtrl.text),
+      'unit_type': _nullable(_typeCtrl.text),
+      'participation_coefficient': double.tryParse(_coefCtrl.text.trim()),
       'is_active': _isActive,
     };
-    payload.removeWhere((key, value) => value == null);
-    return payload;
+  }
+
+  String? _nullable(String value) {
+    return value.trim().isEmpty ? null : value.trim();
   }
 
   Future<void> _submit() async {
     if (_saving) return;
     final form = _formKey.currentState;
-    if (form == null || !form.validate()) return;
+    if (form == null) return;
+
+    if (!form.validate()) return;
+
     setState(() {
       _saving = true;
       _error = null;
@@ -1820,8 +1798,7 @@ class _UnitEditDialogState extends State<_UnitEditDialog> {
       if (!result.success) {
         setState(() {
           _saving = false;
-          _error = result.message ??
-              'No se pudo actualizar la unidad. Inténtalo nuevamente.';
+          _error = result.message ?? 'Error al guardar.';
         });
         return;
       }
@@ -1830,7 +1807,7 @@ class _UnitEditDialogState extends State<_UnitEditDialog> {
       if (!mounted) return;
       setState(() {
         _saving = false;
-        _error = 'Ocurrió un error al actualizar la unidad.';
+        _error = 'Error inesperado.';
       });
     }
   }
