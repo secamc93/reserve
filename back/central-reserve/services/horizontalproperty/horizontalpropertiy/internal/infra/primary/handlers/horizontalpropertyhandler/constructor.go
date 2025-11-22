@@ -1,7 +1,7 @@
 package horizontalpropertyhandler
 
 import (
-	"central_reserve/services/horizontalproperty/internal/domain"
+	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/domain"
 	"central_reserve/shared/log"
 )
 

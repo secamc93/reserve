@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"central_reserve/services/horizontalproperty/internal/domain"
+	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/domain"
 	"central_reserve/shared/env"
 	"central_reserve/shared/log"
 	"central_reserve/shared/storage"

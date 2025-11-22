@@ -1,13 +1,12 @@
 package mapper
 
 import (
+	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/domain"
+	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/primary/handlers/horizontalpropertyhandler/request"
+	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/primary/handlers/horizontalpropertyhandler/response"
 	"regexp"
 	"strings"
 	"unicode"
-
-	"central_reserve/services/horizontalproperty/internal/domain"
-	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/horizontalpropertyhandler/request"
-	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/horizontalpropertyhandler/response"
 
 	"golang.org/x/text/runes"
 	"golang.org/x/text/transform"

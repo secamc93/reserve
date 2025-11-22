@@ -5,7 +5,7 @@ import (
 
 	"dbpostgres/app/infra/models"
 
-	"central_reserve/services/horizontalproperty/internal/domain"
+	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/domain"
 )
 
 // ToBusinessModel mapea una entidad de dominio a modelo GORM

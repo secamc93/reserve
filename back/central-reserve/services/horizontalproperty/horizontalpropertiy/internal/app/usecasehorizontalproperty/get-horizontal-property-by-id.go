@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"central_reserve/services/horizontalproperty/internal/domain"
+	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/domain"
 )
 
 // GetHorizontalPropertyByID obtiene una propiedad horizontal por su ID
