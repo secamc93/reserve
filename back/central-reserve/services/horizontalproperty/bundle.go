@@ -1,8 +1,8 @@
 package horizontalproperty
 
 import (
+	"central_reserve/services/horizontalproperty/horizontalpropertiy"
 	"central_reserve/services/horizontalproperty/internal/app/usecaseattendance"
-	"central_reserve/services/horizontalproperty/internal/app/usecasehorizontalproperty"
 	"central_reserve/services/horizontalproperty/internal/app/usecasepropertyunit"
 	"central_reserve/services/horizontalproperty/internal/app/usecaseresident"
 	"central_reserve/services/horizontalproperty/internal/app/usecasevote"
@@ -11,7 +11,6 @@ import (
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlerpropertyunit"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlerresident"
 	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlervote"
-	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/horizontalpropertyhandler"
 	"central_reserve/services/horizontalproperty/internal/infra/secondary/repository"
 	"central_reserve/shared/db"
 	"central_reserve/shared/env"
@@ -26,18 +25,12 @@ func New(db db.IDatabase, logger log.ILogger, s3 storage.IS3Service, envConfig e
 	// Crear logger contextual para todo el servicio horizontalproperty
 	serviceLogger := logger.WithService("Propiedades horizontales")
 
-	// Crear repositorio consolidado
-	repo := repository.New(db, serviceLogger)
-	// Necesitamos el tipo concreto para satisfacer ambos puertos (HorizontalPropertyRepository y VotingRepository)
-	repoConcrete := repo.(*repository.Repository)
+	// Inicializar módulo de propiedades horizontales (NUEVO - autónomo)
+	horizontalpropertiy.New(db, logger, s3, envConfig, v1Group)
 
-	// Crear casos de uso
-	horizontalPropertyUseCase := usecasehorizontalproperty.NewHorizontalPropertyUseCase(
-		repo,
-		serviceLogger,
-		s3,
-		envConfig,
-	)
+	// Crear repositorio consolidado (OLD - para otros dominios)
+	// Crear repositorio consolidado (OLD - para otros dominios)
+	repoConcrete := repository.New(db, serviceLogger)
 
 	// Voting use case (necesita acceso a voting y resident repos)
 	votingUseCase := usecasevote.NewVotingUseCase(repoConcrete, repoConcrete, serviceLogger)
@@ -54,11 +47,6 @@ func New(db db.IDatabase, logger log.ILogger, s3 storage.IS3Service, envConfig e
 	// Crear cache de votaciones para SSE en tiempo real
 	votingCache := domain.NewVotingCache()
 
-	// Crear handlers
-	horizontalPropertyHandler := horizontalpropertyhandler.NewHorizontalPropertyHandler(
-		horizontalPropertyUseCase,
-		serviceLogger,
-	)
 	// Obtener JWT secret del env
 	jwtSecret := envConfig.Get("JWT_SECRET")
 
@@ -66,7 +54,7 @@ func New(db db.IDatabase, logger log.ILogger, s3 storage.IS3Service, envConfig e
 		votingUseCase,
 		repoConcrete,
 		propertyUnitUseCase,
-		horizontalPropertyUseCase,
+		nil, // horizontalPropertyUseCase - ya no disponible, el módulo es autónomo
 		votingCache,
 		jwtSecret,
 		serviceLogger,
@@ -76,7 +64,6 @@ func New(db db.IDatabase, logger log.ILogger, s3 storage.IS3Service, envConfig e
 	attendanceHandler := handlerattendance.NewAttendanceHandler(attendanceUseCase, serviceLogger)
 
 	// Registrar rutas
-	horizontalPropertyHandler.RegisterRoutes(v1Group)
 	votingHandler.RegisterRoutes(v1Group)
 	propertyUnitHandler.RegisterRoutes(v1Group)
 	residentHandler.RegisterRoutes(v1Group)

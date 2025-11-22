@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"central_reserve/services/horizontalproperty/internal/domain"
+	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/domain"
 )
 
 // DeleteHorizontalProperty elimina una propiedad horizontal

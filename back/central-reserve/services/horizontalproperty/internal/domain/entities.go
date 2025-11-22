@@ -63,11 +63,40 @@ type PropertyUnit struct {
 	Area                     *float64
 	Bedrooms                 *int
 	Bathrooms                *int
-	ParticipationCoefficient *float64 // Coeficiente de participación para votaciones
+	ParticipationCoefficient *float64
 	Description              string
 	IsActive                 bool
 	CreatedAt                time.Time
 	UpdatedAt                time.Time
+}
+
+// Committee - Comité de la propiedad horizontal
+type Committee struct {
+	ID              uint
+	CommitteeTypeID uint
+	CommitteeType   CommitteeType
+	Name            string
+	StartDate       time.Time
+	EndDate         *time.Time
+	IsActive        bool
+	Notes           string
+}
+
+// CommitteeType - Tipo de comité
+type CommitteeType struct {
+	ID   uint
+	Name string
+	Code string
+}
+
+// BusinessType - Entidad de tipo de negocio
+type BusinessType struct {
+	ID          uint
+	Name        string
+	Code        string
+	Description string
+	Icon        string
+	IsActive    bool
 }
 
 // Resident - Residente de una propiedad horizontal
@@ -98,35 +127,6 @@ type ResidentType struct {
 	Name        string
 	Code        string
 	Description string
-	IsActive    bool
-}
-
-// Committee - Comité de la propiedad horizontal
-type Committee struct {
-	ID              uint
-	CommitteeTypeID uint
-	CommitteeType   CommitteeType
-	Name            string
-	StartDate       time.Time
-	EndDate         *time.Time
-	IsActive        bool
-	Notes           string
-}
-
-// CommitteeType - Tipo de comité
-type CommitteeType struct {
-	ID   uint
-	Name string
-	Code string
-}
-
-// BusinessType - Entidad de tipo de negocio (simplificada para referencias)
-type BusinessType struct {
-	ID          uint
-	Name        string
-	Code        string
-	Description string
-	Icon        string
 	IsActive    bool
 }
 

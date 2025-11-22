@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"central_reserve/services/horizontalproperty/internal/domain"
+	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/domain"
 )
 
 // UpdateHorizontalProperty actualiza una propiedad horizontal existente
