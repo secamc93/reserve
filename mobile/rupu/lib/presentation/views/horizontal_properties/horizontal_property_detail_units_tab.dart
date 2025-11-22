@@ -162,43 +162,71 @@ class _UnitsTab extends GetWidget<HorizontalPropertyUnitsController> {
   }
 }
 
-class _UnitsFiltersContent
-    extends GetWidget<HorizontalPropertyUnitsController> {
+class _UnitsFiltersContent extends StatefulWidget {
   final String controllerTag;
   const _UnitsFiltersContent({required this.controllerTag});
 
   @override
-  String? get tag => controllerTag;
+  State<_UnitsFiltersContent> createState() => _UnitsFiltersContentState();
+}
+
+class _UnitsFiltersContentState extends State<_UnitsFiltersContent> {
+  late final HorizontalPropertyUnitsController controller;
+  bool _showAdvanced = false;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = Get.find<HorizontalPropertyUnitsController>(
+      tag: widget.controllerTag,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // HEADER FILTROS (título + botón "avanzados")
+        Row(
+          children: [
+            Icon(Icons.filter_alt_outlined, size: 18, color: cs.primary),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                'Filtra las unidades rápidamente',
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              ),
+            ),
+            TextButton.icon(
+              onPressed: () {
+                setState(() => _showAdvanced = !_showAdvanced);
+              },
+              icon: Icon(
+                _showAdvanced
+                    ? Icons.expand_less_rounded
+                    : Icons.expand_more_rounded,
+                size: 18,
+              ),
+              label: Text(
+                _showAdvanced ? 'Menos filtros' : 'Filtros avanzados',
+                style: tt.labelSmall?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 8),
+
+        // FILTROS PRINCIPALES (siempre visibles)
         ResponsiveFormGrid(
           children: [
-            FilterTextField(
-              label: 'Página',
-              controller: controller.unitsPageCtrl,
-              keyboardType: TextInputType.number,
-            ),
-            FilterTextField(
-              label: 'Tamaño de página',
-              controller: controller.unitsPageSizeCtrl,
-              keyboardType: TextInputType.number,
-            ),
-            FilterTextField(
-              label: 'Número de unidad',
-              controller: controller.unitsNumberCtrl,
-            ),
-            FilterTextField(
-              label: 'Bloque',
-              controller: controller.unitsBlockCtrl,
-            ),
-            FilterTextField(
-              label: 'Tipo de unidad',
-              controller: controller.unitsTypeCtrl,
-            ),
             FilterTextField(
               label: 'Buscar',
               controller: controller.unitsSearchCtrl,
@@ -224,7 +252,48 @@ class _UnitsFiltersContent
             ),
           ],
         ),
-        const SizedBox(height: 12),
+
+        // FILTROS AVANZADOS (colapsables)
+        AnimatedCrossFade(
+          firstChild: const SizedBox.shrink(),
+          secondChild: Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: ResponsiveFormGrid(
+              children: [
+                FilterTextField(
+                  label: 'Página',
+                  controller: controller.unitsPageCtrl,
+                  keyboardType: TextInputType.number,
+                ),
+                FilterTextField(
+                  label: 'Tamaño de página',
+                  controller: controller.unitsPageSizeCtrl,
+                  keyboardType: TextInputType.number,
+                ),
+                FilterTextField(
+                  label: 'Número de unidad',
+                  controller: controller.unitsNumberCtrl,
+                ),
+                FilterTextField(
+                  label: 'Bloque',
+                  controller: controller.unitsBlockCtrl,
+                ),
+                FilterTextField(
+                  label: 'Tipo de unidad',
+                  controller: controller.unitsTypeCtrl,
+                ),
+              ],
+            ),
+          ),
+          crossFadeState: _showAdvanced
+              ? CrossFadeState.showSecond
+              : CrossFadeState.showFirst,
+          duration: const Duration(milliseconds: 220),
+        ),
+
+        const SizedBox(height: 8),
+
+        // CHIPS DE FILTROS ACTIVOS
         Obx(() {
           final _ = controller.filtersRevision.value;
           final chips = _buildActiveFilters();
@@ -244,7 +313,10 @@ class _UnitsFiltersContent
                   ),
           );
         }),
-        const SizedBox(height: 16),
+
+        const SizedBox(height: 12),
+
+        // BOTONES APLICAR / LIMPIAR
         Obx(() {
           final busy =
               controller.unitsLoading.value ||
@@ -262,6 +334,7 @@ class _UnitsFiltersContent
     );
   }
 
+  // 👇 Mantengo tu misma lógica interna de construcción de chips
   List<_ActiveFilterChipData> _buildActiveFilters() {
     final filters = <_ActiveFilterChipData>[];
     final page = controller.unitsPageCtrl.text.trim();
@@ -1039,16 +1112,37 @@ class _UnitFormBottomSheetState extends State<_UnitFormBottomSheet> {
       return InputDecoration(
         labelText: label,
         hintText: hint,
+        labelStyle: tt.labelSmall?.copyWith(
+          color: cs.onSurfaceVariant.withValues(alpha: .9),
+          fontWeight: FontWeight.w600,
+        ),
+        hintStyle: tt.bodySmall?.copyWith(
+          color: cs.onSurfaceVariant.withValues(alpha: .7),
+        ),
         filled: true,
-        fillColor: cs.surfaceContainerHighest,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+        fillColor: cs.surfaceContainerHigh.withValues(alpha: .9),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 12,
+        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: cs.outlineVariant),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: cs.outlineVariant.withValues(alpha: .7),
+          ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: cs.primary.withValues(alpha: .5)),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: cs.primary, width: 1.4),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: cs.error),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: cs.error, width: 1.4),
         ),
       );
     }
@@ -1059,15 +1153,34 @@ class _UnitFormBottomSheetState extends State<_UnitFormBottomSheet> {
       String? hint,
       TextInputType keyboardType = TextInputType.text,
       String? Function(String?)? validator,
+      TextInputAction textInputAction = TextInputAction.next,
+      int maxLines = 1,
     }) {
       return TextFormField(
         controller: controller,
         decoration: decoration(label, hint: hint),
         keyboardType: keyboardType,
-        textInputAction: TextInputAction.next,
+        textInputAction: textInputAction,
+        maxLines: maxLines,
         validator: validator,
       );
     }
+
+    Widget sectionLabel(String title) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: Text(
+          title,
+          style: tt.labelSmall?.copyWith(
+            fontWeight: FontWeight.w800,
+            color: cs.onSurfaceVariant.withValues(alpha: .9),
+            letterSpacing: .2,
+          ),
+        ),
+      );
+    }
+
+    final isEditing = widget.initialDetail != null;
 
     return FractionallySizedBox(
       heightFactor: 0.95,
@@ -1084,9 +1197,9 @@ class _UnitFormBottomSheetState extends State<_UnitFormBottomSheet> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: .18),
-                  blurRadius: 28,
-                  offset: const Offset(0, 22),
+                  color: Colors.black.withValues(alpha: .14),
+                  blurRadius: 22,
+                  offset: const Offset(0, 16),
                 ),
               ],
             ),
@@ -1099,149 +1212,221 @@ class _UnitFormBottomSheetState extends State<_UnitFormBottomSheet> {
                 children: [
                   const SizedBox(height: 12),
                   const _SheetHandle(),
+                  // HEADER tipo Instagram (avatar + título + estado)
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 10, 24, 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Text(
-                          widget.title,
-                          style: tt.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              colors: [cs.primary, cs.secondary],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                          ),
+                          alignment: Alignment.center,
+                          child: Icon(
+                            Icons.apartment_outlined,
+                            color: cs.onPrimary,
                           ),
                         ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Completa la información de la unidad para continuar.',
-                          style: tt.bodyMedium?.copyWith(
-                            color: cs.onSurfaceVariant,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.title,
+                                style: tt.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                isEditing
+                                    ? 'Actualiza los datos de la unidad.'
+                                    : 'Completa la información para crear la unidad.',
+                                style: tt.bodySmall?.copyWith(
+                                  color: cs.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
+                        if (widget.showStatusSwitch)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: ShapeDecoration(
+                              shape: const StadiumBorder(),
+                              color:
+                                  (_isActive
+                                          ? cs.secondaryContainer
+                                          : cs.errorContainer)
+                                      .withValues(alpha: .9),
+                            ),
+                            child: Text(
+                              _isActive ? 'ACTIVA' : 'INACTIVA',
+                              style: tt.labelSmall?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: _isActive
+                                    ? cs.onSecondaryContainer
+                                    : cs.onErrorContainer,
+                                letterSpacing: .4,
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),
+                  Divider(
+                    height: 1,
+                    color: cs.outlineVariant.withValues(alpha: .4),
+                  ),
                   Expanded(
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                      padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
                       child: Form(
                         key: _formKey,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            ResponsiveFormGrid(
-                              children: [
-                                field(
-                                  label: 'Número de unidad',
-                                  controller: _numberCtrl,
-                                  validator: (value) {
-                                    if (value == null || value.trim().isEmpty) {
-                                      return 'Ingresa el número de la unidad';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                field(
-                                  label: 'Tipo de unidad',
-                                  controller: _unitTypeCtrl,
-                                  validator: (value) {
-                                    if (value == null || value.trim().isEmpty) {
-                                      return 'Indica el tipo de unidad';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                field(
-                                  label: 'Bloque',
-                                  controller: _blockCtrl,
-                                  hint: 'Bloque o torre',
-                                ),
-                                field(
-                                  label: 'Piso',
-                                  controller: _floorCtrl,
-                                  keyboardType: TextInputType.number,
-                                  validator: (value) {
-                                    if (value == null || value.trim().isEmpty) {
-                                      return null;
-                                    }
-                                    return _parseInt(value.trim()) == null
-                                        ? 'Ingresa un número válido'
-                                        : null;
-                                  },
-                                ),
-                                field(
-                                  label: 'Área (m²)',
-                                  controller: _areaCtrl,
-                                  keyboardType:
-                                      const TextInputType.numberWithOptions(
-                                        decimal: true,
-                                      ),
-                                  validator: (value) {
-                                    if (value == null || value.trim().isEmpty) {
-                                      return null;
-                                    }
-                                    return _parseDouble(value.trim()) == null
-                                        ? 'Ingresa un valor numérico'
-                                        : null;
-                                  },
-                                ),
-                                field(
-                                  label: 'Coeficiente de participación',
-                                  controller: _coefficientCtrl,
-                                  keyboardType:
-                                      const TextInputType.numberWithOptions(
-                                        decimal: true,
-                                      ),
-                                  validator: (value) {
-                                    if (value == null || value.trim().isEmpty) {
-                                      return null;
-                                    }
-                                    return _parseDouble(value.trim()) == null
-                                        ? 'Ingresa un valor numérico'
-                                        : null;
-                                  },
-                                ),
-                                field(
-                                  label: 'Habitaciones',
-                                  controller: _bedroomsCtrl,
-                                  keyboardType: TextInputType.number,
-                                  validator: (value) {
-                                    if (value == null || value.trim().isEmpty) {
-                                      return null;
-                                    }
-                                    return _parseInt(value.trim()) == null
-                                        ? 'Ingresa un número válido'
-                                        : null;
-                                  },
-                                ),
-                                field(
-                                  label: 'Baños',
-                                  controller: _bathroomsCtrl,
-                                  keyboardType: TextInputType.number,
-                                  validator: (value) {
-                                    if (value == null || value.trim().isEmpty) {
-                                      return null;
-                                    }
-                                    return _parseInt(value.trim()) == null
-                                        ? 'Ingresa un número válido'
-                                        : null;
-                                  },
-                                ),
-                              ],
+                            // SECCIÓN: Información básica
+                            sectionLabel('Información básica'),
+                            const SizedBox(height: 8),
+                            field(
+                              label: 'Número de unidad',
+                              controller: _numberCtrl,
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Ingresa el número de la unidad';
+                                }
+                                return null;
+                              },
                             ),
-                            const SizedBox(height: 16),
-                            TextFormField(
+                            const SizedBox(height: 10),
+                            field(
+                              label: 'Tipo de unidad',
+                              controller: _unitTypeCtrl,
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Indica el tipo de unidad';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 10),
+                            field(
+                              label: 'Bloque',
+                              controller: _blockCtrl,
+                              hint: 'Bloque o torre',
+                            ),
+
+                            const SizedBox(height: 20),
+
+                            // SECCIÓN: Características físicas
+                            sectionLabel('Características físicas'),
+                            const SizedBox(height: 8),
+                            field(
+                              label: 'Piso',
+                              controller: _floorCtrl,
+                              keyboardType: TextInputType.number,
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return null;
+                                }
+                                return _parseInt(value.trim()) == null
+                                    ? 'Ingresa un número válido'
+                                    : null;
+                              },
+                            ),
+                            const SizedBox(height: 10),
+                            field(
+                              label: 'Área (m²)',
+                              controller: _areaCtrl,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return null;
+                                }
+                                return _parseDouble(value.trim()) == null
+                                    ? 'Ingresa un valor numérico'
+                                    : null;
+                              },
+                            ),
+                            const SizedBox(height: 10),
+                            field(
+                              label: 'Coeficiente de participación',
+                              controller: _coefficientCtrl,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return null;
+                                }
+                                return _parseDouble(value.trim()) == null
+                                    ? 'Ingresa un valor numérico'
+                                    : null;
+                              },
+                            ),
+                            const SizedBox(height: 10),
+                            field(
+                              label: 'Habitaciones',
+                              controller: _bedroomsCtrl,
+                              keyboardType: TextInputType.number,
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return null;
+                                }
+                                return _parseInt(value.trim()) == null
+                                    ? 'Ingresa un número válido'
+                                    : null;
+                              },
+                            ),
+                            const SizedBox(height: 10),
+                            field(
+                              label: 'Baños',
+                              controller: _bathroomsCtrl,
+                              keyboardType: TextInputType.number,
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return null;
+                                }
+                                return _parseInt(value.trim()) == null
+                                    ? 'Ingresa un número válido'
+                                    : null;
+                              },
+                            ),
+
+                            const SizedBox(height: 20),
+
+                            // SECCIÓN: Descripción
+                            sectionLabel('Descripción'),
+                            const SizedBox(height: 8),
+                            field(
+                              label: 'Descripción',
                               controller: _descriptionCtrl,
-                              decoration: decoration(
-                                'Descripción',
-                                hint:
-                                    'Comparte detalles adicionales de la unidad',
-                              ),
-                              textInputAction: TextInputAction.newline,
+                              hint:
+                                  'Comparte detalles adicionales de la unidad',
                               keyboardType: TextInputType.multiline,
+                              textInputAction: TextInputAction.newline,
                               maxLines: 3,
                             ),
+
                             if (widget.showStatusSwitch) ...[
-                              const SizedBox(height: 8),
+                              const SizedBox(height: 12),
                               SwitchListTile.adaptive(
                                 value: _isActive,
                                 onChanged: _saving
@@ -1257,6 +1442,7 @@ class _UnitFormBottomSheetState extends State<_UnitFormBottomSheet> {
                                 ),
                               ),
                             ],
+
                             if (_errorMessage != null) ...[
                               const SizedBox(height: 16),
                               Container(
@@ -1284,7 +1470,10 @@ class _UnitFormBottomSheetState extends State<_UnitFormBottomSheet> {
                                 ),
                               ),
                             ],
+
                             const SizedBox(height: 24),
+
+                            // BOTONES inferiores
                             Row(
                               children: [
                                 Expanded(
@@ -1445,6 +1634,7 @@ class _UnitDetailContent extends StatelessWidget {
         ? (cs.secondaryContainer, cs.onSecondaryContainer, 'ACTIVA')
         : (cs.errorContainer, cs.onErrorContainer, 'INACTIVA');
 
+    // mismos datos, solo cambia la forma de mostrarlos
     final metrics = <_MetricTileData>[
       _MetricTileData(
         icon: Icons.confirmation_number_outlined,
@@ -1538,141 +1728,153 @@ class _UnitDetailContent extends StatelessWidget {
     return Scrollbar(
       thumbVisibility: true,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // HEADER tipo tarjeta/perfil
             Container(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(28),
-                gradient: LinearGradient(
-                  colors: [cs.primary.withValues(alpha: .1), cs.surface],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: cs.surface,
+                borderRadius: BorderRadius.circular(24),
                 border: Border.all(
                   color: cs.outlineVariant.withValues(alpha: .6),
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: .08),
+                    blurRadius: 20,
+                    offset: const Offset(0, 12),
+                  ),
+                ],
               ),
-              child: Column(
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: cs.primary.withValues(alpha: .16),
-                        ),
-                        alignment: Alignment.center,
-                        child: Icon(
-                          Icons.apartment_outlined,
-                          color: cs.primary,
-                        ),
+                  // avatar circular
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [cs.primary, cs.secondary],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                      const SizedBox(width: 18),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Unidad ${_formatText(detail.number.isNotEmpty ? detail.number : fallback.number)}',
-                              style: tt.titleLarge?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -.3,
-                              ),
+                    ),
+                    alignment: Alignment.center,
+                    child: Icon(Icons.apartment_outlined, color: cs.onPrimary),
+                  ),
+                  const SizedBox(width: 16),
+                  // info principal
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Unidad ${_formatText(detail.number.isNotEmpty ? detail.number : fallback.number)}',
+                          style: tt.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -.3,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        if ((detail.unitType ?? fallback.unitType)
+                            .trim()
+                            .isNotEmpty)
+                          Text(
+                            _formatText(detail.unitType ?? fallback.unitType),
+                            style: tt.bodyMedium?.copyWith(
+                              color: cs.onSurfaceVariant,
+                              fontWeight: FontWeight.w600,
                             ),
-                            const SizedBox(height: 6),
-                            if ((detail.unitType ?? fallback.unitType)
+                          ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            if ((detail.block ?? fallback.block)
                                 .trim()
                                 .isNotEmpty)
-                              Text(
-                                _formatText(
-                                  detail.unitType ?? fallback.unitType,
-                                ),
-                                style: tt.bodyMedium?.copyWith(
-                                  color: cs.onSurfaceVariant,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                              _InfoChip(
+                                icon: Icons.domain_outlined,
+                                label:
+                                    'Bloque ${_formatText(detail.block ?? fallback.block)}',
+                              ),
+                            if ((detail.tower ?? '').trim().isNotEmpty)
+                              _InfoChip(
+                                icon: Icons.location_city_outlined,
+                                label: 'Torre ${_formatText(detail.tower)}',
                               ),
                           ],
                         ),
-                      ),
-                      _StatusChip(
-                        label: statusLabel,
-                        background: statusBg,
-                        foreground: statusFg,
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 18),
-                  Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
-                    children: [
-                      if ((detail.block ?? fallback.block).trim().isNotEmpty)
-                        _InfoChip(
-                          icon: Icons.domain_outlined,
-                          label:
-                              'Bloque ${_formatText(detail.block ?? fallback.block)}',
-                        ),
-                      if ((detail.tower ?? '').trim().isNotEmpty)
-                        _InfoChip(
-                          icon: Icons.location_city_outlined,
-                          label: 'Torre ${_formatText(detail.tower)}',
-                        ),
-                    ],
+                  const SizedBox(width: 8),
+                  _StatusChip(
+                    label: statusLabel,
+                    background: statusBg,
+                    foreground: statusFg,
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 28),
-            if (metrics.isNotEmpty)
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final width = constraints.maxWidth;
-                  double tileWidth;
-                  if (width >= 840) {
-                    tileWidth = (width - 24) / 3;
-                  } else if (width >= 520) {
-                    tileWidth = (width - 12) / 2;
-                  } else {
-                    tileWidth = width;
-                  }
-                  tileWidth = tileWidth.clamp(180, width);
-                  return Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: [
-                      for (final metric in metrics)
-                        SizedBox(
-                          width: tileWidth,
-                          child: _MetricTile(data: metric),
-                        ),
-                    ],
-                  );
-                },
+
+            const SizedBox(height: 24),
+
+            // DETALLES EN CHIPS
+            if (metrics.isNotEmpty) ...[
+              Text(
+                'Detalles de la unidad',
+                style: tt.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: cs.onSurface,
+                ),
               ),
+              const SizedBox(height: 10),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(10, 10, 10, 6),
+                decoration: BoxDecoration(
+                  color: cs.surfaceContainerHighest.withValues(alpha: .35),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: cs.outlineVariant.withValues(alpha: .5),
+                  ),
+                ),
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final metric in metrics) _MetricChip(data: metric),
+                  ],
+                ),
+              ),
+            ],
+
+            // Propietario
             if (detail.owner != null) ...[
-              const SizedBox(height: 32),
+              const SizedBox(height: 28),
               const _SectionTitle(
                 icon: Icons.badge_outlined,
                 title: 'Propietario',
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
               _ContactTile(contact: detail.owner!, accent: cs.primary),
             ],
+
+            // Residentes
             if (detail.residents.isNotEmpty) ...[
-              const SizedBox(height: 32),
+              const SizedBox(height: 28),
               const _SectionTitle(
                 icon: Icons.groups_2_outlined,
                 title: 'Residentes',
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
               ...detail.residents.map(
                 (resident) => Padding(
                   padding: const EdgeInsets.only(bottom: 12),
@@ -1680,13 +1882,15 @@ class _UnitDetailContent extends StatelessWidget {
                 ),
               ),
             ],
+
+            // Vehículos
             if (detail.vehicles.isNotEmpty) ...[
-              const SizedBox(height: 32),
+              const SizedBox(height: 28),
               const _SectionTitle(
                 icon: Icons.directions_car_filled_outlined,
                 title: 'Vehículos asociados',
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
               ...detail.vehicles.map(
                 (vehicle) => Padding(
                   padding: const EdgeInsets.only(bottom: 12),
@@ -1694,13 +1898,15 @@ class _UnitDetailContent extends StatelessWidget {
                 ),
               ),
             ],
+
+            // Mascotas
             if (detail.pets.isNotEmpty) ...[
-              const SizedBox(height: 32),
+              const SizedBox(height: 28),
               const _SectionTitle(
                 icon: Icons.pets_outlined,
                 title: 'Mascotas registradas',
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
               ...detail.pets.map(
                 (pet) => Padding(
                   padding: const EdgeInsets.only(bottom: 12),
@@ -1708,13 +1914,15 @@ class _UnitDetailContent extends StatelessWidget {
                 ),
               ),
             ],
+
+            // Extras
             if (extras.isNotEmpty) ...[
-              const SizedBox(height: 32),
+              const SizedBox(height: 28),
               const _SectionTitle(
                 icon: Icons.info_outline,
                 title: 'Información adicional',
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               ...extras.map(
                 (entry) => Padding(
                   padding: const EdgeInsets.only(bottom: 10),
@@ -1725,6 +1933,65 @@ class _UnitDetailContent extends StatelessWidget {
                 ),
               ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MetricChip extends StatelessWidget {
+  final _MetricTileData data;
+
+  const _MetricChip({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 120),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: ShapeDecoration(
+          color: cs.surface.withValues(alpha: .9),
+          shape: StadiumBorder(
+            side: BorderSide(color: cs.outlineVariant.withValues(alpha: .7)),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(data.icon, size: 16, color: cs.primary),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    data.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: tt.labelSmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: .2,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    data.value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: tt.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: cs.onSurface,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -1777,10 +2044,10 @@ class _MetricTileData {
   });
 }
 
-class _MetricTile extends StatelessWidget {
+class MetricTile extends StatelessWidget {
   final _MetricTileData data;
 
-  const _MetricTile({required this.data});
+  const MetricTile({required this.data});
 
   @override
   Widget build(BuildContext context) {

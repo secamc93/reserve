@@ -104,18 +104,6 @@ class _PremiumAppBar extends GetWidget<HorizontalPropertyDetailController> {
       surfaceTintColor: Colors.transparent,
       centerTitle: false,
       titleSpacing: 16,
-      flexibleSpace: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              cs.primary.withValues(alpha: .10),
-              cs.secondary.withValues(alpha: .08),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-      ),
       title: Obx(() {
         final name = controller.propertyName.trim().isEmpty
             ? 'Propiedad'
@@ -123,17 +111,15 @@ class _PremiumAppBar extends GetWidget<HorizontalPropertyDetailController> {
         return Text(
           name,
           style: tt.titleLarge!.copyWith(
-            fontWeight: FontWeight.normal,
+            fontWeight: FontWeight.w600,
             color: cs.onSurface,
           ),
         );
       }),
+      // 🔹 Aquí dejamos el TabBar casi “crudo”
       bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(54),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-          child: _PillTabBar(items: tabs),
-        ),
+        preferredSize: const Size.fromHeight(48),
+        child: _PillTabBar(items: tabs),
       ),
     );
   }
@@ -145,39 +131,22 @@ class _PillTabBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
     final tabs = items
         .map((item) => Tab(icon: Icon(item.icon), text: item.label))
         .toList();
 
-    return Container(
-      height: 50,
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: cs.outlineVariant),
-      ),
-      child: TabBar(
-        isScrollable: true,
-        dividerColor: Colors.transparent,
-        indicatorSize: TabBarIndicatorSize.label,
-        labelPadding: const EdgeInsets.symmetric(horizontal: 6),
-        labelStyle: Theme.of(
-          context,
-        ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800),
-        unselectedLabelStyle: Theme.of(
-          context,
-        ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
-        labelColor: cs.onPrimaryContainer,
-        unselectedLabelColor: cs.onSurfaceVariant,
-        indicator: ShapeDecoration(
-          color: cs.primaryContainer,
-          shape: StadiumBorder(
-            side: BorderSide(color: cs.primary.withValues(alpha: .25)),
-          ),
-        ),
-        tabs: tabs,
-      ),
+    return TabBar(
+      tabs: tabs,
+      isScrollable: true,
+      // 🔹 Lo más cercano a nativo: sin container, sin decoraciones extras
+      indicatorColor: cs.primary,
+      labelColor: cs.primary,
+      unselectedLabelColor: cs.onSurfaceVariant,
+      labelStyle: theme.textTheme.labelLarge,
+      unselectedLabelStyle: theme.textTheme.labelLarge,
     );
   }
 }

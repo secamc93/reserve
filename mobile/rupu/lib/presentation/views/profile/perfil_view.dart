@@ -31,108 +31,112 @@ class PerfilView extends GetView<PerfilController> {
         }
 
         return SafeArea(
-          child: Stack(
-            children: [
-              // Fondo con logo del negocio
-              Positioned.fill(child: background),
-              // Overlay global (sutil)
-              Positioned.fill(
-                child: Container(color: cs.surface.withValues(alpha: .15)),
-              ),
-              // Contenido
-              ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  _ThemeTogglePill(controller: ctrl),
+          child: Center(
+            child: Stack(
+              children: [
+                // Fondo con logo del negocio
+                Positioned.fill(child: background),
+                // Overlay global (sutil)
+                Positioned.fill(
+                  child: Container(color: cs.surface.withValues(alpha: .15)),
+                ),
+                // Contenido
+                ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    _ThemeTogglePill(controller: ctrl),
 
-                  const SizedBox(height: 8),
+                    const SizedBox(height: 8),
 
-                  // Tarjeta principal con efecto glass
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(24),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-                      child: Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: cs.surface.withValues(alpha: .22),
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(
-                            color: cs.outlineVariant.withValues(alpha: .35),
+                    // Tarjeta principal con efecto glass
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                        child: Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: cs.surface.withValues(alpha: .22),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: cs.outlineVariant.withValues(alpha: .35),
+                            ),
                           ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            GestureDetector(
-                              onTap: ctrl.avatarUrl.isEmpty
-                                  ? null
-                                  : () => showImagePreviewDialog(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              GestureDetector(
+                                onTap: ctrl.avatarUrl.isEmpty
+                                    ? null
+                                    : () => showImagePreviewDialog(
                                         context,
                                         imageUrl: ctrl.avatarUrl,
                                         title: ctrl.userName,
                                       ),
-                              child: CircleAvatar(
-                                radius: 56,
-                                backgroundImage: (ctrl.avatarUrl.isNotEmpty)
-                                    ? NetworkImage(ctrl.avatarUrl)
-                                    : null,
-                                child: ctrl.avatarUrl.isEmpty
-                                    ? const Icon(Icons.person, size: 48)
-                                    : null,
+                                child: CircleAvatar(
+                                  radius: 56,
+                                  backgroundImage: (ctrl.avatarUrl.isNotEmpty)
+                                      ? NetworkImage(ctrl.avatarUrl)
+                                      : null,
+                                  child: ctrl.avatarUrl.isEmpty
+                                      ? const Icon(Icons.person, size: 48)
+                                      : null,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              ctrl.userName,
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.headlineSmall!
-                                  .copyWith(fontWeight: FontWeight.w800),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              ctrl.email,
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.bodyMedium!
-                                  .copyWith(
-                                    color: cs.onSurfaceVariant,
-                                    fontWeight: FontWeight.w600,
+                              const SizedBox(height: 12),
+                              Text(
+                                ctrl.userName,
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .headlineSmall!
+                                    .copyWith(fontWeight: FontWeight.w800),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                ctrl.email,
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.bodyMedium!
+                                    .copyWith(
+                                      color: cs.onSurfaceVariant,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
+                              const SizedBox(height: 16),
+                              _BusinessCard(controller: ctrl),
+                              const SizedBox(height: 16),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: CustomTextButton(
+                                      onPressed: () =>
+                                          ctrl.goToChangePassword(context),
+                                      textButton: 'Cambiar contraseña',
+                                    ),
                                   ),
-                            ),
-                            const SizedBox(height: 16),
-                            _BusinessCard(controller: ctrl),
-                            const SizedBox(height: 16),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: CustomTextButton(
-                                    onPressed: () =>
-                                        ctrl.goToChangePassword(context),
-                                    textButton: 'Cambiar contraseña',
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: CustomTextButton(
+                                      onPressed: () => ctrl.logout(context),
+                                      textButton: 'Cerrar sesión',
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: CustomTextButton(
-                                    onPressed: () => ctrl.logout(context),
-                                    textButton: 'Cerrar sesión',
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-              ),
-            ],
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ],
+            ),
           ),
         );
       },

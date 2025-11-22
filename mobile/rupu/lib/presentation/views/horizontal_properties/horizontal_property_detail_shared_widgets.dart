@@ -15,8 +15,8 @@ class MetricItem {
   });
 }
 
-class _MetricsGrid extends StatelessWidget {
-  const _MetricsGrid({required this.items});
+class MetricsGrid extends StatelessWidget {
+  const MetricsGrid({required this.items});
   final List<MetricItem> items;
 
   @override
@@ -243,16 +243,6 @@ class _SectionCardState extends State<SectionCard> {
                             color: cs.onSurface,
                           ),
                         ),
-                        if (widget.subtitle?.isNotEmpty == true) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            widget.subtitle!,
-                            style: tt.bodySmall?.copyWith(
-                              color: cs.onSurfaceVariant,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
                       ],
                     ),
                   ),
@@ -861,8 +851,7 @@ class _CardActions extends StatelessWidget {
         ),
         TextButton.icon(
           style: _dangerStyle(context),
-          onPressed:
-              (isDeleteDisabled || showDeleteLoader) ? null : onDelete,
+          onPressed: (isDeleteDisabled || showDeleteLoader) ? null : onDelete,
           icon: showDeleteLoader
               ? SizedBox(
                   width: 18,
@@ -881,14 +870,14 @@ class _CardActions extends StatelessWidget {
 }
 
 void _showActionFeedback(String title, String message) {
-  if (Get.isSnackbarOpen) {
-    Get.closeCurrentSnackbar();
-  }
-  Get.snackbar(
-    title,
-    message,
-    snackPosition: SnackPosition.BOTTOM,
-    duration: const Duration(seconds: 3),
-    margin: const EdgeInsets.all(16),
-  );
+  // if (Get.isSnackbarOpen) {
+  //   Get.closeCurrentSnackbar();
+  // }
+  // Get.snackbar(
+  //   title,
+  //   message,
+  //   snackPosition: SnackPosition.BOTTOM,
+  //   duration: const Duration(seconds: 3),
+  //   margin: const EdgeInsets.all(16),
+  // );
 }

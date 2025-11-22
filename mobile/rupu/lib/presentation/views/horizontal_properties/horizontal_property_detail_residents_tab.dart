@@ -1,5 +1,9 @@
 part of 'horizontal_property_detail_view.dart';
 
+// ─────────────────────────────────────────────────────────────
+// PESTAÑA PRINCIPAL (RESIDENTS TAB)
+// ─────────────────────────────────────────────────────────────
+
 class _ResidentsTab extends GetWidget<HorizontalPropertyResidentsController> {
   final String controllerTag;
   const _ResidentsTab({required this.controllerTag});
@@ -24,6 +28,9 @@ class _ResidentsTab extends GetWidget<HorizontalPropertyResidentsController> {
       return LayoutBuilder(
         builder: (context, constraints) {
           final width = constraints.maxWidth;
+          final isTablet = width >= 720;
+          final horizontalPadding = isTablet ? 24.0 : 16.0;
+
           final crossAxis = width >= 1200
               ? 3
               : width >= 840
@@ -48,37 +55,71 @@ class _ResidentsTab extends GetWidget<HorizontalPropertyResidentsController> {
               child: CustomScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
+                  // HEADER tipo “Instagram admin”
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        horizontalPadding,
+                        16,
+                        horizontalPadding,
+                        8,
+                      ),
+                      child: _ResidentsHeaderSummary(
+                        total: total,
+                        page: page,
+                        totalPages: totalPages,
+                      ),
+                    ),
+                  ),
+
+                  // FILTROS en card (con contenido colapsable)
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                    padding: EdgeInsets.fromLTRB(
+                      horizontalPadding,
+                      8,
+                      horizontalPadding,
+                      12,
+                    ),
                     sliver: SliverToBoxAdapter(
                       child: SectionCard(
                         title: 'Filtros de residentes',
+                        subtitle:
+                            'Filtra rápidamente y abre los filtros avanzados solo cuando los necesites',
                         child: _ResidentsFiltersContent(
                           controllerTag: controllerTag,
                         ),
                       ),
                     ),
                   ),
+
+                  // RESUMEN (SummaryHeader que ya tenías)
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    padding: EdgeInsets.fromLTRB(
+                      horizontalPadding,
+                      0,
+                      horizontalPadding,
+                      12,
+                    ),
                     sliver: SliverToBoxAdapter(
                       child: SummaryHeader(
                         title: 'Residentes encontrados: $total',
                         subtitle: 'Página $page de $totalPages',
                         showProgress: isLoading,
-                        onRefresh: () {
-                          controller.refresh();
-                        },
+                        onRefresh: controller.refresh,
                       ),
                     ),
                   ),
+
                   if (error != null)
                     SliverPadding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: horizontalPadding,
+                      ),
                       sliver: SliverToBoxAdapter(
                         child: _InlineError(message: error),
                       ),
                     ),
+
                   if (!isLoading && residents.isEmpty)
                     const SliverFillRemaining(
                       hasScrollBody: false,
@@ -90,8 +131,14 @@ class _ResidentsTab extends GetWidget<HorizontalPropertyResidentsController> {
                       ),
                     )
                   else ...[
+                    // LISTA / GRID responsive
                     SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                      padding: EdgeInsets.fromLTRB(
+                        horizontalPadding,
+                        0,
+                        horizontalPadding,
+                        24,
+                      ),
                       sliver: crossAxis == 1
                           ? SliverList.builder(
                               itemBuilder: (context, index) => Padding(
@@ -108,9 +155,7 @@ class _ResidentsTab extends GetWidget<HorizontalPropertyResidentsController> {
                                     crossAxisCount: crossAxis,
                                     mainAxisSpacing: 16,
                                     crossAxisSpacing: 16,
-                                    // un poco más de altura fija para evitar desbordes en 2–3 col
-                                    mainAxisExtent:
-                                        340, // <- sube si ves que aún falta aire
+                                    mainAxisExtent: 340,
                                   ),
                               delegate: SliverChildBuilderDelegate(
                                 (context, index) =>
@@ -119,6 +164,7 @@ class _ResidentsTab extends GetWidget<HorizontalPropertyResidentsController> {
                               ),
                             ),
                     ),
+                    // Loader / final de lista
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 32),
@@ -133,7 +179,7 @@ class _ResidentsTab extends GetWidget<HorizontalPropertyResidentsController> {
                               : (!controller.canLoadMoreResidents &&
                                         residents.isNotEmpty
                                     ? const Text(
-                                        'No hay más residentes para cargar.',
+                                        'Ya viste todos los residentes 👌',
                                       )
                                     : const SizedBox.shrink()),
                         ),
@@ -150,75 +196,161 @@ class _ResidentsTab extends GetWidget<HorizontalPropertyResidentsController> {
   }
 }
 
-class _ResidentsFiltersContent
-    extends GetWidget<HorizontalPropertyResidentsController> {
+class _ResidentsHeaderSummary extends StatelessWidget {
+  final int total;
+  final int page;
+  final int totalPages;
+
+  const _ResidentsHeaderSummary({
+    required this.total,
+    required this.page,
+    required this.totalPages,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Row(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(colors: [cs.primary, cs.secondary]),
+          ),
+          alignment: Alignment.center,
+          child: Icon(Icons.group_outlined, color: cs.onPrimary, size: 22),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Residentes',
+                style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '$total residentes · página $page de $totalPages',
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// WIDGETS DE FILTROS MINIMALISTAS
+// ─────────────────────────────────────────────────────────────
+
+class ActiveFiltersBadge extends StatelessWidget {
+  final int count;
+  const ActiveFiltersBadge({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: cs.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: cs.primary.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        '$count',
+        style: TextStyle(
+          color: cs.primary,
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+        ),
+      ),
+    );
+  }
+}
+
+class _ResidentsFiltersContent extends StatefulWidget {
   final String controllerTag;
   const _ResidentsFiltersContent({required this.controllerTag});
 
   @override
-  String? get tag => controllerTag;
+  State<_ResidentsFiltersContent> createState() =>
+      _ResidentsFiltersContentState();
+}
+
+class _ResidentsFiltersContentState extends State<_ResidentsFiltersContent> {
+  late final HorizontalPropertyResidentsController controller;
+  bool _showAdvanced = false;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = Get.find<HorizontalPropertyResidentsController>(
+      tag: widget.controllerTag,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // HEADER FILTROS
+        Row(
+          children: [
+            Icon(Icons.filter_alt_outlined, size: 18, color: cs.primary),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                'Filtra los residentes rápidamente',
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              ),
+            ),
+            TextButton.icon(
+              onPressed: () {
+                setState(() => _showAdvanced = !_showAdvanced);
+              },
+              icon: Icon(
+                _showAdvanced
+                    ? Icons.expand_less_rounded
+                    : Icons.expand_more_rounded,
+                size: 18,
+              ),
+              label: Text(
+                _showAdvanced ? 'Menos filtros' : 'Filtros avanzados',
+                style: tt.labelSmall?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 8),
+
+        // FILTROS PRINCIPALES (siempre visibles)
         ResponsiveFormGrid(
           children: [
-            FilterTextField(
-              label: 'Página',
-              controller: controller.residentsPageCtrl,
-              keyboardType: TextInputType.number,
-            ),
-            FilterTextField(
-              label: 'Tamaño de página',
-              controller: controller.residentsPageSizeCtrl,
-              keyboardType: TextInputType.number,
-            ),
-            FilterTextField(
-              label: 'Nombre',
-              controller: controller.residentsNameCtrl,
-            ),
-            FilterTextField(
-              label: 'Correo',
-              controller: controller.residentsEmailCtrl,
-              keyboardType: TextInputType.emailAddress,
-            ),
-            FilterTextField(
-              label: 'Teléfono',
-              controller: controller.residentsPhoneCtrl,
-              keyboardType: TextInputType.phone,
-            ),
-            FilterTextField(
-              label: 'Unidad',
-              controller: controller.residentsUnitNumberCtrl,
-            ),
-            FilterTextField(
-              label: 'Tipo de residente',
-              controller: controller.residentsTypeCtrl,
-            ),
             FilterTextField(
               label: 'Buscar',
               controller: controller.residentsSearchCtrl,
               textInputAction: TextInputAction.search,
               onSubmitted: (_) => controller.applyResidentsFilters(),
             ),
-            Obx(
-              () => DropdownButtonFormField<bool?>(
-                initialValue: controller.residentsIsMain.value,
-                decoration: _filterDecoration(
-                  context,
-                  'Es residente principal',
-                ),
-                items: const [
-                  DropdownMenuItem<bool?>(value: null, child: Text('Todos')),
-                  DropdownMenuItem<bool?>(value: true, child: Text('Sí')),
-                  DropdownMenuItem<bool?>(value: false, child: Text('No')),
-                ],
-                onChanged: (value) {
-                  controller.residentsIsMain.value = value;
-                },
-              ),
+            FilterTextField(
+              label: 'Nombre',
+              controller: controller.residentsNameCtrl,
             ),
             Obx(
               () => DropdownButtonFormField<bool?>(
@@ -237,9 +369,70 @@ class _ResidentsFiltersContent
                 },
               ),
             ),
+            Obx(
+              () => DropdownButtonFormField<bool?>(
+                initialValue: controller.residentsIsMain.value,
+                decoration: _filterDecoration(context, 'Residente principal'),
+                items: const [
+                  DropdownMenuItem<bool?>(value: null, child: Text('Todos')),
+                  DropdownMenuItem<bool?>(value: true, child: Text('Sí')),
+                  DropdownMenuItem<bool?>(value: false, child: Text('No')),
+                ],
+                onChanged: (value) {
+                  controller.residentsIsMain.value = value;
+                },
+              ),
+            ),
           ],
         ),
-        const SizedBox(height: 12),
+
+        // FILTROS AVANZADOS (colapsables)
+        AnimatedCrossFade(
+          firstChild: const SizedBox.shrink(),
+          secondChild: Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: ResponsiveFormGrid(
+              children: [
+                FilterTextField(
+                  label: 'Página',
+                  controller: controller.residentsPageCtrl,
+                  keyboardType: TextInputType.number,
+                ),
+                FilterTextField(
+                  label: 'Tamaño de página',
+                  controller: controller.residentsPageSizeCtrl,
+                  keyboardType: TextInputType.number,
+                ),
+                FilterTextField(
+                  label: 'Correo',
+                  controller: controller.residentsEmailCtrl,
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                FilterTextField(
+                  label: 'Teléfono',
+                  controller: controller.residentsPhoneCtrl,
+                  keyboardType: TextInputType.phone,
+                ),
+                FilterTextField(
+                  label: 'Unidad',
+                  controller: controller.residentsUnitNumberCtrl,
+                ),
+                FilterTextField(
+                  label: 'Tipo de residente',
+                  controller: controller.residentsTypeCtrl,
+                ),
+              ],
+            ),
+          ),
+          crossFadeState: _showAdvanced
+              ? CrossFadeState.showSecond
+              : CrossFadeState.showFirst,
+          duration: const Duration(milliseconds: 220),
+        ),
+
+        const SizedBox(height: 8),
+
+        // CHIPS de filtros activos
         Obx(() {
           final _ = controller.filtersRevision.value;
           final chips = _buildActiveFilters();
@@ -259,7 +452,10 @@ class _ResidentsFiltersContent
                   ),
           );
         }),
-        const SizedBox(height: 16),
+
+        const SizedBox(height: 12),
+
+        // BOTONES APLICAR / LIMPIAR
         Obx(() {
           final busy =
               controller.residentsLoading.value ||
@@ -277,6 +473,7 @@ class _ResidentsFiltersContent
     );
   }
 
+  // 👇 misma lógica que ya tenías, solo reusada
   List<_ActiveFilterChipData> _buildActiveFilters() {
     final filters = <_ActiveFilterChipData>[];
     final page = controller.residentsPageCtrl.text.trim();
@@ -403,6 +600,10 @@ class _ResidentsFiltersContent
   }
 }
 
+// ─────────────────────────────────────────────────────────────
+// WIDGETS DE TARJETA RESIDENTE (ESTILO INSTAGRAM)
+// ─────────────────────────────────────────────────────────────
+
 class _ResidentCard extends StatelessWidget {
   final HorizontalPropertyResidentItem resident;
   const _ResidentCard({required this.resident});
@@ -413,125 +614,178 @@ class _ResidentCard extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
 
     final (bgChip, fgChip, labelChip) = resident.isActive
-        ? (cs.secondaryContainer, cs.onSecondaryContainer, 'ACTIVO')
-        : (cs.errorContainer, cs.onErrorContainer, 'INACTIVO');
+        ? (
+            cs.primaryContainer.withValues(alpha: 0.4),
+            cs.onPrimaryContainer,
+            'ACTIVO',
+          )
+        : (cs.error.withValues(alpha: 0.1), cs.error, 'INACTIVO');
 
     return Card(
-      elevation: 0,
+      elevation: 0.5, // Sutil elevación para destacar
       margin: EdgeInsets.zero,
-      clipBehavior:
-          Clip.antiAlias, // 👈 clipea el gradiente con el borde redondeado
+      clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-        side: BorderSide(color: cs.outlineVariant),
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // HEADER con gradiente, ya clipeado por el Card
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [cs.primary.withValues(alpha: .14), cs.surface],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: Column(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // HEADER (Avatar y Estado)
+            Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: cs.primary.withValues(alpha: .16),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: cs.primary.withValues(alpha: .24),
+                // Avatar/Icono del residente
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: cs.primary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    Icons.person_outline,
+                    color: cs.primary,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Nombre y tipo
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        resident.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: tt.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: cs.onSurface,
                         ),
                       ),
-                      alignment: Alignment.center,
-                      child: Icon(
-                        Icons.person_outline,
-                        color: cs.primary,
-                        size: 22,
+                      const SizedBox(height: 4),
+                      Text(
+                        resident.residentTypeName.isEmpty
+                            ? 'Sin tipo definido'
+                            : resident.residentTypeName,
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                    const Spacer(),
-                    _StatusChip(
-                      label: labelChip,
-                      background: bgChip,
-                      foreground: fgChip,
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 14),
-                Text(
-                  resident.name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  resident.residentTypeName.isEmpty
-                      ? 'Sin tipo definido'
-                      : resident.residentTypeName,
-                  style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                // Chip de Estado
+                _StatusChip(
+                  label: labelChip,
+                  background: bgChip,
+                  foreground: fgChip,
                 ),
               ],
             ),
-          ),
+            const SizedBox(height: 12),
 
-          // BODY (sin Expanded/Spacer para no pelear con la altura del grid)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _DetailLine(
-                  icon: Icons.meeting_room_outlined,
-                  label: 'Unidad',
-                  value: "#${resident.propertyUnitNumber}",
-                  // resident.propertyUnitNumber.isEmpty
-                  //     ? 'Sin unidad asignada'
-                  //     : '#${resident.propertyUnitNumber}',
-                ),
-                _DetailLine(
-                  icon: Icons.alternate_email_outlined,
-                  label: 'Correo',
-                  value: resident.email.isEmpty ? 'Sin correo' : resident.email,
-                ),
-                _DetailLine(
-                  icon: Icons.phone_outlined,
-                  label: 'Teléfono',
-                  value: resident.phone.isEmpty
-                      ? 'Sin teléfono'
-                      : resident.phone,
-                ),
-                const SizedBox(height: 8),
-                _MainResidenceIndicator(isMain: resident.isMainResident),
-                const SizedBox(height: 10),
-                _CardActions(
-                  onView: () => _showActionFeedback(
-                    'Ver residente',
-                    'Funcionalidad disponible próximamente.',
-                  ),
-                  onEdit: () => _showActionFeedback(
-                    'Editar residente',
-                    'Funcionalidad disponible próximamente.',
-                  ),
-                  onDelete: () => _showActionFeedback(
-                    'Eliminar residente',
-                    'Contacta al administrador para continuar con la acción.',
-                  ),
-                ),
-              ],
+            // DETALLES DE CONTACTO (Estilo Feed/Post)
+            DetailLine(
+              icon: Icons.meeting_room_outlined,
+              label: 'Unidad',
+              value: resident.propertyUnitNumber.isEmpty
+                  ? 'Sin asignar'
+                  : "#${resident.propertyUnitNumber}",
+              isCompact: true,
+            ),
+            DetailLine(
+              icon: Icons.alternate_email_outlined,
+              label: 'Correo',
+              value: resident.email.isEmpty ? 'Sin correo' : resident.email,
+              isCompact: true,
+            ),
+            DetailLine(
+              icon: Icons.phone_outlined,
+              label: 'Teléfono',
+              value: resident.phone.isEmpty ? 'Sin teléfono' : resident.phone,
+              isCompact: true,
+            ),
+
+            // INDICADOR PRINCIPAL Y ACCIONES
+            const SizedBox(height: 8),
+            _MainResidenceIndicator(isMain: resident.isMainResident),
+            const SizedBox(height: 12),
+            _CardActions(
+              viewLabel: 'Ver perfil',
+              onView: () => _showActionFeedback(
+                'Ver residente',
+                'Funcionalidad disponible próximamente.',
+              ),
+              onEdit: () => _showActionFeedback(
+                'Editar residente',
+                'Funcionalidad disponible próximamente.',
+              ),
+              onDelete: () => _showActionFeedback(
+                'Eliminar residente',
+                'Contacta al administrador para continuar con la acción.',
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class DetailLine extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final bool isCompact;
+
+  const DetailLine({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.isCompact = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: isCompact ? 3.0 : 6.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            size: 18,
+            color: cs.onSurfaceVariant.withValues(alpha: 0.8),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            '$label:',
+            style: tt.bodySmall?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: cs.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: tt.bodySmall?.copyWith(
+                color: cs.onSurface,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
@@ -548,20 +802,22 @@ class _MainResidenceIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final valueStyle = tt.bodyMedium?.copyWith(
+    final valueStyle = tt.bodySmall?.copyWith(
       fontWeight: FontWeight.w800,
-      color: isMain ? Colors.green : cs.error,
+      color: isMain ? Colors.green.shade700 : cs.onSurfaceVariant,
     );
+    final iconColor = isMain ? Colors.green.shade400 : cs.onSurfaceVariant;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Icon(Icons.house_outlined, size: 18, color: cs.onSurfaceVariant),
+        Icon(Icons.house_outlined, size: 18, color: iconColor),
         const SizedBox(width: 8),
         Text(
-          'Casa principal:',
-          style: tt.bodyMedium?.copyWith(
+          'Residencia principal:',
+          style: tt.bodySmall?.copyWith(
             color: cs.onSurfaceVariant,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(width: 4),

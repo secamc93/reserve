@@ -19,15 +19,34 @@ class HorizontalPropertiesView extends GetView<HorizontalPropertiesController> {
     final cs = theme.colorScheme;
 
     return Scaffold(
+      backgroundColor: cs.surface,
       appBar: AppBar(
-        title: const Text('Propiedades horizontales'),
+        backgroundColor: cs.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
         centerTitle: true,
+        title: Text(
+          'RUPÜ Propiedades',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+            color: cs.onSurface,
+          ),
+        ),
+        // ✅ CAMBIO 1: Se eliminaron las actions (el botón de arriba)
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Divider(
+            height: 1,
+            color: cs.outlineVariant.withValues(alpha: 0.3),
+          ),
+        ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton: FloatingActionButton.extended(
+      // ✅ CAMBIO 2: Se agregó el FloatingActionButton
+      floatingActionButton: FloatingActionButton(
         onPressed: () => _showCreatePropertyDialog(context),
-        icon: const Icon(Icons.add_home_work_outlined),
-        label: const Text('Agregar propiedad'),
+        backgroundColor: cs.primary,
+        child: Icon(Icons.add, color: cs.onPrimary),
       ),
       body: SafeArea(
         child: Obx(() {
@@ -36,49 +55,41 @@ class HorizontalPropertiesView extends GetView<HorizontalPropertiesController> {
           final error = controller.errorMessage.value;
 
           if (loading) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: CircularProgressIndicator(strokeWidth: 2),
+            );
           }
 
           return RefreshIndicator(
+            color: cs.primary,
+            backgroundColor: cs.surface,
             onRefresh: controller.fetchProperties,
             child: LayoutBuilder(
               builder: (context, c) {
                 final width = c.maxWidth;
 
-                // Grid responsivo
                 final cross = width >= 1200
-                    ? 4
-                    : width >= 900
                     ? 3
-                    : width >= 600
+                    : width >= 800
                     ? 2
                     : 1;
 
-                // Clearance para que el FAB no tape
-                const fabClearance = 88.0;
-
-                // Ratio de tarjeta: un poco más alta en 1 columna
-                final cardAspect = cross == 1
-                    ? 0.84
-                    : (cross == 2 ? 0.9 : 0.92);
+                // AJUSTE UX: Ratio ajustado para imágenes 4:3
+                final cardAspect = cross == 1 ? 0.75 : 0.70;
 
                 return CustomScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   slivers: [
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(24, 10, 24, 12),
-                      sliver: SliverToBoxAdapter(
-                        child: _Header(
-                          onCreate: () => _showCreatePropertyDialog(context),
-                          total: controller.total.value,
-                          trailingProgress: controller.isLoading.value,
-                        ),
+                    SliverToBoxAdapter(
+                      child: _Header(
+                        total: controller.total.value,
+                        isLoading: controller.isLoading.value,
                       ),
                     ),
 
                     if (error != null) ...[
                       SliverPadding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        padding: const EdgeInsets.all(16),
                         sliver: SliverToBoxAdapter(
                           child: _InlineError(
                             message: error,
@@ -92,37 +103,33 @@ class HorizontalPropertiesView extends GetView<HorizontalPropertiesController> {
                       const SliverFillRemaining(
                         hasScrollBody: false,
                         child: _EmptyState(
-                          icon: Icons.apartment_outlined,
-                          title: 'No se encontraron propiedades horizontales.',
+                          icon: Icons.grid_off,
+                          title: 'Sin publicaciones aún',
                           subtitle:
-                              'Crea una nueva o actualiza para intentarlo de nuevo.',
+                              'Cuando crees propiedades, aparecerán aquí.',
                         ),
                       ),
                     ] else ...[
                       SliverPadding(
-                        padding: const EdgeInsets.fromLTRB(
-                          24,
-                          8,
-                          24,
-                          fabClearance,
-                        ),
+                        padding: cross == 1
+                            ? const EdgeInsets.only(bottom: 80)
+                            : const EdgeInsets.fromLTRB(16, 0, 16, 80),
                         sliver: SliverGrid(
                           gridDelegate:
                               SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: cross,
-                                mainAxisSpacing: 16,
-                                crossAxisSpacing: 16,
-                                // ✅ Sin altura fija: evita huecos grandes
+                                mainAxisSpacing: 24,
+                                crossAxisSpacing: 24,
                                 childAspectRatio: cardAspect,
                               ),
                           delegate: SliverChildBuilderDelegate((context, i) {
                             final p = controller.properties[i];
-                            return _PropertyCard(
+                            return _Card(
                               id: p.id,
                               name: p.name,
                               address: (p.address?.isNotEmpty ?? false)
                                   ? p.address!
-                                  : 'Sin dirección',
+                                  : 'Sin ubicación',
                               units: p.totalUnits ?? 0,
                               isActive: p.isActive,
                               createdAt: controller.formatDate(p.createdAt),
@@ -139,6 +146,7 @@ class HorizontalPropertiesView extends GetView<HorizontalPropertiesController> {
                                     >(
                                       context: context,
                                       isScrollControlled: true,
+                                      useSafeArea: true,
                                       builder: (_) =>
                                           HorizontalPropertyUpdateSheet(
                                             propertyId: p.id,
@@ -146,68 +154,61 @@ class HorizontalPropertiesView extends GetView<HorizontalPropertiesController> {
                                     );
 
                                 if (!context.mounted || result == null) return;
+                                if (result.success)
+                                  controller.fetchProperties();
 
-                                final msg =
-                                    result.message ??
-                                    (result.success
-                                        ? 'Propiedad horizontal actualizada correctamente.'
-                                        : 'No se pudo actualizar la propiedad.');
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text(msg),
-                                    backgroundColor: result.success
-                                        ? null
-                                        : cs.error,
+                                    content: Text(
+                                      result.message ?? 'Actualizado',
+                                    ),
+                                    behavior: SnackBarBehavior.floating,
                                   ),
                                 );
-                                if (result.success) {
-                                  controller.fetchProperties();
-                                }
                               },
                               onDelete: () async {
                                 if (controller.isDeleting(p.id)) return;
-                                final ok = await showDialog<bool>(
+                                final ok = await showModalBottomSheet<bool>(
                                   context: context,
-                                  builder: (dctx) => AlertDialog(
-                                    title: const Text('Confirmar eliminación'),
-                                    content: Text(
-                                      '¿Eliminar "${p.name}"? Esta acción no se puede deshacer.',
+                                  builder: (ctx) => SafeArea(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        ListTile(
+                                          leading: const Icon(
+                                            Icons.delete_forever,
+                                            color: Colors.red,
+                                          ),
+                                          title: const Text(
+                                            'Eliminar propiedad',
+                                            style: TextStyle(color: Colors.red),
+                                          ),
+                                          onTap: () => Navigator.pop(ctx, true),
+                                        ),
+                                        ListTile(
+                                          leading: Icon(
+                                            Icons.close,
+                                            color: cs.onSurface,
+                                          ),
+                                          title: Text(
+                                            'Cancelar',
+                                            style: TextStyle(
+                                              color: cs.onSurface,
+                                            ),
+                                          ),
+                                          onTap: () =>
+                                              Navigator.pop(ctx, false),
+                                        ),
+                                      ],
                                     ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () =>
-                                            Navigator.of(dctx).pop(false),
-                                        child: const Text('Cancelar'),
-                                      ),
-                                      FilledButton(
-                                        onPressed: () =>
-                                            Navigator.of(dctx).pop(true),
-                                        child: const Text('Eliminar'),
-                                      ),
-                                    ],
                                   ),
                                 );
+
                                 if (ok != true) return;
                                 final res = await controller.deleteProperty(
                                   id: p.id,
                                 );
-                                if (!context.mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      res.message ??
-                                          (res.success
-                                              ? 'Propiedad horizontal eliminada exitosamente.'
-                                              : 'No se pudo eliminar la propiedad horizontal.'),
-                                    ),
-                                    backgroundColor: res.success
-                                        ? null
-                                        : cs.error,
-                                  ),
-                                );
-                                if (res.success) {
-                                  controller.fetchProperties();
-                                }
+                                if (res.success) controller.fetchProperties();
                               },
                               isDeleting: controller.isDeleting(p.id),
                             );
@@ -227,107 +228,113 @@ class HorizontalPropertiesView extends GetView<HorizontalPropertiesController> {
 
   Future<void> _showCreatePropertyDialog(BuildContext context) async {
     controller.resetCreateForm();
+    final cs = Theme.of(context).colorScheme;
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (dialogCtx) {
-        final dialogTheme = Theme.of(dialogCtx);
         return Obx(() {
           final isCreating = controller.isCreating.value;
           return AlertDialog(
-            title: const Text('Crear nueva propiedad horizontal'),
-            content: Form(
-              key: controller.createFormKey,
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Información básica',
-                      style: dialogTheme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        height: 1.15,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: controller.createNameCtrl,
-                      textCapitalization: TextCapitalization.words,
-                      decoration: const InputDecoration(
-                        labelText: 'Nombre *',
-                        hintText: 'Ingresa el nombre de la propiedad',
-                      ),
-                      validator: (v) => (v == null || v.trim().isEmpty)
-                          ? 'El nombre es obligatorio'
-                          : null,
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: controller.createAddressCtrl,
-                      textCapitalization: TextCapitalization.sentences,
-                      decoration: const InputDecoration(
-                        labelText: 'Dirección *',
-                        hintText: 'Ingresa la dirección de la propiedad',
-                      ),
-                      validator: (v) => (v == null || v.trim().isEmpty)
-                          ? 'La dirección es obligatoria'
-                          : null,
-                    ),
-                  ],
-                ),
+            elevation: 0,
+            backgroundColor: cs.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Text(
+              'Nueva Publicación',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: cs.onSurface,
               ),
             ),
+            content: Form(
+              key: controller.createFormKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: controller.createNameCtrl,
+                    textCapitalization: TextCapitalization.words,
+                    style: TextStyle(color: cs.onSurface),
+                    decoration: InputDecoration(
+                      hintText: 'Nombre de la propiedad...',
+                      hintStyle: TextStyle(color: cs.onSurfaceVariant),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
+                      ),
+                      filled: true,
+                      fillColor: cs.surfaceContainerHighest,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 14,
+                      ),
+                    ),
+                    validator: (v) =>
+                        (v == null || v.trim().isEmpty) ? 'Requerido' : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: controller.createAddressCtrl,
+                    textCapitalization: TextCapitalization.sentences,
+                    style: TextStyle(color: cs.onSurface),
+                    decoration: InputDecoration(
+                      hintText: 'Ubicación...',
+                      hintStyle: TextStyle(color: cs.onSurfaceVariant),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
+                      ),
+                      filled: true,
+                      fillColor: cs.surfaceContainerHighest,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 14,
+                      ),
+                    ),
+                    validator: (v) =>
+                        (v == null || v.trim().isEmpty) ? 'Requerido' : null,
+                  ),
+                ],
+              ),
+            ),
+            actionsAlignment: MainAxisAlignment.spaceEvenly,
             actions: [
               TextButton(
                 onPressed: isCreating
                     ? null
-                    : () {
-                        controller.resetCreateForm();
-                        Navigator.of(dialogCtx).pop();
-                      },
-                child: const Text('Cancelar'),
+                    : () => Navigator.of(dialogCtx).pop(),
+                child: Text('Cancelar', style: TextStyle(color: cs.onSurface)),
               ),
-              FilledButton(
+              TextButton(
                 onPressed: isCreating
                     ? null
                     : () async {
                         FocusScope.of(dialogCtx).unfocus();
                         final result = await controller.createProperty();
-                        final messenger = ScaffoldMessenger.of(context);
                         if (result.success) {
                           Navigator.of(dialogCtx).pop();
-                          messenger.showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                result.message ??
-                                    'Propiedad horizontal creada exitosamente.',
-                              ),
-                            ),
-                          );
                           controller.fetchProperties();
-                        } else {
-                          messenger.showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                (result.message?.isNotEmpty ?? false)
-                                    ? result.message!
-                                    : 'No se pudo crear la propiedad horizontal.',
-                              ),
-                              backgroundColor: Theme.of(
-                                context,
-                              ).colorScheme.error,
-                            ),
-                          );
                         }
                       },
                 child: isCreating
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                    ? SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: cs.primary,
+                        ),
                       )
-                    : const Text('Crear propiedad'),
+                    : Text(
+                        'Compartir',
+                        style: TextStyle(
+                          color: cs.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
               ),
             ],
           );
@@ -338,65 +345,79 @@ class HorizontalPropertiesView extends GetView<HorizontalPropertiesController> {
 }
 
 class _Header extends StatelessWidget {
-  const _Header({
-    required this.onCreate,
-    required this.total,
-    required this.trailingProgress,
-  });
-
-  final VoidCallback onCreate;
+  const _Header({required this.total, required this.isLoading});
   final int total;
-  final bool trailingProgress;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Gestión de propiedades Horizontales',
-          style: tt.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w800,
-            height: 1.1,
-          ),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-        const SizedBox(height: 6),
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                'Propiedades horizontales: $total',
-                style: tt.titleMedium?.copyWith(
-                  color: cs.onSurfaceVariant,
-                  fontWeight: FontWeight.w600,
-                  height: 1.15,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(2.5),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: cs.primary, width: 2),
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                color: cs.surface,
+                shape: BoxShape.circle,
+              ),
+              child: CircleAvatar(
+                radius: 28,
+                backgroundColor: cs.surfaceContainerHighest,
+                child: Icon(Icons.apartment, color: cs.primary),
               ),
             ),
-            if (trailingProgress) ...[
-              const SizedBox(width: 12),
-              const SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            ],
-          ],
-        ),
-      ],
+          ),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "RuPu Admin",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: cs.onSurface,
+                  ),
+                ),
+                if (isLoading)
+                  Text(
+                    "Sincronizando...",
+                    style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12),
+                  )
+                else
+                  RichText(
+                    text: TextSpan(
+                      style: TextStyle(color: cs.onSurface, fontSize: 14),
+                      children: [
+                        const TextSpan(text: 'Gestionando '),
+                        TextSpan(
+                          text: '$total propiedades',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const TextSpan(text: ' horizontales.'),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
-class _PropertyCard extends StatelessWidget {
-  const _PropertyCard({
+class _Card extends StatelessWidget {
+  const _Card({
     required this.id,
     required this.name,
     required this.address,
@@ -415,7 +436,7 @@ class _PropertyCard extends StatelessWidget {
   final String address;
   final int units;
   final bool isActive;
-  final String createdAt; // texto ya formateado
+  final String createdAt;
   final String? imageUrl;
   final VoidCallback onView;
   final VoidCallback onEdit;
@@ -425,297 +446,179 @@ class _PropertyCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final trimmedUrl = imageUrl?.trim();
-    final hasImage = trimmedUrl != null && trimmedUrl.isNotEmpty;
+    final hasImage = imageUrl != null && imageUrl!.trim().isNotEmpty;
 
-    final (bgChip, fgChip, labelChip) = isActive
-        ? (cs.secondaryContainer, cs.onSecondaryContainer, 'ACTIVO')
-        : (cs.errorContainer, cs.onErrorContainer, 'INACTIVO');
-
-    return DecoratedBox(
+    return Container(
       decoration: BoxDecoration(
         color: cs.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: cs.outlineVariant),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: .06),
-            blurRadius: 18,
-            offset: const Offset(0, 10),
-          ),
-        ],
+        border: Border(
+          bottom: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.3)),
+        ),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: LayoutBuilder(
-          builder: (ctx, constraints) {
-            final w = constraints.maxWidth;
-            final desired = w * 7 / 16;
-            // final mediaH = desired.clamp(140.0, 180.0);
-
-            // Clamp local para que todo quepa
-            final mq = MediaQuery.of(context);
-            final clampedMQ = mq.copyWith(
-              textScaler: mq.textScaler.clamp(maxScaleFactor: 1.2),
-            );
-
-            return MediaQuery(
-              data: clampedMQ,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header visual
-                  SizedBox(
-                    height: desired,
-                    width: double.infinity,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        if (!hasImage)
-                          Image.asset(
-                            'assets/images/logorufu.png',
-                            fit: BoxFit.cover,
-                          )
-                        else
-                          Image.network(
-                            trimmedUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Image.asset(
-                              'assets/images/logorufu.png',
-                              fit: BoxFit.cover,
-                            ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Post Header
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 16,
+                  backgroundColor: cs.surfaceContainerHighest,
+                  backgroundImage: hasImage ? NetworkImage(imageUrl!) : null,
+                  child: !hasImage
+                      ? Text(
+                          name.substring(0, 1).toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: cs.primary,
                           ),
-                        Positioned.fill(
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.bottomCenter,
-                                end: Alignment.center,
-                                colors: [
-                                  Colors.black.withValues(alpha: .22),
-                                  Colors.transparent,
-                                ],
-                              ),
-                            ),
-                          ),
+                        )
+                      : null,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: cs.onSurface,
                         ),
-                        // Positioned(
-                        //   right: 4,
-                        //   top: 4,
-                        //   child: IconButton.filledTonal(
-                        //     onPressed: onView,
-                        //     icon: const Icon(Icons.more_horiz),
-                        //     tooltip: 'Abrir',
-                        //   ),
-                        // ),
-                      ],
-                    ),
-                  ),
-
-                  // Cuerpo (ocupa el resto) y acciones al fondo
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(14, 4, 14, 8),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Estado + fecha
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 4,
-                                ),
-                                decoration: ShapeDecoration(
-                                  color: bgChip,
-                                  shape: StadiumBorder(
-                                    side: BorderSide(
-                                      color: fgChip.withValues(alpha: .20),
-                                    ),
-                                  ),
-                                ),
-                                child: Text(
-                                  labelChip,
-                                  style: tt.labelSmall?.copyWith(
-                                    color: fgChip,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: .2,
-                                    // height: 1.0,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              const Icon(Icons.event_outlined, size: 16),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  'Creada $createdAt',
-                                  style: tt.labelMedium?.copyWith(
-                                    color: cs.onSurfaceVariant,
-                                    fontWeight: FontWeight.w700,
-                                    // height: 1.0,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-
-                          // Título
-                          Text(
-                            name,
-                            style: tt.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              // height: 1.12,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 8),
-
-                          // Info
-                          _InfoLine(icon: Icons.place_outlined, text: address),
-                          const SizedBox(height: 4),
-                          _InfoLine(
-                            icon: Icons.view_module_outlined,
-                            text: 'Unidades: $units',
-                          ),
-
-                          // Empuja las acciones hacia abajo
-                          const Spacer(),
-
-                          // Botones minimalistas en el fondo
-                          _MiniActions(
-                            isDeleting: isDeleting,
-                            onView: onView,
-                            onEdit: onEdit,
-                            onDelete: onDelete,
-                          ),
-                        ],
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
+                      if (address.isNotEmpty)
+                        Text(
+                          address,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: cs.onSurfaceVariant,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: isDeleting
+                      ? SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: cs.onSurface,
+                          ),
+                        )
+                      : Icon(Icons.more_vert, color: cs.onSurface),
+                  onPressed: onDelete,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
+            ),
+          ),
+
+          // Image Area (4:3 Ratio + BoxFit.fill)
+          AspectRatio(
+            aspectRatio: 4 / 3,
+            child: GestureDetector(
+              onTap: onView,
+              child: Container(
+                color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+                width: double.infinity,
+                child: hasImage
+                    ? Image.network(
+                        imageUrl!,
+                        fit: BoxFit.fill, // Mantenemos tu preferencia
+                        errorBuilder: (_, __, ___) => _PlaceholderImage(),
+                      )
+                    : _PlaceholderImage(),
+              ),
+            ),
+          ),
+
+          // Action Bar
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(
+              children: [
+                IconButton(
+                  onPressed: onEdit,
+                  icon: const Icon(Icons.edit_outlined, size: 24),
+                  tooltip: 'Editar',
+                ),
+                const SizedBox(width: 16),
+                IconButton(
+                  onPressed: onView,
+                  icon: const Icon(Icons.remove_red_eye_outlined, size: 24),
+                  tooltip: 'Ver detalle',
+                ),
+                const Spacer(),
+              ],
+            ),
+          ),
+
+          // Status
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Text(
+              isActive ? 'Estado: Activo' : 'Estado: Inactivo',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+                color: cs.onSurface,
+              ),
+            ),
+          ),
+
+          // Caption
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
+            child: RichText(
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              text: TextSpan(
+                style: TextStyle(color: cs.onSurface, fontSize: 13),
+                children: [
+                  TextSpan(
+                    text: 'rupu_admin ',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  TextSpan(
+                    text: '${name.trim()}. $units unidades en esta propiedad.',
                   ),
                 ],
               ),
-            );
-          },
-        ),
+            ),
+          ),
+
+          // Date
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 2, 12, 12),
+            child: Text(
+              createdAt.toUpperCase(),
+              style: TextStyle(
+                color: cs.onSurfaceVariant,
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _MiniActions extends StatelessWidget {
-  const _MiniActions({
-    required this.isDeleting,
-    required this.onView,
-    required this.onEdit,
-    required this.onDelete,
-  });
-
-  final bool isDeleting;
-  final VoidCallback onView;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
-
-  ButtonStyle _tinyTonal(BuildContext context) {
-    return FilledButton.styleFrom(
-      minimumSize: const Size(0, 36),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      shape: const StadiumBorder(),
-      visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
-    );
-  }
-
-  ButtonStyle _tinyFilled(BuildContext context) {
-    return FilledButton.styleFrom(
-      minimumSize: const Size(0, 36),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      shape: const StadiumBorder(),
-      visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
-    );
-  }
-
-  ButtonStyle _tinyTextDanger(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return TextButton.styleFrom(
-      minimumSize: const Size(0, 36),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      foregroundColor: cs.error,
-      visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
-    );
-  }
-
+class _PlaceholderImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        FilledButton.tonalIcon(
-          style: _tinyTonal(context),
-          onPressed: onView,
-          icon: const Icon(Icons.visibility_outlined, size: 18),
-          label: const Text('Ver', overflow: TextOverflow.ellipsis),
-        ),
-        FilledButton.icon(
-          style: _tinyFilled(context),
-          onPressed: onEdit,
-          icon: const Icon(Icons.edit_outlined, size: 18),
-          label: const Text('Editar', overflow: TextOverflow.ellipsis),
-        ),
-        TextButton.icon(
-          style: _tinyTextDanger(context),
-          onPressed: isDeleting ? null : onDelete,
-          icon: isDeleting
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.delete_outline, size: 18),
-          label: const Text('Eliminar', overflow: TextOverflow.ellipsis),
-        ),
-      ],
-    );
-  }
-}
-
-class _InfoLine extends StatelessWidget {
-  const _InfoLine({required this.icon, required this.text});
-  final IconData icon;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: cs.onSurfaceVariant),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            style: tt.bodyMedium?.copyWith(
-              color: cs.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
-              height: 1.15,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            softWrap: false,
-          ),
-        ),
-      ],
-    );
+    return Center(child: Image.asset('assets/images/logorufu.png', width: 80));
   }
 }
 
@@ -727,32 +630,22 @@ class _InlineError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: cs.errorContainer,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: cs.error.withValues(alpha: 25)),
-      ),
-      child: Row(
+    return Center(
+      child: Column(
         children: [
-          Icon(Icons.error_outline, color: cs.onErrorContainer),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              message,
-              style: tt.bodyMedium?.copyWith(
-                color: cs.onErrorContainer,
-                height: 1.2,
-              ),
-            ),
+          Icon(Icons.error_outline, size: 40, color: cs.error),
+          const SizedBox(height: 8),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: cs.onSurface),
           ),
-          TextButton.icon(
+          TextButton(
             onPressed: onRetry,
-            icon: const Icon(Icons.refresh),
-            label: const Text('Reintentar'),
+            child: Text(
+              'Toca para reintentar',
+              style: TextStyle(color: cs.primary),
+            ),
           ),
         ],
       ),
@@ -773,31 +666,34 @@ class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(40),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 64, color: cs.onSurfaceVariant),
-            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: cs.outline, width: 1.5),
+              ),
+              child: Icon(icon, size: 40, color: cs.onSurface),
+            ),
+            const SizedBox(height: 16),
             Text(
               title,
-              style: tt.titleMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-                height: 1.15,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: cs.onSurface,
               ),
-              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Text(
               subtitle,
               textAlign: TextAlign.center,
-              style: tt.bodyMedium?.copyWith(
-                color: cs.onSurfaceVariant,
-                height: 1.2,
-              ),
+              style: TextStyle(color: cs.onSurfaceVariant),
             ),
           ],
         ),

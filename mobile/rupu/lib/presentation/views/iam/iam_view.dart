@@ -61,56 +61,123 @@ class _IamViewState extends State<IamView> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final tt = theme.textTheme;
+
     return Scaffold(
+      backgroundColor: cs.surface,
       appBar: AppBar(
-        title: const Text('IAM'),
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          tabs: _tabs
-              .map((tab) => Tab(icon: Icon(tab.icon), text: tab.label))
-              .toList(growable: false),
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        backgroundColor: Colors.transparent,
+        toolbarHeight: 68,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [cs.primary, cs.secondary.withValues(alpha: 0.85)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        titleSpacing: 16,
+        title: Row(
+          children: [
+            Icon(Icons.shield_outlined, size: 26, color: Colors.white),
+            const SizedBox(width: 8),
+            Text(
+              'IAM',
+              style: tt.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+                letterSpacing: 0.4,
+              ),
+            ),
+          ],
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(60),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: TabBar(
+              controller: _tabController,
+              isScrollable: true,
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+              labelPadding: const EdgeInsets.symmetric(horizontal: 6),
+              indicator: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              indicatorSize: TabBarIndicatorSize.label,
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.white.withValues(alpha: 0.8),
+              labelStyle: tt.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+              unselectedLabelStyle: tt.labelLarge,
+              tabs: _tabs
+                  .map(
+                    (tab) => Tab(
+                      iconMargin: const EdgeInsets.only(bottom: 2),
+                      icon: Icon(tab.icon, size: 20),
+                      text: tab.label,
+                    ),
+                  )
+                  .toList(growable: false),
+            ),
+          ),
         ),
       ),
       floatingActionButton: _buildFloatingActionButton(context),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _IamTabPage(
-            child: SafeArea(
-              top: false,
-              bottom: false,
-              child: _IamUsersTab(pageIndex: widget.pageIndex),
-            ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              cs.surface,
+              cs.surfaceContainerHighest.withValues(alpha: 0.25),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
-          const _IamTabPage(
-            child: SafeArea(
-              top: false,
-              bottom: false,
-              child: RolesPermissionsStandaloneTab(
-                tab: RolesPermissionsTab.roles,
+        ),
+        child: TabBarView(
+          controller: _tabController,
+          children: [
+            _IamTabPage(
+              child: SafeArea(
+                top: false,
+                bottom: false,
+                child: _IamUsersTab(pageIndex: widget.pageIndex),
               ),
             ),
-          ),
-          const _IamTabPage(
-            child: SafeArea(
-              top: false,
-              bottom: false,
-              child: RolesPermissionsStandaloneTab(
-                tab: RolesPermissionsTab.permissions,
+            const _IamTabPage(
+              child: SafeArea(
+                top: false,
+                bottom: false,
+                child: RolesPermissionsStandaloneTab(
+                  tab: RolesPermissionsTab.roles,
+                ),
               ),
             ),
-          ),
-          const _IamTabPage(
-            child: SafeArea(top: false, child: _IamResourcesTab()),
-          ),
-          const _IamTabPage(
-            child: SafeArea(top: false, child: _IamBusinessTypesTab()),
-          ),
-          const _IamTabPage(
-            child: SafeArea(top: false, child: _IamBusinessesTab()),
-          ),
-        ],
+            const _IamTabPage(
+              child: SafeArea(
+                top: false,
+                bottom: false,
+                child: RolesPermissionsStandaloneTab(
+                  tab: RolesPermissionsTab.permissions,
+                ),
+              ),
+            ),
+            const _IamTabPage(
+              child: SafeArea(top: false, child: _IamResourcesTab()),
+            ),
+            const _IamTabPage(
+              child: SafeArea(top: false, child: _IamBusinessTypesTab()),
+            ),
+            const _IamTabPage(
+              child: SafeArea(top: false, child: _IamBusinessesTab()),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -123,31 +190,35 @@ class _IamViewState extends State<IamView> with SingleTickerProviderStateMixin {
         return _IamUsersFab(pageIndex: widget.pageIndex);
       case 1:
         if (!Get.isRegistered<RolesPermissionsController>()) return null;
-        return FloatingActionButton(
+        return FloatingActionButton.extended(
           onPressed: () => showRoleFormDialog(context),
           tooltip: 'Crear rol',
-          child: const Icon(Icons.add),
+          icon: const Icon(Icons.add),
+          label: const Text('Nuevo rol'),
         );
       case 2:
         if (!Get.isRegistered<RolesPermissionsController>()) return null;
-        return FloatingActionButton(
+        return FloatingActionButton.extended(
           onPressed: () => showPermissionFormDialog(context),
           tooltip: 'Crear permiso',
-          child: const Icon(Icons.add),
+          icon: const Icon(Icons.add),
+          label: const Text('Nuevo permiso'),
         );
       case 3:
         if (!Get.isRegistered<IamResourcesController>()) return null;
-        return FloatingActionButton(
+        return FloatingActionButton.extended(
           onPressed: () => showResourceFormDialog(context),
           tooltip: 'Crear recurso',
-          child: const Icon(Icons.add),
+          icon: const Icon(Icons.add),
+          label: const Text('Nuevo recurso'),
         );
       case 4:
         if (!Get.isRegistered<IamBusinessTypesController>()) return null;
-        return FloatingActionButton(
+        return FloatingActionButton.extended(
           onPressed: () => showBusinessTypeFormDialog(context),
           tooltip: 'Crear tipo de negocio',
-          child: const Icon(Icons.add_business),
+          icon: const Icon(Icons.add_business),
+          label: const Text('Nuevo tipo'),
         );
       default:
         return null;
@@ -170,7 +241,7 @@ class _IamUsersFab extends StatelessWidget {
       if (!usersController.canCreate) {
         return const SizedBox.shrink();
       }
-      return FloatingActionButton(
+      return FloatingActionButton.extended(
         onPressed: () async {
           final result = await GoRouter.of(context).pushNamed(
             CreateUserView.name,
@@ -181,7 +252,8 @@ class _IamUsersFab extends StatelessWidget {
             await iamUsersController?.fetchUsers();
           }
         },
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.person_add_alt_1_outlined),
+        label: const Text('Nuevo usuario'),
       );
     });
   }
@@ -241,7 +313,9 @@ class _IamUsersTab extends GetView<IamUsersController> {
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final tt = theme.textTheme;
+    final cs = theme.colorScheme;
 
     return Obx(() {
       final isLoading = controller.isLoading.value;
@@ -274,47 +348,76 @@ class _IamUsersTab extends GetView<IamUsersController> {
           },
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
             children: [
+              // Header estilo sección
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Usuarios',
+                    style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                  if (isLoading)
+                    const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Gestiona las personas que tienen acceso a tu espacio.',
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              ),
+              const SizedBox(height: 16),
+
+              // Search bar tipo Instagram
               TextField(
                 controller: controller.searchCtrl,
                 onChanged: controller.setSearch,
                 decoration: InputDecoration(
-                  labelText: 'Buscar',
-                  hintText: 'Nombre, correo, teléfono…',
-                  prefixIcon: const Icon(Icons.search),
+                  hintText: 'Buscar por nombre, correo o teléfono',
+                  prefixIcon: Icon(Icons.search, color: cs.onSurfaceVariant),
+                  filled: true,
+                  fillColor: cs.surfaceContainerHighest.withValues(alpha: 0.6),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 0,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(999),
+                    borderSide: BorderSide.none,
+                  ),
                   suffixIcon: controller.searchText.value.isEmpty
                       ? null
                       : IconButton(
-                          icon: const Icon(Icons.clear),
+                          icon: const Icon(Icons.close),
                           onPressed: controller.clearSearch,
                         ),
                 ),
               ),
+
               const SizedBox(height: 12),
               Row(
                 children: [
                   Expanded(
                     child: Text(
                       'Usuarios encontrados: $totalCount',
-                      style: tt.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
                   ),
-                  if (isLoading)
-                    const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
                 ],
               ),
+
               if (error != null) ...[
                 const SizedBox(height: 12),
                 _IamErrorCard(message: error, onRetry: controller.refreshData),
               ],
+
               const SizedBox(height: 12),
+
               if (users.isEmpty && !isLoading)
                 const _IamEmptyState(message: 'No se encontraron usuarios.')
               else
@@ -406,7 +509,9 @@ class _IamResourcesTab extends GetView<IamResourcesController> {
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final tt = theme.textTheme;
+    final cs = theme.colorScheme;
 
     return Obx(() {
       final isLoading = controller.isLoading.value;
@@ -421,18 +526,48 @@ class _IamResourcesTab extends GetView<IamResourcesController> {
         onRefresh: controller.fetchResources,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
           children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Recursos',
+                  style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                ),
+                if (isLoading)
+                  const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Módulos y funcionalidades disponibles en tu espacio.',
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(height: 16),
             TextField(
               onChanged: controller.setSearch,
               decoration: InputDecoration(
-                labelText: 'Buscar recurso',
-                hintText: 'Nombre, descripción…',
-                prefixIcon: const Icon(Icons.search),
+                hintText: 'Buscar recurso por nombre o descripción',
+                prefixIcon: Icon(Icons.search, color: cs.onSurfaceVariant),
+                filled: true,
+                fillColor: cs.surfaceContainerHighest.withValues(alpha: 0.6),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 0,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(999),
+                  borderSide: BorderSide.none,
+                ),
                 suffixIcon: controller.searchText.value.isEmpty
                     ? null
                     : IconButton(
-                        icon: const Icon(Icons.clear),
+                        icon: const Icon(Icons.close),
                         onPressed: () => controller.setSearch(''),
                       ),
               ),
@@ -443,17 +578,9 @@ class _IamResourcesTab extends GetView<IamResourcesController> {
                 Expanded(
                   child: Text(
                     'Recursos: ${controller.total.value}',
-                    style: tt.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ),
-                if (isLoading)
-                  const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
               ],
             ),
             if (error != null) ...[
@@ -465,73 +592,98 @@ class _IamResourcesTab extends GetView<IamResourcesController> {
               const _IamEmptyState(message: 'No se encontraron recursos.')
             else
               Card(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
                 clipBehavior: Clip.antiAlias,
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.all(16),
-                  child: DataTable(
-                    columns: const [
-                      DataColumn(label: Text('Nombre')),
-                      DataColumn(label: Text('Descripción')),
-                      DataColumn(label: Text('Tipo de negocio')),
-                      DataColumn(label: Text('Creado')),
-                      DataColumn(label: Text('Actualizado')),
-                      DataColumn(label: Text('Acciones')),
-                    ],
-                    rows: resources.map((resource) {
-                      return DataRow(
-                        cells: [
-                          DataCell(Text(resource.name)),
-                          DataCell(
-                            SizedBox(
-                              width: 280,
-                              child: Text(
-                                resource.description.isEmpty
-                                    ? '-'
-                                    : resource.description,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: cs.surface,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: cs.outlineVariant.withValues(alpha: 0.7),
+                    ),
+                  ),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.all(16),
+                    child: DataTable(
+                      columnSpacing: 24,
+                      headingRowHeight: 44,
+                      dataRowMinHeight: 44,
+                      columns: const [
+                        DataColumn(label: Text('Nombre')),
+                        DataColumn(label: Text('Descripción')),
+                        DataColumn(label: Text('Tipo de negocio')),
+                        DataColumn(label: Text('Creado')),
+                        DataColumn(label: Text('Actualizado')),
+                        DataColumn(label: Text('Acciones')),
+                      ],
+                      rows: resources.map((resource) {
+                        return DataRow(
+                          cells: [
+                            DataCell(
+                              Text(
+                                resource.name,
+                                style: tt.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
-                          ),
-                          DataCell(
-                            Text(
-                              resource.businessTypeName.isEmpty
-                                  ? '-'
-                                  : resource.businessTypeName,
-                            ),
-                          ),
-                          DataCell(
-                            Text(_formatFriendlyDate(resource.createdAt)),
-                          ),
-                          DataCell(
-                            Text(_formatFriendlyDate(resource.updatedAt)),
-                          ),
-                          DataCell(
-                            Row(
-                              children: [
-                                IconButton(
-                                  tooltip: 'Editar',
-                                  icon: const Icon(Icons.edit_outlined),
-                                  onPressed: () => showResourceFormDialog(
-                                    context,
-                                    resource: resource,
-                                  ),
+                            DataCell(
+                              SizedBox(
+                                width: 260,
+                                child: Text(
+                                  resource.description.isEmpty
+                                      ? '-'
+                                      : resource.description,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                IconButton(
-                                  tooltip: 'Eliminar',
-                                  icon: const Icon(Icons.delete_outline),
-                                  onPressed: () => confirmDeleteResourceDialog(
-                                    context,
-                                    resource,
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
-                          ),
-                        ],
-                      );
-                    }).toList(),
+                            DataCell(
+                              Text(
+                                resource.businessTypeName.isEmpty
+                                    ? '-'
+                                    : resource.businessTypeName,
+                              ),
+                            ),
+                            DataCell(
+                              Text(_formatFriendlyDate(resource.createdAt)),
+                            ),
+                            DataCell(
+                              Text(_formatFriendlyDate(resource.updatedAt)),
+                            ),
+                            DataCell(
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    tooltip: 'Editar',
+                                    icon: const Icon(Icons.edit_outlined),
+                                    onPressed: () => showResourceFormDialog(
+                                      context,
+                                      resource: resource,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    tooltip: 'Eliminar',
+                                    icon: const Icon(Icons.delete_outline),
+                                    onPressed: () =>
+                                        confirmDeleteResourceDialog(
+                                          context,
+                                          resource,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        );
+                      }).toList(),
+                    ),
                   ),
                 ),
               ),
@@ -562,6 +714,10 @@ class _IamBusinessTypesTab extends GetView<IamBusinessTypesController> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tt = theme.textTheme;
+    final cs = theme.colorScheme;
+
     return Obx(() {
       final isLoading = controller.isLoading.value;
       final error = controller.errorMessage.value;
@@ -575,17 +731,48 @@ class _IamBusinessTypesTab extends GetView<IamBusinessTypesController> {
         onRefresh: controller.fetchTypes,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
           children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Tipos de negocio',
+                  style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                ),
+                if (isLoading)
+                  const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Agrupa tus espacios por tipo para una mejor organización.',
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(height: 16),
             TextField(
               onChanged: controller.setSearch,
               decoration: InputDecoration(
-                labelText: 'Buscar tipo de negocio',
-                prefixIcon: const Icon(Icons.search),
+                hintText: 'Buscar tipo de negocio',
+                prefixIcon: Icon(Icons.search, color: cs.onSurfaceVariant),
+                filled: true,
+                fillColor: cs.surfaceContainerHighest.withValues(alpha: 0.6),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 0,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(999),
+                  borderSide: BorderSide.none,
+                ),
                 suffixIcon: controller.searchText.value.isEmpty
                     ? null
                     : IconButton(
-                        icon: const Icon(Icons.clear),
+                        icon: const Icon(Icons.close),
                         onPressed: () => controller.setSearch(''),
                       ),
               ),
@@ -601,75 +788,100 @@ class _IamBusinessTypesTab extends GetView<IamBusinessTypesController> {
               )
             else
               Card(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
                 clipBehavior: Clip.antiAlias,
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.all(16),
-                  child: DataTable(
-                    columns: const [
-                      DataColumn(label: Text('Nombre')),
-                      DataColumn(label: Text('Código')),
-                      DataColumn(label: Text('Icono')),
-                      DataColumn(label: Text('Estado')),
-                      DataColumn(label: Text('Creado')),
-                      DataColumn(label: Text('Acciones')),
-                    ],
-                    rows: types
-                        .map(
-                          (type) => DataRow(
-                            cells: [
-                              DataCell(Text(type.name)),
-                              DataCell(Text(type.code)),
-                              DataCell(Text(type.icon)),
-                              DataCell(_IamStatusChip(active: type.isActive)),
-                              DataCell(
-                                Text(_formatFriendlyDate(type.createdAt)),
-                              ),
-                              DataCell(
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      tooltip: 'Editar',
-                                      onPressed: () =>
-                                          showBusinessTypeFormDialog(
-                                            context,
-                                            type: type,
-                                          ),
-                                      icon: const Icon(Icons.edit_outlined),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: cs.surface,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: cs.outlineVariant.withValues(alpha: 0.7),
+                    ),
+                  ),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.all(16),
+                    child: DataTable(
+                      columnSpacing: 24,
+                      headingRowHeight: 44,
+                      dataRowMinHeight: 44,
+                      columns: const [
+                        DataColumn(label: Text('Nombre')),
+                        DataColumn(label: Text('Código')),
+                        DataColumn(label: Text('Icono')),
+                        DataColumn(label: Text('Estado')),
+                        DataColumn(label: Text('Creado')),
+                        DataColumn(label: Text('Acciones')),
+                      ],
+                      rows: types
+                          .map(
+                            (type) => DataRow(
+                              cells: [
+                                DataCell(
+                                  Text(
+                                    type.name,
+                                    style: tt.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
                                     ),
-                                    Obx(() {
-                                      final isDeleting = controller
-                                          .deletingTypeIds
-                                          .contains(type.id);
-                                      return IconButton(
-                                        tooltip: 'Eliminar',
-                                        onPressed: isDeleting
-                                            ? null
-                                            : () =>
-                                                  confirmDeleteBusinessTypeDialog(
-                                                    context,
-                                                    type,
-                                                  ),
-                                        icon: isDeleting
-                                            ? const SizedBox(
-                                                width: 16,
-                                                height: 16,
-                                                child:
-                                                    CircularProgressIndicator(
-                                                      strokeWidth: 2,
-                                                    ),
-                                              )
-                                            : const Icon(Icons.delete_outline),
-                                      );
-                                    }),
-                                  ],
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        )
-                        .toList(),
+                                DataCell(Text(type.code)),
+                                DataCell(Text(type.icon)),
+                                DataCell(_IamStatusChip(active: type.isActive)),
+                                DataCell(
+                                  Text(_formatFriendlyDate(type.createdAt)),
+                                ),
+                                DataCell(
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        tooltip: 'Editar',
+                                        onPressed: () =>
+                                            showBusinessTypeFormDialog(
+                                              context,
+                                              type: type,
+                                            ),
+                                        icon: const Icon(Icons.edit_outlined),
+                                      ),
+                                      Obx(() {
+                                        final isDeleting = controller
+                                            .deletingTypeIds
+                                            .contains(type.id);
+                                        return IconButton(
+                                          tooltip: 'Eliminar',
+                                          onPressed: isDeleting
+                                              ? null
+                                              : () =>
+                                                    confirmDeleteBusinessTypeDialog(
+                                                      context,
+                                                      type,
+                                                    ),
+                                          icon: isDeleting
+                                              ? const SizedBox(
+                                                  width: 16,
+                                                  height: 16,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                      ),
+                                                )
+                                              : const Icon(
+                                                  Icons.delete_outline,
+                                                ),
+                                        );
+                                      }),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                          .toList(),
+                    ),
                   ),
                 ),
               ),
@@ -685,6 +897,10 @@ class _IamBusinessesTab extends GetView<IamBusinessesController> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tt = theme.textTheme;
+    final cs = theme.colorScheme;
+
     Future<void> _showConfiguredResourcesDialog(
       BuildContext context,
       IamBusiness business,
@@ -803,10 +1019,14 @@ class _IamBusinessesTab extends GetView<IamBusinessesController> {
                       final resource = resources[index];
                       final isToggling = togglingIds.contains(resource.id);
                       final isActive = resource.isActive;
-                      final theme = Theme.of(dialogCtx);
-                      final cs = theme.colorScheme;
-                      final buttonColor = isActive ? Colors.green : cs.error;
-                      final textColor = isActive ? Colors.white : cs.onError;
+                      final dialogTheme = Theme.of(dialogCtx);
+                      final dialogCs = dialogTheme.colorScheme;
+                      final buttonColor = isActive
+                          ? Colors.green
+                          : dialogCs.error;
+                      final textColor = isActive
+                          ? Colors.white
+                          : dialogCs.onError;
                       return ListTile(
                         title: Text(resource.name),
                         subtitle: Column(
@@ -823,8 +1043,8 @@ class _IamBusinessesTab extends GetView<IamBusinessesController> {
                               isActive
                                   ? 'Toca el botón para desactivar este recurso.'
                                   : 'Toca el botón para activar este recurso.',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: cs.onSurfaceVariant,
+                              style: dialogTheme.textTheme.bodySmall?.copyWith(
+                                color: dialogCs.onSurfaceVariant,
                               ),
                             ),
                           ],
@@ -885,7 +1105,12 @@ class _IamBusinessesTab extends GetView<IamBusinessesController> {
       }) {
         final cells = <DataCell>[
           DataCell(_IamBusinessLogoCell(logoUrl: business.logoUrl)),
-          DataCell(Text(business.name)),
+          DataCell(
+            Text(
+              business.name,
+              style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+            ),
+          ),
           DataCell(Text(business.businessType)),
           DataCell(_IamStatusChip(active: business.isActive)),
           DataCell(
@@ -926,17 +1151,48 @@ class _IamBusinessesTab extends GetView<IamBusinessesController> {
         onRefresh: controller.fetchBusinesses,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
           children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Negocios',
+                  style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                ),
+                if (isLoading)
+                  const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Espacios, edificios o negocios que pertenecen a tu organización.',
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(height: 16),
             TextField(
               onChanged: controller.setSearch,
               decoration: InputDecoration(
-                labelText: 'Buscar negocio',
-                prefixIcon: const Icon(Icons.search),
+                hintText: 'Buscar negocio por nombre o dirección',
+                prefixIcon: Icon(Icons.search, color: cs.onSurfaceVariant),
+                filled: true,
+                fillColor: cs.surfaceContainerHighest.withValues(alpha: 0.6),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 0,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(999),
+                  borderSide: BorderSide.none,
+                ),
                 suffixIcon: controller.searchText.value.isEmpty
                     ? null
                     : IconButton(
-                        icon: const Icon(Icons.clear),
+                        icon: const Icon(Icons.close),
                         onPressed: () => controller.setSearch(''),
                       ),
               ),
@@ -959,12 +1215,6 @@ class _IamBusinessesTab extends GetView<IamBusinessesController> {
                     ],
                   ),
                 ),
-                if (isLoading)
-                  const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
               ],
             ),
             if (error != null) ...[
@@ -979,34 +1229,47 @@ class _IamBusinessesTab extends GetView<IamBusinessesController> {
               const _IamEmptyState(message: 'No se encontraron negocios.')
             else
               Card(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
                 clipBehavior: Clip.antiAlias,
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.all(16),
-                  child: Builder(
-                    builder: (tableCtx) {
-                      const columns = <DataColumn>[
-                        DataColumn(label: Text('Logo')),
-                        DataColumn(label: Text('Nombre')),
-                        DataColumn(label: Text('Tipo de negocio')),
-                        DataColumn(label: Text('Estado')),
-                        DataColumn(label: Text('Dirección')),
-                        DataColumn(label: Text('Creado')),
-                        DataColumn(label: Text('Acciones')),
-                      ];
-                      final rows = businesses
-                          .map(
-                            (business) => DataRow(
-                              cells: _buildBusinessRowCells(
-                                tableCtx,
-                                business,
-                                expectedLength: columns.length,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: cs.surface,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: cs.outlineVariant.withValues(alpha: 0.7),
+                    ),
+                  ),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.all(16),
+                    child: Builder(
+                      builder: (tableCtx) {
+                        const columns = <DataColumn>[
+                          DataColumn(label: Text('Logo')),
+                          DataColumn(label: Text('Nombre')),
+                          DataColumn(label: Text('Tipo de negocio')),
+                          DataColumn(label: Text('Estado')),
+                          DataColumn(label: Text('Dirección')),
+                          DataColumn(label: Text('Creado')),
+                          DataColumn(label: Text('Acciones')),
+                        ];
+                        final rows = businesses
+                            .map(
+                              (business) => DataRow(
+                                cells: _buildBusinessRowCells(
+                                  tableCtx,
+                                  business,
+                                  expectedLength: columns.length,
+                                ),
                               ),
-                            ),
-                          )
-                          .toList(growable: false);
-                      return DataTable(columns: columns, rows: rows);
-                    },
+                            )
+                            .toList(growable: false);
+                        return DataTable(columns: columns, rows: rows);
+                      },
+                    ),
                   ),
                 ),
               ),
@@ -1051,102 +1314,222 @@ class _IamUserCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final tt = theme.textTheme;
+    final cs = theme.colorScheme;
     final initials = _buildInitials(user.name);
     final lastLogin = _formatFriendlyDateTime(user.lastLoginAt);
 
     return Card(
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       clipBehavior: Clip.antiAlias,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          color: cs.surface,
+          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.7)),
+        ),
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header: avatar + nombre + estado corto
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CircleAvatar(
-                  radius: 28,
-                  backgroundImage: user.avatarUrl.isNotEmpty
-                      ? NetworkImage(user.avatarUrl)
-                      : null,
-                  child: user.avatarUrl.isEmpty
-                      ? Text(initials, style: tt.titleMedium)
-                      : null,
+                Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: 26,
+                      backgroundImage: user.avatarUrl.isNotEmpty
+                          ? NetworkImage(user.avatarUrl)
+                          : null,
+                      backgroundColor: cs.primaryContainer.withValues(
+                        alpha: 0.7,
+                      ),
+                      child: user.avatarUrl.isEmpty
+                          ? Text(
+                              initials,
+                              style: tt.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            )
+                          : null,
+                    ),
+                    Positioned(
+                      bottom: 2,
+                      right: 2,
+                      child: Container(
+                        width: 11,
+                        height: 11,
+                        decoration: BoxDecoration(
+                          color: user.isActive ? Colors.green : cs.outline,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: cs.surface, width: 1.5),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         user.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: tt.titleMedium?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(user.email, style: tt.bodyMedium),
+                      const SizedBox(height: 2),
+                      Text(
+                        user.email,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
                       if (user.phone.isNotEmpty) ...[
                         const SizedBox(height: 2),
-                        Text(user.phone, style: tt.bodySmall),
+                        Text(
+                          user.phone,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: tt.bodySmall,
+                        ),
                       ],
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 4,
-                        children: [
-                          _IamStatusChip(active: user.isActive),
-                          if (user.isSuperUser)
-                            Chip(
-                              label: const Text('Super usuario'),
-                              backgroundColor: cs.secondaryContainer,
-                              labelStyle: tt.labelSmall?.copyWith(
-                                color: cs.onSecondaryContainer,
-                              ),
-                            ),
-                          Chip(label: Text('Último acceso: $lastLogin')),
-                        ],
-                      ),
                     ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                if (canView)
+                  IconButton(
+                    onPressed: onView,
+                    icon: const Icon(Icons.chevron_right),
+                    tooltip: 'Ver detalle',
+                  ),
+              ],
+            ),
+
+            const SizedBox(height: 10),
+
+            // Chips compactas
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                _IamStatusChip(active: user.isActive),
+                if (user.isSuperUser)
+                  Chip(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    visualDensity: VisualDensity.compact,
+                    label: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.star, size: 14),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Super usuario',
+                          style: tt.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSecondaryContainer,
+                          ),
+                        ),
+                      ],
+                    ),
+                    backgroundColor: cs.secondaryContainer,
+                    labelStyle: tt.labelSmall?.copyWith(
+                      color: cs.onSecondaryContainer,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                Chip(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  visualDensity: VisualDensity.compact,
+                  backgroundColor: cs.surfaceContainerHighest.withValues(
+                    alpha: 0.7,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  label: Text(
+                    'Último acceso: $lastLogin',
+                    style: tt.labelSmall,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+
+            const SizedBox(height: 8),
+
             if (user.assignments.isEmpty)
               Text(
                 'Sin rol asignado',
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               )
             else
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: user.assignments
-                    .map(
-                      (assignment) => Chip(
-                        label: Text(
-                          '${assignment.businessName ?? 'Negocio'}:${assignment.roleName ?? 'Sin rol'}',
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: user.assignments
+                      .map(
+                        (assignment) => Padding(
+                          padding: const EdgeInsets.only(right: 6),
+                          child: Chip(
+                            visualDensity: VisualDensity.compact,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            backgroundColor: cs.primaryContainer.withValues(
+                              alpha: 0.9,
+                            ),
+                            label: ConstrainedBox(
+                              constraints: const BoxConstraints(
+                                // ajusta este valor si quieres chips más anchos o más compactos
+                                maxWidth: 220,
+                              ),
+                              child: Text(
+                                '${assignment.businessName ?? 'Negocio'} · ${assignment.roleName ?? 'Sin rol'}',
+                                style: tt.labelSmall?.copyWith(
+                                  color: cs.onPrimaryContainer,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                softWrap: true,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                    )
-                    .toList(growable: false),
+                      )
+                      .toList(growable: false),
+                ),
               ),
-            const SizedBox(height: 12),
-            if (canView || canDelete)
-              Wrap(
-                spacing: 12,
-                runSpacing: 8,
+
+            if (canView || canDelete) ...[
+              const SizedBox(height: 10),
+              Row(
                 children: [
                   if (canView)
                     TextButton.icon(
                       onPressed: onView,
-                      icon: const Icon(Icons.visibility_outlined),
-                      label: const Text('Ver detalle'),
+                      icon: const Icon(Icons.visibility_outlined, size: 18),
+                      label: const Text('Ver'),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                      ),
                     ),
-                  if (canDelete)
+                  if (canDelete) ...[
+                    const SizedBox(width: 8),
                     TextButton.icon(
                       onPressed: isDeleting ? null : onDelete,
                       icon: isDeleting
@@ -1155,12 +1538,20 @@ class _IamUserCard extends StatelessWidget {
                               height: 16,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Icon(Icons.delete_outline),
+                          : const Icon(Icons.delete_outline, size: 18),
                       label: Text(isDeleting ? 'Eliminando…' : 'Eliminar'),
-                      style: TextButton.styleFrom(foregroundColor: cs.error),
+                      style: TextButton.styleFrom(
+                        foregroundColor: cs.error,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                      ),
                     ),
+                  ],
                 ],
               ),
+            ],
           ],
         ),
       ),
@@ -1181,8 +1572,17 @@ class _IamBusinessLogoCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     if (logoUrl.isEmpty) {
-      return const Text('Sin logo');
+      return CircleAvatar(
+        radius: 16,
+        backgroundColor: cs.surfaceContainerHighest,
+        child: Icon(
+          Icons.apartment_outlined,
+          size: 16,
+          color: cs.onSurfaceVariant,
+        ),
+      );
     }
     return CircleAvatar(radius: 16, backgroundImage: NetworkImage(logoUrl));
   }
@@ -1197,11 +1597,14 @@ class _IamStatusChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Chip(
+      visualDensity: VisualDensity.compact,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       label: Text(active ? 'Activo' : 'Inactivo'),
       backgroundColor: active ? cs.primaryContainer : cs.errorContainer,
       labelStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
         color: active ? cs.onPrimaryContainer : cs.onErrorContainer,
       ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
     );
   }
 }
@@ -1218,6 +1621,8 @@ class _BusinessTypeInfoCard extends StatelessWidget {
     ];
     return Card(
       color: cs.secondaryContainer,
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -1266,22 +1671,37 @@ class _IamErrorCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     return Card(
+      elevation: 0,
       color: cs.errorContainer,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
+              'Ocurrió un problema',
+              style: tt.titleSmall?.copyWith(
+                color: cs.onErrorContainer,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
               message,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: cs.onErrorContainer),
+              style: tt.bodyMedium?.copyWith(color: cs.onErrorContainer),
             ),
             if (onRetry != null) ...[
               const SizedBox(height: 8),
-              TextButton(onPressed: onRetry, child: const Text('Reintentar')),
+              TextButton(
+                onPressed: onRetry,
+                style: TextButton.styleFrom(
+                  foregroundColor: cs.onErrorContainer,
+                ),
+                child: const Text('Reintentar'),
+              ),
             ],
           ],
         ),
@@ -1298,13 +1718,18 @@ class _IamEmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 32),
       child: Column(
         children: [
-          Icon(Icons.inbox_outlined, color: cs.onSurfaceVariant, size: 48),
+          Icon(Icons.inbox_outlined, color: cs.onSurfaceVariant, size: 40),
           const SizedBox(height: 8),
-          Text(message, textAlign: TextAlign.center),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+          ),
         ],
       ),
     );
@@ -1331,23 +1756,30 @@ class _IamPaginationControls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text('Página $currentPage de $lastPage', style: tt.bodyMedium),
-        Row(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.chevron_left),
-              onPressed: hasPrev ? onPrev : null,
-            ),
-            IconButton(
-              icon: const Icon(Icons.chevron_right),
-              onPressed: hasNext ? onNext : null,
-            ),
-          ],
-        ),
-      ],
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'Página $currentPage de $lastPage',
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.chevron_left),
+                onPressed: hasPrev ? onPrev : null,
+              ),
+              IconButton(
+                icon: const Icon(Icons.chevron_right),
+                onPressed: hasNext ? onNext : null,
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
