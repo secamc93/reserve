@@ -17,6 +17,7 @@ import 'package:rupu/config/helpers/global_vars.dart';
 import 'package:rupu/domain/datasource/horizontal_properties_datasource.dart';
 import 'package:rupu/domain/infrastructure/models/horizontal_properties_response_model.dart';
 import 'package:rupu/domain/infrastructure/models/horizontal_property_detail_response_model.dart';
+import 'package:rupu/domain/infrastructure/models/horizontal_property_resident_detail_response_model.dart';
 import 'package:rupu/domain/infrastructure/models/horizontal_property_residents_response_model.dart';
 import 'package:rupu/domain/infrastructure/models/horizontal_property_unit_detail_response_model.dart';
 import 'package:rupu/domain/infrastructure/models/horizontal_property_units_response_model.dart';
@@ -386,6 +387,54 @@ class HorizontalPropertiesDatasourceImpl
       queryParameters: query,
     );
     return HorizontalPropertyResidentsResponseModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<HorizontalPropertyResidentDetailResponseModel>
+      getHorizontalPropertyResidentDetail({
+    required int residentId,
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await _dio.get(
+      '/horizontal-properties/residents/$residentId',
+      queryParameters: query,
+    );
+    return HorizontalPropertyResidentDetailResponseModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<HorizontalPropertyResidentDetailResponseModel>
+      createHorizontalPropertyResident({
+    required Map<String, dynamic> data,
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await _dio.post(
+      '/horizontal-properties/residents',
+      data: data,
+      queryParameters: query,
+    );
+    return HorizontalPropertyResidentDetailResponseModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<HorizontalPropertyResidentDetailResponseModel>
+      updateHorizontalPropertyResident({
+    required int residentId,
+    required Map<String, dynamic> data,
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await _dio.put(
+      '/horizontal-properties/residents/$residentId',
+      data: data,
+      queryParameters: query,
+    );
+    return HorizontalPropertyResidentDetailResponseModel.fromJson(
       response.data as Map<String, dynamic>,
     );
   }

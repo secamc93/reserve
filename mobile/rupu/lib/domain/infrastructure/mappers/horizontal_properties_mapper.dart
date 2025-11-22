@@ -3,6 +3,7 @@ import 'package:rupu/domain/entities/horizontal_property.dart';
 import 'package:rupu/domain/entities/horizontal_property_action_result.dart';
 import 'package:rupu/domain/entities/horizontal_property_create_result.dart';
 import 'package:rupu/domain/entities/horizontal_property_detail.dart';
+import 'package:rupu/domain/entities/horizontal_property_resident_detail.dart';
 import 'package:rupu/domain/entities/horizontal_property_residents_page.dart';
 import 'package:rupu/domain/entities/horizontal_property_unit_detail.dart';
 import 'package:rupu/domain/entities/horizontal_property_units_page.dart';
@@ -12,6 +13,7 @@ import 'package:rupu/domain/entities/horizontal_property_voting_groups.dart';
 
 import '../models/horizontal_properties_response_model.dart';
 import '../models/horizontal_property_detail_response_model.dart';
+import '../models/horizontal_property_resident_detail_response_model.dart';
 import '../models/horizontal_property_residents_response_model.dart';
 import '../models/horizontal_property_unit_detail_response_model.dart';
 import '../models/horizontal_property_units_response_model.dart';
@@ -216,6 +218,43 @@ class HorizontalPropertiesMapper {
       phone: model.phone,
       isMainResident: model.isMainResident,
       isActive: model.isActive,
+    );
+  }
+
+  static HorizontalPropertyResidentDetailResult residentDetailToEntity(
+    HorizontalPropertyResidentDetailResponseModel model,
+  ) {
+    return HorizontalPropertyResidentDetailResult(
+      success: model.success,
+      message: model.message.isNotEmpty ? model.message : null,
+      resident:
+          model.data != null ? _residentDetailModelToEntity(model.data!) : null,
+    );
+  }
+
+  static HorizontalPropertyResidentDetail _residentDetailModelToEntity(
+    HorizontalPropertyResidentDetailModel model,
+  ) {
+    return HorizontalPropertyResidentDetail(
+      id: model.id,
+      propertyUnitId: model.propertyUnitId,
+      propertyUnitNumber: model.propertyUnitNumber,
+      residentTypeId: model.residentTypeId,
+      residentTypeName: model.residentTypeName,
+      name: model.name,
+      email: model.email,
+      phone: model.phone,
+      dni: model.dni,
+      emergencyContact: model.emergencyContact,
+      isMainResident: model.isMainResident,
+      isActive: model.isActive,
+      leaseStartDate: model.leaseStartDate,
+      leaseEndDate: model.leaseEndDate,
+      moveInDate: model.moveInDate,
+      monthlyRent: model.monthlyRent,
+      createdAt: model.createdAt,
+      updatedAt: model.updatedAt,
+      extra: model.extra,
     );
   }
 

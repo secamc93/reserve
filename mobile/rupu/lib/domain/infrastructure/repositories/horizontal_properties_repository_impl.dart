@@ -5,6 +5,7 @@ import 'package:rupu/domain/entities/horizontal_properties_page.dart';
 import 'package:rupu/domain/entities/horizontal_property_action_result.dart';
 import 'package:rupu/domain/entities/horizontal_property_create_result.dart';
 import 'package:rupu/domain/entities/horizontal_property_detail.dart';
+import 'package:rupu/domain/entities/horizontal_property_resident_detail.dart';
 import 'package:rupu/domain/entities/horizontal_property_residents_page.dart';
 import 'package:rupu/domain/entities/horizontal_property_unit_detail.dart';
 import 'package:rupu/domain/entities/horizontal_property_units_page.dart';
@@ -193,6 +194,71 @@ class HorizontalPropertiesRepositoryImpl
       query: _withBusinessQuery(query),
     );
     return HorizontalPropertiesMapper.residentsResponseToEntity(response);
+  }
+
+  @override
+  Future<HorizontalPropertyResidentDetailResult>
+      getHorizontalPropertyResidentDetail({
+    required int residentId,
+  }) async {
+    try {
+      final response = await datasource.getHorizontalPropertyResidentDetail(
+        residentId: residentId,
+        query: _withBusinessQuery(),
+      );
+      return HorizontalPropertiesMapper.residentDetailToEntity(response);
+    } catch (_) {
+      return const HorizontalPropertyResidentDetailResult(
+        success: false,
+        message: 'No se pudo obtener el detalle del residente.',
+      );
+    }
+  }
+
+  @override
+  Future<HorizontalPropertyResidentDetailResult>
+      createHorizontalPropertyResident({
+    required int propertyId,
+    required Map<String, dynamic> data,
+  }) async {
+    try {
+      final response = await datasource.createHorizontalPropertyResident(
+        data: data,
+        query: _withBusinessQuery(
+          propertyId > 0 ? {'business_id': propertyId} : null,
+        ),
+      );
+      return HorizontalPropertiesMapper.residentDetailToEntity(response);
+    } catch (_) {
+      return const HorizontalPropertyResidentDetailResult(
+        success: false,
+        message: 'No se pudo crear el residente.',
+      );
+    }
+  }
+
+  @override
+  Future<HorizontalPropertyResidentDetailResult>
+      updateHorizontalPropertyResident({
+    required int propertyId,
+    required int residentId,
+    required Map<String, dynamic> data,
+  }) async {
+    try {
+      final response = await datasource.updateHorizontalPropertyResident(
+        residentId: residentId,
+        data: data,
+        query: _withBusinessQuery(
+          propertyId > 0 ? {'business_id': propertyId} : null,
+        ),
+      );
+      return HorizontalPropertiesMapper.residentDetailToEntity(response);
+    } catch (_) {
+      return const HorizontalPropertyResidentDetailResult(
+        success: false,
+        message: 'No se pudo actualizar el residente.',
+      );
+    }
   }
 
   @override

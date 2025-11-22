@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:rupu/domain/entities/horizontal_property_resident_detail.dart';
 import 'package:rupu/domain/entities/horizontal_property_residents_page.dart';
+import 'package:rupu/domain/entities/horizontal_property_units_page.dart';
 import 'package:rupu/domain/infrastructure/repositories/horizontal_properties_repository_impl.dart';
 import 'package:rupu/domain/repositories/horizontal_properties_repository.dart';
 import 'package:rupu/presentation/views/login/login_controller.dart';
@@ -25,6 +27,12 @@ class HorizontalPropertyResidentsController extends GetxController {
   final residentsLoadingMore = false.obs;
   final residentsErrorMessage = RxnString();
   final filtersRevision = 0.obs;
+  final unitsOptions = <HorizontalPropertyUnitItem>[].obs;
+  final unitsOptionsLoading = false.obs;
+  final residentMutationBusy = false.obs;
+  final _residentDetailsCache = <int, HorizontalPropertyResidentDetail>{};
+  final _residentDetailRequests =
+      <int, Future<HorizontalPropertyResidentDetailResult>>{};
 
   // Filters
   final residentsPageCtrl = TextEditingController(text: '1');
@@ -40,6 +48,7 @@ class HorizontalPropertyResidentsController extends GetxController {
   late final VoidCallback _filtersListener;
   Worker? _mainWorker;
   Worker? _statusWorker;
+  bool _unitsLoaded = false;
 
   bool get canLoadMoreResidents {
     final page = residentsPage.value?.page ?? 0;
@@ -181,8 +190,142 @@ class HorizontalPropertyResidentsController extends GetxController {
       if (append) {
         residentsLoadingMore.value = false;
       } else {
-        residentsLoading.value = false;
+      residentsLoading.value = false;
+    }
+  }
+
+  Future<void> loadUnitsOptions({bool forceRefresh = false}) async {
+    if (_unitsLoaded && !forceRefresh) return;
+    if (unitsOptionsLoading.value) return;
+    unitsOptionsLoading.value = true;
+    try {
+      final result = await repository.getHorizontalPropertyUnits(
+        id: propertyId,
+        query: _withBusinessId({
+          'page': 1,
+          'page_size': 200,
+        }),
+      );
+      unitsOptions.assignAll(result.units);
+      _unitsLoaded = true;
+    } catch (_) {
+      unitsOptions.clear();
+    } finally {
+      unitsOptionsLoading.value = false;
+    }
+  }
+
+  List<HorizontalPropertyUnitItem> filterUnits(String query) {
+    final normalized = query.trim().toLowerCase();
+    if (normalized.isEmpty) return List.of(unitsOptions);
+    return unitsOptions
+        .where(
+          (unit) => unit.number.toLowerCase().contains(normalized),
+        )
+        .toList(growable: false);
+  }
+
+  Future<HorizontalPropertyResidentDetailResult> fetchResidentDetail(
+    int residentId,
+  ) {
+    final cached = _residentDetailsCache[residentId];
+    if (cached != null) {
+      return Future.value(
+        HorizontalPropertyResidentDetailResult(
+          success: true,
+          resident: cached,
+        ),
+      );
+    }
+
+    final pending = _residentDetailRequests[residentId];
+    if (pending != null) {
+      return pending;
+    }
+
+    final future = repository
+        .getHorizontalPropertyResidentDetail(residentId: residentId)
+        .then((result) {
+      if (result.success && result.resident != null) {
+        _residentDetailsCache[residentId] = result.resident!;
       }
+      _residentDetailRequests.remove(residentId);
+      return result;
+    }).catchError((_) {
+      _residentDetailRequests.remove(residentId);
+      return const HorizontalPropertyResidentDetailResult(
+        success: false,
+        message: 'No se pudo cargar el residente.',
+      );
+    });
+
+    _residentDetailRequests[residentId] = future;
+    return future;
+  }
+
+  Future<HorizontalPropertyResidentDetailResult> createResident({
+    required Map<String, dynamic> data,
+  }) async {
+    if (residentMutationBusy.value) {
+      return const HorizontalPropertyResidentDetailResult(
+        success: false,
+        message: 'Ya hay una operación en curso.',
+      );
+    }
+    residentMutationBusy.value = true;
+    try {
+      final result = await repository.createHorizontalPropertyResident(
+        propertyId: propertyId,
+        data: data,
+      );
+      if (result.success) {
+        await refresh();
+      }
+      return result;
+    } catch (_) {
+      return const HorizontalPropertyResidentDetailResult(
+        success: false,
+        message: 'No se pudo crear el residente. Inténtalo nuevamente.',
+      );
+    } finally {
+      residentMutationBusy.value = false;
+    }
+  }
+
+  Future<HorizontalPropertyResidentDetailResult> updateResident({
+    required int residentId,
+    required Map<String, dynamic> data,
+  }) async {
+    if (residentMutationBusy.value) {
+      return const HorizontalPropertyResidentDetailResult(
+        success: false,
+        message: 'Ya hay una operación en curso.',
+      );
+    }
+    residentMutationBusy.value = true;
+    try {
+      final result = await repository.updateHorizontalPropertyResident(
+        propertyId: propertyId,
+        residentId: residentId,
+        data: data,
+      );
+      if (result.success) {
+        await refresh();
+        _residentDetailsCache[residentId] = result.resident ??
+            _residentDetailsCache[residentId] ??
+            HorizontalPropertyResidentDetail(
+              id: residentId,
+              name: data['name']?.toString() ?? '',
+            );
+      }
+      return result;
+    } catch (_) {
+      return const HorizontalPropertyResidentDetailResult(
+        success: false,
+        message: 'No se pudo actualizar el residente. Inténtalo nuevamente.',
+      );
+    } finally {
+      residentMutationBusy.value = false;
     }
   }
 
@@ -210,7 +353,20 @@ class HorizontalPropertyResidentsController extends GetxController {
     residentsUnitNumberCtrl.dispose();
     residentsTypeCtrl.dispose();
     residentsSearchCtrl.dispose();
+    _residentDetailRequests.clear();
+    _residentDetailsCache.clear();
+    unitsOptions.clear();
     super.onClose();
+  }
+
+  Map<String, dynamic>? _withBusinessId(Map<String, dynamic>? query) {
+    final businessId = _resolveBusinessId();
+    if (businessId == null) return query;
+    final result = <String, dynamic>{'business_id': businessId};
+    if (query != null) {
+      result.addAll(query);
+    }
+    return result;
   }
 
   int? _resolveBusinessId() {

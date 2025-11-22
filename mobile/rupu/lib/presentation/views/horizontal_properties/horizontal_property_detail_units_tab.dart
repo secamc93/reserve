@@ -633,7 +633,7 @@ class _UnitCard extends StatelessWidget {
                     onView: () => _openDetailSheet(context),
                     onEdit: disableEdition
                         ? null
-                        : () => _openEditSheet(context),
+                        : () => _openEditDialog(context),
                     onDelete: isDeleting ? null : () => _confirmDelete(context),
                     isEditDisabled: disableEdition,
                     isDeleteDisabled: disableEdition,
@@ -659,7 +659,7 @@ class _UnitCard extends StatelessWidget {
     );
   }
 
-  Future<void> _openEditSheet(BuildContext context) async {
+  Future<void> _openEditDialog(BuildContext context) async {
     final controller = Get.find<HorizontalPropertyUnitsController>(
       tag: controllerTag,
     );
@@ -692,27 +692,22 @@ class _UnitCard extends StatelessWidget {
       return;
     }
 
-    final result =
-        await showModalBottomSheet<HorizontalPropertyUnitDetailResult>(
-          context: context,
-          backgroundColor: Colors.transparent,
-          useRootNavigator: true,
-          isScrollControlled: true,
-          builder: (_) => _UnitFormBottomSheet(
-            title: 'Editar unidad',
-            actionLabel: 'Guardar cambios',
-            initialDetail: resolvedDetail.unit,
-            fallback: unit,
-            showStatusSwitch: true,
-            onSubmit: (payload) =>
-                controller.updateUnit(unitId: unit.id, data: payload),
-          ),
-        );
+    final result = await showDialog<HorizontalPropertyUnitDetailResult>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => _UnitEditDialog(
+        initialDetail: resolvedDetail.unit,
+        fallback: unit,
+        onSubmit: (payload) =>
+            controller.updateUnit(unitId: unit.id, data: payload),
+      ),
+    );
 
     if (result != null && result.success) {
       final updatedNumber = result.unit?.number ?? unit.number;
-      final message =
-          'Los cambios de la unidad $updatedNumber se guardaron correctamente.';
+      final message = result.message?.isNotEmpty == true
+          ? result.message!
+          : 'Los cambios de la unidad $updatedNumber se guardaron correctamente.';
       _showSnack('Unidad actualizada', message);
     }
   }
@@ -1522,6 +1517,325 @@ class _UnitFormBottomSheetState extends State<_UnitFormBottomSheet> {
   }
 }
 
+class _UnitEditDialog extends StatefulWidget {
+  final HorizontalPropertyUnitDetail? initialDetail;
+  final HorizontalPropertyUnitItem? fallback;
+  final Future<HorizontalPropertyUnitDetailResult> Function(
+    Map<String, dynamic> data,
+  )
+      onSubmit;
+
+  const _UnitEditDialog({
+    this.initialDetail,
+    this.fallback,
+    required this.onSubmit,
+  });
+
+  @override
+  State<_UnitEditDialog> createState() => _UnitEditDialogState();
+}
+
+class _UnitEditDialogState extends State<_UnitEditDialog> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _numberCtrl;
+  late final TextEditingController _typeCtrl;
+  late final TextEditingController _floorCtrl;
+  late final TextEditingController _blockCtrl;
+  late final TextEditingController _areaCtrl;
+  late final TextEditingController _bedroomsCtrl;
+  late final TextEditingController _bathroomsCtrl;
+  late final TextEditingController _coefficientCtrl;
+  late final TextEditingController _descriptionCtrl;
+  bool _isActive = true;
+  bool _saving = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    final detail = widget.initialDetail;
+    final fallback = widget.fallback;
+    _numberCtrl = TextEditingController(
+      text: detail?.number ?? fallback?.number ?? '',
+    );
+    _typeCtrl = TextEditingController(
+      text: detail?.unitType ?? fallback?.unitType ?? '',
+    );
+    _floorCtrl = TextEditingController(
+      text: detail?.floor?.toString() ?? '',
+    );
+    _blockCtrl = TextEditingController(
+      text: detail?.block ?? fallback?.block ?? fallback?.tower ?? '',
+    );
+    _areaCtrl = TextEditingController(
+      text: _doubleToText(detail?.area ?? fallback?.area),
+    );
+    _bedroomsCtrl = TextEditingController(
+      text: detail?.bedrooms?.toString() ?? fallback?.bedrooms?.toString() ?? '',
+    );
+    _bathroomsCtrl = TextEditingController(
+      text: detail?.bathrooms?.toString() ?? fallback?.bathrooms?.toString() ?? '',
+    );
+    _coefficientCtrl = TextEditingController(
+      text: _doubleToText(
+        detail?.participationCoefficient ?? fallback?.participationCoefficient,
+      ),
+    );
+    _descriptionCtrl = TextEditingController(
+      text: detail?.description ?? fallback?.description ?? '',
+    );
+    _isActive = detail?.isActive ?? fallback?.isActive ?? true;
+  }
+
+  @override
+  void dispose() {
+    _numberCtrl.dispose();
+    _typeCtrl.dispose();
+    _floorCtrl.dispose();
+    _blockCtrl.dispose();
+    _areaCtrl.dispose();
+    _bedroomsCtrl.dispose();
+    _bathroomsCtrl.dispose();
+    _coefficientCtrl.dispose();
+    _descriptionCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final viewInsets = MediaQuery.viewInsetsOf(context);
+
+    InputDecoration decoration(String label, {String? hint}) {
+      return InputDecoration(
+        labelText: label,
+        hintText: hint,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      );
+    }
+
+    Widget numericField({
+      required String label,
+      required TextEditingController controller,
+      String? hint,
+      TextInputType keyboardType = TextInputType.number,
+    }) {
+      return TextFormField(
+        controller: controller,
+        decoration: decoration(label, hint: hint),
+        keyboardType: keyboardType,
+        validator: (value) {
+          if (value == null || value.trim().isEmpty) return null;
+          return double.tryParse(value.replaceAll(',', '.')) == null
+              ? 'Ingresa un número válido'
+              : null;
+        },
+      );
+    }
+
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: const Text('Editar unidad'),
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 560),
+        child: Padding(
+          padding: EdgeInsets.only(bottom: viewInsets.bottom),
+          child: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: _numberCtrl,
+                    decoration: decoration('Número de unidad'),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Ingresa el número de la unidad';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _typeCtrl,
+                    decoration: decoration('Tipo de unidad'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _floorCtrl,
+                    decoration: decoration('Piso'),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) return null;
+                      return int.tryParse(value) == null
+                          ? 'Ingresa un piso válido'
+                          : null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _blockCtrl,
+                    decoration: decoration('Bloque / Torre'),
+                  ),
+                  const SizedBox(height: 12),
+                  numericField(
+                    label: 'Área (m²)',
+                    controller: _areaCtrl,
+                    hint: 'Ej: 85.5',
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _bedroomsCtrl,
+                    decoration: decoration('Habitaciones'),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) return null;
+                      return int.tryParse(value) == null
+                          ? 'Ingresa un número válido'
+                          : null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _bathroomsCtrl,
+                    decoration: decoration('Baños'),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) return null;
+                      return int.tryParse(value) == null
+                          ? 'Ingresa un número válido'
+                          : null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  numericField(
+                    label: 'Coeficiente de participación',
+                    controller: _coefficientCtrl,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _descriptionCtrl,
+                    decoration: decoration('Descripción'),
+                    maxLines: 3,
+                  ),
+                  const SizedBox(height: 8),
+                  CheckboxListTile(
+                    value: _isActive,
+                    onChanged: (value) {
+                      setState(() => _isActive = value ?? true);
+                    },
+                    title: const Text('Unidad activa'),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  if (_error != null) ...[
+                    const SizedBox(height: 4),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        _error!,
+                        style: tt.bodySmall?.copyWith(color: cs.error),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _saving ? null : () => Navigator.of(context).pop(),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton.icon(
+          onPressed: _saving ? null : _submit,
+          icon: _saving
+              ? SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: cs.onPrimary,
+                  ),
+                )
+              : const Icon(Icons.save_outlined),
+          label: const Text('Actualizar unidad'),
+        ),
+      ],
+    );
+  }
+
+  String _doubleToText(double? value) {
+    if (value == null) return '';
+    if (value.truncateToDouble() == value) {
+      return value.toStringAsFixed(0);
+    }
+    return value.toString();
+  }
+
+  int? _parseInt(String value) {
+    if (value.isEmpty) return null;
+    return int.tryParse(value);
+  }
+
+  double? _parseDouble(String value) {
+    if (value.isEmpty) return null;
+    final normalized = value.replaceAll(',', '.');
+    return double.tryParse(normalized);
+  }
+
+  Map<String, dynamic> _buildPayload() {
+    final payload = <String, dynamic>{
+      'number': _numberCtrl.text.trim(),
+      'unit_type': _typeCtrl.text.trim(),
+      'floor': _parseInt(_floorCtrl.text.trim()),
+      'block': _blockCtrl.text.trim().isEmpty ? null : _blockCtrl.text.trim(),
+      'area': _parseDouble(_areaCtrl.text.trim()),
+      'bedrooms': _parseInt(_bedroomsCtrl.text.trim()),
+      'bathrooms': _parseInt(_bathroomsCtrl.text.trim()),
+      'participation_coefficient': _parseDouble(_coefficientCtrl.text.trim()),
+      'description':
+          _descriptionCtrl.text.trim().isEmpty ? null : _descriptionCtrl.text,
+      'is_active': _isActive,
+    };
+    payload.removeWhere((key, value) => value == null);
+    return payload;
+  }
+
+  Future<void> _submit() async {
+    if (_saving) return;
+    final form = _formKey.currentState;
+    if (form == null || !form.validate()) return;
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      final result = await widget.onSubmit(_buildPayload());
+      if (!mounted) return;
+      if (!result.success) {
+        setState(() {
+          _saving = false;
+          _error = result.message ??
+              'No se pudo actualizar la unidad. Inténtalo nuevamente.';
+        });
+        return;
+      }
+      Navigator.of(context).pop(result);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _error = 'Ocurrió un error al actualizar la unidad.';
+      });
+    }
+  }
+}
+
 class _UnitDetailLoading extends StatelessWidget {
   const _UnitDetailLoading();
 
@@ -1600,22 +1914,28 @@ class _UnitDetailError extends StatelessWidget {
 }
 
 void _showSnack(String title, String message, {bool isError = false}) {
-  // if (Get.isSnackbarOpen) {
-  //   Get.closeCurrentSnackbar();
-  // }
-  // Get.snackbar(
-  //   title,
-  //   message,
-  //   snackPosition: SnackPosition.BOTTOM,
-  //   duration: const Duration(seconds: 3),
-  //   margin: const EdgeInsets.all(16),
-  //   backgroundColor: isError ? cs.errorContainer : cs.primaryContainer,
-  //   colorText: isError ? cs.onErrorContainer : cs.onPrimaryContainer,
-  //   icon: Icon(
-  //     isError ? Icons.error_outline : Icons.check_circle_outline,
-  //     color: isError ? cs.error : cs.primary,
-  //   ),
-  // );
+  final context = Get.context;
+  final cs = context != null ? Theme.of(context).colorScheme : null;
+  final background = isError
+      ? cs?.errorContainer ?? Colors.red.shade100
+      : cs?.primaryContainer ?? Colors.green.shade100;
+  final foreground = isError
+      ? cs?.onErrorContainer ?? Colors.red.shade800
+      : cs?.onPrimaryContainer ?? Colors.green.shade900;
+
+  Get.snackbar(
+    title,
+    message,
+    snackPosition: SnackPosition.BOTTOM,
+    duration: const Duration(seconds: 3),
+    margin: const EdgeInsets.all(16),
+    backgroundColor: background,
+    colorText: foreground,
+    icon: Icon(
+      isError ? Icons.error_outline : Icons.check_circle_outline,
+      color: isError ? cs?.error ?? Colors.red : cs?.primary ?? Colors.green,
+    ),
+  );
 }
 
 class _UnitDetailContent extends StatelessWidget {

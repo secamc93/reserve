@@ -1,5 +1,6 @@
 import '../infrastructure/models/horizontal_properties_response_model.dart';
 import '../infrastructure/models/horizontal_property_detail_response_model.dart';
+import '../infrastructure/models/horizontal_property_resident_detail_response_model.dart';
 import '../infrastructure/models/horizontal_property_residents_response_model.dart';
 import '../infrastructure/models/horizontal_property_unit_detail_response_model.dart';
 import '../infrastructure/models/horizontal_property_units_response_model.dart';
@@ -69,6 +70,25 @@ abstract class HorizontalPropertiesDatasource {
 
   Future<HorizontalPropertyResidentsResponseModel> getHorizontalPropertyResidents({
     required int id,
+    Map<String, dynamic>? query,
+  });
+
+  Future<HorizontalPropertyResidentDetailResponseModel>
+      getHorizontalPropertyResidentDetail({
+    required int residentId,
+    Map<String, dynamic>? query,
+  });
+
+  Future<HorizontalPropertyResidentDetailResponseModel>
+      createHorizontalPropertyResident({
+    required Map<String, dynamic> data,
+    Map<String, dynamic>? query,
+  });
+
+  Future<HorizontalPropertyResidentDetailResponseModel>
+      updateHorizontalPropertyResident({
+    required int residentId,
+    required Map<String, dynamic> data,
     Map<String, dynamic>? query,
   });
 

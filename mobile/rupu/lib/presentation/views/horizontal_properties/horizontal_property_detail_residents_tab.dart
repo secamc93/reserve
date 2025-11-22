@@ -34,10 +34,10 @@ class _ResidentsTab extends GetWidget<HorizontalPropertyResidentsController> {
           final crossAxis = width >= 1200
               ? 3
               : width >= 840
-              ? 2
-              : 1;
+                  ? 2
+                  : 1;
 
-          return RefreshIndicator(
+          final listContent = RefreshIndicator(
             onRefresh: controller.refresh,
             child: NotificationListener<ScrollNotification>(
               onNotification: (notification) {
@@ -55,7 +55,6 @@ class _ResidentsTab extends GetWidget<HorizontalPropertyResidentsController> {
               child: CustomScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
-                  // HEADER tipo “Instagram admin”
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: EdgeInsets.fromLTRB(
@@ -71,8 +70,6 @@ class _ResidentsTab extends GetWidget<HorizontalPropertyResidentsController> {
                       ),
                     ),
                   ),
-
-                  // FILTROS en card (con contenido colapsable)
                   SliverPadding(
                     padding: EdgeInsets.fromLTRB(
                       horizontalPadding,
@@ -91,8 +88,6 @@ class _ResidentsTab extends GetWidget<HorizontalPropertyResidentsController> {
                       ),
                     ),
                   ),
-
-                  // RESUMEN (SummaryHeader que ya tenías)
                   SliverPadding(
                     padding: EdgeInsets.fromLTRB(
                       horizontalPadding,
@@ -109,7 +104,6 @@ class _ResidentsTab extends GetWidget<HorizontalPropertyResidentsController> {
                       ),
                     ),
                   ),
-
                   if (error != null)
                     SliverPadding(
                       padding: EdgeInsets.symmetric(
@@ -119,7 +113,6 @@ class _ResidentsTab extends GetWidget<HorizontalPropertyResidentsController> {
                         child: _InlineError(message: error),
                       ),
                     ),
-
                   if (!isLoading && residents.isEmpty)
                     const SliverFillRemaining(
                       hasScrollBody: false,
@@ -131,7 +124,6 @@ class _ResidentsTab extends GetWidget<HorizontalPropertyResidentsController> {
                       ),
                     )
                   else ...[
-                    // LISTA / GRID responsive
                     SliverPadding(
                       padding: EdgeInsets.fromLTRB(
                         horizontalPadding,
@@ -145,6 +137,7 @@ class _ResidentsTab extends GetWidget<HorizontalPropertyResidentsController> {
                                 padding: const EdgeInsets.only(bottom: 16),
                                 child: _ResidentCard(
                                   resident: residents[index],
+                                  controllerTag: controllerTag,
                                 ),
                               ),
                               itemCount: residents.length,
@@ -152,19 +145,20 @@ class _ResidentsTab extends GetWidget<HorizontalPropertyResidentsController> {
                           : SliverGrid(
                               gridDelegate:
                                   SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: crossAxis,
-                                    mainAxisSpacing: 16,
-                                    crossAxisSpacing: 16,
-                                    mainAxisExtent: 340,
-                                  ),
+                                crossAxisCount: crossAxis,
+                                mainAxisSpacing: 16,
+                                crossAxisSpacing: 16,
+                                mainAxisExtent: 340,
+                              ),
                               delegate: SliverChildBuilderDelegate(
-                                (context, index) =>
-                                    _ResidentCard(resident: residents[index]),
+                                (context, index) => _ResidentCard(
+                                  resident: residents[index],
+                                  controllerTag: controllerTag,
+                                ),
                                 childCount: residents.length,
                               ),
                             ),
                     ),
-                    // Loader / final de lista
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 32),
@@ -177,11 +171,11 @@ class _ResidentsTab extends GetWidget<HorizontalPropertyResidentsController> {
                                   ),
                                 )
                               : (!controller.canLoadMoreResidents &&
-                                        residents.isNotEmpty
-                                    ? const Text(
-                                        'Ya viste todos los residentes 👌',
-                                      )
-                                    : const SizedBox.shrink()),
+                                      residents.isNotEmpty
+                                  ? const Text(
+                                      'Ya viste todos los residentes 👌',
+                                    )
+                                  : const SizedBox.shrink()),
                         ),
                       ),
                     ),
@@ -189,6 +183,19 @@ class _ResidentsTab extends GetWidget<HorizontalPropertyResidentsController> {
                 ],
               ),
             ),
+          );
+
+          final bottomPadding = MediaQuery.viewPaddingOf(context).bottom;
+
+          return Stack(
+            children: [
+              Positioned.fill(child: listContent),
+              Positioned(
+                right: 24,
+                bottom: 24 + bottomPadding,
+                child: _AddResidentFab(controllerTag: controllerTag),
+              ),
+            ],
           );
         },
       );
@@ -243,6 +250,45 @@ class _ResidentsHeaderSummary extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+class _AddResidentFab extends StatelessWidget {
+  final String controllerTag;
+  const _AddResidentFab({required this.controllerTag});
+
+  @override
+  Widget build(BuildContext context) {
+    return FloatingActionButton.extended(
+      onPressed: () => _openCreateDialog(context),
+      icon: const Icon(Icons.person_add_alt_rounded),
+      label: const Text('Agregar residente'),
+    );
+  }
+
+  Future<void> _openCreateDialog(BuildContext context) async {
+    final controller = Get.find<HorizontalPropertyResidentsController>(
+      tag: controllerTag,
+    );
+    await controller.loadUnitsOptions();
+
+    final result = await showDialog<HorizontalPropertyResidentDetailResult>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => _ResidentFormDialog(
+        controller: controller,
+        title: 'Crear residente',
+        actionLabel: 'Crear residente',
+        onSubmit: (payload) => controller.createResident(data: payload),
+      ),
+    );
+
+    if (result != null && result.success) {
+      final message = result.message?.isNotEmpty == true
+          ? result.message!
+          : 'El residente se creó correctamente.';
+      _showSnack('Residente creado', message);
+    }
   }
 }
 
@@ -606,7 +652,8 @@ class _ResidentsFiltersContentState extends State<_ResidentsFiltersContent> {
 
 class _ResidentCard extends StatelessWidget {
   final HorizontalPropertyResidentItem resident;
-  const _ResidentCard({required this.resident});
+  final String controllerTag;
+  const _ResidentCard({required this.resident, required this.controllerTag});
 
   @override
   Widget build(BuildContext context) {
@@ -724,10 +771,7 @@ class _ResidentCard extends StatelessWidget {
                 'Ver residente',
                 'Funcionalidad disponible próximamente.',
               ),
-              onEdit: () => _showActionFeedback(
-                'Editar residente',
-                'Funcionalidad disponible próximamente.',
-              ),
+              onEdit: () => _openEditDialog(context),
               onDelete: () => _showActionFeedback(
                 'Eliminar residente',
                 'Contacta al administrador para continuar con la acción.',
@@ -737,6 +781,403 @@ class _ResidentCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _openEditDialog(BuildContext context) async {
+    final controller = Get.find<HorizontalPropertyResidentsController>(
+      tag: controllerTag,
+    );
+    Get.dialog(
+      const Center(child: CircularProgressIndicator()),
+      barrierDismissible: false,
+    );
+    HorizontalPropertyResidentDetailResult? detail;
+    try {
+      detail = await controller.fetchResidentDetail(resident.id);
+    } catch (_) {
+      detail = const HorizontalPropertyResidentDetailResult(
+        success: false,
+        message: 'No se pudo cargar la información del residente.',
+      );
+    } finally {
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
+    }
+
+    if (detail == null || !detail.success || detail.resident == null) {
+      _showSnack(
+        'No se pudo cargar',
+        detail?.message ?? 'Inténtalo nuevamente en unos segundos.',
+        isError: true,
+      );
+      return;
+    }
+
+    await controller.loadUnitsOptions();
+
+    final result = await showDialog<HorizontalPropertyResidentDetailResult>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => _ResidentFormDialog(
+        controller: controller,
+        title: 'Editar residente',
+        actionLabel: 'Actualizar residente',
+        initialDetail: detail!.resident,
+        fallback: resident,
+        showActiveSwitch: true,
+        onSubmit: (payload) =>
+            controller.updateResident(residentId: resident.id, data: payload),
+      ),
+    );
+
+    if (result != null && result.success) {
+      final message = result.message?.isNotEmpty == true
+          ? result.message!
+          : 'El residente ${resident.name} se actualizó correctamente.';
+      _showSnack('Residente actualizado', message);
+    }
+  }
+}
+
+class _ResidentFormDialog extends StatefulWidget {
+  final HorizontalPropertyResidentsController controller;
+  final String title;
+  final String actionLabel;
+  final HorizontalPropertyResidentDetail? initialDetail;
+  final HorizontalPropertyResidentItem? fallback;
+  final bool showActiveSwitch;
+  final Future<HorizontalPropertyResidentDetailResult> Function(
+    Map<String, dynamic> data,
+  )
+      onSubmit;
+
+  const _ResidentFormDialog({
+    required this.controller,
+    required this.title,
+    required this.actionLabel,
+    required this.onSubmit,
+    this.initialDetail,
+    this.fallback,
+    this.showActiveSwitch = false,
+  });
+
+  @override
+  State<_ResidentFormDialog> createState() => _ResidentFormDialogState();
+}
+
+class _ResidentFormDialogState extends State<_ResidentFormDialog> {
+  static const _residentTypes = <int, String>{
+    1: 'Propietario',
+    2: 'Arrendatario',
+    3: 'Familiar',
+    4: 'Invitado',
+  };
+
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _unitCtrl = TextEditingController();
+  final TextEditingController _nameCtrl = TextEditingController();
+  final TextEditingController _emailCtrl = TextEditingController();
+  final TextEditingController _dniCtrl = TextEditingController();
+  final TextEditingController _phoneCtrl = TextEditingController();
+  final TextEditingController _emergencyCtrl = TextEditingController();
+  int? _selectedUnitId;
+  int? _residentTypeId;
+  bool _isMain = true;
+  bool _isActive = true;
+  bool _saving = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    final detail = widget.initialDetail;
+    final fallback = widget.fallback;
+    _selectedUnitId = detail?.propertyUnitId;
+    _unitCtrl.text = detail?.propertyUnitNumber ?? fallback?.propertyUnitNumber ?? '';
+    _residentTypeId = detail?.residentTypeId;
+    _nameCtrl.text = detail?.name ?? fallback?.name ?? '';
+    _emailCtrl.text = detail?.email ?? fallback?.email ?? '';
+    _dniCtrl.text = detail?.dni ?? '';
+    _phoneCtrl.text = detail?.phone ?? fallback?.phone ?? '';
+    _emergencyCtrl.text = detail?.emergencyContact ?? '';
+    _isMain = detail?.isMainResident ?? fallback?.isMainResident ?? true;
+    _isActive = detail?.isActive ?? fallback?.isActive ?? true;
+  }
+
+  @override
+  void dispose() {
+    _unitCtrl.dispose();
+    _nameCtrl.dispose();
+    _emailCtrl.dispose();
+    _dniCtrl.dispose();
+    _phoneCtrl.dispose();
+    _emergencyCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final viewInsets = MediaQuery.viewInsetsOf(context);
+
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: Text(widget.title),
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 620),
+        child: Padding(
+          padding: EdgeInsets.only(bottom: viewInsets.bottom),
+          child: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _unitAutocomplete(),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<int>(
+                    value: _residentTypeId,
+                    decoration: _fieldDecoration('Tipo de residente'),
+                    items: _residentTypes.entries
+                        .map(
+                          (entry) => DropdownMenuItem<int>(
+                            value: entry.key,
+                            child: Text(entry.value),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) => setState(() => _residentTypeId = value),
+                    validator: (value) =>
+                        value == null ? 'Selecciona el tipo de residente' : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _nameCtrl,
+                    decoration: _fieldDecoration('Nombre completo'),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Ingresa el nombre del residente';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _emailCtrl,
+                    decoration: _fieldDecoration('Email'),
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _dniCtrl,
+                    decoration: _fieldDecoration('Documento de identidad'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _phoneCtrl,
+                    decoration: _fieldDecoration('Teléfono'),
+                    keyboardType: TextInputType.phone,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _emergencyCtrl,
+                    decoration: _fieldDecoration('Contacto de emergencia'),
+                  ),
+                  const SizedBox(height: 8),
+                  CheckboxListTile(
+                    value: _isMain,
+                    onChanged: (value) => setState(() => _isMain = value ?? true),
+                    title: const Text('Residente principal'),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  if (widget.showActiveSwitch)
+                    CheckboxListTile(
+                      value: _isActive,
+                      onChanged: (value) =>
+                          setState(() => _isActive = value ?? true),
+                      title: const Text('Activo'),
+                      controlAffinity: ListTileControlAffinity.leading,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  if (_error != null) ...[
+                    const SizedBox(height: 4),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        _error!,
+                        style: tt.bodySmall?.copyWith(color: cs.error),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _saving ? null : () => Navigator.of(context).pop(),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: _saving ? null : _submit,
+          child: _saving
+              ? SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    color: cs.onPrimary,
+                    strokeWidth: 2,
+                  ),
+                )
+              : Text(widget.actionLabel),
+        ),
+      ],
+    );
+  }
+
+  InputDecoration _fieldDecoration(String label) {
+    return InputDecoration(
+      labelText: label,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+    );
+  }
+
+  Widget _unitAutocomplete() {
+    final options = widget.controller.unitsOptions;
+    return Obx(() {
+      final loading = widget.controller.unitsOptionsLoading.value;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Autocomplete<HorizontalPropertyUnitItem>(
+            displayStringForOption: (option) => option.number,
+            initialValue: TextEditingValue(text: _unitCtrl.text),
+            optionsBuilder: (text) {
+              return widget.controller.filterUnits(text.text);
+            },
+            onSelected: (option) {
+              _selectedUnitId = option.id;
+              _unitCtrl.text = option.number;
+            },
+            fieldViewBuilder: (
+              context,
+              textEditingController,
+              focusNode,
+              onFieldSubmitted,
+            ) {
+              textEditingController.text = _unitCtrl.text;
+              _unitCtrl.value = textEditingController.value;
+              return TextFormField(
+                controller: textEditingController,
+                focusNode: focusNode,
+                decoration: _fieldDecoration('Unidad'),
+                onFieldSubmitted: (_) => onFieldSubmitted(),
+                validator: (value) {
+                  if ((value ?? '').trim().isEmpty) {
+                    return 'Selecciona la unidad';
+                  }
+                  if (_selectedUnitId == null &&
+                      !_matchUnit(value ?? '', options)) {
+                    return 'Selecciona una unidad válida';
+                  }
+                  return null;
+                },
+                onChanged: (_) => setState(() => _selectedUnitId = null),
+              );
+            },
+          ),
+          if (loading)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Row(
+                children: const [
+                  SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  SizedBox(width: 8),
+                  Text('Cargando unidades...'),
+                ],
+              ),
+            ),
+        ],
+      );
+    });
+  }
+
+  bool _matchUnit(String input, List<HorizontalPropertyUnitItem> options) {
+    final normalized = input.trim().toLowerCase();
+    for (final unit in options) {
+      if (unit.number.toLowerCase() == normalized) {
+        _selectedUnitId = unit.id;
+        return true;
+      }
+    }
+    return false;
+  }
+
+  Map<String, dynamic> _buildPayload() {
+    return {
+      'property_unit_id': _selectedUnitId,
+      'resident_type_id': _residentTypeId,
+      'name': _nameCtrl.text.trim(),
+      'email': _nullable(_emailCtrl.text),
+      'dni': _nullable(_dniCtrl.text),
+      'phone': _nullable(_phoneCtrl.text),
+      'emergency_contact': _nullable(_emergencyCtrl.text),
+      'is_main_resident': _isMain,
+      if (widget.showActiveSwitch) 'is_active': _isActive,
+    };
+  }
+
+  String? _nullable(String value) {
+    return value.trim().isEmpty ? null : value.trim();
+  }
+
+  Future<void> _submit() async {
+    if (_saving) return;
+    final form = _formKey.currentState;
+    if (form == null) return;
+
+    if (_selectedUnitId == null) {
+      _matchUnit(_unitCtrl.text, widget.controller.unitsOptions);
+    }
+
+    if (!form.validate() || _selectedUnitId == null) {
+      setState(() {
+        _error = _selectedUnitId == null ? 'Selecciona la unidad.' : null;
+      });
+      return;
+    }
+
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      final result = await widget.onSubmit(_buildPayload());
+      if (!mounted) return;
+      if (!result.success) {
+        setState(() {
+          _saving = false;
+          _error = result.message ?? 'No se pudo completar la acción.';
+        });
+        return;
+      }
+      Navigator.of(context).pop(result);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _error = 'Ocurrió un error al procesar la solicitud.';
+      });
+    }
   }
 }
 
