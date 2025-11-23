@@ -166,12 +166,14 @@ class HomeController extends GetxController {
         selected ?? (businesses.isNotEmpty ? businesses.first : null);
     if (business == null) return;
 
-    final primary = business.primaryColor;
-    final secondary = business.secondaryColor;
-
     // Post-frame para no hacerlo en medio de un build.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      AppTheme.instance.updateColors(primary, secondary);
+      AppTheme.instance.updateColors(
+        business.primaryColor,
+        business.secondaryColor,
+        business.tertiaryColor,
+        business.quaternaryColor,
+      );
     });
   }
 

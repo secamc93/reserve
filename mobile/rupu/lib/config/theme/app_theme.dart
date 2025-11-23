@@ -8,18 +8,11 @@ class AppTheme {
 
   late Color primaryColor = const Color(0xFF021699);
   late Color secondaryColor = const Color(0xFF3B82F6);
+  late Color tertiaryColor = const Color(0xFF0EA5E9);
+  late Color quaternaryColor = const Color(0xFF22C55E);
 
   ThemeData get lightTheme {
-    final baseScheme = ColorScheme.fromSeed(
-      seedColor: primaryColor,
-      brightness: Brightness.light,
-    );
-
-    // ⬇️ Alinea el FAB con tu color secundario
-    final scheme = baseScheme.copyWith(
-      secondaryContainer: secondaryColor,
-      onSecondaryContainer: Colors.white,
-    );
+    final scheme = _buildColorScheme(Brightness.light);
 
     return ThemeData(
       brightness: Brightness.light,
@@ -48,15 +41,7 @@ class AppTheme {
   }
 
   ThemeData get darkTheme {
-    final baseScheme = ColorScheme.fromSeed(
-      seedColor: primaryColor,
-      brightness: Brightness.dark,
-    );
-
-    final scheme = baseScheme.copyWith(
-      secondaryContainer: secondaryColor.withValues(alpha: .95),
-      onSecondaryContainer: Colors.white,
-    );
+    final scheme = _buildColorScheme(Brightness.dark);
 
     return ThemeData(
       brightness: Brightness.dark,
@@ -99,9 +84,34 @@ class AppTheme {
     );
   }
 
-  void updateColors(String primaryHex, String secondaryHex) {
+  ColorScheme _buildColorScheme(Brightness brightness) {
+    final baseScheme = ColorScheme.fromSeed(
+      seedColor: primaryColor,
+      brightness: brightness,
+    );
+
+    return baseScheme.copyWith(
+      secondary: secondaryColor,
+      secondaryContainer: secondaryColor.withValues(alpha: brightness == Brightness.dark ? .95 : 1),
+      onSecondaryContainer: Colors.white,
+      tertiary: tertiaryColor,
+      tertiaryContainer: tertiaryColor.withValues(alpha: .9),
+      onTertiaryContainer: Colors.white,
+      surfaceTint: quaternaryColor,
+      outlineVariant: quaternaryColor.withValues(alpha: .25),
+    );
+  }
+
+  void updateColors(
+    String primaryHex,
+    String secondaryHex,
+    String tertiaryHex,
+    String quaternaryHex,
+  ) {
     primaryColor = _hexToColor(primaryHex);
     secondaryColor = _hexToColor(secondaryHex);
+    tertiaryColor = _hexToColor(tertiaryHex);
+    quaternaryColor = _hexToColor(quaternaryHex);
     final newTheme = Get.isDarkMode ? darkTheme : lightTheme;
     Get.changeTheme(newTheme);
   }

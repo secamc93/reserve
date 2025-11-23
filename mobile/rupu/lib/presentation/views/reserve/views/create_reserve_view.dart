@@ -3,64 +3,21 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
-import 'package:rupu/presentation/views/profile/perfil_controller.dart';
-import 'package:rupu/presentation/views/reserve/controllers/reserves_controller.dart';
+import 'package:rupu/presentation/views/reserve/controllers/create_reserve_controller.dart';
 import '../widgets.dart';
 
-class CreateReserveView extends StatefulWidget {
+class CreateReserveView extends StatelessWidget {
   const CreateReserveView({super.key});
 
   static const name = 'reserve_new';
 
-  @override
-  State<CreateReserveView> createState() => _CreateReserveViewState();
-}
-
-class _CreateReserveViewState extends State<CreateReserveView> {
-  final _formKey = GlobalKey<FormState>();
-
-  final _nameCtrl = TextEditingController();
-  final _dniCtrl = TextEditingController();
-  final _emailCtrl = TextEditingController();
-  final _phoneCtrl = TextEditingController();
-  final _guestsCtrl = TextEditingController(text: '1');
-  final _notesCtrl = TextEditingController();
-
-  DateTime _start = _todayAt(hour: 9);
-  DateTime _end = _todayAt(hour: 10);
-  bool _saving = false;
-
-  static DateTime _todayAt({required int hour, int minute = 0}) {
-    final now = DateTime.now();
-    return DateTime(now.year, now.month, now.day, hour, minute);
-  }
-
-  @override
-  void dispose() {
-    _nameCtrl.dispose();
-    _dniCtrl.dispose();
-    _emailCtrl.dispose();
-    _phoneCtrl.dispose();
-    _guestsCtrl.dispose();
-    _notesCtrl.dispose();
-    super.dispose();
-  }
-
-  bool _isPastDate(DateTime dt) {
-    final today0 = DateTime(
-      DateTime.now().year,
-      DateTime.now().month,
-      DateTime.now().day,
-    );
-    final d0 = DateTime(dt.year, dt.month, dt.day);
-    return d0.isBefore(today0);
-  }
-
-  Future<void> _pickStart() async {
-    final ctx = context;
+  Future<void> _pickStart(
+    BuildContext context,
+    CreateReserveController controller,
+  ) async {
     final date = await showDatePicker(
-      context: ctx,
-      initialDate: _start,
+      context: context,
+      initialDate: controller.start.value,
       firstDate: DateTime(
         DateTime.now().year,
         DateTime.now().month,
@@ -69,12 +26,11 @@ class _CreateReserveViewState extends State<CreateReserveView> {
       lastDate: DateTime(2100),
       locale: const Locale('es'),
     );
-    if (date == null) return;
+    if (date == null || !context.mounted) return;
 
-    if (!context.mounted) return;
     final time = await showTimePicker(
-      context: ctx,
-      initialTime: TimeOfDay.fromDateTime(_start.toUtc()),
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(controller.start.value.toUtc()),
       helpText: 'Hora de inicio',
     );
     if (time == null) return;
@@ -86,21 +42,22 @@ class _CreateReserveViewState extends State<CreateReserveView> {
       time.hour,
       time.minute,
     );
-    if (_isPastDate(tmp)) {
-      _showSnack('La fecha debe ser hoy o futura.');
-      return;
+    final ok = controller.updateStart(tmp);
+    if (!ok) {
+      _showSnack(context, 'La fecha debe ser hoy o futura.');
     }
-    setState(() {
-      _start = tmp;
-      if (!_end.isAfter(_start)) _end = _start.add(const Duration(hours: 1));
-    });
   }
 
-  Future<void> _pickEnd() async {
-    final ctx = context;
+  Future<void> _pickEnd(
+    BuildContext context,
+    CreateReserveController controller,
+  ) async {
     final date = await showDatePicker(
-      context: ctx,
-      initialDate: _end.isAfter(_start) ? _end : _start,
+      context: context,
+      initialDate:
+          controller.end.value.isAfter(controller.start.value)
+              ? controller.end.value
+              : controller.start.value,
       firstDate: DateTime(
         DateTime.now().year,
         DateTime.now().month,
@@ -109,12 +66,11 @@ class _CreateReserveViewState extends State<CreateReserveView> {
       lastDate: DateTime(2100),
       locale: const Locale('es'),
     );
-    if (date == null) return;
+    if (date == null || !context.mounted) return;
 
-    if (!context.mounted) return;
     final time = await showTimePicker(
-      context: ctx,
-      initialTime: TimeOfDay.fromDateTime(_end.toUtc()),
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(controller.end.value.toUtc()),
       helpText: 'Hora de fin',
     );
     if (time == null) return;
@@ -126,120 +82,62 @@ class _CreateReserveViewState extends State<CreateReserveView> {
       time.hour,
       time.minute,
     );
-    if (_isPastDate(tmp)) {
-      _showSnack('La fecha debe ser hoy o futura.');
-      return;
+    final ok = controller.updateEnd(tmp);
+    if (!ok) {
+      final message = controller.isPastDate(tmp)
+          ? 'La fecha debe ser hoy o futura.'
+          : 'La hora de fin debe ser mayor a la de inicio.';
+      _showSnack(context, message);
     }
-    if (!tmp.isAfter(_start)) {
-      _showSnack('La hora de fin debe ser mayor a la de inicio.');
-      return;
-    }
-    setState(() => _end = tmp);
   }
 
-  Future<void> _submit() async {
-    final name = _nameCtrl.text.trim();
-    final dni = _dniCtrl.text.trim();
-    final email = _emailCtrl.text.trim();
-    final phone = _phoneCtrl.text.trim();
-    final guests =
-        int.tryParse(
-          _guestsCtrl.text.trim().isEmpty ? '0' : _guestsCtrl.text.trim(),
-        ) ??
-        0;
-
-    if (!_formKey.currentState!.validate()) return;
-    if (_isPastDate(_start)) {
-      _showSnack('La fecha debe ser hoy o futura.');
-      return;
-    }
-    if (!_end.isAfter(_start)) {
-      _showSnack('La hora de fin debe ser mayor a la de inicio.');
-      return;
-    }
-    if (guests <= 0) {
-      _showSnack('El número de personas debe ser mayor a 0.');
-      return;
-    }
-    if (email.isEmpty && phone.isEmpty) {
-      _showSnack('Proporciona al menos email o teléfono.');
-      return;
-    }
-    if (email.isNotEmpty && !_isValidEmail(email)) {
-      _showSnack('Email inválido.');
-      return;
-    }
-
-    // 1) BottomSheet de confirmación
+  Future<void> _submit(
+    BuildContext context,
+    CreateReserveController controller,
+  ) async {
     final df = DateFormat('EEE d MMM, HH:mm', 'es');
+    final name = controller.nameCtrl.text.trim();
+    final guests = int.tryParse(controller.guestsCtrl.text.trim()) ?? 0;
+    final email = controller.emailCtrl.text.trim();
+    final phone = controller.phoneCtrl.text.trim();
+    final dni = controller.dniCtrl.text.trim();
+
+    final valid = controller.validateInputs(onError: (msg) {
+      _showSnack(context, msg);
+    });
+    if (!valid) return;
+
     final confirmed = await _confirmSheet(
+      context: context,
       name: name,
       guests: guests,
-      timeRange: '${df.format(_start)} – ${df.format(_end)}',
+      timeRange: '${df.format(controller.start.value)} – ${df.format(controller.end.value)}',
       email: email.isEmpty ? null : email,
       phone: phone.isEmpty ? null : phone,
       dni: dni.isEmpty ? null : dni,
     );
-    if (!confirmed) return; // usuario decidió seguir editando
+    if (!confirmed) return;
 
-    // 2) Guardar
-    final perfil = Get.find<PerfilController>();
-    final businessId = perfil.businessId;
-    if (businessId <= 0) {
-      _showSnack('No hay negocio seleccionado.');
-      return;
-    }
-
-    final reserveCtrl = Get.isRegistered<ReserveController>()
-        ? Get.find<ReserveController>()
-        : Get.put(ReserveController());
-
-    setState(() => _saving = true);
-    final ok = await reserveCtrl.crearReserva(
-      businessId: businessId,
-      name: name,
-      startAt: _start,
-      endAt: _end,
-      numberOfGuests: guests,
-      dni: dni.isEmpty ? null : dni,
-      email: email.isEmpty ? null : email,
-      phone: phone.isEmpty ? null : phone,
-    );
-    setState(() => _saving = false);
-
+    final ok = await controller.persistReservation();
     if (!ok) {
-      _showSnack('No se pudo crear la reserva.');
+      _showSnack(context, 'No se pudo crear la reserva.');
       return;
     }
 
-    // 3) Refrescar (hoy y todas)
-    try {
-      await reserveCtrl.cargarReservasHoy(silent: true);
-    } catch (_) {}
-    try {
-      await reserveCtrl.cargarReservasTodas(silent: true);
-    } catch (_) {} // o tu método de “todas”
-
-    // 4) BottomSheet de éxito
     final goBack = await _successSheet(
+      context: context,
       title: '¡Reserva creada!',
       message: 'Se creó la reserva de $name para $guests persona(s).',
     );
-    if (goBack && mounted) Navigator.of(context).pop();
+    if (goBack && context.mounted) Navigator.of(context).pop();
   }
 
-  bool _isValidEmail(String email) {
-    final re = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
-    return re.hasMatch(email);
-  }
-
-  void _showSnack(String msg) {
+  void _showSnack(BuildContext context, String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
-  // ───────────────────── Bottom Sheets ─────────────────────
-
   Future<bool> _confirmSheet({
+    required BuildContext context,
     required String name,
     required int guests,
     required String timeRange,
@@ -267,7 +165,6 @@ class _CreateReserveViewState extends State<CreateReserveView> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Encabezado premium
                   Row(
                     children: [
                       CircleAvatar(
@@ -329,7 +226,7 @@ class _CreateReserveViewState extends State<CreateReserveView> {
                       value: dni!,
                     ),
                   ],
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 10),
                   Row(
                     children: [
                       Expanded(
@@ -357,6 +254,7 @@ class _CreateReserveViewState extends State<CreateReserveView> {
   }
 
   Future<bool> _successSheet({
+    required BuildContext context,
     required String title,
     required String message,
   }) async {
@@ -413,215 +311,259 @@ class _CreateReserveViewState extends State<CreateReserveView> {
 
   @override
   Widget build(BuildContext context) {
+    return GetX<CreateReserveController>(
+      init: CreateReserveController(),
+      autoRemove: true,
+      builder: (controller) {
+        final cs = Theme.of(context).colorScheme;
+        final textTheme = Theme.of(context).textTheme;
+
+        return SafeArea(
+          child: Scaffold(
+            appBar: AppBar(
+              title: const Text('Nueva reserva'),
+              backgroundColor: cs.primary,
+              foregroundColor: cs.onPrimary,
+              elevation: 0,
+            ),
+            body: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        cs.primary.withValues(alpha: .10),
+                        cs.secondary.withValues(alpha: .08),
+                      ],
+                    ),
+                    border: Border.all(color: cs.outlineVariant),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 8),
+                      Text(
+                        'Nueva reserva',
+                        style: textTheme.titleLarge!.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Completa los datos para crear una nueva reserva.',
+                        style: textTheme.bodyMedium!.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Form(
+                  key: controller.formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextFormField(
+                        controller: controller.nameCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'Nombre *',
+                          prefixIcon: Icon(Icons.person_outline),
+                        ),
+                        validator: (v) =>
+                            (v == null || v.trim().isEmpty)
+                                ? 'El nombre es obligatorio'
+                                : null,
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: controller.dniCtrl,
+                              decoration: const InputDecoration(
+                                labelText: 'Documento',
+                                prefixIcon: Icon(Icons.badge_outlined),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: TextFormField(
+                              controller: controller.guestsCtrl,
+                              decoration: const InputDecoration(
+                                labelText: 'Personas *',
+                                prefixIcon: Icon(Icons.group_outlined),
+                              ),
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: controller.emailCtrl,
+                              decoration: const InputDecoration(
+                                labelText: 'Email',
+                                prefixIcon: Icon(Icons.email_outlined),
+                              ),
+                              keyboardType: TextInputType.emailAddress,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: TextFormField(
+                              controller: controller.phoneCtrl,
+                              decoration: const InputDecoration(
+                                labelText: 'Teléfono',
+                                prefixIcon: Icon(Icons.phone_outlined),
+                              ),
+                              keyboardType: TextInputType.phone,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: controller.notesCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'Notas adicionales',
+                          prefixIcon: Icon(Icons.notes_outlined),
+                        ),
+                        maxLines: 2,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Horario',
+                        style: textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _DateTimeCard(
+                              label: 'Inicio',
+                              value: controller.start.value,
+                              onTap: () => _pickStart(context, controller),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _DateTimeCard(
+                              label: 'Fin',
+                              value: controller.end.value,
+                              onTap: () => _pickEnd(context, controller),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: controller.saving.value
+                              ? null
+                              : () => _submit(context, controller),
+                          icon: controller.saving.value
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.check_circle_outline),
+                          label: Text(
+                            controller.saving.value
+                                ? 'Guardando...'
+                                : 'Crear reserva',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _DateTimeCard extends StatelessWidget {
+  final String label;
+  final DateTime value;
+  final VoidCallback onTap;
+
+  const _DateTimeCard({
+    required this.label,
+    required this.value,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final df = DateFormat('EEE d MMM', 'es');
+    final tf = DateFormat('HH:mm');
 
-    return SafeArea(
-      child: Scaffold(
-        body: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          border: Border.all(color: cs.outlineVariant),
+          borderRadius: BorderRadius.circular(12),
+          color: cs.surfaceContainerLow,
+        ),
+        child: Row(
           children: [
-            // Encabezado suave con degradado del tema
             Container(
-              padding: const EdgeInsets.all(16),
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    cs.primary.withValues(alpha: .10),
-                    cs.secondary.withValues(alpha: .08),
-                  ],
-                ),
-                border: Border.all(color: cs.outlineVariant),
+                color: cs.secondaryContainer,
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 8),
-                  Text(
-                    'Nueva reserva',
-                    style: textTheme.titleLarge!.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Completa los datos para crear una nueva reserva.',
-                    style: textTheme.bodyMedium!.copyWith(
-                      color: cs.onSurfaceVariant,
-                    ),
-                  ),
-                ],
+              child: Icon(
+                Icons.event,
+                color: cs.onSecondaryContainer,
               ),
             ),
-            const SizedBox(height: 16),
-
-            // Tarjeta principal (premium)
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: cs.surface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: cs.outlineVariant),
-              ),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    // Nombre
-                    TextFormField(
-                      controller: _nameCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Nombre del cliente *',
-                        hintText: 'Ej: Ana Gómez',
-                        prefixIcon: Icon(Icons.person_outline),
-                      ),
-                      validator: (v) {
-                        if (v == null || v.trim().isEmpty) {
-                          return 'El nombre es obligatorio';
-                        }
-                        return null;
-                      },
-                      textInputAction: TextInputAction.next,
-                    ),
-                    const SizedBox(height: 12),
-
-                    // DNI
-                    TextFormField(
-                      controller: _dniCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'DNI / Documento',
-                        hintText: 'Ej: 12345678',
-                        prefixIcon: Icon(Icons.badge_outlined),
-                      ),
-                      textInputAction: TextInputAction.next,
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Email
-                    TextFormField(
-                      controller: _emailCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Email',
-                        hintText: 'ejemplo@dominio.com',
-                        prefixIcon: Icon(Icons.email_outlined),
-                      ),
-                      keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.next,
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Teléfono
-                    TextFormField(
-                      controller: _phoneCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Teléfono',
-                        hintText: 'Ej: 3001234567',
-                        prefixIcon: Icon(Icons.phone_outlined),
-                      ),
-                      keyboardType: TextInputType.phone,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'[0-9+\- ]')),
-                      ],
-                      textInputAction: TextInputAction.next,
-                    ),
-                    const SizedBox(height: 12),
-
-                    // # Personas
-                    TextFormField(
-                      controller: _guestsCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Número de personas',
-                        hintText: 'Ej: 2',
-                        prefixIcon: Icon(Icons.group_outlined),
-                      ),
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      validator: (v) {
-                        final n = int.tryParse((v ?? '').trim());
-                        if (n == null || n <= 0) return 'Debe ser mayor a 0';
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Fecha / Hora
-                    Row(
-                      children: [
-                        Expanded(
-                          child: DateTile(
-                            label: 'Inicio',
-                            value: DateFormat(
-                              'EEE d MMM, HH:mm',
-                              'es',
-                            ).format(_start),
-                            icon: Icons.schedule,
-                            onTap: _pickStart,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: DateTile(
-                            label: 'Fin',
-                            value: DateFormat(
-                              'EEE d MMM, HH:mm',
-                              'es',
-                            ).format(_end),
-                            icon: Icons.schedule_outlined,
-                            onTap: _pickEnd,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Notas (UI solo)
-                    TextFormField(
-                      controller: _notesCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Notas (opcional)',
-                        hintText: 'Algo que quieras recordar…',
-                        prefixIcon: Icon(Icons.sticky_note_2_outlined),
-                      ),
-                      minLines: 1,
-                      maxLines: 3,
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Botones
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: _saving
-                                ? null
-                                : () => Navigator.of(context).pop(),
-                            child: const Text('Cancelar'),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: FilledButton.icon(
-                            onPressed: _saving ? null : _submit,
-                            icon: _saving
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Icon(Icons.check_circle_outline),
-                            label: Text(_saving ? 'Guardando…' : 'Guardar'),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: textTheme.labelMedium?.copyWith(
+                    color: cs.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
+                const SizedBox(height: 2),
+                Text(
+                  '${df.format(value)} · ${tf.format(value)}',
+                  style: textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -629,4 +571,3 @@ class _CreateReserveViewState extends State<CreateReserveView> {
     );
   }
 }
-

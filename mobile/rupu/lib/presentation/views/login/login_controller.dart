@@ -69,6 +69,8 @@ class LoginController extends GetxController {
     AppTheme.instance.updateColors(
       business.primaryColor,
       business.secondaryColor,
+      business.tertiaryColor,
+      business.quaternaryColor,
     );
   }
 
