@@ -523,9 +523,9 @@ class _Card extends StatelessWidget {
             ),
           ),
 
-          // Image Area (4:3 Ratio + BoxFit.fill)
+          // Image Area (16:9 Ratio + BoxFit.fill)
           AspectRatio(
-            aspectRatio: 4 / 3,
+            aspectRatio: 16 / 9,
             child: GestureDetector(
               onTap: onView,
               child: Container(

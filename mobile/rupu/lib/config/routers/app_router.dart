@@ -368,7 +368,7 @@ final appRouter = GoRouter(
                 final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
                 final ctrl = Get.find<ReserveUpdateController>();
                 ctrl.cargarReserva(id);
-                return const UpdateReserveView();
+                return UpdateReserveView();
               },
             );
           },

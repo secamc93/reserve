@@ -46,129 +46,133 @@ class IamView extends StatelessWidget {
 
     return DefaultTabController(
       length: _tabs.length,
-      child: Builder(builder: (context) {
-        final tabController = DefaultTabController.of(context)!;
-        return Scaffold(
-          backgroundColor: cs.surface,
-          appBar: AppBar(
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            backgroundColor: Colors.transparent,
-            toolbarHeight: 68,
-            flexibleSpace: Container(
+      child: Builder(
+        builder: (context) {
+          final tabController = DefaultTabController.of(context)!;
+          return Scaffold(
+            backgroundColor: cs.surface,
+            appBar: AppBar(
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              backgroundColor: Colors.transparent,
+              toolbarHeight: 68,
+              flexibleSpace: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [cs.primary, cs.secondary.withValues(alpha: 0.85)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+              ),
+              titleSpacing: 16,
+              title: Row(
+                children: [
+                  Icon(Icons.shield_outlined, size: 26, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Text(
+                    'IAM',
+                    style: tt.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                ],
+              ),
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(60),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: TabBar(
+                    controller: tabController,
+                    isScrollable: true,
+                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+                    labelPadding: const EdgeInsets.symmetric(horizontal: 6),
+                    indicator: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    indicatorSize: TabBarIndicatorSize.label,
+                    labelColor: Colors.white,
+                    unselectedLabelColor: Colors.white.withValues(alpha: 0.8),
+                    labelStyle: tt.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    unselectedLabelStyle: tt.labelLarge,
+                    tabs: _tabs
+                        .map(
+                          (tab) => Tab(
+                            iconMargin: const EdgeInsets.only(bottom: 2),
+                            icon: Icon(tab.icon, size: 20),
+                            text: tab.label,
+                          ),
+                        )
+                        .toList(growable: false),
+                  ),
+                ),
+              ),
+            ),
+            floatingActionButton: AnimatedBuilder(
+              animation: tabController.animation!,
+              builder: (_, __) =>
+                  _buildFloatingActionButton(context, tabController.index) ??
+                  const SizedBox.shrink(),
+            ),
+            body: Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [cs.primary, cs.secondary.withValues(alpha: 0.85)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+                  colors: [
+                    cs.surface,
+                    cs.surfaceContainerHighest.withValues(alpha: 0.25),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                 ),
               ),
-            ),
-            titleSpacing: 16,
-            title: Row(
-              children: [
-                Icon(Icons.shield_outlined, size: 26, color: Colors.white),
-                const SizedBox(width: 8),
-                Text(
-                  'IAM',
-                  style: tt.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    letterSpacing: 0.4,
+              child: TabBarView(
+                controller: tabController,
+                children: [
+                  _IamTabPage(
+                    child: SafeArea(
+                      top: false,
+                      bottom: false,
+                      child: _IamUsersTab(pageIndex: pageIndex),
+                    ),
                   ),
-                ),
-              ],
-            ),
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(60),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: TabBar(
-                  controller: tabController,
-                  isScrollable: true,
-                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-                  labelPadding: const EdgeInsets.symmetric(horizontal: 6),
-                  indicator: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(999),
+                  const _IamTabPage(
+                    child: SafeArea(
+                      top: false,
+                      bottom: false,
+                      child: RolesPermissionsStandaloneTab(
+                        tab: RolesPermissionsTab.roles,
+                      ),
+                    ),
                   ),
-                  indicatorSize: TabBarIndicatorSize.label,
-                  labelColor: Colors.white,
-                  unselectedLabelColor: Colors.white.withValues(alpha: 0.8),
-                  labelStyle:
-                      tt.labelLarge?.copyWith(fontWeight: FontWeight.w600),
-                  unselectedLabelStyle: tt.labelLarge,
-                  tabs: _tabs
-                      .map(
-                        (tab) => Tab(
-                          iconMargin: const EdgeInsets.only(bottom: 2),
-                          icon: Icon(tab.icon, size: 20),
-                          text: tab.label,
-                        ),
-                      )
-                      .toList(growable: false),
-                ),
-              ),
-            ),
-          ),
-          floatingActionButton: AnimatedBuilder(
-            animation: tabController.animation!,
-            builder: (_, __) =>
-                _buildFloatingActionButton(context, tabController.index),
-          ),
-          body: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  cs.surface,
-                  cs.surfaceContainerHighest.withValues(alpha: 0.25),
+                  const _IamTabPage(
+                    child: SafeArea(
+                      top: false,
+                      bottom: false,
+                      child: RolesPermissionsStandaloneTab(
+                        tab: RolesPermissionsTab.permissions,
+                      ),
+                    ),
+                  ),
+                  const _IamTabPage(
+                    child: SafeArea(top: false, child: _IamResourcesTab()),
+                  ),
+                  const _IamTabPage(
+                    child: SafeArea(top: false, child: _IamBusinessTypesTab()),
+                  ),
+                  const _IamTabPage(
+                    child: SafeArea(top: false, child: _IamBusinessesTab()),
+                  ),
                 ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
               ),
             ),
-            child: TabBarView(
-              controller: tabController,
-              children: [
-                _IamTabPage(
-                  child: SafeArea(
-                    top: false,
-                    bottom: false,
-                    child: _IamUsersTab(pageIndex: pageIndex),
-                  ),
-                ),
-                const _IamTabPage(
-                  child: SafeArea(
-                    top: false,
-                    bottom: false,
-                    child: RolesPermissionsStandaloneTab(
-                      tab: RolesPermissionsTab.roles,
-                    ),
-                  ),
-                ),
-                const _IamTabPage(
-                  child: SafeArea(
-                    top: false,
-                    bottom: false,
-                    child: RolesPermissionsStandaloneTab(
-                      tab: RolesPermissionsTab.permissions,
-                    ),
-                  ),
-                ),
-                const _IamTabPage(
-                  child: SafeArea(top: false, child: _IamResourcesTab()),
-                ),
-                const _IamTabPage(
-                  child: SafeArea(top: false, child: _IamBusinessTypesTab()),
-                ),
-                const _IamTabPage(
-                  child: SafeArea(top: false, child: _IamBusinessesTab()),
-                ),
-              ],
-            ),
-          ),
-        );
-      }),
+          );
+        },
+      ),
     );
   }
 

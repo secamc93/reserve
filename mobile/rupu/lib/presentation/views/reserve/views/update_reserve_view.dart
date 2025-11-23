@@ -17,18 +17,18 @@ class UpdateReserveView extends StatelessWidget {
 
   final ReserveUpdateController updateController =
       Get.isRegistered<ReserveUpdateController>()
-          ? Get.find<ReserveUpdateController>()
-          : Get.put(ReserveUpdateController());
+      ? Get.find<ReserveUpdateController>()
+      : Get.put(ReserveUpdateController());
 
   final ReserveUpdateFormController formController =
       Get.isRegistered<ReserveUpdateFormController>()
-          ? Get.find<ReserveUpdateFormController>()
-          : Get.put(ReserveUpdateFormController());
+      ? Get.find<ReserveUpdateFormController>()
+      : Get.put(ReserveUpdateFormController());
 
   final ReserveStatusController statusController =
       Get.isRegistered<ReserveStatusController>()
-          ? Get.find<ReserveStatusController>()
-          : Get.put(ReserveStatusController());
+      ? Get.find<ReserveStatusController>()
+      : Get.put(ReserveStatusController());
 
   @override
   Widget build(BuildContext context) {
@@ -218,7 +218,7 @@ class UpdateReserveView extends StatelessWidget {
                           },
                         ),
                         const SizedBox(height: 12),
-                        const TextFormField(
+                        TextFormField(
                           enabled: false,
                           decoration: InputDecoration(
                             labelText: 'Mesa (próximamente)',
@@ -249,14 +249,19 @@ class UpdateReserveView extends StatelessWidget {
                             ? null
                             : () async {
                                 if (!formController.formKey.currentState!
-                                    .validate()) return;
+                                    .validate())
+                                  return;
 
-                                final guests =
-                                    int.parse(formController.guestsCtrl.text.trim());
-                                if (!(formController.end.value!
-                                    .isAfter(formController.start.value!))) {
-                                  _snack(context,
-                                      'Hora fin debe ser mayor a inicio');
+                                final guests = int.parse(
+                                  formController.guestsCtrl.text.trim(),
+                                );
+                                if (!(formController.end.value!.isAfter(
+                                  formController.start.value!,
+                                ))) {
+                                  _snack(
+                                    context,
+                                    'Hora fin debe ser mayor a inicio',
+                                  );
                                   return;
                                 }
 
@@ -273,7 +278,8 @@ class UpdateReserveView extends StatelessWidget {
                                   startAt: formController.start.value!,
                                   endAt: formController.end.value!,
                                   numberOfGuests: guests,
-                                  statusId: formController.selectedStatusId ??
+                                  statusId:
+                                      formController.selectedStatusId ??
                                       (r.statusHistory.isNotEmpty
                                           ? r.statusHistory.last.statusId
                                           : 0),
@@ -283,9 +289,11 @@ class UpdateReserveView extends StatelessWidget {
                                 if (ok) {
                                   final listCtrl =
                                       Get.isRegistered<ReserveController>()
-                                          ? Get.find<ReserveController>()
-                                          : null;
-                                  await listCtrl?.cargarReservasHoy(silent: true);
+                                      ? Get.find<ReserveController>()
+                                      : null;
+                                  await listCtrl?.cargarReservasHoy(
+                                    silent: true,
+                                  );
                                   await listCtrl?.cargarReservasTodas.call(
                                     silent: true,
                                   );
@@ -310,11 +318,16 @@ class UpdateReserveView extends StatelessWidget {
                             ? const SizedBox(
                                 width: 16,
                                 height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : const Icon(Icons.save_outlined),
                         label: Text(
-                            formController.saving.value ? 'Guardando…' : 'Guardar'),
+                          formController.saving.value
+                              ? 'Guardando…'
+                              : 'Guardar',
+                        ),
                       ),
                     ),
                   ],
@@ -374,13 +387,7 @@ class UpdateReserveView extends StatelessWidget {
     if (time == null) return;
 
     formController.setStart(
-      DateTime(
-        date.year,
-        date.month,
-        date.day,
-        time.hour,
-        time.minute,
-      ),
+      DateTime(date.year, date.month, date.day, time.hour, time.minute),
     );
   }
 
