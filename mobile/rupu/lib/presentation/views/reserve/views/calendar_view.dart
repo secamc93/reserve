@@ -1,6 +1,5 @@
 // presentation/views/calendar/calendar_view_reserve.dart
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
@@ -9,6 +8,7 @@ import 'package:rupu/config/helpers/calendar_helper.dart';
 import 'package:rupu/presentation/views/profile/perfil_controller.dart';
 import 'package:rupu/presentation/views/reserve/controllers/reserves_controller.dart';
 import 'package:rupu/presentation/views/reserve/views/update_reserve_view.dart';
+import 'package:rupu/presentation/views/reserve/controllers/reserve_calendar_controller.dart';
 
 import '../widgets/calendar_compact_toolbar.dart';
 import '../widgets/reserve_calendar.dart';
@@ -16,51 +16,15 @@ import '../widgets/add_event_sheet.dart';
 import '../widgets/appointment_detail_sheet.dart';
 import '../widgets/sheets.dart';
 
-class CalendarViewReserve extends StatefulWidget {
-  const CalendarViewReserve({super.key, required this.pageIndex});
+class CalendarViewReserve extends StatelessWidget {
+  CalendarViewReserve({super.key, required this.pageIndex});
   static const name = 'calendar';
   final int pageIndex;
 
-  @override
-  State<CalendarViewReserve> createState() => _CalendarViewReserveState();
-}
-
-class _CalendarViewReserveState extends State<CalendarViewReserve> {
-  final calCtrl = CalendarController();
-  CalendarView _view = CalendarView.month;
-
-  // Eventos creados localmente (además de los traídos del controller)
-  final List<Appointment> _localEvents = [];
-
-  @override
-  void initState() {
-    super.initState();
-    calCtrl.view = _view;
-    _applyOrientationPolicy(_view);
-
-    final reserve = Get.isRegistered<ReserveController>()
-        ? Get.find<ReserveController>()
-        : Get.put(ReserveController());
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (reserve.reservasTodas.isEmpty) {
-        reserve.cargarReservasTodas(silent: true);
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    calCtrl.dispose();
-    // Restablece todas las orientaciones
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
-    super.dispose();
-  }
+  final ReserveCalendarController calendarController =
+      Get.isRegistered<ReserveCalendarController>()
+          ? Get.find<ReserveCalendarController>()
+          : Get.put(ReserveCalendarController());
 
   @override
   Widget build(BuildContext context) {
@@ -68,79 +32,67 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
         ? Get.find<ReserveController>()
         : Get.put(ReserveController());
 
-    return SafeArea(
-      child: Obx(() {
-        final appts = toAppointments(reserve.reservasTodas);
-        final merged = [...appts, ..._localEvents];
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Calendario'),
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: Obx(() {
+          final appts = toAppointments(reserve.reservasTodas);
+          final merged = [...appts, ...calendarController.localEvents];
 
-        return Stack(
-          children: [
-            Column(
-              children: [
-                CalendarCompactToolbar(
-                  currentView: _view,
-                  onChangeView: (v) {
-                    setState(() {
-                      _view = v;
-                      calCtrl.view = v;
-                      _applyOrientationPolicy(v);
-                    });
-                  },
-                  onToday: () {
-                    final now = DateTime.now();
-                    calCtrl.displayDate = DateTime(
-                      now.year,
-                      now.month,
-                      now.day,
-                    );
-                  },
-                  onPrev: () {
-                    final d = calCtrl.displayDate ?? DateTime.now();
-                    calCtrl.displayDate = stepBack(d, _view);
-                  },
-                  onNext: () {
-                    final d = calCtrl.displayDate ?? DateTime.now();
-                    calCtrl.displayDate = stepForward(d, _view);
-                  },
-                ),
-                Expanded(
-                  child: ReserveCalendar(
-                    controller: calCtrl,
-                    view: _view,
-                    appointments: merged,
-                    onTap: _handleTap,
-                    onLongPress: _handleLongPress,
+          return Stack(
+            children: [
+              Column(
+                children: [
+                  Obx(() => CalendarCompactToolbar(
+                        currentView: calendarController.view.value,
+                        onChangeView: calendarController.changeView,
+                        onToday: calendarController.goToday,
+                        onPrev: calendarController.goPrev,
+                        onNext: calendarController.goNext,
+                      )),
+                  Expanded(
+                    child: Obx(() => ReserveCalendar(
+                          controller: calendarController.calendar,
+                          view: calendarController.view.value,
+                          appointments: merged,
+                          onTap: (d) => _handleTap(context, d),
+                          onLongPress: (d) => _handleLongPress(context, d),
+                        )),
                   ),
-                ),
-              ],
-            ),
-
-            // FAB agregar desde la fecha visible
-            Positioned(
-              right: 16,
-              bottom: 16,
-              child: FloatingActionButton.extended(
-                onPressed: () {
-                  final base = calCtrl.displayDate ?? DateTime.now();
-                  final initial = DateTime(base.year, base.month, base.day, 9);
-                  _openAddEventSheet(initialDate: initial);
-                },
-                icon: const Icon(Icons.add),
-                label: const Text('Agregar'),
+                ],
               ),
-            ),
-          ],
-        );
-      }),
+
+              Positioned(
+                right: 16,
+                bottom: 16,
+                child: FloatingActionButton.extended(
+                  onPressed: () {
+                    final base = calendarController.calendar.displayDate ??
+                        DateTime.now();
+                    final initial =
+                        DateTime(base.year, base.month, base.day, 9);
+                    _openAddEventSheet(context, initialDate: initial);
+                  },
+                  icon: const Icon(Icons.add),
+                  label: const Text('Agregar'),
+                ),
+              ),
+            ],
+          );
+        }),
+      ),
     );
   }
 
   // ──────────────────────────── Handlers ────────────────────────────
-  void _handleTap(CalendarTapDetails d) {
+  void _handleTap(BuildContext context, CalendarTapDetails d) {
     if (d.targetElement == CalendarElement.appointment &&
         (d.appointments?.isNotEmpty ?? false)) {
       final appt = d.appointments!.first as Appointment;
-      _showAppointmentSheet(appt);
+      _showAppointmentSheet(context, appt);
       return;
     }
 
@@ -148,14 +100,14 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
       final tapped = d.date ?? DateTime.now();
       final base = DateTime(tapped.year, tapped.month, tapped.day, tapped.hour);
       if (_isPastDate(base)) {
-        _showSnack('No puedes crear eventos en fechas pasadas.');
+        _showSnack(context, 'No puedes crear eventos en fechas pasadas.');
         return;
       }
       // Si quieres, puedes habilitar creación con tap corto aquí.
     }
   }
 
-  void _handleLongPress(CalendarLongPressDetails d) {
+  void _handleLongPress(BuildContext context, CalendarLongPressDetails d) {
     final pressed = d.date ?? DateTime.now();
     final base = DateTime(
       pressed.year,
@@ -164,18 +116,19 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
       pressed.hour,
     );
     if (_isPastDate(base)) {
-      _showSnack('No puedes crear eventos en fechas pasadas.');
+      _showSnack(context, 'No puedes crear eventos en fechas pasadas.');
       return;
     }
-    final initial =
-        (_view == CalendarView.month || _view == CalendarView.schedule)
+    final initial = (calendarController.view.value == CalendarView.month ||
+            calendarController.view.value == CalendarView.schedule)
         ? DateTime(base.year, base.month, base.day, 9, 0)
         : base;
-    _openAddEventSheet(initialDate: initial);
+    _openAddEventSheet(context, initialDate: initial);
   }
 
   // ────────────────────── Hojas (sheets) & acciones ──────────────────────
-  Future<void> _openAddEventSheet({required DateTime initialDate}) async {
+  Future<void> _openAddEventSheet(BuildContext context,
+      {required DateTime initialDate}) async {
     await showAddEventSheet(
       context: context,
       initialDate: initialDate,
@@ -210,32 +163,32 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
             );
 
             if (!ok) {
-              _showSnack('No se pudo crear la reserva.');
+              _showSnack(context, 'No se pudo crear la reserva.');
               return false;
             }
-            _showSnack('Evento creado');
+            _showSnack(context, 'Evento creado');
             return true;
           },
     );
   }
 
-  void _showAppointmentSheet(Appointment appt) {
+  void _showAppointmentSheet(BuildContext context, Appointment appt) {
     showAppointmentDetailSheet(
       context: context,
       appt: appt,
-      pageIndex: widget.pageIndex,
+      pageIndex: pageIndex,
       onEdit: () {
         context.pushNamed(
           UpdateReserveView.name,
-          pathParameters: {'page': '${widget.pageIndex}', 'id': '${appt.id}'},
+          pathParameters: {'page': '$pageIndex', 'id': '${appt.id}'},
         );
       },
-      onCancel: () async => _cancelFromCalendar(appt.id as int),
-      onCheckIn: () async => _checkInFromCalendar(appt.id as int),
+      onCancel: () async => _cancelFromCalendar(context, appt.id as int),
+      onCheckIn: () async => _checkInFromCalendar(context, appt.id as int),
     );
   }
 
-  Future<void> _cancelFromCalendar(int id) async {
+  Future<void> _cancelFromCalendar(BuildContext context, int id) async {
     final reserveCtrl = Get.isRegistered<ReserveController>()
         ? Get.find<ReserveController>()
         : Get.put(ReserveController());
@@ -250,17 +203,15 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
     );
 
     if (!ok) {
-      if (!mounted) return;
-      _showSnack('No se pudo cancelar la reserva.');
+      _showSnack(context, 'No se pudo cancelar la reserva.');
       return;
     }
-    if (!mounted) return;
     await showCancelledSheet(context);
     await reserveCtrl.cargarReservasHoy(silent: true);
     await reserveCtrl.cargarReservasTodas(silent: true);
   }
 
-  Future<void> _checkInFromCalendar(int id) async {
+  Future<void> _checkInFromCalendar(BuildContext context, int id) async {
     final reserveCtrl = Get.isRegistered<ReserveController>()
         ? Get.find<ReserveController>()
         : Get.put(ReserveController());
@@ -270,30 +221,15 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
 
     final ok = await reserveCtrl.checkInReserva(id: id);
     if (!ok) {
-      if (!mounted) return;
-      _showSnack('No se pudo confirmar la reserva.');
+      _showSnack(context, 'No se pudo confirmar la reserva.');
       return;
     }
-    if (!mounted) return;
     await showCheckInSheet(context);
     await reserveCtrl.cargarReservasHoy(silent: true);
     await reserveCtrl.cargarReservasTodas(silent: true);
   }
 
   // ─────────────────────────── Utilidades ───────────────────────────
-  void _applyOrientationPolicy(CalendarView v) {
-    if (v == CalendarView.month) {
-      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    } else {
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-        DeviceOrientation.portraitDown,
-        DeviceOrientation.landscapeLeft,
-        DeviceOrientation.landscapeRight,
-      ]);
-    }
-  }
-
   bool _isPastDate(DateTime dt) {
     final now = DateTime.now();
     final today0 = DateTime(now.year, now.month, now.day);
@@ -301,7 +237,7 @@ class _CalendarViewReserveState extends State<CalendarViewReserve> {
     return d0.isBefore(today0);
   }
 
-  void _showSnack(String msg) {
+  void _showSnack(BuildContext context, String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 }

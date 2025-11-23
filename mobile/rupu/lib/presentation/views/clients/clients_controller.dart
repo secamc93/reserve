@@ -1,4 +1,5 @@
 // clients_controller.dart
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:rupu/domain/entities/client.dart';
 import 'package:rupu/domain/repositories/client_repository.dart';
@@ -7,7 +8,7 @@ import 'package:rupu/domain/infrastructure/datasources/clients_datasource_impl.d
 import 'package:rupu/presentation/views/login/login_controller.dart';
 import 'package:rupu/presentation/views/reserve/controllers/reserves_controller.dart';
 
-class ClientsController extends GetxController {
+class ClientsController extends GetxController with WidgetsBindingObserver {
   final ClientRepository repository;
   ClientsController()
     : repository = ClientRepositoryImpl(ClientsDatasourceImpl());
@@ -23,6 +24,7 @@ class ClientsController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    WidgetsBinding.instance.addObserver(this);
     _businessWorker = ever(_loginController.selectedBusiness, (_) {
       cargarClientes();
     });
@@ -49,10 +51,18 @@ class ClientsController extends GetxController {
 
   @override
   void onClose() {
+    WidgetsBinding.instance.removeObserver(this);
     _wHoy?.dispose();
     _wTodas?.dispose();
     _businessWorker?.dispose();
     super.onClose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      cargarClientes(silent: true);
+    }
   }
 
   Future<void> cargarClientes({bool silent = false}) async {

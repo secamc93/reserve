@@ -9,45 +9,15 @@ import 'package:url_launcher/url_launcher_string.dart';
 import 'clients_controller.dart';
 import 'package:rupu/presentation/views/profile/perfil_controller.dart';
 
-class ClientsView extends StatefulWidget {
-  const ClientsView({super.key, required this.pageIndex});
+class ClientsView extends StatelessWidget {
+  ClientsView({super.key, required this.pageIndex});
   static const name = 'clients';
   final int pageIndex;
 
-  @override
-  State<ClientsView> createState() => _ClientsViewState();
-}
-
-class _ClientsViewState extends State<ClientsView> with WidgetsBindingObserver {
-  late final ClientsController controller;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    controller = Get.isRegistered<ClientsController>()
-        ? Get.find<ClientsController>()
-        : Get.put(ClientsController());
-
-    // Refresco inmediato al montar (sin bloquear con loader)
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      controller.cargarClientes(silent: true);
-    });
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  // Si la app vuelve a 1er plano, refresca
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      controller.cargarClientes(silent: true);
-    }
-  }
+  final ClientsController controller =
+      Get.isRegistered<ClientsController>()
+          ? Get.find<ClientsController>()
+          : Get.put(ClientsController());
 
   @override
   Widget build(BuildContext context) {

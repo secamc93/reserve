@@ -1,48 +1,34 @@
 // presentation/views/reserve/update_reserve_view.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter/services.dart';
 
 import '../widgets.dart';
+import '../controllers/reserve_update_form_controller.dart';
 import '../controllers/reserve_update_controller.dart';
 import '../controllers/reserves_controller.dart';
 import '../controllers/reserve_status_controller.dart';
 import 'package:rupu/domain/entities/reserve_status.dart';
 
-class UpdateReserveView extends StatefulWidget {
-  const UpdateReserveView({super.key});
+class UpdateReserveView extends StatelessWidget {
+  UpdateReserveView({super.key});
   static const name = 'reserve_update';
 
-  @override
-  State<UpdateReserveView> createState() => _UpdateReserveViewState();
-}
+  final ReserveUpdateController updateController =
+      Get.isRegistered<ReserveUpdateController>()
+          ? Get.find<ReserveUpdateController>()
+          : Get.put(ReserveUpdateController());
 
-class _UpdateReserveViewState extends State<UpdateReserveView> {
-  final _formKey = GlobalKey<FormState>();
-  final _guestsCtrl = TextEditingController();
-  final _statusCtrl = TextEditingController();
+  final ReserveUpdateFormController formController =
+      Get.isRegistered<ReserveUpdateFormController>()
+          ? Get.find<ReserveUpdateFormController>()
+          : Get.put(ReserveUpdateFormController());
 
-  ReserveStatus? _selectedStatus;
-  late final ReserveStatusController _statusController;
-
-  DateTime? _start;
-  DateTime? _end;
-  bool _init = false;
-  bool _saving = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _statusController = Get.put(ReserveStatusController());
-  }
-
-  @override
-  void dispose() {
-    _guestsCtrl.dispose();
-    _statusCtrl.dispose();
-    super.dispose();
-  }
+  final ReserveStatusController statusController =
+      Get.isRegistered<ReserveStatusController>()
+          ? Get.find<ReserveStatusController>()
+          : Get.put(ReserveStatusController());
 
   @override
   Widget build(BuildContext context) {
@@ -80,6 +66,7 @@ class _UpdateReserveViewState extends State<UpdateReserveView> {
     }
 
     return GetX<ReserveUpdateController>(
+      init: updateController,
       builder: (ctrl) {
         if (ctrl.isLoading.value || ctrl.reserva.value == null) {
           return Scaffold(
@@ -89,24 +76,7 @@ class _UpdateReserveViewState extends State<UpdateReserveView> {
         }
 
         final r = ctrl.reserva.value!;
-        if (!_init) {
-          _start = r.startAt.toLocal();
-          _end = r.endAt.toLocal();
-          _guestsCtrl.text = r.numberOfGuests.toString();
-          final latest = r.statusHistory.isNotEmpty
-              ? r.statusHistory.last
-              : null;
-          if (latest != null) {
-            _selectedStatus = ReserveStatus(
-              id: latest.statusId,
-              code: latest.statusCode,
-              name: latest.statusName,
-            );
-            _statusCtrl.text = _selectedStatus!.name;
-          }
-          _init = true;
-        }
-
+        formController.hydrateFromReserve(r);
         final dfHeader = DateFormat('EEE d MMM, HH:mm', locale);
 
         return Scaffold(
@@ -114,250 +84,259 @@ class _UpdateReserveViewState extends State<UpdateReserveView> {
             title: const Text('Actualizar reserva'),
             centerTitle: true,
           ),
-          body: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-            children: [
-              // ── Encabezado premium
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(18),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      cs.primary.withValues(alpha: .10),
-                      cs.secondary.withValues(alpha: .08),
+          body: Obx(() {
+            final start = formController.start.value;
+            final end = formController.end.value;
+
+            if (start == null || end == null) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(18),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        cs.primary.withValues(alpha: .10),
+                        cs.secondary.withValues(alpha: .08),
+                      ],
+                    ),
+                    border: Border.all(color: cs.outlineVariant),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 54,
+                        height: 54,
+                        decoration: BoxDecoration(
+                          color: cs.primary.withValues(alpha: .12),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        alignment: Alignment.center,
+                        child: Icon(Icons.edit_calendar, color: cs.primary),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Editar horario',
+                              style: tt.titleLarge!.copyWith(
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${dfHeader.format(start)} – ${DateFormat('HH:mm', locale).format(end)}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: tt.bodyMedium!.copyWith(
+                                color: cs.onSurfaceVariant,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
-                  border: Border.all(color: cs.outlineVariant),
                 ),
-                child: Row(
+                const SizedBox(height: 16),
+
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: cs.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: cs.outlineVariant),
+                  ),
+                  child: Form(
+                    key: formController.formKey,
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: DateTimeTile(
+                                label: 'Inicio',
+                                value: dfHeader.format(start),
+                                onTap: () => _pickStart(context),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: DateTimeTile(
+                                label: 'Fin',
+                                value: dfHeader.format(end),
+                                onTap: () => _pickEnd(context),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: formController.guestsCtrl,
+                          decoration: const InputDecoration(
+                            labelText: 'Número de personas',
+                            hintText: 'Ej: 2',
+                            prefixIcon: Icon(Icons.group_outlined),
+                          ),
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          validator: (v) {
+                            final n = int.tryParse((v ?? '').trim());
+                            if (n == null || n <= 0) {
+                              return 'Ingrese un número válido';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: formController.statusCtrl,
+                          readOnly: true,
+                          decoration: const InputDecoration(
+                            labelText: 'Estado',
+                            prefixIcon: Icon(Icons.flag_outlined),
+                            suffixIcon: Icon(Icons.arrow_drop_down),
+                          ),
+                          onTap: () => _pickStatus(context),
+                          validator: (_) {
+                            if (formController.selectedStatus.value == null) {
+                              return 'Seleccione un estado';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        const TextFormField(
+                          enabled: false,
+                          decoration: InputDecoration(
+                            labelText: 'Mesa (próximamente)',
+                            prefixIcon: Icon(Icons.table_bar_outlined),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 18),
+
+                Row(
                   children: [
-                    Container(
-                      width: 54,
-                      height: 54,
-                      decoration: BoxDecoration(
-                        color: cs.primary.withValues(alpha: .12),
-                        borderRadius: BorderRadius.circular(14),
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: formController.saving.value
+                            ? null
+                            : () => Navigator.of(context).pop(),
+                        child: const Text('Cancelar'),
                       ),
-                      alignment: Alignment.center,
-                      child: Icon(Icons.edit_calendar, color: cs.primary),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Editar horario',
-                            style: tt.titleLarge!.copyWith(
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${dfHeader.format(_start!)} – ${DateFormat('HH:mm', locale).format(_end!)}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: tt.bodyMedium!.copyWith(
-                              color: cs.onSurfaceVariant,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
+                      child: FilledButton.icon(
+                        onPressed: formController.saving.value
+                            ? null
+                            : () async {
+                                if (!formController.formKey.currentState!
+                                    .validate()) return;
+
+                                final guests =
+                                    int.parse(formController.guestsCtrl.text.trim());
+                                if (!(formController.end.value!
+                                    .isAfter(formController.start.value!))) {
+                                  _snack(context,
+                                      'Hora fin debe ser mayor a inicio');
+                                  return;
+                                }
+
+                                final confirmed = await confirmSaveDialog(
+                                  title: 'Confirmar cambios',
+                                  message:
+                                      '¿Deseas guardar esta actualización de la reserva?',
+                                );
+                                if (!confirmed) return;
+
+                                formController.saving.value = true;
+                                final ok = await ctrl.actualizar(
+                                  id: r.reservaId,
+                                  startAt: formController.start.value!,
+                                  endAt: formController.end.value!,
+                                  numberOfGuests: guests,
+                                  statusId: formController.selectedStatusId ??
+                                      (r.statusHistory.isNotEmpty
+                                          ? r.statusHistory.last.statusId
+                                          : 0),
+                                );
+                                formController.saving.value = false;
+
+                                if (ok) {
+                                  final listCtrl =
+                                      Get.isRegistered<ReserveController>()
+                                          ? Get.find<ReserveController>()
+                                          : null;
+                                  await listCtrl?.cargarReservasHoy(silent: true);
+                                  await listCtrl?.cargarReservasTodas.call(
+                                    silent: true,
+                                  );
+
+                                  await _showSuccessSheet(
+                                    context,
+                                    title: 'Reserva actualizada',
+                                    message:
+                                        'Los cambios se guardaron correctamente.',
+                                  );
+                                  if (context.mounted) {
+                                    Navigator.of(context).pop();
+                                  }
+                                } else {
+                                  await _errorDialog(
+                                    context,
+                                    'No se pudo actualizar la reserva',
+                                  );
+                                }
+                              },
+                        icon: formController.saving.value
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.save_outlined),
+                        label: Text(
+                            formController.saving.value ? 'Guardando…' : 'Guardar'),
                       ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 16),
-
-              // ── Tarjeta del formulario
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: cs.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: cs.outlineVariant),
-                ),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: DateTimeTile(
-                              label: 'Inicio',
-                              value: dfHeader.format(_start!),
-                              onTap: _pickStart,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: DateTimeTile(
-                              label: 'Fin',
-                              value: dfHeader.format(_end!),
-                              onTap: _pickEnd,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: _guestsCtrl,
-                        decoration: const InputDecoration(
-                          labelText: 'Número de personas',
-                          hintText: 'Ej: 2',
-                          prefixIcon: Icon(Icons.group_outlined),
-                        ),
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                        validator: (v) {
-                          final n = int.tryParse((v ?? '').trim());
-                          if (n == null || n <= 0) {
-                            return 'Ingrese un número válido';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: _statusCtrl,
-                        readOnly: true,
-                        decoration: const InputDecoration(
-                          labelText: 'Estado',
-                          prefixIcon: Icon(Icons.flag_outlined),
-                          suffixIcon: Icon(Icons.arrow_drop_down),
-                        ),
-                        onTap: _pickStatus,
-                        validator: (_) {
-                          if (_selectedStatus == null) {
-                            return 'Seleccione un estado';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        enabled: false,
-                        decoration: const InputDecoration(
-                          labelText: 'Mesa (próximamente)',
-                          prefixIcon: Icon(Icons.table_bar_outlined),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 18),
-
-              // ── Barra de acciones (premium, full-width)
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: _saving
-                          ? null
-                          : () => Navigator.of(context).pop(),
-                      child: const Text('Cancelar'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: _saving
-                          ? null
-                          : () async {
-                              if (!_formKey.currentState!.validate()) return;
-
-                              final guests = int.parse(_guestsCtrl.text.trim());
-                              if (!_end!.isAfter(_start!)) {
-                                _snack('Hora fin debe ser mayor a inicio');
-                                return;
-                              }
-
-                              // 1) Confirmación previa
-                              final confirmed = await confirmSaveDialog(
-                                title: 'Confirmar cambios',
-                                message:
-                                    '¿Deseas guardar esta actualización de la reserva?',
-                              );
-                              if (!confirmed) return;
-
-                              // 2) Guardar
-                              setState(() => _saving = true);
-                              final ok = await ctrl.actualizar(
-                                id: r.reservaId,
-                                startAt: _start!,
-                                endAt: _end!,
-                                numberOfGuests: guests,
-                                statusId: _selectedStatus?.id ??
-                                    r.statusHistory.last.statusId,
-                              );
-                              setState(() => _saving = false);
-                              if (!mounted) return;
-
-                              if (ok) {
-                                // Refresca HOY y TODAS
-                                final listCtrl =
-                                    Get.isRegistered<ReserveController>()
-                                    ? Get.find<ReserveController>()
-                                    : null;
-                                await listCtrl?.cargarReservasHoy(silent: true);
-                                await listCtrl?.cargarReservasTodas.call(
-                                  silent: true,
-                                ); // <- ajusta el nombre si es distinto
-
-                                // 3) Modal de éxito con botón "Listo"
-                                await _showSuccessSheet(
-                                  title: 'Reserva actualizada',
-                                  message:
-                                      'Los cambios se guardaron correctamente.',
-                                );
-                                if (!context.mounted) return;
-
-                                if (mounted) Navigator.of(context).pop();
-                              } else {
-                                _errorDialog(
-                                  'No se pudo actualizar la reserva',
-                                );
-                              }
-                            },
-
-                      icon: _saving
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.save_outlined),
-                      label: Text(_saving ? 'Guardando…' : 'Guardar'),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+              ],
+            );
+          }),
         );
       },
     );
   }
 
-  Future<void> _pickStatus() async {
-    if (_statusController.estados.isEmpty) {
-      await _statusController.cargarEstados();
+  Future<void> _pickStatus(BuildContext context) async {
+    if (statusController.estados.isEmpty) {
+      await statusController.cargarEstados();
     }
-    
+
     final selected = await showModalBottomSheet<ReserveStatus>(
       context: context,
       builder: (_) {
         return ListView(
-          children: _statusController.estados
+          children: statusController.estados
               .map(
                 (e) => ListTile(
                   title: Text(e.name),
@@ -369,62 +348,60 @@ class _UpdateReserveViewState extends State<UpdateReserveView> {
       },
     );
     if (selected != null) {
-      setState(() {
-        _selectedStatus = selected;
-        _statusCtrl.text = selected.name;
-      });
+      formController.selectStatus(selected);
     }
   }
 
-  Future<void> _pickStart() async {
+  Future<void> _pickStart(BuildContext context) async {
     final date = await showDatePicker(
       context: context,
-      initialDate: _start!,
+      initialDate: formController.start.value ?? DateTime.now(),
       firstDate: DateTime.now(),
       lastDate: DateTime(2100),
       locale: const Locale('es'),
     );
 
-    if (!mounted) return;
     if (date == null) return;
 
     final time = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.fromDateTime(_start!.toLocal()),
+      initialTime: TimeOfDay.fromDateTime(
+        (formController.start.value ?? DateTime.now()).toLocal(),
+      ),
       helpText: 'Hora de inicio',
     );
 
     if (time == null) return;
 
-    setState(() {
-      _start = DateTime(
+    formController.setStart(
+      DateTime(
         date.year,
         date.month,
         date.day,
         time.hour,
         time.minute,
-      );
-      if (!_end!.isAfter(_start!)) {
-        _end = _start!.add(const Duration(hours: 1));
-      }
-    });
+      ),
+    );
   }
 
-  Future<void> _pickEnd() async {
+  Future<void> _pickEnd(BuildContext context) async {
+    final start = formController.start.value ?? DateTime.now();
     final date = await showDatePicker(
       context: context,
-      initialDate: _end!.isAfter(_start!) ? _end! : _start!,
-      firstDate: _start!,
+      initialDate: formController.end.value ?? start,
+      firstDate: start,
       lastDate: DateTime(2100),
       locale: const Locale('es'),
     );
 
-    if (!mounted) return;
     if (date == null) return;
 
     final time = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.fromDateTime(_end!.toLocal()),
+      initialTime: TimeOfDay.fromDateTime(
+        (formController.end.value ?? start.add(const Duration(hours: 1)))
+            .toLocal(),
+      ),
       helpText: 'Hora de fin',
     );
     if (time == null) return;
@@ -436,19 +413,18 @@ class _UpdateReserveViewState extends State<UpdateReserveView> {
       time.hour,
       time.minute,
     );
-    if (!tmp.isAfter(_start!)) {
-      _snack('Debe ser después del inicio');
-      return;
+    final ok = formController.setEnd(tmp);
+    if (!ok) {
+      _snack(context, 'Debe ser después del inicio');
     }
-    setState(() => _end = tmp);
   }
 
   // ────────────── UI helpers ──────────────
-  void _snack(String msg) {
+  void _snack(BuildContext context, String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
-  Future<void> _errorDialog(String msg) async {
+  Future<void> _errorDialog(BuildContext context, String msg) async {
     await showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -464,7 +440,8 @@ class _UpdateReserveViewState extends State<UpdateReserveView> {
     );
   }
 
-  Future<void> _showSuccessSheet({
+  Future<void> _showSuccessSheet(
+    BuildContext context, {
     required String title,
     required String message,
   }) async {
