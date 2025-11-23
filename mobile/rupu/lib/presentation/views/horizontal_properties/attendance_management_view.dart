@@ -446,199 +446,146 @@ class _MiniStatChip extends StatelessWidget {
   }
 }
 
-class _AttendanceRecordsSheet extends StatefulWidget {
+class _AttendanceRecordsSheet extends StatelessWidget {
   final AttendanceManagementController controller;
   const _AttendanceRecordsSheet({required this.controller});
 
   @override
-  State<_AttendanceRecordsSheet> createState() =>
-      _AttendanceRecordsSheetState();
-}
-
-class _AttendanceRecordsSheetState extends State<_AttendanceRecordsSheet> {
-  late final ScrollController _scrollController;
-
-  AttendanceManagementController get controller => widget.controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollController = ScrollController();
-    _scrollController.addListener(_onScroll);
-  }
-
-  void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
-      controller.loadMoreRecords();
-    }
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final radius = const Radius.circular(28);
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: FractionallySizedBox(
         heightFactor: 0.92,
-        child: Container(
-          decoration: BoxDecoration(
-            color: cs.surface,
-            borderRadius: BorderRadius.only(topLeft: radius, topRight: radius),
+        child: Scaffold(
+          backgroundColor: cs.surface,
+          appBar: AppBar(
+            title: const Text('Lista de asistencia'),
+            centerTitle: false,
           ),
-          child: SafeArea(
-            top: false,
-            child: Column(
-              children: [
-                const SizedBox(height: 12),
-                Container(
-                  width: 48,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: cs.outlineVariant,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Lista de asistencia',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  controller.selectedList.value?.title ?? '',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-                ),
-                const SizedBox(height: 12),
-                Expanded(
-                  child: Obx(() {
-                    final summary = controller.summary.value;
-                    final records = controller.records;
-                    final loadingRecords = controller.isLoadingRecords.value;
-                    final error = controller.recordsError.value;
+          body: Column(
+            children: [
+              const SizedBox(height: 4),
+              Text(
+                controller.selectedList.value?.title ?? '',
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(color: cs.onSurfaceVariant),
+              ),
+              const SizedBox(height: 12),
+              Expanded(
+                child: Obx(() {
+                  final summary = controller.summary.value;
+                  final records = controller.records;
+                  final loadingRecords = controller.isLoadingRecords.value;
+                  final error = controller.recordsError.value;
 
-                    return CustomScrollView(
-                      controller: _scrollController,
-                      slivers: [
-                        SliverPadding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 8,
+                  return CustomScrollView(
+                    controller: controller.recordsScrollController,
+                    slivers: [
+                      SliverPadding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 8,
+                        ),
+                        sliver: SliverToBoxAdapter(
+                          child: _SummaryGrid(summary: summary),
+                        ),
+                      ),
+                      SliverPadding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 8,
+                        ),
+                        sliver: SliverToBoxAdapter(
+                          child: _FiltersSection(controller: controller),
+                        ),
+                      ),
+                      if (loadingRecords)
+                        const SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: Center(child: CircularProgressIndicator()),
+                        )
+                      else if (error != null)
+                        SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: _InlineError(
+                            message: error,
+                            onRetry: () => controller.fetchRecords(),
                           ),
-                          sliver: SliverToBoxAdapter(
-                            child: _SummaryGrid(summary: summary),
+                        )
+                      else if (records.isEmpty)
+                        const SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: _EmptyState(
+                            icon: Icons.person_off_outlined,
+                            title: 'Sin registros',
+                            description: 'No se encontraron unidades en esta lista.',
+                          ),
+                        )
+                      else
+                        SliverPadding(
+                          padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+                          sliver: SliverList.separated(
+                            itemCount: records.length,
+                            separatorBuilder: (_, __) => const SizedBox(height: 14),
+                            itemBuilder: (_, index) {
+                              final record = records[index];
+                              return _AttendanceRecordTile(
+                                controller: controller,
+                                record: record,
+                              );
+                            },
                           ),
                         ),
-                        SliverPadding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 8,
-                          ),
-                          sliver: SliverToBoxAdapter(
-                            child: _FiltersSection(controller: controller),
-                          ),
-                        ),
-                        if (loadingRecords)
-                          const SliverFillRemaining(
-                            hasScrollBody: false,
-                            child: Center(child: CircularProgressIndicator()),
-                          )
-                        else if (error != null)
-                          SliverFillRemaining(
-                            hasScrollBody: false,
-                            child: _InlineError(
-                              message: error,
-                              onRetry: () => controller.fetchRecords(),
+                      if (!loadingRecords && records.isNotEmpty)
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.only(
+                              bottom: 24,
+                              top: 12,
                             ),
-                          )
-                        else if (records.isEmpty)
-                          const SliverFillRemaining(
-                            hasScrollBody: false,
-                            child: _EmptyState(
-                              icon: Icons.person_off_outlined,
-                              title: 'Sin registros',
-                              description:
-                                  'No se encontraron unidades en esta lista.',
-                            ),
-                          )
-                        else
-                          SliverPadding(
-                            padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
-                            sliver: SliverList.separated(
-                              itemCount: records.length,
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(height: 14),
-                              itemBuilder: (_, index) {
-                                final record = records[index];
-                                return _AttendanceRecordTile(
-                                  controller: controller,
-                                  record: record,
+                            child: Obx(() {
+                              final canLoadMore = controller.canLoadMoreRecords;
+                              final isLoadingMore = controller.isLoadingRecords.value &&
+                                  controller.currentPage.value > 1;
+
+                              if (isLoadingMore) {
+                                return const Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: 16,
+                                    ),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.6,
+                                    ),
+                                  ),
                                 );
-                              },
-                            ),
-                          ),
-                        // Loading indicator for loadMoreRecords
-                        if (!loadingRecords && records.isNotEmpty)
-                          SliverToBoxAdapter(
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                bottom: 24,
-                                top: 12,
-                              ),
-                              child: Obx(() {
-                                final canLoadMore =
-                                    controller.canLoadMoreRecords;
-                                final isLoadingMore =
-                                    controller.isLoadingRecords.value &&
-                                    controller.currentPage.value > 1;
+                              }
 
-                                if (isLoadingMore) {
-                                  return const Center(
-                                    child: Padding(
-                                      padding: EdgeInsets.symmetric(
-                                        vertical: 16,
-                                      ),
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2.6,
-                                      ),
+                              if (!canLoadMore) {
+                                return const Center(
+                                  child: Text(
+                                    'Ya viste todos los registros 👌',
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 14,
                                     ),
-                                  );
-                                }
+                                  ),
+                                );
+                              }
 
-                                if (!canLoadMore) {
-                                  return const Center(
-                                    child: Text(
-                                      'Ya viste todos los registros 👌',
-                                      style: TextStyle(
-                                        color: Colors.grey,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  );
-                                }
-
-                                return const SizedBox.shrink();
-                              }),
-                            ),
+                              return const SizedBox.shrink();
+                            }),
                           ),
-                      ],
-                    );
-                  }),
-                ),
-              ],
-            ),
+                        ),
+                    ],
+                  );
+                }),
+              ),
+            ],
           ),
         ),
       ),

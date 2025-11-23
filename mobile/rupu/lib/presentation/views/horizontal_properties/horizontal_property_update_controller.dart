@@ -40,6 +40,11 @@ class HorizontalPropertyUpdateController extends GetxController {
   final quaternaryColorCtrl = TextEditingController();
   final customDomainCtrl = TextEditingController();
 
+  final primaryColor = const Color(0xFF6750A4).obs;
+  final secondaryColor = const Color(0xFF625B71).obs;
+  final tertiaryColor = const Color(0xFF7D5260).obs;
+  final quaternaryColor = const Color(0xFF386A20).obs;
+
   final isLoading = false.obs;
   final isSaving = false.obs;
   final errorMessage = RxnString();
@@ -62,11 +67,14 @@ class HorizontalPropertyUpdateController extends GetxController {
 
   final property = Rxn<HorizontalPropertyDetail>();
 
+  final Map<TextEditingController, VoidCallback> _colorListeners = {};
+
   LoginController get _loginController => Get.find<LoginController>();
 
   @override
   void onInit() {
     super.onInit();
+    _bindColorControllers();
     loadProperty();
   }
 
@@ -84,6 +92,7 @@ class HorizontalPropertyUpdateController extends GetxController {
     tertiaryColorCtrl.dispose();
     quaternaryColorCtrl.dispose();
     customDomainCtrl.dispose();
+    _removeColorListeners();
     super.onClose();
   }
 
@@ -136,6 +145,13 @@ class HorizontalPropertyUpdateController extends GetxController {
     quaternaryColorCtrl.text = detail.quaternaryColor ?? '';
     customDomainCtrl.text = detail.customDomain ?? '';
 
+    primaryColor.value = _parseColor(primaryColorCtrl.text, primaryColor.value);
+    secondaryColor.value =
+        _parseColor(secondaryColorCtrl.text, secondaryColor.value);
+    tertiaryColor.value = _parseColor(tertiaryColorCtrl.text, tertiaryColor.value);
+    quaternaryColor.value =
+        _parseColor(quaternaryColorCtrl.text, quaternaryColor.value);
+
     hasElevator.value = detail.hasElevator ?? false;
     hasParking.value = detail.hasParking ?? false;
     hasPool.value = detail.hasPool ?? false;
@@ -151,6 +167,15 @@ class HorizontalPropertyUpdateController extends GetxController {
     clearLogo.value = false;
     clearNavbarImage.value = false;
   }
+
+  void setPrimaryColor(Color color) =>
+      _applyColor(color, primaryColor, primaryColorCtrl);
+  void setSecondaryColor(Color color) =>
+      _applyColor(color, secondaryColor, secondaryColorCtrl);
+  void setTertiaryColor(Color color) =>
+      _applyColor(color, tertiaryColor, tertiaryColorCtrl);
+  void setQuaternaryColor(Color color) =>
+      _applyColor(color, quaternaryColor, quaternaryColorCtrl);
 
   Future<void> pickLogo() async {
     final result = await FilePicker.platform.pickFiles(type: FileType.image);
@@ -394,6 +419,48 @@ class HorizontalPropertyUpdateController extends GetxController {
 
     return map;
   }
+
+  void _bindColorControllers() {
+    _registerColorListener(primaryColorCtrl, primaryColor);
+    _registerColorListener(secondaryColorCtrl, secondaryColor);
+    _registerColorListener(tertiaryColorCtrl, tertiaryColor);
+    _registerColorListener(quaternaryColorCtrl, quaternaryColor);
+  }
+
+  void _registerColorListener(
+    TextEditingController ctrl,
+    Rx<Color> target,
+  ) {
+    void listener() {
+      target.value = _parseColor(ctrl.text, target.value);
+    }
+
+    _colorListeners[ctrl] = listener;
+    ctrl.addListener(listener);
+  }
+
+  void _removeColorListeners() {
+    for (final entry in _colorListeners.entries) {
+      entry.key.removeListener(entry.value);
+    }
+    _colorListeners.clear();
+  }
+
+  void _applyColor(Color color, Rx<Color> target, TextEditingController ctrl) {
+    target.value = color;
+    ctrl.text = _toHex(color);
+  }
+
+  Color _parseColor(String raw, Color fallback) {
+    final value = raw.trim().replaceAll('#', '');
+    if (value.length != 6) return fallback;
+    final parsed = int.tryParse(value, radix: 16);
+    if (parsed == null) return fallback;
+    return Color(0xFF000000 | parsed);
+  }
+
+  String _toHex(Color color) =>
+      color.value.toRadixString(16).toUpperCase().padLeft(8, '0').substring(2);
 
   String _extractDioMessage(DioException exception, String fallback) {
     final data = exception.response?.data;

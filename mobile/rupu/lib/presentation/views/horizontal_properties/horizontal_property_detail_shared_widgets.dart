@@ -143,161 +143,150 @@ class _AnimatedMetric extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────
 // SECTION CARD PREMIUM (con header, acciones, colapsable y grid)
 // ─────────────────────────────────────────────────────────────
-class SectionCard extends StatefulWidget {
-  const SectionCard({
+class SectionCard extends StatelessWidget {
+  SectionCard({
     super.key,
     required this.title,
-    this.child, // Compatibilidad: si lo pasas, se muestra tal cual
+    this.child,
     this.subtitle,
     this.leadingIcon,
     this.headerActions,
-    this.gridFields, // Si lo pasas, se renderiza como grid responsivo
-    this.footer, // Ideal para acciones: aplicar/limpiar
-    this.collapsible = false, // Header clicable para colapsar/expandir
+    this.gridFields,
+    this.footer,
+    this.collapsible = false,
     this.initiallyExpanded = true,
     this.contentPadding = const EdgeInsets.fromLTRB(16, 14, 16, 14),
     this.gap = 12,
-  });
+    RxBool? expanded,
+  }) : expanded = expanded ?? RxBool(initiallyExpanded);
 
   final String title;
   final String? subtitle;
   final IconData? leadingIcon;
   final List<Widget>? headerActions;
-
-  // Layout del body: usa uno u otro
-  final Widget? child; // layout libre (compat)
-  final List<Widget>? gridFields; // layout premium (grid responsivo)
-
-  final Widget? footer; // zona inferior (botones, tags, etc.)
+  final Widget? child;
+  final List<Widget>? gridFields;
+  final Widget? footer;
   final bool collapsible;
   final bool initiallyExpanded;
   final EdgeInsets contentPadding;
   final double gap;
-
-  @override
-  State<SectionCard> createState() => _SectionCardState();
-}
-
-class _SectionCardState extends State<SectionCard> {
-  late bool _expanded;
-
-  @override
-  void initState() {
-    super.initState();
-    _expanded = widget.initiallyExpanded;
-  }
+  final RxBool expanded;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cs.outlineVariant),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: .04),
-            blurRadius: 14,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Header
-          InkWell(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-            onTap: widget.collapsible
-                ? () => setState(() => _expanded = !_expanded)
-                : null,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
-              child: Row(
-                children: [
-                  if (widget.leadingIcon != null) ...[
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: cs.primary.withValues(alpha: .08),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: cs.primary.withValues(alpha: .18),
-                        ),
-                      ),
-                      alignment: Alignment.center,
-                      child: Icon(widget.leadingIcon, color: cs.primary),
-                    ),
-                    const SizedBox(width: 10),
-                  ],
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.title,
-                          style: tt.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            color: cs.onSurface,
+    return Obx(() {
+      final isExpanded = expanded.value;
+      return Container(
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: cs.outlineVariant),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: .04),
+              blurRadius: 14,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            InkWell(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              onTap: collapsible ? () => expanded.toggle() : null,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+                child: Row(
+                  children: [
+                    if (leadingIcon != null) ...[
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: cs.primary.withValues(alpha: .08),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: cs.primary.withValues(alpha: .18),
                           ),
                         ),
-                      ],
+                        alignment: Alignment.center,
+                        child: Icon(leadingIcon, color: cs.primary),
+                      ),
+                      const SizedBox(width: 10),
+                    ],
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: tt.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: cs.onSurface,
+                            ),
+                          ),
+                          if (subtitle != null) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              subtitle!,
+                              style: tt.bodySmall?.copyWith(
+                                color: cs.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
-                  ),
-                  if (widget.headerActions?.isNotEmpty == true) ...[
-                    ...widget.headerActions!,
-                    const SizedBox(width: 4),
+                    if (headerActions?.isNotEmpty == true) ...[
+                      ...headerActions!,
+                      const SizedBox(width: 4),
+                    ],
+                    if (collapsible)
+                      Icon(
+                        isExpanded
+                            ? Icons.expand_less_rounded
+                            : Icons.expand_more_rounded,
+                        color: cs.onSurfaceVariant,
+                      ),
                   ],
-                  if (widget.collapsible)
-                    Icon(
-                      _expanded
-                          ? Icons.expand_less_rounded
-                          : Icons.expand_more_rounded,
-                      color: cs.onSurfaceVariant,
-                    ),
-                ],
+                ),
               ),
             ),
-          ),
-
-          // Divider sutil
-          Divider(height: 1, thickness: 1, color: cs.outlineVariant),
-
-          // Body (animado)
-          AnimatedCrossFade(
-            firstChild: const SizedBox.shrink(),
-            secondChild: Padding(
-              padding: widget.contentPadding,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (widget.gridFields?.isNotEmpty == true) ...[
-                    ResponsiveFormGrid(children: widget.gridFields!),
-                  ] else if (widget.child != null) ...[
-                    widget.child!,
+            Divider(height: 1, thickness: 1, color: cs.outlineVariant),
+            AnimatedCrossFade(
+              firstChild: const SizedBox.shrink(),
+              secondChild: Padding(
+                padding: contentPadding,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (gridFields?.isNotEmpty == true) ...[
+                      ResponsiveFormGrid(children: gridFields!),
+                    ] else if (child != null) ...[
+                      child!,
+                    ],
+                    if (footer != null) ...[
+                      SizedBox(height: gap),
+                      footer!,
+                    ],
                   ],
-
-                  if (widget.footer != null) ...[
-                    SizedBox(height: widget.gap),
-                    widget.footer!,
-                  ],
-                ],
+                ),
               ),
+              crossFadeState: isExpanded
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+              duration: const Duration(milliseconds: 200),
             ),
-            crossFadeState: _expanded
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            duration: const Duration(milliseconds: 200),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
+    });
   }
 }
-
 // ─────────────────────────────────────────────────────────────
 // INPUTS PREMIUM DE FILTRO (TextField y Dropdown)
 // ─────────────────────────────────────────────────────────────

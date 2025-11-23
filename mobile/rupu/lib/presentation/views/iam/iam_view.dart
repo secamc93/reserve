@@ -24,18 +24,12 @@ import 'package:rupu/config/helpers/design_helper.dart';
 import 'package:rupu/presentation/views/users/user_detail_view.dart';
 import 'package:rupu/presentation/views/users/users_controller.dart';
 
-class IamView extends StatefulWidget {
+class IamView extends StatelessWidget {
   final int pageIndex;
 
   const IamView({super.key, required this.pageIndex});
 
-  @override
-  State<IamView> createState() => _IamViewState();
-}
-
-class _IamViewState extends State<IamView> with SingleTickerProviderStateMixin {
-  late final TabController _tabController;
-  final _tabs = const [
+  static const _tabs = [
     _IamTabDefinition('Usuarios', Icons.people_alt_outlined),
     _IamTabDefinition('Roles', Icons.security_outlined),
     _IamTabDefinition('Permisos', Icons.gavel_outlined),
@@ -45,154 +39,144 @@ class _IamViewState extends State<IamView> with SingleTickerProviderStateMixin {
   ];
 
   @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: _tabs.length, vsync: this);
-    _tabController.addListener(_handleTabChange);
-  }
-
-  void _handleTabChange() {
-    if (mounted) {
-      setState(() {});
-    }
-  }
-
-  @override
-  void dispose() {
-    _tabController.removeListener(_handleTabChange);
-    _tabController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final tt = theme.textTheme;
 
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: AppBar(
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        backgroundColor: Colors.transparent,
-        toolbarHeight: 68,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [cs.primary, cs.secondary.withValues(alpha: 0.85)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+    return DefaultTabController(
+      length: _tabs.length,
+      child: Builder(builder: (context) {
+        final tabController = DefaultTabController.of(context)!;
+        return Scaffold(
+          backgroundColor: cs.surface,
+          appBar: AppBar(
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            backgroundColor: Colors.transparent,
+            toolbarHeight: 68,
+            flexibleSpace: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [cs.primary, cs.secondary.withValues(alpha: 0.85)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+            ),
+            titleSpacing: 16,
+            title: Row(
+              children: [
+                Icon(Icons.shield_outlined, size: 26, color: Colors.white),
+                const SizedBox(width: 8),
+                Text(
+                  'IAM',
+                  style: tt.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: 0.4,
+                  ),
+                ),
+              ],
+            ),
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(60),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: TabBar(
+                  controller: tabController,
+                  isScrollable: true,
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 6),
+                  indicator: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  indicatorSize: TabBarIndicatorSize.label,
+                  labelColor: Colors.white,
+                  unselectedLabelColor: Colors.white.withValues(alpha: 0.8),
+                  labelStyle:
+                      tt.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+                  unselectedLabelStyle: tt.labelLarge,
+                  tabs: _tabs
+                      .map(
+                        (tab) => Tab(
+                          iconMargin: const EdgeInsets.only(bottom: 2),
+                          icon: Icon(tab.icon, size: 20),
+                          text: tab.label,
+                        ),
+                      )
+                      .toList(growable: false),
+                ),
+              ),
             ),
           ),
-        ),
-        titleSpacing: 16,
-        title: Row(
-          children: [
-            Icon(Icons.shield_outlined, size: 26, color: Colors.white),
-            const SizedBox(width: 8),
-            Text(
-              'IAM',
-              style: tt.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
-                letterSpacing: 0.4,
+          floatingActionButton: AnimatedBuilder(
+            animation: tabController.animation!,
+            builder: (_, __) =>
+                _buildFloatingActionButton(context, tabController.index),
+          ),
+          body: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  cs.surface,
+                  cs.surfaceContainerHighest.withValues(alpha: 0.25),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
               ),
             ),
-          ],
-        ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(60),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: TabBar(
-              controller: _tabController,
-              isScrollable: true,
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-              labelPadding: const EdgeInsets.symmetric(horizontal: 6),
-              indicator: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.18),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              indicatorSize: TabBarIndicatorSize.label,
-              labelColor: Colors.white,
-              unselectedLabelColor: Colors.white.withValues(alpha: 0.8),
-              labelStyle: tt.labelLarge?.copyWith(fontWeight: FontWeight.w600),
-              unselectedLabelStyle: tt.labelLarge,
-              tabs: _tabs
-                  .map(
-                    (tab) => Tab(
-                      iconMargin: const EdgeInsets.only(bottom: 2),
-                      icon: Icon(tab.icon, size: 20),
-                      text: tab.label,
+            child: TabBarView(
+              controller: tabController,
+              children: [
+                _IamTabPage(
+                  child: SafeArea(
+                    top: false,
+                    bottom: false,
+                    child: _IamUsersTab(pageIndex: pageIndex),
+                  ),
+                ),
+                const _IamTabPage(
+                  child: SafeArea(
+                    top: false,
+                    bottom: false,
+                    child: RolesPermissionsStandaloneTab(
+                      tab: RolesPermissionsTab.roles,
                     ),
-                  )
-                  .toList(growable: false),
+                  ),
+                ),
+                const _IamTabPage(
+                  child: SafeArea(
+                    top: false,
+                    bottom: false,
+                    child: RolesPermissionsStandaloneTab(
+                      tab: RolesPermissionsTab.permissions,
+                    ),
+                  ),
+                ),
+                const _IamTabPage(
+                  child: SafeArea(top: false, child: _IamResourcesTab()),
+                ),
+                const _IamTabPage(
+                  child: SafeArea(top: false, child: _IamBusinessTypesTab()),
+                ),
+                const _IamTabPage(
+                  child: SafeArea(top: false, child: _IamBusinessesTab()),
+                ),
+              ],
             ),
           ),
-        ),
-      ),
-      floatingActionButton: _buildFloatingActionButton(context),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              cs.surface,
-              cs.surfaceContainerHighest.withValues(alpha: 0.25),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: TabBarView(
-          controller: _tabController,
-          children: [
-            _IamTabPage(
-              child: SafeArea(
-                top: false,
-                bottom: false,
-                child: _IamUsersTab(pageIndex: widget.pageIndex),
-              ),
-            ),
-            const _IamTabPage(
-              child: SafeArea(
-                top: false,
-                bottom: false,
-                child: RolesPermissionsStandaloneTab(
-                  tab: RolesPermissionsTab.roles,
-                ),
-              ),
-            ),
-            const _IamTabPage(
-              child: SafeArea(
-                top: false,
-                bottom: false,
-                child: RolesPermissionsStandaloneTab(
-                  tab: RolesPermissionsTab.permissions,
-                ),
-              ),
-            ),
-            const _IamTabPage(
-              child: SafeArea(top: false, child: _IamResourcesTab()),
-            ),
-            const _IamTabPage(
-              child: SafeArea(top: false, child: _IamBusinessTypesTab()),
-            ),
-            const _IamTabPage(
-              child: SafeArea(top: false, child: _IamBusinessesTab()),
-            ),
-          ],
-        ),
-      ),
+        );
+      }),
     );
   }
 
-  Widget? _buildFloatingActionButton(BuildContext context) {
-    final index = _tabController.index;
+  Widget? _buildFloatingActionButton(BuildContext context, int index) {
     switch (index) {
       case 0:
         if (!Get.isRegistered<UsersController>()) return null;
-        return _IamUsersFab(pageIndex: widget.pageIndex);
+        return _IamUsersFab(pageIndex: pageIndex);
       case 1:
         if (!Get.isRegistered<RolesPermissionsController>()) return null;
         return FloatingActionButton.extended(

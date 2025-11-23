@@ -47,6 +47,8 @@ class AttendanceManagementController extends GetxController {
   final markingRecordIds = <int>{}.obs;
   final proxyProcessingRecordIds = <int>{}.obs;
 
+  late final ScrollController recordsScrollController;
+
   Timer? _summaryTimer;
 
   String get groupName => group?.name ?? 'Gestión de asistencia';
@@ -61,8 +63,17 @@ class AttendanceManagementController extends GetxController {
   @override
   void onClose() {
     _summaryTimer?.cancel();
+    recordsScrollController.removeListener(_handleRecordsScroll);
+    recordsScrollController.dispose();
     unitFilterCtrl.dispose();
     super.onClose();
+  }
+
+  @override
+  void onInit() {
+    super.onInit();
+    recordsScrollController = ScrollController();
+    recordsScrollController.addListener(_handleRecordsScroll);
   }
 
   Future<void> fetchLists() async {
@@ -204,6 +215,13 @@ class AttendanceManagementController extends GetxController {
   Future<void> loadMoreRecords() async {
     if (isLoadingRecords.value || !canLoadMoreRecords) return;
     await fetchRecords(page: currentPage.value + 1);
+  }
+
+  void _handleRecordsScroll() {
+    if (recordsScrollController.position.pixels >=
+        recordsScrollController.position.maxScrollExtent - 200) {
+      loadMoreRecords();
+    }
   }
 
   void applyFilters() {
