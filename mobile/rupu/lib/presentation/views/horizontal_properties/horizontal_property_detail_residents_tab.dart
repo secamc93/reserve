@@ -272,9 +272,12 @@ class _AddResidentFab extends StatelessWidget {
     );
     await controller.loadUnitsOptions();
 
+    controller.clearResidentForm();
+
     final result = await showDialog<HorizontalPropertyResidentDetailResult>(
       context: context,
       barrierDismissible: false,
+      barrierColor: Colors.black.withValues(alpha: 0.3),
       builder: (_) => _ResidentFormDialog(
         controller: controller,
         title: 'Crear residente',
@@ -322,29 +325,15 @@ class ActiveFiltersBadge extends StatelessWidget {
   }
 }
 
-class _ResidentsFiltersContent extends StatefulWidget {
+class _ResidentsFiltersContent extends StatelessWidget {
   final String controllerTag;
   const _ResidentsFiltersContent({required this.controllerTag});
 
   @override
-  State<_ResidentsFiltersContent> createState() =>
-      _ResidentsFiltersContentState();
-}
-
-class _ResidentsFiltersContentState extends State<_ResidentsFiltersContent> {
-  late final HorizontalPropertyResidentsController controller;
-  bool _showAdvanced = false;
-
-  @override
-  void initState() {
-    super.initState();
-    controller = Get.find<HorizontalPropertyResidentsController>(
-      tag: widget.controllerTag,
-    );
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final controller = Get.find<HorizontalPropertyResidentsController>(
+      tag: controllerTag,
+    );
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
@@ -362,22 +351,26 @@ class _ResidentsFiltersContentState extends State<_ResidentsFiltersContent> {
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
             ),
-            TextButton.icon(
-              onPressed: () {
-                setState(() => _showAdvanced = !_showAdvanced);
-              },
-              icon: Icon(
-                _showAdvanced
-                    ? Icons.expand_less_rounded
-                    : Icons.expand_more_rounded,
-                size: 18,
-              ),
-              label: Text(
-                _showAdvanced ? 'Menos filtros' : 'Filtros avanzados',
-                style: tt.labelSmall?.copyWith(fontWeight: FontWeight.w700),
-              ),
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+            Obx(
+              () => TextButton.icon(
+                onPressed: () {
+                  controller.residentsShowAdvancedFilters.toggle();
+                },
+                icon: Icon(
+                  controller.residentsShowAdvancedFilters.value
+                      ? Icons.expand_less_rounded
+                      : Icons.expand_more_rounded,
+                  size: 18,
+                ),
+                label: Text(
+                  controller.residentsShowAdvancedFilters.value
+                      ? 'Menos filtros'
+                      : 'Filtros avanzados',
+                  style: tt.labelSmall?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                ),
               ),
             ),
           ],
@@ -400,7 +393,7 @@ class _ResidentsFiltersContentState extends State<_ResidentsFiltersContent> {
             ),
             Obx(
               () => DropdownButtonFormField<bool?>(
-                initialValue: controller.residentsIsActive.value,
+                value: controller.residentsIsActive.value,
                 decoration: _filterDecoration(context, 'Estado'),
                 items: const [
                   DropdownMenuItem<bool?>(value: null, child: Text('Todos')),
@@ -417,7 +410,7 @@ class _ResidentsFiltersContentState extends State<_ResidentsFiltersContent> {
             ),
             Obx(
               () => DropdownButtonFormField<bool?>(
-                initialValue: controller.residentsIsMain.value,
+                value: controller.residentsIsMain.value,
                 decoration: _filterDecoration(context, 'Residente principal'),
                 items: const [
                   DropdownMenuItem<bool?>(value: null, child: Text('Todos')),
@@ -433,47 +426,49 @@ class _ResidentsFiltersContentState extends State<_ResidentsFiltersContent> {
         ),
 
         // FILTROS AVANZADOS (colapsables)
-        AnimatedCrossFade(
-          firstChild: const SizedBox.shrink(),
-          secondChild: Padding(
-            padding: const EdgeInsets.only(top: 10),
-            child: ResponsiveFormGrid(
-              children: [
-                FilterTextField(
-                  label: 'Página',
-                  controller: controller.residentsPageCtrl,
-                  keyboardType: TextInputType.number,
-                ),
-                FilterTextField(
-                  label: 'Tamaño de página',
-                  controller: controller.residentsPageSizeCtrl,
-                  keyboardType: TextInputType.number,
-                ),
-                FilterTextField(
-                  label: 'Correo',
-                  controller: controller.residentsEmailCtrl,
-                  keyboardType: TextInputType.emailAddress,
-                ),
-                FilterTextField(
-                  label: 'Teléfono',
-                  controller: controller.residentsPhoneCtrl,
-                  keyboardType: TextInputType.phone,
-                ),
-                FilterTextField(
-                  label: 'Unidad',
-                  controller: controller.residentsUnitNumberCtrl,
-                ),
-                FilterTextField(
-                  label: 'Tipo de residente',
-                  controller: controller.residentsTypeCtrl,
-                ),
-              ],
+        Obx(
+          () => AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: ResponsiveFormGrid(
+                children: [
+                  FilterTextField(
+                    label: 'Página',
+                    controller: controller.residentsPageCtrl,
+                    keyboardType: TextInputType.number,
+                  ),
+                  FilterTextField(
+                    label: 'Tamaño de página',
+                    controller: controller.residentsPageSizeCtrl,
+                    keyboardType: TextInputType.number,
+                  ),
+                  FilterTextField(
+                    label: 'Correo',
+                    controller: controller.residentsEmailCtrl,
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  FilterTextField(
+                    label: 'Teléfono',
+                    controller: controller.residentsPhoneCtrl,
+                    keyboardType: TextInputType.phone,
+                  ),
+                  FilterTextField(
+                    label: 'Unidad',
+                    controller: controller.residentsUnitNumberCtrl,
+                  ),
+                  FilterTextField(
+                    label: 'Tipo de residente',
+                    controller: controller.residentsTypeCtrl,
+                  ),
+                ],
+              ),
             ),
+            crossFadeState: controller.residentsShowAdvancedFilters.value
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 220),
           ),
-          crossFadeState: _showAdvanced
-              ? CrossFadeState.showSecond
-              : CrossFadeState.showFirst,
-          duration: const Duration(milliseconds: 220),
         ),
 
         const SizedBox(height: 8),
@@ -481,7 +476,7 @@ class _ResidentsFiltersContentState extends State<_ResidentsFiltersContent> {
         // CHIPS de filtros activos
         Obx(() {
           final _ = controller.filtersRevision.value;
-          final chips = _buildActiveFilters();
+          final chips = _buildActiveFilters(controller);
           return AnimatedSwitcher(
             duration: const Duration(milliseconds: 250),
             child: chips.isEmpty
@@ -520,7 +515,9 @@ class _ResidentsFiltersContentState extends State<_ResidentsFiltersContent> {
   }
 
   // 👇 misma lógica que ya tenías, solo reusada
-  List<_ActiveFilterChipData> _buildActiveFilters() {
+  List<_ActiveFilterChipData> _buildActiveFilters(
+    HorizontalPropertyResidentsController controller,
+  ) {
     final filters = <_ActiveFilterChipData>[];
     final page = controller.residentsPageCtrl.text.trim();
     if (page.isNotEmpty && page != '1') {
@@ -832,17 +829,18 @@ class _ResidentCard extends StatelessWidget {
 
     await controller.loadUnitsOptions();
 
+    controller.initResidentForm(detail: detail.resident, fallback: resident);
+
     if (!context.mounted) return;
 
     final result = await showDialog<HorizontalPropertyResidentDetailResult>(
       context: context,
       barrierDismissible: false,
+      barrierColor: Colors.black.withValues(alpha: 0.3),
       builder: (_) => _ResidentFormDialog(
         controller: controller,
         title: 'Editar residente',
         actionLabel: 'Actualizar residente',
-        initialDetail: detail!.resident,
-        fallback: resident,
         showActiveSwitch: true,
         onSubmit: (payload) =>
             controller.updateResident(residentId: resident.id, data: payload),
@@ -858,12 +856,10 @@ class _ResidentCard extends StatelessWidget {
   }
 }
 
-class _ResidentFormDialog extends StatefulWidget {
+class _ResidentFormDialog extends StatelessWidget {
   final HorizontalPropertyResidentsController controller;
   final String title;
   final String actionLabel;
-  final HorizontalPropertyResidentDetail? initialDetail;
-  final HorizontalPropertyResidentItem? fallback;
   final bool showActiveSwitch;
   final Future<HorizontalPropertyResidentDetailResult> Function(
     Map<String, dynamic> data,
@@ -875,16 +871,9 @@ class _ResidentFormDialog extends StatefulWidget {
     required this.title,
     required this.actionLabel,
     required this.onSubmit,
-    this.initialDetail,
-    this.fallback,
     this.showActiveSwitch = false,
   });
 
-  @override
-  State<_ResidentFormDialog> createState() => _ResidentFormDialogState();
-}
-
-class _ResidentFormDialogState extends State<_ResidentFormDialog> {
   static const _residentTypes = <int, String>{
     1: 'Propietario',
     2: 'Arrendatario',
@@ -892,234 +881,232 @@ class _ResidentFormDialogState extends State<_ResidentFormDialog> {
     4: 'Invitado',
   };
 
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController _unitCtrl = TextEditingController();
-  final TextEditingController _nameCtrl = TextEditingController();
-  final TextEditingController _emailCtrl = TextEditingController();
-  final TextEditingController _dniCtrl = TextEditingController();
-  final TextEditingController _phoneCtrl = TextEditingController();
-  final TextEditingController _emergencyCtrl = TextEditingController();
-  int? _selectedUnitId;
-  int? _residentTypeId;
-  bool _isMain = true;
-  bool _isActive = true;
-  bool _saving = false;
-  String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    final detail = widget.initialDetail;
-    final fallback = widget.fallback;
-    _selectedUnitId = detail?.propertyUnitId;
-    _unitCtrl.text =
-        detail?.propertyUnitNumber ?? fallback?.propertyUnitNumber ?? '';
-    _residentTypeId = detail?.residentTypeId;
-    _nameCtrl.text = detail?.name ?? fallback?.name ?? '';
-    _emailCtrl.text = detail?.email ?? fallback?.email ?? '';
-    _dniCtrl.text = detail?.dni ?? '';
-    _phoneCtrl.text = detail?.phone ?? fallback?.phone ?? '';
-    _emergencyCtrl.text = detail?.emergencyContact ?? '';
-    _isMain = detail?.isMainResident ?? fallback?.isMainResident ?? true;
-    _isActive = detail?.isActive ?? fallback?.isActive ?? true;
-  }
-
-  @override
-  void dispose() {
-    _unitCtrl.dispose();
-    _nameCtrl.dispose();
-    _emailCtrl.dispose();
-    _dniCtrl.dispose();
-    _phoneCtrl.dispose();
-    _emergencyCtrl.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final viewInsets = MediaQuery.viewInsetsOf(context);
+    final formKey = GlobalKey<FormState>();
 
-    return Dialog(
-      insetPadding: const EdgeInsets.all(16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      backgroundColor: cs.surface,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 500),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // HEADER
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: GlassContainer(
+          borderRadius: BorderRadius.circular(24),
+          blur: 20,
+          opacity: 0.95,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 500),
+            child: Material(
+              color: Colors.transparent,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  TextButton(
-                    onPressed: _saving
-                        ? null
-                        : () => Navigator.of(context).pop(),
-                    style: TextButton.styleFrom(
-                      foregroundColor: cs.onSurface,
-                      textStyle: tt.bodyMedium,
+                  // HEADER
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
                     ),
-                    child: const Text('Cancelar'),
-                  ),
-                  Text(
-                    widget.title,
-                    style: tt.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Obx(
+                          () => TextButton(
+                            onPressed: controller.residentFormSaving.value
+                                ? null
+                                : () => Navigator.of(context).pop(),
+                            style: TextButton.styleFrom(
+                              foregroundColor: cs.onSurface,
+                              textStyle: tt.bodyMedium,
+                            ),
+                            child: const Text('Cancelar'),
+                          ),
+                        ),
+                        Text(
+                          title,
+                          style: tt.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        Obx(
+                          () => TextButton(
+                            onPressed: controller.residentFormSaving.value
+                                ? null
+                                : () => _submit(context, formKey),
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.blue,
+                              textStyle: tt.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            child: controller.residentFormSaving.value
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.blue,
+                                    ),
+                                  )
+                                : const Text('Guardar'),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  TextButton(
-                    onPressed: _saving ? null : _submit,
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.blue,
-                      textStyle: tt.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
+                  Divider(
+                    height: 1,
+                    color: cs.outlineVariant.withValues(alpha: 0.4),
+                  ),
+
+                  // CONTENT
+                  Flexible(
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.fromLTRB(
+                        24,
+                        24,
+                        24,
+                        24 + viewInsets.bottom,
+                      ),
+                      child: Form(
+                        key: formKey,
+                        child: Column(
+                          children: [
+                            // AVATAR PLACEHOLDER
+                            Container(
+                              width: 80,
+                              height: 80,
+                              decoration: BoxDecoration(
+                                color: cs.surfaceContainerHigh,
+                                shape: BoxShape.circle,
+                              ),
+                              alignment: Alignment.center,
+                              child: Icon(
+                                Icons.person_outline,
+                                size: 40,
+                                color: cs.onSurfaceVariant,
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+
+                            _unitAutocomplete(cs, tt),
+                            const SizedBox(height: 16),
+
+                            Obx(
+                              () => DropdownButtonFormField<int>(
+                                value: controller.residentFormTypeId.value,
+                                decoration: _instagramDecoration(
+                                  cs,
+                                  'Tipo de residente',
+                                ),
+                                items: _residentTypes.entries
+                                    .map(
+                                      (entry) => DropdownMenuItem<int>(
+                                        value: entry.key,
+                                        child: Text(entry.value),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (value) =>
+                                    controller.residentFormTypeId.value = value,
+                                validator: (value) =>
+                                    value == null ? 'Requerido' : null,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+
+                            TextFormField(
+                              controller: controller.residentFormNameCtrl,
+                              decoration: _instagramDecoration(
+                                cs,
+                                'Nombre completo',
+                              ),
+                              validator: (value) =>
+                                  (value?.trim().isEmpty ?? true)
+                                  ? 'Requerido'
+                                  : null,
+                            ),
+                            const SizedBox(height: 16),
+
+                            TextFormField(
+                              controller: controller.residentFormEmailCtrl,
+                              decoration: _instagramDecoration(cs, 'Email'),
+                              keyboardType: TextInputType.emailAddress,
+                            ),
+                            const SizedBox(height: 16),
+
+                            TextFormField(
+                              controller: controller.residentFormDniCtrl,
+                              decoration: _instagramDecoration(
+                                cs,
+                                'Documento de identidad',
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+
+                            TextFormField(
+                              controller: controller.residentFormPhoneCtrl,
+                              decoration: _instagramDecoration(cs, 'Teléfono'),
+                              keyboardType: TextInputType.phone,
+                            ),
+                            const SizedBox(height: 16),
+
+                            TextFormField(
+                              controller: controller.residentFormEmergencyCtrl,
+                              decoration: _instagramDecoration(
+                                cs,
+                                'Contacto de emergencia',
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+
+                            // SWITCHES
+                            Obx(
+                              () => _InstagramSwitch(
+                                label: 'Residente principal',
+                                value: controller.residentFormIsMain.value,
+                                onChanged: (v) =>
+                                    controller.residentFormIsMain.value = v,
+                              ),
+                            ),
+                            if (showActiveSwitch) ...[
+                              const SizedBox(height: 12),
+                              Obx(
+                                () => _InstagramSwitch(
+                                  label: 'Activo',
+                                  value: controller.residentFormIsActive.value,
+                                  onChanged: (v) =>
+                                      controller.residentFormIsActive.value = v,
+                                ),
+                              ),
+                            ],
+
+                            Obx(() {
+                              final error = controller.residentFormError.value;
+                              if (error != null) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(top: 16),
+                                  child: Text(
+                                    error,
+                                    style: tt.bodySmall?.copyWith(
+                                      color: cs.error,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                );
+                              }
+                              return const SizedBox.shrink();
+                            }),
+                          ],
+                        ),
                       ),
                     ),
-                    child: _saving
-                        ? SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.blue,
-                            ),
-                          )
-                        : const Text('Guardar'),
                   ),
                 ],
               ),
             ),
-            const Divider(height: 1),
-
-            // CONTENT
-            Flexible(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.fromLTRB(
-                  24,
-                  24,
-                  24,
-                  24 + viewInsets.bottom,
-                ),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      // AVATAR PLACEHOLDER
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: cs.surfaceContainerHigh,
-                          shape: BoxShape.circle,
-                        ),
-                        alignment: Alignment.center,
-                        child: Icon(
-                          Icons.person_outline,
-                          size: 40,
-                          color: cs.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      _unitAutocomplete(cs, tt),
-                      const SizedBox(height: 16),
-
-                      DropdownButtonFormField<int>(
-                        value: _residentTypeId,
-                        decoration: _instagramDecoration(
-                          cs,
-                          'Tipo de residente',
-                        ),
-                        items: _residentTypes.entries
-                            .map(
-                              (entry) => DropdownMenuItem<int>(
-                                value: entry.key,
-                                child: Text(entry.value),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (value) =>
-                            setState(() => _residentTypeId = value),
-                        validator: (value) =>
-                            value == null ? 'Requerido' : null,
-                      ),
-                      const SizedBox(height: 16),
-
-                      TextFormField(
-                        controller: _nameCtrl,
-                        decoration: _instagramDecoration(cs, 'Nombre completo'),
-                        validator: (value) => (value?.trim().isEmpty ?? true)
-                            ? 'Requerido'
-                            : null,
-                      ),
-                      const SizedBox(height: 16),
-
-                      TextFormField(
-                        controller: _emailCtrl,
-                        decoration: _instagramDecoration(cs, 'Email'),
-                        keyboardType: TextInputType.emailAddress,
-                      ),
-                      const SizedBox(height: 16),
-
-                      TextFormField(
-                        controller: _dniCtrl,
-                        decoration: _instagramDecoration(
-                          cs,
-                          'Documento de identidad',
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      TextFormField(
-                        controller: _phoneCtrl,
-                        decoration: _instagramDecoration(cs, 'Teléfono'),
-                        keyboardType: TextInputType.phone,
-                      ),
-                      const SizedBox(height: 16),
-
-                      TextFormField(
-                        controller: _emergencyCtrl,
-                        decoration: _instagramDecoration(
-                          cs,
-                          'Contacto de emergencia',
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // SWITCHES
-                      _InstagramSwitch(
-                        label: 'Residente principal',
-                        value: _isMain,
-                        onChanged: (v) => setState(() => _isMain = v),
-                      ),
-                      if (widget.showActiveSwitch) ...[
-                        const SizedBox(height: 12),
-                        _InstagramSwitch(
-                          label: 'Activo',
-                          value: _isActive,
-                          onChanged: (v) => setState(() => _isActive = v),
-                        ),
-                      ],
-
-                      if (_error != null) ...[
-                        const SizedBox(height: 16),
-                        Text(
-                          _error!,
-                          style: tt.bodySmall?.copyWith(color: cs.error),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -1151,23 +1138,28 @@ class _ResidentFormDialogState extends State<_ResidentFormDialog> {
   }
 
   Widget _unitAutocomplete(ColorScheme cs, TextTheme tt) {
-    final options = widget.controller.unitsOptions;
+    final options = controller.unitsOptions;
     return Obx(() {
-      final loading = widget.controller.unitsOptionsLoading.value;
+      final loading = controller.unitsOptionsLoading.value;
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Autocomplete<HorizontalPropertyUnitItem>(
             displayStringForOption: (option) => option.number,
-            initialValue: TextEditingValue(text: _unitCtrl.text),
-            optionsBuilder: (text) => widget.controller.filterUnits(text.text),
+            initialValue: TextEditingValue(
+              text: controller.residentFormUnitCtrl.text,
+            ),
+            optionsBuilder: (text) => controller.filterUnits(text.text),
             onSelected: (option) {
-              _selectedUnitId = option.id;
-              _unitCtrl.text = option.number;
+              controller.residentFormSelectedUnitId.value = option.id;
+              controller.residentFormUnitCtrl.text = option.number;
             },
             fieldViewBuilder: (ctx, textCtrl, focusNode, onSubmitted) {
-              textCtrl.text = _unitCtrl.text;
-              _unitCtrl.value = textCtrl.value;
+              // Sync controllers
+              if (textCtrl.text != controller.residentFormUnitCtrl.text) {
+                textCtrl.text = controller.residentFormUnitCtrl.text;
+              }
+
               return TextFormField(
                 controller: textCtrl,
                 focusNode: focusNode,
@@ -1175,13 +1167,16 @@ class _ResidentFormDialogState extends State<_ResidentFormDialog> {
                 onFieldSubmitted: (_) => onSubmitted(),
                 validator: (value) {
                   if ((value ?? '').trim().isEmpty) return 'Requerido';
-                  if (_selectedUnitId == null &&
+                  if (controller.residentFormSelectedUnitId.value == null &&
                       !_matchUnit(value ?? '', options)) {
                     return 'Unidad inválida';
                   }
                   return null;
                 },
-                onChanged: (_) => setState(() => _selectedUnitId = null),
+                onChanged: (val) {
+                  controller.residentFormUnitCtrl.text = val;
+                  controller.residentFormSelectedUnitId.value = null;
+                },
               );
             },
           ),
@@ -1202,7 +1197,7 @@ class _ResidentFormDialogState extends State<_ResidentFormDialog> {
     final normalized = input.trim().toLowerCase();
     for (final unit in options) {
       if (unit.number.toLowerCase() == normalized) {
-        _selectedUnitId = unit.id;
+        controller.residentFormSelectedUnitId.value = unit.id;
         return true;
       }
     }
@@ -1211,15 +1206,15 @@ class _ResidentFormDialogState extends State<_ResidentFormDialog> {
 
   Map<String, dynamic> _buildPayload() {
     return {
-      'property_unit_id': _selectedUnitId,
-      'resident_type_id': _residentTypeId,
-      'name': _nameCtrl.text.trim(),
-      'email': _nullable(_emailCtrl.text),
-      'dni': _nullable(_dniCtrl.text),
-      'phone': _nullable(_phoneCtrl.text),
-      'emergency_contact': _nullable(_emergencyCtrl.text),
-      'is_main_resident': _isMain,
-      if (widget.showActiveSwitch) 'is_active': _isActive,
+      'property_unit_id': controller.residentFormSelectedUnitId.value,
+      'resident_type_id': controller.residentFormTypeId.value,
+      'name': controller.residentFormNameCtrl.text.trim(),
+      'email': _nullable(controller.residentFormEmailCtrl.text),
+      'dni': _nullable(controller.residentFormDniCtrl.text),
+      'phone': _nullable(controller.residentFormPhoneCtrl.text),
+      'emergency_contact': _nullable(controller.residentFormEmergencyCtrl.text),
+      'is_main_resident': controller.residentFormIsMain.value,
+      if (showActiveSwitch) 'is_active': controller.residentFormIsActive.value,
     };
   }
 
@@ -1227,43 +1222,44 @@ class _ResidentFormDialogState extends State<_ResidentFormDialog> {
     return value.trim().isEmpty ? null : value.trim();
   }
 
-  Future<void> _submit() async {
-    if (_saving) return;
-    final form = _formKey.currentState;
+  Future<void> _submit(
+    BuildContext context,
+    GlobalKey<FormState> formKey,
+  ) async {
+    if (controller.residentFormSaving.value) return;
+    final form = formKey.currentState;
     if (form == null) return;
 
-    if (_selectedUnitId == null) {
-      _matchUnit(_unitCtrl.text, widget.controller.unitsOptions);
+    if (controller.residentFormSelectedUnitId.value == null) {
+      _matchUnit(controller.residentFormUnitCtrl.text, controller.unitsOptions);
     }
 
-    if (!form.validate() || _selectedUnitId == null) {
-      setState(() {
-        _error = _selectedUnitId == null ? 'Selecciona la unidad.' : null;
-      });
+    if (!form.validate() ||
+        controller.residentFormSelectedUnitId.value == null) {
+      controller.residentFormError.value =
+          controller.residentFormSelectedUnitId.value == null
+          ? 'Selecciona la unidad.'
+          : null;
       return;
     }
 
-    setState(() {
-      _saving = true;
-      _error = null;
-    });
+    controller.residentFormSaving.value = true;
+    controller.residentFormError.value = null;
+
     try {
-      final result = await widget.onSubmit(_buildPayload());
-      if (!mounted) return;
+      final result = await onSubmit(_buildPayload());
+      if (!context.mounted) return;
       if (!result.success) {
-        setState(() {
-          _saving = false;
-          _error = result.message ?? 'Error al guardar.';
-        });
+        controller.residentFormSaving.value = false;
+        controller.residentFormError.value =
+            result.message ?? 'Error al guardar.';
         return;
       }
       Navigator.of(context).pop(result);
     } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _saving = false;
-        _error = 'Error inesperado.';
-      });
+      if (!context.mounted) return;
+      controller.residentFormSaving.value = false;
+      controller.residentFormError.value = 'Error inesperado.';
     }
   }
 }

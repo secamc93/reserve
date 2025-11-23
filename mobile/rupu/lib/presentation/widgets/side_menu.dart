@@ -8,16 +8,9 @@ import 'package:rupu/config/menu/menu_item.dart';
 import 'package:rupu/presentation/views/home/home_controller.dart';
 import 'package:rupu/presentation/views/login/login_controller.dart';
 
-class SideMenu extends StatefulWidget {
+class SideMenu extends StatelessWidget {
   final GlobalKey<ScaffoldState> scaffoldKey;
   const SideMenu({super.key, required this.scaffoldKey});
-
-  @override
-  State<SideMenu> createState() => _SideMenuState();
-}
-
-class _SideMenuState extends State<SideMenu> {
-  int navDrawerIndex = 0;
 
   Future<void> _handleSelection(
     BuildContext context,
@@ -48,7 +41,7 @@ class _SideMenuState extends State<SideMenu> {
       }
     }
 
-    widget.scaffoldKey.currentState?.closeDrawer();
+    scaffoldKey.currentState?.closeDrawer();
   }
 
   ({List<MenuItem> first, List<MenuItem> second}) _groups(
@@ -66,6 +59,7 @@ class _SideMenuState extends State<SideMenu> {
   Widget _buildMenu(
     BuildContext context,
     List<MenuItem> menuItems,
+    HomeController? home,
   ) {
     final cs = Theme.of(context).colorScheme;
     final groups = _groups(menuItems);
@@ -82,7 +76,7 @@ class _SideMenuState extends State<SideMenu> {
               style: TextStyle(color: cs.onSurfaceVariant),
             ),
           ),
-        ..._buildDenseTiles(context, groups.first, 0, menuItems),
+        ..._buildDenseTiles(context, groups.first, 0, menuItems, home),
         if (groups.second.isNotEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -96,6 +90,7 @@ class _SideMenuState extends State<SideMenu> {
           groups.second,
           groups.first.length,
           menuItems,
+          home,
         ),
         ListTile(
           dense: true,
@@ -115,9 +110,7 @@ class _SideMenuState extends State<SideMenu> {
 
     if (home == null) {
       return Drawer(
-        child: SafeArea(
-          child: _buildMenu(context, appMenuItems),
-        ),
+        child: SafeArea(child: _buildMenu(context, appMenuItems, null)),
       );
     }
 
@@ -126,9 +119,9 @@ class _SideMenuState extends State<SideMenu> {
         child: Obx(() {
           final menuItems = home.accessibleMenuItems.toList(growable: false);
           if (menuItems.isEmpty && home.isSuper) {
-            return _buildMenu(context, appMenuItems);
+            return _buildMenu(context, appMenuItems, home);
           }
-          return _buildMenu(context, menuItems);
+          return _buildMenu(context, menuItems, home);
         }),
       ),
     );
@@ -164,47 +157,50 @@ class _SideMenuState extends State<SideMenu> {
     List<MenuItem> items,
     int offset,
     List<MenuItem> fullList,
+    HomeController? home,
   ) {
     final cs = Theme.of(context).colorScheme;
 
     return List.generate(items.length, (i) {
       final idx = offset + i;
-      final selected = navDrawerIndex == idx;
       final it = items[i];
 
-      // Resalte sutil sin divisores: icono y texto con color primario cuando está seleccionado
-      return InkWell(
-        onTap: () {
-          setState(() => navDrawerIndex = idx);
-          _handleSelection(context, idx, fullList);
-        },
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          decoration: BoxDecoration(
-            color: selected
-                ? cs.primaryContainer.withValues(alpha: .35)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: ListTile(
-            dense: true,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-            leading: Icon(
-              it.icon,
-              color: selected ? cs.primary : cs.onSurfaceVariant,
+      return Obx(() {
+        final navDrawerIndex = home?.navDrawerIndex.value ?? 0;
+        final selected = navDrawerIndex == idx;
+
+        return InkWell(
+          onTap: () {
+            home?.navDrawerIndex.value = idx;
+            _handleSelection(context, idx, fullList);
+          },
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            decoration: BoxDecoration(
+              color: selected
+                  ? cs.primaryContainer.withValues(alpha: .35)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
             ),
-            title: Text(
-              it.tittle,
-              style: TextStyle(
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                color: selected ? cs.primary : null,
+            child: ListTile(
+              dense: true,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+              leading: Icon(
+                it.icon,
+                color: selected ? cs.primary : cs.onSurfaceVariant,
+              ),
+              title: Text(
+                it.tittle,
+                style: TextStyle(
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  color: selected ? cs.primary : null,
+                ),
               ),
             ),
-            // Sin trailing/chevrons para mantenerlo limpio y compacto
           ),
-        ),
-      );
+        );
+      });
     });
   }
 }

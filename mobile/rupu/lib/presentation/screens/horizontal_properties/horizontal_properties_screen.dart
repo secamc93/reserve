@@ -46,9 +46,9 @@ class _HorizontalPropertiesScreenState
     if (businessId == null) return;
 
     setState(() => _redirecting = true);
-    GoRouter.of(context).go(
-      '/home/${widget.pageIndex}/horizontal-properties/$businessId',
-    );
+    GoRouter.of(
+      context,
+    ).go('/home/${widget.pageIndex}/horizontal-properties/$businessId');
   }
 
   @override

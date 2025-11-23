@@ -23,6 +23,22 @@ class IamUsersController extends GetxController {
   final searchText = ''.obs;
   final searchCtrl = TextEditingController();
   final deletingUserId = RxnInt();
+  final selectedRoles = <int, List<int>>{}.obs;
+
+  void toggleRole(int businessId, int roleId) {
+    final current = selectedRoles[businessId] ?? [];
+    if (current.contains(roleId)) {
+      current.remove(roleId);
+    } else {
+      current.add(roleId);
+    }
+    selectedRoles[businessId] = List.from(current);
+  }
+
+  void initSelectedRoles(Map<int, List<int>> initial) {
+    selectedRoles.assignAll(initial);
+  }
+
   final int perPage = 20;
   int _nextPage = 1;
   bool _hasMore = true;

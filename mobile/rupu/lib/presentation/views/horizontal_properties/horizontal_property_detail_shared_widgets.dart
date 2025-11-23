@@ -145,6 +145,7 @@ class _AnimatedMetric extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────
 class SectionCard extends StatefulWidget {
   const SectionCard({
+    super.key,
     required this.title,
     this.child, // Compatibilidad: si lo pasas, se muestra tal cual
     this.subtitle,

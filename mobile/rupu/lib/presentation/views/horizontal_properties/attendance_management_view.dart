@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:rupu/domain/entities/attendance.dart';
 
 import 'controllers/attendance_management_controller.dart';
+import 'package:rupu/config/helpers/design_helper.dart';
+import 'package:rupu/config/helpers/dialog_helper.dart';
 
 class AttendanceManagementView extends GetView<AttendanceManagementController> {
   final int propertyId;
@@ -108,10 +110,10 @@ class AttendanceManagementView extends GetView<AttendanceManagementController> {
     }
     await controller.fetchSummary(showLoader: true);
     await controller.fetchRecords(page: controller.currentPage.value);
-    await showModalBottomSheet(
+    await DialogHelper.showBlurredBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.3),
       builder: (_) => _AttendanceRecordsSheet(controller: controller),
     );
   }
@@ -127,10 +129,10 @@ class AttendanceManagementView extends GetView<AttendanceManagementController> {
       return;
     }
     await controller.fetchSummary(showLoader: true);
-    await showModalBottomSheet(
+    await DialogHelper.showBlurredBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.3),
       builder: (_) => _AttendanceSummarySheet(controller: controller),
     );
   }
@@ -220,19 +222,11 @@ class _AttendanceListCard extends StatelessWidget {
     // list.notes
     final notes = list.notes;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: cs.outlineVariant),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: .05),
-            blurRadius: 18,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
+    return GlassContainer(
+      borderRadius: BorderRadius.circular(24),
+      blur: 15,
+      opacity: 0.6,
+      border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.3)),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
         child: Column(

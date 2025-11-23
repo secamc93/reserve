@@ -26,6 +26,7 @@ class HomeController extends GetxController {
   final Rxn<RolesPermisos> rolesPermisos = Rxn();
   final accessibleMenuItems = <MenuItem>[].obs;
   final Rxn<MenuItem> defaultMenuItem = Rxn();
+  final navDrawerIndex = 0.obs;
 
   bool get isSuper =>
       _loginController.isSuperAdmin || (rolesPermisos.value?.isSuper ?? false);
@@ -45,8 +46,9 @@ class HomeController extends GetxController {
     final normalizedAction = action.toLowerCase();
 
     if (resource == null) {
-      return rp.permissions
-          .any((permission) => permission.action.toLowerCase() == normalizedAction);
+      return rp.permissions.any(
+        (permission) => permission.action.toLowerCase() == normalizedAction,
+      );
     }
 
     final normalizedResource = resource.toLowerCase();
@@ -89,7 +91,8 @@ class HomeController extends GetxController {
       }
 
       return group.actions.any(
-        (permission) => normalizedActions.contains(permission.action.toLowerCase()),
+        (permission) =>
+            normalizedActions.contains(permission.action.toLowerCase()),
       );
     }
 
@@ -133,7 +136,9 @@ class HomeController extends GetxController {
           return;
         }
 
-        final rp = await repository.obtenerRolesPermisos(businessId: businessId);
+        final rp = await repository.obtenerRolesPermisos(
+          businessId: businessId,
+        );
         rolesPermisos.value = rp;
         _updateAccessibleMenuItems();
       }
@@ -154,9 +159,11 @@ class HomeController extends GetxController {
 
   /// Saca los colores de negocio desde la sesión y actualiza el tema.
   void _applyBusinessTheme() {
-    final businesses = _loginController.sessionModel.value?.data.businesses ?? [];
+    final businesses =
+        _loginController.sessionModel.value?.data.businesses ?? [];
     final selected = _loginController.selectedBusiness.value;
-    final business = selected ?? (businesses.isNotEmpty ? businesses.first : null);
+    final business =
+        selected ?? (businesses.isNotEmpty ? businesses.first : null);
     if (business == null) return;
 
     final primary = business.primaryColor;

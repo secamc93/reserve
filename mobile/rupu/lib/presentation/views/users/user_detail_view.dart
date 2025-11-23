@@ -7,6 +7,8 @@ import 'package:rupu/domain/entities/user_detail.dart';
 
 import 'user_detail_controller.dart';
 import 'package:rupu/presentation/widgets/image_preview_dialog.dart';
+import 'package:rupu/config/helpers/design_helper.dart';
+import 'package:rupu/config/helpers/dialog_helper.dart';
 
 class UserDetailView extends GetView<UserDetailController> {
   static const name = 'user-detail';
@@ -337,7 +339,7 @@ class UserDetailView extends GetView<UserDetailController> {
   }
 
   Future<bool> _confirmDelete(BuildContext context) async {
-    return await showDialog<bool>(
+    return await DialogHelper.showBlurredDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
             title: const Text('Eliminar usuario'),
@@ -387,148 +389,155 @@ class UserDetailView extends GetView<UserDetailController> {
 
   Future<void> _openBusinessPicker(BuildContext context) async {
     if (!controller.canUpdate) return;
-    await showDialog<void>(
+    controller.businessSearchCtrl.clear();
+    controller.searchBusinesses('');
+
+    await DialogHelper.showBlurredDialog<void>(
       context: context,
-      builder: (dialogCtx) => _BusinessPickerDialog(controller: controller),
+      barrierColor: Colors.black.withValues(alpha: 0.2),
+      builder: (dialogCtx) => _BusinessPickerContent(controller: controller),
     );
   }
 }
 
-class _BusinessPickerDialog extends StatefulWidget {
+class _BusinessPickerContent extends StatelessWidget {
   final UserDetailController controller;
 
-  const _BusinessPickerDialog({required this.controller});
-
-  @override
-  State<_BusinessPickerDialog> createState() => _BusinessPickerDialogState();
-}
-
-class _BusinessPickerDialogState extends State<_BusinessPickerDialog> {
-  late final TextEditingController _searchCtrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _searchCtrl = TextEditingController();
-    widget.controller.searchBusinesses('');
-  }
-
-  @override
-  void dispose() {
-    _searchCtrl.dispose();
-    super.dispose();
-  }
+  const _BusinessPickerContent({required this.controller});
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Seleccionar negocios'),
-      content: SizedBox(
-        width: 420,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _searchCtrl,
-              textInputAction: TextInputAction.search,
-              decoration: InputDecoration(
-                labelText: 'Buscar negocio',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.send),
-                  onPressed: () =>
-                      widget.controller.searchBusinesses(_searchCtrl.text),
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: GlassContainer(
+          width: 420,
+          borderRadius: BorderRadius.circular(20),
+          padding: const EdgeInsets.all(24),
+          blur: 15,
+          opacity: 0.85,
+          child: Material(
+            color: Colors.transparent,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Seleccionar negocios',
+                  style: Theme.of(context).textTheme.titleLarge,
                 ),
-              ),
-              onSubmitted: (value) => widget.controller.searchBusinesses(value),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 320,
-              child: Obx(() {
-                final isLoading =
-                    widget.controller.businessSuggestionsLoading.value;
-                final error = widget.controller.businessSuggestionsError.value;
-                final suggestions = widget.controller.businessSuggestions;
+                const SizedBox(height: 16),
+                TextField(
+                  controller: controller.businessSearchCtrl,
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    labelText: 'Buscar negocio',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.send),
+                      onPressed: () => controller.searchBusinesses(
+                        controller.businessSearchCtrl.text,
+                      ),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    filled: true,
+                    fillColor: Theme.of(
+                      context,
+                    ).colorScheme.surface.withOpacity(0.5),
+                  ),
+                  onSubmitted: (value) => controller.searchBusinesses(value),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 320,
+                  child: Obx(() {
+                    final isLoading =
+                        controller.businessSuggestionsLoading.value;
+                    final error = controller.businessSuggestionsError.value;
+                    final suggestions = controller.businessSuggestions;
 
-                if (isLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (error != null) {
-                  return Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(error, textAlign: TextAlign.center),
-                        const SizedBox(height: 8),
-                        FilledButton.tonal(
-                          onPressed: () => widget.controller.searchBusinesses(
-                            _searchCtrl.text,
-                          ),
-                          child: const Text('Reintentar'),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-                if (suggestions.isEmpty) {
-                  return const Center(
-                    child: Text(
-                      'No se encontraron negocios con la búsqueda actual.',
-                    ),
-                  );
-                }
-                final selectedIds = widget.controller.selectedBusinesses
-                    .map((biz) => biz.id)
-                    .toSet();
-                return ListView.separated(
-                  itemCount: suggestions.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
-                  itemBuilder: (_, index) {
-                    final business = suggestions[index];
-                    final isSelected = selectedIds.contains(business.id);
-                    return ListTile(
-                      enabled: !isSelected,
-                      leading: CircleAvatar(
-                        child: Text(
-                          business.name.isNotEmpty
-                              ? business.name.substring(0, 1).toUpperCase()
-                              : '?',
-                        ),
-                      ),
-                      title: Text(business.name),
-                      subtitle: Text(
-                        business.businessType.isEmpty
-                            ? 'Sin tipo registrado'
-                            : business.businessType,
-                      ),
-                      trailing: Icon(
-                        isSelected
-                            ? Icons.check_circle
-                            : Icons.add_circle_outline,
-                        color: isSelected
-                            ? Theme.of(context).colorScheme.secondary
-                            : Theme.of(context).colorScheme.primary,
-                      ),
-                      onTap: isSelected
-                          ? null
-                          : () => widget.controller.addBusinessFromCatalog(
-                              business,
+                    if (isLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (error != null) {
+                      return Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(error, textAlign: TextAlign.center),
+                            const SizedBox(height: 8),
+                            FilledButton.tonal(
+                              onPressed: () => controller.searchBusinesses(
+                                controller.businessSearchCtrl.text,
+                              ),
+                              child: const Text('Reintentar'),
                             ),
+                          ],
+                        ),
+                      );
+                    }
+                    if (suggestions.isEmpty) {
+                      return const Center(
+                        child: Text(
+                          'No se encontraron negocios con la búsqueda actual.',
+                        ),
+                      );
+                    }
+                    final selectedIds = controller.selectedBusinesses
+                        .map((biz) => biz.id)
+                        .toSet();
+                    return ListView.separated(
+                      itemCount: suggestions.length,
+                      separatorBuilder: (_, __) => const Divider(height: 1),
+                      itemBuilder: (_, index) {
+                        final business = suggestions[index];
+                        final isSelected = selectedIds.contains(business.id);
+                        return ListTile(
+                          enabled: !isSelected,
+                          leading: CircleAvatar(
+                            child: Text(
+                              business.name.isNotEmpty
+                                  ? business.name.substring(0, 1).toUpperCase()
+                                  : '?',
+                            ),
+                          ),
+                          title: Text(business.name),
+                          subtitle: Text(
+                            business.businessType.isEmpty
+                                ? 'Sin tipo registrado'
+                                : business.businessType,
+                          ),
+                          trailing: Icon(
+                            isSelected
+                                ? Icons.check_circle
+                                : Icons.add_circle_outline,
+                            color: isSelected
+                                ? Theme.of(context).colorScheme.secondary
+                                : Theme.of(context).colorScheme.primary,
+                          ),
+                          onTap: isSelected
+                              ? null
+                              : () =>
+                                    controller.addBusinessFromCatalog(business),
+                        );
+                      },
                     );
-                  },
-                );
-              }),
+                  }),
+                ),
+                const SizedBox(height: 16),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Cerrar'),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cerrar'),
-        ),
-      ],
     );
   }
 }
@@ -590,9 +599,13 @@ class _HeaderSummary extends StatelessWidget {
       imageProvider = NetworkImage(detail.avatarUrl);
     }
 
-    return Card(
+    return GlassContainer(
+      borderRadius: BorderRadius.circular(24),
+      blur: 15,
+      opacity: 0.6,
+      border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.3)),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Row(
           children: [
             GestureDetector(
@@ -603,54 +616,98 @@ class _HeaderSummary extends StatelessWidget {
                       imageProvider: imageProvider,
                       title: detail.name,
                     ),
-              child: CircleAvatar(
-                radius: 32,
-                backgroundImage: imageProvider,
-                child: imageProvider == null
-                    ? Text(
-                        detail.name.isNotEmpty
-                            ? detail.name.substring(0, 1).toUpperCase()
-                            : '?',
-                        style: tt.titleLarge,
-                      )
-                    : null,
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: cs.primary.withValues(alpha: 0.2),
+                    width: 2,
+                  ),
+                ),
+                child: CircleAvatar(
+                  radius: 36,
+                  backgroundColor: cs.surfaceContainerHighest,
+                  backgroundImage: imageProvider,
+                  child: imageProvider == null
+                      ? Text(
+                          detail.name.isNotEmpty
+                              ? detail.name.substring(0, 1).toUpperCase()
+                              : '?',
+                          style: tt.headlineMedium?.copyWith(
+                            color: cs.onSurfaceVariant,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )
+                      : null,
+                ),
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 20),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     detail.name,
-                    style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                    style: tt.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
+                    ),
                   ),
                   const SizedBox(height: 4),
-                  Text(detail.email, style: tt.bodyMedium),
+                  Text(
+                    detail.email,
+                    style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                  ),
                   if (detail.phone.isNotEmpty) ...[
                     const SizedBox(height: 2),
-                    Text(detail.phone, style: tt.bodySmall),
+                    Text(
+                      detail.phone,
+                      style: tt.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant.withValues(alpha: 0.8),
+                      ),
+                    ),
                   ],
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
                   Wrap(
                     spacing: 8,
                     runSpacing: 6,
                     children: [
-                      Chip(
-                        avatar: const Icon(
-                          Icons.verified_user_outlined,
-                          size: 18,
-                        ),
-                        label: Text(detail.isActive ? 'Activo' : 'Inactivo'),
-                        backgroundColor: detail.isActive
-                            ? cs.secondaryContainer
-                            : cs.errorContainer,
+                      _StatusChip(
+                        isActive: detail.isActive,
+                        label: detail.isActive ? 'Activo' : 'Inactivo',
                       ),
                       if (detail.lastLoginAt != null)
-                        Chip(
-                          avatar: const Icon(Icons.schedule_outlined, size: 18),
-                          label: Text(
-                            'Último acceso: ${dateFormat.format(detail.lastLoginAt!.toLocal())}',
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: cs.surfaceContainerHighest.withValues(
+                              alpha: 0.5,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.schedule_outlined,
+                                size: 14,
+                                color: cs.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                dateFormat.format(
+                                  detail.lastLoginAt!.toLocal(),
+                                ),
+                                style: tt.labelSmall?.copyWith(
+                                  color: cs.onSurfaceVariant,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                     ],
@@ -660,6 +717,46 @@ class _HeaderSummary extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _StatusChip extends StatelessWidget {
+  final bool isActive;
+  final String label;
+
+  const _StatusChip({required this.isActive, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final color = isActive ? Colors.green : cs.error;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isActive ? Icons.check_circle_outline : Icons.cancel_outlined,
+            size: 14,
+            color: color,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -45,10 +45,60 @@ class HorizontalPropertyResidentsController extends GetxController {
   final residentsSearchCtrl = TextEditingController();
   final residentsIsMain = RxnBool();
   final residentsIsActive = RxnBool();
+  final residentsShowAdvancedFilters = false.obs;
   late final VoidCallback _filtersListener;
   Worker? _mainWorker;
   Worker? _statusWorker;
   bool _unitsLoaded = false;
+
+  // Form State
+  final residentFormUnitCtrl = TextEditingController();
+  final residentFormNameCtrl = TextEditingController();
+  final residentFormEmailCtrl = TextEditingController();
+  final residentFormDniCtrl = TextEditingController();
+  final residentFormPhoneCtrl = TextEditingController();
+  final residentFormEmergencyCtrl = TextEditingController();
+  final residentFormSelectedUnitId = RxnInt();
+  final residentFormTypeId = RxnInt();
+  final residentFormIsMain = true.obs;
+  final residentFormIsActive = true.obs;
+  final residentFormSaving = false.obs;
+  final residentFormError = RxnString();
+
+  void initResidentForm({
+    HorizontalPropertyResidentDetail? detail,
+    HorizontalPropertyResidentItem? fallback,
+  }) {
+    residentFormSelectedUnitId.value = detail?.propertyUnitId;
+    residentFormUnitCtrl.text =
+        detail?.propertyUnitNumber ?? fallback?.propertyUnitNumber ?? '';
+    residentFormTypeId.value = detail?.residentTypeId;
+    residentFormNameCtrl.text = detail?.name ?? fallback?.name ?? '';
+    residentFormEmailCtrl.text = detail?.email ?? fallback?.email ?? '';
+    residentFormDniCtrl.text = detail?.dni ?? '';
+    residentFormPhoneCtrl.text = detail?.phone ?? fallback?.phone ?? '';
+    residentFormEmergencyCtrl.text = detail?.emergencyContact ?? '';
+    residentFormIsMain.value =
+        detail?.isMainResident ?? fallback?.isMainResident ?? true;
+    residentFormIsActive.value = detail?.isActive ?? fallback?.isActive ?? true;
+    residentFormSaving.value = false;
+    residentFormError.value = null;
+  }
+
+  void clearResidentForm() {
+    residentFormUnitCtrl.clear();
+    residentFormNameCtrl.clear();
+    residentFormEmailCtrl.clear();
+    residentFormDniCtrl.clear();
+    residentFormPhoneCtrl.clear();
+    residentFormEmergencyCtrl.clear();
+    residentFormSelectedUnitId.value = null;
+    residentFormTypeId.value = null;
+    residentFormIsMain.value = true;
+    residentFormIsActive.value = true;
+    residentFormSaving.value = false;
+    residentFormError.value = null;
+  }
 
   bool get canLoadMoreResidents {
     final page = residentsPage.value?.page ?? 0;
@@ -347,6 +397,12 @@ class HorizontalPropertyResidentsController extends GetxController {
     residentsUnitNumberCtrl.dispose();
     residentsTypeCtrl.dispose();
     residentsSearchCtrl.dispose();
+    residentFormUnitCtrl.dispose();
+    residentFormNameCtrl.dispose();
+    residentFormEmailCtrl.dispose();
+    residentFormDniCtrl.dispose();
+    residentFormPhoneCtrl.dispose();
+    residentFormEmergencyCtrl.dispose();
     _residentDetailRequests.clear();
     _residentDetailsCache.clear();
     unitsOptions.clear();

@@ -19,6 +19,8 @@ import 'package:rupu/presentation/views/iam/controllers/iam_users_controller.dar
 import 'package:rupu/presentation/views/roles_permissions/roles_permissions_controller.dart';
 import 'package:rupu/presentation/views/roles_permissions/roles_permissions_view.dart';
 import 'package:rupu/presentation/views/settings/views/create_user_view.dart';
+
+import 'package:rupu/config/helpers/design_helper.dart';
 import 'package:rupu/presentation/views/users/user_detail_view.dart';
 import 'package:rupu/presentation/views/users/users_controller.dart';
 
@@ -2219,83 +2221,90 @@ void _showPasswordBottomSheet(
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
+    backgroundColor: Colors.transparent,
     builder: (ctx) {
       final theme = Theme.of(ctx);
       final cs = theme.colorScheme;
       final tt = theme.textTheme;
 
-      return Padding(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 40),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.check_circle, color: Colors.green, size: 28),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Contraseña generada',
-                    style: tt.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.of(ctx).pop(),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            Text('Correo electrónico', style: tt.labelMedium),
-            const SizedBox(height: 8),
-            _CopyableField(label: 'Correo', value: result.email),
-            const SizedBox(height: 20),
-            Text('Contraseña generada', style: tt.labelMedium),
-            const SizedBox(height: 8),
-            _CopyableField(
-              label: 'Contraseña',
-              value: result.password,
-              isPassword: true,
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: cs.errorContainer.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
+      return GlassContainer(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        blur: 20,
+        opacity: 0.9,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 40),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  Icon(Icons.warning_amber_rounded, color: cs.error, size: 20),
+                  Icon(Icons.check_circle, color: Colors.green, size: 28),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      '⚠️ Solo se muestra una vez. Asegúrate de copiarla.',
-                      style: tt.bodySmall?.copyWith(color: cs.error),
+                      'Contraseña generada',
+                      style: tt.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.of(ctx).pop(),
                   ),
                 ],
               ),
-            ),
-            if (result.message.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Text(result.message, style: tt.bodySmall),
-            ],
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Cerrar'),
+              const SizedBox(height: 24),
+              Text('Correo electrónico', style: tt.labelMedium),
+              const SizedBox(height: 8),
+              _CopyableField(label: 'Correo', value: result.email),
+              const SizedBox(height: 20),
+              Text('Contraseña generada', style: tt.labelMedium),
+              const SizedBox(height: 8),
+              _CopyableField(
+                label: 'Contraseña',
+                value: result.password,
+                isPassword: true,
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: cs.errorContainer.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.warning_amber_rounded,
+                      color: cs.error,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        '⚠️ Solo se muestra una vez. Asegúrate de copiarla.',
+                        style: tt.bodySmall?.copyWith(color: cs.error),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (result.message.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Text(result.message, style: tt.bodySmall),
+              ],
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('Cerrar'),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     },
@@ -2388,12 +2397,25 @@ Future<void> showAssignRolesDialog(BuildContext context, IamUser user) async {
     if (!context.mounted) return;
     Navigator.of(context, rootNavigator: true).pop(); // Close loading
 
+    // Initialize selected roles
+    final initialRoles = <int, List<int>>{};
+    for (final entry in assignmentsByBusiness.entries) {
+      final businessId = entry.key;
+      final assignments = entry.value;
+      if (assignments.isNotEmpty) {
+        initialRoles[businessId] = [assignments.first.roleId];
+      }
+    }
+    controller.initSelectedRoles(initialRoles);
+
     await showDialog(
       context: context,
-      builder: (ctx) => _AssignRolesDialog(
+      barrierColor: Colors.black.withValues(alpha: 0.2),
+      builder: (ctx) => _AssignRolesContent(
         user: user,
         assignmentsByBusiness: assignmentsByBusiness,
         businessRoles: businessRoles,
+        controller: controller,
       ),
     );
   } catch (e) {
@@ -2403,37 +2425,18 @@ Future<void> showAssignRolesDialog(BuildContext context, IamUser user) async {
   }
 }
 
-class _AssignRolesDialog extends StatefulWidget {
+class _AssignRolesContent extends StatelessWidget {
   final IamUser user;
   final Map<int, List<IamBusinessRoleAssignment>> assignmentsByBusiness;
   final Map<int, List<Role>> businessRoles;
+  final IamUsersController controller;
 
-  const _AssignRolesDialog({
+  const _AssignRolesContent({
     required this.user,
     required this.assignmentsByBusiness,
     required this.businessRoles,
+    required this.controller,
   });
-
-  @override
-  State<_AssignRolesDialog> createState() => _AssignRolesDialogState();
-}
-
-class _AssignRolesDialogState extends State<_AssignRolesDialog> {
-  // Store selected role ID for each business
-  final Map<int, int?> _selectedRoles = {};
-
-  @override
-  void initState() {
-    super.initState();
-    // Initialize with current roles
-    for (final entry in widget.assignmentsByBusiness.entries) {
-      final businessId = entry.key;
-      final assignments = entry.value;
-      if (assignments.isNotEmpty) {
-        _selectedRoles[businessId] = assignments.first.roleId;
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -2441,125 +2444,171 @@ class _AssignRolesDialogState extends State<_AssignRolesDialog> {
     final cs = theme.colorScheme;
     final tt = theme.textTheme;
 
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: Row(
-        children: [
-          Icon(Icons.admin_panel_settings, color: cs.primary),
-          const SizedBox(width: 12),
-          const Expanded(child: Text('Asignar roles')),
-        ],
-      ),
-      content: SizedBox(
-        width: 500,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Usuario: ${widget.user.name}',
-                style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(8),
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: GlassContainer(
+          width: 500,
+          borderRadius: BorderRadius.circular(20),
+          padding: const EdgeInsets.all(24),
+          blur: 15,
+          opacity: 0.85,
+          child: Material(
+            color: Colors.transparent,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.admin_panel_settings, color: cs.primary),
+                    const SizedBox(width: 12),
+                    const Expanded(child: Text('Asignar roles')),
+                  ],
                 ),
-                child: Text(
-                  'Selecciona un rol para cada negocio asociado al usuario. Los roles se filtran automáticamente según el tipo de negocio.',
-                  style: tt.bodySmall,
-                ),
-              ),
-              const SizedBox(height: 20),
-              if (widget.assignmentsByBusiness.isEmpty)
-                const Center(
-                  child: Text('El usuario no tiene negocios asignados.'),
-                )
-              else
-                ...widget.assignmentsByBusiness.entries.map((entry) {
-                  final businessId = entry.key;
-                  final assignments = entry.value;
-                  final businessName =
-                      assignments.firstOrNull?.businessName ??
-                      'Negocio #$businessId';
-                  final roles = widget.businessRoles[businessId] ?? [];
-                  final selectedRoleId = _selectedRoles[businessId];
-
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
+                const SizedBox(height: 16),
+                Flexible(
+                  child: SingleChildScrollView(
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          businessName,
-                          style: tt.titleSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
+                          'Usuario: ${user.name}',
+                          style: tt.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        if (roles.isEmpty)
-                          Text(
-                            'No hay roles disponibles para este tipo de negocio.',
-                            style: tt.bodySmall?.copyWith(color: cs.error),
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: cs.surfaceContainerHighest.withValues(
+                              alpha: 0.5,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            'Selecciona un rol para cada negocio asociado al usuario. Los roles se filtran automáticamente según el tipo de negocio.',
+                            style: tt.bodySmall,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        if (assignmentsByBusiness.isEmpty)
+                          const Center(
+                            child: Text(
+                              'El usuario no tiene negocios asignados.',
+                            ),
                           )
                         else
-                          DropdownButtonFormField<int>(
-                            value: roles.any((r) => r.id == selectedRoleId)
-                                ? selectedRoleId
-                                : null,
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
+                          ...assignmentsByBusiness.entries.map((entry) {
+                            final businessId = entry.key;
+                            final assignments = entry.value;
+                            final businessName =
+                                assignments.firstOrNull?.businessName ??
+                                'Negocio #$businessId';
+                            final roles = businessRoles[businessId] ?? [];
+
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    businessName,
+                                    style: tt.titleSmall?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  if (roles.isEmpty)
+                                    Text(
+                                      'No hay roles disponibles para este tipo de negocio.',
+                                      style: tt.bodySmall?.copyWith(
+                                        color: cs.error,
+                                      ),
+                                    )
+                                  else
+                                    Obx(() {
+                                      final selected =
+                                          controller.selectedRoles[businessId];
+                                      final selectedId = selected?.firstOrNull;
+                                      return DropdownButtonFormField<int>(
+                                        value:
+                                            roles.any((r) => r.id == selectedId)
+                                            ? selectedId
+                                            : null,
+                                        decoration: InputDecoration(
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                horizontal: 12,
+                                                vertical: 8,
+                                              ),
+                                          filled: true,
+                                          fillColor: cs.surface.withValues(
+                                            alpha: 0.5,
+                                          ),
+                                        ),
+                                        items: roles.map((role) {
+                                          return DropdownMenuItem<int>(
+                                            value: role.id,
+                                            child: Text(role.name),
+                                          );
+                                        }).toList(),
+                                        onChanged: (value) {
+                                          if (value != null) {
+                                            // Clear and set new
+                                            controller
+                                                .selectedRoles[businessId] = [
+                                              value,
+                                            ];
+                                          }
+                                        },
+                                        hint: const Text('Seleccionar rol'),
+                                      );
+                                    }),
+                                ],
                               ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                            ),
-                            items: roles.map((role) {
-                              return DropdownMenuItem<int>(
-                                value: role.id,
-                                child: Text(role.name),
-                              );
-                            }).toList(),
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedRoles[businessId] = value;
-                              });
-                            },
-                            hint: const Text('Seleccionar rol'),
-                          ),
+                            );
+                          }),
                       ],
                     ),
-                  );
-                }),
-            ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Cancelar'),
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton(
+                      onPressed: () {
+                        // TODO: Implement API call to save roles
+                        Navigator.of(context).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Funcionalidad de guardado pendiente de integración',
+                            ),
+                          ),
+                        );
+                      },
+                      child: const Text('Asignar Roles'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancelar'),
-        ),
-        FilledButton(
-          onPressed: () {
-            // TODO: Implement API call to save roles
-            Navigator.of(context).pop();
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'Funcionalidad de guardado pendiente de integración',
-                ),
-              ),
-            );
-          },
-          child: const Text('Asignar Roles'),
-        ),
-      ],
     );
   }
 }

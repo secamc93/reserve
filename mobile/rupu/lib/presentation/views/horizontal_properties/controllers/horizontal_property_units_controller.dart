@@ -41,8 +41,56 @@ class HorizontalPropertyUnitsController extends GetxController {
   final unitsTypeCtrl = TextEditingController();
   final unitsSearchCtrl = TextEditingController();
   final unitsIsActive = RxnBool();
+  final unitsShowAdvancedFilters = false.obs;
   late final VoidCallback _filtersListener;
   Worker? _statusWorker;
+
+  // Form State
+  final unitFormNumberCtrl = TextEditingController();
+  final unitFormBlockCtrl = TextEditingController();
+  final unitFormTypeCtrl = TextEditingController();
+  final unitFormCoefCtrl = TextEditingController();
+  final unitFormFloorCtrl = TextEditingController();
+  final unitFormAreaCtrl = TextEditingController();
+  final unitFormBedroomsCtrl = TextEditingController();
+  final unitFormBathroomsCtrl = TextEditingController();
+  final unitFormDescriptionCtrl = TextEditingController();
+  final unitFormIsActive = true.obs;
+  final unitFormSaving = false.obs;
+  final unitFormError = RxnString();
+
+  void initUnitForm({
+    HorizontalPropertyUnitDetail? detail,
+    HorizontalPropertyUnitItem? fallback,
+  }) {
+    unitFormNumberCtrl.text = detail?.number ?? fallback?.number ?? '';
+    unitFormBlockCtrl.text = detail?.block ?? fallback?.block ?? '';
+    unitFormTypeCtrl.text = detail?.unitType ?? fallback?.unitType ?? '';
+    unitFormCoefCtrl.text = (detail?.participationCoefficient ?? 0).toString();
+    unitFormFloorCtrl.text = (detail?.floor ?? 0).toString();
+    unitFormAreaCtrl.text = (detail?.area ?? 0).toString();
+    unitFormBedroomsCtrl.text = (detail?.bedrooms ?? 0).toString();
+    unitFormBathroomsCtrl.text = (detail?.bathrooms ?? 0).toString();
+    unitFormDescriptionCtrl.text = detail?.description ?? '';
+    unitFormIsActive.value = detail?.isActive ?? fallback?.isActive ?? true;
+    unitFormSaving.value = false;
+    unitFormError.value = null;
+  }
+
+  void clearUnitForm() {
+    unitFormNumberCtrl.clear();
+    unitFormBlockCtrl.clear();
+    unitFormTypeCtrl.clear();
+    unitFormCoefCtrl.clear();
+    unitFormFloorCtrl.clear();
+    unitFormAreaCtrl.clear();
+    unitFormBedroomsCtrl.clear();
+    unitFormBathroomsCtrl.clear();
+    unitFormDescriptionCtrl.clear();
+    unitFormIsActive.value = true;
+    unitFormSaving.value = false;
+    unitFormError.value = null;
+  }
 
   bool get canLoadMoreUnits {
     final page = unitsPage.value?.page ?? 0;
@@ -111,18 +159,19 @@ class HorizontalPropertyUnitsController extends GetxController {
     final future = repository
         .getHorizontalPropertyUnitDetail(unitId: unitId)
         .then((result) {
-      if (result.success && result.unit != null) {
-        _unitDetailsCache[unitId] = result.unit!;
-      }
-      _unitDetailRequests.remove(unitId);
-      return result;
-    }).catchError((_) {
-      _unitDetailRequests.remove(unitId);
-      return const HorizontalPropertyUnitDetailResult(
-        success: false,
-        message: 'No se pudo cargar el detalle de la unidad.',
-      );
-    });
+          if (result.success && result.unit != null) {
+            _unitDetailsCache[unitId] = result.unit!;
+          }
+          _unitDetailRequests.remove(unitId);
+          return result;
+        })
+        .catchError((_) {
+          _unitDetailRequests.remove(unitId);
+          return const HorizontalPropertyUnitDetailResult(
+            success: false,
+            message: 'No se pudo cargar el detalle de la unidad.',
+          );
+        });
 
     _unitDetailRequests[unitId] = future;
     return future;
@@ -174,8 +223,8 @@ class HorizontalPropertyUnitsController extends GetxController {
     try {
       final basePage = append
           ? (unitsPage.value?.page ??
-              int.tryParse(unitsPageCtrl.text.trim()) ??
-              1)
+                int.tryParse(unitsPageCtrl.text.trim()) ??
+                1)
           : int.tryParse(unitsPageCtrl.text.trim()) ?? 1;
       final pageToRequest = basePage < 1 ? 1 : basePage;
       final query = _buildUnitsQuery(
@@ -315,6 +364,15 @@ class HorizontalPropertyUnitsController extends GetxController {
     unitsBlockCtrl.dispose();
     unitsTypeCtrl.dispose();
     unitsSearchCtrl.dispose();
+    unitFormNumberCtrl.dispose();
+    unitFormBlockCtrl.dispose();
+    unitFormTypeCtrl.dispose();
+    unitFormCoefCtrl.dispose();
+    unitFormFloorCtrl.dispose();
+    unitFormAreaCtrl.dispose();
+    unitFormBedroomsCtrl.dispose();
+    unitFormBathroomsCtrl.dispose();
+    unitFormDescriptionCtrl.dispose();
     _clearUnitDetailsCache();
     deletingUnitIds.clear();
     super.onClose();
@@ -340,8 +398,9 @@ class HorizontalPropertyUnitsController extends GetxController {
 
     final detailTag = HorizontalPropertyDetailController.tagFor(propertyId);
     if (Get.isRegistered<HorizontalPropertyDetailController>(tag: detailTag)) {
-      final detailController =
-          Get.find<HorizontalPropertyDetailController>(tag: detailTag);
+      final detailController = Get.find<HorizontalPropertyDetailController>(
+        tag: detailTag,
+      );
       final detailId = detailController.detail.value?.id;
       if (detailId != null && detailId > 0) {
         return detailId;

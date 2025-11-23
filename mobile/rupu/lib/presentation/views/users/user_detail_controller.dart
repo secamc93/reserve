@@ -23,8 +23,8 @@ class UserDetailController extends GetxController {
   final UsersRepository repository;
   final IamRepository iamRepository;
   UserDetailController({IamRepository? iamRepository})
-      : repository = UsersRepositoryImpl(UsersManagementDatasourceImpl()),
-        iamRepository = iamRepository ?? IamRepositoryImpl();
+    : repository = UsersRepositoryImpl(UsersManagementDatasourceImpl()),
+      iamRepository = iamRepository ?? IamRepositoryImpl();
 
   final HomeController _homeController = Get.find<HomeController>();
 
@@ -34,6 +34,7 @@ class UserDetailController extends GetxController {
   final phoneCtrl = TextEditingController();
   final roleIdsCtrl = TextEditingController();
   final avatarUrlCtrl = TextEditingController();
+  final businessSearchCtrl = TextEditingController();
 
   final isActive = true.obs;
   final isLoading = false.obs;
@@ -52,8 +53,11 @@ class UserDetailController extends GetxController {
 
   int? _userId;
 
-  bool get _hasManage =>
-      _homeController.canAccessResource('users', actions: const ['Manage'], requireActive: false);
+  bool get _hasManage => _homeController.canAccessResource(
+    'users',
+    actions: const ['Manage'],
+    requireActive: false,
+  );
 
   bool _hasAction(String action) {
     if (_hasManage) return true;
@@ -217,10 +221,14 @@ class UserDetailController extends GetxController {
     }
     if (!formKey.currentState!.validate()) return null;
     if (_userId == null) {
-      return const UserActionResult(success: false, message: 'No se ha cargado el usuario.');
+      return const UserActionResult(
+        success: false,
+        message: 'No se ha cargado el usuario.',
+      );
     }
     if (avatarProcessing.value) {
-      avatarError.value = 'Espera a que finalice el procesamiento de la imagen.';
+      avatarError.value =
+          'Espera a que finalice el procesamiento de la imagen.';
       return null;
     }
 
@@ -245,7 +253,8 @@ class UserDetailController extends GetxController {
 
       if (!result.success) {
         errorMessage.value =
-            result.message ?? 'No se pudo actualizar el usuario, intenta nuevamente.';
+            result.message ??
+            'No se pudo actualizar el usuario, intenta nuevamente.';
         return result;
       }
 
@@ -315,6 +324,7 @@ class UserDetailController extends GetxController {
     phoneCtrl.dispose();
     roleIdsCtrl.dispose();
     avatarUrlCtrl.dispose();
+    businessSearchCtrl.dispose();
     super.onClose();
   }
 
@@ -358,10 +368,12 @@ class UserDetailController extends GetxController {
       description: business.description.isEmpty ? null : business.description,
       logoUrl: business.logoUrl.isEmpty ? null : business.logoUrl,
       isActive: business.isActive,
-      businessTypeName:
-          business.businessType.isEmpty ? null : business.businessType,
-      businessTypeCode:
-          business.businessType.isEmpty ? null : business.businessType,
+      businessTypeName: business.businessType.isEmpty
+          ? null
+          : business.businessType,
+      businessTypeCode: business.businessType.isEmpty
+          ? null
+          : business.businessType,
     );
   }
 }
