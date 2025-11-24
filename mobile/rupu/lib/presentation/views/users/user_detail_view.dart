@@ -1,14 +1,11 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
-import 'package:rupu/domain/entities/user_detail.dart';
 
 import 'user_detail_controller.dart';
-import 'package:rupu/presentation/widgets/image_preview_dialog.dart';
 import 'package:rupu/config/helpers/design_helper.dart';
 import 'package:rupu/config/helpers/dialog_helper.dart';
+import 'widgets/user_detail_widgets.dart';
+import 'widgets/user_detail_avatar_section.dart';
 
 class UserDetailView extends GetView<UserDetailController> {
   static const name = 'user-detail';
@@ -18,12 +15,19 @@ class UserDetailView extends GetView<UserDetailController> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     return Scaffold(
+      backgroundColor: cs.surface,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Obx(() {
-          final detail = controller.user.value;
-          return Text(detail?.name ?? 'Detalle de usuario');
-        }),
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        backgroundColor: Colors.transparent,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: cs.onPrimary),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         actions: [
           Obx(() {
             if (!controller.canDelete) return const SizedBox.shrink();
@@ -50,12 +54,15 @@ class UserDetailView extends GetView<UserDetailController> {
                       }
                     },
               icon: controller.isDeleting.value
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(cs.onPrimary),
+                      ),
                     )
-                  : const Icon(Icons.delete_outline),
+                  : Icon(Icons.delete_outline, color: cs.onPrimary),
             );
           }),
         ],
@@ -85,252 +92,339 @@ class UserDetailView extends GetView<UserDetailController> {
           );
         }
 
+        final tt = Theme.of(context).textTheme;
+
         return Form(
           key: controller.formKey,
-          child: ListView(
-            padding: const EdgeInsets.all(16),
+          child: Stack(
             children: [
-              _HeaderSummary(detail: detail, controller: controller),
-              const SizedBox(height: 24),
-              if (detail.roles.isNotEmpty) ...[
-                _SectionTitle('Roles asignados'),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 6,
-                  children: [
-                    for (final role in detail.roles)
-                      Chip(
-                        avatar: const Icon(Icons.security_outlined, size: 18),
-                        label: Text(role.name),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-              ],
-              if (detail.businesses.isNotEmpty) ...[
-                _SectionTitle('Negocios asignados'),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 6,
-                  children: [
-                    for (final business in detail.businesses)
-                      Chip(
-                        avatar: const Icon(Icons.storefront_outlined, size: 18),
-                        label: Text(business.name),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-              ],
-              _SectionTitle('Información general'),
-              const SizedBox(height: 12),
-              _buildTextField(
-                context,
-                controller: controller.nameCtrl,
-                label: 'Nombre',
-                validator: (v) => (v == null || v.isEmpty) ? 'Requerido' : null,
-                enabled: controller.canUpdate,
-              ),
-              const SizedBox(height: 12),
-              _buildTextField(
-                context,
-                controller: controller.emailCtrl,
-                label: 'Email',
-                validator: (v) => (v == null || v.isEmpty) ? 'Requerido' : null,
-                enabled: controller.canUpdate,
-              ),
-              const SizedBox(height: 12),
-              _buildTextField(
-                context,
-                controller: controller.phoneCtrl,
-                label: 'Teléfono',
-                keyboardType: TextInputType.phone,
-                enabled: controller.canUpdate,
-              ),
-              const SizedBox(height: 12),
-              Obx(
-                () => SwitchListTile.adaptive(
-                  title: const Text('Activo'),
-                  value: controller.isActive.value,
-                  onChanged: controller.canUpdate
-                      ? (v) => controller.isActive.value = v
-                      : null,
+              // Gradient header background
+              Container(
+                height: 200,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [cs.primary, cs.secondary.withValues(alpha: 0.9)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                 ),
               ),
-              const SizedBox(height: 12),
-              Obx(
-                () => _BusinessSelectorField(
-                  canEdit: controller.canUpdate,
-                  selectedCount: controller.selectedBusinesses.length,
-                  onTap: controller.canUpdate
-                      ? () => _openBusinessPicker(context)
-                      : null,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Obx(() {
-                final businesses = controller.selectedBusinesses;
-                if (businesses.isEmpty) {
-                  return Text(
-                    'No hay negocios asignados. Usa el selector para agregarlos.',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+
+              // Main content
+              CustomScrollView(
+                physics: const BouncingScrollPhysics(),
+                slivers: [
+                  // Spacing for AppBar
+                  SliverToBoxAdapter(
+                    child: SizedBox(
+                      height: MediaQuery.of(context).padding.top + 60,
                     ),
-                  );
-                }
-                return Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: businesses
-                      .map(
-                        (business) => InputChip(
-                          avatar: const Icon(
-                            Icons.storefront_outlined,
-                            size: 18,
+                  ),
+
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Column(
+                        children: [
+                          // Avatar Section
+                          UserDetailAvatarSection(
+                            controller: controller,
+                            userName: detail.name,
+                            existingAvatarUrl: detail.avatarUrl,
                           ),
-                          label: Text(business.name),
-                          onDeleted: controller.canUpdate
-                              ? () => controller.removeBusiness(business.id)
-                              : null,
-                        ),
-                      )
-                      .toList(),
-                );
-              }),
-              const SizedBox(height: 12),
-              _buildTextField(
-                context,
-                controller: controller.avatarUrlCtrl,
-                label: 'URL de avatar',
-                onChanged: controller.onAvatarUrlChanged,
-                enabled:
-                    controller.canUpdate && !controller.avatarProcessing.value,
-              ),
-              const SizedBox(height: 12),
-              Obx(() {
-                final processing = controller.avatarProcessing.value;
-                final file = controller.avatarFile.value;
-                final hasUrl = controller.hasAvatarUrl.value;
-                return ListTile(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  title: Text(
-                    processing
-                        ? 'Procesando imagen...'
-                        : file?.fileName ?? 'Archivo de avatar',
-                  ),
-                  subtitle: processing
-                      ? const Text('Comprimiendo archivo')
-                      : file != null
-                      ? Text(controller.formatFileSize(file.sizeInBytes))
-                      : hasUrl
-                      ? const Text('Se usará la URL proporcionada')
-                      : const Text('Formatos permitidos: JPG, PNG, WEBP'),
-                  trailing: processing
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (file != null)
-                              IconButton(
-                                tooltip: 'Eliminar archivo',
-                                onPressed: controller.removeAvatarFile,
-                                icon: const Icon(Icons.clear),
+
+                          const SizedBox(height: 24),
+
+                          // Form Section
+                          SectionContainer(
+                            title: 'Información general',
+                            children: [
+                              // Name field
+                              StyledFormField(
+                                controller: controller.nameCtrl,
+                                label: 'Nombre',
+                                icon: Icons.person_outline,
+                                enabled: controller.canUpdate,
+                                validator: (v) => (v == null || v.isEmpty)
+                                    ? 'Requerido'
+                                    : null,
                               ),
-                            IconButton(
-                              tooltip: 'Tomar foto',
-                              onPressed: (!controller.canUpdate || hasUrl)
-                                  ? null
-                                  : () => controller.pickAvatarFromCamera(),
-                              icon: const Icon(Icons.photo_camera_outlined),
-                            ),
-                            IconButton(
-                              tooltip: 'Seleccionar archivo',
-                              onPressed: (!controller.canUpdate || hasUrl)
-                                  ? null
-                                  : () => controller.pickAvatar(),
-                              icon: const Icon(Icons.attach_file),
-                            ),
-                          ],
-                        ),
-                  onTap: (!controller.canUpdate || hasUrl || processing)
-                      ? null
-                      : () => controller.pickAvatar(),
-                );
-              }),
-              Obx(
-                () => controller.avatarError.value != null
-                    ? Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Text(
-                          controller.avatarError.value!,
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodySmall?.copyWith(color: Colors.red),
-                        ),
-                      )
-                    : const SizedBox.shrink(),
-              ),
-              const SizedBox(height: 24),
-              if (controller.errorMessage.value != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Text(
-                    controller.errorMessage.value!,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                ),
-              if (controller.canUpdate)
-                Obx(
-                  () => FilledButton(
-                    onPressed: controller.isSaving.value
-                        ? null
-                        : () async {
-                            final result = await controller.submit();
-                            if (result == null || !context.mounted) return;
-                            if (result.success) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    result.message ??
-                                        'Usuario actualizado correctamente.',
+
+                              const SizedBox(height: 12),
+
+                              // Email field
+                              StyledFormField(
+                                controller: controller.emailCtrl,
+                                label: 'Email',
+                                icon: Icons.email_outlined,
+                                enabled: controller.canUpdate,
+                                keyboardType: TextInputType.emailAddress,
+                                validator: (v) => (v == null || v.isEmpty)
+                                    ? 'Requerido'
+                                    : null,
+                              ),
+
+                              const SizedBox(height: 12),
+
+                              // Phone field
+                              StyledFormField(
+                                controller: controller.phoneCtrl,
+                                label: 'Teléfono',
+                                icon: Icons.phone_outlined,
+                                enabled: controller.canUpdate,
+                                keyboardType: TextInputType.phone,
+                              ),
+
+                              const SizedBox(height: 12),
+
+                              // Avatar URL field
+                              StyledFormField(
+                                controller: controller.avatarUrlCtrl,
+                                label: 'URL de avatar',
+                                icon: Icons.link,
+                                enabled:
+                                    controller.canUpdate &&
+                                    !controller.avatarProcessing.value,
+                                onChanged: controller.onAvatarUrlChanged,
+                              ),
+
+                              const SizedBox(height: 16),
+
+                              // Active toggle
+                              Obx(
+                                () => Container(
+                                  decoration: BoxDecoration(
+                                    color: cs.surfaceContainerHighest
+                                        .withValues(alpha: 0.3),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: SwitchListTile.adaptive(
+                                    title: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.power_settings_new,
+                                          size: 22,
+                                          color: cs.primary,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        const Text('Usuario activo'),
+                                      ],
+                                    ),
+                                    value: controller.isActive.value,
+                                    onChanged: controller.canUpdate
+                                        ? (v) => controller.isActive.value = v
+                                        : null,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
                                   ),
                                 ),
-                              );
-                            } else if (result.message != null) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(result.message!)),
-                              );
-                            }
-                          },
-                    child: controller.isSaving.value
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('Guardar cambios'),
-                  ),
-                ),
-              if (!controller.canUpdate)
-                const Card(
-                  child: Padding(
-                    padding: EdgeInsets.all(12),
-                    child: Text(
-                      'Solo puedes visualizar la información de este usuario.',
-                      textAlign: TextAlign.center,
+                              ),
+
+                              const SizedBox(height: 16),
+
+                              // Business selector
+                              Obx(
+                                () => BusinessSelectorTile(
+                                  selectedCount:
+                                      controller.selectedBusinesses.length,
+                                  onTap: () => _openBusinessPicker(context),
+                                  enabled: controller.canUpdate,
+                                ),
+                              ),
+
+                              // Selected businesses chips
+                              Obx(() {
+                                final businesses =
+                                    controller.selectedBusinesses;
+                                if (businesses.isEmpty) {
+                                  return const SizedBox(height: 8);
+                                }
+
+                                return Padding(
+                                  padding: const EdgeInsets.only(top: 12),
+                                  child: Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: businesses
+                                        .map(
+                                          (business) => InputChip(
+                                            label: Text(business.name),
+                                            avatar: Icon(
+                                              Icons.storefront_outlined,
+                                              size: 18,
+                                              color: cs.primary,
+                                            ),
+                                            onDeleted: controller.canUpdate
+                                                ? () =>
+                                                      controller.removeBusiness(
+                                                        business.id,
+                                                      )
+                                                : null,
+                                            backgroundColor: cs.primaryContainer
+                                                .withValues(alpha: 0.5),
+                                            deleteIconColor: cs.error,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                          ),
+                                        )
+                                        .toList(),
+                                  ),
+                                );
+                              }),
+
+                              const SizedBox(height: 20),
+
+                              // Error message
+                              if (controller.errorMessage.value != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: cs.errorContainer,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.error_outline,
+                                          color: cs.error,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Text(
+                                            controller.errorMessage.value!,
+                                            style: tt.bodyMedium?.copyWith(
+                                              color: cs.onErrorContainer,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+
+                              // Save button
+                              if (controller.canUpdate)
+                                Obx(
+                                  () => SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton(
+                                      onPressed: controller.isSaving.value
+                                          ? null
+                                          : () async {
+                                              final result = await controller
+                                                  .submit();
+                                              if (result == null ||
+                                                  !context.mounted)
+                                                return;
+                                              if (result.success) {
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).showSnackBar(
+                                                  SnackBar(
+                                                    content: Text(
+                                                      result.message ??
+                                                          'Usuario actualizado correctamente.',
+                                                    ),
+                                                  ),
+                                                );
+                                              } else if (result.message !=
+                                                  null) {
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).showSnackBar(
+                                                  SnackBar(
+                                                    content: Text(
+                                                      result.message!,
+                                                    ),
+                                                  ),
+                                                );
+                                              }
+                                            },
+                                      style: ElevatedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 16,
+                                        ),
+                                        backgroundColor: cs.primary,
+                                        foregroundColor: cs.onPrimary,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                        ),
+                                        elevation: 2,
+                                      ),
+                                      child: controller.isSaving.value
+                                          ? SizedBox(
+                                              width: 20,
+                                              height: 20,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                valueColor:
+                                                    AlwaysStoppedAnimation<
+                                                      Color
+                                                    >(
+                                                      cs.onPrimary.withValues(
+                                                        alpha: 0.7,
+                                                      ),
+                                                    ),
+                                              ),
+                                            )
+                                          : Text(
+                                              'Guardar cambios',
+                                              style: tt.titleSmall?.copyWith(
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                    ),
+                                  ),
+                                ),
+
+                              // Read-only message
+                              if (!controller.canUpdate)
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: cs.surfaceContainerHighest
+                                        .withValues(alpha: 0.5),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.lock_outline,
+                                        size: 20,
+                                        color: cs.onSurfaceVariant,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          'Solo puedes visualizar la información de este usuario.',
+                                          style: tt.bodyMedium?.copyWith(
+                                            color: cs.onSurfaceVariant,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 20),
+                        ],
+                      ),
                     ),
                   ),
-                ),
+                ],
+              ),
             ],
           ),
         );
@@ -363,28 +457,6 @@ class UserDetailView extends GetView<UserDetailController> {
           ),
         ) ??
         false;
-  }
-
-  Widget _buildTextField(
-    BuildContext context, {
-    required TextEditingController controller,
-    required String label,
-    TextInputType? keyboardType,
-    bool enabled = true,
-    String? helperText,
-    String? Function(String?)? validator,
-    bool obscureText = false,
-    ValueChanged<String>? onChanged,
-  }) {
-    return TextFormField(
-      controller: controller,
-      decoration: InputDecoration(labelText: label, helperText: helperText),
-      keyboardType: keyboardType,
-      enabled: enabled,
-      obscureText: obscureText,
-      validator: validator,
-      onChanged: onChanged,
-    );
   }
 
   Future<void> _openBusinessPicker(BuildContext context) async {
@@ -538,240 +610,6 @@ class _BusinessPickerContent extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _BusinessSelectorField extends StatelessWidget {
-  final bool canEdit;
-  final int selectedCount;
-  final VoidCallback? onTap;
-
-  const _BusinessSelectorField({
-    required this.canEdit,
-    required this.selectedCount,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: ListTile(
-        onTap: canEdit ? onTap : null,
-        leading: Icon(
-          Icons.store_mall_directory_outlined,
-          color: Theme.of(context).colorScheme.primary,
-        ),
-        title: Text('Negocios seleccionados: $selectedCount'),
-        subtitle: Text(
-          canEdit
-              ? 'Toca para buscar y agregar negocios a este usuario.'
-              : 'Solo lectura.',
-        ),
-        trailing: Icon(canEdit ? Icons.chevron_right : Icons.lock_outline),
-      ),
-    );
-  }
-}
-
-class _HeaderSummary extends StatelessWidget {
-  final UserDetail detail;
-  final UserDetailController controller;
-
-  const _HeaderSummary({required this.detail, required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
-
-    final avatarData = controller.avatarFile.value;
-    final hasUrl = controller.hasAvatarUrl.value;
-    final customUrl = controller.avatarUrlCtrl.text.trim();
-
-    ImageProvider? imageProvider;
-    if (avatarData != null) {
-      imageProvider = FileImage(File(avatarData.path));
-    } else if (hasUrl && customUrl.isNotEmpty) {
-      imageProvider = NetworkImage(customUrl);
-    } else if (detail.avatarUrl.isNotEmpty) {
-      imageProvider = NetworkImage(detail.avatarUrl);
-    }
-
-    return GlassContainer(
-      borderRadius: BorderRadius.circular(24),
-      blur: 15,
-      opacity: 0.6,
-      border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.3)),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          children: [
-            GestureDetector(
-              onTap: imageProvider == null
-                  ? null
-                  : () => showImagePreviewDialog(
-                      context,
-                      imageProvider: imageProvider,
-                      title: detail.name,
-                    ),
-              child: Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: cs.primary.withValues(alpha: 0.2),
-                    width: 2,
-                  ),
-                ),
-                child: CircleAvatar(
-                  radius: 36,
-                  backgroundColor: cs.surfaceContainerHighest,
-                  backgroundImage: imageProvider,
-                  child: imageProvider == null
-                      ? Text(
-                          detail.name.isNotEmpty
-                              ? detail.name.substring(0, 1).toUpperCase()
-                              : '?',
-                          style: tt.headlineMedium?.copyWith(
-                            color: cs.onSurfaceVariant,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        )
-                      : null,
-                ),
-              ),
-            ),
-            const SizedBox(width: 20),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    detail.name,
-                    style: tt.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    detail.email,
-                    style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-                  ),
-                  if (detail.phone.isNotEmpty) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      detail.phone,
-                      style: tt.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant.withValues(alpha: 0.8),
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 6,
-                    children: [
-                      _StatusChip(
-                        isActive: detail.isActive,
-                        label: detail.isActive ? 'Activo' : 'Inactivo',
-                      ),
-                      if (detail.lastLoginAt != null)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: cs.surfaceContainerHighest.withValues(
-                              alpha: 0.5,
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.schedule_outlined,
-                                size: 14,
-                                color: cs.onSurfaceVariant,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                dateFormat.format(
-                                  detail.lastLoginAt!.toLocal(),
-                                ),
-                                style: tt.labelSmall?.copyWith(
-                                  color: cs.onSurfaceVariant,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _StatusChip extends StatelessWidget {
-  final bool isActive;
-  final String label;
-
-  const _StatusChip({required this.isActive, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final color = isActive ? Colors.green : cs.error;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            isActive ? Icons.check_circle_outline : Icons.cancel_outlined,
-            size: 14,
-            color: color,
-          ),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SectionTitle extends StatelessWidget {
-  final String text;
-  const _SectionTitle(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    return Text(
-      text,
-      style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
     );
   }
 }

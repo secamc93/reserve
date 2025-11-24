@@ -268,3 +268,31 @@ class GlassCard extends StatelessWidget {
     return GestureDetector(onTap: onTap, child: content);
   }
 }
+
+class DesignHelper {
+  static InputDecoration inputDecoration({
+    required String label,
+    required IconData icon,
+    required BuildContext context,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon, size: 22, color: cs.primary),
+      filled: true,
+      fillColor: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: cs.primary, width: 2),
+      ),
+    );
+  }
+}

@@ -64,4 +64,12 @@ class DialogHelper {
       },
     );
   }
+
+  static Future<void> showLoading(BuildContext context) {
+    return showBlurredDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => const Center(child: CircularProgressIndicator()),
+    );
+  }
 }

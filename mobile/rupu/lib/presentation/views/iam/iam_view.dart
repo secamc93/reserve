@@ -23,6 +23,7 @@ import 'package:rupu/presentation/views/settings/views/create_user_view.dart';
 import 'package:rupu/config/helpers/design_helper.dart';
 import 'package:rupu/presentation/views/users/user_detail_view.dart';
 import 'package:rupu/presentation/views/users/users_controller.dart';
+import 'package:rupu/presentation/widgets/image_preview_dialog.dart';
 
 class IamView extends StatelessWidget {
   final int pageIndex;
@@ -140,7 +141,7 @@ class IamView extends StatelessWidget {
                       child: _IamUsersTab(pageIndex: pageIndex),
                     ),
                   ),
-                  const _IamTabPage(
+                  _IamTabPage(
                     child: SafeArea(
                       top: false,
                       bottom: false,
@@ -149,7 +150,7 @@ class IamView extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const _IamTabPage(
+                  _IamTabPage(
                     child: SafeArea(
                       top: false,
                       bottom: false,
@@ -584,99 +585,149 @@ class _IamResourcesTab extends GetView<IamResourcesController> {
             if (resources.isEmpty && !isLoading)
               const _IamEmptyState(message: 'No se encontraron recursos.')
             else
-              Card(
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: Container(
+              ...resources.map(
+                (resource) => Container(
+                  margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
                     color: cs.surface,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: cs.outlineVariant.withValues(alpha: 0.7),
-                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.all(16),
-                    child: DataTable(
-                      columnSpacing: 24,
-                      headingRowHeight: 44,
-                      dataRowMinHeight: 44,
-                      columns: const [
-                        DataColumn(label: Text('Nombre')),
-                        DataColumn(label: Text('Descripción')),
-                        DataColumn(label: Text('Tipo de negocio')),
-                        DataColumn(label: Text('Creado')),
-                        DataColumn(label: Text('Actualizado')),
-                        DataColumn(label: Text('Acciones')),
+                  child: ExpansionTile(
+                    shape: const Border(),
+                    collapsedShape: const Border(),
+                    tilePadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    leading: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: cs.primaryContainer,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.category_outlined,
+                        color: cs.onPrimaryContainer,
+                      ),
+                    ),
+                    title: Text(
+                      resource.name,
+                      style: tt.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 4),
+                        if (resource.description.isNotEmpty)
+                          Text(
+                            resource.description,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                        const SizedBox(height: 4),
+                        if (resource.businessTypeName.isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: cs.secondaryContainer.withValues(
+                                alpha: 0.5,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              resource.businessTypeName,
+                              style: tt.labelSmall?.copyWith(
+                                color: cs.onSecondaryContainer,
+                              ),
+                            ),
+                          ),
                       ],
-                      rows: resources.map((resource) {
-                        return DataRow(
-                          cells: [
-                            DataCell(
-                              Text(
-                                resource.name,
-                                style: tt.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                            DataCell(
-                              SizedBox(
-                                width: 260,
-                                child: Text(
-                                  resource.description.isEmpty
-                                      ? '-'
-                                      : resource.description,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ),
-                            DataCell(
-                              Text(
-                                resource.businessTypeName.isEmpty
-                                    ? '-'
-                                    : resource.businessTypeName,
-                              ),
-                            ),
-                            DataCell(
-                              Text(_formatFriendlyDate(resource.createdAt)),
-                            ),
-                            DataCell(
-                              Text(_formatFriendlyDate(resource.updatedAt)),
-                            ),
-                            DataCell(
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    tooltip: 'Editar',
-                                    icon: const Icon(Icons.edit_outlined),
-                                    onPressed: () => showResourceFormDialog(
-                                      context,
-                                      resource: resource,
+                    ),
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Divider(),
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Creado',
+                                      style: tt.labelSmall?.copyWith(
+                                        color: cs.onSurfaceVariant,
+                                      ),
                                     ),
+                                    Text(
+                                      _formatFriendlyDate(resource.createdAt),
+                                      style: tt.bodyMedium,
+                                    ),
+                                  ],
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      'Actualizado',
+                                      style: tt.labelSmall?.copyWith(
+                                        color: cs.onSurfaceVariant,
+                                      ),
+                                    ),
+                                    Text(
+                                      _formatFriendlyDate(resource.updatedAt),
+                                      style: tt.bodyMedium,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                IconButton(
+                                  tooltip: 'Editar',
+                                  icon: const Icon(Icons.edit_outlined),
+                                  onPressed: () => showResourceFormDialog(
+                                    context,
+                                    resource: resource,
                                   ),
-                                  IconButton(
-                                    tooltip: 'Eliminar',
-                                    icon: const Icon(Icons.delete_outline),
-                                    onPressed: () =>
-                                        confirmDeleteResourceDialog(
-                                          context,
-                                          resource,
-                                        ),
+                                ),
+                                IconButton(
+                                  tooltip: 'Eliminar',
+                                  icon: const Icon(Icons.delete_outline),
+                                  color: cs.error,
+                                  onPressed: () => confirmDeleteResourceDialog(
+                                    context,
+                                    resource,
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ],
-                        );
-                      }).toList(),
-                    ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -780,100 +831,113 @@ class _IamBusinessTypesTab extends GetView<IamBusinessTypesController> {
                 message: 'No se encontraron tipos de negocio.',
               )
             else
-              Card(
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: Container(
+              ...types.map(
+                (type) => Container(
+                  margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
                     color: cs.surface,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: cs.outlineVariant.withValues(alpha: 0.7),
-                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.all(16),
-                    child: DataTable(
-                      columnSpacing: 24,
-                      headingRowHeight: 44,
-                      dataRowMinHeight: 44,
-                      columns: const [
-                        DataColumn(label: Text('Nombre')),
-                        DataColumn(label: Text('Código')),
-                        DataColumn(label: Text('Icono')),
-                        DataColumn(label: Text('Estado')),
-                        DataColumn(label: Text('Creado')),
-                        DataColumn(label: Text('Acciones')),
-                      ],
-                      rows: types
-                          .map(
-                            (type) => DataRow(
-                              cells: [
-                                DataCell(
-                                  Text(
-                                    type.name,
-                                    style: tt.bodyMedium?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                                DataCell(Text(type.code)),
-                                DataCell(Text(type.icon)),
-                                DataCell(_IamStatusChip(active: type.isActive)),
-                                DataCell(
-                                  Text(_formatFriendlyDate(type.createdAt)),
-                                ),
-                                DataCell(
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      IconButton(
-                                        tooltip: 'Editar',
-                                        onPressed: () =>
-                                            showBusinessTypeFormDialog(
-                                              context,
-                                              type: type,
-                                            ),
-                                        icon: const Icon(Icons.edit_outlined),
-                                      ),
-                                      Obx(() {
-                                        final isDeleting = controller
-                                            .deletingTypeIds
-                                            .contains(type.id);
-                                        return IconButton(
-                                          tooltip: 'Eliminar',
-                                          onPressed: isDeleting
-                                              ? null
-                                              : () =>
-                                                    confirmDeleteBusinessTypeDialog(
-                                                      context,
-                                                      type,
-                                                    ),
-                                          icon: isDeleting
-                                              ? const SizedBox(
-                                                  width: 16,
-                                                  height: 16,
-                                                  child:
-                                                      CircularProgressIndicator(
-                                                        strokeWidth: 2,
-                                                      ),
-                                                )
-                                              : const Icon(
-                                                  Icons.delete_outline,
-                                                ),
-                                        );
-                                      }),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    leading: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: type.isActive
+                            ? cs.primaryContainer
+                            : cs.surfaceContainerHighest,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        type.icon.isNotEmpty ? type.icon : '📦',
+                        style: const TextStyle(fontSize: 24),
+                      ),
+                    ),
+                    title: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            type.name,
+                            style: tt.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
                             ),
-                          )
-                          .toList(),
+                          ),
+                        ),
+                        _IamStatusChip(active: type.isActive),
+                      ],
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: cs.secondaryContainer.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            type.code,
+                            style: tt.labelSmall?.copyWith(
+                              color: cs.onSecondaryContainer,
+                              fontFamily: 'monospace',
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Creado: ${_formatFriendlyDate(type.createdAt)}',
+                          style: tt.labelSmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          tooltip: 'Editar',
+                          onPressed: () =>
+                              showBusinessTypeFormDialog(context, type: type),
+                          icon: const Icon(Icons.edit_outlined),
+                        ),
+                        Obx(() {
+                          final isDeleting = controller.deletingTypeIds
+                              .contains(type.id);
+                          return IconButton(
+                            tooltip: 'Eliminar',
+                            onPressed: isDeleting
+                                ? null
+                                : () => confirmDeleteBusinessTypeDialog(
+                                    context,
+                                    type,
+                                  ),
+                            icon: isDeleting
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : Icon(Icons.delete_outline, color: cs.error),
+                          );
+                        }),
+                      ],
                     ),
                   ),
                 ),
@@ -1091,55 +1155,6 @@ class _IamBusinessesTab extends GetView<IamBusinessesController> {
         return const Center(child: CircularProgressIndicator());
       }
 
-      List<DataCell> _buildBusinessRowCells(
-        BuildContext context,
-        IamBusiness business, {
-        required int expectedLength,
-      }) {
-        final cells = <DataCell>[
-          DataCell(_IamBusinessLogoCell(logoUrl: business.logoUrl)),
-          DataCell(
-            Text(
-              business.name,
-              style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-            ),
-          ),
-          DataCell(Text(business.businessType)),
-          DataCell(_IamStatusChip(active: business.isActive)),
-          DataCell(
-            SizedBox(
-              width: 280,
-              child: Text(
-                business.address.isEmpty ? '-' : business.address,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ),
-          DataCell(Text(_formatFriendlyDate(business.createdAt))),
-          DataCell(
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  tooltip: 'Ver recursos configurados',
-                  icon: const Icon(Icons.widgets_outlined),
-                  onPressed: () =>
-                      _showConfiguredResourcesDialog(context, business),
-                ),
-              ],
-            ),
-          ),
-        ];
-
-        assert(
-          cells.length == expectedLength,
-          'Cada fila debe tener $expectedLength celdas en la tabla de negocios.',
-        );
-
-        return cells;
-      }
-
       return RefreshIndicator(
         onRefresh: controller.fetchBusinesses,
         child: ListView(
@@ -1221,48 +1236,112 @@ class _IamBusinessesTab extends GetView<IamBusinessesController> {
             if (businesses.isEmpty && !isLoading)
               const _IamEmptyState(message: 'No se encontraron negocios.')
             else
-              Card(
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: Container(
+              ...businesses.map(
+                (business) => Container(
+                  margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
                     color: cs.surface,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: cs.outlineVariant.withValues(alpha: 0.7),
-                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.all(16),
-                    child: Builder(
-                      builder: (tableCtx) {
-                        const columns = <DataColumn>[
-                          DataColumn(label: Text('Logo')),
-                          DataColumn(label: Text('Nombre')),
-                          DataColumn(label: Text('Tipo de negocio')),
-                          DataColumn(label: Text('Estado')),
-                          DataColumn(label: Text('Dirección')),
-                          DataColumn(label: Text('Creado')),
-                          DataColumn(label: Text('Acciones')),
-                        ];
-                        final rows = businesses
-                            .map(
-                              (business) => DataRow(
-                                cells: _buildBusinessRowCells(
-                                  tableCtx,
-                                  business,
-                                  expectedLength: columns.length,
-                                ),
-                              ),
-                            )
-                            .toList(growable: false);
-                        return DataTable(columns: columns, rows: rows);
-                      },
+                  child: ExpansionTile(
+                    shape: const Border(),
+                    collapsedShape: const Border(),
+                    tilePadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
                     ),
+                    leading: _IamBusinessLogoCell(logoUrl: business.logoUrl),
+                    title: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            business.name,
+                            style: tt.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        _IamStatusChip(active: business.isActive),
+                      ],
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 4),
+                        if (business.businessType.isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: cs.secondaryContainer.withValues(
+                                alpha: 0.5,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              business.businessType,
+                              style: tt.labelSmall?.copyWith(
+                                color: cs.onSecondaryContainer,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Divider(),
+                            const SizedBox(height: 8),
+                            if (business.address.isNotEmpty) ...[
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.location_on_outlined,
+                                    size: 16,
+                                    color: cs.onSurfaceVariant,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      business.address,
+                                      style: tt.bodyMedium,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                            ],
+                            Text(
+                              'Creado: ${_formatFriendlyDate(business.createdAt)}',
+                              style: tt.labelSmall?.copyWith(
+                                color: cs.onSurfaceVariant,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            FilledButton.icon(
+                              onPressed: () => _showConfiguredResourcesDialog(
+                                context,
+                                business,
+                              ),
+                              icon: const Icon(Icons.widgets_outlined),
+                              label: const Text('Ver recursos configurados'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -1313,266 +1392,512 @@ class _IamUserCard extends StatelessWidget {
     final initials = _buildInitials(user.name);
     final lastLogin = _formatFriendlyDateTime(user.lastLoginAt);
 
-    return Card(
-      elevation: 0,
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      clipBehavior: Clip.antiAlias,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          color: cs.surface,
-          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.7)),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        color: cs.surface,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(
+          color: cs.outlineVariant.withValues(alpha: 0.3),
+          width: 1,
         ),
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header: avatar + nombre + estado corto
-            Row(
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          onTap: canView ? onView : null,
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Stack(
+                // Header: avatar + nombre + estado
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    CircleAvatar(
-                      radius: 26,
-                      backgroundImage: user.avatarUrl.isNotEmpty
-                          ? NetworkImage(user.avatarUrl)
-                          : null,
-                      backgroundColor: cs.primaryContainer.withValues(
-                        alpha: 0.7,
+                    // Avatar con gradiente border
+                    Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: user.isActive
+                            ? LinearGradient(
+                                colors: [cs.primary, cs.secondary],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              )
+                            : null,
+                        border: !user.isActive
+                            ? Border.all(color: cs.outlineVariant, width: 2)
+                            : null,
                       ),
-                      child: user.avatarUrl.isEmpty
-                          ? Text(
-                              initials,
-                              style: tt.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
-                            )
-                          : null,
-                    ),
-                    Positioned(
-                      bottom: 2,
-                      right: 2,
-                      child: Container(
-                        width: 11,
-                        height: 11,
-                        decoration: BoxDecoration(
-                          color: user.isActive ? Colors.green : cs.outline,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: cs.surface, width: 1.5),
+                      padding: const EdgeInsets.all(2.5),
+                      child: GestureDetector(
+                        onTap: user.avatarUrl.isNotEmpty
+                            ? () => showImagePreviewDialog(
+                                context,
+                                imageProvider: NetworkImage(user.avatarUrl),
+                                title: user.name,
+                              )
+                            : null,
+                        child: CircleAvatar(
+                          radius: 28,
+                          backgroundImage: user.avatarUrl.isNotEmpty
+                              ? NetworkImage(user.avatarUrl)
+                              : null,
+                          backgroundColor: user.avatarUrl.isEmpty
+                              ? cs.primaryContainer.withValues(alpha: 0.5)
+                              : cs.surfaceContainerHighest,
+                          child: user.avatarUrl.isEmpty
+                              ? Text(
+                                  initials,
+                                  style: tt.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                    color: cs.onPrimaryContainer,
+                                  ),
+                                )
+                              : null,
                         ),
+                      ),
+                    ),
+
+                    const SizedBox(width: 14),
+
+                    // Nombre, email, teléfono
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  user.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: tt.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: -0.2,
+                                  ),
+                                ),
+                              ),
+                              if (user.isSuperUser)
+                                Container(
+                                  margin: const EdgeInsets.only(left: 6),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        cs.primary.withValues(alpha: 0.15),
+                                        cs.secondary.withValues(alpha: 0.12),
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.star_rounded,
+                                        size: 14,
+                                        color: cs.primary,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        'Super',
+                                        style: tt.labelSmall?.copyWith(
+                                          color: cs.primary,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 4),
+
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.email_outlined,
+                                size: 14,
+                                color: cs.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  user.email,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: tt.bodySmall?.copyWith(
+                                    color: cs.onSurfaceVariant,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          if (user.phone.isNotEmpty) ...[
+                            const SizedBox(height: 3),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.phone_outlined,
+                                  size: 14,
+                                  color: cs.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  user.phone,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: tt.bodySmall?.copyWith(
+                                    color: cs.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(width: 8),
+
+                    // Status indicator
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: user.isActive
+                            ? Colors.green.withValues(alpha: 0.1)
+                            : cs.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: user.isActive
+                              ? Colors.green.withValues(alpha: 0.3)
+                              : cs.outlineVariant,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: user.isActive ? Colors.green : cs.outline,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            user.isActive ? 'Activo' : 'Inactivo',
+                            style: tt.labelSmall?.copyWith(
+                              color: user.isActive
+                                  ? Colors.green
+                                  : cs.onSurfaceVariant,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+
+                const SizedBox(height: 12),
+
+                // Last login info
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        user.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: tt.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                      Icon(
+                        Icons.schedule_outlined,
+                        size: 14,
+                        color: cs.onSurfaceVariant,
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(width: 6),
                       Text(
-                        user.email,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: tt.bodySmall?.copyWith(
+                        'Último acceso: $lastLogin',
+                        style: tt.labelSmall?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),
                       ),
-                      if (user.phone.isNotEmpty) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          user.phone,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: tt.bodySmall,
-                        ),
-                      ],
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
-                if (canView)
-                  IconButton(
-                    onPressed: onView,
-                    icon: const Icon(Icons.chevron_right),
-                    tooltip: 'Ver detalle',
-                  ),
-              ],
-            ),
 
-            const SizedBox(height: 10),
+                const SizedBox(height: 12),
 
-            // Chips compactas
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                _IamStatusChip(active: user.isActive),
-                if (user.isSuperUser)
-                  Chip(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    visualDensity: VisualDensity.compact,
-                    label: Row(
+                // Assignments
+                if (user.assignments.isEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: cs.surfaceContainerHighest.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: cs.outlineVariant.withValues(alpha: 0.5),
+                        style: BorderStyle.solid,
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.star, size: 14),
-                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.info_outline,
+                          size: 16,
+                          color: cs.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 8),
                         Text(
-                          'Super usuario',
-                          style: tt.labelSmall?.copyWith(
-                            color: theme.colorScheme.onSecondaryContainer,
+                          'Sin rol asignado',
+                          style: tt.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
                           ),
                         ),
                       ],
                     ),
-                    backgroundColor: cs.secondaryContainer,
-                    labelStyle: tt.labelSmall?.copyWith(
-                      color: cs.onSecondaryContainer,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                  ),
-                Chip(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  visualDensity: VisualDensity.compact,
-                  backgroundColor: cs.surfaceContainerHighest.withValues(
-                    alpha: 0.7,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  label: Text(
-                    'Último acceso: $lastLogin',
-                    style: tt.labelSmall,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 8),
-
-            if (user.assignments.isEmpty)
-              Text(
-                'Sin rol asignado',
-                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-              )
-            else
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: user.assignments
-                      .map(
-                        (assignment) => Padding(
-                          padding: const EdgeInsets.only(right: 6),
-                          child: Chip(
-                            visualDensity: VisualDensity.compact,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(999),
+                  )
+                else
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: user.assignments
+                        .map(
+                          (assignment) => Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
                             ),
-                            backgroundColor: cs.primaryContainer.withValues(
-                              alpha: 0.9,
-                            ),
-                            label: ConstrainedBox(
-                              constraints: const BoxConstraints(
-                                // ajusta este valor si quieres chips más anchos o más compactos
-                                maxWidth: 220,
+                            decoration: BoxDecoration(
+                              color: cs.primaryContainer.withValues(alpha: 0.5),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: cs.primary.withValues(alpha: 0.2),
                               ),
-                              child: Text(
-                                '${assignment.businessName ?? 'Negocio'} · ${assignment.roleName ?? 'Sin rol'}',
-                                style: tt.labelSmall?.copyWith(
-                                  color: cs.onPrimaryContainer,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.business_outlined,
+                                  size: 14,
+                                  color: cs.primary,
                                 ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                softWrap: true,
+                                const SizedBox(width: 6),
+                                ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    maxWidth: 200,
+                                  ),
+                                  child: Text(
+                                    '${assignment.businessName ?? 'Negocio'} · ${assignment.roleName ?? 'Sin rol'}',
+                                    style: tt.labelSmall?.copyWith(
+                                      color: cs.onPrimaryContainer,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                        .toList(growable: false),
+                  ),
+
+                // Action buttons
+                if (canView || canDelete) ...[
+                  const SizedBox(height: 14),
+                  const Divider(height: 1),
+                  const SizedBox(height: 10),
+
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      if (canView)
+                        Material(
+                          color: cs.surfaceContainerHighest.withValues(
+                            alpha: 0.5,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          child: InkWell(
+                            onTap: onView,
+                            borderRadius: BorderRadius.circular(12),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 10,
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.visibility_outlined,
+                                    size: 18,
+                                    color: cs.primary,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Ver detalle',
+                                    style: tt.labelMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: cs.primary,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
                         ),
-                      )
-                      .toList(growable: false),
-                ),
-              ),
 
-            if (canView || canDelete) ...[
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  if (canView)
-                    TextButton.icon(
-                      onPressed: onView,
-                      icon: const Icon(Icons.visibility_outlined, size: 18),
-                      label: const Text('Ver'),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
+                      Material(
+                        color: cs.primaryContainer.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(12),
+                        child: InkWell(
+                          onTap: () => showAssignRolesDialog(context, user),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 10,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.admin_panel_settings_outlined,
+                                  size: 18,
+                                  color: cs.primary,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Asignar roles',
+                                  style: tt.labelMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: cs.onPrimaryContainer,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  // Assign Roles button
-                  FilledButton.tonalIcon(
-                    onPressed: () => showAssignRolesDialog(context, user),
-                    icon: const Icon(
-                      Icons.admin_panel_settings_outlined,
-                      size: 18,
-                    ),
-                    label: const Text('Asignar roles'),
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                    ),
-                  ),
-                  // Generate Password button
-                  FilledButton.tonalIcon(
-                    onPressed: () => showGeneratePasswordDialog(context, user),
-                    icon: const Icon(Icons.key_outlined, size: 18),
-                    label: const Text('Generar contraseña'),
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                    ),
-                  ),
-                  if (canDelete)
-                    TextButton.icon(
-                      onPressed: isDeleting ? null : onDelete,
-                      icon: isDeleting
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.delete_outline, size: 18),
-                      label: Text(isDeleting ? 'Eliminando…' : 'Eliminar'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: cs.error,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
+
+                      Material(
+                        color: cs.primaryContainer.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(12),
+                        child: InkWell(
+                          onTap: () =>
+                              showGeneratePasswordDialog(context, user),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 10,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.key_outlined,
+                                  size: 18,
+                                  color: cs.primary,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Generar contraseña',
+                                  style: tt.labelMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: cs.onPrimaryContainer,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+
+                      if (canDelete)
+                        Material(
+                          color: cs.errorContainer.withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(12),
+                          child: InkWell(
+                            onTap: isDeleting ? null : onDelete,
+                            borderRadius: BorderRadius.circular(12),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 10,
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (isDeleting)
+                                    SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              cs.error,
+                                            ),
+                                      ),
+                                    )
+                                  else
+                                    Icon(
+                                      Icons.delete_outline,
+                                      size: 18,
+                                      color: cs.error,
+                                    ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    isDeleting ? 'Eliminando…' : 'Eliminar',
+                                    style: tt.labelMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: cs.error,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ],
-              ),
-            ],
-          ],
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -1843,86 +2168,130 @@ Future<void> showResourceFormDialog(
 
   await showDialog(
     context: context,
-    builder: (ctx) => AlertDialog(
-      title: Text(resource == null ? 'Crear recurso' : 'Editar recurso'),
-      content: Form(
-        key: formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+    builder: (ctx) {
+      final theme = Theme.of(ctx);
+      final cs = theme.colorScheme;
+      final tt = theme.textTheme;
+
+      return AlertDialog(
+        backgroundColor: cs.surface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+        contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
+        actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+        title: Row(
           children: [
-            TextFormField(
-              controller: nameCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Nombre del recurso',
-              ),
-              validator: (value) => value == null || value.trim().isEmpty
-                  ? 'Campo obligatorio'
-                  : null,
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<int?>(
-              initialValue: selectedBusinessType,
-              decoration: const InputDecoration(
-                labelText: 'Tipo de negocio (opcional)',
-              ),
-              items: [
-                const DropdownMenuItem(value: null, child: Text('Genérico')),
-                ...businessTypes.types
-                    .map(
-                      (type) => DropdownMenuItem(
-                        value: type.id,
-                        child: Text(type.name),
-                      ),
-                    )
-                    .toList(),
-              ],
-              onChanged: (value) => selectedBusinessType = value,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: descriptionCtrl,
-              decoration: const InputDecoration(labelText: 'Descripción'),
-              minLines: 2,
-              maxLines: 3,
+            Icon(Icons.category_outlined, color: cs.primary),
+            const SizedBox(width: 12),
+            Text(
+              resource == null ? 'Crear recurso' : 'Editar recurso',
+              style: tt.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
           ],
         ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(ctx).pop(),
-          child: const Text('Cancelar'),
+        content: SingleChildScrollView(
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: nameCtrl,
+                  decoration: DesignHelper.inputDecoration(
+                    label: 'Nombre del recurso',
+                    icon: Icons.label_outlined,
+                    context: ctx,
+                  ),
+                  validator: (value) => value == null || value.trim().isEmpty
+                      ? 'Campo obligatorio'
+                      : null,
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<int?>(
+                  value: selectedBusinessType,
+                  decoration: DesignHelper.inputDecoration(
+                    label: 'Tipo de negocio (opcional)',
+                    icon: Icons.business,
+                    context: ctx,
+                  ),
+                  isExpanded: true,
+                  items: [
+                    const DropdownMenuItem(
+                      value: null,
+                      child: Text('Genérico'),
+                    ),
+                    ...businessTypes.types
+                        .map(
+                          (type) => DropdownMenuItem(
+                            value: type.id,
+                            child: Text(
+                              type.name,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ],
+                  onChanged: (value) => selectedBusinessType = value,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: descriptionCtrl,
+                  decoration: DesignHelper.inputDecoration(
+                    label: 'Descripción',
+                    icon: Icons.description_outlined,
+                    context: ctx,
+                  ),
+                  minLines: 3,
+                  maxLines: 5,
+                ),
+                const SizedBox(height: 16),
+              ],
+            ),
+          ),
         ),
-        FilledButton(
-          onPressed: () async {
-            if (!formKey.currentState!.validate()) return;
-            if (resource == null) {
-              final result = await controller.createResource(
-                name: nameCtrl.text.trim(),
-                businessTypeId: normalizeBusinessTypeId(selectedBusinessType),
-                description: descriptionCtrl.text.trim(),
-              );
-              if (result != null) {
-                Navigator.of(ctx).pop();
-                _showIamSnackBar(context, result.message);
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              if (!formKey.currentState!.validate()) return;
+              if (resource == null) {
+                final result = await controller.createResource(
+                  name: nameCtrl.text.trim(),
+                  businessTypeId: normalizeBusinessTypeId(selectedBusinessType),
+                  description: descriptionCtrl.text.trim(),
+                );
+                if (result != null && ctx.mounted) {
+                  Navigator.of(ctx).pop();
+                  if (context.mounted) {
+                    _showIamSnackBar(context, result.message);
+                  }
+                }
+              } else {
+                final result = await controller.updateResource(
+                  id: resource.id,
+                  name: nameCtrl.text.trim(),
+                  businessTypeId: normalizeBusinessTypeId(selectedBusinessType),
+                  description: descriptionCtrl.text.trim(),
+                );
+                if (result != null && ctx.mounted) {
+                  Navigator.of(ctx).pop();
+                  if (context.mounted) {
+                    _showIamSnackBar(context, result.message);
+                  }
+                }
               }
-            } else {
-              final result = await controller.updateResource(
-                id: resource.id,
-                name: nameCtrl.text.trim(),
-                businessTypeId: normalizeBusinessTypeId(selectedBusinessType),
-                description: descriptionCtrl.text.trim(),
-              );
-              if (result != null) {
-                Navigator.of(ctx).pop();
-                _showIamSnackBar(context, result.message);
-              }
-            }
-          },
-          child: Text(resource == null ? 'Crear recurso' : 'Guardar cambios'),
-        ),
-      ],
-    ),
+            },
+            child: Text(resource == null ? 'Crear recurso' : 'Guardar cambios'),
+          ),
+        ],
+      );
+    },
   );
 }
 
@@ -1975,6 +2344,10 @@ Future<void> showBusinessTypeFormDialog(
     builder: (dialogCtx) {
       return StatefulBuilder(
         builder: (dialogCtx, setState) {
+          final theme = Theme.of(dialogCtx);
+          final cs = theme.colorScheme;
+          final tt = theme.textTheme;
+
           Future<void> submit() async {
             if (!formKey.currentState!.validate()) return;
             setState(() => isSaving = true);
@@ -1992,8 +2365,29 @@ Future<void> showBusinessTypeFormDialog(
           }
 
           return AlertDialog(
-            title: Text(
-              type == null ? 'Crear tipo de negocio' : 'Editar tipo de negocio',
+            backgroundColor: cs.surface,
+            surfaceTintColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(28),
+            ),
+            titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+            contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
+            actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+            title: Row(
+              children: [
+                Icon(Icons.business, color: cs.primary),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    type == null
+                        ? 'Crear tipo de negocio'
+                        : 'Editar tipo de negocio',
+                    style: tt.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
             ),
             content: SingleChildScrollView(
               child: Form(
@@ -2001,44 +2395,56 @@ Future<void> showBusinessTypeFormDialog(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    const SizedBox(height: 16),
                     TextFormField(
                       controller: nameCtrl,
-                      decoration: const InputDecoration(labelText: 'Nombre'),
-                      validator: (value) =>
-                          (value == null || value.trim().isEmpty)
-                          ? 'Requerido'
-                          : null,
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: codeCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Código',
-                        helperText: 'Debe ser único y en minúsculas.',
+                      decoration: DesignHelper.inputDecoration(
+                        label: 'Nombre',
+                        icon: Icons.label_outlined,
+                        context: dialogCtx,
                       ),
                       validator: (value) =>
                           (value == null || value.trim().isEmpty)
                           ? 'Requerido'
                           : null,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: codeCtrl,
+                      decoration: DesignHelper.inputDecoration(
+                        label: 'Código',
+                        icon: Icons.code,
+                        context: dialogCtx,
+                      ).copyWith(helperText: 'Debe ser único y en minúsculas.'),
+                      validator: (value) =>
+                          (value == null || value.trim().isEmpty)
+                          ? 'Requerido'
+                          : null,
+                    ),
+                    const SizedBox(height: 16),
                     TextFormField(
                       controller: descriptionCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Descripción',
+                      decoration: DesignHelper.inputDecoration(
+                        label: 'Descripción',
+                        icon: Icons.description_outlined,
+                        context: dialogCtx,
                       ),
                       maxLines: 3,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     TextFormField(
                       controller: iconCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Icono',
-                        helperText:
-                            'Selecciona uno de la lista o ingresa un emoji.',
-                      ),
+                      decoration:
+                          DesignHelper.inputDecoration(
+                            label: 'Icono',
+                            icon: Icons.emoji_emotions_outlined,
+                            context: dialogCtx,
+                          ).copyWith(
+                            helperText:
+                                'Selecciona uno de la lista o ingresa un emoji.',
+                          ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Wrap(
@@ -2058,17 +2464,31 @@ Future<void> showBusinessTypeFormDialog(
                             .toList(),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    CheckboxListTile(
-                      value: isActive,
-                      onChanged: (value) {
-                        setState(() => isActive = value ?? isActive);
-                      },
-                      title: const Text('¿Activo?'),
-                      contentPadding: EdgeInsets.zero,
+                    const SizedBox(height: 16),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: cs.surfaceContainerHighest.withValues(
+                          alpha: 0.5,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: CheckboxListTile(
+                        value: isActive,
+                        onChanged: (value) {
+                          setState(() => isActive = value ?? isActive);
+                        },
+                        title: const Text('¿Activo?'),
+                        subtitle: const Text(
+                          'Los tipos inactivos no se mostrarán en nuevos negocios',
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     _BusinessTypeInfoCard(),
+                    const SizedBox(height: 16),
                   ],
                 ),
               ),
