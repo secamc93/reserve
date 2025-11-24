@@ -22,7 +22,9 @@ class _VotingTab extends GetWidget<HorizontalPropertyVotingController> {
         onRefresh: controller.refresh,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          padding: ResponsiveHelper.getAdaptivePadding(
+            context,
+          ).copyWith(top: 16, bottom: 24),
           children: [
             // Encabezado tipo "sección" estilo Instagram settings
             Row(
@@ -142,12 +144,15 @@ class _VotingTab extends GetWidget<HorizontalPropertyVotingController> {
     BuildContext context, {
     HorizontalPropertyVotingGroup? group,
   }) async {
+    final controller = Get.find<HorizontalPropertyVotingController>(
+      tag: controllerTag,
+    );
+
     final result =
-        await showModalBottomSheet<HorizontalPropertyVotingGroupActionResult>(
+        await DialogHelper.showBlurredBottomSheet<
+          HorizontalPropertyVotingGroupActionResult
+        >(
           context: context,
-          backgroundColor: Colors.transparent,
-          useRootNavigator: true,
-          isScrollControlled: true,
           builder: (_) => _VotingGroupFormBottomSheet(
             title: group == null ? 'Crear grupo de votación' : 'Editar grupo',
             actionLabel: group == null ? 'Crear grupo' : 'Guardar cambios',

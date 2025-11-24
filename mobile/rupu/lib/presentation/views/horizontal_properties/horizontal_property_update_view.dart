@@ -2,6 +2,7 @@
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:rupu/config/helpers/responsive_helper.dart';
 
 import 'horizontal_property_update_controller.dart';
 import 'models/property_file_data.dart';
@@ -12,9 +13,10 @@ class HorizontalPropertyUpdateSheet
   final String controllerTag;
 
   HorizontalPropertyUpdateSheet({super.key, required this.propertyId})
-      : controllerTag = HorizontalPropertyUpdateController.tagFor(propertyId) {
+    : controllerTag = HorizontalPropertyUpdateController.tagFor(propertyId) {
     if (!Get.isRegistered<HorizontalPropertyUpdateController>(
-        tag: controllerTag)) {
+      tag: controllerTag,
+    )) {
       Get.put(
         HorizontalPropertyUpdateController(propertyId: propertyId),
         tag: controllerTag,
@@ -30,15 +32,17 @@ class HorizontalPropertyUpdateSheet
     final viewInsets = MediaQuery.of(context).viewInsets.bottom;
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final isTablet = ResponsiveHelper.isTablet(context);
 
     return Padding(
       padding: EdgeInsets.only(bottom: viewInsets),
       child: SafeArea(
         child: FractionallySizedBox(
           heightFactor: 0.92,
+          widthFactor: isTablet ? 0.6 : 1.0,
           child: PopScope(
             canPop: true,
-            onPopInvoked: (didPop) {
+            onPopInvokedWithResult: (didPop, result) {
               if (didPop &&
                   Get.isRegistered<HorizontalPropertyUpdateController>(
                     tag: controllerTag,
@@ -157,9 +161,13 @@ class HorizontalPropertyUpdateSheet
                           value: controller.hasParking,
                         ),
                         _BoolTile(
-                            title: '¿Tiene piscina?', value: controller.hasPool),
+                          title: '¿Tiene piscina?',
+                          value: controller.hasPool,
+                        ),
                         _BoolTile(
-                            title: '¿Tiene gimnasio?', value: controller.hasGym),
+                          title: '¿Tiene gimnasio?',
+                          value: controller.hasGym,
+                        ),
                         _BoolTile(
                           title: '¿Tiene área social?',
                           value: controller.hasSocialArea,
@@ -234,7 +242,8 @@ class HorizontalPropertyUpdateSheet
                           onPick: controller.pickNavbarImage,
                           onRemoveFile: controller.removeNavbarImageFile,
                           onClearExisting: controller.clearExistingNavbarImage,
-                          onRestoreExisting: controller.restoreExistingNavbarImage,
+                          onRestoreExisting:
+                              controller.restoreExistingNavbarImage,
                           formatSize: controller.formatFileSize,
                         ),
 
@@ -249,13 +258,11 @@ class HorizontalPropertyUpdateSheet
                                       ? null
                                       : () {
                                           if (Get.isRegistered<
-                                              HorizontalPropertyUpdateController>(
-                                            tag: controllerTag,
-                                          )) {
+                                            HorizontalPropertyUpdateController
+                                          >(tag: controllerTag)) {
                                             Get.delete<
-                                                HorizontalPropertyUpdateController>(
-                                              tag: controllerTag,
-                                            );
+                                              HorizontalPropertyUpdateController
+                                            >(tag: controllerTag);
                                           }
                                           Navigator.of(context).pop();
                                         },
@@ -270,24 +277,25 @@ class HorizontalPropertyUpdateSheet
                                   onPressed: controller.isSaving.value
                                       ? null
                                       : () async {
-                                          final result = await controller.submit();
-                                          if (!context.mounted || result == null) {
+                                          final result = await controller
+                                              .submit();
+                                          if (!context.mounted ||
+                                              result == null) {
                                             return;
                                           }
                                           if (result.success) {
                                             if (Get.isRegistered<
-                                                HorizontalPropertyUpdateController>(
-                                              tag: controllerTag,
-                                            )) {
+                                              HorizontalPropertyUpdateController
+                                            >(tag: controllerTag)) {
                                               Get.delete<
-                                                  HorizontalPropertyUpdateController>(
-                                                tag: controllerTag,
-                                              );
+                                                HorizontalPropertyUpdateController
+                                              >(tag: controllerTag);
                                             }
                                             Navigator.of(context).pop(result);
                                           } else if (result.message != null) {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
                                               SnackBar(
                                                 content: Text(result.message!),
                                               ),

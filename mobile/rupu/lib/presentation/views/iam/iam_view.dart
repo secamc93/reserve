@@ -21,6 +21,7 @@ import 'package:rupu/presentation/views/roles_permissions/roles_permissions_view
 import 'package:rupu/presentation/views/settings/views/create_user_view.dart';
 
 import 'package:rupu/config/helpers/design_helper.dart';
+import 'package:rupu/config/helpers/responsive_helper.dart';
 import 'package:rupu/presentation/views/users/user_detail_view.dart';
 import 'package:rupu/presentation/views/users/users_controller.dart';
 import 'package:rupu/presentation/widgets/image_preview_dialog.dart';
@@ -49,7 +50,7 @@ class IamView extends StatelessWidget {
       length: _tabs.length,
       child: Builder(
         builder: (context) {
-          final tabController = DefaultTabController.of(context)!;
+          final tabController = DefaultTabController.of(context);
           return Scaffold(
             backgroundColor: cs.surface,
             appBar: AppBar(
@@ -340,103 +341,121 @@ class _IamUsersTab extends GetView<IamUsersController> {
             }
             return false;
           },
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-            children: [
-              // Header estilo sección
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1000),
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: ResponsiveHelper.getAdaptivePadding(context),
                 children: [
-                  Text(
-                    'Usuarios',
-                    style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-                  ),
-                  if (isLoading)
-                    const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Gestiona las personas que tienen acceso a tu espacio.',
-                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-              ),
-              const SizedBox(height: 16),
-
-              // Search bar tipo Instagram
-              TextField(
-                controller: controller.searchCtrl,
-                onChanged: controller.setSearch,
-                decoration: InputDecoration(
-                  hintText: 'Buscar por nombre, correo o teléfono',
-                  prefixIcon: Icon(Icons.search, color: cs.onSurfaceVariant),
-                  filled: true,
-                  fillColor: cs.surfaceContainerHighest.withValues(alpha: 0.6),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 0,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(999),
-                    borderSide: BorderSide.none,
-                  ),
-                  suffixIcon: controller.searchText.value.isEmpty
-                      ? null
-                      : IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: controller.clearSearch,
+                  // Header estilo sección
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Usuarios',
+                        style: tt.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
                         ),
-                ),
-              ),
+                      ),
+                      if (isLoading)
+                        const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Gestiona las personas que tienen acceso a tu espacio.',
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                  const SizedBox(height: 16),
 
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Usuarios encontrados: $totalCount',
-                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  // Search bar tipo Instagram
+                  TextField(
+                    controller: controller.searchCtrl,
+                    onChanged: controller.setSearch,
+                    decoration: InputDecoration(
+                      hintText: 'Buscar por nombre, correo o teléfono',
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: cs.onSurfaceVariant,
+                      ),
+                      filled: true,
+                      fillColor: cs.surfaceContainerHighest.withValues(
+                        alpha: 0.6,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 0,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(999),
+                        borderSide: BorderSide.none,
+                      ),
+                      suffixIcon: controller.searchText.value.isEmpty
+                          ? null
+                          : IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: controller.clearSearch,
+                            ),
                     ),
                   ),
+
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Usuarios encontrados: $totalCount',
+                          style: tt.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  if (error != null) ...[
+                    const SizedBox(height: 12),
+                    _IamErrorCard(
+                      message: error,
+                      onRetry: controller.refreshData,
+                    ),
+                  ],
+
+                  const SizedBox(height: 12),
+
+                  if (users.isEmpty && !isLoading)
+                    const _IamEmptyState(message: 'No se encontraron usuarios.')
+                  else
+                    ...users.map(
+                      (user) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _IamUserCard(
+                          user: user,
+                          canView: canView,
+                          canDelete: canDelete,
+                          isDeleting:
+                              controller.deletingUserId.value == user.id,
+                          onView: canView
+                              ? () => _openDetail(context, user.id)
+                              : null,
+                          onDelete: canDelete
+                              ? () => _confirmDelete(context, user)
+                              : null,
+                        ),
+                      ),
+                    ),
+                  if (controller.isLoadingMore.value) ...[
+                    const SizedBox(height: 16),
+                    const Center(child: CircularProgressIndicator()),
+                  ],
                 ],
               ),
-
-              if (error != null) ...[
-                const SizedBox(height: 12),
-                _IamErrorCard(message: error, onRetry: controller.refreshData),
-              ],
-
-              const SizedBox(height: 12),
-
-              if (users.isEmpty && !isLoading)
-                const _IamEmptyState(message: 'No se encontraron usuarios.')
-              else
-                ...users.map(
-                  (user) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: _IamUserCard(
-                      user: user,
-                      canView: canView,
-                      canDelete: canDelete,
-                      isDeleting: controller.deletingUserId.value == user.id,
-                      onView: canView
-                          ? () => _openDetail(context, user.id)
-                          : null,
-                      onDelete: canDelete
-                          ? () => _confirmDelete(context, user)
-                          : null,
-                    ),
-                  ),
-                ),
-              if (controller.isLoadingMore.value) ...[
-                const SizedBox(height: 16),
-                const Center(child: CircularProgressIndicator()),
-              ],
-            ],
+            ),
           ),
         ),
       );
@@ -518,235 +537,258 @@ class _IamResourcesTab extends GetView<IamResourcesController> {
 
       return RefreshIndicator(
         onRefresh: controller.fetchResources,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1000),
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: ResponsiveHelper.getAdaptivePadding(context),
               children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Recursos',
+                      style: tt.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    if (isLoading)
+                      const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 4),
                 Text(
-                  'Recursos',
-                  style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                  'Módulos y funcionalidades disponibles en tu espacio.',
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
-                if (isLoading)
-                  const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Módulos y funcionalidades disponibles en tu espacio.',
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              onChanged: controller.setSearch,
-              decoration: InputDecoration(
-                hintText: 'Buscar recurso por nombre o descripción',
-                prefixIcon: Icon(Icons.search, color: cs.onSurfaceVariant),
-                filled: true,
-                fillColor: cs.surfaceContainerHighest.withValues(alpha: 0.6),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 0,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(999),
-                  borderSide: BorderSide.none,
-                ),
-                suffixIcon: controller.searchText.value.isEmpty
-                    ? null
-                    : IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => controller.setSearch(''),
-                      ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Recursos: ${controller.total.value}',
-                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                  ),
-                ),
-              ],
-            ),
-            if (error != null) ...[
-              const SizedBox(height: 12),
-              _IamErrorCard(message: error, onRetry: controller.fetchResources),
-            ],
-            const SizedBox(height: 12),
-            if (resources.isEmpty && !isLoading)
-              const _IamEmptyState(message: 'No se encontraron recursos.')
-            else
-              ...resources.map(
-                (resource) => Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: cs.surface,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: ExpansionTile(
-                    shape: const Border(),
-                    collapsedShape: const Border(),
-                    tilePadding: const EdgeInsets.symmetric(
+                const SizedBox(height: 16),
+                TextField(
+                  onChanged: controller.setSearch,
+                  decoration: InputDecoration(
+                    hintText: 'Buscar recurso por nombre o descripción',
+                    prefixIcon: Icon(Icons.search, color: cs.onSurfaceVariant),
+                    filled: true,
+                    fillColor: cs.surfaceContainerHighest.withValues(
+                      alpha: 0.6,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
-                      vertical: 8,
+                      vertical: 0,
                     ),
-                    leading: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: cs.primaryContainer,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.category_outlined,
-                        color: cs.onPrimaryContainer,
-                      ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(999),
+                      borderSide: BorderSide.none,
                     ),
-                    title: Text(
-                      resource.name,
-                      style: tt.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 4),
-                        if (resource.description.isNotEmpty)
-                          Text(
-                            resource.description,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: tt.bodySmall?.copyWith(
-                              color: cs.onSurfaceVariant,
-                            ),
+                    suffixIcon: controller.searchText.value.isEmpty
+                        ? null
+                        : IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => controller.setSearch(''),
                           ),
-                        const SizedBox(height: 4),
-                        if (resource.businessTypeName.isNotEmpty)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: cs.secondaryContainer.withValues(
-                                alpha: 0.5,
-                              ),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              resource.businessTypeName,
-                              style: tt.labelSmall?.copyWith(
-                                color: cs.onSecondaryContainer,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Divider(),
-                            const SizedBox(height: 8),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Creado',
-                                      style: tt.labelSmall?.copyWith(
-                                        color: cs.onSurfaceVariant,
-                                      ),
-                                    ),
-                                    Text(
-                                      _formatFriendlyDate(resource.createdAt),
-                                      style: tt.bodyMedium,
-                                    ),
-                                  ],
-                                ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      'Actualizado',
-                                      style: tt.labelSmall?.copyWith(
-                                        color: cs.onSurfaceVariant,
-                                      ),
-                                    ),
-                                    Text(
-                                      _formatFriendlyDate(resource.updatedAt),
-                                      style: tt.bodyMedium,
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                IconButton(
-                                  tooltip: 'Editar',
-                                  icon: const Icon(Icons.edit_outlined),
-                                  onPressed: () => showResourceFormDialog(
-                                    context,
-                                    resource: resource,
-                                  ),
-                                ),
-                                IconButton(
-                                  tooltip: 'Eliminar',
-                                  icon: const Icon(Icons.delete_outline),
-                                  color: cs.error,
-                                  onPressed: () => confirmDeleteResourceDialog(
-                                    context,
-                                    resource,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Recursos: ${controller.total.value}',
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ),
-            if (controller.totalPages.value > 1) ...[
-              const SizedBox(height: 8),
-              _IamPaginationControls(
-                currentPage: controller.page.value,
-                lastPage: controller.totalPages.value,
-                hasPrev: controller.page.value > 1,
-                hasNext: controller.page.value < controller.totalPages.value,
-                onPrev: controller.page.value > 1
-                    ? controller.previousPage
-                    : null,
-                onNext: controller.page.value < controller.totalPages.value
-                    ? controller.nextPage
-                    : null,
-              ),
-            ],
-          ],
+                if (error != null) ...[
+                  const SizedBox(height: 12),
+                  _IamErrorCard(
+                    message: error,
+                    onRetry: controller.fetchResources,
+                  ),
+                ],
+                const SizedBox(height: 12),
+                if (resources.isEmpty && !isLoading)
+                  const _IamEmptyState(message: 'No se encontraron recursos.')
+                else
+                  ...resources.map(
+                    (resource) => Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: cs.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: ExpansionTile(
+                        shape: const Border(),
+                        collapsedShape: const Border(),
+                        tilePadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        leading: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: cs.primaryContainer,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.category_outlined,
+                            color: cs.onPrimaryContainer,
+                          ),
+                        ),
+                        title: Text(
+                          resource.name,
+                          style: tt.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 4),
+                            if (resource.description.isNotEmpty)
+                              Text(
+                                resource.description,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: tt.bodySmall?.copyWith(
+                                  color: cs.onSurfaceVariant,
+                                ),
+                              ),
+                            const SizedBox(height: 4),
+                            if (resource.businessTypeName.isNotEmpty)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: cs.secondaryContainer.withValues(
+                                    alpha: 0.5,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  resource.businessTypeName,
+                                  style: tt.labelSmall?.copyWith(
+                                    color: cs.onSecondaryContainer,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Divider(),
+                                const SizedBox(height: 8),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Creado',
+                                          style: tt.labelSmall?.copyWith(
+                                            color: cs.onSurfaceVariant,
+                                          ),
+                                        ),
+                                        Text(
+                                          _formatFriendlyDate(
+                                            resource.createdAt,
+                                          ),
+                                          style: tt.bodyMedium,
+                                        ),
+                                      ],
+                                    ),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          'Actualizado',
+                                          style: tt.labelSmall?.copyWith(
+                                            color: cs.onSurfaceVariant,
+                                          ),
+                                        ),
+                                        Text(
+                                          _formatFriendlyDate(
+                                            resource.updatedAt,
+                                          ),
+                                          style: tt.bodyMedium,
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    IconButton(
+                                      tooltip: 'Editar',
+                                      icon: const Icon(Icons.edit_outlined),
+                                      onPressed: () => showResourceFormDialog(
+                                        context,
+                                        resource: resource,
+                                      ),
+                                    ),
+                                    IconButton(
+                                      tooltip: 'Eliminar',
+                                      icon: const Icon(Icons.delete_outline),
+                                      color: cs.error,
+                                      onPressed: () =>
+                                          confirmDeleteResourceDialog(
+                                            context,
+                                            resource,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                if (controller.totalPages.value > 1) ...[
+                  const SizedBox(height: 8),
+                  _IamPaginationControls(
+                    currentPage: controller.page.value,
+                    lastPage: controller.totalPages.value,
+                    hasPrev: controller.page.value > 1,
+                    hasNext:
+                        controller.page.value < controller.totalPages.value,
+                    onPrev: controller.page.value > 1
+                        ? controller.previousPage
+                        : null,
+                    onNext: controller.page.value < controller.totalPages.value
+                        ? controller.nextPage
+                        : null,
+                  ),
+                ],
+              ],
+            ),
+          ),
         ),
       );
     });
@@ -773,176 +815,192 @@ class _IamBusinessTypesTab extends GetView<IamBusinessTypesController> {
 
       return RefreshIndicator(
         onRefresh: controller.fetchTypes,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1000),
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: ResponsiveHelper.getAdaptivePadding(context),
               children: [
-                Text(
-                  'Tipos de negocio',
-                  style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Tipos de negocio',
+                      style: tt.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    if (isLoading)
+                      const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                  ],
                 ),
-                if (isLoading)
-                  const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                const SizedBox(height: 4),
+                Text(
+                  'Agrupa tus espacios por tipo para una mejor organización.',
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  onChanged: controller.setSearch,
+                  decoration: InputDecoration(
+                    hintText: 'Buscar tipo de negocio',
+                    prefixIcon: Icon(Icons.search, color: cs.onSurfaceVariant),
+                    filled: true,
+                    fillColor: cs.surfaceContainerHighest.withValues(
+                      alpha: 0.6,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 0,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(999),
+                      borderSide: BorderSide.none,
+                    ),
+                    suffixIcon: controller.searchText.value.isEmpty
+                        ? null
+                        : IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => controller.setSearch(''),
+                          ),
+                  ),
+                ),
+                if (error != null) ...[
+                  const SizedBox(height: 12),
+                  _IamErrorCard(message: error, onRetry: controller.fetchTypes),
+                ],
+                const SizedBox(height: 12),
+                if (types.isEmpty && !isLoading)
+                  const _IamEmptyState(
+                    message: 'No se encontraron tipos de negocio.',
+                  )
+                else
+                  ...types.map(
+                    (type) => Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: cs.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        leading: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: type.isActive
+                                ? cs.primaryContainer
+                                : cs.surfaceContainerHighest,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            type.icon.isNotEmpty ? type.icon : '📦',
+                            style: const TextStyle(fontSize: 24),
+                          ),
+                        ),
+                        title: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                type.name,
+                                style: tt.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            _IamStatusChip(active: type.isActive),
+                          ],
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: cs.secondaryContainer.withValues(
+                                  alpha: 0.5,
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                type.code,
+                                style: tt.labelSmall?.copyWith(
+                                  color: cs.onSecondaryContainer,
+                                  fontFamily: 'monospace',
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Creado: ${_formatFriendlyDate(type.createdAt)}',
+                              style: tt.labelSmall?.copyWith(
+                                color: cs.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              tooltip: 'Editar',
+                              onPressed: () => showBusinessTypeFormDialog(
+                                context,
+                                type: type,
+                              ),
+                              icon: const Icon(Icons.edit_outlined),
+                            ),
+                            Obx(() {
+                              final isDeleting = controller.deletingTypeIds
+                                  .contains(type.id);
+                              return IconButton(
+                                tooltip: 'Eliminar',
+                                onPressed: isDeleting
+                                    ? null
+                                    : () => confirmDeleteBusinessTypeDialog(
+                                        context,
+                                        type,
+                                      ),
+                                icon: isDeleting
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : Icon(
+                                        Icons.delete_outline,
+                                        color: cs.error,
+                                      ),
+                              );
+                            }),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
               ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              'Agrupa tus espacios por tipo para una mejor organización.',
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              onChanged: controller.setSearch,
-              decoration: InputDecoration(
-                hintText: 'Buscar tipo de negocio',
-                prefixIcon: Icon(Icons.search, color: cs.onSurfaceVariant),
-                filled: true,
-                fillColor: cs.surfaceContainerHighest.withValues(alpha: 0.6),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 0,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(999),
-                  borderSide: BorderSide.none,
-                ),
-                suffixIcon: controller.searchText.value.isEmpty
-                    ? null
-                    : IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => controller.setSearch(''),
-                      ),
-              ),
-            ),
-            if (error != null) ...[
-              const SizedBox(height: 12),
-              _IamErrorCard(message: error, onRetry: controller.fetchTypes),
-            ],
-            const SizedBox(height: 12),
-            if (types.isEmpty && !isLoading)
-              const _IamEmptyState(
-                message: 'No se encontraron tipos de negocio.',
-              )
-            else
-              ...types.map(
-                (type) => Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: cs.surface,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    leading: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: type.isActive
-                            ? cs.primaryContainer
-                            : cs.surfaceContainerHighest,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        type.icon.isNotEmpty ? type.icon : '📦',
-                        style: const TextStyle(fontSize: 24),
-                      ),
-                    ),
-                    title: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            type.name,
-                            style: tt.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        _IamStatusChip(active: type.isActive),
-                      ],
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 4),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: cs.secondaryContainer.withValues(alpha: 0.5),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            type.code,
-                            style: tt.labelSmall?.copyWith(
-                              color: cs.onSecondaryContainer,
-                              fontFamily: 'monospace',
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Creado: ${_formatFriendlyDate(type.createdAt)}',
-                          style: tt.labelSmall?.copyWith(
-                            color: cs.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          tooltip: 'Editar',
-                          onPressed: () =>
-                              showBusinessTypeFormDialog(context, type: type),
-                          icon: const Icon(Icons.edit_outlined),
-                        ),
-                        Obx(() {
-                          final isDeleting = controller.deletingTypeIds
-                              .contains(type.id);
-                          return IconButton(
-                            tooltip: 'Eliminar',
-                            onPressed: isDeleting
-                                ? null
-                                : () => confirmDeleteBusinessTypeDialog(
-                                    context,
-                                    type,
-                                  ),
-                            icon: isDeleting
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : Icon(Icons.delete_outline, color: cs.error),
-                          );
-                        }),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-          ],
+          ),
         ),
       );
     });
@@ -1157,210 +1215,227 @@ class _IamBusinessesTab extends GetView<IamBusinessesController> {
 
       return RefreshIndicator(
         onRefresh: controller.fetchBusinesses,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1000),
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: ResponsiveHelper.getAdaptivePadding(context),
               children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Negocios',
+                      style: tt.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    if (isLoading)
+                      const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 4),
                 Text(
-                  'Negocios',
-                  style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                  'Espacios, edificios o negocios que pertenecen a tu organización.',
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
-                if (isLoading)
-                  const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Espacios, edificios o negocios que pertenecen a tu organización.',
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              onChanged: controller.setSearch,
-              decoration: InputDecoration(
-                hintText: 'Buscar negocio por nombre o dirección',
-                prefixIcon: Icon(Icons.search, color: cs.onSurfaceVariant),
-                filled: true,
-                fillColor: cs.surfaceContainerHighest.withValues(alpha: 0.6),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 0,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(999),
-                  borderSide: BorderSide.none,
-                ),
-                suffixIcon: controller.searchText.value.isEmpty
-                    ? null
-                    : IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => controller.setSearch(''),
-                      ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: DropdownButton<bool?>(
-                    value: controller.statusFilter.value,
-                    onChanged: controller.setStatusFilter,
-                    underline: const SizedBox.shrink(),
-                    items: const [
-                      DropdownMenuItem(
-                        value: null,
-                        child: Text('Todos los estados'),
-                      ),
-                      DropdownMenuItem(value: true, child: Text('Activos')),
-                      DropdownMenuItem(value: false, child: Text('Inactivos')),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            if (error != null) ...[
-              const SizedBox(height: 12),
-              _IamErrorCard(
-                message: error,
-                onRetry: controller.fetchBusinesses,
-              ),
-            ],
-            const SizedBox(height: 12),
-            if (businesses.isEmpty && !isLoading)
-              const _IamEmptyState(message: 'No se encontraron negocios.')
-            else
-              ...businesses.map(
-                (business) => Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: cs.surface,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: ExpansionTile(
-                    shape: const Border(),
-                    collapsedShape: const Border(),
-                    tilePadding: const EdgeInsets.symmetric(
+                const SizedBox(height: 16),
+                TextField(
+                  onChanged: controller.setSearch,
+                  decoration: InputDecoration(
+                    hintText: 'Buscar negocio por nombre o dirección',
+                    prefixIcon: Icon(Icons.search, color: cs.onSurfaceVariant),
+                    filled: true,
+                    fillColor: cs.surfaceContainerHighest.withValues(
+                      alpha: 0.6,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
-                      vertical: 8,
+                      vertical: 0,
                     ),
-                    leading: _IamBusinessLogoCell(logoUrl: business.logoUrl),
-                    title: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            business.name,
-                            style: tt.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(999),
+                      borderSide: BorderSide.none,
+                    ),
+                    suffixIcon: controller.searchText.value.isEmpty
+                        ? null
+                        : IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => controller.setSearch(''),
                           ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButton<bool?>(
+                        value: controller.statusFilter.value,
+                        onChanged: controller.setStatusFilter,
+                        underline: const SizedBox.shrink(),
+                        items: const [
+                          DropdownMenuItem(
+                            value: null,
+                            child: Text('Todos los estados'),
+                          ),
+                          DropdownMenuItem(value: true, child: Text('Activos')),
+                          DropdownMenuItem(
+                            value: false,
+                            child: Text('Inactivos'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                if (error != null) ...[
+                  const SizedBox(height: 12),
+                  _IamErrorCard(
+                    message: error,
+                    onRetry: controller.fetchBusinesses,
+                  ),
+                ],
+                const SizedBox(height: 12),
+                if (businesses.isEmpty && !isLoading)
+                  const _IamEmptyState(message: 'No se encontraron negocios.')
+                else
+                  ...businesses.map(
+                    (business) => Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: cs.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: ExpansionTile(
+                        shape: const Border(),
+                        collapsedShape: const Border(),
+                        tilePadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
                         ),
-                        _IamStatusChip(active: business.isActive),
-                      ],
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 4),
-                        if (business.businessType.isNotEmpty)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: cs.secondaryContainer.withValues(
-                                alpha: 0.5,
-                              ),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              business.businessType,
-                              style: tt.labelSmall?.copyWith(
-                                color: cs.onSecondaryContainer,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        leading: _IamBusinessLogoCell(
+                          logoUrl: business.logoUrl,
+                        ),
+                        title: Row(
                           children: [
-                            const Divider(),
-                            const SizedBox(height: 8),
-                            if (business.address.isNotEmpty) ...[
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.location_on_outlined,
-                                    size: 16,
-                                    color: cs.onSurfaceVariant,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      business.address,
-                                      style: tt.bodyMedium,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                            ],
-                            Text(
-                              'Creado: ${_formatFriendlyDate(business.createdAt)}',
-                              style: tt.labelSmall?.copyWith(
-                                color: cs.onSurfaceVariant,
+                            Expanded(
+                              child: Text(
+                                business.name,
+                                style: tt.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
-                            const SizedBox(height: 16),
-                            FilledButton.icon(
-                              onPressed: () => _showConfiguredResourcesDialog(
-                                context,
-                                business,
-                              ),
-                              icon: const Icon(Icons.widgets_outlined),
-                              label: const Text('Ver recursos configurados'),
-                            ),
+                            _IamStatusChip(active: business.isActive),
                           ],
                         ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 4),
+                            if (business.businessType.isNotEmpty)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: cs.secondaryContainer.withValues(
+                                    alpha: 0.5,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  business.businessType,
+                                  style: tt.labelSmall?.copyWith(
+                                    color: cs.onSecondaryContainer,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Divider(),
+                                const SizedBox(height: 8),
+                                if (business.address.isNotEmpty) ...[
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.location_on_outlined,
+                                        size: 16,
+                                        color: cs.onSurfaceVariant,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          business.address,
+                                          style: tt.bodyMedium,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                ],
+                                Text(
+                                  'Creado: ${_formatFriendlyDate(business.createdAt)}',
+                                  style: tt.labelSmall?.copyWith(
+                                    color: cs.onSurfaceVariant,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                FilledButton.icon(
+                                  onPressed: () =>
+                                      _showConfiguredResourcesDialog(
+                                        context,
+                                        business,
+                                      ),
+                                  icon: const Icon(Icons.widgets_outlined),
+                                  label: const Text(
+                                    'Ver recursos configurados',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-            if (controller.pagination.value != null) ...[
-              const SizedBox(height: 8),
-              _IamPaginationControls(
-                currentPage: controller.pagination.value!.currentPage,
-                lastPage: controller.pagination.value!.lastPage,
-                hasPrev: controller.pagination.value!.hasPrev,
-                hasNext: controller.pagination.value!.hasNext,
-                onPrev: controller.pagination.value!.hasPrev
-                    ? controller.previousPage
-                    : null,
-                onNext: controller.pagination.value!.hasNext
-                    ? controller.nextPage
-                    : null,
-              ),
-            ],
-          ],
+                if (controller.pagination.value != null) ...[
+                  const SizedBox(height: 8),
+                  _IamPaginationControls(
+                    currentPage: controller.pagination.value!.currentPage,
+                    lastPage: controller.pagination.value!.lastPage,
+                    hasPrev: controller.pagination.value!.hasPrev,
+                    hasNext: controller.pagination.value!.hasNext,
+                    onPrev: controller.pagination.value!.hasPrev
+                        ? controller.previousPage
+                        : null,
+                    onNext: controller.pagination.value!.hasNext
+                        ? controller.nextPage
+                        : null,
+                  ),
+                ],
+              ],
+            ),
+          ),
         ),
       );
     });
@@ -2210,7 +2285,7 @@ Future<void> showResourceFormDialog(
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<int?>(
-                  value: selectedBusinessType,
+                  initialValue: selectedBusinessType,
                   decoration: DesignHelper.inputDecoration(
                     label: 'Tipo de negocio (opcional)',
                     icon: Icons.business,
@@ -2941,7 +3016,7 @@ class _AssignRolesContent extends StatelessWidget {
                                           controller.selectedRoles[businessId];
                                       final selectedId = selected?.firstOrNull;
                                       return DropdownButtonFormField<int>(
-                                        value:
+                                        initialValue:
                                             roles.any((r) => r.id == selectedId)
                                             ? selectedId
                                             : null,

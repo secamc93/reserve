@@ -100,7 +100,9 @@ class HorizontalPropertyUpdateController extends GetxController {
     isLoading.value = true;
     errorMessage.value = null;
     try {
-      final detail = await repository.getHorizontalPropertyDetail(id: propertyId);
+      final detail = await repository.getHorizontalPropertyDetail(
+        id: propertyId,
+      );
       if (detail == null) {
         errorMessage.value = 'No se encontró información de la propiedad.';
         property.value = null;
@@ -146,11 +148,18 @@ class HorizontalPropertyUpdateController extends GetxController {
     customDomainCtrl.text = detail.customDomain ?? '';
 
     primaryColor.value = _parseColor(primaryColorCtrl.text, primaryColor.value);
-    secondaryColor.value =
-        _parseColor(secondaryColorCtrl.text, secondaryColor.value);
-    tertiaryColor.value = _parseColor(tertiaryColorCtrl.text, tertiaryColor.value);
-    quaternaryColor.value =
-        _parseColor(quaternaryColorCtrl.text, quaternaryColor.value);
+    secondaryColor.value = _parseColor(
+      secondaryColorCtrl.text,
+      secondaryColor.value,
+    );
+    tertiaryColor.value = _parseColor(
+      tertiaryColorCtrl.text,
+      tertiaryColor.value,
+    );
+    quaternaryColor.value = _parseColor(
+      quaternaryColorCtrl.text,
+      quaternaryColor.value,
+    );
 
     hasElevator.value = detail.hasElevator ?? false;
     hasParking.value = detail.hasParking ?? false;
@@ -347,10 +356,7 @@ class HorizontalPropertyUpdateController extends GetxController {
           'No se pudo actualizar la propiedad.${e.message != null ? ' (${e.message})' : ''}';
       final message = _extractDioMessage(e, fallback);
       errorMessage.value = message;
-      return HorizontalPropertyUpdateResult(
-        success: false,
-        message: message,
-      );
+      return HorizontalPropertyUpdateResult(success: false, message: message);
     } catch (e) {
       errorMessage.value = 'Error al actualizar la propiedad: $e';
       return HorizontalPropertyUpdateResult(
@@ -427,10 +433,7 @@ class HorizontalPropertyUpdateController extends GetxController {
     _registerColorListener(quaternaryColorCtrl, quaternaryColor);
   }
 
-  void _registerColorListener(
-    TextEditingController ctrl,
-    Rx<Color> target,
-  ) {
+  void _registerColorListener(TextEditingController ctrl, Rx<Color> target) {
     void listener() {
       target.value = _parseColor(ctrl.text, target.value);
     }
@@ -459,8 +462,12 @@ class HorizontalPropertyUpdateController extends GetxController {
     return Color(0xFF000000 | parsed);
   }
 
-  String _toHex(Color color) =>
-      color.value.toRadixString(16).toUpperCase().padLeft(8, '0').substring(2);
+  String _toHex(Color color) => color
+      .toARGB32()
+      .toRadixString(16)
+      .toUpperCase()
+      .padLeft(8, '0')
+      .substring(2);
 
   String _extractDioMessage(DioException exception, String fallback) {
     final data = exception.response?.data;
@@ -477,4 +484,3 @@ class HorizontalPropertyUpdateController extends GetxController {
     return fallback;
   }
 }
-

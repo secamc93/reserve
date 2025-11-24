@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:rupu/config/helpers/design_helper.dart';
 import 'package:rupu/presentation/views/views.dart';
 import 'package:rupu/config/helpers/design_helper.dart' as design;
+import 'package:rupu/config/helpers/responsive_helper.dart';
 
 import 'package:rupu/presentation/widgets/premium_reserve_card.dart';
 import '../widgets.dart';
@@ -247,98 +248,127 @@ class ReserveView extends GetView<ReserveController> {
         child: Obx(() {
           // Contadores útiles para header
           final totalHoy = controller.reservasHoy.length;
+          final adaptivePadding = ResponsiveHelper.getAdaptivePadding(context);
 
-          return ListView(
+          return CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-            children: [
-              // ───────────────── Hero / Header ─────────────────
-              ReserveHeader(
-                totalToday: totalHoy,
-                onNew: () => context.pushNamed(
-                  'reserve_new',
-                  pathParameters: {'page': '$pageIndex'},
-                ),
-                onCalendar: () => context.pushNamed(
-                  'calendar',
-                  pathParameters: {'page': '$pageIndex'},
+            slivers: [
+              SliverPadding(
+                padding: adaptivePadding.copyWith(bottom: 0),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    // ───────────────── Hero / Header ─────────────────
+                    ReserveHeader(
+                      totalToday: totalHoy,
+                      onNew: () => context.pushNamed(
+                        'reserve_new',
+                        pathParameters: {'page': '$pageIndex'},
+                      ),
+                      onCalendar: () => context.pushNamed(
+                        'calendar',
+                        pathParameters: {'page': '$pageIndex'},
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // ───────────────── Acciones rápidas (scroll horizontal) ─────────────────
+                    QuickActionsStrip(
+                      onNew: () => context.pushNamed(
+                        'reserve_new',
+                        pathParameters: {'page': '$pageIndex'},
+                      ),
+                      onCalendar: () => context.pushNamed(
+                        'calendar',
+                        pathParameters: {'page': '$pageIndex'},
+                      ),
+                      onCheckIn: () {}, // TODO: tu flujo de check-in
+                      onClients: () => context.pushNamed(
+                        ClientsView.name,
+                        pathParameters: {'page': '$pageIndex'},
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    const SectionTitle('Próximas reservas'),
+                  ]),
                 ),
               ),
-              const SizedBox(height: 16),
-
-              // ───────────────── Acciones rápidas (scroll horizontal) ─────────────────
-              QuickActionsStrip(
-                onNew: () => context.pushNamed(
-                  'reserve_new',
-                  pathParameters: {'page': '$pageIndex'},
-                ),
-                onCalendar: () => context.pushNamed(
-                  'calendar',
-                  pathParameters: {'page': '$pageIndex'},
-                ),
-                onCheckIn: () {}, // TODO: tu flujo de check-in
-                onClients: () => context.pushNamed(
-                  ClientsView.name,
-                  pathParameters: {'page': '$pageIndex'},
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              const SectionTitle('Próximas reservas'),
-
-              if (controller.isLoading.value) ...[
-                const Padding(
-                  padding: EdgeInsets.all(16),
+              if (controller.isLoading.value)
+                const SliverFillRemaining(
+                  hasScrollBody: false,
                   child: Center(child: CircularProgressIndicator()),
-                ),
-              ] else if (controller.errorMessage.value != null) ...[
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    controller.errorMessage.value!,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
+                )
+              else if (controller.errorMessage.value != null)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(
+                      controller.errorMessage.value!,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
                     ),
                   ),
-                ),
-              ] else if (controller.reservasHoy.isEmpty) ...[
-                EmptyStateCard(
-                  title: 'Sin reservas hoy',
-                  message:
-                      'Aún no tienes reservas para hoy. Crea la primera y aparecerá aquí.',
-                  ctaText: 'Nueva reserva',
-                  onCta: () => context.pushNamed(
-                    'reserve_new',
-                    pathParameters: {'page': '$pageIndex'},
-                  ),
-                ),
-              ] else ...[
-                for (final r in controller.reservasHoy)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: PremiumReserveCard(
-                      client: controller.cliente(r),
-                      subtitle: 'Servicio: Reserva',
-                      time: controller.fechaHome(r),
-                      status: controller.estado(r),
-                      tone: toneForStatus(controller.estado(r)),
-                      logoUrl: Get.find<PerfilController>().businessLogoUrl,
-                      onTap: () {
-                        context.pushNamed(
-                          'reserve_detail',
-                          pathParameters: {
-                            'page': '$pageIndex',
-                            'id': '${r.reservaId}',
-                          },
-                        );
-                      },
-                      // Si la reserva está cancelada ocultamos la opción de cancelación
-                      onCancel: r.estadoNombre.toLowerCase().contains('cancel')
-                          ? null
-                          : () => confirmCancel(context, r),
+                )
+              else if (controller.reservasHoy.isEmpty)
+                SliverPadding(
+                  padding: adaptivePadding,
+                  sliver: SliverToBoxAdapter(
+                    child: EmptyStateCard(
+                      title: 'Sin reservas hoy',
+                      message:
+                          'Aún no tienes reservas para hoy. Crea la primera y aparecerá aquí.',
+                      ctaText: 'Nueva reserva',
+                      onCta: () => context.pushNamed(
+                        'reserve_new',
+                        pathParameters: {'page': '$pageIndex'},
+                      ),
                     ),
                   ),
-              ],
+                )
+              else
+                SliverPadding(
+                  padding: adaptivePadding.copyWith(top: 16),
+                  sliver: SliverGrid(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: ResponsiveHelper.getGridColumns(
+                        context,
+                        mobile: 1,
+                        tablet: 2,
+                        desktop: 3,
+                      ),
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      mainAxisExtent: 160,
+                    ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final r = controller.reservasHoy[index];
+                      return PremiumReserveCard(
+                        client: controller.cliente(r),
+                        subtitle: 'Servicio: Reserva',
+                        time: controller.fechaHome(r),
+                        status: controller.estado(r),
+                        tone: toneForStatus(controller.estado(r)),
+                        logoUrl: Get.find<PerfilController>().businessLogoUrl,
+                        onTap: () {
+                          context.pushNamed(
+                            'reserve_detail',
+                            pathParameters: {
+                              'page': '$pageIndex',
+                              'id': '${r.reservaId}',
+                            },
+                          );
+                        },
+                        // Si la reserva está cancelada ocultamos la opción de cancelación
+                        onCancel:
+                            r.estadoNombre.toLowerCase().contains('cancel')
+                            ? null
+                            : () => confirmCancel(context, r),
+                      );
+                    }, childCount: controller.reservasHoy.length),
+                  ),
+                ),
+              SliverPadding(padding: EdgeInsets.only(bottom: 24)),
             ],
           );
         }),

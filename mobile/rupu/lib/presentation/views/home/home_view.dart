@@ -1,6 +1,7 @@
 // presentation/views/home/home_view.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:rupu/config/helpers/responsive_helper.dart';
 import 'package:rupu/presentation/widgets/dashboard.dart';
 import 'package:rupu/presentation/widgets/shared/custom_appbar.dart';
 import 'package:rupu/presentation/widgets/widgets.dart';
@@ -26,7 +27,7 @@ class HomeView extends GetView<HomeController> {
         if (error != null) {
           return Center(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: ResponsiveHelper.getAdaptivePadding(context),
               child: Text(
                 error,
                 textAlign: TextAlign.center,

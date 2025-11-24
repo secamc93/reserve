@@ -23,8 +23,8 @@ class CalendarViewReserve extends StatelessWidget {
 
   final ReserveCalendarController calendarController =
       Get.isRegistered<ReserveCalendarController>()
-          ? Get.find<ReserveCalendarController>()
-          : Get.put(ReserveCalendarController());
+      ? Get.find<ReserveCalendarController>()
+      : Get.put(ReserveCalendarController());
 
   @override
   Widget build(BuildContext context) {
@@ -33,10 +33,7 @@ class CalendarViewReserve extends StatelessWidget {
         : Get.put(ReserveController());
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Calendario'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Calendario'), centerTitle: true),
       body: SafeArea(
         child: Obx(() {
           final appts = toAppointments(reserve.reservasTodas);
@@ -46,21 +43,25 @@ class CalendarViewReserve extends StatelessWidget {
             children: [
               Column(
                 children: [
-                  Obx(() => CalendarCompactToolbar(
-                        currentView: calendarController.view.value,
-                        onChangeView: calendarController.changeView,
-                        onToday: calendarController.goToday,
-                        onPrev: calendarController.goPrev,
-                        onNext: calendarController.goNext,
-                      )),
+                  Obx(
+                    () => CalendarCompactToolbar(
+                      currentView: calendarController.view.value,
+                      onChangeView: calendarController.changeView,
+                      onToday: calendarController.goToday,
+                      onPrev: calendarController.goPrev,
+                      onNext: calendarController.goNext,
+                    ),
+                  ),
                   Expanded(
-                    child: Obx(() => ReserveCalendar(
-                          controller: calendarController.calendar,
-                          view: calendarController.view.value,
-                          appointments: merged,
-                          onTap: (d) => _handleTap(context, d),
-                          onLongPress: (d) => _handleLongPress(context, d),
-                        )),
+                    child: Obx(
+                      () => ReserveCalendar(
+                        controller: calendarController.calendar,
+                        view: calendarController.view.value,
+                        appointments: merged,
+                        onTap: (d) => _handleTap(context, d),
+                        onLongPress: (d) => _handleLongPress(context, d),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -70,10 +71,15 @@ class CalendarViewReserve extends StatelessWidget {
                 bottom: 16,
                 child: FloatingActionButton.extended(
                   onPressed: () {
-                    final base = calendarController.calendar.displayDate ??
+                    final base =
+                        calendarController.calendar.displayDate ??
                         DateTime.now();
-                    final initial =
-                        DateTime(base.year, base.month, base.day, 9);
+                    final initial = DateTime(
+                      base.year,
+                      base.month,
+                      base.day,
+                      9,
+                    );
                     _openAddEventSheet(context, initialDate: initial);
                   },
                   icon: const Icon(Icons.add),
@@ -119,7 +125,8 @@ class CalendarViewReserve extends StatelessWidget {
       _showSnack(context, 'No puedes crear eventos en fechas pasadas.');
       return;
     }
-    final initial = (calendarController.view.value == CalendarView.month ||
+    final initial =
+        (calendarController.view.value == CalendarView.month ||
             calendarController.view.value == CalendarView.schedule)
         ? DateTime(base.year, base.month, base.day, 9, 0)
         : base;
@@ -127,8 +134,10 @@ class CalendarViewReserve extends StatelessWidget {
   }
 
   // ────────────────────── Hojas (sheets) & acciones ──────────────────────
-  Future<void> _openAddEventSheet(BuildContext context,
-      {required DateTime initialDate}) async {
+  Future<void> _openAddEventSheet(
+    BuildContext context, {
+    required DateTime initialDate,
+  }) async {
     await showAddEventSheet(
       context: context,
       initialDate: initialDate,
@@ -184,7 +193,10 @@ class CalendarViewReserve extends StatelessWidget {
         );
       },
       onCancel: () async => _cancelFromCalendar(context, appt.id as int),
-      onCheckIn: () async => _checkInFromCalendar(context, appt.id as int),
+      onCheckIn: () async {
+        final (clientName, _) = parseSubject(appt.subject);
+        await _checkInFromCalendar(context, appt.id as int, clientName);
+      },
     );
   }
 
@@ -211,12 +223,16 @@ class CalendarViewReserve extends StatelessWidget {
     await reserveCtrl.cargarReservasTodas(silent: true);
   }
 
-  Future<void> _checkInFromCalendar(BuildContext context, int id) async {
+  Future<void> _checkInFromCalendar(
+    BuildContext context,
+    int id,
+    String clientName,
+  ) async {
     final reserveCtrl = Get.isRegistered<ReserveController>()
         ? Get.find<ReserveController>()
         : Get.put(ReserveController());
 
-    final confirm = await showConfirmCheckInSheet(context);
+    final confirm = await showConfirmCheckInSheet(context, clientName);
     if (confirm != true) return;
 
     final ok = await reserveCtrl.checkInReserva(id: id);

@@ -45,19 +45,19 @@ abstract class HorizontalPropertiesDatasource {
   });
 
   Future<HorizontalPropertyUnitDetailResponseModel>
-      getHorizontalPropertyUnitDetail({
+  getHorizontalPropertyUnitDetail({
     required int unitId,
     Map<String, dynamic>? query,
   });
 
   Future<HorizontalPropertyUnitDetailResponseModel>
-      createHorizontalPropertyUnit({
+  createHorizontalPropertyUnit({
     required Map<String, dynamic> data,
     Map<String, dynamic>? query,
   });
 
   Future<HorizontalPropertyUnitDetailResponseModel>
-      updateHorizontalPropertyUnit({
+  updateHorizontalPropertyUnit({
     required int unitId,
     required Map<String, dynamic> data,
     Map<String, dynamic>? query,
@@ -68,44 +68,50 @@ abstract class HorizontalPropertiesDatasource {
     Map<String, dynamic>? query,
   });
 
-  Future<HorizontalPropertyResidentsResponseModel> getHorizontalPropertyResidents({
+  Future<HorizontalPropertyResidentsResponseModel>
+  getHorizontalPropertyResidents({
     required int id,
     Map<String, dynamic>? query,
   });
 
   Future<HorizontalPropertyResidentDetailResponseModel>
-      getHorizontalPropertyResidentDetail({
+  getHorizontalPropertyResidentDetail({
     required int residentId,
     Map<String, dynamic>? query,
   });
 
   Future<HorizontalPropertyResidentDetailResponseModel>
-      createHorizontalPropertyResident({
+  createHorizontalPropertyResident({
     required Map<String, dynamic> data,
     Map<String, dynamic>? query,
   });
 
   Future<HorizontalPropertyResidentDetailResponseModel>
-      updateHorizontalPropertyResident({
+  updateHorizontalPropertyResident({
     required int residentId,
     required Map<String, dynamic> data,
+    Map<String, dynamic>? query,
+  });
+
+  Future<SimpleResponseModel> deleteHorizontalPropertyResident({
+    required int residentId,
     Map<String, dynamic>? query,
   });
 
   Future<HorizontalPropertyVotingGroupsResponseModel>
-      getHorizontalPropertyVotingGroups({
+  getHorizontalPropertyVotingGroups({
     required int id,
     Map<String, dynamic>? query,
   });
 
   Future<HorizontalPropertyVotingGroupActionResponseModel>
-      createHorizontalPropertyVotingGroup({
+  createHorizontalPropertyVotingGroup({
     required Map<String, dynamic> data,
     Map<String, dynamic>? query,
   });
 
   Future<HorizontalPropertyVotingGroupActionResponseModel>
-      updateHorizontalPropertyVotingGroup({
+  updateHorizontalPropertyVotingGroup({
     required int groupId,
     required Map<String, dynamic> data,
     Map<String, dynamic>? query,
@@ -121,13 +127,15 @@ abstract class HorizontalPropertiesDatasource {
     Map<String, dynamic>? query,
   });
 
-  Future<HorizontalPropertyVotingActionResponseModel> createHorizontalPropertyVoting({
+  Future<HorizontalPropertyVotingActionResponseModel>
+  createHorizontalPropertyVoting({
     required int groupId,
     required Map<String, dynamic> data,
     Map<String, dynamic>? query,
   });
 
-  Future<HorizontalPropertyVotingActionResponseModel> updateHorizontalPropertyVoting({
+  Future<HorizontalPropertyVotingActionResponseModel>
+  updateHorizontalPropertyVoting({
     required int groupId,
     required int votingId,
     required Map<String, dynamic> data,
@@ -153,14 +161,14 @@ abstract class HorizontalPropertiesDatasource {
   });
 
   Future<HorizontalPropertyVotingOptionsResponseModel>
-      getHorizontalPropertyVotingOptions({
+  getHorizontalPropertyVotingOptions({
     required int groupId,
     required int votingId,
     Map<String, dynamic>? query,
   });
 
   Future<HorizontalPropertyVotingOptionActionResponseModel>
-      createHorizontalPropertyVotingOption({
+  createHorizontalPropertyVotingOption({
     required int groupId,
     required int votingId,
     required Map<String, dynamic> data,
@@ -174,14 +182,15 @@ abstract class HorizontalPropertiesDatasource {
     Map<String, dynamic>? query,
   });
 
-  Future<HorizontalPropertyVotingVotesResponseModel> getHorizontalPropertyVotingVotes({
+  Future<HorizontalPropertyVotingVotesResponseModel>
+  getHorizontalPropertyVotingVotes({
     required int groupId,
     required int votingId,
     Map<String, dynamic>? query,
   });
 
   Future<HorizontalPropertyVotingDetailsResponseModel>
-      getHorizontalPropertyVotingDetails({
+  getHorizontalPropertyVotingDetails({
     required int groupId,
     required int votingId,
     Map<String, dynamic>? query,

@@ -2,6 +2,7 @@
 import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:rupu/config/helpers/responsive_helper.dart';
 import '../controllers/settings_controller.dart';
 import '../widgets/widgets.dart';
 
@@ -17,12 +18,15 @@ class SettingsView extends GetView<SettingsController> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Ajustes'), centerTitle: true),
-      body: ListView(
-        physics: const BouncingScrollPhysics(
-          parent: AlwaysScrollableScrollPhysics(),
-        ),
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-        children: [
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: ListView(
+            physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
+            ),
+            padding: ResponsiveHelper.getAdaptivePadding(context).copyWith(top: 12, bottom: 24),
+            children: [
           // ───────── Header premium ─────────
           Container(
             padding: const EdgeInsets.all(16),
@@ -158,6 +162,8 @@ class SettingsView extends GetView<SettingsController> {
           ),
         ],
       ),
-    );
+    ),
+  ),
+);
   }
 }

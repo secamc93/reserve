@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'user_detail_controller.dart';
 import 'package:rupu/config/helpers/design_helper.dart';
 import 'package:rupu/config/helpers/dialog_helper.dart';
+import 'package:rupu/config/helpers/responsive_helper.dart';
 import 'widgets/user_detail_widgets.dart';
 import 'widgets/user_detail_avatar_section.dart';
 
@@ -122,304 +123,322 @@ class UserDetailView extends GetView<UserDetailController> {
                   ),
 
                   SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Column(
-                        children: [
-                          // Avatar Section
-                          UserDetailAvatarSection(
-                            controller: controller,
-                            userName: detail.name,
-                            existingAvatarUrl: detail.avatarUrl,
-                          ),
-
-                          const SizedBox(height: 24),
-
-                          // Form Section
-                          SectionContainer(
-                            title: 'Información general',
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 600),
+                        child: Padding(
+                          padding: ResponsiveHelper.getAdaptivePadding(
+                            context,
+                          ).copyWith(top: 0),
+                          child: Column(
                             children: [
-                              // Name field
-                              StyledFormField(
-                                controller: controller.nameCtrl,
-                                label: 'Nombre',
-                                icon: Icons.person_outline,
-                                enabled: controller.canUpdate,
-                                validator: (v) => (v == null || v.isEmpty)
-                                    ? 'Requerido'
-                                    : null,
+                              // Avatar Section
+                              UserDetailAvatarSection(
+                                controller: controller,
+                                userName: detail.name,
+                                existingAvatarUrl: detail.avatarUrl,
                               ),
 
-                              const SizedBox(height: 12),
+                              const SizedBox(height: 24),
 
-                              // Email field
-                              StyledFormField(
-                                controller: controller.emailCtrl,
-                                label: 'Email',
-                                icon: Icons.email_outlined,
-                                enabled: controller.canUpdate,
-                                keyboardType: TextInputType.emailAddress,
-                                validator: (v) => (v == null || v.isEmpty)
-                                    ? 'Requerido'
-                                    : null,
-                              ),
-
-                              const SizedBox(height: 12),
-
-                              // Phone field
-                              StyledFormField(
-                                controller: controller.phoneCtrl,
-                                label: 'Teléfono',
-                                icon: Icons.phone_outlined,
-                                enabled: controller.canUpdate,
-                                keyboardType: TextInputType.phone,
-                              ),
-
-                              const SizedBox(height: 12),
-
-                              // Avatar URL field
-                              StyledFormField(
-                                controller: controller.avatarUrlCtrl,
-                                label: 'URL de avatar',
-                                icon: Icons.link,
-                                enabled:
-                                    controller.canUpdate &&
-                                    !controller.avatarProcessing.value,
-                                onChanged: controller.onAvatarUrlChanged,
-                              ),
-
-                              const SizedBox(height: 16),
-
-                              // Active toggle
-                              Obx(
-                                () => Container(
-                                  decoration: BoxDecoration(
-                                    color: cs.surfaceContainerHighest
-                                        .withValues(alpha: 0.3),
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: SwitchListTile.adaptive(
-                                    title: Row(
-                                      children: [
-                                        Icon(
-                                          Icons.power_settings_new,
-                                          size: 22,
-                                          color: cs.primary,
-                                        ),
-                                        const SizedBox(width: 12),
-                                        const Text('Usuario activo'),
-                                      ],
-                                    ),
-                                    value: controller.isActive.value,
-                                    onChanged: controller.canUpdate
-                                        ? (v) => controller.isActive.value = v
+                              // Form Section
+                              SectionContainer(
+                                title: 'Información general',
+                                children: [
+                                  // Name field
+                                  StyledFormField(
+                                    controller: controller.nameCtrl,
+                                    label: 'Nombre',
+                                    icon: Icons.person_outline,
+                                    enabled: controller.canUpdate,
+                                    validator: (v) => (v == null || v.isEmpty)
+                                        ? 'Requerido'
                                         : null,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
                                   ),
-                                ),
-                              ),
 
-                              const SizedBox(height: 16),
+                                  const SizedBox(height: 12),
 
-                              // Business selector
-                              Obx(
-                                () => BusinessSelectorTile(
-                                  selectedCount:
-                                      controller.selectedBusinesses.length,
-                                  onTap: () => _openBusinessPicker(context),
-                                  enabled: controller.canUpdate,
-                                ),
-                              ),
+                                  // Email field
+                                  StyledFormField(
+                                    controller: controller.emailCtrl,
+                                    label: 'Email',
+                                    icon: Icons.email_outlined,
+                                    enabled: controller.canUpdate,
+                                    keyboardType: TextInputType.emailAddress,
+                                    validator: (v) => (v == null || v.isEmpty)
+                                        ? 'Requerido'
+                                        : null,
+                                  ),
 
-                              // Selected businesses chips
-                              Obx(() {
-                                final businesses =
-                                    controller.selectedBusinesses;
-                                if (businesses.isEmpty) {
-                                  return const SizedBox(height: 8);
-                                }
+                                  const SizedBox(height: 12),
 
-                                return Padding(
-                                  padding: const EdgeInsets.only(top: 12),
-                                  child: Wrap(
-                                    spacing: 8,
-                                    runSpacing: 8,
-                                    children: businesses
-                                        .map(
-                                          (business) => InputChip(
-                                            label: Text(business.name),
-                                            avatar: Icon(
-                                              Icons.storefront_outlined,
-                                              size: 18,
+                                  // Phone field
+                                  StyledFormField(
+                                    controller: controller.phoneCtrl,
+                                    label: 'Teléfono',
+                                    icon: Icons.phone_outlined,
+                                    enabled: controller.canUpdate,
+                                    keyboardType: TextInputType.phone,
+                                  ),
+
+                                  const SizedBox(height: 12),
+
+                                  // Avatar URL field
+                                  StyledFormField(
+                                    controller: controller.avatarUrlCtrl,
+                                    label: 'URL de avatar',
+                                    icon: Icons.link,
+                                    enabled:
+                                        controller.canUpdate &&
+                                        !controller.avatarProcessing.value,
+                                    onChanged: controller.onAvatarUrlChanged,
+                                  ),
+
+                                  const SizedBox(height: 16),
+
+                                  // Active toggle
+                                  Obx(
+                                    () => Container(
+                                      decoration: BoxDecoration(
+                                        color: cs.surfaceContainerHighest
+                                            .withValues(alpha: 0.3),
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      child: SwitchListTile.adaptive(
+                                        title: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.power_settings_new,
+                                              size: 22,
                                               color: cs.primary,
                                             ),
-                                            onDeleted: controller.canUpdate
-                                                ? () =>
-                                                      controller.removeBusiness(
-                                                        business.id,
-                                                      )
-                                                : null,
-                                            backgroundColor: cs.primaryContainer
-                                                .withValues(alpha: 0.5),
-                                            deleteIconColor: cs.error,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                            ),
-                                          ),
-                                        )
-                                        .toList(),
-                                  ),
-                                );
-                              }),
-
-                              const SizedBox(height: 20),
-
-                              // Error message
-                              if (controller.errorMessage.value != null)
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 12),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: cs.errorContainer,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Icon(
-                                          Icons.error_outline,
-                                          color: cs.error,
+                                            const SizedBox(width: 12),
+                                            const Text('Usuario activo'),
+                                          ],
                                         ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Text(
-                                            controller.errorMessage.value!,
-                                            style: tt.bodyMedium?.copyWith(
-                                              color: cs.onErrorContainer,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-
-                              // Save button
-                              if (controller.canUpdate)
-                                Obx(
-                                  () => SizedBox(
-                                    width: double.infinity,
-                                    child: ElevatedButton(
-                                      onPressed: controller.isSaving.value
-                                          ? null
-                                          : () async {
-                                              final result = await controller
-                                                  .submit();
-                                              if (result == null ||
-                                                  !context.mounted)
-                                                return;
-                                              if (result.success) {
-                                                ScaffoldMessenger.of(
-                                                  context,
-                                                ).showSnackBar(
-                                                  SnackBar(
-                                                    content: Text(
-                                                      result.message ??
-                                                          'Usuario actualizado correctamente.',
-                                                    ),
-                                                  ),
-                                                );
-                                              } else if (result.message !=
-                                                  null) {
-                                                ScaffoldMessenger.of(
-                                                  context,
-                                                ).showSnackBar(
-                                                  SnackBar(
-                                                    content: Text(
-                                                      result.message!,
-                                                    ),
-                                                  ),
-                                                );
-                                              }
-                                            },
-                                      style: ElevatedButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 16,
-                                        ),
-                                        backgroundColor: cs.primary,
-                                        foregroundColor: cs.onPrimary,
+                                        value: controller.isActive.value,
+                                        onChanged: controller.canUpdate
+                                            ? (v) =>
+                                                  controller.isActive.value = v
+                                            : null,
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(
                                             16,
                                           ),
                                         ),
-                                        elevation: 2,
                                       ),
-                                      child: controller.isSaving.value
-                                          ? SizedBox(
-                                              width: 20,
-                                              height: 20,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                valueColor:
-                                                    AlwaysStoppedAnimation<
-                                                      Color
-                                                    >(
-                                                      cs.onPrimary.withValues(
-                                                        alpha: 0.7,
-                                                      ),
-                                                    ),
-                                              ),
-                                            )
-                                          : Text(
-                                              'Guardar cambios',
-                                              style: tt.titleSmall?.copyWith(
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
                                     ),
                                   ),
-                                ),
 
-                              // Read-only message
-                              if (!controller.canUpdate)
-                                Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: cs.surfaceContainerHighest
-                                        .withValues(alpha: 0.5),
-                                    borderRadius: BorderRadius.circular(16),
+                                  const SizedBox(height: 16),
+
+                                  // Business selector
+                                  Obx(
+                                    () => BusinessSelectorTile(
+                                      selectedCount:
+                                          controller.selectedBusinesses.length,
+                                      onTap: () => _openBusinessPicker(context),
+                                      enabled: controller.canUpdate,
+                                    ),
                                   ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.lock_outline,
-                                        size: 20,
-                                        color: cs.onSurfaceVariant,
+
+                                  // Selected businesses chips
+                                  Obx(() {
+                                    final businesses =
+                                        controller.selectedBusinesses;
+                                    if (businesses.isEmpty) {
+                                      return const SizedBox(height: 8);
+                                    }
+
+                                    return Padding(
+                                      padding: const EdgeInsets.only(top: 12),
+                                      child: Wrap(
+                                        spacing: 8,
+                                        runSpacing: 8,
+                                        children: businesses
+                                            .map(
+                                              (business) => InputChip(
+                                                label: Text(business.name),
+                                                avatar: Icon(
+                                                  Icons.storefront_outlined,
+                                                  size: 18,
+                                                  color: cs.primary,
+                                                ),
+                                                onDeleted: controller.canUpdate
+                                                    ? () => controller
+                                                          .removeBusiness(
+                                                            business.id,
+                                                          )
+                                                    : null,
+                                                backgroundColor: cs
+                                                    .primaryContainer
+                                                    .withValues(alpha: 0.5),
+                                                deleteIconColor: cs.error,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                ),
+                                              ),
+                                            )
+                                            .toList(),
                                       ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Text(
-                                          'Solo puedes visualizar la información de este usuario.',
-                                          style: tt.bodyMedium?.copyWith(
-                                            color: cs.onSurfaceVariant,
+                                    );
+                                  }),
+
+                                  const SizedBox(height: 20),
+
+                                  // Error message
+                                  if (controller.errorMessage.value != null)
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                        bottom: 12,
+                                      ),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: cs.errorContainer,
+                                          borderRadius: BorderRadius.circular(
+                                            12,
                                           ),
-                                          textAlign: TextAlign.center,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.error_outline,
+                                              color: cs.error,
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Text(
+                                                controller.errorMessage.value!,
+                                                style: tt.bodyMedium?.copyWith(
+                                                  color: cs.onErrorContainer,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
-                                    ],
-                                  ),
-                                ),
+                                    ),
+
+                                  // Save button
+                                  if (controller.canUpdate)
+                                    Obx(
+                                      () => SizedBox(
+                                        width: double.infinity,
+                                        child: ElevatedButton(
+                                          onPressed: controller.isSaving.value
+                                              ? null
+                                              : () async {
+                                                  final result =
+                                                      await controller.submit();
+                                                  if (result == null ||
+                                                      !context.mounted)
+                                                    return;
+                                                  if (result.success) {
+                                                    ScaffoldMessenger.of(
+                                                      context,
+                                                    ).showSnackBar(
+                                                      SnackBar(
+                                                        content: Text(
+                                                          result.message ??
+                                                              'Usuario actualizado correctamente.',
+                                                        ),
+                                                      ),
+                                                    );
+                                                  } else if (result.message !=
+                                                      null) {
+                                                    ScaffoldMessenger.of(
+                                                      context,
+                                                    ).showSnackBar(
+                                                      SnackBar(
+                                                        content: Text(
+                                                          result.message!,
+                                                        ),
+                                                      ),
+                                                    );
+                                                  }
+                                                },
+                                          style: ElevatedButton.styleFrom(
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 16,
+                                            ),
+                                            backgroundColor: cs.primary,
+                                            foregroundColor: cs.onPrimary,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                            ),
+                                            elevation: 2,
+                                          ),
+                                          child: controller.isSaving.value
+                                              ? SizedBox(
+                                                  width: 20,
+                                                  height: 20,
+                                                  child: CircularProgressIndicator(
+                                                    strokeWidth: 2,
+                                                    valueColor:
+                                                        AlwaysStoppedAnimation<
+                                                          Color
+                                                        >(
+                                                          cs.onPrimary
+                                                              .withValues(
+                                                                alpha: 0.7,
+                                                              ),
+                                                        ),
+                                                  ),
+                                                )
+                                              : Text(
+                                                  'Guardar cambios',
+                                                  style: tt.titleSmall
+                                                      ?.copyWith(
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                      ),
+                                                ),
+                                        ),
+                                      ),
+                                    ),
+
+                                  // Read-only message
+                                  if (!controller.canUpdate)
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: cs.surfaceContainerHighest
+                                            .withValues(alpha: 0.5),
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.lock_outline,
+                                            size: 20,
+                                            color: cs.onSurfaceVariant,
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Text(
+                                              'Solo puedes visualizar la información de este usuario.',
+                                              style: tt.bodyMedium?.copyWith(
+                                                color: cs.onSurfaceVariant,
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 20),
                             ],
                           ),
-
-                          const SizedBox(height: 20),
-                        ],
+                        ),
                       ),
                     ),
                   ),
@@ -516,7 +535,7 @@ class _BusinessPickerContent extends StatelessWidget {
                     filled: true,
                     fillColor: Theme.of(
                       context,
-                    ).colorScheme.surface.withOpacity(0.5),
+                    ).colorScheme.surface.withValues(alpha: 0.5),
                   ),
                   onSubmitted: (value) => controller.searchBusinesses(value),
                 ),

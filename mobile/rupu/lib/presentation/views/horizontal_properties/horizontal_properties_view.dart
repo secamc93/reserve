@@ -2,6 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rupu/config/helpers/design_helper.dart';
+import 'package:rupu/config/helpers/dialog_helper.dart';
+import 'package:rupu/config/helpers/responsive_helper.dart';
 
 import 'package:rupu/domain/entities/horizontal_property_update_result.dart';
 import 'horizontal_properties_controller.dart';
@@ -66,13 +69,13 @@ class HorizontalPropertiesView extends GetView<HorizontalPropertiesController> {
             onRefresh: controller.fetchProperties,
             child: LayoutBuilder(
               builder: (context, c) {
-                final width = c.maxWidth;
-
-                final cross = width >= 1200
-                    ? 3
-                    : width >= 800
-                    ? 2
-                    : 1;
+                final cross = ResponsiveHelper.getGridColumns(
+                  context,
+                  mobile: 1,
+                  tablet: 2,
+                  largeTablet: 2,
+                  desktop: 3,
+                );
 
                 // AJUSTE UX: Ratio ajustado para imágenes 4:3
                 final cardAspect = cross == 1 ? 0.75 : 0.70;
@@ -229,114 +232,164 @@ class HorizontalPropertiesView extends GetView<HorizontalPropertiesController> {
   Future<void> _showCreatePropertyDialog(BuildContext context) async {
     controller.resetCreateForm();
     final cs = Theme.of(context).colorScheme;
-    await showDialog<void>(
+    final tt = Theme.of(context).textTheme;
+
+    await DialogHelper.showBlurredDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (dialogCtx) {
         return Obx(() {
           final isCreating = controller.isCreating.value;
-          return AlertDialog(
-            elevation: 0,
-            backgroundColor: cs.surface,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            title: Text(
-              'Nueva Publicación',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: cs.onSurface,
-              ),
-            ),
-            content: Form(
-              key: controller.createFormKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                    controller: controller.createNameCtrl,
-                    textCapitalization: TextCapitalization.words,
-                    style: TextStyle(color: cs.onSurface),
-                    decoration: InputDecoration(
-                      hintText: 'Nombre de la propiedad...',
-                      hintStyle: TextStyle(color: cs.onSurfaceVariant),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide.none,
-                      ),
-                      filled: true,
-                      fillColor: cs.surfaceContainerHighest,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 14,
-                      ),
-                    ),
-                    validator: (v) =>
-                        (v == null || v.trim().isEmpty) ? 'Requerido' : null,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: controller.createAddressCtrl,
-                    textCapitalization: TextCapitalization.sentences,
-                    style: TextStyle(color: cs.onSurface),
-                    decoration: InputDecoration(
-                      hintText: 'Ubicación...',
-                      hintStyle: TextStyle(color: cs.onSurfaceVariant),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide.none,
-                      ),
-                      filled: true,
-                      fillColor: cs.surfaceContainerHighest,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 14,
-                      ),
-                    ),
-                    validator: (v) =>
-                        (v == null || v.trim().isEmpty) ? 'Requerido' : null,
-                  ),
-                ],
-              ),
-            ),
-            actionsAlignment: MainAxisAlignment.spaceEvenly,
-            actions: [
-              TextButton(
-                onPressed: isCreating
-                    ? null
-                    : () => Navigator.of(dialogCtx).pop(),
-                child: Text('Cancelar', style: TextStyle(color: cs.onSurface)),
-              ),
-              TextButton(
-                onPressed: isCreating
-                    ? null
-                    : () async {
-                        FocusScope.of(dialogCtx).unfocus();
-                        final result = await controller.createProperty();
-                        if (result.success) {
-                          Navigator.of(dialogCtx).pop();
-                          controller.fetchProperties();
-                        }
-                      },
-                child: isCreating
-                    ? SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: cs.primary,
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: GlassContainer(
+                borderRadius: BorderRadius.circular(24),
+                blur: 20,
+                opacity: 0.95,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 500),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Header
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              TextButton(
+                                onPressed: isCreating
+                                    ? null
+                                    : () => Navigator.of(dialogCtx).pop(),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: cs.onSurface,
+                                  textStyle: tt.bodyMedium,
+                                ),
+                                child: const Text('Cancelar'),
+                              ),
+                              Text(
+                                'Nueva Propiedad',
+                                style: tt.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: isCreating
+                                    ? null
+                                    : () async {
+                                        FocusScope.of(dialogCtx).unfocus();
+                                        final result = await controller
+                                            .createProperty();
+                                        if (result.success) {
+                                          Navigator.of(dialogCtx).pop();
+                                          controller.fetchProperties();
+                                        }
+                                      },
+                                style: TextButton.styleFrom(
+                                  foregroundColor: cs.primary,
+                                  textStyle: tt.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                child: isCreating
+                                    ? SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: cs.primary,
+                                        ),
+                                      )
+                                    : const Text('Crear'),
+                              ),
+                            ],
+                          ),
                         ),
-                      )
-                    : Text(
-                        'Compartir',
-                        style: TextStyle(
-                          color: cs.primary,
-                          fontWeight: FontWeight.bold,
+                        const Divider(height: 1),
+                        // Form Content
+                        Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Form(
+                            key: controller.createFormKey,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 64,
+                                  height: 64,
+                                  margin: const EdgeInsets.only(bottom: 24),
+                                  decoration: BoxDecoration(
+                                    color: cs.primaryContainer,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.domain_add_outlined,
+                                    size: 32,
+                                    color: cs.onPrimaryContainer,
+                                  ),
+                                ),
+                                TextFormField(
+                                  controller: controller.createNameCtrl,
+                                  textCapitalization: TextCapitalization.words,
+                                  style: TextStyle(color: cs.onSurface),
+                                  decoration: InputDecoration(
+                                    labelText: 'Nombre de la propiedad',
+                                    hintText: 'Ej. Edificio Central',
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    prefixIcon: const Icon(Icons.business),
+                                    filled: true,
+                                    fillColor: cs.surface.withValues(
+                                      alpha: 0.5,
+                                    ),
+                                  ),
+                                  validator: (v) =>
+                                      (v == null || v.trim().isEmpty)
+                                      ? 'Requerido'
+                                      : null,
+                                ),
+                                const SizedBox(height: 16),
+                                TextFormField(
+                                  controller: controller.createAddressCtrl,
+                                  textCapitalization:
+                                      TextCapitalization.sentences,
+                                  style: TextStyle(color: cs.onSurface),
+                                  decoration: InputDecoration(
+                                    labelText: 'Ubicación',
+                                    hintText: 'Ej. Calle 123 #45-67',
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    prefixIcon: const Icon(
+                                      Icons.place_outlined,
+                                    ),
+                                    filled: true,
+                                    fillColor: cs.surface.withValues(
+                                      alpha: 0.5,
+                                    ),
+                                  ),
+                                  validator: (v) =>
+                                      (v == null || v.trim().isEmpty)
+                                      ? 'Requerido'
+                                      : null,
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
-            ],
+            ),
           );
         });
       },

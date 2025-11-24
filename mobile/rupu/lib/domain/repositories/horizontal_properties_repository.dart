@@ -66,31 +66,38 @@ abstract class HorizontalPropertiesRepository {
     Map<String, dynamic>? query,
   });
 
-  Future<HorizontalPropertyResidentDetailResult> getHorizontalPropertyResidentDetail({
-    required int residentId,
-  });
+  Future<HorizontalPropertyResidentDetailResult>
+  getHorizontalPropertyResidentDetail({required int residentId});
 
-  Future<HorizontalPropertyResidentDetailResult> createHorizontalPropertyResident({
+  Future<HorizontalPropertyResidentDetailResult>
+  createHorizontalPropertyResident({
     required int propertyId,
     required Map<String, dynamic> data,
   });
 
-  Future<HorizontalPropertyResidentDetailResult> updateHorizontalPropertyResident({
+  Future<HorizontalPropertyResidentDetailResult>
+  updateHorizontalPropertyResident({
     required int propertyId,
     required int residentId,
     required Map<String, dynamic> data,
   });
 
-  Future<HorizontalPropertyVotingGroupsResult> getHorizontalPropertyVotingGroups({
-    required int id,
+  Future<HorizontalPropertyActionResult> deleteHorizontalPropertyResident({
+    required int propertyId,
+    required int residentId,
   });
 
-  Future<HorizontalPropertyVotingGroupActionResult> createHorizontalPropertyVotingGroup({
+  Future<HorizontalPropertyVotingGroupsResult>
+  getHorizontalPropertyVotingGroups({required int id});
+
+  Future<HorizontalPropertyVotingGroupActionResult>
+  createHorizontalPropertyVotingGroup({
     required int businessId,
     required Map<String, dynamic> data,
   });
 
-  Future<HorizontalPropertyVotingGroupActionResult> updateHorizontalPropertyVotingGroup({
+  Future<HorizontalPropertyVotingGroupActionResult>
+  updateHorizontalPropertyVotingGroup({
     required int businessId,
     required int groupId,
     required Map<String, dynamic> data,
@@ -137,13 +144,15 @@ abstract class HorizontalPropertiesRepository {
     required int votingId,
   });
 
-  Future<HorizontalPropertyVotingOptionListResult> getHorizontalPropertyVotingOptions({
+  Future<HorizontalPropertyVotingOptionListResult>
+  getHorizontalPropertyVotingOptions({
     required int businessId,
     required int groupId,
     required int votingId,
   });
 
-  Future<HorizontalPropertyVotingOptionActionResult> createHorizontalPropertyVotingOption({
+  Future<HorizontalPropertyVotingOptionActionResult>
+  createHorizontalPropertyVotingOption({
     required int businessId,
     required int groupId,
     required int votingId,
@@ -163,7 +172,8 @@ abstract class HorizontalPropertiesRepository {
     required int votingId,
   });
 
-  Future<HorizontalPropertyVotingDetailsResult> getHorizontalPropertyVotingDetails({
+  Future<HorizontalPropertyVotingDetailsResult>
+  getHorizontalPropertyVotingDetails({
     required int businessId,
     required int groupId,
     required int votingId,

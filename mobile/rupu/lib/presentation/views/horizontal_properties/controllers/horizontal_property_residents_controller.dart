@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:rupu/domain/entities/horizontal_property_action_result.dart';
 import 'package:rupu/domain/entities/horizontal_property_resident_detail.dart';
 import 'package:rupu/domain/entities/horizontal_property_residents_page.dart';
 import 'package:rupu/domain/entities/horizontal_property_units_page.dart';
@@ -367,6 +368,34 @@ class HorizontalPropertyResidentsController extends GetxController {
       return const HorizontalPropertyResidentDetailResult(
         success: false,
         message: 'No se pudo actualizar el residente. Inténtalo nuevamente.',
+      );
+    } finally {
+      residentMutationBusy.value = false;
+    }
+  }
+
+  Future<HorizontalPropertyActionResult> deleteResident(int residentId) async {
+    if (residentMutationBusy.value) {
+      return const HorizontalPropertyActionResult(
+        success: false,
+        message: 'Ya hay una operación en curso.',
+      );
+    }
+    residentMutationBusy.value = true;
+    try {
+      final result = await repository.deleteHorizontalPropertyResident(
+        propertyId: propertyId,
+        residentId: residentId,
+      );
+      if (result.success) {
+        await refresh();
+        _residentDetailsCache.remove(residentId);
+      }
+      return result;
+    } catch (_) {
+      return const HorizontalPropertyActionResult(
+        success: false,
+        message: 'No se pudo eliminar el residente. Inténtalo nuevamente.',
       );
     } finally {
       residentMutationBusy.value = false;

@@ -198,9 +198,7 @@ class HorizontalPropertiesRepositoryImpl
 
   @override
   Future<HorizontalPropertyResidentDetailResult>
-      getHorizontalPropertyResidentDetail({
-    required int residentId,
-  }) async {
+  getHorizontalPropertyResidentDetail({required int residentId}) async {
     try {
       final response = await datasource.getHorizontalPropertyResidentDetail(
         residentId: residentId,
@@ -217,7 +215,7 @@ class HorizontalPropertiesRepositoryImpl
 
   @override
   Future<HorizontalPropertyResidentDetailResult>
-      createHorizontalPropertyResident({
+  createHorizontalPropertyResident({
     required int propertyId,
     required Map<String, dynamic> data,
   }) async {
@@ -239,7 +237,7 @@ class HorizontalPropertiesRepositoryImpl
 
   @override
   Future<HorizontalPropertyResidentDetailResult>
-      updateHorizontalPropertyResident({
+  updateHorizontalPropertyResident({
     required int propertyId,
     required int residentId,
     required Map<String, dynamic> data,
@@ -257,6 +255,27 @@ class HorizontalPropertiesRepositoryImpl
       return const HorizontalPropertyResidentDetailResult(
         success: false,
         message: 'No se pudo actualizar el residente.',
+      );
+    }
+  }
+
+  @override
+  Future<HorizontalPropertyActionResult> deleteHorizontalPropertyResident({
+    required int propertyId,
+    required int residentId,
+  }) async {
+    try {
+      final response = await datasource.deleteHorizontalPropertyResident(
+        residentId: residentId,
+        query: _withBusinessQuery(
+          propertyId > 0 ? {'business_id': propertyId} : null,
+        ),
+      );
+      return HorizontalPropertiesMapper.simpleResponseToActionResult(response);
+    } catch (_) {
+      return const HorizontalPropertyActionResult(
+        success: false,
+        message: 'No se pudo eliminar el residente.',
       );
     }
   }
@@ -559,7 +578,7 @@ class HorizontalPropertiesRepositoryImpl
 
   @override
   Future<HorizontalPropertyVotingDetailsResult>
-      getHorizontalPropertyVotingDetails({
+  getHorizontalPropertyVotingDetails({
     required int businessId,
     required int groupId,
     required int votingId,
@@ -670,7 +689,8 @@ class HorizontalPropertiesRepositoryImpl
   ) {
     try {
       final rawData = payload['data'];
-      final payloadEventName = (payload['event'] ?? payload['event_name']) as String?;
+      final payloadEventName =
+          (payload['event'] ?? payload['event_name']) as String?;
 
       if (rawData is List) {
         final units = rawData
@@ -692,27 +712,27 @@ class HorizontalPropertiesRepositoryImpl
       }
 
       final data = _asMap(rawData) ?? payload;
-      final eventName = (data['event'] ?? data['event_name']) as String? ??
-          payloadEventName;
+      final eventName =
+          (data['event'] ?? data['event_name']) as String? ?? payloadEventName;
 
       final unitsData = data['units'];
       final hasUnitsSnapshot = unitsData is List;
       final units = hasUnitsSnapshot
           ? unitsData
-              .whereType<Map<String, dynamic>>()
-              .map(_liveUnitFromMap)
-              .whereType<HorizontalPropertyVotingLiveUnit>()
-              .toList(growable: false)
+                .whereType<Map<String, dynamic>>()
+                .map(_liveUnitFromMap)
+                .whereType<HorizontalPropertyVotingLiveUnit>()
+                .toList(growable: false)
           : const <HorizontalPropertyVotingLiveUnit>[];
 
       final resultsData = data['results'];
       final hasResultsSnapshot = resultsData is List;
       final results = hasResultsSnapshot
           ? resultsData
-              .whereType<Map<String, dynamic>>()
-              .map(_liveResultFromMap)
-              .whereType<HorizontalPropertyVotingLiveResult>()
-              .toList(growable: false)
+                .whereType<Map<String, dynamic>>()
+                .map(_liveResultFromMap)
+                .whereType<HorizontalPropertyVotingLiveResult>()
+                .toList(growable: false)
           : const <HorizontalPropertyVotingLiveResult>[];
 
       final votesData = data['votes'];
@@ -798,15 +818,17 @@ class HorizontalPropertiesRepositoryImpl
       ),
       residentId: _toInt(json['resident_id']),
       residentName: json['resident_name'] as String?,
-      hasVoted: json['has_voted'] as bool? ??
-          (json['voting_option_id'] != null ||
-              json['votingOptionId'] != null),
-      votingOptionId:
-          _toInt(json['voting_option_id'] ?? json['votingOptionId']),
+      hasVoted:
+          json['has_voted'] as bool? ??
+          (json['voting_option_id'] != null || json['votingOptionId'] != null),
+      votingOptionId: _toInt(
+        json['voting_option_id'] ?? json['votingOptionId'],
+      ),
       optionText: (json['option_text'] ?? json['optionText']) as String?,
       optionCode: (json['option_code'] ?? json['optionCode']) as String?,
       optionColor: (json['option_color'] ?? json['optionColor']) as String?,
-      votedAt: _parseDate(json['voted_at'] as String?) ??
+      votedAt:
+          _parseDate(json['voted_at'] as String?) ??
           _parseDate(json['votedAt'] as String?),
     );
   }
@@ -829,15 +851,15 @@ class HorizontalPropertiesRepositoryImpl
     );
   }
 
-  HorizontalPropertyVotingVote? _liveVoteFromMap(
-    Map<String, dynamic> json,
-  ) {
+  HorizontalPropertyVotingVote? _liveVoteFromMap(Map<String, dynamic> json) {
     final id = _toInt(json['id']);
     final votingId = _toInt(json['voting_id'] ?? json['votingId']);
-    final propertyUnitId =
-        _toInt(json['property_unit_id'] ?? json['propertyUnitId']);
-    final votingOptionId =
-        _toInt(json['voting_option_id'] ?? json['votingOptionId']);
+    final propertyUnitId = _toInt(
+      json['property_unit_id'] ?? json['propertyUnitId'],
+    );
+    final votingOptionId = _toInt(
+      json['voting_option_id'] ?? json['votingOptionId'],
+    );
     if (id == null ||
         votingId == null ||
         propertyUnitId == null ||
@@ -857,9 +879,7 @@ class HorizontalPropertiesRepositoryImpl
     );
   }
 
-  Map<String, dynamic>? _normalizeVotePayload(
-    Map<String, dynamic> json,
-  ) {
+  Map<String, dynamic>? _normalizeVotePayload(Map<String, dynamic> json) {
     if (json.containsKey('voting_option_id') ||
         json.containsKey('votingOptionId') ||
         json.containsKey('property_unit_id') ||

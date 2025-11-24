@@ -1,6 +1,7 @@
 // presentation/views/business_selector/business_selector_view.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:rupu/config/helpers/responsive_helper.dart';
 
 import 'business_selector_controller.dart';
 import 'widgets/business_card.dart';
@@ -37,12 +38,26 @@ class BusinessSelectorView extends GetView<BusinessSelectorController> {
           );
         }
 
+        final isTablet = ResponsiveHelper.isTablet(context);
+        final padding = ResponsiveHelper.getAdaptivePadding(context);
+        final gridColumns = ResponsiveHelper.getGridColumns(
+          context,
+          mobile: 1,
+          tablet: 2,
+          largeTablet: 3,
+        );
+
         return SafeArea(
           child: Column(
             children: [
               // Header fijo
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                padding: EdgeInsets.fromLTRB(
+                  padding.left,
+                  padding.top,
+                  padding.right,
+                  padding.top / 2,
+                ),
                 child: BusinessHeader(
                   greeting:
                       'Hola ${controller.userName.isNotEmpty ? controller.userName : '👋'}',
@@ -52,22 +67,54 @@ class BusinessSelectorView extends GetView<BusinessSelectorController> {
 
               // Solo las cards scrollean
               Expanded(
-                child: ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24 + 72),
-                  itemCount: businesses.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    final b = businesses[index];
-                    return BusinessCard(
-                      key: ValueKey(b.id), // <- ayuda al reciclado
-                      business: b,
-                      selected:
-                          selectedId ==
-                          b.id, // <- se actualiza al cambiar selección
-                      onTap: () => controller.selectBusiness(b.id),
-                    );
-                  },
-                ),
+                child: isTablet
+                    ? GridView.builder(
+                        padding: EdgeInsets.fromLTRB(
+                          padding.left,
+                          padding.top / 2,
+                          padding.right,
+                          24 + 72,
+                        ),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: gridColumns,
+                          crossAxisSpacing: ResponsiveHelper.getSpacing(
+                            context,
+                          ),
+                          mainAxisSpacing: ResponsiveHelper.getSpacing(context),
+                          childAspectRatio: 2.5,
+                        ),
+                        itemCount: businesses.length,
+                        itemBuilder: (context, index) {
+                          final b = businesses[index];
+                          return BusinessCard(
+                            key: ValueKey(b.id),
+                            business: b,
+                            selected: selectedId == b.id,
+                            onTap: () => controller.selectBusiness(b.id),
+                          );
+                        },
+                      )
+                    : ListView.separated(
+                        padding: EdgeInsets.fromLTRB(
+                          padding.left,
+                          padding.top / 2,
+                          padding.right,
+                          24 + 72,
+                        ),
+                        itemCount: businesses.length,
+                        separatorBuilder: (_, __) => SizedBox(
+                          height: ResponsiveHelper.getSpacing(context) * 0.75,
+                        ),
+                        itemBuilder: (context, index) {
+                          final b = businesses[index];
+                          return BusinessCard(
+                            key: ValueKey(b.id),
+                            business: b,
+                            selected: selectedId == b.id,
+                            onTap: () => controller.selectBusiness(b.id),
+                          );
+                        },
+                      ),
               ),
             ],
           ),
@@ -84,6 +131,8 @@ class BusinessSelectorView extends GetView<BusinessSelectorController> {
 
         if (!hasItems) return const SizedBox.shrink();
 
+        final padding = ResponsiveHelper.getAdaptivePadding(context);
+
         return SafeArea(
           top: false,
           child: Container(
@@ -95,7 +144,12 @@ class BusinessSelectorView extends GetView<BusinessSelectorController> {
                 ),
               ),
             ),
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+            padding: EdgeInsets.fromLTRB(
+              padding.left,
+              10,
+              padding.right,
+              padding.bottom,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,

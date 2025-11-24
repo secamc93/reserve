@@ -196,7 +196,9 @@ class SectionCard extends StatelessWidget {
         child: Column(
           children: [
             InkWell(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(16),
+              ),
               onTap: collapsible ? () => expanded.toggle() : null,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
@@ -269,10 +271,7 @@ class SectionCard extends StatelessWidget {
                     ] else if (child != null) ...[
                       child!,
                     ],
-                    if (footer != null) ...[
-                      SizedBox(height: gap),
-                      footer!,
-                    ],
+                    if (footer != null) ...[SizedBox(height: gap), footer!],
                   ],
                 ),
               ),
@@ -896,7 +895,7 @@ class _InstagramSwitch extends StatelessWidget {
         Switch.adaptive(
           value: value,
           onChanged: onChanged,
-          activeColor: Colors.blue,
+          activeThumbColor: Colors.blue,
         ),
       ],
     );

@@ -26,19 +26,14 @@ class _DashboardTab extends GetWidget<HorizontalPropertyDashboardController> {
 
       return LayoutBuilder(
         builder: (context, constraints) {
-          final isTablet = constraints.maxWidth >= 720;
-          final horizontalPadding = isTablet ? 32.0 : 16.0;
+          final isTablet = ResponsiveHelper.isTablet(context);
+          final adaptivePadding = ResponsiveHelper.getAdaptivePadding(context);
 
           return RefreshIndicator(
             onRefresh: controller.refreshAll,
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: EdgeInsets.fromLTRB(
-                horizontalPadding,
-                16,
-                horizontalPadding,
-                24,
-              ),
+              padding: adaptivePadding.copyWith(top: 16, bottom: 24),
               children: [
                 if (error != null) ...[
                   _InlineError(message: error),

@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 import 'clients_controller.dart';
+import 'package:rupu/config/helpers/responsive_helper.dart';
 import 'package:rupu/presentation/views/profile/perfil_controller.dart';
 
 class ClientsView extends StatelessWidget {
@@ -14,10 +15,9 @@ class ClientsView extends StatelessWidget {
   static const name = 'clients';
   final int pageIndex;
 
-  final ClientsController controller =
-      Get.isRegistered<ClientsController>()
-          ? Get.find<ClientsController>()
-          : Get.put(ClientsController());
+  final ClientsController controller = Get.isRegistered<ClientsController>()
+      ? Get.find<ClientsController>()
+      : Get.put(ClientsController());
 
   @override
   Widget build(BuildContext context) {
@@ -37,93 +37,102 @@ class ClientsView extends StatelessWidget {
             return Center(child: Text(error));
           }
 
-          return ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-            children: [
-              // Header premium
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(18),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      cs.primary.withValues(alpha: .10),
-                      cs.secondary.withValues(alpha: .08),
-                    ],
-                  ),
-                  border: Border.all(color: cs.outlineVariant),
-                ),
-                child: Row(
-                  children: [
-                    _InitialAvatar(
-                      initial: 'C',
-                      size: 52,
-                      start: cs.primary,
-                      end: cs.secondary,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Clientes con reserva',
-                            style: tt.titleLarge!.copyWith(
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            controller.clientes.isEmpty
-                                ? 'Aún no hay clientes registrados para hoy.'
-                                : '${controller.clientes.length} cliente${controller.clientes.length == 1 ? '' : 's'} hoy',
-                            style: tt.bodyMedium!.copyWith(
-                              color: cs.onSurfaceVariant,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1000),
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: ResponsiveHelper.getAdaptivePadding(
+                  context,
+                ).copyWith(top: 12, bottom: 24),
+                children: [
+                  // Header premium
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(18),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          cs.primary.withValues(alpha: .10),
+                          cs.secondary.withValues(alpha: .08),
                         ],
                       ),
+                      border: Border.all(color: cs.outlineVariant),
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              if (controller.clientes.isEmpty) ...[
-                _EmptyStateCard(
-                  title: 'Sin clientes hoy',
-                  message:
-                      'Cuando registres reservas, los clientes aparecerán aquí para contactarlos rápido.',
-                ),
-              ] else ...[
-                for (final c in controller.clientes) ...[
-                  _ClientCard(
-                    name: c.nombre,
-                    email: c.email,
-                    phone: c.telefono,
-                    businessName: Get.isRegistered<PerfilController>()
-                        ? (Get.find<PerfilController>().businessName)
-                        : '',
-                    onCall: () => _launchPhone(c.telefono),
-                    onEmail: () => _launchEmail(
-                      to: c.email,
-                      subject: 'Hola ${c.nombre.isNotEmpty ? c.nombre : ''}',
-                      body: 'Hola ${c.nombre.isNotEmpty ? c.nombre : ''},\n\n',
-                    ),
-                    onWhatsApp: () => _launchWhatsApp(
-                      phone: c.telefono,
-                      message:
-                          'Hola ${c.nombre.isNotEmpty ? c.nombre : ''} 👋, te saluda ${Get.isRegistered<PerfilController>() ? (Get.find<PerfilController>().businessName) : 'nuestro negocio'}.',
+                    child: Row(
+                      children: [
+                        _InitialAvatar(
+                          initial: 'C',
+                          size: 52,
+                          start: cs.primary,
+                          end: cs.secondary,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Clientes con reserva',
+                                style: tt.titleLarge!.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                controller.clientes.isEmpty
+                                    ? 'Aún no hay clientes registrados para hoy.'
+                                    : '${controller.clientes.length} cliente${controller.clientes.length == 1 ? '' : 's'} hoy',
+                                style: tt.bodyMedium!.copyWith(
+                                  color: cs.onSurfaceVariant,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 16),
+
+                  if (controller.clientes.isEmpty) ...[
+                    _EmptyStateCard(
+                      title: 'Sin clientes hoy',
+                      message:
+                          'Cuando registres reservas, los clientes aparecerán aquí para contactarlos rápido.',
+                    ),
+                  ] else ...[
+                    for (final c in controller.clientes) ...[
+                      _ClientCard(
+                        name: c.nombre,
+                        email: c.email,
+                        phone: c.telefono,
+                        businessName: Get.isRegistered<PerfilController>()
+                            ? (Get.find<PerfilController>().businessName)
+                            : '',
+                        onCall: () => _launchPhone(c.telefono),
+                        onEmail: () => _launchEmail(
+                          to: c.email,
+                          subject:
+                              'Hola ${c.nombre.isNotEmpty ? c.nombre : ''}',
+                          body:
+                              'Hola ${c.nombre.isNotEmpty ? c.nombre : ''},\n\n',
+                        ),
+                        onWhatsApp: () => _launchWhatsApp(
+                          phone: c.telefono,
+                          message:
+                              'Hola ${c.nombre.isNotEmpty ? c.nombre : ''} 👋, te saluda ${Get.isRegistered<PerfilController>() ? (Get.find<PerfilController>().businessName) : 'nuestro negocio'}.',
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                    ],
+                  ],
                 ],
-              ],
-            ],
+              ),
+            ),
           );
         }),
       ),

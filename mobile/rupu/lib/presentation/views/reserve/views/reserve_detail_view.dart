@@ -14,6 +14,7 @@ import '../controllers/reserves_controller.dart';
 import 'package:rupu/config/helpers/calendar_helper.dart';
 import 'package:rupu/presentation/widgets/widgets.dart';
 import '../widgets.dart';
+import 'package:rupu/config/helpers/responsive_helper.dart';
 
 class ReserveDetailView extends GetView<ReserveDetailController> {
   const ReserveDetailView({super.key, required this.pageIndex});
@@ -102,33 +103,36 @@ class ReserveDetailView extends GetView<ReserveDetailController> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, color: color, size: 28),
-              const SizedBox(height: 8),
-              Text(
-                title,
-                style: tt.titleLarge!.copyWith(fontWeight: FontWeight.w800),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 6),
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: tt.bodyMedium!.copyWith(color: cs.onSurfaceVariant),
-              ),
-              const SizedBox(height: 14),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  child: Text(buttonText),
+        return FractionallySizedBox(
+          widthFactor: ResponsiveHelper.isTablet(ctx) ? 0.6 : 1.0,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, color: color, size: 28),
+                const SizedBox(height: 8),
+                Text(
+                  title,
+                  style: tt.titleLarge!.copyWith(fontWeight: FontWeight.w800),
+                  textAlign: TextAlign.center,
                 ),
-              ),
-            ],
+                const SizedBox(height: 6),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: tt.bodyMedium!.copyWith(color: cs.onSurfaceVariant),
+                ),
+                const SizedBox(height: 14),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    child: Text(buttonText),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -151,94 +155,104 @@ class ReserveDetailView extends GetView<ReserveDetailController> {
       builder: (ctx) {
         return StatefulBuilder(
           builder: (ctx, setLocal) {
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.how_to_reg, color: cs.primary),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Confirmar check-in',
-                    style: tt.titleLarge!.copyWith(fontWeight: FontWeight.w800),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    '¿Deseas marcar esta reserva como confirmada?',
-                    textAlign: TextAlign.center,
-                    style: tt.bodyMedium!.copyWith(color: cs.onSurfaceVariant),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: working
-                              ? null
-                              : () => Navigator.of(ctx).pop(),
-                          child: const Text('No, volver'),
-                        ),
+            return FractionallySizedBox(
+              widthFactor: ResponsiveHelper.isTablet(ctx) ? 0.6 : 1.0,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.how_to_reg, color: cs.primary),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Confirmar check-in',
+                      style: tt.titleLarge!.copyWith(
+                        fontWeight: FontWeight.w800,
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: FilledButton(
-                          onPressed: working
-                              ? null
-                              : () async {
-                                  setLocal(() => working = true);
-                                  final reserveCtrl =
-                                      Get.isRegistered<ReserveController>()
-                                      ? Get.find<ReserveController>()
-                                      : Get.put(ReserveController());
-                                  final ok = await reserveCtrl.checkInReserva(
-                                    id: r.reservaId,
-                                  );
-                                  setLocal(() => working = false);
-
-                                  if (ctx.mounted) Navigator.of(ctx).pop();
-
-                                  if (ok) {
-                                    await reserveCtrl.cargarReservasHoy(
-                                      silent: true,
-                                    );
-                                    await reserveCtrl.cargarReservasTodas(
-                                      silent: true,
-                                    );
-                                    await controller.cargarReserva(r.reservaId);
-                                    if (!context.mounted) return;
-                                    await _showResultSheet(
-                                      context,
-                                      icon: Icons.check_circle_outline,
-                                      color: Colors.green,
-                                      title: 'Check-in realizado',
-                                      message: 'La reserva ha sido confirmada.',
-                                    );
-                                  } else {
-                                    if (!context.mounted) return;
-                                    await _showResultSheet(
-                                      context,
-                                      icon: Icons.error_outline,
-                                      color: cs.error,
-                                      title: 'No se pudo confirmar',
-                                      message:
-                                          'Intenta nuevamente en unos segundos.',
-                                    );
-                                  }
-                                },
-                          child: working
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Text('Confirmar'),
-                        ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '¿Deseas marcar esta reserva como confirmada?',
+                      textAlign: TextAlign.center,
+                      style: tt.bodyMedium!.copyWith(
+                        color: cs.onSurfaceVariant,
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: working
+                                ? null
+                                : () => Navigator.of(ctx).pop(),
+                            child: const Text('No, volver'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: working
+                                ? null
+                                : () async {
+                                    setLocal(() => working = true);
+                                    final reserveCtrl =
+                                        Get.isRegistered<ReserveController>()
+                                        ? Get.find<ReserveController>()
+                                        : Get.put(ReserveController());
+                                    final ok = await reserveCtrl.checkInReserva(
+                                      id: r.reservaId,
+                                    );
+                                    setLocal(() => working = false);
+
+                                    if (ctx.mounted) Navigator.of(ctx).pop();
+
+                                    if (ok) {
+                                      await reserveCtrl.cargarReservasHoy(
+                                        silent: true,
+                                      );
+                                      await reserveCtrl.cargarReservasTodas(
+                                        silent: true,
+                                      );
+                                      await controller.cargarReserva(
+                                        r.reservaId,
+                                      );
+                                      if (!context.mounted) return;
+                                      await _showResultSheet(
+                                        context,
+                                        icon: Icons.check_circle_outline,
+                                        color: Colors.green,
+                                        title: 'Check-in realizado',
+                                        message:
+                                            'La reserva ha sido confirmada.',
+                                      );
+                                    } else {
+                                      if (!context.mounted) return;
+                                      await _showResultSheet(
+                                        context,
+                                        icon: Icons.error_outline,
+                                        color: cs.error,
+                                        title: 'No se pudo confirmar',
+                                        message:
+                                            'Intenta nuevamente en unos segundos.',
+                                      );
+                                    }
+                                  },
+                            child: working
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text('Confirmar'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -298,323 +312,336 @@ class ReserveDetailView extends GetView<ReserveDetailController> {
         // Determinamos si la reserva está cancelada
         final isCancelled = r.estadoNombre.toLowerCase().contains('cancel');
 
-        return ListView(
-          key: const PageStorageKey('reserve-detail'),
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-          children: [
-            HeaderCard(
-              name: name.isEmpty ? 'Cliente' : name,
-              email: (r.clienteEmail).trim(),
-              bannerUrl: businessLogoUrl,
-              initial: initial,
-            ),
-            const SizedBox(height: 12),
+        return Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: ListView(
+              key: const PageStorageKey('reserve-detail'),
+              padding: ResponsiveHelper.getAdaptivePadding(
+                context,
+              ).copyWith(top: 16, bottom: 24),
+              children: [
+                HeaderCard(
+                  name: name.isEmpty ? 'Cliente' : name,
+                  email: (r.clienteEmail).trim(),
+                  bannerUrl: businessLogoUrl,
+                  initial: initial,
+                ),
+                const SizedBox(height: 12),
 
-            PrimaryCard(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                PrimaryCard(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
                       children: [
-                        Icon(Icons.event, color: cs.primary),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                dfDay.format(start).toUpperCase(),
-                                style: tt.labelLarge!.copyWith(
-                                  letterSpacing: .4,
-                                  color: cs.onSurfaceVariant,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Row(
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(Icons.event, color: cs.primary),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  TimeChip(
-                                    icon: Icons.schedule,
-                                    label:
-                                        '${dfTime.format(start)} – ${dfTime.format(end)}',
+                                  Text(
+                                    dfDay.format(start).toUpperCase(),
+                                    style: tt.labelLarge!.copyWith(
+                                      letterSpacing: .4,
+                                      color: cs.onSurfaceVariant,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
-                                  const SizedBox(width: 8),
-                                  TimeChip(
-                                    icon: Icons.timelapse,
-                                    label: durationLabel,
+                                  const SizedBox(height: 6),
+                                  Row(
+                                    children: [
+                                      TimeChip(
+                                        icon: Icons.schedule,
+                                        label:
+                                            '${dfTime.format(start)} – ${dfTime.format(end)}',
+                                      ),
+                                      const SizedBox(width: 8),
+                                      TimeChip(
+                                        icon: Icons.timelapse,
+                                        label: durationLabel,
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
-                            ],
-                          ),
+                            ),
+                            SoftStatusPill(
+                              text: _normalizeStatus(r.estadoNombre),
+                              tone: _toneForStatus(r.estadoNombre),
+                            ),
+                          ],
                         ),
-                        SoftStatusPill(
-                          text: _normalizeStatus(r.estadoNombre),
-                          tone: _toneForStatus(r.estadoNombre),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    const Divider(height: 1),
-                    const SizedBox(height: 12),
+                        const SizedBox(height: 16),
+                        const Divider(height: 1),
+                        const SizedBox(height: 12),
 
-                    Wrap(
-                      runSpacing: 10,
-                      spacing: 16,
-                      children: [
-                        InfoTile(
-                          icon: Icons.group_outlined,
-                          label: 'Personas',
-                          value: '${r.numberOfGuests}',
+                        Wrap(
+                          runSpacing: 10,
+                          spacing: 16,
+                          children: [
+                            InfoTile(
+                              icon: Icons.group_outlined,
+                              label: 'Personas',
+                              value: '${r.numberOfGuests}',
+                            ),
+                            if ((r.mesaNumero ?? '').toString().isNotEmpty)
+                              InfoTile(
+                                icon: Icons.table_bar_outlined,
+                                label: 'Mesa',
+                                value: '${r.mesaNumero}',
+                              ),
+                            if ((r.negocioNombre).trim().isNotEmpty)
+                              InfoTile(
+                                icon: Icons.store_mall_directory_outlined,
+                                label: 'Negocio',
+                                value: r.negocioNombre,
+                              ),
+                            InfoTile(
+                              icon: Icons.confirmation_number_outlined,
+                              label: 'Reserva',
+                              value: '#${r.reservaId}',
+                            ),
+                          ],
                         ),
-                        if ((r.mesaNumero ?? '').toString().isNotEmpty)
-                          InfoTile(
-                            icon: Icons.table_bar_outlined,
-                            label: 'Mesa',
-                            value: '${r.mesaNumero}',
+                        const SizedBox(height: 12),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Creada: ${dfShort.format(_asLocal(r.reservaCreada))}',
+                            style: tt.bodySmall!.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
                           ),
-                        if ((r.negocioNombre).trim().isNotEmpty)
-                          InfoTile(
-                            icon: Icons.store_mall_directory_outlined,
-                            label: 'Negocio',
-                            value: r.negocioNombre,
-                          ),
-                        InfoTile(
-                          icon: Icons.confirmation_number_outlined,
-                          label: 'Reserva',
-                          value: '#${r.reservaId}',
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Creada: ${dfShort.format(_asLocal(r.reservaCreada))}',
-                        style: tt.bodySmall!.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
 
-            const SizedBox(height: 12),
+                const SizedBox(height: 12),
 
-            PrimaryCard(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SectionTitle('Contacto del cliente'),
-                    const SizedBox(height: 10),
-                    if (r.clienteTelefono.toString().trim().isNotEmpty)
-                      ContactRow(
-                        icon: Icons.phone_outlined,
-                        label: 'Teléfono',
-                        value: r.clienteTelefono.toString(),
-                      ),
-                    if ((r.clienteEmail).trim().isNotEmpty)
-                      ContactRow(
-                        icon: Icons.email_outlined,
-                        label: 'Email',
-                        value: r.clienteEmail,
-                      ),
-                    if ((r.clienteDni).toString().trim().isNotEmpty)
-                      ContactRow(
-                        icon: Icons.badge_outlined,
-                        label: 'Documento',
-                        value: r.clienteDni.toString(),
-                      ),
-                    const SizedBox(height: 14),
-                    const SizedBox(height: 14),
-                    Row(
+                PrimaryCard(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Llamar
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed:
-                                r.clienteTelefono.toString().trim().isEmpty
-                                ? null
-                                : () => _launchPhone(
-                                    context,
-                                    r.clienteTelefono.toString(),
+                        const SectionTitle('Contacto del cliente'),
+                        const SizedBox(height: 10),
+                        if (r.clienteTelefono.toString().trim().isNotEmpty)
+                          ContactRow(
+                            icon: Icons.phone_outlined,
+                            label: 'Teléfono',
+                            value: r.clienteTelefono.toString(),
+                          ),
+                        if ((r.clienteEmail).trim().isNotEmpty)
+                          ContactRow(
+                            icon: Icons.email_outlined,
+                            label: 'Email',
+                            value: r.clienteEmail,
+                          ),
+                        if ((r.clienteDni).toString().trim().isNotEmpty)
+                          ContactRow(
+                            icon: Icons.badge_outlined,
+                            label: 'Documento',
+                            value: r.clienteDni.toString(),
+                          ),
+                        const SizedBox(height: 14),
+                        const SizedBox(height: 14),
+                        Row(
+                          children: [
+                            // Llamar
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed:
+                                    r.clienteTelefono.toString().trim().isEmpty
+                                    ? null
+                                    : () => _launchPhone(
+                                        context,
+                                        r.clienteTelefono.toString(),
+                                      ),
+                                icon: const Icon(Icons.call),
+                                label: const Text('Llamar'),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                    horizontal: 8,
                                   ),
-                            icon: const Icon(Icons.call),
-                            label: const Text('Llamar'),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 12,
-                                horizontal: 8,
-                              ),
-                              visualDensity: VisualDensity.compact,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-
-                        // Email
-                        Expanded(
-                          child: FilledButton.icon(
-                            onPressed: (r.clienteEmail).trim().isEmpty
-                                ? null
-                                : () => _launchEmail(context, r.clienteEmail),
-                            icon: const Icon(Icons.email),
-                            label: const Text('Email'),
-                            style: FilledButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 12,
-                                horizontal: 8,
-                              ),
-                              visualDensity: VisualDensity.compact,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-
-                        // WhatsApp (verde + chat icon)
-                        Expanded(
-                          child: FilledButton.icon(
-                            onPressed:
-                                r.clienteTelefono.toString().trim().isEmpty
-                                ? null
-                                : () => _launchWhatsApp(
-                                    context,
-                                    r.clienteTelefono.toString(),
-                                    message:
-                                        'Hola ${r.clienteNombre.trim().isEmpty ? "👋" : r.clienteNombre.trim()}, '
-                                        'te contacto sobre tu reserva (#${r.reservaId}).',
-                                  ),
-                            icon: const FaIcon(
-                              FontAwesomeIcons.whatsapp,
-                            ), // si quieres el logo real, ver nota abajo
-                            label: const Text('WhatsApp'),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: const Color(
-                                0xFF25D366,
-                              ), // verde WhatsApp
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 12,
-                                horizontal: 2,
-                              ),
-                              visualDensity: VisualDensity.compact,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            if (r.statusHistory.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              PrimaryCard(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SectionTitle('Historial'),
-                      const SizedBox(height: 12),
-                      Column(
-                        children: List.generate(r.statusHistory.length, (i) {
-                          final h = r.statusHistory[i];
-                          final when = _asLocal(h.changedAt);
-                          return Padding(
-                            padding: EdgeInsets.only(
-                              bottom: i == r.statusHistory.length - 1 ? 0 : 12,
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Icon(
-                                  Icons.flag_outlined,
-                                  size: 18,
-                                  color: cs.onSurfaceVariant,
+                                  visualDensity: VisualDensity.compact,
                                 ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        h.statusName,
-                                        style: tt.labelLarge!.copyWith(
-                                          fontWeight: FontWeight.w700,
-                                        ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+
+                            // Email
+                            Expanded(
+                              child: FilledButton.icon(
+                                onPressed: (r.clienteEmail).trim().isEmpty
+                                    ? null
+                                    : () =>
+                                          _launchEmail(context, r.clienteEmail),
+                                icon: const Icon(Icons.email),
+                                label: const Text('Email'),
+                                style: FilledButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                    horizontal: 8,
+                                  ),
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+
+                            // WhatsApp (verde + chat icon)
+                            Expanded(
+                              child: FilledButton.icon(
+                                onPressed:
+                                    r.clienteTelefono.toString().trim().isEmpty
+                                    ? null
+                                    : () => _launchWhatsApp(
+                                        context,
+                                        r.clienteTelefono.toString(),
+                                        message:
+                                            'Hola ${r.clienteNombre.trim().isEmpty ? "👋" : r.clienteNombre.trim()}, '
+                                            'te contacto sobre tu reserva (#${r.reservaId}).',
                                       ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        DateFormat(
-                                          'dd/MM/yyyy • HH:mm',
-                                          locale,
-                                        ).format(when),
-                                        style: tt.bodySmall!.copyWith(
-                                          color: cs.onSurfaceVariant,
-                                        ),
-                                      ),
-                                      if ((h.changedByUser ?? '').isNotEmpty)
-                                        Text(
-                                          'Por: ${h.changedByUser}',
-                                          style: tt.bodySmall!.copyWith(
-                                            color: cs.onSurfaceVariant,
+                                icon: const FaIcon(
+                                  FontAwesomeIcons.whatsapp,
+                                ), // si quieres el logo real, ver nota abajo
+                                label: const Text('WhatsApp'),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: const Color(
+                                    0xFF25D366,
+                                  ), // verde WhatsApp
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                    horizontal: 2,
+                                  ),
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                if (r.statusHistory.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  PrimaryCard(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SectionTitle('Historial'),
+                          const SizedBox(height: 12),
+                          Column(
+                            children: List.generate(r.statusHistory.length, (
+                              i,
+                            ) {
+                              final h = r.statusHistory[i];
+                              final when = _asLocal(h.changedAt);
+                              return Padding(
+                                padding: EdgeInsets.only(
+                                  bottom: i == r.statusHistory.length - 1
+                                      ? 0
+                                      : 12,
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(
+                                      Icons.flag_outlined,
+                                      size: 18,
+                                      color: cs.onSurfaceVariant,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            h.statusName,
+                                            style: tt.labelLarge!.copyWith(
+                                              fontWeight: FontWeight.w700,
+                                            ),
                                           ),
-                                        ),
-                                    ],
-                                  ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            DateFormat(
+                                              'dd/MM/yyyy • HH:mm',
+                                              locale,
+                                            ).format(when),
+                                            style: tt.bodySmall!.copyWith(
+                                              color: cs.onSurfaceVariant,
+                                            ),
+                                          ),
+                                          if ((h.changedByUser ?? '')
+                                              .isNotEmpty)
+                                            Text(
+                                              'Por: ${h.changedByUser}',
+                                              style: tt.bodySmall!.copyWith(
+                                                color: cs.onSurfaceVariant,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                          );
-                        }),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-
-            const SizedBox(height: 16),
-
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: isCancelled
-                        ? null
-                        : () => context.pushNamed(
-                            UpdateReserveView.name,
-                            pathParameters: {
-                              'page': '$pageIndex',
-                              'id': '${r.reservaId}',
-                            },
+                              );
+                            }),
                           ),
-                    icon: const Icon(Icons.event_repeat),
-                    label: const Text('Reasignar'),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: isCancelled
-                        ? null
-                        : () => _confirmCheckIn(context, r),
-                    icon: const Icon(Icons.how_to_reg),
-                    label: const Text('Check-in'),
-                  ),
+                ],
+
+                const SizedBox(height: 16),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: isCancelled
+                            ? null
+                            : () => context.pushNamed(
+                                UpdateReserveView.name,
+                                pathParameters: {
+                                  'page': '$pageIndex',
+                                  'id': '${r.reservaId}',
+                                },
+                              ),
+                        icon: const Icon(Icons.event_repeat),
+                        label: const Text('Reasignar'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed: isCancelled
+                            ? null
+                            : () => _confirmCheckIn(context, r),
+                        icon: const Icon(Icons.how_to_reg),
+                        label: const Text('Check-in'),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
+          ),
         );
       }),
     );
@@ -653,4 +680,3 @@ Tone _toneForStatus(String raw) {
   if (s.contains('confirm')) return Tone.info;
   return Tone.info;
 }
-

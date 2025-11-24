@@ -27,15 +27,16 @@ class _ResidentsTab extends GetWidget<HorizontalPropertyResidentsController> {
 
       return LayoutBuilder(
         builder: (context, constraints) {
-          final width = constraints.maxWidth;
-          final isTablet = width >= 720;
-          final horizontalPadding = isTablet ? 24.0 : 16.0;
+          final horizontalPadding = ResponsiveHelper.getAdaptivePadding(
+            context,
+          ).left;
 
-          final crossAxis = width >= 1200
-              ? 3
-              : width >= 840
-              ? 2
-              : 1;
+          final crossAxis = ResponsiveHelper.getGridColumns(
+            context,
+            mobile: 1,
+            tablet: 2,
+            desktop: 3,
+          );
 
           final listContent = RefreshIndicator(
             onRefresh: controller.refresh,
@@ -274,17 +275,19 @@ class _AddResidentFab extends StatelessWidget {
 
     controller.clearResidentForm();
 
-    final result = await showDialog<HorizontalPropertyResidentDetailResult>(
-      context: context,
-      barrierDismissible: false,
-      barrierColor: Colors.black.withValues(alpha: 0.3),
-      builder: (_) => _ResidentFormDialog(
-        controller: controller,
-        title: 'Crear residente',
-        actionLabel: 'Crear residente',
-        onSubmit: (payload) => controller.createResident(data: payload),
-      ),
-    );
+    final result =
+        await DialogHelper.showBlurredDialog<
+          HorizontalPropertyResidentDetailResult
+        >(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => _ResidentFormDialog(
+            controller: controller,
+            title: 'Crear residente',
+            actionLabel: 'Crear residente',
+            onSubmit: (payload) => controller.createResident(data: payload),
+          ),
+        );
 
     if (result != null && result.success) {
       final message = result.message?.isNotEmpty == true
@@ -393,7 +396,7 @@ class _ResidentsFiltersContent extends StatelessWidget {
             ),
             Obx(
               () => DropdownButtonFormField<bool?>(
-                value: controller.residentsIsActive.value,
+                initialValue: controller.residentsIsActive.value,
                 decoration: _filterDecoration(context, 'Estado'),
                 items: const [
                   DropdownMenuItem<bool?>(value: null, child: Text('Todos')),
@@ -410,7 +413,7 @@ class _ResidentsFiltersContent extends StatelessWidget {
             ),
             Obx(
               () => DropdownButtonFormField<bool?>(
-                value: controller.residentsIsMain.value,
+                initialValue: controller.residentsIsMain.value,
                 decoration: _filterDecoration(context, 'Residente principal'),
                 items: const [
                   DropdownMenuItem<bool?>(value: null, child: Text('Todos')),
@@ -769,10 +772,7 @@ class _ResidentCard extends StatelessWidget {
                 'Funcionalidad disponible próximamente.',
               ),
               onEdit: () => _openEditDialog(context),
-              onDelete: () => _showActionFeedback(
-                'Eliminar residente',
-                'Contacta al administrador para continuar con la acción.',
-              ),
+              onDelete: () => _confirmDelete(context),
             ),
           ],
         ),
@@ -785,73 +785,86 @@ class _ResidentCard extends StatelessWidget {
       tag: controllerTag,
     );
 
-    // Use a Completer to wait explicitly for the dialog context
-    final dialogCompleter = Completer<BuildContext>();
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) {
-        // Complete the completer when the builder runs
-        if (!dialogCompleter.isCompleted) {
-          dialogCompleter.complete(ctx);
-        }
-        return const Center(child: CircularProgressIndicator());
-      },
-    );
-
-    // Wait for the dialog to be built and get its context
-    final dialogContext = await dialogCompleter.future;
-
-    HorizontalPropertyResidentDetailResult? detail;
-    try {
-      detail = await controller.fetchResidentDetail(resident.id);
-    } catch (_) {
-      detail = const HorizontalPropertyResidentDetailResult(
-        success: false,
-        message: 'No se pudo cargar la información del residente.',
-      );
-    } finally {
-      // Close loader - we're guaranteed to have the context
-      if (dialogContext.mounted) {
-        Navigator.of(dialogContext).pop();
-      }
-    }
-
-    if (detail == null || !detail.success || detail.resident == null) {
-      _showSnack(
-        'No se pudo cargar',
-        detail?.message ?? 'Inténtalo nuevamente en unos segundos.',
-        isError: true,
-      );
-      return;
-    }
-
+    // Ensure units are loaded
     await controller.loadUnitsOptions();
 
-    controller.initResidentForm(detail: detail.resident, fallback: resident);
+    // Fetch full detail or use current item as fallback
+    final detailResult = await controller.fetchResidentDetail(resident.id);
+    final detail = detailResult.resident;
 
-    if (!context.mounted) return;
+    controller.initResidentForm(detail: detail, fallback: resident);
 
-    final result = await showDialog<HorizontalPropertyResidentDetailResult>(
-      context: context,
-      barrierDismissible: false,
-      barrierColor: Colors.black.withValues(alpha: 0.3),
-      builder: (_) => _ResidentFormDialog(
-        controller: controller,
-        title: 'Editar residente',
-        actionLabel: 'Actualizar residente',
-        showActiveSwitch: true,
-        onSubmit: (payload) =>
-            controller.updateResident(residentId: resident.id, data: payload),
-      ),
-    );
+    final result =
+        await DialogHelper.showBlurredDialog<
+          HorizontalPropertyResidentDetailResult
+        >(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => _ResidentFormDialog(
+            controller: controller,
+            title: 'Editar residente',
+            actionLabel: 'Guardar cambios',
+            onSubmit: (payload) => controller.updateResident(
+              residentId: resident.id,
+              data: payload,
+            ),
+          ),
+        );
 
     if (result != null && result.success) {
       final message = result.message?.isNotEmpty == true
           ? result.message!
-          : 'El residente ${resident.name} se actualizó correctamente.';
+          : 'El residente se actualizó correctamente.';
       _showSnack('Residente actualizado', message);
+    }
+  }
+
+  Future<void> _confirmDelete(BuildContext context) async {
+    final cs = Theme.of(context).colorScheme;
+    final confirmed = await DialogHelper.showBlurredDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        backgroundColor: cs.surface.withValues(alpha: 0.9),
+        title: const Text('Eliminar residente'),
+        content: Text(
+          '¿Quieres eliminar a ${resident.name}? Esta acción no se puede deshacer.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: cs.error,
+              foregroundColor: cs.onError,
+            ),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    final controller = Get.find<HorizontalPropertyResidentsController>(
+      tag: controllerTag,
+    );
+    final result = await controller.deleteResident(resident.id);
+
+    if (result.success) {
+      _showSnack(
+        'Residente eliminado',
+        result.message ?? 'El residente se eliminó correctamente.',
+      );
+    } else {
+      _showSnack(
+        'No se pudo eliminar',
+        result.message ?? 'Inténtalo nuevamente más tarde.',
+        isError: true,
+      );
     }
   }
 }
@@ -860,7 +873,6 @@ class _ResidentFormDialog extends StatelessWidget {
   final HorizontalPropertyResidentsController controller;
   final String title;
   final String actionLabel;
-  final bool showActiveSwitch;
   final Future<HorizontalPropertyResidentDetailResult> Function(
     Map<String, dynamic> data,
   )
@@ -871,7 +883,6 @@ class _ResidentFormDialog extends StatelessWidget {
     required this.title,
     required this.actionLabel,
     required this.onSubmit,
-    this.showActiveSwitch = false,
   });
 
   static const _residentTypes = <int, String>{
@@ -995,7 +1006,8 @@ class _ResidentFormDialog extends StatelessWidget {
 
                             Obx(
                               () => DropdownButtonFormField<int>(
-                                value: controller.residentFormTypeId.value,
+                                initialValue:
+                                    controller.residentFormTypeId.value,
                                 decoration: _instagramDecoration(
                                   cs,
                                   'Tipo de residente',
@@ -1070,17 +1082,6 @@ class _ResidentFormDialog extends StatelessWidget {
                                     controller.residentFormIsMain.value = v,
                               ),
                             ),
-                            if (showActiveSwitch) ...[
-                              const SizedBox(height: 12),
-                              Obx(
-                                () => _InstagramSwitch(
-                                  label: 'Activo',
-                                  value: controller.residentFormIsActive.value,
-                                  onChanged: (v) =>
-                                      controller.residentFormIsActive.value = v,
-                                ),
-                              ),
-                            ],
 
                             Obx(() {
                               final error = controller.residentFormError.value;
@@ -1128,11 +1129,17 @@ class _ResidentFormDialog extends StatelessWidget {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: cs.outline.withOpacity(0.5), width: 1),
+        borderSide: BorderSide(
+          color: cs.outline.withValues(alpha: 0.5),
+          width: 1,
+        ),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: cs.error.withOpacity(0.5), width: 1),
+        borderSide: BorderSide(
+          color: cs.error.withValues(alpha: 0.5),
+          width: 1,
+        ),
       ),
     );
   }
@@ -1214,7 +1221,6 @@ class _ResidentFormDialog extends StatelessWidget {
       'phone': _nullable(controller.residentFormPhoneCtrl.text),
       'emergency_contact': _nullable(controller.residentFormEmergencyCtrl.text),
       'is_main_resident': controller.residentFormIsMain.value,
-      if (showActiveSwitch) 'is_active': controller.residentFormIsActive.value,
     };
   }
 

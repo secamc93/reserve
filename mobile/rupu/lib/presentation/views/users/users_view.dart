@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:rupu/domain/entities/user_action_result.dart';
 import 'package:rupu/domain/entities/user_list_item.dart';
+import 'package:rupu/config/helpers/responsive_helper.dart';
 
 import '../settings/views/create_user_view.dart';
 import 'user_detail_view.dart';
@@ -16,11 +17,7 @@ class UsersView extends GetView<UsersController> {
   final int pageIndex;
   final bool embedded;
 
-  const UsersView({
-    super.key,
-    required this.pageIndex,
-    this.embedded = false,
-  });
+  const UsersView({super.key, required this.pageIndex, this.embedded = false});
 
   @override
   Widget build(BuildContext context) {
@@ -83,84 +80,84 @@ class UsersView extends GetView<UsersController> {
 
       return RefreshIndicator(
         onRefresh: controller.fetchUsers,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
-          children: [
-            UsersFiltersPanel(controller: controller),
-            const SizedBox(height: 16),
-            if (hasError)
-              Card(
-                color: Theme.of(context).colorScheme.errorContainer,
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Text(
-                    controller.errorMessage.value!,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onErrorContainer,
-                        ),
-                  ),
-                ),
-              ),
-            Row(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1000),
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: ResponsiveHelper.getAdaptivePadding(context),
               children: [
-                Expanded(
-                  child: Text(
-                    'Coincidencias: $visibleCount de $totalCount',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w600),
+                UsersFiltersPanel(controller: controller),
+                const SizedBox(height: 16),
+                if (hasError)
+                  Card(
+                    color: Theme.of(context).colorScheme.errorContainer,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Text(
+                        controller.errorMessage.value!,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onErrorContainer,
+                        ),
+                      ),
+                    ),
                   ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Coincidencias: $visibleCount de $totalCount',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    if (controller.isLoading.value)
+                      const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                  ],
                 ),
-                if (controller.isLoading.value)
-                  const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
+                const SizedBox(height: 12),
+                if (visibleUsers.isEmpty && !hasError)
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          Icon(Icons.people_alt_outlined, size: 48),
+                          SizedBox(height: 8),
+                          Text(
+                            'No se encontraron usuarios con los filtros aplicados.',
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                else
+                  ...visibleUsers
+                      .map(
+                        (user) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: UserListCard(
+                            user: user,
+                            formatDate: controller.formatDate,
+                            canView: controller.canRead || controller.canUpdate,
+                            canDelete: controller.canDelete,
+                            isProcessing:
+                                controller.deletingUserId.value == user.id,
+                            onView: () => _openDetail(context, user.id),
+                            onDelete: () => _confirmDelete(context, user),
+                          ),
+                        ),
+                      )
+                      .toList(),
               ],
             ),
-            const SizedBox(height: 12),
-            if (visibleUsers.isEmpty && !hasError)
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Icon(Icons.people_alt_outlined, size: 48),
-                      SizedBox(height: 8),
-                      Text(
-                        'No se encontraron usuarios con los filtros aplicados.',
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-              )
-            else
-              ...visibleUsers
-                  .map((user) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: UserListCard(
-                          user: user,
-                          formatDate: controller.formatDate,
-                          canView: controller.canRead || controller.canUpdate,
-                          canDelete: controller.canDelete,
-                          isProcessing:
-                              controller.deletingUserId.value == user.id,
-                          onView: () => _openDetail(context, user.id),
-                          onDelete: () => _confirmDelete(context, user),
-                        ),
-                      ))
-                  .toList(),
-          ],
+          ),
         ),
       );
     });
@@ -169,10 +166,7 @@ class UsersView extends GetView<UsersController> {
   Future<void> _openDetail(BuildContext context, int userId) async {
     final result = await GoRouter.of(context).pushNamed(
       UserDetailView.name,
-      pathParameters: {
-        'page': '$pageIndex',
-        'id': '$userId',
-      },
+      pathParameters: {'page': '$pageIndex', 'id': '$userId'},
     );
 
     if (!context.mounted) return;
@@ -181,9 +175,7 @@ class UsersView extends GetView<UsersController> {
       await controller.fetchUsers();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            result.message ?? 'Usuario eliminado exitosamente.',
-          ),
+          content: Text(result.message ?? 'Usuario eliminado exitosamente.'),
         ),
       );
     }
@@ -231,7 +223,9 @@ class UsersView extends GetView<UsersController> {
       );
     } else {
       messenger.showSnackBar(
-        SnackBar(content: Text(action.message ?? 'No se pudo eliminar el usuario.')),
+        SnackBar(
+          content: Text(action.message ?? 'No se pudo eliminar el usuario.'),
+        ),
       );
     }
   }

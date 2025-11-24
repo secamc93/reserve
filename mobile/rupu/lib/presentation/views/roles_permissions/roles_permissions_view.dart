@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import 'package:rupu/config/helpers/design_helper.dart';
 import 'package:rupu/config/helpers/dialog_helper.dart';
+import 'package:rupu/config/helpers/responsive_helper.dart';
 import 'package:rupu/domain/entities/permission.dart';
 import 'package:rupu/domain/entities/role.dart';
 import 'package:rupu/domain/entities/role_action_result.dart';
@@ -153,7 +154,9 @@ class RolesPermissionsView extends GetView<RolesPermissionsController> {
 
                 // List Content
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 80),
+                  padding: ResponsiveHelper.getAdaptivePadding(
+                    context,
+                  ).copyWith(bottom: 80),
                   sliver: Obx(() {
                     if (controller.isLoading.value) {
                       return const SliverFillRemaining(
@@ -705,7 +708,7 @@ Future<void> showRoleFormDialog(BuildContext context, {Role? role}) async {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<int>(
-                    value: selectedLevel,
+                    initialValue: selectedLevel,
                     decoration: DesignHelper.inputDecoration(
                       label: 'Nivel del rol',
                       icon: Icons.layers_outlined,
@@ -739,7 +742,7 @@ Future<void> showRoleFormDialog(BuildContext context, {Role? role}) async {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<int>(
-                    value: selectedScope,
+                    initialValue: selectedScope,
                     decoration: DesignHelper.inputDecoration(
                       label: 'Ámbito',
                       icon: Icons.public,
@@ -755,7 +758,7 @@ Future<void> showRoleFormDialog(BuildContext context, {Role? role}) async {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<int?>(
-                    value: selectedBusinessType,
+                    initialValue: selectedBusinessType,
                     decoration: DesignHelper.inputDecoration(
                       label: 'Tipo de negocio',
                       icon: Icons.business,
@@ -1330,7 +1333,7 @@ Future<void> showPermissionFormDialog(
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<int?>(
-                    value: selectedBusinessType,
+                    initialValue: selectedBusinessType,
                     decoration: DesignHelper.inputDecoration(
                       label: 'Tipo de negocio',
                       icon: Icons.business,
@@ -1353,7 +1356,7 @@ Future<void> showPermissionFormDialog(
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<int>(
-                    value: selectedResource,
+                    initialValue: selectedResource,
                     decoration: DesignHelper.inputDecoration(
                       label: 'Recurso',
                       icon: Icons.category_outlined,
@@ -1381,7 +1384,7 @@ Future<void> showPermissionFormDialog(
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<int>(
-                    value: selectedAction,
+                    initialValue: selectedAction,
                     decoration: DesignHelper.inputDecoration(
                       label: 'Acción',
                       icon: Icons.touch_app_outlined,
@@ -1409,7 +1412,7 @@ Future<void> showPermissionFormDialog(
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<int>(
-                    value: selectedScope,
+                    initialValue: selectedScope,
                     decoration: DesignHelper.inputDecoration(
                       label: 'Ámbito',
                       icon: Icons.public,

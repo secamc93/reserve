@@ -21,12 +21,12 @@ class _UnitsTab extends GetWidget<HorizontalPropertyUnitsController> {
 
       final listContent = LayoutBuilder(
         builder: (context, constraints) {
-          final width = constraints.maxWidth;
-          final crossAxis = width >= 1200
-              ? 3
-              : width >= 900
-              ? 2
-              : 1;
+          final crossAxis = ResponsiveHelper.getGridColumns(
+            context,
+            mobile: 1,
+            tablet: 2,
+            desktop: 3,
+          );
 
           return RefreshIndicator(
             onRefresh: controller.refresh,
@@ -226,7 +226,7 @@ class _UnitsFiltersContent extends StatelessWidget {
             ),
             Obx(
               () => DropdownButtonFormField<bool?>(
-                value: controller.unitsIsActive.value,
+                initialValue: controller.unitsIsActive.value,
                 decoration: _filterDecoration(context, 'Estado'),
                 items: const [
                   DropdownMenuItem<bool?>(value: null, child: Text('Todos')),
@@ -929,7 +929,6 @@ class _UnitFormBottomSheet extends StatelessWidget {
   final HorizontalPropertyUnitsController controller;
   final String title;
   final String actionLabel;
-  final bool showStatusSwitch;
   final Future<HorizontalPropertyUnitDetailResult> Function(
     Map<String, dynamic> data,
   )
@@ -940,7 +939,6 @@ class _UnitFormBottomSheet extends StatelessWidget {
     required this.title,
     required this.actionLabel,
     required this.onSubmit,
-    this.showStatusSwitch = false,
   });
 
   int? _parseInt(String value) {
@@ -970,10 +968,6 @@ class _UnitFormBottomSheet extends StatelessWidget {
         controller.unitFormDescriptionCtrl.text.trim(),
       ),
     };
-
-    if (showStatusSwitch) {
-      payload['is_active'] = controller.unitFormIsActive.value;
-    }
 
     payload.removeWhere((key, value) => value == null);
     return payload;
@@ -1151,35 +1145,6 @@ class _UnitFormBottomSheet extends StatelessWidget {
                         ],
                       ),
                     ),
-                    if (showStatusSwitch)
-                      Obx(
-                        () => Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          decoration: ShapeDecoration(
-                            shape: const StadiumBorder(),
-                            color:
-                                (controller.unitFormIsActive.value
-                                        ? cs.secondaryContainer
-                                        : cs.errorContainer)
-                                    .withValues(alpha: .9),
-                          ),
-                          child: Text(
-                            controller.unitFormIsActive.value
-                                ? 'ACTIVA'
-                                : 'INACTIVA',
-                            style: tt.labelSmall?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              color: controller.unitFormIsActive.value
-                                  ? cs.onSecondaryContainer
-                                  : cs.onErrorContainer,
-                              letterSpacing: .4,
-                            ),
-                          ),
-                        ),
-                      ),
                   ],
                 ),
               ),
@@ -1318,24 +1283,6 @@ class _UnitFormBottomSheet extends StatelessWidget {
                           textInputAction: TextInputAction.newline,
                           maxLines: 3,
                         ),
-
-                        if (showStatusSwitch) ...[
-                          const SizedBox(height: 12),
-                          Obx(
-                            () => SwitchListTile.adaptive(
-                              value: controller.unitFormIsActive.value,
-                              onChanged: controller.unitFormSaving.value
-                                  ? null
-                                  : (value) {
-                                      controller.unitFormIsActive.value = value;
-                                    },
-                              title: const Text('Unidad activa'),
-                              subtitle: const Text(
-                                'Controla si la unidad permanece visible en la administración.',
-                              ),
-                            ),
-                          ),
-                        ],
 
                         Obx(() {
                           final errorMessage = controller.unitFormError.value;
@@ -1642,11 +1589,17 @@ class _UnitEditDialog extends StatelessWidget {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: cs.outline.withOpacity(0.5), width: 1),
+        borderSide: BorderSide(
+          color: cs.outline.withValues(alpha: 0.5),
+          width: 1,
+        ),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: cs.error.withOpacity(0.5), width: 1),
+        borderSide: BorderSide(
+          color: cs.error.withValues(alpha: 0.5),
+          width: 1,
+        ),
       ),
     );
   }

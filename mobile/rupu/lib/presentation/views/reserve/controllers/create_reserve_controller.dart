@@ -60,11 +60,12 @@ class CreateReserveController extends GetxController {
   }
 
   bool validateInputs({required void Function(String) onError}) {
-    final name = nameCtrl.text.trim();
-    final dni = dniCtrl.text.trim();
+    nameCtrl.text.trim();
+    dniCtrl.text.trim();
     final email = emailCtrl.text.trim();
     final phone = phoneCtrl.text.trim();
-    final guests = int.tryParse(
+    final guests =
+        int.tryParse(
           guestsCtrl.text.trim().isEmpty ? '0' : guestsCtrl.text.trim(),
         ) ??
         0;
@@ -106,7 +107,8 @@ class CreateReserveController extends GetxController {
     final dni = dniCtrl.text.trim();
     final email = emailCtrl.text.trim();
     final phone = phoneCtrl.text.trim();
-    final guests = int.tryParse(
+    final guests =
+        int.tryParse(
           guestsCtrl.text.trim().isEmpty ? '0' : guestsCtrl.text.trim(),
         ) ??
         0;

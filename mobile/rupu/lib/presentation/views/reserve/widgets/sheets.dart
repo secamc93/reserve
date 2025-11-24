@@ -1,7 +1,7 @@
-// presentation/views/calendar/widgets/sheets.dart
 import 'package:flutter/material.dart';
+import 'package:rupu/config/helpers/responsive_helper.dart';
 
-Future<String?> showCancelReasonSheet(BuildContext context) async {
+Future<String?> showCancelReasonSheet(BuildContext context) {
   return showModalBottomSheet<String>(
     context: context,
     useSafeArea: true,
@@ -13,84 +13,73 @@ Future<String?> showCancelReasonSheet(BuildContext context) async {
     builder: (ctx) {
       final cs = Theme.of(ctx).colorScheme;
       final reasonCtrl = TextEditingController();
-      return Padding(
-        padding: EdgeInsets.only(
-          left: 16,
-          right: 16,
-          top: 10,
-          bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        cs.error.withValues(alpha: .12),
-                        cs.errorContainer.withValues(alpha: .10),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(Icons.cancel_outlined, color: cs.error),
+      return FractionallySizedBox(
+        widthFactor: ResponsiveHelper.isTablet(ctx) ? 0.6 : 1.0,
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 10,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Cancelar cita',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: cs.onSurface,
                 ),
-                const SizedBox(width: 10),
-                Text(
-                  'Cancelar reserva',
-                  style: Theme.of(ctx).textTheme.titleMedium!.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              '¿Deseas cancelar esta reserva? Puedes indicar un motivo (opcional).',
-              style: Theme.of(
-                ctx,
-              ).textTheme.bodyMedium!.copyWith(color: cs.onSurfaceVariant),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: reasonCtrl,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: 'Motivo (opcional)',
-                hintText: 'Ej: cliente no podrá asistir',
               ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                OutlinedButton(
-                  onPressed: () => Navigator.of(ctx).pop(null),
-                  child: const Text('Volver'),
+              const SizedBox(height: 12),
+              TextField(
+                controller: reasonCtrl,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  labelText: 'Motivo de cancelación',
+                  hintText: 'Ej: Cliente no asistió',
+                  border: OutlineInputBorder(),
                 ),
-                const Spacer(),
-                FilledButton.tonal(
-                  style: FilledButton.styleFrom(
-                    foregroundColor: cs.error,
-                    backgroundColor: cs.error.withValues(alpha: .08),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      child: const Text('Volver'),
+                    ),
                   ),
-                  onPressed: () => Navigator.of(ctx).pop(reasonCtrl.text),
-                  child: const Text('Confirmar cancelación'),
-                ),
-              ],
-            ),
-          ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: cs.error,
+                        foregroundColor: cs.onError,
+                      ),
+                      onPressed: () {
+                        final reason = reasonCtrl.text.trim();
+                        if (reason.isEmpty) return;
+                        Navigator.of(ctx).pop(reason);
+                      },
+                      child: const Text('Confirmar'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       );
     },
   );
 }
 
-Future<bool?> showConfirmCheckInSheet(BuildContext context) {
+Future<bool?> showConfirmCheckInSheet(BuildContext context, String clientName) {
   return showModalBottomSheet<bool>(
     context: context,
     useSafeArea: true,
@@ -100,63 +89,49 @@ Future<bool?> showConfirmCheckInSheet(BuildContext context) {
     ),
     builder: (ctx) {
       final cs = Theme.of(ctx).colorScheme;
-      return Padding(
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        cs.primary.withValues(alpha: .12),
-                        cs.primaryContainer.withValues(alpha: .10),
-                      ],
+      return FractionallySizedBox(
+        widthFactor: ResponsiveHelper.isTablet(ctx) ? 0.6 : 1.0,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.check_circle_outline, size: 48, color: cs.primary),
+              const SizedBox(height: 12),
+              Text(
+                'Confirmar Check-in',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: cs.onSurface,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '¿Marcar asistencia para $clientName?',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(ctx).pop(false),
+                      child: const Text('Cancelar'),
                     ),
-                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(Icons.how_to_reg, color: cs.primary),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  'Confirmar check-in',
-                  style: Theme.of(ctx).textTheme.titleMedium!.copyWith(
-                    fontWeight: FontWeight.w800,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () => Navigator.of(ctx).pop(true),
+                      child: const Text('Confirmar'),
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              '¿Deseas marcar esta reserva como confirmada?',
-              style: Theme.of(
-                ctx,
-              ).textTheme.bodyMedium!.copyWith(color: cs.onSurfaceVariant),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                OutlinedButton(
-                  onPressed: () => Navigator.of(ctx).pop(false),
-                  child: const Text('Volver'),
-                ),
-                const Spacer(),
-                FilledButton.tonal(
-                  style: FilledButton.styleFrom(
-                    foregroundColor: cs.primary,
-                    backgroundColor: cs.primary.withValues(alpha: .08),
-                  ),
-                  onPressed: () => Navigator.of(ctx).pop(true),
-                  child: const Text('Confirmar'),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       );
     },
@@ -164,10 +139,6 @@ Future<bool?> showConfirmCheckInSheet(BuildContext context) {
 }
 
 Future<void> showCheckInSheet(BuildContext context) async {
-  final theme = Theme.of(context);
-  final cs = theme.colorScheme;
-  final tt = theme.textTheme;
-  if (!context.mounted) return;
   await showModalBottomSheet(
     context: context,
     useSafeArea: true,
@@ -176,42 +147,31 @@ Future<void> showCheckInSheet(BuildContext context) async {
       borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
     ),
     builder: (sheetCtx) {
-      return Padding(
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 18,
-                  backgroundColor: cs.primaryContainer,
-                  child: Icon(
-                    Icons.check_rounded,
-                    color: cs.onPrimaryContainer,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  'Check-in realizado',
-                  style: tt.titleMedium!.copyWith(fontWeight: FontWeight.w800),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'La reserva se confirmó correctamente.',
-                style: tt.bodyMedium,
+      return FractionallySizedBox(
+        widthFactor: ResponsiveHelper.isTablet(context) ? 0.6 : 1.0,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.check_circle, color: Colors.green, size: 50),
+              const SizedBox(height: 12),
+              const Text(
+                '¡Check-in Exitoso!',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-            ),
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: () => Navigator.of(sheetCtx).pop(),
-              child: const Text('Listo'),
-            ),
-          ],
+              const SizedBox(height: 8),
+              const Text('El cliente ha sido marcado como asistido.'),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () => Navigator.of(sheetCtx).pop(),
+                  child: const Text('Cerrar'),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     },
@@ -219,11 +179,6 @@ Future<void> showCheckInSheet(BuildContext context) async {
 }
 
 Future<void> showCancelledSheet(BuildContext context) async {
-  final theme = Theme.of(context);
-  final cs = theme.colorScheme;
-  final tt = theme.textTheme;
-  if (!context.mounted) return;
-
   await showModalBottomSheet(
     context: context,
     useSafeArea: true,
@@ -232,42 +187,31 @@ Future<void> showCancelledSheet(BuildContext context) async {
       borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
     ),
     builder: (sheetCtx) {
-      return Padding(
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 18,
-                  backgroundColor: cs.primaryContainer,
-                  child: Icon(
-                    Icons.check_rounded,
-                    color: cs.onPrimaryContainer,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  'Reserva cancelada',
-                  style: tt.titleMedium!.copyWith(fontWeight: FontWeight.w800),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'La reserva se canceló correctamente.',
-                style: tt.bodyMedium,
+      return FractionallySizedBox(
+        widthFactor: ResponsiveHelper.isTablet(context) ? 0.6 : 1.0,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.cancel, color: Colors.red, size: 50),
+              const SizedBox(height: 12),
+              const Text(
+                'Reserva Cancelada',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-            ),
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: () => Navigator.of(sheetCtx).pop(),
-              child: const Text('Listo'),
-            ),
-          ],
+              const SizedBox(height: 8),
+              const Text('La reserva ha sido cancelada correctamente.'),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () => Navigator.of(sheetCtx).pop(),
+                  child: const Text('Cerrar'),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     },

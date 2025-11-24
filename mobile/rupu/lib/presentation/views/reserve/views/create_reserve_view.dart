@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 import 'package:rupu/presentation/views/reserve/controllers/create_reserve_controller.dart';
+import 'package:rupu/config/helpers/responsive_helper.dart';
 import '../widgets.dart';
 
 class CreateReserveView extends StatelessWidget {
@@ -54,10 +55,9 @@ class CreateReserveView extends StatelessWidget {
   ) async {
     final date = await showDatePicker(
       context: context,
-      initialDate:
-          controller.end.value.isAfter(controller.start.value)
-              ? controller.end.value
-              : controller.start.value,
+      initialDate: controller.end.value.isAfter(controller.start.value)
+          ? controller.end.value
+          : controller.start.value,
       firstDate: DateTime(
         DateTime.now().year,
         DateTime.now().month,
@@ -102,16 +102,19 @@ class CreateReserveView extends StatelessWidget {
     final phone = controller.phoneCtrl.text.trim();
     final dni = controller.dniCtrl.text.trim();
 
-    final valid = controller.validateInputs(onError: (msg) {
-      _showSnack(context, msg);
-    });
+    final valid = controller.validateInputs(
+      onError: (msg) {
+        _showSnack(context, msg);
+      },
+    );
     if (!valid) return;
 
     final confirmed = await _confirmSheet(
       context: context,
       name: name,
       guests: guests,
-      timeRange: '${df.format(controller.start.value)} – ${df.format(controller.end.value)}',
+      timeRange:
+          '${df.format(controller.start.value)} – ${df.format(controller.end.value)}',
       email: email.isEmpty ? null : email,
       phone: phone.isEmpty ? null : phone,
       dni: dni.isEmpty ? null : dni,
@@ -155,97 +158,100 @@ class CreateReserveView extends StatelessWidget {
             borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
           ),
           builder: (ctx) {
-            return Padding(
-              padding: EdgeInsets.fromLTRB(
-                16,
-                8,
-                16,
-                MediaQuery.of(ctx).viewInsets.bottom + 16,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 18,
-                        backgroundColor: cs.primaryContainer,
-                        child: Icon(
-                          Icons.event_available,
-                          color: cs.onPrimaryContainer,
+            return FractionallySizedBox(
+              widthFactor: ResponsiveHelper.isTablet(ctx) ? 0.6 : 1.0,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  8,
+                  16,
+                  MediaQuery.of(ctx).viewInsets.bottom + 16,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 18,
+                          backgroundColor: cs.primaryContainer,
+                          child: Icon(
+                            Icons.event_available,
+                            color: cs.onPrimaryContainer,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        'Confirmar reserva',
-                        style: Theme.of(ctx).textTheme.titleMedium!.copyWith(
-                          fontWeight: FontWeight.w800,
+                        const SizedBox(width: 10),
+                        Text(
+                          'Confirmar reserva',
+                          style: Theme.of(ctx).textTheme.titleMedium!.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    ConfirmRow(
+                      icon: Icons.person_outline,
+                      label: 'Cliente',
+                      value: name,
+                    ),
+                    const SizedBox(height: 6),
+                    ConfirmRow(
+                      icon: Icons.schedule,
+                      label: 'Horario',
+                      value: timeRange,
+                    ),
+                    const SizedBox(height: 6),
+                    ConfirmRow(
+                      icon: Icons.group_outlined,
+                      label: 'Personas',
+                      value: '$guests',
+                    ),
+                    if ((email ?? '').isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      ConfirmRow(
+                        icon: Icons.email_outlined,
+                        label: 'Email',
+                        value: email!,
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 12),
-                  ConfirmRow(
-                    icon: Icons.person_outline,
-                    label: 'Cliente',
-                    value: name,
-                  ),
-                  const SizedBox(height: 6),
-                  ConfirmRow(
-                    icon: Icons.schedule,
-                    label: 'Horario',
-                    value: timeRange,
-                  ),
-                  const SizedBox(height: 6),
-                  ConfirmRow(
-                    icon: Icons.group_outlined,
-                    label: 'Personas',
-                    value: '$guests',
-                  ),
-                  if ((email ?? '').isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    ConfirmRow(
-                      icon: Icons.email_outlined,
-                      label: 'Email',
-                      value: email!,
-                    ),
-                  ],
-                  if ((phone ?? '').isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    ConfirmRow(
-                      icon: Icons.phone_outlined,
-                      label: 'Teléfono',
-                      value: phone!,
-                    ),
-                  ],
-                  if ((dni ?? '').isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    ConfirmRow(
-                      icon: Icons.badge_outlined,
-                      label: 'Documento',
-                      value: dni!,
-                    ),
-                  ],
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.of(ctx).pop(false),
-                          child: const Text('Cancelar'),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: FilledButton.icon(
-                          onPressed: () => Navigator.of(ctx).pop(true),
-                          icon: const Icon(Icons.check),
-                          label: const Text('Confirmar'),
-                        ),
+                    if ((phone ?? '').isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      ConfirmRow(
+                        icon: Icons.phone_outlined,
+                        label: 'Teléfono',
+                        value: phone!,
                       ),
                     ],
-                  ),
-                ],
+                    if ((dni ?? '').isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      ConfirmRow(
+                        icon: Icons.badge_outlined,
+                        label: 'Documento',
+                        value: dni!,
+                      ),
+                    ],
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.of(ctx).pop(false),
+                            child: const Text('Cancelar'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: FilledButton.icon(
+                            onPressed: () => Navigator.of(ctx).pop(true),
+                            icon: const Icon(Icons.check),
+                            label: const Text('Confirmar'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -267,41 +273,47 @@ class CreateReserveView extends StatelessWidget {
             borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
           ),
           builder: (ctx) {
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 18,
-                        backgroundColor: Colors.green.shade100,
-                        child: const Icon(
-                          Icons.check_rounded,
-                          color: Colors.green,
+            return FractionallySizedBox(
+              widthFactor: ResponsiveHelper.isTablet(ctx) ? 0.6 : 1.0,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 18,
+                          backgroundColor: Colors.green.shade100,
+                          child: const Icon(
+                            Icons.check_rounded,
+                            color: Colors.green,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        title,
-                        style: Theme.of(ctx).textTheme.titleMedium!.copyWith(
-                          fontWeight: FontWeight.w800,
+                        const SizedBox(width: 10),
+                        Text(
+                          title,
+                          style: Theme.of(ctx).textTheme.titleMedium!.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Align(alignment: Alignment.centerLeft, child: Text(message)),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: () => Navigator.of(ctx).pop(true),
-                      child: const Text('Listo'),
+                      ],
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(message),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: () => Navigator.of(ctx).pop(true),
+                        child: const Text('Listo'),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -326,175 +338,183 @@ class CreateReserveView extends StatelessWidget {
               foregroundColor: cs.onPrimary,
               elevation: 0,
             ),
-            body: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        cs.primary.withValues(alpha: .10),
-                        cs.secondary.withValues(alpha: .08),
-                      ],
+            body: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: ListView(
+                  padding: ResponsiveHelper.getAdaptivePadding(
+                    context,
+                  ).copyWith(top: 16, bottom: 24),
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            cs.primary.withValues(alpha: .10),
+                            cs.secondary.withValues(alpha: .08),
+                          ],
+                        ),
+                        border: Border.all(color: cs.outlineVariant),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 8),
+                          Text(
+                            'Nueva reserva',
+                            style: textTheme.titleLarge!.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Completa los datos para crear una nueva reserva.',
+                            style: textTheme.bodyMedium!.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    border: Border.all(color: cs.outlineVariant),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 8),
-                      Text(
-                        'Nueva reserva',
-                        style: textTheme.titleLarge!.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Completa los datos para crear una nueva reserva.',
-                        style: textTheme.bodyMedium!.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Form(
-                  key: controller.formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      TextFormField(
-                        controller: controller.nameCtrl,
-                        decoration: const InputDecoration(
-                          labelText: 'Nombre *',
-                          prefixIcon: Icon(Icons.person_outline),
-                        ),
-                        validator: (v) =>
-                            (v == null || v.trim().isEmpty)
+                    const SizedBox(height: 16),
+                    Form(
+                      key: controller.formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TextFormField(
+                            controller: controller.nameCtrl,
+                            decoration: const InputDecoration(
+                              labelText: 'Nombre *',
+                              prefixIcon: Icon(Icons.person_outline),
+                            ),
+                            validator: (v) => (v == null || v.trim().isEmpty)
                                 ? 'El nombre es obligatorio'
                                 : null,
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: controller.dniCtrl,
-                              decoration: const InputDecoration(
-                                labelText: 'Documento',
-                                prefixIcon: Icon(Icons.badge_outlined),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextFormField(
+                                  controller: controller.dniCtrl,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Documento',
+                                    prefixIcon: Icon(Icons.badge_outlined),
+                                  ),
+                                ),
                               ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: TextFormField(
+                                  controller: controller.guestsCtrl,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Personas *',
+                                    prefixIcon: Icon(Icons.group_outlined),
+                                  ),
+                                  keyboardType: TextInputType.number,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextFormField(
+                                  controller: controller.emailCtrl,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Email',
+                                    prefixIcon: Icon(Icons.email_outlined),
+                                  ),
+                                  keyboardType: TextInputType.emailAddress,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: TextFormField(
+                                  controller: controller.phoneCtrl,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Teléfono',
+                                    prefixIcon: Icon(Icons.phone_outlined),
+                                  ),
+                                  keyboardType: TextInputType.phone,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: controller.notesCtrl,
+                            decoration: const InputDecoration(
+                              labelText: 'Notas adicionales',
+                              prefixIcon: Icon(Icons.notes_outlined),
+                            ),
+                            maxLines: 2,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Horario',
+                            style: textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: TextFormField(
-                              controller: controller.guestsCtrl,
-                              decoration: const InputDecoration(
-                                labelText: 'Personas *',
-                                prefixIcon: Icon(Icons.group_outlined),
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _DateTimeCard(
+                                  label: 'Inicio',
+                                  value: controller.start.value,
+                                  onTap: () => _pickStart(context, controller),
+                                ),
                               ),
-                              keyboardType: TextInputType.number,
-                              inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly,
-                              ],
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _DateTimeCard(
+                                  label: 'Fin',
+                                  value: controller.end.value,
+                                  onTap: () => _pickEnd(context, controller),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton.icon(
+                              onPressed: controller.saving.value
+                                  ? null
+                                  : () => _submit(context, controller),
+                              icon: controller.saving.value
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Icon(Icons.check_circle_outline),
+                              label: Text(
+                                controller.saving.value
+                                    ? 'Guardando...'
+                                    : 'Crear reserva',
+                              ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: controller.emailCtrl,
-                              decoration: const InputDecoration(
-                                labelText: 'Email',
-                                prefixIcon: Icon(Icons.email_outlined),
-                              ),
-                              keyboardType: TextInputType.emailAddress,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: TextFormField(
-                              controller: controller.phoneCtrl,
-                              decoration: const InputDecoration(
-                                labelText: 'Teléfono',
-                                prefixIcon: Icon(Icons.phone_outlined),
-                              ),
-                              keyboardType: TextInputType.phone,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: controller.notesCtrl,
-                        decoration: const InputDecoration(
-                          labelText: 'Notas adicionales',
-                          prefixIcon: Icon(Icons.notes_outlined),
-                        ),
-                        maxLines: 2,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Horario',
-                        style: textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _DateTimeCard(
-                              label: 'Inicio',
-                              value: controller.start.value,
-                              onTap: () => _pickStart(context, controller),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _DateTimeCard(
-                              label: 'Fin',
-                              value: controller.end.value,
-                              onTap: () => _pickEnd(context, controller),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton.icon(
-                          onPressed: controller.saving.value
-                              ? null
-                              : () => _submit(context, controller),
-                          icon: controller.saving.value
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : const Icon(Icons.check_circle_outline),
-                          label: Text(
-                            controller.saving.value
-                                ? 'Guardando...'
-                                : 'Crear reserva',
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         );
@@ -540,10 +560,7 @@ class _DateTimeCard extends StatelessWidget {
                 color: cs.secondaryContainer,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                Icons.event,
-                color: cs.onSecondaryContainer,
-              ),
+              child: Icon(Icons.event, color: cs.onSecondaryContainer),
             ),
             const SizedBox(width: 12),
             Column(
