@@ -1,6 +1,6 @@
- /**
- * Component: Attendance Management for Voting Groups
- */
+/**
+* Component: Attendance Management for Voting Groups
+*/
 
 'use client';
 
@@ -77,7 +77,7 @@ export function AttendanceManagement({
       if (result.success && result.data) {
         setAttendanceLists(prev => [result.data!, ...prev]);
         setShowCreateModal(false);
-        
+
         if (useRoutes) {
           // Navigate to the specific attendance list page
           router.push(`/properties/${businessId}/voting-groups/${votingGroupId}/attendance/${result.data.id}`);
@@ -109,7 +109,7 @@ export function AttendanceManagement({
 
       if (result.success && result.data) {
         setAttendanceLists(prev => [result.data!, ...prev]);
-        
+
         if (useRoutes) {
           // Navigate to the specific attendance list page
           router.push(`/properties/${businessId}/voting-groups/${votingGroupId}/attendance/${result.data.id}`);
@@ -142,161 +142,139 @@ export function AttendanceManagement({
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">
-            Gestión de Asistencia
+      <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between gap-4">
+        {/* Left Side: Title + List Info */}
+        <div className="flex items-center gap-6 overflow-hidden">
+          <h3 className="text-lg font-bold text-gray-900 flex-shrink-0 flex items-center gap-2">
+            📋 Gestión de Asistencia
           </h3>
-          <p className="text-sm text-gray-600">
-            Gestiona la asistencia para: {votingGroupName}
-          </p>
+
+          {/* Error Display Inline */}
+          {error && (
+            <div className="text-sm text-red-600 flex items-center gap-1 bg-red-50 px-2 py-1 rounded">
+              ⚠️ {error}
+            </div>
+          )}
+
+          {/* Active List Info (Inline) */}
+          {attendanceLists.length > 0 && (
+            <div className="flex items-center gap-4 text-sm border-l border-gray-300 pl-6">
+              <span className="font-medium text-gray-900 whitespace-nowrap">
+                ID: {attendanceLists[0].id}
+              </span>
+              <span className={`px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${attendanceLists[0].isActive
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-gray-100 text-gray-800'
+                }`}>
+                {attendanceLists[0].isActive ? 'Activa' : 'Inactiva'}
+              </span>
+              <span className="text-gray-500 text-xs whitespace-nowrap">
+                {attendanceLists[0].createdAt ? new Date(attendanceLists[0].createdAt).toLocaleDateString() : '-'}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Right Side: List Actions + Create Button */}
+        <div className="flex items-center gap-3 flex-shrink-0">
+          {attendanceLists.length > 0 && (
+            <div className="flex items-center gap-2 mr-2">
+              <button
+                onClick={() => handleOpenAttendanceList(attendanceLists[0])}
+                className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-xs font-medium rounded hover:bg-gray-50 transition-colors flex items-center gap-1"
+              >
+                📋 Abrir
+              </button>
+              <button
+                onClick={() => {
+                  setSelectedAttendanceList(attendanceLists[0]);
+                  setShowSummaryModal(true);
+                }}
+                className="px-3 py-1.5 bg-blue-50 border border-blue-200 text-blue-700 text-xs font-medium rounded hover:bg-blue-100 transition-colors flex items-center gap-1"
+              >
+                📊 Resumen
+              </button>
+              <button
+                onClick={() => {
+                  setAttendanceListToDelete(attendanceLists[0]);
+                  setShowDeleteConfirm(true);
+                }}
+                className="px-3 py-1.5 bg-red-50 border border-red-200 text-red-700 text-xs font-medium rounded hover:bg-red-100 transition-colors flex items-center gap-1"
+              >
+                🗑️
+              </button>
+            </div>
+          )}
+
+          <button
+            onClick={() => setShowCreateModal(true)}
+            disabled={loading}
+            className="px-4 py-2 bg-gray-800 text-white text-sm font-medium rounded-lg hover:bg-gray-900 transition-colors flex items-center gap-2 whitespace-nowrap"
+          >
+            📝 Crear Lista Manual
+          </button>
         </div>
       </div>
-
-      {/* Error Display */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <div className="flex">
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">
-                Error
-              </h3>
-              <div className="mt-2 text-sm text-red-700">
-                {error}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Action Buttons */}
-      <div className="flex gap-3">
-        <button
-          onClick={() => setShowCreateModal(true)}
-          disabled={loading}
-          className="btn btn-primary flex items-center gap-2"
-        >
-          📝 Crear Lista Manual
-        </button>
-        
-        <button
-          onClick={handleGenerateAttendanceList}
-          disabled={loading}
-          className="btn btn-outline flex items-center gap-2"
-        >
-          ⚡ Generar Lista Automática
-        </button>
-      </div>
-
-      {/* Attendance Lists */}
-      {attendanceLists.length > 0 && (
-        <div className="space-y-3">
-          <h4 className="font-medium text-gray-900">Listas de Asistencia</h4>
-          {attendanceLists.map((list) => (
-            <div
-              key={list.id}
-              className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <h5 className="font-medium text-gray-900">{list.title}</h5>
-                  {list.description && (
-                    <p className="text-sm text-gray-600 mt-1">{list.description}</p>
-                  )}
-                  <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-                    <span>ID: {list.id}</span>
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      list.isActive 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {list.isActive ? 'Activa' : 'Inactiva'}
-                    </span>
-                    <span>Creada: {new Date(list.createdAt).toLocaleDateString()}</span>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleOpenAttendanceList(list)}
-                    className="btn btn-outline btn-sm flex items-center gap-2"
-                  >
-                    📋 Abrir Lista
-                  </button>
-                  <button
-                    onClick={() => {
-                      setSelectedAttendanceList(list);
-                      setShowSummaryModal(true);
-                    }}
-                    className="btn btn-primary btn-sm flex items-center gap-2"
-                  >
-                    📊 Resumen
-                  </button>
-                  <button
-                    onClick={() => {
-                      setAttendanceListToDelete(list);
-                      setShowDeleteConfirm(true);
-                    }}
-                    className="btn btn-error btn-sm flex items-center gap-2"
-                  >
-                    🗑️ Eliminar
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
 
       {/* Empty State */}
-      {attendanceLists.length === 0 && !loading && (
-        <div className="text-center py-8">
-          <div className="text-gray-400 text-6xl mb-4">📋</div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No hay listas de asistencia
-          </h3>
-          <p className="text-gray-600 mb-4">
-            Crea una lista manual o genera una automática para comenzar a gestionar la asistencia.
-          </p>
-        </div>
-      )}
+      {
+        attendanceLists.length === 0 && !loading && (
+          <div className="text-center py-8">
+            <div className="text-gray-400 text-6xl mb-4">📋</div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No hay listas de asistencia
+            </h3>
+            <p className="text-gray-600 mb-4">
+              Crea una lista manual o genera una automática para comenzar a gestionar la asistencia.
+            </p>
+          </div>
+        )
+      }
 
       {/* Loading State */}
-      {loading && (
-        <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="text-gray-600 mt-2">Procesando...</p>
-        </div>
-      )}
+      {
+        loading && (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="text-gray-600 mt-2">Procesando...</p>
+          </div>
+        )
+      }
 
       {/* Modals */}
-      {showCreateModal && (
-        <CreateAttendanceListModal
-          isOpen={showCreateModal}
-          onClose={() => setShowCreateModal(false)}
-          onSubmit={handleCreateAttendanceList}
-          votingGroupName={votingGroupName}
-        />
-      )}
+      {
+        showCreateModal && (
+          <CreateAttendanceListModal
+            isOpen={showCreateModal}
+            onClose={() => setShowCreateModal(false)}
+            onSubmit={handleCreateAttendanceList}
+            votingGroupName={votingGroupName}
+          />
+        )
+      }
 
-      {showAttendanceModal && selectedAttendanceList && (
-        <AttendanceListModal
-          isOpen={showAttendanceModal}
-          onClose={() => setShowAttendanceModal(false)}
-          attendanceList={selectedAttendanceList}
-          token={token}
-          businessId={businessId}
-        />
-      )}
+      {
+        showAttendanceModal && selectedAttendanceList && (
+          <AttendanceListModal
+            isOpen={showAttendanceModal}
+            onClose={() => setShowAttendanceModal(false)}
+            attendanceList={selectedAttendanceList}
+            token={token}
+            businessId={businessId}
+          />
+        )
+      }
 
-      {showSummaryModal && selectedAttendanceList && (
-        <AttendanceSummaryModal
-          isOpen={showSummaryModal}
-          onClose={() => setShowSummaryModal(false)}
-          attendanceListId={selectedAttendanceList.id}
-          token={token}
-        />
-      )}
+      {
+        showSummaryModal && selectedAttendanceList && (
+          <AttendanceSummaryModal
+            isOpen={showSummaryModal}
+            onClose={() => setShowSummaryModal(false)}
+            attendanceListId={selectedAttendanceList.id}
+            token={token}
+          />
+        )
+      }
 
       <ConfirmModal
         isOpen={showDeleteConfirm}
@@ -335,6 +313,6 @@ export function AttendanceManagement({
           }
         }}
       />
-    </div>
+    </div >
   );
 }

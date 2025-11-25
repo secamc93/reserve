@@ -1,32 +1,33 @@
-package horizontalpropertyhandler
+package handler
 
 import (
 	"net/http"
 	"strconv"
 
 	"central_reserve/services/auth/middleware"
-	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/primary/handlers/horizontalpropertyhandler/response"
+	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
 
 	"github.com/gin-gonic/gin"
 )
 
-// DeleteHorizontalProperty godoc
+// GetHorizontalPropertyByID godoc
 //
-//	@Summary		Eliminar propiedad horizontal
-//	@Description	Elimina una propiedad horizontal (soft delete) y sus imágenes de S3
+//	@Summary		Obtener propiedad horizontal por ID
+//	@Description	Obtiene una propiedad horizontal con información detallada (incluye unidades y comités)
 //	@Tags			Propiedades Horizontales
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Success		200		{object}	response.HorizontalPropertyDeleteSuccessResponse
+//	@Param			business_id	path		int	true	"ID de la propiedad horizontal"
+//	@Success		200		{object}	response.HorizontalPropertySuccessResponse
 //	@Failure		400		{object}	object
 //	@Failure		404		{object}	object
-//	@Failure		409		{object}	object
 //	@Failure		500		{object}	object
-//	@Router			/horizontal-properties/{business_id} [delete]
-func (h *HorizontalPropertyHandler) DeleteHorizontalProperty(c *gin.Context) {
-	ctx := log.WithFunctionCtx(c.Request.Context(), "DeleteHorizontalProperty")
+//	@Router			/horizontal-properties/{business_id} [get]
+func (h *HorizontalPropertyHandler) GetHorizontalPropertyByID(c *gin.Context) {
+	ctx := log.WithFunctionCtx(c.Request.Context(), "GetHorizontalPropertyByID")
 
 	// Get ID from path parameter
 	idParam := c.Param("business_id")
@@ -41,7 +42,7 @@ func (h *HorizontalPropertyHandler) DeleteHorizontalProperty(c *gin.Context) {
 		return
 	}
 
-	// Verificar acceso: super admin puede eliminar cualquier propiedad, usuario normal solo la suya
+	// Verificar acceso: super admin puede ver cualquier propiedad, usuario normal solo la suya
 	isSuperAdmin := middleware.IsSuperAdmin(c)
 	if !isSuperAdmin {
 		tokenBusinessID, exists := middleware.GetBusinessID(c)
@@ -66,9 +67,9 @@ func (h *HorizontalPropertyHandler) DeleteHorizontalProperty(c *gin.Context) {
 	}
 
 	// Call use case
-	err = h.horizontalPropertyUseCase.DeleteHorizontalProperty(ctx, uint(id))
+	result, err := h.horizontalPropertyUseCase.GetHorizontalPropertyByID(ctx, uint(id))
 	if err != nil {
-		h.logger.Error(ctx).Err(err).Uint("id", uint(id)).Msg("Error deleting horizontal property")
+		h.logger.Error(ctx).Err(err).Uint("id", uint(id)).Msg("Error getting horizontal property by ID")
 
 		// Handle specific domain errors
 		switch err.Error() {
@@ -77,18 +78,6 @@ func (h *HorizontalPropertyHandler) DeleteHorizontalProperty(c *gin.Context) {
 				Success: false,
 				Message: "Propiedad horizontal no encontrada",
 				Error:   err.Error(),
-			})
-		case "no se puede eliminar una propiedad horizontal que tiene unidades registradas":
-			c.JSON(http.StatusConflict, response.ErrorResponse{
-				Success: false,
-				Message: "No se puede eliminar la propiedad horizontal",
-				Error:   "La propiedad tiene unidades registradas",
-			})
-		case "no se puede eliminar una propiedad horizontal que tiene residentes registrados":
-			c.JSON(http.StatusConflict, response.ErrorResponse{
-				Success: false,
-				Message: "No se puede eliminar la propiedad horizontal",
-				Error:   "La propiedad tiene residentes registrados",
 			})
 		default:
 			c.JSON(http.StatusInternalServerError, response.ErrorResponse{
@@ -100,14 +89,13 @@ func (h *HorizontalPropertyHandler) DeleteHorizontalProperty(c *gin.Context) {
 		return
 	}
 
-	h.logger.Info(ctx).
-		Uint("id", uint(id)).
-		Bool("is_super_admin", isSuperAdmin).
-		Msg("Propiedad horizontal eliminada exitosamente")
+	// Map domain DTO to response
+	responseData := mapper.MapDTOToResponse(result)
 
 	// Return success response
-	c.JSON(http.StatusOK, response.HorizontalPropertyDeleteSuccessResponse{
+	c.JSON(http.StatusOK, response.HorizontalPropertySuccessResponse{
 		Success: true,
-		Message: "Propiedad horizontal eliminada exitosamente",
+		Message: "Propiedad horizontal obtenida exitosamente",
+		Data:    *responseData,
 	})
 }

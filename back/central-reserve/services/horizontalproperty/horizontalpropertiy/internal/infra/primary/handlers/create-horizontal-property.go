@@ -1,12 +1,12 @@
-package horizontalpropertyhandler
+package handler
 
 import (
 	"net/http"
 	"strings"
 
-	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/primary/handlers/horizontalpropertyhandler/mapper"
-	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/primary/handlers/horizontalpropertyhandler/request"
-	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/primary/handlers/horizontalpropertyhandler/response"
+	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/primary/handlers/request"
+	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/primary/handlers/response"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"

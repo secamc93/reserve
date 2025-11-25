@@ -1,4 +1,4 @@
-package horizontalpropertyhandler
+package handler
 
 import (
 	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/domain"

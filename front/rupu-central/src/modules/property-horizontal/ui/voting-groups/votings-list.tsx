@@ -7,9 +7,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Badge, Spinner, ConfirmModal } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
-import { 
-  getVotingsAction, 
-  getVotingOptionsAction, 
+import {
+  getVotingsAction,
+  getVotingOptionsAction,
   getVotesAction,
   updateVotingOptionStatusAction,
   deleteVotingOptionAction,
@@ -32,6 +32,13 @@ import {
   PlusCircleIcon,
   UserPlusIcon,
   PlayCircleIcon,
+  InformationCircleIcon,
+  ListBulletIcon,
+  CheckCircleIcon,
+  PencilSquareIcon,
+  StopIcon,
+  BoltIcon,
+  ChevronDownIcon,
 } from '@heroicons/react/24/outline';
 
 interface Voting {
@@ -54,6 +61,7 @@ interface VotingOption {
   votingId: number;
   optionText: string;
   optionCode: string;
+  color?: string;
   displayOrder: number;
   isActive: boolean;
 }
@@ -119,7 +127,7 @@ export function VotingsList({
       }
 
       const result = await getVotingsAction({ token, businessId, groupId });
-      
+
       if (result.success && result.data) {
         const sortedVotings = result.data.sort((a, b) => a.displayOrder - b.displayOrder);
         setVotings(sortedVotings);
@@ -136,7 +144,7 @@ export function VotingsList({
       if (!token) return;
 
       const result = await getVotingOptionsAction({ token, businessId, groupId, votingId });
-      
+
       if (result.success && result.data) {
         const sortedOptions = result.data.sort((a, b) => a.displayOrder - b.displayOrder);
         setVotingOptions(prev => ({
@@ -163,7 +171,7 @@ export function VotingsList({
       if (!token) return;
 
       const result = await getVotesAction({ token, businessId, groupId, votingId });
-      
+
       if (result.success && result.data) {
         setVotingVotes(prev => ({
           ...prev,
@@ -347,7 +355,7 @@ export function VotingsList({
   const handleActivateVoting = async (voting: Voting) => {
     try {
       const token = TokenStorage.getToken();
-      
+
       if (!token) {
         console.error('❌ No se encontró el token de autenticación');
         return;
@@ -377,7 +385,7 @@ export function VotingsList({
   const handleDeactivateVoting = async (voting: Voting) => {
     try {
       const token = TokenStorage.getToken();
-      
+
       if (!token) {
         console.error('❌ No se encontró el token de autenticación');
         return;
@@ -433,26 +441,18 @@ export function VotingsList({
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">
-            Votaciones ({votings.length})
+      <div className="flex flex-wrap items-center justify-between gap-3 px-6">
+        <div className="bg-black/20 backdrop-blur-sm rounded-lg p-3 border border-white/10">
+          <h3 className="text-lg font-bold text-white flex items-center gap-2">
+            🗳️ Votaciones ({votings.length})
           </h3>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-white/80 mt-1">
             Gestiona las votaciones del grupo{' '}
-            <span className="font-medium text-gray-700">{groupName}</span>
+            <span className="font-medium text-white">{groupName}</span>
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {onToggleAttendance && (
-            <button
-              onClick={onToggleAttendance}
-              className={`${outlineButton} ${isAttendanceVisible ? 'bg-gray-100 border-gray-400 text-gray-900' : ''}`}
-            >
-              <span className="text-base leading-none">🗒️</span>
-              {isAttendanceVisible ? 'Ocultar asistencia' : 'Listas de asistencia'}
-            </button>
-          )}
+
           <button
             onClick={() => setShowCreateVotingModal(true)}
             className={primaryActionButton}
@@ -473,7 +473,7 @@ export function VotingsList({
           </button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4 px-6 pb-6">
           {votings.map((voting) => {
             const isExpanded = expandedVoting === voting.id;
             const options = votingOptions[voting.id];
@@ -481,218 +481,243 @@ export function VotingsList({
             const optionsLoaded = options !== undefined;
             const typeBadge = getVotingTypeBadge(voting.votingType);
 
+            // Calculate stats for chart
+            const votes = votingVotes[voting.id] || [];
+            const totalVotes = votes.length;
+
+            // Generate chart data
+            let currentAngle = 0;
+            const chartSegments = optionList.map((option, index) => {
+              const optionVotes = votes.filter(v => v.votingOptionId === option.id).length;
+              const percentage = totalVotes > 0 ? (optionVotes / totalVotes) * 100 : 0;
+              const degrees = (percentage / 100) * 360;
+              const start = currentAngle;
+              const end = currentAngle + degrees;
+              currentAngle = end;
+
+              // Colors for segments
+              const defaultColors = ['#3B82F6', '#6B7280', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
+              const color = option.color || defaultColors[index % defaultColors.length];
+
+              return { ...option, percentage, color, start, end, count: optionVotes };
+            });
+
+            const gradientString = totalVotes === 0
+              ? '#E5E7EB 0deg 360deg'
+              : chartSegments.map(s => `${s.color} ${s.start}deg ${s.end}deg`).join(', ');
+
             return (
               <div
                 key={voting.id}
-                className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
+                className="rounded-xl border border-gray-200 bg-white shadow-lg overflow-hidden"
               >
-                <div className="flex flex-col gap-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div
-                      className="flex flex-1 cursor-pointer flex-col gap-3"
-                      onClick={() => handleToggleVoting(voting.id)}
-                    >
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="text-lg font-semibold text-gray-900">
-                            {voting.displayOrder}. {voting.title}
-                          </h3>
-                          <Badge type={typeBadge.type}>{typeBadge.label}</Badge>
-                          {voting.isSecret && <Badge type="error">Secreta</Badge>}
-                          {!voting.isActive && <Badge type="error">Inactiva</Badge>}
-                        </div>
-                        {voting.description && (
-                          <p className="mt-2 text-sm text-gray-600">{voting.description}</p>
-                        )}
+                <div className="p-6">
+                  {/* Fila 1: Título centrado */}
+                  <div className="flex items-center justify-center mb-4">
+                    <h3 className="text-2xl font-bold text-gray-900 text-center">
+                      {voting.displayOrder}. {voting.title}
+                    </h3>
+                  </div>
+
+                  {/* Fila 2: Badge + Información + Botones */}
+                  <div className="flex items-center justify-between gap-3">
+                    {/* Lado izquierdo: Badge + Info */}
+                    <div className="flex items-center gap-3 flex-1 flex-wrap">
+                      {/* Badge de estado */}
+                      <span className={`inline-flex items-center px-3 py-1 rounded-md text-sm font-semibold whitespace-nowrap ${voting.isActive
+                        ? 'bg-green-500 text-white'
+                        : 'bg-gray-500 text-white'
+                        }`}>
+                        {voting.isActive ? 'Activa' : 'Inactiva'}
+                      </span>
+
+                      {/* Información en una fila con efectos */}
+                      <div className="flex items-center gap-3 text-sm flex-wrap">
+                        <span className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 border border-gray-200 shadow-sm text-gray-700">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                          </svg>
+                          <span className="font-semibold">% Requerido:</span>
+                          <span className="font-medium">{voting.requiredPercentage}%</span>
+                        </span>
+                        <span className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 border border-gray-200 shadow-sm text-gray-700">
+                          <InformationCircleIcon className="w-4 h-4" />
+                          <span className="font-semibold">Abstención:</span>
+                          <span className="font-medium">{voting.allowAbstention ? 'Permitida' : 'No permitida'}</span>
+                        </span>
+                        <span className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 border border-gray-200 shadow-sm text-gray-700">
+                          <ListBulletIcon className="w-4 h-4" />
+                          <span className="font-semibold">Tipo:</span>
+                          <span className="font-medium">{typeBadge.label}</span>
+                        </span>
                       </div>
                     </div>
-                    <div className="flex flex-wrap items-center justify-end gap-2">
+
+                    {/* Lado derecho: Botón de votación + Botones de acción */}
+                    <div className="flex items-center gap-2">
+                      {/* Botón de votación en vivo */}
                       <button
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          if (voting.isActive) {
-                            handleLiveVoting(voting);
-                          } else {
-                            await handleActivateVoting(voting);
-                          }
-                        }}
-                        className="inline-flex items-center gap-2 rounded-full bg-rose-100 px-4 py-2 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-200"
+                        onClick={() => handleLiveVoting(voting)}
+                        className={`px-4 py-2 rounded-lg flex items-center gap-2 font-semibold text-white transition-all ${voting.isActive
+                          ? 'bg-green-600 hover:bg-green-700'
+                          : 'bg-gray-800 hover:bg-gray-900'
+                          }`}
                       >
-                        <PlayCircleIcon className="h-4 w-4" />
-                        {voting.isActive ? 'Votación en vivo' : 'Iniciar votación'}
+                        {voting.isActive ? (
+                          <>
+                            <BoltIcon className="w-4 h-4 animate-pulse" />
+                            Votación en Vivo
+                          </>
+                        ) : (
+                          <>
+                            <PlayIcon className="w-4 h-4" />
+                            Iniciar Votación
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        onClick={() => handleEditClick(voting)}
+                        className="p-2 bg-blue-500 text-white hover:bg-blue-600 rounded-lg transition-colors"
+                        title="Editar votación"
+                      >
+                        <PencilSquareIcon className="w-5 h-5" />
+                      </button>
+
+                      <button
+                        onClick={() => voting.isActive ? handleDeactivateVoting(voting) : handleActivateVoting(voting)}
+                        className={`p-2 rounded-lg transition-colors ${voting.isActive
+                          ? 'bg-orange-500 text-white hover:bg-orange-600'
+                          : 'bg-green-500 text-white hover:bg-green-600'
+                          }`}
+                        title={voting.isActive ? 'Desactivar' : 'Activar'}
+                      >
+                        {voting.isActive ? (
+                          <StopIcon className="w-5 h-5" />
+                        ) : (
+                          <PlayIcon className="w-5 h-5" />
+                        )}
+                      </button>
+
+                      <button
+                        onClick={() => handleDeleteClick(voting)}
+                        className="p-2 bg-red-500 text-white hover:bg-red-600 rounded-lg transition-colors"
+                        title="Eliminar votación"
+                      >
+                        <TrashIcon className="w-5 h-5" />
                       </button>
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleVote(voting);
-                        }}
-                        className="inline-flex items-center gap-2 rounded-full border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
-                      >
-                        <UserPlusIcon className="h-4 w-4" />
-                        Registrar voto
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewVotes(voting);
-                        }}
-                        className="inline-flex items-center gap-2 rounded-full border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
-                      >
-                        <ChartPieIcon className="h-4 w-4" />
-                        Resultados
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditClick(voting);
-                        }}
-                        className="inline-flex items-center gap-2 rounded-full border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
-                      >
-                        <EllipsisHorizontalIcon className="h-4 w-4" />
-                        Acciones
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAddOption(voting.id);
-                        }}
-                        className="inline-flex items-center gap-2 rounded-full border border-blue-200 px-4 py-2 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50"
-                      >
-                        <PlusCircleIcon className="h-4 w-4" />
-                        Nueva opción
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteClick(voting);
-                        }}
-                        className="inline-flex items-center gap-2 rounded-full border border-red-200 px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                        Eliminar votación
-                      </button>
-                      <button
-                        className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 text-gray-500 transition-transform hover:bg-gray-50 hover:text-gray-700"
+                        onClick={() => handleToggleVoting(voting.id)}
+                        className="p-2 bg-gray-600 text-white hover:bg-gray-700 rounded-lg transition-all"
                         style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleToggleVoting(voting.id);
-                        }}
+                        title={isExpanded ? 'Contraer' : 'Ver detalles y resultados'}
                       >
-                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
+                        <ChevronDownIcon className="w-5 h-5" />
                       </button>
                     </div>
-                  </div>
-                  <div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-gray-500">
-                    <span className={mutedTag}>
-                      <span className="text-gray-400">Requerido</span>
-                      <span className="font-semibold text-gray-700">{voting.requiredPercentage}%</span>
-                    </span>
-                    {voting.allowAbstention && (
-                      <span className={mutedTag}>
-                        <span className="text-gray-400">Abstención</span>
-                        <span className="font-semibold text-emerald-600">Permitida</span>
-                      </span>
-                    )}
-                    <span className={mutedTag}>
-                      <span className="text-gray-400">Tipo</span>
-                      <span className="font-semibold text-gray-700">{typeBadge.label}</span>
-                    </span>
-                    <span
-                      className={`${mutedTag} ${
-                        voting.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'
-                      }`}
-                    >
-                      {voting.isActive ? 'Activa' : 'Inactiva'}
-                    </span>
                   </div>
                 </div>
 
+                {/* Expanded Content (Results) */}
                 {isExpanded && (
-                  <div className="space-y-3 rounded-xl border border-gray-100 bg-gray-50 p-4">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <h4 className="text-sm font-semibold text-gray-800">
-                        Resumen de votos ({votingVotes[voting.id]?.length || 0})
-                      </h4>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewVotes(voting);
-                        }}
-                        className={outlineButton}
-                      >
-                        Ver detalle
-                      </button>
+                  <div className="border-t border-gray-200 bg-gray-50 p-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Left: Chart */}
+                      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                        <h4 className="font-semibold mb-6 text-gray-800">Resultados de Votación ({totalVotes} votos)</h4>
+
+                        <div className="flex flex-col items-center">
+                          {/* Donut Chart */}
+                          <div
+                            className="relative w-56 h-56 rounded-full shadow-inner"
+                            style={{ background: `conic-gradient(${gradientString})` }}
+                          >
+                            <div className="absolute inset-8 bg-white rounded-full flex items-center justify-center flex-col shadow-sm">
+                              <span className="text-3xl font-bold text-gray-800">{totalVotes}</span>
+                              <span className="text-xs text-gray-500 font-medium uppercase tracking-wide">Votos Totales</span>
+                            </div>
+                          </div>
+
+                          {/* Legend */}
+                          <div className="flex flex-wrap justify-center gap-4 mt-8 w-full">
+                            {chartSegments.map((segment) => (
+                              <div key={segment.id} className="flex items-center gap-2 text-sm">
+                                <span
+                                  className="w-3 h-3 rounded-full"
+                                  style={{ backgroundColor: segment.color }}
+                                ></span>
+                                <span className="text-gray-600">{segment.optionText}:</span>
+                                <span className="font-bold text-gray-900">{segment.percentage.toFixed(1)}%</span>
+                                <span className="text-gray-400 text-xs">({segment.count} votos)</span>
+                              </div>
+                            ))}
+                            {totalVotes === 0 && (
+                              <span className="text-gray-400 text-sm italic">Sin votos registrados</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right: Individual Votes Table */}
+                      <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[400px]">
+                        <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-xl">
+                          <h4 className="font-semibold text-gray-800">Votos Individuales</h4>
+                          <button
+                            onClick={() => handleViewVotes(voting)}
+                            className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                          >
+                            Ver todos
+                          </button>
+                        </div>
+
+                        <div className="overflow-y-auto flex-1 p-0">
+                          {votes.length === 0 ? (
+                            <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+                              No hay votos registrados
+                            </div>
+                          ) : (
+                            <table className="w-full text-sm text-left">
+                              <thead className="text-xs text-gray-500 uppercase bg-gray-50 sticky top-0 shadow-sm">
+                                <tr>
+                                  <th className="px-4 py-3 font-medium">ID</th>
+                                  <th className="px-4 py-3 font-medium">Opción</th>
+                                  <th className="px-4 py-3 font-medium">Fecha</th>
+                                  <th className="px-4 py-3 font-medium">Unidad</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-gray-100">
+                                {votes.map((vote) => {
+                                  const option = optionList.find(o => o.id === vote.votingOptionId);
+                                  const segment = chartSegments.find(s => s.id === option?.id);
+
+                                  return (
+                                    <tr key={vote.id} className="hover:bg-gray-50 transition-colors">
+                                      <td className="px-4 py-3 font-medium text-emerald-600">#{vote.id}</td>
+                                      <td className="px-4 py-3">
+                                        <span
+                                          className="inline-block w-2 h-2 rounded-full mr-2"
+                                          style={{ backgroundColor: segment?.color || '#ccc' }}
+                                        ></span>
+                                        {option?.optionText || 'Desconocido'}
+                                      </td>
+                                      <td className="px-4 py-3 text-gray-500">
+                                        {new Date(vote.votedAt).toLocaleString('es-ES', {
+                                          day: '2-digit', month: '2-digit', year: 'numeric',
+                                          hour: '2-digit', minute: '2-digit'
+                                        })}
+                                      </td>
+                                      <td className="px-4 py-3 text-gray-600">
+                                        Unidad #{vote.propertyUnitId}
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          )}
+                        </div>
+                      </div>
                     </div>
-
-                    {!votingVotes[voting.id] || votingVotes[voting.id].length === 0 || !optionsLoaded ? (
-                      <div className="rounded-lg border border-dashed border-gray-300 bg-white py-6 text-center text-sm text-gray-500">
-                        {optionsLoaded ? 'No hay votos registrados aún.' : 'Cargando resultados...'}
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-                          {optionList.map((option) => {
-                            const totalVotes = votingVotes[voting.id]?.length ?? 0;
-                            const optionVotes = (votingVotes[voting.id] || []).filter(
-                              (vote) => vote.votingOptionId === option.id
-                            );
-                            const percentage =
-                              totalVotes > 0 ? ((optionVotes.length / totalVotes) * 100).toFixed(1) : '0';
-
-                            return (
-                              <div key={option.id} className="rounded-lg bg-gray-50 p-3">
-                                <div className="flex items-center justify-between text-sm font-medium text-gray-800">
-                                  <span className="truncate pr-2">{option.optionText}</span>
-                                  <span className="text-xs text-gray-500">{percentage}%</span>
-                                </div>
-                                <div className="mt-2 h-1.5 w-full rounded-full bg-gray-200">
-                                  <div
-                                    className="h-1.5 rounded-full bg-indigo-500 transition-all"
-                                    style={{ width: `${percentage}%` }}
-                                  />
-                                </div>
-                                <div className="mt-2 text-xs text-gray-500">{optionVotes.length} voto(s)</div>
-                              </div>
-                            );
-                          })}
-                        </div>
-
-                        <div className="max-h-60 space-y-2 overflow-y-auto rounded-lg border border-gray-100 bg-gray-50 p-3">
-                          {(votingVotes[voting.id] || []).map((vote) => {
-                            const option = optionList.find((opt) => opt.id === vote.votingOptionId);
-                            return (
-                              <div
-                                key={vote.id}
-                                className="flex items-center justify-between rounded-md border border-gray-200 bg-white px-3 py-2 text-xs text-gray-600"
-                              >
-                                <div className="flex items-center gap-3">
-                                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-[11px] font-semibold text-emerald-700">
-                                    {vote.id}
-                                  </span>
-                                  <div>
-                                    <p className="font-medium text-gray-800">
-                                      {option?.optionText || 'Opción no encontrada'}
-                                    </p>
-                                    <p>{new Date(vote.votedAt).toLocaleString('es-ES')}</p>
-                                  </div>
-                                </div>
-                                <div className="text-right">
-                                  <p>Unidad #{vote.propertyUnitId}</p>
-                                  {vote.notes && (
-                                    <p className="max-w-[160px] truncate text-gray-400" title={vote.notes}>
-                                      {vote.notes}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
                   </div>
                 )}
               </div>
