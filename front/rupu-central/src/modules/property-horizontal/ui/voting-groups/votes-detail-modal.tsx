@@ -117,57 +117,58 @@ export function VotesDetailModal({
   ];
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={`Votos: ${votingTitle}`} size="xl">
-      <div className="space-y-6">
-        {/* Resumen */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 className="font-semibold text-blue-900 mb-3">Resumen de Votación</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-blue-700">Total de votos:</p>
-              <p className="text-2xl font-bold text-blue-900">{votes.length}</p>
+    <Modal isOpen={isOpen} onClose={onClose} title={`Votos: ${votingTitle}`} size="full">
+      <div className="flex flex-col h-full max-h-[85vh]">
+        {/* Resumen - Fijo arriba */}
+        <div className="flex-shrink-0 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6 mb-4">
+          <h3 className="font-bold text-blue-900 mb-4 text-lg">📊 Resumen de Votación</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-blue-100">
+              <p className="text-sm text-blue-700 mb-1">Total de votos</p>
+              <p className="text-3xl font-bold text-blue-900">{votes.length}</p>
             </div>
-            <div className="space-y-2">
-              {summary.map(({ option, count, percentage }) => (
-                <div key={option.id} className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-blue-900">
-                    {option.optionText}:
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-blue-900">{count}</span>
-                    <Badge type="primary">{percentage}%</Badge>
-                  </div>
+            {summary.map(({ option, count, percentage }) => (
+              <div key={option.id} className="bg-white rounded-lg p-4 shadow-sm border border-blue-100">
+                <p className="text-sm text-gray-600 mb-1">{option.optionText}</p>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-bold text-gray-900">{count}</span>
+                  <Badge type="primary">{percentage}%</Badge>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Tabla de Votos */}
-        <div>
-          <h3 className="font-semibold text-gray-900 mb-3">Detalle de Votos</h3>
+        {/* Tabla de Votos - Con scroll */}
+        <div className="flex-1 flex flex-col min-h-0">
+          <h3 className="font-bold text-gray-900 mb-3 text-lg flex-shrink-0">📋 Detalle de Votos</h3>
           {loading ? (
-            <div className="flex justify-center py-8">
-              <Spinner size="md" />
+            <div className="flex justify-center items-center py-20">
+              <Spinner size="lg" />
             </div>
           ) : votes.length === 0 ? (
-            <div className="text-center py-8 bg-gray-50 rounded-lg">
-              <p className="text-gray-500">No hay votos registrados aún</p>
+            <div className="text-center py-20 bg-gray-50 rounded-lg">
+              <p className="text-gray-500 text-lg">No hay votos registrados aún</p>
             </div>
           ) : (
-            <Table
-              columns={columns}
-              data={votes}
-              loading={loading}
-              emptyMessage="No hay votos registrados"
-              keyExtractor={(row) => row.id}
-            />
+            <div className="flex-1 overflow-auto bg-white rounded-lg border border-gray-200 shadow-sm">
+              <Table
+                columns={columns}
+                data={votes}
+                loading={loading}
+                emptyMessage="No hay votos registrados"
+                keyExtractor={(row) => row.id}
+              />
+            </div>
           )}
         </div>
 
-        {/* Botón Cerrar */}
-        <div className="flex justify-end pt-4 border-t">
-          <button onClick={onClose} className="btn btn-outline">
+        {/* Botón Cerrar - Fijo abajo */}
+        <div className="flex-shrink-0 flex justify-end pt-4 mt-4 border-t">
+          <button
+            onClick={onClose}
+            className="px-6 py-2 bg-gray-600 text-white hover:bg-gray-700 rounded-lg transition-colors font-semibold"
+          >
             Cerrar
           </button>
         </div>

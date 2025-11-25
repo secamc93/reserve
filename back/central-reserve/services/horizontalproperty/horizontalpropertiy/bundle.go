@@ -2,7 +2,7 @@ package horizontalpropertiy
 
 import (
 	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/app/usecasehorizontalproperty"
-	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/primary/handlers/horizontalpropertyhandler"
+	handler "central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/primary/handlers"
 	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/secondary/repository"
 	"central_reserve/shared/db"
 	"central_reserve/shared/env"
@@ -28,7 +28,7 @@ func New(db db.IDatabase, logger log.ILogger, s3 storage.IS3Service, envConfig e
 	)
 
 	// Crear handler
-	handler := horizontalpropertyhandler.NewHorizontalPropertyHandler(
+	handler := handler.NewHorizontalPropertyHandler(
 		useCase,
 		serviceLogger,
 	)

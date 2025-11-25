@@ -1,13 +1,13 @@
-package horizontalpropertyhandler
+package handler
 
 import (
 	"net/http"
 	"strconv"
 
 	"central_reserve/services/auth/middleware"
-	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/primary/handlers/horizontalpropertyhandler/mapper"
-	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/primary/handlers/horizontalpropertyhandler/request"
-	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/primary/handlers/horizontalpropertyhandler/response"
+	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/primary/handlers/request"
+	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
 
 	"github.com/gin-gonic/gin"

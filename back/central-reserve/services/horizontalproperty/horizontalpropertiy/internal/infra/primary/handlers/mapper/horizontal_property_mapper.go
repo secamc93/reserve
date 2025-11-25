@@ -2,8 +2,8 @@ package mapper
 
 import (
 	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/domain"
-	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/primary/handlers/horizontalpropertyhandler/request"
-	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/primary/handlers/horizontalpropertyhandler/response"
+	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/primary/handlers/request"
+	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/primary/handlers/response"
 	"regexp"
 	"strings"
 	"unicode"
