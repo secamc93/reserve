@@ -1,7 +1,7 @@
 package clienthandler
 
 import (
-	"central_reserve/services/customer/internal/app/usecaseclient"
+	"central_reserve/services/restaurants/customer/internal/app/usecaseclient"
 	"central_reserve/shared/log"
 
 	"github.com/gin-gonic/gin"

@@ -1,7 +1,7 @@
 package usecasebusiness
 
 import (
-	"central_reserve/services/business/internal/domain"
+	"central_reserve/services/auth/business/internal/domain"
 	"context"
 )
 

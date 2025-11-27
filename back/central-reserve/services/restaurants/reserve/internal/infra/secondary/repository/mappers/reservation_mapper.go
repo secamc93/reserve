@@ -1,7 +1,7 @@
 package mappers
 
 import (
-	"central_reserve/services/reserve/internal/domain"
+	"central_reserve/services/restaurants/reserve/internal/domain"
 	"dbpostgres/app/infra/models"
 	"time"
 )

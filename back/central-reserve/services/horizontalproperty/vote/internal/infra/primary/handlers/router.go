@@ -1,65 +1,74 @@
 package handlers
 
 import (
-	"central_reserve/services/auth/middleware"
+	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/handlerpublic"
+	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/handlerresults"
+	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/handlervotes"
+	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/handlervotinggroups"
+	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/handlervotingoptions"
+	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/handlervotings"
 
 	"github.com/gin-gonic/gin"
 )
 
+// VotingHandler orquesta todos los handlers modulares
+type VotingHandler struct {
+	votingGroupsHandler  handlervotinggroups.IVotingGroupsHandler
+	votingsHandler       handlervotings.IVotingsHandler
+	resultsHandler       handlerresults.IResultsHandler
+	votingOptionsHandler handlervotingoptions.IVotingOptionsHandler
+	votesHandler         handlervotes.IVotesHandler
+	publicHandler        handlerpublic.IPublicHandler
+}
+
+// New crea el handler principal que orquesta todos los handlers modulares
+func New(
+	votingGroupsHandler handlervotinggroups.IVotingGroupsHandler,
+	votingsHandler handlervotings.IVotingsHandler,
+	resultsHandler handlerresults.IResultsHandler,
+	votingOptionsHandler handlervotingoptions.IVotingOptionsHandler,
+	votesHandler handlervotes.IVotesHandler,
+	publicHandler handlerpublic.IPublicHandler,
+) *VotingHandler {
+	return &VotingHandler{
+		votingGroupsHandler:  votingGroupsHandler,
+		votingsHandler:       votingsHandler,
+		resultsHandler:       resultsHandler,
+		votingOptionsHandler: votingOptionsHandler,
+		votesHandler:         votesHandler,
+		publicHandler:        publicHandler,
+	}
+}
+
+// RegisterRoutes es el router general que orquesta todos los handlers modulares.
+// Mantiene exactamente las mismas URLs que existían antes.
 func (h *VotingHandler) RegisterRoutes(router *gin.RouterGroup) {
 	// Rutas privadas (requieren autenticación admin)
 	groups := router.Group("/horizontal-properties/voting-groups")
 	{
-		groups.POST("", middleware.JWT(), h.CreateVotingGroup)
-		groups.GET("", middleware.JWT(), h.ListVotingGroups)
-		groups.PUT("/:group_id", middleware.JWT(), h.UpdateVotingGroup)
-		groups.DELETE("/:group_id", middleware.JWT(), h.DeleteVotingGroup)
+		// handler-voting-groups: /horizontal-properties/voting-groups
+		h.votingGroupsHandler.Router(groups)
 
+		// handler-votings: /horizontal-properties/voting-groups/:group_id/votings
 		votings := groups.Group("/:group_id/votings")
-		{
-			votings.POST("", middleware.JWT(), h.CreateVoting)
-			votings.GET("", middleware.JWT(), h.ListVotings)
-			votings.PUT("/:voting_id", middleware.JWT(), h.UpdateVoting)
-			votings.DELETE("/:voting_id", middleware.JWT(), h.DeleteVoting)
-			votings.PATCH("/:voting_id/activate", middleware.JWT(), h.ActivateVoting)                    // Activar votación
-			votings.PATCH("/:voting_id/deactivate", middleware.JWT(), h.DeactivateVotingHandler)         // Desactivar votación
-			votings.GET("/:voting_id/stream", middleware.JWT(), h.SSEVotingResults)                      // SSE en tiempo real
-			votings.GET("/:voting_id/voting-details", middleware.JWT(), h.GetVotingDetailsAdmin)         // Detalles completos por unidad (admin)
-			votings.GET("/:voting_id/unvoted-units", middleware.JWT(), h.GetUnvotedUnitsByVoting)        // Unidades que no han votado
-			votings.POST("/:voting_id/generate-public-url", middleware.JWT(), h.GeneratePublicVotingURL) // Generar URL pública
+		h.votingsHandler.Router(votings)
 
-			options := votings.Group("/:voting_id/options")
-			{
-				options.POST("", middleware.JWT(), h.CreateVotingOption)
-				options.GET("", middleware.JWT(), h.ListVotingOptions)
-				options.GET("/:option_id", middleware.JWT(), h.GetVotingOptionByID)
-				options.PATCH("/:option_id/status", middleware.JWT(), h.UpdateVotingOptionStatus)
-				options.DELETE("/:option_id", middleware.JWT(), h.DeleteVotingOption)
-			}
+		// handler-results: /horizontal-properties/voting-groups/:group_id/votings/:voting_id/{stream,voting-details,unvoted-units}
+		h.resultsHandler.Router(votings)
 
-			votes := votings.Group("/:voting_id/votes")
-			{
-				votes.POST("", middleware.JWT(), h.CreateVote)
-				votes.GET("", middleware.JWT(), h.ListVotes)
-				votes.DELETE("/:vote_id", middleware.JWT(), h.DeleteVoteAdmin) // Eliminar voto (admin)
-			}
-		}
+		// handler-voting-options: /horizontal-properties/voting-groups/:group_id/votings/:voting_id/options
+		options := votings.Group("/:voting_id/options")
+		h.votingOptionsHandler.Router(options)
+
+		// handler-votes: /horizontal-properties/voting-groups/:group_id/votings/:voting_id/votes
+		votes := votings.Group("/:voting_id/votes")
+		h.votesHandler.Router(votes)
 	}
 
 	// Rutas públicas (sin autenticación admin, usan token de votación pública)
-	// NO requieren hp_id en path porque viene en el token
 	publicRoutes := router.Group("/public")
 	{
-		// Con PUBLIC_VOTING_TOKEN
-		publicRoutes.GET("/voting-context", h.GetPublicVotingContext)
-		publicRoutes.GET("/property-units", h.GetPublicPropertyUnits)
-		publicRoutes.POST("/validate-resident", h.ValidateResidentForVoting)
-
-		// Con VOTING_AUTH_TOKEN (después de validar residente)
-		publicRoutes.GET("/voting-info", h.GetPublicVotingInfo)
-		publicRoutes.POST("/vote", h.CreatePublicVote) // ⬅️ Emitir voto público
-		publicRoutes.GET("/units-with-residents", h.GetPublicUnitsWithResidents)
-		publicRoutes.GET("/votes", h.GetPublicVotes)
-		publicRoutes.GET("/voting-stream", h.PublicSSEVotingResults)
+		// handler-public
+		h.publicHandler.Router(publicRoutes)
 	}
 }

@@ -1,8 +1,8 @@
 package clienthandler
 
 import (
-	"central_reserve/services/customer/internal/infra/primary/handlers/clienthandler/mapper"
-	"central_reserve/services/customer/internal/infra/primary/handlers/clienthandler/request"
+	"central_reserve/services/restaurants/customer/internal/infra/primary/handlers/clienthandler/mapper"
+	"central_reserve/services/restaurants/customer/internal/infra/primary/handlers/clienthandler/request"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

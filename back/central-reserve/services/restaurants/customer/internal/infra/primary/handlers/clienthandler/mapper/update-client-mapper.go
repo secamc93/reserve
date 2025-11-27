@@ -1,8 +1,8 @@
 package mapper
 
 import (
-	"central_reserve/services/customer/internal/domain"
-	"central_reserve/services/customer/internal/infra/primary/handlers/clienthandler/request"
+	"central_reserve/services/restaurants/customer/internal/domain"
+	"central_reserve/services/restaurants/customer/internal/infra/primary/handlers/clienthandler/request"
 )
 
 // UpdateClientToDomain convierte un request.UpdateClient a entities.Client

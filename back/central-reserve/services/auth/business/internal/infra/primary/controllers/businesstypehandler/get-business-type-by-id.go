@@ -1,7 +1,7 @@
 package businesstypehandler
 
 import (
-	"central_reserve/services/business/internal/infra/primary/controllers/businesstypehandler/mapper"
+	"central_reserve/services/auth/business/internal/infra/primary/controllers/businesstypehandler/mapper"
 	"net/http"
 	"strconv"
 

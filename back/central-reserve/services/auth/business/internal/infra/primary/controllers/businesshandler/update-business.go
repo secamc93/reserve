@@ -1,8 +1,8 @@
 package businesshandler
 
 import (
-	"central_reserve/services/business/internal/infra/primary/controllers/businesshandler/mapper"
-	"central_reserve/services/business/internal/infra/primary/controllers/businesshandler/request"
+	"central_reserve/services/auth/business/internal/infra/primary/controllers/businesshandler/mapper"
+	"central_reserve/services/auth/business/internal/infra/primary/controllers/businesshandler/request"
 	"net/http"
 	"strconv"
 

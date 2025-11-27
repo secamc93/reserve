@@ -1,9 +1,9 @@
 package tables
 
 import (
-	"central_reserve/services/tables/internal/app/usecasetables"
-	"central_reserve/services/tables/internal/infra/primary/controllers/tablehandler"
-	"central_reserve/services/tables/internal/infra/secondary/repository"
+	"central_reserve/services/restaurants/tables/internal/app/usecasetables"
+	"central_reserve/services/restaurants/tables/internal/infra/primary/controllers/tablehandler"
+	"central_reserve/services/restaurants/tables/internal/infra/secondary/repository"
 	"central_reserve/shared/db"
 	"central_reserve/shared/env"
 	"central_reserve/shared/log"

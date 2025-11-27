@@ -1,7 +1,7 @@
 package businesstypehandler
 
 import (
-	"central_reserve/services/business/internal/app/usecasebusinesstype"
+	"central_reserve/services/auth/business/internal/app/usecasebusinesstype"
 	"central_reserve/shared/log"
 
 	"github.com/gin-gonic/gin"

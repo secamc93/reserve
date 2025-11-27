@@ -1,7 +1,7 @@
 package mapper
 
 import (
-	"central_reserve/services/horizontalproperty/resident/internal/domain"
+	"central_reserve/services/horizontalproperty/vote/internal/domain"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/response"
 )
 

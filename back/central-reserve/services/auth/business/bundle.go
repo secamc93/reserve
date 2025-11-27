@@ -1,12 +1,12 @@
 package business
 
 import (
-	"central_reserve/services/business/internal/app/usecasebusiness"
-	"central_reserve/services/business/internal/app/usecasebusinesstype"
-	"central_reserve/services/business/internal/domain"
-	"central_reserve/services/business/internal/infra/primary/controllers/businesshandler"
-	"central_reserve/services/business/internal/infra/primary/controllers/businesstypehandler"
-	"central_reserve/services/business/internal/infra/secondary/repository"
+	"central_reserve/services/auth/business/internal/app/usecasebusiness"
+	"central_reserve/services/auth/business/internal/app/usecasebusinesstype"
+	"central_reserve/services/auth/business/internal/domain"
+	"central_reserve/services/auth/business/internal/infra/primary/controllers/businesshandler"
+	"central_reserve/services/auth/business/internal/infra/primary/controllers/businesstypehandler"
+	"central_reserve/services/auth/business/internal/infra/secondary/repository"
 	"central_reserve/shared/db"
 	"central_reserve/shared/env"
 	"central_reserve/shared/log"

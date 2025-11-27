@@ -106,6 +106,12 @@ type VoteDTO struct {
 	Notes          string
 }
 
+// VoteEvent - Evento de voto para SSE
+type VoteEvent struct {
+	Type string // "new_vote" o "vote_deleted"
+	Vote VoteDTO
+}
+
 // VotingResultDTO - DTO para resultados de votación
 type VotingResultDTO struct {
 	VotingOptionID uint
@@ -234,6 +240,13 @@ type UpdatePropertyUnitDTO struct {
 	ParticipationCoefficient *float64
 	Description              *string
 	IsActive                 *bool
+}
+
+// HorizontalPropertyDTO - DTO básico de propiedad horizontal
+type HorizontalPropertyDTO struct {
+	ID      uint
+	Name    string
+	Address string
 }
 
 // ImportPropertyUnitsResult - Resultado de la importación de unidades

@@ -1,7 +1,7 @@
 package reservehandler
 
 import (
-	"central_reserve/services/reserve/internal/app/usecasereserve"
+	"central_reserve/services/restaurants/reserve/internal/app/usecasereserve"
 	"central_reserve/shared/log"
 
 	"github.com/gin-gonic/gin"

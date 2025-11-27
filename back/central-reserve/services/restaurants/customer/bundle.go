@@ -1,9 +1,9 @@
 package customer
 
 import (
-	"central_reserve/services/customer/internal/app/usecaseclient"
-	"central_reserve/services/customer/internal/infra/primary/handlers/clienthandler"
-	"central_reserve/services/customer/internal/infra/secondary/repository"
+	"central_reserve/services/restaurants/customer/internal/app/usecaseclient"
+	"central_reserve/services/restaurants/customer/internal/infra/primary/handlers/clienthandler"
+	"central_reserve/services/restaurants/customer/internal/infra/secondary/repository"
 	"central_reserve/shared/db"
 	"central_reserve/shared/env"
 	"central_reserve/shared/log"

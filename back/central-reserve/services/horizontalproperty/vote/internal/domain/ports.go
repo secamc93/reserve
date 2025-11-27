@@ -41,64 +41,19 @@ type VotingRepository interface {
 	GetUnvotedUnitsByVoting(ctx context.Context, votingID uint, unitNumberFilter string) ([]UnvotedUnit, error)
 	GetResidentMainUnitID(ctx context.Context, residentID uint) (uint, error)
 	CheckUnitAttendanceForVoting(ctx context.Context, votingID, propertyUnitID uint) (bool, error)
-}
+	GetHorizontalPropertyBasicInfo(ctx context.Context, hpID uint) (*HorizontalPropertyDTO, error)
+	ListPropertyUnits(ctx context.Context, filters PropertyUnitFiltersDTO) (*PaginatedPropertyUnitsDTO, error)
 
-// VotingUseCase - Puerto para casos de uso de votaciones
-type VotingUseCase interface {
-	// Groups
-	CreateVotingGroup(ctx context.Context, dto CreateVotingGroupDTO) (*VotingGroupDTO, error)
-	GetVotingGroupByID(ctx context.Context, id uint) (*VotingGroupDTO, error)
-	ListVotingGroupsByBusiness(ctx context.Context, businessID uint) ([]VotingGroupDTO, error)
-	UpdateVotingGroup(ctx context.Context, id uint, dto CreateVotingGroupDTO) (*VotingGroupDTO, error)
-	DeactivateVotingGroup(ctx context.Context, id uint) error
-	DeleteVotingGroup(ctx context.Context, id uint) error
-
-	// Votings
-	CreateVoting(ctx context.Context, dto CreateVotingDTO) (*VotingDTO, error)
-	GetVotingByID(ctx context.Context, hpID, groupID, votingID uint) (*VotingDTO, error)
-	ListVotingsByGroup(ctx context.Context, groupID uint) ([]VotingDTO, error)
-	UpdateVoting(ctx context.Context, id uint, dto CreateVotingDTO) (*VotingDTO, error)
-	ActivateVoting(ctx context.Context, id uint) error
-	DeactivateVoting(ctx context.Context, id uint) error
-	DeleteVoting(ctx context.Context, id uint) error
-
-	// Options
-	CreateVotingOption(ctx context.Context, dto CreateVotingOptionDTO) (*VotingOptionDTO, error)
-	ListVotingOptionsByVoting(ctx context.Context, votingID uint) ([]VotingOptionDTO, error)
-	GetVotingOptionByID(ctx context.Context, id uint) (*VotingOptionDTO, error)
-	UpdateVotingOptionStatus(ctx context.Context, id uint, isActive bool) (*VotingOptionDTO, error)
-	DeleteVotingOption(ctx context.Context, id uint) error
-
-	// Votes
-	CreateVote(ctx context.Context, dto CreateVoteDTO) (*VoteDTO, error)
-	DeleteVote(ctx context.Context, voteID uint) error
-	ListVotesByVoting(ctx context.Context, votingID uint) ([]VoteDTO, error)
-	HasUnitVoted(ctx context.Context, votingID, propertyUnitID uint) (bool, error)
-	GetUnitVote(ctx context.Context, votingID, propertyUnitID uint) (*VoteDTO, error)
-	GetVotingResults(ctx context.Context, votingID uint) ([]VotingResultDTO, error)
-	GetVotingDetailsByUnit(ctx context.Context, votingID, hpID uint) ([]VotingDetailByUnitDTO, error)
-	GetUnvotedUnitsByVoting(ctx context.Context, votingID uint, unitNumberFilter string) ([]UnvotedUnitDTO, error)
-
-	// Public Voting
-	ValidateResidentForVoting(ctx context.Context, hpID, propertyUnitID uint, dni string) (*ResidentBasicDTO, error)
-	GetUnitsWithResidents(ctx context.Context, hpID uint) ([]UnitWithResidentDTO, error)
-	CheckUnitAttendanceForVoting(ctx context.Context, votingID, propertyUnitID uint) (bool, error)
-}
-
-// PropertyUnitUseCase - Puerto para casos de uso de unidades de propiedad
-type PropertyUnitUseCase interface {
-	GetPropertyUnitByID(ctx context.Context, id uint) (*PropertyUnitDetailDTO, error)
-	// Add other methods if needed by vote module
-}
-
-// ResidentRepository - Puerto para repositorio de residentes (subset needed by vote)
-type ResidentRepository interface {
+	// Resident methods (todo en el mismo repository)
 	GetResidentByUnitAndDni(ctx context.Context, hpID, propertyUnitID uint, dni string) (*ResidentBasicDTO, error)
-	// Add other methods if needed
 }
 
 // VotingCacheService - Puerto para servicio de cache de votaciones
 type VotingCacheService interface {
 	PublishVote(votingID uint, vote VoteDTO) error
-	SubscribeToVoting(votingID uint) (<-chan VoteDTO, error)
+	RemoveVote(votingID uint, voteID uint) error
+	ClearVoting(votingID uint) error
+	Subscribe(ctx context.Context, votingID uint) (<-chan VoteEvent, error)
+	GetVotingState(votingID uint) ([]VoteDTO, error)
+	InitializeVoting(votingID uint, votes []VoteDTO) error
 }

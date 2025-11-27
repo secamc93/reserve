@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"central_reserve/services/rooms/internal/domain"
+	"central_reserve/services/restaurants/rooms/internal/domain"
 	"central_reserve/shared/db"
 	"central_reserve/shared/log"
 	"context"

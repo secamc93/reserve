@@ -4339,6 +4339,61 @@ const docTemplate = `{
                 }
             }
         },
+        "/horizontal-properties/voting-groups/{group_id}/deactivate": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Desactiva un grupo de votación sin eliminarlo",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones"
+                ],
+                "summary": "Desactivar un grupo de votación",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del grupo de votación",
+                        "name": "group_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
         "/horizontal-properties/voting-groups/{group_id}/votings": {
             "get": {
                 "security": [
@@ -4750,7 +4805,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.GeneratePublicVotingURLRequest"
+                            "$ref": "#/definitions/handlerpublic.GeneratePublicVotingURLRequest"
                         }
                     }
                 ],
@@ -4896,13 +4951,13 @@ const docTemplate = `{
             }
         },
         "/horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/options/{option_id}": {
-            "delete": {
+            "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Desactiva una opción de votación existente",
+                "description": "Obtiene una opción de votación por su ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -4912,7 +4967,7 @@ const docTemplate = `{
                 "tags": [
                     "Votaciones"
                 ],
-                "summary": "Desactivar una opción de votación",
+                "summary": "Obtener opción de votación",
                 "parameters": [
                     {
                         "type": "integer",
@@ -4934,6 +4989,151 @@ const docTemplate = `{
                         "name": "option_id",
                         "in": "path",
                         "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Elimina permanentemente una opción de votación existente",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones"
+                ],
+                "summary": "Eliminar una opción de votación",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del grupo de votación",
+                        "name": "group_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la votación",
+                        "name": "voting_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la opción de votación",
+                        "name": "option_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/options/{option_id}/status": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Activa o desactiva una opción de votación existente",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones"
+                ],
+                "summary": "Actualizar estado de una opción de votación",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del grupo de votación",
+                        "name": "group_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la votación",
+                        "name": "voting_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la opción de votación",
+                        "name": "option_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Estado a aplicar",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.UpdateVotingOptionStatusRequest"
+                        }
                     }
                 ],
                 "responses": {
@@ -6165,7 +6365,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.ValidateResidentRequest"
+                            "$ref": "#/definitions/handlerpublic.ValidateResidentRequest"
                         }
                     },
                     {
@@ -6237,7 +6437,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.CreatePublicVoteRequest"
+                            "$ref": "#/definitions/handlerpublic.CreatePublicVoteRequest"
                         }
                     }
                 ],
@@ -9033,7 +9233,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "handlers.CreatePublicVoteRequest": {
+        "handlerpublic.CreatePublicVoteRequest": {
             "type": "object",
             "required": [
                 "voting_option_id"
@@ -9053,7 +9253,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.GeneratePublicVotingURLRequest": {
+        "handlerpublic.GeneratePublicVotingURLRequest": {
             "type": "object",
             "properties": {
                 "business_id": {
@@ -9073,7 +9273,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.ValidateResidentRequest": {
+        "handlerpublic.ValidateResidentRequest": {
             "type": "object",
             "required": [
                 "dni",
@@ -10149,6 +10349,17 @@ const docTemplate = `{
                 }
             }
         },
+        "request.UpdateVotingOptionStatusRequest": {
+            "type": "object",
+            "required": [
+                "is_active"
+            ],
+            "properties": {
+                "is_active": {
+                    "type": "boolean"
+                }
+            }
+        },
         "response.AssignPermissionsToRoleResponse": {
             "type": "object",
             "properties": {
@@ -10639,7 +10850,7 @@ const docTemplate = `{
                     "description": "Información detallada (solo en GET by ID)",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.PropertyUnitResponse"
+                        "$ref": "#/definitions/services_horizontalproperty_horizontalpropertiy_internal_infra_primary_handlers_response.PropertyUnitResponse"
                     }
                 },
                 "quaternary_color": {
@@ -11382,7 +11593,7 @@ const docTemplate = `{
                 }
             }
         },
-        "services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.PropertyUnitResponse": {
+        "services_horizontalproperty_horizontalpropertiy_internal_infra_primary_handlers_response.PropertyUnitResponse": {
             "type": "object",
             "properties": {
                 "area": {

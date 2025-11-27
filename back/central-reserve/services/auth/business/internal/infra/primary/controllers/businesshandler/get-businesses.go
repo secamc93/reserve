@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"central_reserve/services/auth/middleware"
-	"central_reserve/services/business/internal/infra/primary/controllers/businesshandler/mapper"
+	"central_reserve/services/auth/business/internal/infra/primary/controllers/businesshandler/mapper"
 	"central_reserve/shared/log"
 
 	"github.com/gin-gonic/gin"

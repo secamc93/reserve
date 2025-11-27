@@ -1,9 +1,9 @@
 package businesshandler
 
 import (
-	"central_reserve/services/business/internal/domain"
-	"central_reserve/services/business/internal/infra/primary/controllers/businesshandler/mapper"
-	"central_reserve/services/business/internal/infra/primary/controllers/businesshandler/request"
+	"central_reserve/services/auth/business/internal/domain"
+	"central_reserve/services/auth/business/internal/infra/primary/controllers/businesshandler/mapper"
+	"central_reserve/services/auth/business/internal/infra/primary/controllers/businesshandler/request"
 	"errors"
 	"fmt"
 	"net/http"
