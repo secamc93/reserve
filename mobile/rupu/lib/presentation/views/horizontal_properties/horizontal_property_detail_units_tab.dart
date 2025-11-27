@@ -24,7 +24,8 @@ class _UnitsTab extends GetWidget<HorizontalPropertyUnitsController> {
           final crossAxis = ResponsiveHelper.getGridColumns(
             context,
             mobile: 1,
-            tablet: 2,
+            tablet: 1,
+            largeTablet: 1,
             desktop: 3,
           );
 

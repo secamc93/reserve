@@ -1,9 +1,11 @@
 library horizontal_property_detail_view;
 
 import 'dart:async';
+import 'package:rupu/presentation/views/horizontal_properties/voting_live_view.dart';
 import 'dart:math' as math;
 
 import 'package:flex_color_picker/flex_color_picker.dart';
+import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';

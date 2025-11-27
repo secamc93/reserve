@@ -117,6 +117,8 @@ class _VotingTab extends GetWidget<HorizontalPropertyVotingController> {
                         group: group,
                         onOpenAttendance: () => _openAttendance(context, group),
                         onEdit: () => _openGroupForm(context, group: group),
+                        onOpenLiveVoting: (voting) =>
+                            _openLiveVoting(context, group, voting),
                       ),
                     ),
                   )
@@ -138,6 +140,25 @@ class _VotingTab extends GetWidget<HorizontalPropertyVotingController> {
     final path =
         '/home/$page/horizontal-properties/$propertyId/voting/${group.id}/attendance';
     context.push(path, extra: group);
+  }
+
+  void _openLiveVoting(
+    BuildContext context,
+    HorizontalPropertyVotingGroup group,
+    HorizontalPropertyVoting voting,
+  ) {
+    final state = GoRouterState.of(context);
+    final page = state.pathParameters['page'] ?? '1';
+    context.pushNamed(
+      VotingLiveView.name,
+      pathParameters: {
+        'page': page,
+        'propertyId': controller.propertyId.toString(),
+        'groupId': group.id.toString(),
+        'votingId': voting.id.toString(),
+      },
+      extra: {'controllerTag': controllerTag, 'group': group, 'voting': voting},
+    );
   }
 
   Future<void> _openGroupForm(
@@ -201,12 +222,14 @@ class _VotingGroupCard extends StatelessWidget {
   final String controllerTag;
   final VoidCallback onOpenAttendance;
   final VoidCallback onEdit;
+  final void Function(HorizontalPropertyVoting) onOpenLiveVoting;
 
   const _VotingGroupCard({
     required this.group,
     required this.controllerTag,
     required this.onOpenAttendance,
     required this.onEdit,
+    required this.onOpenLiveVoting,
   });
 
   HorizontalPropertyVotingController get _controller =>
@@ -416,6 +439,8 @@ class _VotingGroupCard extends StatelessWidget {
                                     controllerTag: controllerTag,
                                     group: group,
                                     voting: voting,
+                                    onOpenLiveVoting: () =>
+                                        onOpenLiveVoting(voting),
                                   ),
                                 ),
                               )
@@ -509,11 +534,13 @@ class _VotingItemCard extends StatelessWidget {
   final HorizontalPropertyVotingGroup group;
   final HorizontalPropertyVoting voting;
   final String controllerTag;
+  final VoidCallback onOpenLiveVoting;
 
   const _VotingItemCard({
     required this.group,
     required this.voting,
     required this.controllerTag,
+    required this.onOpenLiveVoting,
   });
 
   HorizontalPropertyVotingController get _controller =>
@@ -646,9 +673,7 @@ class _VotingItemCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(999),
                         ),
                       ),
-                      onPressed: voting.isActive
-                          ? () => _openLiveVoting(context)
-                          : null,
+                      onPressed: voting.isActive ? onOpenLiveVoting : null,
                       icon: const Icon(Icons.podcasts_outlined, size: 18),
                       label: const Text('Votación en vivo'),
                     ),
@@ -893,59 +918,12 @@ class _VotingItemCard extends StatelessWidget {
                                 if (totalVotes == 0)
                                   const Text('Aún no se han registrado votos.')
                                 else
-                                  ...options.map((option) {
-                                    final percentFormatter = NumberFormat(
-                                      '##0.0#',
-                                    );
-                                    final int count = summary[option.id] ?? 0;
-                                    final double percentage = totalVotes == 0
-                                        ? 0.0
-                                        : (count / totalVotes)
-                                              .clamp(0.0, 1.0)
-                                              .toDouble();
-                                    return Padding(
-                                      padding: const EdgeInsets.only(
-                                        bottom: 12,
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Expanded(
-                                                child: Text(option.optionText),
-                                              ),
-                                              Text(
-                                                '${percentFormatter.format(percentage * 100)}%',
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 6),
-                                          ClipRRect(
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                            child: LinearProgressIndicator(
-                                              value: percentage,
-                                              minHeight: 8,
-                                              backgroundColor:
-                                                  cs.surfaceContainerHighest,
-                                              valueColor:
-                                                  AlwaysStoppedAnimation(
-                                                    _parseColor(option.color) ??
-                                                        cs.primary,
-                                                  ),
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            '$count voto${count == 1 ? '' : 's'}',
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  }),
+                                  _VotingResultsPieChart(
+                                    options: options,
+                                    summary: summary,
+                                    totalVotes: totalVotes,
+                                    parseColor: _parseColor,
+                                  ),
                                 const SizedBox(height: 16),
                                 Text(
                                   'Votos individuales',
@@ -972,7 +950,7 @@ class _VotingItemCard extends StatelessWidget {
                                     'No se han registrado votos para esta votación.',
                                   )
                                 else
-                                  ...votes.map((vote) {
+                                  ...votes.take(3).map((vote) {
                                     final option = _controller.optionById(
                                       groupId: group.id,
                                       votingId: voting.id,
@@ -1042,6 +1020,24 @@ class _VotingItemCard extends StatelessWidget {
                                       ],
                                     );
                                   }),
+                                if (votes.length > 3)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 8),
+                                    child: SizedBox(
+                                      width: double.infinity,
+                                      child: OutlinedButton.icon(
+                                        onPressed: () =>
+                                            _showAllVotesDialog(context, votes),
+                                        icon: const Icon(
+                                          Icons.visibility_outlined,
+                                          size: 18,
+                                        ),
+                                        label: Text(
+                                          'Ver ${votes.length - 3} votos más',
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                               ],
                             ),
                           ),
@@ -1272,16 +1268,21 @@ class _VotingItemCard extends StatelessWidget {
     }
   }
 
-  Future<void> _openLiveVoting(BuildContext context) async {
-    await showModalBottomSheet<void>(
+  Future<void> _showAllVotesDialog(
+    BuildContext context,
+    List<HorizontalPropertyVotingVote> votes,
+  ) async {
+    await showDialog(
       context: context,
-      backgroundColor: Colors.transparent,
-      useRootNavigator: true,
-      isScrollControlled: true,
-      builder: (_) => _VotingLiveBottomSheet(
-        controllerTag: controllerTag,
-        group: group,
+      builder: (context) => _VotesListDialog(
+        votes: votes,
+        controller: _controller,
+        groupId: group.id,
         voting: voting,
+        onDelete: (ctx, vote) {
+          Navigator.of(ctx).pop();
+          _deleteVote(ctx, vote);
+        },
       ),
     );
   }
@@ -5770,5 +5771,381 @@ class _ColoredInfoChip extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+// Advanced interactive pie chart widget using Syncfusion for voting results
+class _VotingResultsPieChart extends StatefulWidget {
+  final List<HorizontalPropertyVotingOption> options;
+  final Map<int, int> summary;
+  final int totalVotes;
+  final Color? Function(String?) parseColor;
+
+  const _VotingResultsPieChart({
+    required this.options,
+    required this.summary,
+    required this.totalVotes,
+    required this.parseColor,
+  });
+
+  @override
+  State<_VotingResultsPieChart> createState() => _VotingResultsPieChartState();
+}
+
+class _VotingResultsPieChartState extends State<_VotingResultsPieChart> {
+  late TooltipBehavior _tooltipBehavior;
+  late SelectionBehavior _selectionBehavior;
+
+  @override
+  void initState() {
+    super.initState();
+    _tooltipBehavior = TooltipBehavior(
+      enable: true,
+      builder:
+          (
+            dynamic data,
+            dynamic point,
+            dynamic series,
+            int pointIndex,
+            int seriesIndex,
+          ) {
+            final chartData = data as _VotingChartData;
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.8),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: Colors.white, width: 1),
+              ),
+              child: Text(
+                '${chartData.optionText}: ${chartData.votes} votos · ${chartData.percentage.toStringAsFixed(1)}%',
+                style: const TextStyle(color: Colors.white, fontSize: 12),
+              ),
+            );
+          },
+      elevation: 4,
+      canShowMarker: false,
+      duration: 3000,
+    );
+
+    _selectionBehavior = SelectionBehavior(
+      enable: true,
+      // selectedColor removed to keep the original point color
+      unselectedColor: Colors.grey.withValues(alpha: 0.5),
+      selectedBorderWidth: 3,
+      unselectedBorderWidth: 0,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    final chartData = widget.options.map((option) {
+      final count = widget.summary[option.id] ?? 0;
+      final percentage = widget.totalVotes == 0
+          ? 0.0
+          : (count / widget.totalVotes * 100).clamp(0.0, 100.0);
+      final color = widget.parseColor(option.color) ?? cs.primary;
+
+      return _VotingChartData(
+        optionText: option.optionText,
+        votes: count,
+        percentage: percentage,
+        color: color,
+      );
+    }).toList();
+    // Ordenar los datos manualmente para asegurar consistencia
+    chartData.sort((a, b) => b.votes.compareTo(a.votes));
+
+    return SizedBox(
+      height: 400,
+      child: SfCircularChart(
+        // Título del gráfico
+        title: ChartTitle(
+          text: 'Distribución de Votos',
+          textStyle: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+        ),
+
+        // Leyenda interactiva
+        legend: Legend(
+          isVisible: true,
+          position: LegendPosition.bottom,
+          overflowMode: LegendItemOverflowMode.wrap,
+          toggleSeriesVisibility: true,
+          iconHeight: 14,
+          iconWidth: 14,
+          textStyle: Theme.of(context).textTheme.bodySmall,
+          itemPadding: 8,
+        ),
+
+        // Comportamientos interactivos
+        tooltipBehavior: _tooltipBehavior,
+        selectionGesture: ActivationMode.singleTap,
+
+        // Habilitar zoom y pan
+        enableMultiSelection: false,
+
+        series: <CircularSeries>[
+          DoughnutSeries<_VotingChartData, String>(
+            dataSource: chartData,
+            xValueMapper: (_VotingChartData data, _) => data.optionText,
+            yValueMapper: (_VotingChartData data, _) => data.votes,
+            pointColorMapper: (_VotingChartData data, _) => data.color,
+
+            // Configuración de etiquetas
+            dataLabelSettings: DataLabelSettings(
+              isVisible: true,
+              labelPosition: ChartDataLabelPosition.outside,
+              labelIntersectAction: LabelIntersectAction.shift,
+              builder:
+                  (
+                    dynamic data,
+                    dynamic point,
+                    dynamic series,
+                    int pointIndex,
+                    int seriesIndex,
+                  ) {
+                    final chartData = data as _VotingChartData;
+                    return Text(
+                      '${chartData.percentage.toStringAsFixed(1)}%',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: cs.onSurface,
+                      ),
+                    );
+                  },
+              connectorLineSettings: const ConnectorLineSettings(
+                type: ConnectorType.curve,
+                length: '20%',
+                width: 2,
+              ),
+            ),
+
+            // Animación
+            animationDuration: 1500,
+            animationDelay: 0,
+
+            // Explosión de segmentos al seleccionar
+            explode: true,
+            explodeAll: false,
+            explodeIndex: 0,
+            explodeOffset: '10%',
+            explodeGesture: ActivationMode.singleTap,
+
+            // Comportamiento de selección
+            selectionBehavior: _selectionBehavior,
+
+            // Radio y espaciado (DoughnutSeries usa innerRadius automáticamente)
+            radius: '85%',
+            innerRadius: '50%',
+
+            // Bordes
+            strokeWidth: 2,
+            strokeColor: cs.surface,
+
+            // Opacidad
+            opacity: 1.0,
+
+            // Nombre para la leyenda
+            name: 'Votos',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Clase de datos para el gráfico
+class _VotingChartData {
+  final String optionText;
+  final int votes;
+  final double percentage;
+  final Color color;
+
+  _VotingChartData({
+    required this.optionText,
+    required this.votes,
+    required this.percentage,
+    required this.color,
+  });
+}
+
+class _VotesListDialog extends StatefulWidget {
+  final List<HorizontalPropertyVotingVote> votes;
+  final HorizontalPropertyVotingController controller;
+  final int groupId;
+  final HorizontalPropertyVoting voting;
+  final Function(BuildContext, HorizontalPropertyVotingVote) onDelete;
+
+  const _VotesListDialog({
+    required this.votes,
+    required this.controller,
+    required this.groupId,
+    required this.voting,
+    required this.onDelete,
+  });
+
+  @override
+  State<_VotesListDialog> createState() => _VotesListDialogState();
+}
+
+class _VotesListDialogState extends State<_VotesListDialog> {
+  late List<HorizontalPropertyVotingVote> _filteredVotes;
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _filteredVotes = widget.votes;
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      if (query.isEmpty) {
+        _filteredVotes = widget.votes;
+      } else {
+        _filteredVotes = widget.votes.where((vote) {
+          return vote.propertyUnitId.toString().toLowerCase().contains(query);
+        }).toList();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Dialog(
+      backgroundColor: cs.surface,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 700),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Votos registrados',
+                          style: tt.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${widget.votes.length} votos en total',
+                          style: tt.bodyMedium?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Buscar por unidad...',
+                  prefixIcon: const Icon(Icons.search),
+                  filled: true,
+                  fillColor: cs.surfaceContainerHighest.withValues(alpha: 0.3),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (_filteredVotes.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 32),
+                  child: Center(
+                    child: Text('No se encontraron votos para esta unidad'),
+                  ),
+                )
+              else
+                Flexible(
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: _filteredVotes.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final vote = _filteredVotes[index];
+                      final option = widget.controller.optionById(
+                        groupId: widget.groupId,
+                        votingId: widget.voting.id,
+                        optionId: vote.votingOptionId,
+                      );
+                      return ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(
+                          option?.optionText ?? 'Opción ${vote.votingOptionId}',
+                          style: tt.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        subtitle: Text(
+                          'Unidad ${vote.propertyUnitId} · ${vote.id} · ${_formatDateTime(vote.votedAt)}',
+                          style: tt.bodyMedium?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ),
+                        trailing: IconButton(
+                          tooltip: 'Eliminar voto',
+                          onPressed:
+                              widget.controller.isDeletingVote(
+                                widget.groupId,
+                                widget.voting.id,
+                                vote.id,
+                              )
+                              ? null
+                              : () => widget.onDelete(context, vote),
+                          icon: const Icon(Icons.delete_outline, size: 20),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _formatDateTime(DateTime? date) {
+    if (date == null) return '--';
+    return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
   }
 }

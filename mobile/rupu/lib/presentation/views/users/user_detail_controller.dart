@@ -18,6 +18,7 @@ import 'package:rupu/presentation/views/home/home_controller.dart';
 import 'package:rupu/presentation/views/settings/models/avatar_file_data.dart';
 import 'package:rupu/presentation/views/settings/utils/avatar_file_helper.dart';
 import 'package:rupu/presentation/views/users/users_controller.dart';
+import 'package:rupu/presentation/views/login/login_controller.dart';
 
 class UserDetailController extends GetxController {
   final UsersRepository repository;
@@ -61,6 +62,14 @@ class UserDetailController extends GetxController {
 
   bool _hasAction(String action) {
     if (_hasManage) return true;
+
+    // Allow self-editing
+    final sessionUser =
+        Get.find<LoginController>().sessionModel.value?.data.user;
+    if (_userId != null && sessionUser?.id == _userId) {
+      if (action == 'Read' || action == 'Update') return true;
+    }
+
     return _homeController.canAccessResource(
       'users',
       actions: [action],

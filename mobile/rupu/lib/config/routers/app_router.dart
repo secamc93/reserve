@@ -356,6 +356,25 @@ final appRouter = GoRouter(
           },
         ),
         GoRoute(
+          path:
+              '/home/:page/horizontal-properties/:propertyId/voting/:groupId/:votingId/live',
+          name: VotingLiveView.name,
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>?;
+            if (extra == null) {
+              return const Scaffold(
+                body: Center(child: Text('Error: Missing arguments')),
+              );
+            }
+
+            return VotingLiveView(
+              controllerTag: extra['controllerTag'] as String,
+              group: extra['group'] as HorizontalPropertyVotingGroup,
+              voting: extra['voting'] as HorizontalPropertyVoting,
+            );
+          },
+        ),
+        GoRoute(
           path: '/home/:page/reserve/:id/update',
           name: UpdateReserveView.name,
           builder: (context, state) {

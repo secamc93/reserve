@@ -34,7 +34,8 @@ class _ResidentsTab extends GetWidget<HorizontalPropertyResidentsController> {
           final crossAxis = ResponsiveHelper.getGridColumns(
             context,
             mobile: 1,
-            tablet: 2,
+            tablet: 1,
+            largeTablet: 1,
             desktop: 3,
           );
 
@@ -1343,11 +1344,14 @@ class _MainResidenceIndicator extends StatelessWidget {
       children: [
         Icon(Icons.house_outlined, size: 18, color: iconColor),
         const SizedBox(width: 8),
-        Text(
-          'Residencia principal:',
-          style: tt.bodySmall?.copyWith(
-            color: cs.onSurfaceVariant,
-            fontWeight: FontWeight.w600,
+        Flexible(
+          child: Text(
+            'Residencia principal:',
+            style: tt.bodySmall?.copyWith(
+              color: cs.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+            overflow: TextOverflow.ellipsis,
           ),
         ),
         const SizedBox(width: 4),

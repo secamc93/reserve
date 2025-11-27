@@ -72,9 +72,14 @@ class HorizontalPropertiesView extends GetView<HorizontalPropertiesController> {
                 final cross = ResponsiveHelper.getGridColumns(
                   context,
                   mobile: 1,
-                  tablet: 2,
-                  largeTablet: 2,
+                  tablet: 1,
+                  largeTablet: 1,
                   desktop: 3,
+                );
+
+                // DEBUG: Print device width and cross value
+                print(
+                  '📱 Screen width: ${MediaQuery.sizeOf(context).width}px, Columns: $cross',
                 );
 
                 // AJUSTE UX: Ratio ajustado para imágenes 4:3
@@ -117,106 +122,232 @@ class HorizontalPropertiesView extends GetView<HorizontalPropertiesController> {
                         padding: cross == 1
                             ? const EdgeInsets.only(bottom: 80)
                             : const EdgeInsets.fromLTRB(16, 0, 16, 80),
-                        sliver: SliverGrid(
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: cross,
-                                mainAxisSpacing: 24,
-                                crossAxisSpacing: 24,
-                                childAspectRatio: cardAspect,
-                              ),
-                          delegate: SliverChildBuilderDelegate((context, i) {
-                            final p = controller.properties[i];
-                            return _Card(
-                              id: p.id,
-                              name: p.name,
-                              address: (p.address?.isNotEmpty ?? false)
-                                  ? p.address!
-                                  : 'Sin ubicación',
-                              units: p.totalUnits ?? 0,
-                              isActive: p.isActive,
-                              createdAt: controller.formatDate(p.createdAt),
-                              imageUrl: p.logoUrl,
-                              onView: () {
-                                final path =
-                                    '/home/$pageIndex/horizontal-properties/${p.id}';
-                                context.push(path);
-                              },
-                              onEdit: () async {
-                                final result =
-                                    await showModalBottomSheet<
-                                      HorizontalPropertyUpdateResult?
-                                    >(
-                                      context: context,
-                                      isScrollControlled: true,
-                                      useSafeArea: true,
-                                      builder: (_) =>
-                                          HorizontalPropertyUpdateSheet(
-                                            propertyId: p.id,
-                                          ),
-                                    );
-
-                                if (!context.mounted || result == null) return;
-                                if (result.success)
-                                  controller.fetchProperties();
-
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      result.message ?? 'Actualizado',
+                        sliver: cross == 1
+                            ? SliverList(
+                                delegate: SliverChildBuilderDelegate((
+                                  context,
+                                  i,
+                                ) {
+                                  final p = controller.properties[i];
+                                  return _Card(
+                                    id: p.id,
+                                    name: p.name,
+                                    address: (p.address?.isNotEmpty ?? false)
+                                        ? p.address!
+                                        : 'Sin ubicación',
+                                    units: p.totalUnits ?? 0,
+                                    isActive: p.isActive,
+                                    createdAt: controller.formatDate(
+                                      p.createdAt,
                                     ),
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
-                              },
-                              onDelete: () async {
-                                if (controller.isDeleting(p.id)) return;
-                                final ok = await showModalBottomSheet<bool>(
-                                  context: context,
-                                  builder: (ctx) => SafeArea(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        ListTile(
-                                          leading: const Icon(
-                                            Icons.delete_forever,
-                                            color: Colors.red,
+                                    imageUrl: p.logoUrl,
+                                    onView: () {
+                                      final path =
+                                          '/home/$pageIndex/horizontal-properties/${p.id}';
+                                      context.push(path);
+                                    },
+                                    onEdit: () async {
+                                      final result =
+                                          await showModalBottomSheet<
+                                            HorizontalPropertyUpdateResult?
+                                          >(
+                                            context: context,
+                                            isScrollControlled: true,
+                                            useSafeArea: true,
+                                            builder: (_) =>
+                                                HorizontalPropertyUpdateSheet(
+                                                  propertyId: p.id,
+                                                ),
+                                          );
+
+                                      if (!context.mounted || result == null)
+                                        return;
+                                      if (result.success)
+                                        controller.fetchProperties();
+
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            result.message ?? 'Actualizado',
                                           ),
-                                          title: const Text(
-                                            'Eliminar propiedad',
-                                            style: TextStyle(color: Colors.red),
-                                          ),
-                                          onTap: () => Navigator.pop(ctx, true),
+                                          behavior: SnackBarBehavior.floating,
                                         ),
-                                        ListTile(
-                                          leading: Icon(
-                                            Icons.close,
-                                            color: cs.onSurface,
-                                          ),
-                                          title: Text(
-                                            'Cancelar',
-                                            style: TextStyle(
-                                              color: cs.onSurface,
+                                      );
+                                    },
+                                    onDelete: () async {
+                                      if (controller.isDeleting(p.id)) return;
+                                      final ok =
+                                          await showModalBottomSheet<bool>(
+                                            context: context,
+                                            builder: (ctx) => SafeArea(
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  ListTile(
+                                                    leading: const Icon(
+                                                      Icons.delete_forever,
+                                                      color: Colors.red,
+                                                    ),
+                                                    title: const Text(
+                                                      'Eliminar propiedad',
+                                                      style: TextStyle(
+                                                        color: Colors.red,
+                                                      ),
+                                                    ),
+                                                    onTap: () => Navigator.pop(
+                                                      ctx,
+                                                      true,
+                                                    ),
+                                                  ),
+                                                  ListTile(
+                                                    leading: Icon(
+                                                      Icons.close,
+                                                      color: cs.onSurface,
+                                                    ),
+                                                    title: Text(
+                                                      'Cancelar',
+                                                      style: TextStyle(
+                                                        color: cs.onSurface,
+                                                      ),
+                                                    ),
+                                                    onTap: () => Navigator.pop(
+                                                      ctx,
+                                                      false,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
-                                          ),
-                                          onTap: () =>
-                                              Navigator.pop(ctx, false),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                );
+                                          );
 
-                                if (ok != true) return;
-                                final res = await controller.deleteProperty(
-                                  id: p.id,
-                                );
-                                if (res.success) controller.fetchProperties();
-                              },
-                              isDeleting: controller.isDeleting(p.id),
-                            );
-                          }, childCount: controller.properties.length),
-                        ),
+                                      if (ok != true) return;
+                                      final res = await controller
+                                          .deleteProperty(id: p.id);
+                                      if (res.success)
+                                        controller.fetchProperties();
+                                    },
+                                    isDeleting: controller.isDeleting(p.id),
+                                  );
+                                }, childCount: controller.properties.length),
+                              )
+                            : SliverGrid(
+                                gridDelegate:
+                                    SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: cross,
+                                      mainAxisSpacing: 24,
+                                      crossAxisSpacing: 24,
+                                      childAspectRatio: cardAspect,
+                                    ),
+                                delegate: SliverChildBuilderDelegate((
+                                  context,
+                                  i,
+                                ) {
+                                  final p = controller.properties[i];
+                                  return _Card(
+                                    id: p.id,
+                                    name: p.name,
+                                    address: (p.address?.isNotEmpty ?? false)
+                                        ? p.address!
+                                        : 'Sin ubicación',
+                                    units: p.totalUnits ?? 0,
+                                    isActive: p.isActive,
+                                    createdAt: controller.formatDate(
+                                      p.createdAt,
+                                    ),
+                                    imageUrl: p.logoUrl,
+                                    onView: () {
+                                      final path =
+                                          '/home/$pageIndex/horizontal-properties/${p.id}';
+                                      context.push(path);
+                                    },
+                                    onEdit: () async {
+                                      final result =
+                                          await showModalBottomSheet<
+                                            HorizontalPropertyUpdateResult?
+                                          >(
+                                            context: context,
+                                            isScrollControlled: true,
+                                            useSafeArea: true,
+                                            builder: (_) =>
+                                                HorizontalPropertyUpdateSheet(
+                                                  propertyId: p.id,
+                                                ),
+                                          );
+
+                                      if (!context.mounted || result == null)
+                                        return;
+                                      if (result.success)
+                                        controller.fetchProperties();
+
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            result.message ?? 'Actualizado',
+                                          ),
+                                          behavior: SnackBarBehavior.floating,
+                                        ),
+                                      );
+                                    },
+                                    onDelete: () async {
+                                      if (controller.isDeleting(p.id)) return;
+                                      final ok =
+                                          await showModalBottomSheet<bool>(
+                                            context: context,
+                                            builder: (ctx) => SafeArea(
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  ListTile(
+                                                    leading: const Icon(
+                                                      Icons.delete_forever,
+                                                      color: Colors.red,
+                                                    ),
+                                                    title: const Text(
+                                                      'Eliminar propiedad',
+                                                      style: TextStyle(
+                                                        color: Colors.red,
+                                                      ),
+                                                    ),
+                                                    onTap: () => Navigator.pop(
+                                                      ctx,
+                                                      true,
+                                                    ),
+                                                  ),
+                                                  ListTile(
+                                                    leading: Icon(
+                                                      Icons.close,
+                                                      color: cs.onSurface,
+                                                    ),
+                                                    title: Text(
+                                                      'Cancelar',
+                                                      style: TextStyle(
+                                                        color: cs.onSurface,
+                                                      ),
+                                                    ),
+                                                    onTap: () => Navigator.pop(
+                                                      ctx,
+                                                      false,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+
+                                      if (ok != true) return;
+                                      final res = await controller
+                                          .deleteProperty(id: p.id);
+                                      if (res.success)
+                                        controller.fetchProperties();
+                                    },
+                                    isDeleting: controller.isDeleting(p.id),
+                                  );
+                                }, childCount: controller.properties.length),
+                              ),
                       ),
                     ],
                   ],

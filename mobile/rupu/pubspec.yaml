@@ -41,6 +41,7 @@ dependencies:
   flutter_secure_storage: ^9.2.4
   intl: ^0.20.2
   syncfusion_flutter_calendar: ^30.2.4
+  syncfusion_flutter_charts: ^30.2.4
   animate_do: ^4.2.0
   flutter_localizations:
     sdk: flutter

@@ -17,9 +17,11 @@ class BusinessSelectorController extends GetxController {
   final RxBool isProcessing = false.obs;
 
   List<BusinessModel> get businesses =>
-      _loginController.sessionModel.value?.data.businesses ?? const <BusinessModel>[];
+      _loginController.sessionModel.value?.data.businesses ??
+      const <BusinessModel>[];
 
-  String get userName => _loginController.sessionModel.value?.data.user.name ?? '';
+  String get userName =>
+      _loginController.sessionModel.value?.data.user.name ?? '';
 
   bool get hasSession => _loginController.sessionModel.value != null;
 
@@ -40,7 +42,9 @@ class BusinessSelectorController extends GetxController {
     if (context == null) return;
 
     if (!hasSession) {
-      GoRouter.of(context).goNamed(LoginScreen.name, pathParameters: {'page': '0'});
+      GoRouter.of(
+        context,
+      ).goNamed(LoginScreen.name, pathParameters: {'page': '0'});
       return;
     }
 
@@ -53,7 +57,8 @@ class BusinessSelectorController extends GetxController {
     errorMessage.value = null;
     final business = _findBusinessById(businessId);
     if (business == null) {
-      errorMessage.value = 'No fue posible cargar la información del negocio seleccionado.';
+      errorMessage.value =
+          'No fue posible cargar la información del negocio seleccionado.';
       return;
     }
     selectedBusinessId.value = businessId;
@@ -69,7 +74,8 @@ class BusinessSelectorController extends GetxController {
 
     final business = _findBusinessById(id);
     if (business == null) {
-      errorMessage.value = 'No fue posible cargar la información del negocio seleccionado.';
+      errorMessage.value =
+          'No fue posible cargar la información del negocio seleccionado.';
       _showError(context, errorMessage.value!);
       return;
     }
@@ -86,7 +92,8 @@ class BusinessSelectorController extends GetxController {
     }
 
     if (!activated) {
-      final message = _loginController.errorMessage.value ??
+      final message =
+          _loginController.errorMessage.value ??
           'No fue posible activar el negocio seleccionado.';
       errorMessage.value = message;
       if (context.mounted) {
@@ -99,17 +106,19 @@ class BusinessSelectorController extends GetxController {
 
     if (!context.mounted) return;
 
-    GoRouter.of(context).goNamed(
-      HomeScreen.name,
-      pathParameters: {'page': '0'},
-    );
+    GoRouter.of(
+      context,
+    ).goNamed(HomeScreen.name, pathParameters: {'page': '0'});
   }
 
-  void goBackToLogin(BuildContext context) {
-    GoRouter.of(context).goNamed(
-      LoginScreen.name,
-      pathParameters: {'page': '0'},
-    );
+  void handleBack(BuildContext context) {
+    if (GoRouter.of(context).canPop()) {
+      GoRouter.of(context).pop();
+    } else {
+      GoRouter.of(
+        context,
+      ).goNamed(LoginScreen.name, pathParameters: {'page': '0'});
+    }
   }
 
   BusinessModel? _findBusinessById(int id) {
@@ -123,8 +132,6 @@ class BusinessSelectorController extends GetxController {
     if (message.isEmpty || !context.mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 }

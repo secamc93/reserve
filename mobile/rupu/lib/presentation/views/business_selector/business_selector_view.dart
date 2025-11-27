@@ -21,7 +21,7 @@ class BusinessSelectorView extends GetView<BusinessSelectorController> {
         title: const Text('Selecciona un negocio'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => controller.goBackToLogin(context),
+          onPressed: () => controller.handleBack(context),
         ),
       ),
 
@@ -34,7 +34,7 @@ class BusinessSelectorView extends GetView<BusinessSelectorController> {
         if (businesses.isEmpty) {
           return EmptyBusinesses(
             messageColor: cs.error,
-            onGoBack: controller.goBackToLogin,
+            onGoBack: controller.handleBack,
           );
         }
 

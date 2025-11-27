@@ -332,11 +332,10 @@ class CreateReserveView extends StatelessWidget {
 
         return SafeArea(
           child: Scaffold(
+            backgroundColor: cs.surface,
             appBar: AppBar(
               title: const Text('Nueva reserva'),
-              backgroundColor: cs.primary,
-              foregroundColor: cs.onPrimary,
-              elevation: 0,
+              centerTitle: false,
             ),
             body: Center(
               child: ConstrainedBox(
@@ -346,170 +345,225 @@ class CreateReserveView extends StatelessWidget {
                     context,
                   ).copyWith(top: 16, bottom: 24),
                   children: [
+                    // Header Card
                     Container(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(16),
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            cs.primary.withValues(alpha: .10),
-                            cs.secondary.withValues(alpha: .08),
-                          ],
+                        color: cs.surfaceContainerHighest.withValues(
+                          alpha: 0.3,
                         ),
-                        border: Border.all(color: cs.outlineVariant),
+                        border: Border.all(
+                          color: cs.outlineVariant.withValues(alpha: 0.3),
+                        ),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Row(
                         children: [
-                          const SizedBox(height: 8),
-                          Text(
-                            'Nueva reserva',
-                            style: textTheme.titleLarge!.copyWith(
-                              fontWeight: FontWeight.w800,
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: cs.primaryContainer,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.event_available_rounded,
+                              color: cs.onPrimaryContainer,
+                              size: 28,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Completa los datos para crear una nueva reserva.',
-                            style: textTheme.bodyMedium!.copyWith(
-                              color: cs.onSurfaceVariant,
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Nueva reserva',
+                                  style: textTheme.titleLarge!.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Completa los datos del cliente y horario',
+                                  style: textTheme.bodyMedium!.copyWith(
+                                    color: cs.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    Form(
-                      key: controller.formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          TextFormField(
-                            controller: controller.nameCtrl,
-                            decoration: const InputDecoration(
-                              labelText: 'Nombre *',
-                              prefixIcon: Icon(Icons.person_outline),
+                    const SizedBox(height: 24),
+
+                    // Form Section
+                    _SectionCard(
+                      title: 'Información del cliente',
+                      icon: Icons.person_outline_rounded,
+                      child: Form(
+                        key: controller.formKey,
+                        child: Column(
+                          children: [
+                            TextFormField(
+                              controller: controller.nameCtrl,
+                              decoration: InputDecoration(
+                                labelText: 'Nombre completo *',
+                                hintText: 'Ej: Juan Pérez',
+                                prefixIcon: const Icon(Icons.person_outline),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              validator: (v) => (v == null || v.trim().isEmpty)
+                                  ? 'El nombre es obligatorio'
+                                  : null,
                             ),
-                            validator: (v) => (v == null || v.trim().isEmpty)
-                                ? 'El nombre es obligatorio'
-                                : null,
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: TextFormField(
-                                  controller: controller.dniCtrl,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Documento',
-                                    prefixIcon: Icon(Icons.badge_outlined),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: TextFormField(
-                                  controller: controller.guestsCtrl,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Personas *',
-                                    prefixIcon: Icon(Icons.group_outlined),
-                                  ),
-                                  keyboardType: TextInputType.number,
-                                  inputFormatters: [
-                                    FilteringTextInputFormatter.digitsOnly,
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: TextFormField(
-                                  controller: controller.emailCtrl,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Email',
-                                    prefixIcon: Icon(Icons.email_outlined),
-                                  ),
-                                  keyboardType: TextInputType.emailAddress,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: TextFormField(
-                                  controller: controller.phoneCtrl,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Teléfono',
-                                    prefixIcon: Icon(Icons.phone_outlined),
-                                  ),
-                                  keyboardType: TextInputType.phone,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: controller.notesCtrl,
-                            decoration: const InputDecoration(
-                              labelText: 'Notas adicionales',
-                              prefixIcon: Icon(Icons.notes_outlined),
-                            ),
-                            maxLines: 2,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Horario',
-                            style: textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _DateTimeCard(
-                                  label: 'Inicio',
-                                  value: controller.start.value,
-                                  onTap: () => _pickStart(context, controller),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _DateTimeCard(
-                                  label: 'Fin',
-                                  value: controller.end.value,
-                                  onTap: () => _pickEnd(context, controller),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-                          SizedBox(
-                            width: double.infinity,
-                            child: FilledButton.icon(
-                              onPressed: controller.saving.value
-                                  ? null
-                                  : () => _submit(context, controller),
-                              icon: controller.saving.value
-                                  ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
+                            const SizedBox(height: 16),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextFormField(
+                                    controller: controller.dniCtrl,
+                                    decoration: InputDecoration(
+                                      labelText: 'Documento',
+                                      hintText: 'Ej: 1234567890',
+                                      prefixIcon: const Icon(
+                                        Icons.badge_outlined,
                                       ),
-                                    )
-                                  : const Icon(Icons.check_circle_outline),
-                              label: Text(
-                                controller.saving.value
-                                    ? 'Guardando...'
-                                    : 'Crear reserva',
-                              ),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: TextFormField(
+                                    controller: controller.guestsCtrl,
+                                    decoration: InputDecoration(
+                                      labelText: 'Personas *',
+                                      hintText: 'Ej: 4',
+                                      prefixIcon: const Icon(
+                                        Icons.group_outlined,
+                                      ),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    keyboardType: TextInputType.number,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly,
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: controller.emailCtrl,
+                              decoration: InputDecoration(
+                                labelText: 'Email (opcional)',
+                                hintText: 'ejemplo@correo.com',
+                                prefixIcon: const Icon(Icons.email_outlined),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              keyboardType: TextInputType.emailAddress,
+                            ),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: controller.phoneCtrl,
+                              decoration: InputDecoration(
+                                labelText: 'Teléfono (opcional)',
+                                hintText: '+57 300 123 4567',
+                                prefixIcon: const Icon(Icons.phone_outlined),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              keyboardType: TextInputType.phone,
+                            ),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: controller.notesCtrl,
+                              decoration: InputDecoration(
+                                labelText: 'Notas adicionales',
+                                hintText:
+                                    'Comentarios o solicitudes especiales',
+                                prefixIcon: const Icon(Icons.notes_outlined),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                alignLabelWithHint: true,
+                              ),
+                              maxLines: 3,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Schedule Section
+                    _SectionCard(
+                      title: 'Horario de la reserva',
+                      icon: Icons.schedule_rounded,
+                      child: Column(
+                        children: [
+                          _DateTimeCard(
+                            label: 'Inicio',
+                            value: controller.start.value,
+                            onTap: () => _pickStart(context, controller),
+                            color: cs.primaryContainer,
+                            iconColor: cs.onPrimaryContainer,
+                          ),
+                          const SizedBox(height: 12),
+                          _DateTimeCard(
+                            label: 'Fin',
+                            value: controller.end.value,
+                            onTap: () => _pickEnd(context, controller),
+                            color: cs.secondaryContainer,
+                            iconColor: cs.onSecondaryContainer,
                           ),
                         ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Submit Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: FilledButton.icon(
+                        onPressed: controller.saving.value
+                            ? null
+                            : () => _submit(context, controller),
+                        icon: controller.saving.value
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(Icons.check_circle_outline),
+                        label: Text(
+                          controller.saving.value
+                              ? 'Guardando...'
+                              : 'Crear reserva',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        style: FilledButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -523,15 +577,65 @@ class CreateReserveView extends StatelessWidget {
   }
 }
 
+class _SectionCard extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final Widget child;
+
+  const _SectionCard({
+    required this.title,
+    required this.icon,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.3),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 20, color: cs.primary),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: textTheme.titleMedium!.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
 class _DateTimeCard extends StatelessWidget {
   final String label;
   final DateTime value;
   final VoidCallback onTap;
+  final Color color;
+  final Color iconColor;
 
   const _DateTimeCard({
     required this.label,
     required this.value,
     required this.onTap,
+    required this.color,
+    required this.iconColor,
   });
 
   @override
@@ -545,43 +649,46 @@ class _DateTimeCard extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          border: Border.all(color: cs.outlineVariant),
+          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
           borderRadius: BorderRadius.circular(12),
-          color: cs.surfaceContainerLow,
+          color: cs.surface,
         ),
         child: Row(
           children: [
             Container(
-              width: 40,
-              height: 40,
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
-                color: cs.secondaryContainer,
+                color: color,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(Icons.event, color: cs.onSecondaryContainer),
+              child: Icon(Icons.event_rounded, color: iconColor, size: 24),
             ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: textTheme.labelMedium?.copyWith(
-                    color: cs.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: textTheme.labelMedium?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '${df.format(value)} · ${tf.format(value)}',
-                  style: textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
+                  const SizedBox(height: 4),
+                  Text(
+                    '${df.format(value)} · ${tf.format(value)}',
+                    style: textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
+            Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
           ],
         ),
       ),
