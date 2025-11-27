@@ -4744,7 +4744,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlervote.GeneratePublicVotingURLRequest"
+                            "$ref": "#/definitions/handlers.GeneratePublicVotingURLRequest"
                         }
                     }
                 ],
@@ -6159,7 +6159,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlervote.ValidateResidentRequest"
+                            "$ref": "#/definitions/handlers.ValidateResidentRequest"
                         }
                     },
                     {
@@ -6231,7 +6231,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlervote.CreatePublicVoteRequest"
+                            "$ref": "#/definitions/handlers.CreatePublicVoteRequest"
                         }
                     }
                 ],
@@ -9027,7 +9027,7 @@
         }
     },
     "definitions": {
-        "handlervote.CreatePublicVoteRequest": {
+        "handlers.CreatePublicVoteRequest": {
             "type": "object",
             "required": [
                 "voting_option_id"
@@ -9047,7 +9047,7 @@
                 }
             }
         },
-        "handlervote.GeneratePublicVotingURLRequest": {
+        "handlers.GeneratePublicVotingURLRequest": {
             "type": "object",
             "properties": {
                 "business_id": {
@@ -9067,7 +9067,7 @@
                 }
             }
         },
-        "handlervote.ValidateResidentRequest": {
+        "handlers.ValidateResidentRequest": {
             "type": "object",
             "required": [
                 "dni",

@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"central_reserve/services/horizontalproperty/internal/domain"
+	"central_reserve/services/horizontalproperty/resident/internal/domain"
 	"context"
 	"dbpostgres/app/infra/models"
 	"fmt"

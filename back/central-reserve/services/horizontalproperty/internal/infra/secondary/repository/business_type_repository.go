@@ -5,8 +5,8 @@ import (
 	"dbpostgres/app/infra/models"
 	"fmt"
 
-	"central_reserve/services/horizontalproperty/internal/domain"
 	"central_reserve/services/horizontalproperty/internal/infra/secondary/repository/mapper"
+	"central_reserve/services/horizontalproperty/resident/internal/domain"
 
 	"gorm.io/gorm"
 )

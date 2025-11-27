@@ -1,6 +1,6 @@
 basePath: /api/v1
 definitions:
-  handlervote.CreatePublicVoteRequest:
+  handlers.CreatePublicVoteRequest:
     properties:
       dni:
         description: Opcional - viene del token
@@ -14,7 +14,7 @@ definitions:
     required:
     - voting_option_id
     type: object
-  handlervote.GeneratePublicVotingURLRequest:
+  handlers.GeneratePublicVotingURLRequest:
     properties:
       business_id:
         description: ID del business (solo para super admin, opcional en body)
@@ -30,7 +30,7 @@ definitions:
         example: https://votacion.miconjunto.com/vote
         type: string
     type: object
-  handlervote.ValidateResidentRequest:
+  handlers.ValidateResidentRequest:
     properties:
       dni:
         example: "123456789"
@@ -5008,7 +5008,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handlervote.GeneratePublicVotingURLRequest'
+          $ref: '#/definitions/handlers.GeneratePublicVotingURLRequest'
       produces:
       - application/json
       responses:
@@ -5758,7 +5758,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handlervote.ValidateResidentRequest'
+          $ref: '#/definitions/handlers.ValidateResidentRequest'
       - description: Token de votación pública (Bearer token)
         in: header
         name: Authorization
@@ -5809,7 +5809,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handlervote.CreatePublicVoteRequest'
+          $ref: '#/definitions/handlers.CreatePublicVoteRequest'
       produces:
       - application/json
       responses:
