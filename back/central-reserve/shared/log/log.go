@@ -234,7 +234,7 @@ func extractServiceAndModule() (service, module string) {
 			!strings.Contains(funcName, "zerolog.") {
 
 			// Extraer servicio y módulo del path completo
-			// Ejemplo: central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlerpropertyunit.CreatePropertyUnit
+			// Ejemplo: central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlers.CreatePropertyUnit
 			parts := strings.Split(funcName, "/")
 			if len(parts) >= 3 {
 				// Buscar el servicio en el path

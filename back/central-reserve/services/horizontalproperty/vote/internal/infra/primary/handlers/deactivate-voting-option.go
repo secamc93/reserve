@@ -1,0 +1,46 @@
+package handlers
+
+import (
+	"fmt"
+	"net/http"
+	"os"
+	"strconv"
+
+	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/response"
+
+	"github.com/gin-gonic/gin"
+)
+
+// DeleteVotingOption godoc
+//
+//	@Summary	Eliminar una opción de votación
+//	@Description	Elimina permanentemente una opción de votación existente
+//	@Tags		Votaciones
+//	@Security	BearerAuth
+//	@Accept		json
+//	@Produce	json
+//	@Param		group_id	path	int	true	"ID del grupo de votación"
+//	@Param		voting_id	path	int	true	"ID de la votación"
+//	@Param		option_id	path	int	true	"ID de la opción de votación"
+//	@Success	200	{object}	object
+//	@Failure	400	{object}	object
+//	@Failure	404	{object}	object
+//	@Failure	500	{object}	object
+//	@Router		/horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/options/{option_id} [delete]
+func (h *VotingHandler) DeleteVotingOption(c *gin.Context) {
+	idParam := c.Param("option_id")
+	id64, err := strconv.ParseUint(idParam, 10, 32)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "[ERROR] handlers/deactivate-voting-option.go - Error en handler: %v\n", err)
+		h.logger.Error().Err(err).Str("option_id", idParam).Msg("Error parseando ID de opción de votación")
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "id inválido", Error: "Debe ser numérico"})
+		return
+	}
+	if err := h.votingUseCase.DeleteVotingOption(c.Request.Context(), uint(id64)); err != nil {
+		fmt.Fprintf(os.Stderr, "[ERROR] handlers/deactivate-voting-option.go - Error en handler: %v\n", err)
+		h.logger.Error().Err(err).Uint("option_id", uint(id64)).Msg("Error eliminando opción de votación")
+		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Success: false, Message: "No se pudo eliminar", Error: err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"success": true, "message": "Opción eliminada"})
+}

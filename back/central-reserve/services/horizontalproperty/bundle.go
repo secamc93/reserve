@@ -1,17 +1,13 @@
 package horizontalproperty
 
 import (
+	"central_reserve/services/horizontalproperty/attendance"
 	"central_reserve/services/horizontalproperty/horizontalpropertiy"
-	"central_reserve/services/horizontalproperty/internal/app/usecaseattendance"
-	"central_reserve/services/horizontalproperty/internal/app/usecasepropertyunit"
-	"central_reserve/services/horizontalproperty/internal/app/usecaseresident"
-	"central_reserve/services/horizontalproperty/internal/app/usecasevote"
-	"central_reserve/services/horizontalproperty/internal/domain"
-	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlerattendance"
-	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlerpropertyunit"
-	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlerresident"
-	"central_reserve/services/horizontalproperty/internal/infra/primary/handlers/handlervote"
 	"central_reserve/services/horizontalproperty/internal/infra/secondary/repository"
+	"central_reserve/services/horizontalproperty/resident"
+	"central_reserve/services/horizontalproperty/resident/internal/domain"
+	"central_reserve/services/horizontalproperty/unit"
+	"central_reserve/services/horizontalproperty/vote"
 	"central_reserve/shared/db"
 	"central_reserve/shared/env"
 	"central_reserve/shared/log"
@@ -29,20 +25,17 @@ func New(db db.IDatabase, logger log.ILogger, s3 storage.IS3Service, envConfig e
 	horizontalpropertiy.New(db, logger, s3, envConfig, v1Group)
 
 	// Crear repositorio consolidado (OLD - para otros dominios)
-	// Crear repositorio consolidado (OLD - para otros dominios)
 	repoConcrete := repository.New(db, serviceLogger)
 
 	// Voting use case (necesita acceso a voting y resident repos)
-	votingUseCase := usecasevote.NewVotingUseCase(repoConcrete, repoConcrete, serviceLogger)
+	// votingUseCase := voteApp.NewVotingUseCase(repoConcrete, repoConcrete, serviceLogger)
 
-	// Property Unit use case
-	propertyUnitUseCase := usecasepropertyunit.New(repoConcrete, serviceLogger)
+	// Initialize Unit Module
+	_, unitAdapter := unit.New(db, serviceLogger, v1Group)
 
-	// Resident use case
-	residentUseCase := usecaseresident.New(repoConcrete, serviceLogger)
+	// Resident use case - Managed by resident module
 
-	// Attendance use case
-	attendanceUseCase := usecaseattendance.NewAttendanceUseCase(repoConcrete, serviceLogger)
+	// Attendance use case - Managed by attendance module
 
 	// Crear cache de votaciones para SSE en tiempo real
 	votingCache := domain.NewVotingCache()
@@ -50,22 +43,20 @@ func New(db db.IDatabase, logger log.ILogger, s3 storage.IS3Service, envConfig e
 	// Obtener JWT secret del env
 	jwtSecret := envConfig.Get("JWT_SECRET")
 
-	votingHandler := handlervote.NewVotingHandler(
-		votingUseCase,
-		repoConcrete,
-		propertyUnitUseCase,
-		nil, // horizontalPropertyUseCase - ya no disponible, el módulo es autónomo
+	// Initialize Vote Module
+	vote.New(
+		db,
+		repoConcrete, // Shared repository implements ResidentRepository
+		unitAdapter,
 		votingCache,
 		jwtSecret,
 		serviceLogger,
+		v1Group,
 	)
-	propertyUnitHandler := handlerpropertyunit.New(propertyUnitUseCase, serviceLogger)
-	residentHandler := handlerresident.New(residentUseCase, serviceLogger)
-	attendanceHandler := handlerattendance.NewAttendanceHandler(attendanceUseCase, serviceLogger)
 
-	// Registrar rutas
-	votingHandler.RegisterRoutes(v1Group)
-	propertyUnitHandler.RegisterRoutes(v1Group)
-	residentHandler.RegisterRoutes(v1Group)
-	attendanceHandler.RegisterRoutes(v1Group)
+	// Initialize Resident Module
+	resident.New(db, serviceLogger, v1Group)
+
+	// Initialize Attendance Module
+	attendance.New(db, serviceLogger, v1Group)
 }
