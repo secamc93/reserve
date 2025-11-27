@@ -86,9 +86,37 @@ export interface CreateVotingOptionParams {
   data: CreateVotingOptionDTO;
 }
 
+export interface GetVotingOptionByIdParams {
+  token: string;
+  businessId: number;
+  groupId: number;
+  votingId: number;
+  optionId: number;
+}
+
+export interface UpdateVotingOptionStatusParams {
+  token: string;
+  businessId: number;
+  groupId: number;
+  votingId: number;
+  optionId: number;
+  isActive: boolean;
+}
+
+export interface DeleteVotingOptionParams {
+  token: string;
+  businessId: number;
+  groupId: number;
+  votingId: number;
+  optionId: number;
+}
+
 export interface IVotingOptionsRepository {
   getVotingOptions(params: GetVotingOptionsParams): Promise<VotingOptionsList>;
   createVotingOption(params: CreateVotingOptionParams): Promise<VotingOption>;
+  getVotingOptionById(params: GetVotingOptionByIdParams): Promise<VotingOption>;
+  updateVotingOptionStatus(params: UpdateVotingOptionStatusParams): Promise<VotingOption>;
+  deleteVotingOption(params: DeleteVotingOptionParams): Promise<string>;
 }
 
 // ============================================

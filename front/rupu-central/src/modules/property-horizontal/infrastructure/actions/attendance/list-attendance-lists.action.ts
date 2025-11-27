@@ -6,6 +6,7 @@ import { AttendanceList } from '../../../domain/entities/attendance';
 export interface ListAttendanceListsInput {
   token: string;
   businessId: number;
+  votingGroupId: number;
   title?: string;
   isActive?: boolean;
 }
@@ -22,6 +23,7 @@ export async function listAttendanceListsAction(input: ListAttendanceListsInput)
     const data = await repo.listAttendanceLists({
       token: input.token,
       businessId: input.businessId,
+      votingGroupId: input.votingGroupId,
       title: input.title,
       isActive: input.isActive,
     });

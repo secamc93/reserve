@@ -221,6 +221,7 @@ export class AttendanceListRepository implements IAttendanceListRepository {
     const startTime = Date.now();
     const url = new URL(`${process.env.API_BASE_URL}/attendance/lists`);
     url.searchParams.append('business_id', String(params.businessId));
+    url.searchParams.append('voting_group_id', String(params.votingGroupId));
     if (params.title) url.searchParams.append('title', params.title);
     if (params.isActive !== undefined) url.searchParams.append('is_active', String(params.isActive));
 

@@ -441,6 +441,12 @@ const docTemplate = `{
                         "description": "Filtro por activo",
                         "name": "is_active",
                         "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filtro por ID del grupo de votación",
+                        "name": "voting_group_id",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -1377,6 +1383,74 @@ const docTemplate = `{
                     },
                     "403": {
                         "description": "Contraseña actual incorrecta",
+                        "schema": {
+                            "$ref": "#/definitions/response.LoginErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/response.LoginErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/generate-password": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Genera una nueva contraseña aleatoria. Si el usuario es super admin, puede especificar user_id para generar contraseña de otro usuario. Si no se envía user_id, se genera para el usuario autenticado. La contraseña solo se muestra una vez en esta respuesta.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Generar nueva contraseña aleatoria",
+                "parameters": [
+                    {
+                        "description": "Request body (user_id opcional, solo para super usuarios)",
+                        "name": "request",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/request.GeneratePasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Nueva contraseña generada exitosamente (solo se muestra una vez)",
+                        "schema": {
+                            "$ref": "#/definitions/response.GeneratePasswordResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Datos inválidos",
+                        "schema": {
+                            "$ref": "#/definitions/response.LoginErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "$ref": "#/definitions/response.LoginErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "No tienes permisos para generar contraseña de otro usuario o usuario inactivo",
+                        "schema": {
+                            "$ref": "#/definitions/response.LoginErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Usuario no encontrado",
                         "schema": {
                             "$ref": "#/definitions/response.LoginErrorResponse"
                         }
@@ -4217,7 +4291,62 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Desactiva un grupo de votación existente",
+                "description": "Elimina permanentemente un grupo de votación y todos sus registros asociados",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones"
+                ],
+                "summary": "Eliminar un grupo de votación",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del grupo de votación",
+                        "name": "group_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/voting-groups/{group_id}/deactivate": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Desactiva un grupo de votación sin eliminarlo",
                 "consumes": [
                     "application/json"
                 ],
@@ -4676,7 +4805,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlervote.GeneratePublicVotingURLRequest"
+                            "$ref": "#/definitions/handlerpublic.GeneratePublicVotingURLRequest"
                         }
                     }
                 ],
@@ -4822,13 +4951,13 @@ const docTemplate = `{
             }
         },
         "/horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/options/{option_id}": {
-            "delete": {
+            "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Desactiva una opción de votación existente",
+                "description": "Obtiene una opción de votación por su ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -4838,7 +4967,7 @@ const docTemplate = `{
                 "tags": [
                     "Votaciones"
                 ],
-                "summary": "Desactivar una opción de votación",
+                "summary": "Obtener opción de votación",
                 "parameters": [
                     {
                         "type": "integer",
@@ -4860,6 +4989,151 @@ const docTemplate = `{
                         "name": "option_id",
                         "in": "path",
                         "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Elimina permanentemente una opción de votación existente",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones"
+                ],
+                "summary": "Eliminar una opción de votación",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del grupo de votación",
+                        "name": "group_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la votación",
+                        "name": "voting_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la opción de votación",
+                        "name": "option_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/options/{option_id}/status": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Activa o desactiva una opción de votación existente",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones"
+                ],
+                "summary": "Actualizar estado de una opción de votación",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del grupo de votación",
+                        "name": "group_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la votación",
+                        "name": "voting_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la opción de votación",
+                        "name": "option_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Estado a aplicar",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.UpdateVotingOptionStatusRequest"
+                        }
                     }
                 ],
                 "responses": {
@@ -6091,7 +6365,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlervote.ValidateResidentRequest"
+                            "$ref": "#/definitions/handlerpublic.ValidateResidentRequest"
                         }
                     },
                     {
@@ -6163,7 +6437,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlervote.CreatePublicVoteRequest"
+                            "$ref": "#/definitions/handlerpublic.CreatePublicVoteRequest"
                         }
                     }
                 ],
@@ -8752,12 +9026,6 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Nueva contraseña (\u003e=6)",
-                        "name": "password",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
                         "description": "Teléfono (exactamente 10 dígitos)",
                         "name": "phone",
                         "in": "formData"
@@ -8886,10 +9154,86 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/users/{id}/assign-role": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Asigna o actualiza roles de un usuario en múltiples businesses. El usuario debe estar previamente asociado a cada business. Solo se permite un rol por business y cada rol debe ser del mismo tipo de business que su business asociado.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Asignar roles a usuario en businesses",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del usuario",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Lista de asignaciones (business_id y role_id por cada asignación)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.AssignRoleToUserBusinessRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Roles asignados exitosamente",
+                        "schema": {
+                            "$ref": "#/definitions/response.AssignRoleToUserBusinessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Datos inválidos",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token de acceso requerido",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "El usuario no está asociado a algún business o algún rol no corresponde al tipo de business",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Usuario, business o rol no encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
-        "handlervote.CreatePublicVoteRequest": {
+        "handlerpublic.CreatePublicVoteRequest": {
             "type": "object",
             "required": [
                 "voting_option_id"
@@ -8909,7 +9253,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handlervote.GeneratePublicVotingURLRequest": {
+        "handlerpublic.GeneratePublicVotingURLRequest": {
             "type": "object",
             "properties": {
                 "business_id": {
@@ -8929,7 +9273,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handlervote.ValidateResidentRequest": {
+        "handlerpublic.ValidateResidentRequest": {
             "type": "object",
             "required": [
                 "dni",
@@ -8957,6 +9301,28 @@ const docTemplate = `{
                     "items": {
                         "type": "integer"
                     }
+                }
+            }
+        },
+        "request.AssignRoleToUserBusinessRequest": {
+            "type": "object"
+        },
+        "request.BusinessRoleAssignmentItem": {
+            "type": "object",
+            "required": [
+                "business_id",
+                "role_id"
+            ],
+            "properties": {
+                "business_id": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 16
+                },
+                "role_id": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 4
                 }
             }
         },
@@ -9501,6 +9867,17 @@ const docTemplate = `{
                 }
             }
         },
+        "request.GeneratePasswordRequest": {
+            "type": "object",
+            "properties": {
+                "user_id": {
+                    "description": "Opcional: solo para super usuarios",
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 10
+                }
+            }
+        },
         "request.LoginRequest": {
             "type": "object",
             "required": [
@@ -9645,7 +10022,6 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "action_id",
-                "code",
                 "name",
                 "resource_id",
                 "scope_id"
@@ -9973,6 +10349,17 @@ const docTemplate = `{
                 }
             }
         },
+        "request.UpdateVotingOptionStatusRequest": {
+            "type": "object",
+            "required": [
+                "is_active"
+            ],
+            "properties": {
+                "is_active": {
+                    "type": "boolean"
+                }
+            }
+        },
         "response.AssignPermissionsToRoleResponse": {
             "type": "object",
             "properties": {
@@ -9989,6 +10376,19 @@ const docTemplate = `{
                 "role_id": {
                     "type": "integer",
                     "example": 1
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "response.AssignRoleToUserBusinessResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Rol asignado exitosamente al usuario en el business"
                 },
                 "success": {
                     "type": "boolean",
@@ -10225,6 +10625,27 @@ const docTemplate = `{
                 }
             }
         },
+        "response.GeneratePasswordResponse": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "usuario@ejemplo.com"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Nueva contraseña generada para el usuario usuario@ejemplo.com"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "aB3$kL9mP2xQ"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
         "response.GetBusinessByIDResponse": {
             "type": "object",
             "properties": {
@@ -10429,7 +10850,7 @@ const docTemplate = `{
                     "description": "Información detallada (solo en GET by ID)",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.PropertyUnitResponse"
+                        "$ref": "#/definitions/services_horizontalproperty_horizontalpropertiy_internal_infra_primary_handlers_response.PropertyUnitResponse"
                     }
                 },
                 "quaternary_color": {
@@ -10866,14 +11287,14 @@ const docTemplate = `{
         "response.UserListResponse": {
             "type": "object",
             "properties": {
-                "count": {
-                    "type": "integer"
-                },
                 "data": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/response.UserResponse"
                     }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/services_auth_internal_infra_primary_controllers_userhandler_response.PaginationInfo"
                 },
                 "success": {
                     "type": "boolean"
@@ -11066,6 +11487,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "create"
                 },
+                "action_id": {
+                    "type": "integer",
+                    "example": 5
+                },
                 "business_type_id": {
                     "type": "integer",
                     "example": 11
@@ -11093,6 +11518,10 @@ const docTemplate = `{
                 "resource": {
                     "type": "string",
                     "example": "users"
+                },
+                "resource_id": {
+                    "type": "integer",
+                    "example": 3
                 },
                 "scope_code": {
                     "type": "string",
@@ -11141,7 +11570,30 @@ const docTemplate = `{
                 }
             }
         },
-        "services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.PropertyUnitResponse": {
+        "services_auth_internal_infra_primary_controllers_userhandler_response.PaginationInfo": {
+            "type": "object",
+            "properties": {
+                "current_page": {
+                    "type": "integer"
+                },
+                "has_next": {
+                    "type": "boolean"
+                },
+                "has_prev": {
+                    "type": "boolean"
+                },
+                "last_page": {
+                    "type": "integer"
+                },
+                "per_page": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "services_horizontalproperty_horizontalpropertiy_internal_infra_primary_handlers_response.PropertyUnitResponse": {
             "type": "object",
             "properties": {
                 "area": {

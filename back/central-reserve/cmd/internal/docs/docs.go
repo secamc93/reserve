@@ -4230,7 +4230,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlervote.GeneratePublicVotingURLRequest"
+                            "$ref": "#/definitions/handlers.GeneratePublicVotingURLRequest"
                         }
                     }
                 ],
@@ -5630,7 +5630,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlervote.ValidateResidentRequest"
+                            "$ref": "#/definitions/handlers.ValidateResidentRequest"
                         }
                     },
                     {
@@ -5702,7 +5702,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlervote.CreatePublicVoteRequest"
+                            "$ref": "#/definitions/handlers.CreatePublicVoteRequest"
                         }
                     }
                 ],
@@ -8447,7 +8447,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "handlervote.CreatePublicVoteRequest": {
+        "handlers.CreatePublicVoteRequest": {
             "type": "object",
             "required": [
                 "voting_option_id"
@@ -8467,7 +8467,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handlervote.GeneratePublicVotingURLRequest": {
+        "handlers.GeneratePublicVotingURLRequest": {
             "type": "object",
             "properties": {
                 "duration_hours": {
@@ -8482,7 +8482,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handlervote.ValidateResidentRequest": {
+        "handlers.ValidateResidentRequest": {
             "type": "object",
             "required": [
                 "dni",
