@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"central_reserve/services/business/internal/domain"
+	"central_reserve/services/auth/business/internal/domain"
 	"dbpostgres/app/infra/models"
 
 	"gorm.io/gorm"

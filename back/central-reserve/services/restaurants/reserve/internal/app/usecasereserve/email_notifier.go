@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"central_reserve/services/reserve/internal/domain"
+	"central_reserve/services/restaurants/reserve/internal/domain"
 )
 
 func (n *ReserveUseCase) SendReservationConfirmation(ctx context.Context, email, name string, reservation domain.Reservation) error {

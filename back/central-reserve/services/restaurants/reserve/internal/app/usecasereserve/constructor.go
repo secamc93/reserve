@@ -1,7 +1,7 @@
 package usecasereserve
 
 import (
-	"central_reserve/services/reserve/internal/domain"
+	"central_reserve/services/restaurants/reserve/internal/domain"
 	"central_reserve/shared/email"
 	"central_reserve/shared/log"
 	"context"

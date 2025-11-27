@@ -1,9 +1,9 @@
 package mapper
 
 import (
-	"central_reserve/services/reserve/internal/domain"
-	"central_reserve/services/reserve/internal/infra/primary/controllers/reservehandler/request"
-	"central_reserve/services/reserve/internal/infra/primary/controllers/reservehandler/response"
+	"central_reserve/services/restaurants/reserve/internal/domain"
+	"central_reserve/services/restaurants/reserve/internal/infra/primary/controllers/reservehandler/request"
+	"central_reserve/services/restaurants/reserve/internal/infra/primary/controllers/reservehandler/response"
 )
 
 // ReserveToDomain convierte un request.Reservation a entities.Reservation

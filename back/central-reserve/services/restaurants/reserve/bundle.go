@@ -1,9 +1,9 @@
 package reserve
 
 import (
-	"central_reserve/services/reserve/internal/app/usecasereserve"
-	"central_reserve/services/reserve/internal/infra/primary/controllers/reservehandler"
-	"central_reserve/services/reserve/internal/infra/secondary/repository"
+	"central_reserve/services/restaurants/reserve/internal/app/usecasereserve"
+	"central_reserve/services/restaurants/reserve/internal/infra/primary/controllers/reservehandler"
+	"central_reserve/services/restaurants/reserve/internal/infra/secondary/repository"
 	"central_reserve/shared/db"
 	"central_reserve/shared/email"
 	"central_reserve/shared/env"

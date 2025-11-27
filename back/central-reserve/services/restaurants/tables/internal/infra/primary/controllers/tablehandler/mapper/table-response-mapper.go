@@ -1,8 +1,8 @@
 package mapper
 
 import (
-	"central_reserve/services/tables/internal/domain"
-	"central_reserve/services/tables/internal/infra/primary/controllers/tablehandler/response"
+	"central_reserve/services/restaurants/tables/internal/domain"
+	"central_reserve/services/restaurants/tables/internal/infra/primary/controllers/tablehandler/response"
 )
 
 // TableToResponse convierte una entidad Table del dominio a TableResponse

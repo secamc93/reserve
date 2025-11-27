@@ -1,7 +1,7 @@
 package usecasetables
 
 import (
-	"central_reserve/services/tables/internal/domain"
+	"central_reserve/services/restaurants/tables/internal/domain"
 	"context"
 )
 

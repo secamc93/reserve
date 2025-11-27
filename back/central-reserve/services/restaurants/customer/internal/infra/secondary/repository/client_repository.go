@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"central_reserve/services/customer/internal/domain"
-	"central_reserve/services/customer/internal/infra/secondary/repository/mappers"
+	"central_reserve/services/restaurants/customer/internal/domain"
+	"central_reserve/services/restaurants/customer/internal/infra/secondary/repository/mappers"
 	"central_reserve/shared/db"
 	"central_reserve/shared/log"
 	"context"

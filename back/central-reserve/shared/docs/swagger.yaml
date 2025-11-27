@@ -1,6 +1,6 @@
 basePath: /api/v1
 definitions:
-  handlers.CreatePublicVoteRequest:
+  handlerpublic.CreatePublicVoteRequest:
     properties:
       dni:
         description: Opcional - viene del token
@@ -14,7 +14,7 @@ definitions:
     required:
     - voting_option_id
     type: object
-  handlers.GeneratePublicVotingURLRequest:
+  handlerpublic.GeneratePublicVotingURLRequest:
     properties:
       business_id:
         description: ID del business (solo para super admin, opcional en body)
@@ -30,7 +30,7 @@ definitions:
         example: https://votacion.miconjunto.com/vote
         type: string
     type: object
-  handlers.ValidateResidentRequest:
+  handlerpublic.ValidateResidentRequest:
     properties:
       dni:
         example: "123456789"
@@ -810,6 +810,13 @@ definitions:
       number:
         type: integer
     type: object
+  request.UpdateVotingOptionStatusRequest:
+    properties:
+      is_active:
+        type: boolean
+    required:
+    - is_active
+    type: object
   response.AssignPermissionsToRoleResponse:
     properties:
       message:
@@ -1150,7 +1157,7 @@ definitions:
       property_units:
         description: Información detallada (solo en GET by ID)
         items:
-          $ref: '#/definitions/services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.PropertyUnitResponse'
+          $ref: '#/definitions/services_horizontalproperty_horizontalpropertiy_internal_infra_primary_handlers_response.PropertyUnitResponse'
         type: array
       quaternary_color:
         example: '#fbbf24'
@@ -1657,7 +1664,7 @@ definitions:
       total:
         type: integer
     type: object
-  services_horizontalproperty_internal_infra_primary_handlers_horizontalpropertyhandler_response.PropertyUnitResponse:
+  services_horizontalproperty_horizontalpropertiy_internal_infra_primary_handlers_response.PropertyUnitResponse:
     properties:
       area:
         example: 85.5
@@ -4744,6 +4751,41 @@ paths:
       summary: Actualizar un grupo de votación
       tags:
       - Votaciones
+  /horizontal-properties/voting-groups/{group_id}/deactivate:
+    patch:
+      consumes:
+      - application/json
+      description: Desactiva un grupo de votación sin eliminarlo
+      parameters:
+      - description: ID del grupo de votación
+        in: path
+        name: group_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Desactivar un grupo de votación
+      tags:
+      - Votaciones
   /horizontal-properties/voting-groups/{group_id}/votings:
     get:
       consumes:
@@ -5008,7 +5050,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handlers.GeneratePublicVotingURLRequest'
+          $ref: '#/definitions/handlerpublic.GeneratePublicVotingURLRequest'
       produces:
       - application/json
       responses:
@@ -5110,7 +5152,7 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Desactiva una opción de votación existente
+      description: Elimina permanentemente una opción de votación existente
       parameters:
       - description: ID del grupo de votación
         in: path
@@ -5148,7 +5190,102 @@ paths:
             type: object
       security:
       - BearerAuth: []
-      summary: Desactivar una opción de votación
+      summary: Eliminar una opción de votación
+      tags:
+      - Votaciones
+    get:
+      consumes:
+      - application/json
+      description: Obtiene una opción de votación por su ID
+      parameters:
+      - description: ID del grupo de votación
+        in: path
+        name: group_id
+        required: true
+        type: integer
+      - description: ID de la votación
+        in: path
+        name: voting_id
+        required: true
+        type: integer
+      - description: ID de la opción de votación
+        in: path
+        name: option_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Obtener opción de votación
+      tags:
+      - Votaciones
+  /horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/options/{option_id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Activa o desactiva una opción de votación existente
+      parameters:
+      - description: ID del grupo de votación
+        in: path
+        name: group_id
+        required: true
+        type: integer
+      - description: ID de la votación
+        in: path
+        name: voting_id
+        required: true
+        type: integer
+      - description: ID de la opción de votación
+        in: path
+        name: option_id
+        required: true
+        type: integer
+      - description: Estado a aplicar
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateVotingOptionStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Actualizar estado de una opción de votación
       tags:
       - Votaciones
   /horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/stream:
@@ -5758,7 +5895,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handlers.ValidateResidentRequest'
+          $ref: '#/definitions/handlerpublic.ValidateResidentRequest'
       - description: Token de votación pública (Bearer token)
         in: header
         name: Authorization
@@ -5809,7 +5946,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handlers.CreatePublicVoteRequest'
+          $ref: '#/definitions/handlerpublic.CreatePublicVoteRequest'
       produces:
       - application/json
       responses:

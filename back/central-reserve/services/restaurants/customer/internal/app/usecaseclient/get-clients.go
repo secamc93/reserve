@@ -1,7 +1,7 @@
 package usecaseclient
 
 import (
-	"central_reserve/services/customer/internal/domain"
+	"central_reserve/services/restaurants/customer/internal/domain"
 	"context"
 )
 

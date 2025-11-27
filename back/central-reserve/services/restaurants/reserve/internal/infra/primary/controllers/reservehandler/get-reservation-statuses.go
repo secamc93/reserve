@@ -1,8 +1,8 @@
 package reservehandler
 
 import (
-	"central_reserve/services/reserve/internal/infra/primary/controllers/reservehandler/mapper"
-	"central_reserve/services/reserve/internal/infra/primary/controllers/reservehandler/response"
+	"central_reserve/services/restaurants/reserve/internal/infra/primary/controllers/reservehandler/mapper"
+	"central_reserve/services/restaurants/reserve/internal/infra/primary/controllers/reservehandler/response"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

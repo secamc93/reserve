@@ -8,18 +8,19 @@ import (
 	"strings"
 	"time"
 
-	"central_reserve/services/horizontalproperty/resident/internal/domain"
+	"central_reserve/services/horizontalproperty/vote/internal/domain"
+	"central_reserve/shared/db"
 	"central_reserve/shared/log"
 
 	"gorm.io/gorm"
 )
 
 type Repository struct {
-	db     *gorm.DB
-	logger log.Logger
+	db     db.IDatabase
+	logger log.ILogger
 }
 
-func New(db *gorm.DB, logger log.Logger) *Repository {
+func New(db db.IDatabase, logger log.ILogger) *Repository {
 	return &Repository{db: db, logger: logger}
 }
 

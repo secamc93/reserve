@@ -1,7 +1,7 @@
 package mappers
 
 import (
-	"central_reserve/services/tables/internal/domain"
+	"central_reserve/services/restaurants/tables/internal/domain"
 	"dbpostgres/app/infra/models"
 
 	"gorm.io/gorm"

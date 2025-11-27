@@ -2,8 +2,8 @@ package reservehandler
 
 import (
 	"central_reserve/services/auth/middleware"
-	"central_reserve/services/reserve/internal/infra/primary/controllers/reservehandler/mapper"
-	"central_reserve/services/reserve/internal/infra/primary/controllers/reservehandler/request"
+	"central_reserve/services/restaurants/reserve/internal/infra/primary/controllers/reservehandler/mapper"
+	"central_reserve/services/restaurants/reserve/internal/infra/primary/controllers/reservehandler/request"
 
 	"net/http"
 

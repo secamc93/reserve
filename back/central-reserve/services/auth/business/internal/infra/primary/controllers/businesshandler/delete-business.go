@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"central_reserve/services/business/internal/infra/primary/controllers/businesshandler/mapper"
+	"central_reserve/services/auth/business/internal/infra/primary/controllers/businesshandler/mapper"
 
 	"github.com/gin-gonic/gin"
 )

@@ -1,7 +1,7 @@
 package usecaseroom
 
 import (
-	"central_reserve/services/rooms/internal/domain"
+	"central_reserve/services/restaurants/rooms/internal/domain"
 	"context"
 	"fmt"
 	"strings"

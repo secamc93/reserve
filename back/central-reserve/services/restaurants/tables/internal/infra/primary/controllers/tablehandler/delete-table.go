@@ -1,7 +1,7 @@
 package tablehandler
 
 import (
-	"central_reserve/services/tables/internal/infra/primary/controllers/tablehandler/mapper"
+	"central_reserve/services/restaurants/tables/internal/infra/primary/controllers/tablehandler/mapper"
 	"net/http"
 	"strconv"
 

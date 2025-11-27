@@ -1,9 +1,9 @@
 package mapper
 
 import (
-	"central_reserve/services/business/internal/domain"
-	"central_reserve/services/business/internal/infra/primary/controllers/businesshandler/request"
-	"central_reserve/services/business/internal/infra/primary/controllers/businesshandler/response"
+	"central_reserve/services/auth/business/internal/domain"
+	"central_reserve/services/auth/business/internal/infra/primary/controllers/businesshandler/request"
+	"central_reserve/services/auth/business/internal/infra/primary/controllers/businesshandler/response"
 )
 
 // RequestToDTO convierte request.BusinessRequest a dtos.BusinessRequest

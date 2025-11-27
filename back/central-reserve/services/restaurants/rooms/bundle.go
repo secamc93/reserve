@@ -1,9 +1,9 @@
 package rooms
 
 import (
-	"central_reserve/services/rooms/internal/app/usecaseroom"
-	"central_reserve/services/rooms/internal/infra/primary/controllers/roomhandler"
-	"central_reserve/services/rooms/internal/infra/secondary/repository"
+	"central_reserve/services/restaurants/rooms/internal/app/usecaseroom"
+	"central_reserve/services/restaurants/rooms/internal/infra/primary/controllers/roomhandler"
+	"central_reserve/services/restaurants/rooms/internal/infra/secondary/repository"
 	"central_reserve/shared/db"
 	"central_reserve/shared/env"
 	"central_reserve/shared/log"

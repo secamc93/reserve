@@ -1,8 +1,8 @@
 package mapper
 
 import (
-	"central_reserve/services/rooms/internal/domain"
-	"central_reserve/services/rooms/internal/infra/primary/controllers/roomhandler/request"
+	"central_reserve/services/restaurants/rooms/internal/domain"
+	"central_reserve/services/restaurants/rooms/internal/infra/primary/controllers/roomhandler/request"
 )
 
 // RoomToDomain convierte un request.Room a entities.Room
