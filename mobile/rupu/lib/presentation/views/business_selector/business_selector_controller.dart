@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:rupu/domain/infrastructure/models/login_response_model.dart';
 import 'package:rupu/presentation/screens/home/home_screen.dart';
 import 'package:rupu/presentation/screens/login/login_screen.dart';
+import 'package:rupu/main.dart';
 
 import '../login/login_controller.dart';
 
@@ -106,9 +107,18 @@ class BusinessSelectorController extends GetxController {
 
     if (!context.mounted) return;
 
-    GoRouter.of(
-      context,
-    ).goNamed(HomeScreen.name, pathParameters: {'page': '0'});
+    // Check if there's a pending deeplink to navigate to
+    final hasPendingDeepLink = DeepLinkManager.pendingDeepLink != null;
+
+    if (hasPendingDeepLink) {
+      // Navigate to pending deeplink instead of home
+      DeepLinkManager.navigateToPendingDeepLink();
+    } else {
+      // Normal flow: navigate to home
+      GoRouter.of(
+        context,
+      ).goNamed(HomeScreen.name, pathParameters: {'page': '0'});
+    }
   }
 
   void handleBack(BuildContext context) {

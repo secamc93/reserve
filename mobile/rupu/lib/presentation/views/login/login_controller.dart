@@ -115,8 +115,7 @@ class LoginController extends GetxController {
       );
       return false;
     } catch (_) {
-      errorMessage.value =
-          'No fue posible activar el negocio seleccionado.';
+      errorMessage.value = 'No fue posible activar el negocio seleccionado.';
       return false;
     }
   }

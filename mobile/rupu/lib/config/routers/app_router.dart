@@ -8,8 +8,6 @@ import 'package:rupu/presentation/widgets/shared/custom_bottom_navigation.dart';
 import '../../presentation/screens/screens.dart';
 import '../../presentation/views/views.dart';
 
-final _shellNavigatorKey = GlobalKey<NavigatorState>();
-
 int _calculateIndex(String location) {
   if (location.contains('/perfil')) return 1;
   if (location.contains('/ajustes')) return 2;
@@ -66,10 +64,14 @@ HorizontalPropertyVotingGroup? _resolveVotingGroup({
 
 final appRouter = GoRouter(
   initialLocation: '/login/0',
+  errorBuilder: (context, state) {
+    // Handle navigation errors gracefully (e.g., during deeplink initialization)
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
+  },
   routes: [
     // --------------- Shell para /home ---------------
     ShellRoute(
-      navigatorKey: _shellNavigatorKey,
+      // Removed navigatorKey to prevent Duplicate GlobalKey errors with deeplinks
       builder: (BuildContext context, GoRouterState state, Widget child) {
         final idx = _calculateIndex(state.matchedLocation);
         return Scaffold(

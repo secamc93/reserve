@@ -49,5 +49,18 @@
 	<string>Necesitamos la cámara para tomar la foto de perfil.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Necesitamos la galería para seleccionar la foto de perfil.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.rupu.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>rupu</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>
