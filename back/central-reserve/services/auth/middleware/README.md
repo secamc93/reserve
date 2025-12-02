@@ -98,7 +98,7 @@ func setupRoutes(router *gin.Engine, jwtService *jwt.JWTService, logger log.ILog
         admin.Use(middleware.RequireRole("admin"))
         {
             admin.GET("/users", getAllUsersHandler)
-            admin.POST("/users", createUserHandler)
+            admin.POST("/users", createhandlers)
         }
         
         // Rutas que requieren uno de varios roles

@@ -9755,7 +9755,7 @@ const docTemplate = `{
                 "permissions": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/services_auth_internal_infra_primary_controllers_rolehandler_response.PermissionResponse"
+                        "$ref": "#/definitions/services_auth_internal_infra_primary_controllers_handlers_response.PermissionResponse"
                     }
                 },
                 "role_id": {
@@ -10009,7 +10009,7 @@ const docTemplate = `{
                 "businesses": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/services_auth_internal_infra_primary_controllers_authhandler_response.BusinessInfo"
+                        "$ref": "#/definitions/services_auth_internal_infra_primary_controllers_handlers_response.BusinessInfo"
                     }
                 },
                 "is_super_admin": {
@@ -10084,7 +10084,7 @@ const docTemplate = `{
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionResponse"
+                        "$ref": "#/definitions/services_auth_internal_infra_primary_controllers_handlers_response.PermissionResponse"
                     }
                 },
                 "success": {
@@ -10114,7 +10114,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionResponse"
+                    "$ref": "#/definitions/services_auth_internal_infra_primary_controllers_handlers_response.PermissionResponse"
                 },
                 "success": {
                     "type": "boolean",
@@ -10420,7 +10420,7 @@ const docTemplate = `{
                 "businesses": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/services_auth_internal_infra_primary_controllers_userhandler_response.BusinessInfo"
+                        "$ref": "#/definitions/services_auth_internal_infra_primary_controllers_handlers_response.BusinessInfo"
                     }
                 },
                 "created_at": {
@@ -10447,7 +10447,7 @@ const docTemplate = `{
                 "roles": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/services_auth_internal_infra_primary_controllers_userhandler_response.RoleInfo"
+                        "$ref": "#/definitions/services_auth_internal_infra_primary_controllers_handlers_response.RoleInfo"
                     }
                 },
                 "updated_at": {
@@ -10480,7 +10480,7 @@ const docTemplate = `{
                     }
                 },
                 "role": {
-                    "$ref": "#/definitions/services_auth_internal_infra_primary_controllers_authhandler_response.RoleInfo"
+                    "$ref": "#/definitions/services_auth_internal_infra_primary_controllers_handlers_response.RoleInfo"
                 }
             }
         },
@@ -10506,7 +10506,7 @@ const docTemplate = `{
                 }
             }
         },
-        "services_auth_internal_infra_primary_controllers_authhandler_response.BusinessInfo": {
+        "services_auth_internal_infra_primary_controllers_handlers_response.BusinessInfo": {
             "type": "object",
             "properties": {
                 "address": {
@@ -10568,7 +10568,7 @@ const docTemplate = `{
                 }
             }
         },
-        "services_auth_internal_infra_primary_controllers_authhandler_response.RoleInfo": {
+        "services_auth_internal_infra_primary_controllers_handlers_response.RoleInfo": {
             "type": "object",
             "properties": {
                 "description": {
@@ -10582,7 +10582,7 @@ const docTemplate = `{
                 }
             }
         },
-        "services_auth_internal_infra_primary_controllers_permissionhandler_response.PermissionResponse": {
+        "services_auth_internal_infra_primary_controllers_handlers_response.PermissionResponse": {
             "type": "object",
             "properties": {
                 "action": {
@@ -10631,7 +10631,7 @@ const docTemplate = `{
                 }
             }
         },
-        "services_auth_internal_infra_primary_controllers_rolehandler_response.PermissionResponse": {
+        "services_auth_internal_infra_primary_controllers_handlers_response.PermissionResponse": {
             "type": "object",
             "properties": {
                 "action": {
@@ -10664,7 +10664,7 @@ const docTemplate = `{
                 }
             }
         },
-        "services_auth_internal_infra_primary_controllers_userhandler_response.BusinessInfo": {
+        "services_auth_internal_infra_primary_controllers_handlers_response.BusinessInfo": {
             "type": "object",
             "properties": {
                 "business_type_id": {
@@ -10692,7 +10692,7 @@ const docTemplate = `{
                 }
             }
         },
-        "services_auth_internal_infra_primary_controllers_userhandler_response.RoleInfo": {
+        "services_auth_internal_infra_primary_controllers_handlers_response.RoleInfo": {
             "type": "object",
             "properties": {
                 "description": {

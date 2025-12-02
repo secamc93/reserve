@@ -1,8 +1,6 @@
 package middleware
 
 import (
-	"central_reserve/services/auth/internal/app/usecaseauth"
-	"central_reserve/services/auth/internal/domain"
 	"central_reserve/shared/env"
 	"central_reserve/shared/log"
 	"fmt"
@@ -24,12 +22,12 @@ func (a jwtAdapter) GenerateToken(userID uint) (string, error) {
 	return a.impl.GenerateToken(userID)
 }
 
-func (a jwtAdapter) ValidateToken(tokenString string) (*domain.JWTClaims, error) {
+func (a jwtAdapter) ValidateToken(tokenString string) (*JWTClaims, error) {
 	claims, err := a.impl.ValidateToken(tokenString)
 	if err != nil {
 		return nil, err
 	}
-	return &domain.JWTClaims{
+	return &JWTClaims{
 		UserID:    claims.UserID,
 		TokenType: claims.TokenType,
 	}, nil
@@ -43,12 +41,12 @@ func (a jwtAdapter) GenerateBusinessToken(userID, businessID, businessTypeID, ro
 	return a.impl.GenerateBusinessToken(userID, businessID, businessTypeID, roleID)
 }
 
-func (a jwtAdapter) ValidateBusinessToken(tokenString string) (*domain.BusinessTokenClaims, error) {
+func (a jwtAdapter) ValidateBusinessToken(tokenString string) (*BusinessTokenClaims, error) {
 	claims, err := a.impl.ValidateBusinessToken(tokenString)
 	if err != nil {
 		return nil, err
 	}
-	return &domain.BusinessTokenClaims{
+	return &BusinessTokenClaims{
 		UserID:         claims.UserID,
 		BusinessID:     claims.BusinessID,
 		BusinessTypeID: claims.BusinessTypeID,
@@ -71,7 +69,7 @@ func InitFromEnv(cfg env.IConfig, logger log.ILogger) {
 }
 
 // GetJWTService retorna el servicio JWT configurado globalmente
-func GetJWTService() domain.IJWTService {
+func GetJWTService() IJWTService {
 	ensureInitialized()
 	return defaultJWTService
 }
@@ -91,10 +89,10 @@ type AuthInfo struct {
 	Roles      []string
 	BusinessID uint
 	APIKey     string
-	JWTClaims  *domain.JWTClaims
+	JWTClaims  *JWTClaims
 }
 
-func AuthMiddleware(jwtService domain.IJWTService, logger log.ILogger) gin.HandlerFunc {
+func AuthMiddleware(jwtService IJWTService, logger log.ILogger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authInfo, err := validateJWT(c, jwtService)
 		if err != nil {
@@ -122,7 +120,7 @@ func AuthMiddleware(jwtService domain.IJWTService, logger log.ILogger) gin.Handl
 	}
 }
 
-func APIKeyMiddleware(authUseCase usecaseauth.IAuthUseCase, logger log.ILogger) gin.HandlerFunc {
+func APIKeyMiddleware(authUseCase IAuthService, logger log.ILogger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		apiKey := extractAPIKey(c)
 		if apiKey == "" {
@@ -134,7 +132,7 @@ func APIKeyMiddleware(authUseCase usecaseauth.IAuthUseCase, logger log.ILogger) 
 			return
 		}
 
-		request := domain.ValidateAPIKeyRequest{
+		request := ValidateAPIKeyRequest{
 			APIKey: apiKey,
 		}
 
@@ -186,7 +184,7 @@ func APIKeyMiddleware(authUseCase usecaseauth.IAuthUseCase, logger log.ILogger) 
 	}
 }
 
-func AutoAuthMiddleware(jwtService domain.IJWTService, authUseCase usecaseauth.IAuthUseCase, logger log.ILogger) gin.HandlerFunc {
+func AutoAuthMiddleware(jwtService IJWTService, authUseCase IAuthService, logger log.ILogger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Detectar si tiene Authorization header (JWT)
 		authHeader := c.GetHeader("Authorization")
@@ -222,7 +220,7 @@ func AutoAuthMiddleware(jwtService domain.IJWTService, authUseCase usecaseauth.I
 // validateJWT valida la autenticación por JWT
 // Solo acepta business tokens (con business_id, business_type_id, role_id)
 // Rechaza tokens principales (solo con user_id)
-func validateJWT(c *gin.Context, jwtService domain.IJWTService) (*AuthInfo, error) {
+func validateJWT(c *gin.Context, jwtService IJWTService) (*AuthInfo, error) {
 	token := c.GetHeader("Authorization")
 	if token == "" {
 		return nil, &AuthError{Message: "Token de autorización requerido"}
@@ -373,12 +371,12 @@ func GetUserRoles(c *gin.Context) ([]string, bool) {
 }
 
 // GetJWTClaims obtiene los claims completos del JWT desde el contexto de Gin
-func GetJWTClaims(c *gin.Context) (*domain.JWTClaims, bool) {
+func GetJWTClaims(c *gin.Context) (*JWTClaims, bool) {
 	claims, exists := c.Get("jwt_claims")
 	if !exists {
 		return nil, false
 	}
-	if c, ok := claims.(*domain.JWTClaims); ok {
+	if c, ok := claims.(*JWTClaims); ok {
 		return c, true
 	}
 	return nil, false
@@ -512,13 +510,13 @@ func RequireAPIKey() gin.HandlerFunc {
 
 // AuthBuilder permite especificar el tipo de autenticación de forma fluida
 type AuthBuilder struct {
-	jwtService  domain.IJWTService
-	authUseCase usecaseauth.IAuthUseCase
+	jwtService  IJWTService
+	authUseCase IAuthService
 	logger      log.ILogger
 }
 
 // NewAuthBuilder crea un nuevo builder de autenticación
-func NewAuthBuilder(jwtService domain.IJWTService, authUseCase usecaseauth.IAuthUseCase, logger log.ILogger) *AuthBuilder {
+func NewAuthBuilder(jwtService IJWTService, authUseCase IAuthService, logger log.ILogger) *AuthBuilder {
 	return &AuthBuilder{
 		jwtService:  jwtService,
 		authUseCase: authUseCase,
@@ -543,14 +541,14 @@ func (ab *AuthBuilder) Auto() gin.HandlerFunc {
 
 // Configuración global para simplificar el uso desde otros servicios
 var (
-	defaultJWTService  domain.IJWTService
-	defaultAuthUseCase usecaseauth.IAuthUseCase
+	defaultJWTService  IJWTService
+	defaultAuthUseCase IAuthService
 	defaultLogger      log.ILogger
 	initialized        bool
 )
 
 // Configure inicializa el middleware con las dependencias necesarias
-func Configure(jwtService domain.IJWTService, authUseCase usecaseauth.IAuthUseCase, logger log.ILogger) {
+func Configure(jwtService IJWTService, authUseCase IAuthService, logger log.ILogger) {
 	defaultJWTService = jwtService
 	defaultAuthUseCase = authUseCase
 	defaultLogger = logger
@@ -590,7 +588,7 @@ func BusinessTokenAuth() gin.HandlerFunc {
 }
 
 // BusinessTokenAuthMiddleware valida solo tokens principales para el endpoint de business token
-func BusinessTokenAuthMiddleware(jwtService domain.IJWTService, logger log.ILogger) gin.HandlerFunc {
+func BusinessTokenAuthMiddleware(jwtService IJWTService, logger log.ILogger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := c.GetHeader("Authorization")
 		if token == "" {
@@ -644,12 +642,12 @@ func BusinessTokenAuthMiddleware(jwtService domain.IJWTService, logger log.ILogg
 }
 
 // GetBusinessTokenClaims obtiene los claims del business token desde el contexto
-func GetBusinessTokenClaims(c *gin.Context) (*domain.BusinessTokenClaims, bool) {
+func GetBusinessTokenClaims(c *gin.Context) (*BusinessTokenClaims, bool) {
 	claims, exists := c.Get("business_token_claims")
 	if !exists {
 		return nil, false
 	}
-	if c, ok := claims.(*domain.BusinessTokenClaims); ok {
+	if c, ok := claims.(*BusinessTokenClaims); ok {
 		return c, true
 	}
 	return nil, false

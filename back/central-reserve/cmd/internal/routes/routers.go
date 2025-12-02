@@ -3,7 +3,7 @@
 package routes
 
 import (
-	"central_reserve/internal/app/usecaseauth"
+	"central_reserve/internal/app/app"
 	"central_reserve/internal/domain/ports"
 	"central_reserve/internal/infra/primary/http2/middleware"
 	"central_reserve/internal/infra/primary/http2/routes"
@@ -25,7 +25,7 @@ type HTTPServer struct {
 	listener    net.Listener
 	env         env.IConfig
 	jwtService  ports.IJWTService
-	authUseCase usecaseauth.IUseCaseAuth
+	authUseCase app.Iapp
 }
 
 func New(
@@ -34,7 +34,7 @@ func New(
 	handlers *routes.Handlers,
 	env env.IConfig,
 	jwtService ports.IJWTService,
-	authUseCase usecaseauth.IUseCaseAuth,
+	authUseCase app.Iapp,
 ) (*HTTPServer, error) {
 	lis, err := net.Listen("tcp", address)
 	if err != nil {
