@@ -17,7 +17,6 @@ import (
 func Init(ctx context.Context) error {
 	logger := log.New()
 	environment := env.New(logger)
-
 	database := db.New(logger, environment)
 	s3 := storage.New(environment, logger)
 	// email := email.New(environment, logger)
