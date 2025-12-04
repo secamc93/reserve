@@ -9,6 +9,7 @@ import 'package:rupu/domain/entities/iam_business.dart';
 import 'package:rupu/domain/entities/user_action_result.dart';
 import 'package:rupu/domain/entities/user_detail.dart';
 import 'package:rupu/domain/entities/user_list_item.dart';
+import 'package:rupu/domain/entities/role.dart';
 import 'package:rupu/domain/infrastructure/datasources/users_management_datasource_impl.dart';
 import 'package:rupu/domain/infrastructure/repositories/iam_repository_impl.dart';
 import 'package:rupu/domain/infrastructure/repositories/users_repository_impl.dart';
@@ -20,12 +21,22 @@ import 'package:rupu/presentation/views/settings/utils/avatar_file_helper.dart';
 import 'package:rupu/presentation/views/users/users_controller.dart';
 import 'package:rupu/presentation/views/login/login_controller.dart';
 
+import 'package:rupu/domain/infrastructure/repositories/roles_repository_impl.dart';
+import 'package:rupu/domain/infrastructure/datasources/roles_datasource_impl.dart';
+import 'package:rupu/domain/repositories/roles_repository.dart';
+
 class UserDetailController extends GetxController {
   final UsersRepository repository;
   final IamRepository iamRepository;
-  UserDetailController({IamRepository? iamRepository})
-    : repository = UsersRepositoryImpl(UsersManagementDatasourceImpl()),
-      iamRepository = iamRepository ?? IamRepositoryImpl();
+  final RolesRepository rolesRepository;
+
+  UserDetailController({
+    IamRepository? iamRepository,
+    RolesRepository? rolesRepository,
+  }) : repository = UsersRepositoryImpl(UsersManagementDatasourceImpl()),
+       iamRepository = iamRepository ?? IamRepositoryImpl(),
+       rolesRepository =
+           rolesRepository ?? RolesRepositoryImpl(RolesDatasourceImpl());
 
   final HomeController _homeController = Get.find<HomeController>();
 
@@ -51,6 +62,65 @@ class UserDetailController extends GetxController {
   final businessSuggestions = <IamBusiness>[].obs;
   final businessSuggestionsLoading = false.obs;
   final businessSuggestionsError = RxnString();
+
+  final availableRoles = <Role>[].obs;
+  final filteredRoles = <Role>[].obs;
+  final rolesLoading = false.obs;
+  final rolesError = RxnString();
+
+  @override
+  void onInit() {
+    super.onInit();
+    loadRoles();
+  }
+
+  Future<void> loadRoles() async {
+    rolesLoading.value = true;
+    rolesError.value = null;
+    try {
+      final result = await rolesRepository.obtenerRoles();
+      debugPrint('Roles cargados: ${result.roles.length}');
+      for (var r in result.roles) {
+        debugPrint(
+          'Rol: ${r.name}, BusinessType: ${r.businessTypeId} (${r.businessTypeName})',
+        );
+      }
+      availableRoles.assignAll(result.roles);
+      filteredRoles.assignAll(result.roles); // Initially show all
+    } catch (e) {
+      debugPrint('Error cargando roles: $e');
+      rolesError.value = 'Error al cargar roles: $e';
+    } finally {
+      rolesLoading.value = false;
+    }
+  }
+
+  void filterRoles(int? businessTypeId) {
+    debugPrint('Filtrando roles por BusinessType: $businessTypeId');
+
+    // Treat 0 as null (since IamBusiness maps null to 0)
+    final targetTypeId = (businessTypeId == 0) ? null : businessTypeId;
+
+    if (targetTypeId == null) {
+      // If no business type is specified, show all roles (or maybe just global ones)
+      // For now, showing all seems safer to ensure something appears.
+      filteredRoles.assignAll(availableRoles);
+      return;
+    }
+
+    final filtered = availableRoles.where((role) {
+      // Show roles that match the business type or are global (null businessTypeId)
+      final match =
+          role.businessTypeId == targetTypeId || role.businessTypeId == null;
+      if (match) {
+        debugPrint('Rol coincidente: ${role.name} (${role.businessTypeId})');
+      }
+      return match;
+    }).toList();
+
+    debugPrint('Roles filtrados: ${filtered.length}');
+    filteredRoles.assignAll(filtered);
+  }
 
   int? _userId;
 
@@ -116,7 +186,7 @@ class UserDetailController extends GetxController {
     phoneCtrl.text = detail.phone;
     roleIdsCtrl.text = detail.roles.map((r) => r.id).join(',');
     avatarUrlCtrl.text = detail.avatarUrl;
-    hasAvatarUrl.value = false;
+    hasAvatarUrl.value = detail.avatarUrl.isNotEmpty;
     isActive.value = detail.isActive;
     selectedBusinesses.assignAll(detail.businesses);
   }
@@ -197,6 +267,8 @@ class UserDetailController extends GetxController {
   void removeAvatarFile() {
     avatarFile.value = null;
     avatarError.value = null;
+    avatarUrlCtrl.clear();
+    hasAvatarUrl.value = false;
   }
 
   void onAvatarUrlChanged(String value) {
@@ -384,5 +456,44 @@ class UserDetailController extends GetxController {
           ? null
           : business.businessType,
     );
+  }
+
+  final isAssigningRole = false.obs;
+
+  Future<UserActionResult> assignRoles({
+    required List<Map<String, int>> assignments,
+  }) async {
+    if (_userId == null) {
+      return const UserActionResult(
+        success: false,
+        message: 'No se ha cargado el usuario.',
+      );
+    }
+
+    isAssigningRole.value = true;
+    errorMessage.value = null;
+
+    try {
+      final request = {'request': assignments};
+
+      final result = await repository.assignRole(
+        userId: _userId!,
+        request: request,
+      );
+
+      if (!result.success) {
+        errorMessage.value = result.message ?? 'Error al asignar roles.';
+      }
+
+      return result;
+    } catch (e) {
+      errorMessage.value = 'Error al asignar roles: $e';
+      return UserActionResult(
+        success: false,
+        message: 'Error al asignar roles: $e',
+      );
+    } finally {
+      isAssigningRole.value = false;
+    }
   }
 }

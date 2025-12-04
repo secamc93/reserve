@@ -180,15 +180,90 @@ class IamUsersController extends GetxController {
 
   Future<List<Role>> fetchRoles({int? businessTypeId}) async {
     try {
-      final result = await repository.getRoles(businessTypeId: businessTypeId);
-      return result.roles;
+      debugPrint(
+        'IamUsersController.fetchRoles called with businessTypeId: $businessTypeId',
+      );
+      // Fetch all roles (pass null to get everything)
+      final result = await repository.getRoles();
+      debugPrint('Total roles fetched from repo: ${result.roles.length}');
+
+      // Normalize businessTypeId (treat 0 as null)
+      final targetTypeId = (businessTypeId == null || businessTypeId == 0)
+          ? null
+          : businessTypeId;
+      debugPrint('TargetTypeId for filtering: $targetTypeId');
+
+      // If no specific type is requested, return ALL roles
+      if (targetTypeId == null) {
+        debugPrint(
+          'No specific businessTypeId - returning all ${result.roles.length} roles',
+        );
+        return result.roles;
+      }
+
+      // Filter by specific business type OR global roles (null businessTypeId)
+      final filtered = result.roles.where((role) {
+        final match =
+            role.businessTypeId == targetTypeId || role.businessTypeId == null;
+        if (match) {
+          // debugPrint('Role matched: ${role.name} (Type: ${role.businessTypeId})');
+        }
+        return match;
+      }).toList();
+
+      debugPrint('Filtered roles count: ${filtered.length}');
+      return filtered;
     } catch (e) {
+      debugPrint('Error in fetchRoles: $e');
       rethrow;
     }
   }
 
   Future<IamGeneratePasswordResult> generatePassword(int userId) async {
     return await repository.generatePassword(userId);
+  }
+
+  Future<UserActionResult> assignRoles({
+    required int userId,
+    required Map<int, int> businessRoleAssignments,
+  }) async {
+    try {
+      // Call UsersRepository.assignRole if available
+      final usersController = _usersController;
+      if (usersController == null) {
+        return const UserActionResult(
+          success: false,
+          message: 'No es posible asignar roles en este momento.',
+        );
+      }
+
+      // Build the request: array of {business_id, role_id}
+      final assignments = businessRoleAssignments.entries
+          .map((e) => {'business_id': e.key, 'role_id': e.value})
+          .toList();
+
+      final request = {'assignments': assignments};
+
+      debugPrint('IAM: Assigning roles for user $userId: $request');
+
+      final result = await usersController.repository.assignRole(
+        userId: userId,
+        request: request,
+      );
+
+      if (result.success) {
+        // Refresh the user list to get updated assignments
+        await fetchUsers(reset: true);
+      }
+
+      return result;
+    } catch (e) {
+      debugPrint('IAM: Error assigning roles: $e');
+      return UserActionResult(
+        success: false,
+        message: 'Error al asignar roles: $e',
+      );
+    }
   }
 }
 

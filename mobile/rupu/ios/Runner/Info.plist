@@ -49,6 +49,8 @@
 	<string>Necesitamos la cámara para tomar la foto de perfil.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Necesitamos la galería para seleccionar la foto de perfil.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Usa Face ID para iniciar sesión de forma rápida y segura.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

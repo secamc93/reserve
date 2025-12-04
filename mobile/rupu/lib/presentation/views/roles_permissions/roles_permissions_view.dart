@@ -1112,10 +1112,16 @@ Future<void> showAssignPermissionsDialog(
                                                   ),
                                                 ),
                                                 const SizedBox(width: 8),
-                                                Text(
-                                                  permission.action,
-                                                  style: tt.bodySmall?.copyWith(
-                                                    color: cs.onSurfaceVariant,
+                                                Flexible(
+                                                  child: Text(
+                                                    permission.action,
+                                                    style: tt.bodySmall
+                                                        ?.copyWith(
+                                                          color: cs
+                                                              .onSurfaceVariant,
+                                                        ),
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
                                                   ),
                                                 ),
                                               ],
@@ -1655,7 +1661,7 @@ class RolesPermissionsStandaloneTab
         onRefresh: controller.refreshData,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,

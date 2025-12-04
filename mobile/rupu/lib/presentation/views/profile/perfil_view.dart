@@ -60,6 +60,7 @@ class PerfilView extends GetView<PerfilController> {
                                         context,
                                         imageUrl: ctrl.avatarUrl,
                                         title: ctrl.userName,
+                                        heroTag: 'profile_avatar',
                                       ),
                                 child: Container(
                                   decoration: BoxDecoration(
@@ -71,19 +72,24 @@ class PerfilView extends GetView<PerfilController> {
                                       width: 1,
                                     ),
                                   ),
-                                  child: CircleAvatar(
-                                    radius: 50,
-                                    backgroundColor: cs.surfaceContainerHighest,
-                                    backgroundImage: (ctrl.avatarUrl.isNotEmpty)
-                                        ? NetworkImage(ctrl.avatarUrl)
-                                        : null,
-                                    child: ctrl.avatarUrl.isEmpty
-                                        ? Icon(
-                                            Icons.person,
-                                            size: 48,
-                                            color: cs.onSurfaceVariant,
-                                          )
-                                        : null,
+                                  child: Hero(
+                                    tag: 'profile_avatar',
+                                    child: CircleAvatar(
+                                      radius: 50,
+                                      backgroundColor:
+                                          cs.surfaceContainerHighest,
+                                      backgroundImage:
+                                          (ctrl.avatarUrl.isNotEmpty)
+                                          ? NetworkImage(ctrl.avatarUrl)
+                                          : null,
+                                      child: ctrl.avatarUrl.isEmpty
+                                          ? Icon(
+                                              Icons.person,
+                                              size: 48,
+                                              color: cs.onSurfaceVariant,
+                                            )
+                                          : null,
+                                    ),
                                   ),
                                 ),
                               ),

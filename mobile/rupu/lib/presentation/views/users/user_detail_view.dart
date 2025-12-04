@@ -11,8 +11,13 @@ import 'widgets/user_detail_avatar_section.dart';
 class UserDetailView extends GetView<UserDetailController> {
   static const name = 'user-detail';
   final int userId;
+  final bool isProfileMode;
 
-  const UserDetailView({super.key, required this.userId});
+  const UserDetailView({
+    super.key,
+    required this.userId,
+    this.isProfileMode = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -29,44 +34,6 @@ class UserDetailView extends GetView<UserDetailController> {
           icon: Icon(Icons.arrow_back, color: cs.onPrimary),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        actions: [
-          Obx(() {
-            if (!controller.canDelete) return const SizedBox.shrink();
-            return IconButton(
-              tooltip: 'Eliminar usuario',
-              onPressed: controller.isDeleting.value
-                  ? null
-                  : () async {
-                      final confirmed = await _confirmDelete(context);
-                      if (!confirmed || !context.mounted) return;
-                      final result = await controller.deleteCurrentUser();
-                      if (!context.mounted) return;
-                      if (result.success) {
-                        Navigator.of(context).pop(result);
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              result.message ??
-                                  'No se pudo eliminar el usuario.',
-                            ),
-                          ),
-                        );
-                      }
-                    },
-              icon: controller.isDeleting.value
-                  ? SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(cs.onPrimary),
-                      ),
-                    )
-                  : Icon(Icons.delete_outline, color: cs.onPrimary),
-            );
-          }),
-        ],
       ),
       body: Obx(() {
         if (controller.isLoading.value) {
@@ -136,7 +103,6 @@ class UserDetailView extends GetView<UserDetailController> {
                               UserDetailAvatarSection(
                                 controller: controller,
                                 userName: detail.name,
-                                existingAvatarUrl: detail.avatarUrl,
                               ),
 
                               const SizedBox(height: 24),
@@ -194,96 +160,108 @@ class UserDetailView extends GetView<UserDetailController> {
                                     onChanged: controller.onAvatarUrlChanged,
                                   ),
 
-                                  const SizedBox(height: 16),
+                                  // Only show administrative fields when NOT in profile mode
+                                  if (!isProfileMode) ...[
+                                    const SizedBox(height: 16),
 
-                                  // Active toggle
-                                  Obx(
-                                    () => Container(
-                                      decoration: BoxDecoration(
-                                        color: cs.surfaceContainerHighest
-                                            .withValues(alpha: 0.3),
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      child: SwitchListTile.adaptive(
-                                        title: Row(
-                                          children: [
-                                            Icon(
-                                              Icons.power_settings_new,
-                                              size: 22,
-                                              color: cs.primary,
-                                            ),
-                                            const SizedBox(width: 12),
-                                            const Text('Usuario activo'),
-                                          ],
-                                        ),
-                                        value: controller.isActive.value,
-                                        onChanged: controller.canUpdate
-                                            ? (v) =>
-                                                  controller.isActive.value = v
-                                            : null,
-                                        shape: RoundedRectangleBorder(
+                                    // Active toggle
+                                    Obx(
+                                      () => Container(
+                                        decoration: BoxDecoration(
+                                          color: cs.surfaceContainerHighest
+                                              .withValues(alpha: 0.3),
                                           borderRadius: BorderRadius.circular(
                                             16,
                                           ),
                                         ),
-                                      ),
-                                    ),
-                                  ),
-
-                                  const SizedBox(height: 16),
-
-                                  // Business selector
-                                  Obx(
-                                    () => BusinessSelectorTile(
-                                      selectedCount:
-                                          controller.selectedBusinesses.length,
-                                      onTap: () => _openBusinessPicker(context),
-                                      enabled: controller.canUpdate,
-                                    ),
-                                  ),
-
-                                  // Selected businesses chips
-                                  Obx(() {
-                                    final businesses =
-                                        controller.selectedBusinesses;
-                                    if (businesses.isEmpty) {
-                                      return const SizedBox(height: 8);
-                                    }
-
-                                    return Padding(
-                                      padding: const EdgeInsets.only(top: 12),
-                                      child: Wrap(
-                                        spacing: 8,
-                                        runSpacing: 8,
-                                        children: businesses
-                                            .map(
-                                              (business) => InputChip(
-                                                label: Text(business.name),
-                                                avatar: Icon(
-                                                  Icons.storefront_outlined,
-                                                  size: 18,
-                                                  color: cs.primary,
-                                                ),
-                                                onDeleted: controller.canUpdate
-                                                    ? () => controller
-                                                          .removeBusiness(
-                                                            business.id,
-                                                          )
-                                                    : null,
-                                                backgroundColor: cs
-                                                    .primaryContainer
-                                                    .withValues(alpha: 0.5),
-                                                deleteIconColor: cs.error,
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(12),
-                                                ),
+                                        child: SwitchListTile.adaptive(
+                                          title: Row(
+                                            children: [
+                                              Icon(
+                                                Icons.power_settings_new,
+                                                size: 22,
+                                                color: cs.primary,
                                               ),
-                                            )
-                                            .toList(),
+                                              const SizedBox(width: 12),
+                                              const Text('Usuario activo'),
+                                            ],
+                                          ),
+                                          value: controller.isActive.value,
+                                          onChanged: controller.canUpdate
+                                              ? (v) =>
+                                                    controller.isActive.value =
+                                                        v
+                                              : null,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
+                                          ),
+                                        ),
                                       ),
-                                    );
-                                  }),
+                                    ),
+
+                                    const SizedBox(height: 16),
+
+                                    // Business selector
+                                    Obx(
+                                      () => BusinessSelectorTile(
+                                        selectedCount: controller
+                                            .selectedBusinesses
+                                            .length,
+                                        onTap: () =>
+                                            _openBusinessPicker(context),
+                                        enabled: controller.canUpdate,
+                                      ),
+                                    ),
+                                  ],
+
+                                  // Selected businesses chips - only show if NOT in profile mode
+                                  if (!isProfileMode)
+                                    Obx(() {
+                                      final businesses =
+                                          controller.selectedBusinesses;
+                                      if (businesses.isEmpty) {
+                                        return const SizedBox(height: 8);
+                                      }
+
+                                      return Padding(
+                                        padding: const EdgeInsets.only(top: 12),
+                                        child: Wrap(
+                                          spacing: 8,
+                                          runSpacing: 8,
+                                          children: businesses
+                                              .map(
+                                                (business) => InputChip(
+                                                  label: Text(business.name),
+                                                  avatar: Icon(
+                                                    Icons.storefront_outlined,
+                                                    size: 18,
+                                                    color: cs.primary,
+                                                  ),
+                                                  onDeleted:
+                                                      controller.canUpdate
+                                                      ? () => controller
+                                                            .removeBusiness(
+                                                              business.id,
+                                                            )
+                                                      : null,
+                                                  backgroundColor: cs
+                                                      .primaryContainer
+                                                      .withValues(alpha: 0.5),
+                                                  deleteIconColor: cs.error,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          12,
+                                                        ),
+                                                  ),
+                                                ),
+                                              )
+                                              .toList(),
+                                        ),
+                                      );
+                                    }),
 
                                   const SizedBox(height: 20),
 
@@ -487,6 +465,259 @@ class UserDetailView extends GetView<UserDetailController> {
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.2),
       builder: (dialogCtx) => _BusinessPickerContent(controller: controller),
+    );
+  }
+
+  Future<void> _showAssignRoleDialog(BuildContext context) async {
+    controller.businessSearchCtrl.clear();
+    controller.searchBusinesses('');
+    // Ensure roles are loaded
+    if (controller.availableRoles.isEmpty) {
+      await controller.loadRoles();
+    }
+
+    await DialogHelper.showBlurredDialog<void>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.2),
+      builder: (dialogCtx) => _AssignRoleDialogContent(controller: controller),
+    );
+  }
+}
+
+class _AssignRoleDialogContent extends StatefulWidget {
+  final UserDetailController controller;
+  const _AssignRoleDialogContent({required this.controller});
+
+  @override
+  State<_AssignRoleDialogContent> createState() =>
+      _AssignRoleDialogContentState();
+}
+
+class _AssignRoleDialogContentState extends State<_AssignRoleDialogContent> {
+  int? selectedBusinessId;
+  int? selectedRoleId;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: GlassContainer(
+          width: 420,
+          borderRadius: BorderRadius.circular(20),
+          padding: const EdgeInsets.all(24),
+          blur: 15,
+          opacity: 0.85,
+          child: Material(
+            color: Colors.transparent,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Asignar Rol',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 24),
+
+                // Business Selection
+                Text(
+                  'Seleccionar Negocio',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: widget.controller.businessSearchCtrl,
+                  decoration: InputDecoration(
+                    hintText: 'Buscar negocio...',
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                  ),
+                  onChanged: (val) => widget.controller.searchBusinesses(val),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  height: 150,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Theme.of(context).dividerColor),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Obx(() {
+                    if (widget.controller.businessSuggestionsLoading.value) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    final suggestions = widget.controller.businessSuggestions;
+                    if (suggestions.isEmpty) {
+                      return const Center(
+                        child: Text('No se encontraron negocios'),
+                      );
+                    }
+                    return ListView.builder(
+                      itemCount: suggestions.length,
+                      itemBuilder: (context, index) {
+                        final business = suggestions[index];
+                        final isSelected = selectedBusinessId == business.id;
+                        return ListTile(
+                          title: Text(business.name),
+                          subtitle: Text(business.businessType),
+                          selected: isSelected,
+                          selectedTileColor: Theme.of(
+                            context,
+                          ).colorScheme.primaryContainer.withValues(alpha: 0.2),
+                          onTap: () {
+                            setState(() {
+                              selectedBusinessId = business.id;
+                              selectedRoleId = null; // Reset role selection
+                            });
+                            widget.controller.filterRoles(
+                              business.businessTypeId,
+                            );
+                          },
+                          trailing: isSelected
+                              ? Icon(
+                                  Icons.check,
+                                  color: Theme.of(context).colorScheme.primary,
+                                )
+                              : null,
+                        );
+                      },
+                    );
+                  }),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Role Selection
+                Text(
+                  'Seleccionar Rol',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  height: 150,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Theme.of(context).dividerColor),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Obx(() {
+                    if (widget.controller.rolesLoading.value) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    final roles = widget.controller.filteredRoles;
+                    if (roles.isEmpty) {
+                      return Center(
+                        child: Text(
+                          'No hay roles disponibles para este negocio (Tipo: ${selectedBusinessId != null ? widget.controller.businessSuggestions.firstWhereOrNull((b) => b.id == selectedBusinessId)?.businessTypeId : "?"})',
+                        ),
+                      );
+                    }
+                    return ListView.builder(
+                      itemCount: roles.length,
+                      itemBuilder: (context, index) {
+                        final role = roles[index];
+                        final isSelected = selectedRoleId == role.id;
+                        return ListTile(
+                          title: Text(role.name),
+                          subtitle: role.businessTypeName != null
+                              ? Text(role.businessTypeName!)
+                              : null,
+                          selected: isSelected,
+                          selectedTileColor: Theme.of(
+                            context,
+                          ).colorScheme.primaryContainer.withValues(alpha: 0.2),
+                          onTap: () {
+                            setState(() {
+                              selectedRoleId = role.id;
+                            });
+                          },
+                          trailing: isSelected
+                              ? Icon(
+                                  Icons.check,
+                                  color: Theme.of(context).colorScheme.primary,
+                                )
+                              : null,
+                        );
+                      },
+                    );
+                  }),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Actions
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Cancelar'),
+                    ),
+                    const SizedBox(width: 12),
+                    Obx(
+                      () => FilledButton(
+                        onPressed:
+                            (selectedBusinessId == null ||
+                                selectedRoleId == null ||
+                                widget.controller.isAssigningRole.value)
+                            ? null
+                            : () async {
+                                final assignments = [
+                                  {
+                                    'business_id': selectedBusinessId!,
+                                    'role_id': selectedRoleId!,
+                                  },
+                                ];
+
+                                final result = await widget.controller
+                                    .assignRoles(assignments: assignments);
+
+                                if (!context.mounted) return;
+                                if (result.success) {
+                                  Navigator.of(context).pop();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        result.message ??
+                                            'Rol asignado correctamente',
+                                      ),
+                                    ),
+                                  );
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        result.message ??
+                                            'Error al asignar rol',
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                        child: widget.controller.isAssigningRole.value
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text('Asignar'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

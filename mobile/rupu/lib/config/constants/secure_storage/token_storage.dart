@@ -4,6 +4,9 @@ class TokenStorage {
   // Crea la instancia (usa el llavero de iOS y Keystore de Android)
   final _storage = const FlutterSecureStorage();
 
+  // Getter público para acceder al storage desde otros servicios
+  FlutterSecureStorage get storage => _storage;
+
   static const _loginKey = 'ACCESS_TOKEN';
   static const _businessKey = 'BUSINESS_ACCESS_TOKEN';
 

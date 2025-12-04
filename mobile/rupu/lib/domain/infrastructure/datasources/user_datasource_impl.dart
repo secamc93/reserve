@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:rupu/config/helpers/global_vars.dart';
 import 'package:rupu/domain/datasource/users_datasource.dart';
 import 'package:rupu/domain/infrastructure/models/login_response_model.dart';
+import 'package:rupu/domain/infrastructure/models/simple_response_model.dart';
 
 class UserDatasource extends UsersDatasource {
   final dio = Dio(BaseOptions(baseUrl: '${GlobVars.baseUrl}/auth'));
@@ -47,5 +48,13 @@ class UserDatasource extends UsersDatasource {
     }
 
     throw Exception('Token de negocio no encontrado en la respuesta.');
+  }
+
+  @override
+  Future<SimpleResponseModel> assignRole({
+    required int userId,
+    required Map<String, dynamic> request,
+  }) {
+    throw UnimplementedError();
   }
 }

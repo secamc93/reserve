@@ -7,10 +7,10 @@ import '../models/users_response_model.dart';
 
 class UsersMapper {
   static UsersPage responseToEntity(UsersResponseModel model) => UsersPage(
-        success: model.success,
-        count: model.count,
-        users: model.data.map(userModelToEntity).toList(),
-      );
+    success: model.success,
+    count: model.count,
+    users: model.data.map(userModelToEntity).toList(),
+  );
 
   static UserDetail userModelToDetail(UserModel model) {
     final base = userModelToEntity(model);
@@ -25,35 +25,51 @@ class UsersMapper {
       createdAt: base.createdAt,
       updatedAt: base.updatedAt,
       roles: base.roles,
-      businesses: base.businesses,
+      businesses: base.businesses.isNotEmpty
+          ? base.businesses
+          : model.assignments.map(_assignmentToBusinessSummary).toList(),
+    );
+  }
+
+  static UserBusinessSummary _assignmentToBusinessSummary(
+    UserAssignmentModel assignment,
+  ) {
+    return UserBusinessSummary(
+      id: assignment.businessId,
+      name: assignment.businessName ?? 'Negocio',
+      code: '',
+      businessTypeId: assignment.businessTypeId,
+      businessTypeName: null,
+      businessTypeCode: null,
+      isActive: true, // Assuming active if assigned
     );
   }
 
   static UserListItem userModelToEntity(UserModel model) => UserListItem(
-        id: model.id,
-        name: model.name,
-        email: model.email,
-        phone: model.phone,
-        avatarUrl: model.avatarUrl,
-        isActive: model.isActive,
-        lastLoginAt: model.lastLoginAt,
-        createdAt: model.createdAt,
-        updatedAt: model.updatedAt,
-        roles: model.roles.map(_roleModelToEntity).toList(),
-        businesses: model.businesses.map(_businessModelToEntity).toList(),
-      );
+    id: model.id,
+    name: model.name,
+    email: model.email,
+    phone: model.phone,
+    avatarUrl: model.avatarUrl,
+    isActive: model.isActive,
+    lastLoginAt: model.lastLoginAt,
+    createdAt: model.createdAt,
+    updatedAt: model.updatedAt,
+    roles: model.roles.map(_roleModelToEntity).toList(),
+    businesses: model.businesses.map(_businessModelToEntity).toList(),
+  );
 
   static UserRoleSummary _roleModelToEntity(RoleModel model) => UserRoleSummary(
-        id: model.id,
-        name: model.name,
-        code: model.code,
-        description: model.description,
-        level: model.level,
-        isSystem: model.isSystem,
-        scopeId: model.scopeId,
-        scopeName: model.scopeName,
-        scopeCode: model.scopeCode,
-      );
+    id: model.id,
+    name: model.name,
+    code: model.code,
+    description: model.description,
+    level: model.level,
+    isSystem: model.isSystem,
+    scopeId: model.scopeId,
+    scopeName: model.scopeName,
+    scopeCode: model.scopeCode,
+  );
 
   static UserBusinessSummary _businessModelToEntity(BusinessModel model) =>
       UserBusinessSummary(

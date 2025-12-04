@@ -1521,25 +1521,29 @@ class _IamUserCard extends StatelessWidget {
                                 context,
                                 imageProvider: NetworkImage(user.avatarUrl),
                                 title: user.name,
+                                heroTag: 'iam_avatar_${user.id}',
                               )
                             : null,
-                        child: CircleAvatar(
-                          radius: 28,
-                          backgroundImage: user.avatarUrl.isNotEmpty
-                              ? NetworkImage(user.avatarUrl)
-                              : null,
-                          backgroundColor: user.avatarUrl.isEmpty
-                              ? cs.primaryContainer.withValues(alpha: 0.5)
-                              : cs.surfaceContainerHighest,
-                          child: user.avatarUrl.isEmpty
-                              ? Text(
-                                  initials,
-                                  style: tt.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                    color: cs.onPrimaryContainer,
-                                  ),
-                                )
-                              : null,
+                        child: Hero(
+                          tag: 'iam_avatar_${user.id}',
+                          child: CircleAvatar(
+                            radius: 28,
+                            backgroundImage: user.avatarUrl.isNotEmpty
+                                ? NetworkImage(user.avatarUrl)
+                                : null,
+                            backgroundColor: user.avatarUrl.isEmpty
+                                ? cs.primaryContainer.withValues(alpha: 0.5)
+                                : cs.surfaceContainerHighest,
+                            child: user.avatarUrl.isEmpty
+                                ? Text(
+                                    initials,
+                                    style: tt.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.w800,
+                                      color: cs.onPrimaryContainer,
+                                    ),
+                                  )
+                                : null,
+                          ),
                         ),
                       ),
                     ),
@@ -2842,7 +2846,12 @@ class _CopyableField extends StatelessWidget {
 
 /// Muestra diálogo para asignar roles a un usuario
 Future<void> showAssignRolesDialog(BuildContext context, IamUser user) async {
-  if (!Get.isRegistered<IamUsersController>()) return;
+  debugPrint('═══════════════════════════════════════');
+  debugPrint('IAM: showAssignRolesDialog called for user: ${user.name}');
+  if (!Get.isRegistered<IamUsersController>()) {
+    debugPrint('IAM: IamUsersController not registered!');
+    return;
+  }
   final controller = Get.find<IamUsersController>();
 
   // Group assignments by business
@@ -2853,7 +2862,21 @@ Future<void> showAssignRolesDialog(BuildContext context, IamUser user) async {
         .add(assignment);
   }
 
+  debugPrint('IAM: Total businesses for user: ${assignmentsByBusiness.length}');
+  for (var entry in assignmentsByBusiness.entries) {
+    debugPrint(
+      'IAM: Business ${entry.key} has ${entry.value.length} assignments',
+    );
+    for (var a in entry.value) {
+      debugPrint(
+        'IAM:   - BusinessTypeId: ${a.businessTypeId}, RoleId: ${a.roleId}',
+      );
+    }
+  }
+
   final businessRoles = <int, List<Role>>{};
+  List<IamBusinessType> businessTypes = [];
+  Map<int, int> businessTypeIdMap = {}; // Map businessId -> businessTypeId
 
   // Show loading
   showDialog(
@@ -2863,18 +2886,66 @@ Future<void> showAssignRolesDialog(BuildContext context, IamUser user) async {
   );
 
   try {
+    // Load business types first
+    debugPrint('IAM: Loading business types...');
+    if (Get.isRegistered<IamBusinessTypesController>()) {
+      final typesController = Get.find<IamBusinessTypesController>();
+      if (typesController.types.isEmpty) {
+        await typesController.fetchTypes();
+      }
+      businessTypes = typesController.types.toList();
+      debugPrint('IAM: Loaded ${businessTypes.length} business types');
+    }
+
+    // Load businesses to get business_type_id for each business
+    debugPrint('IAM: Loading businesses to get business_type_id...');
+    if (Get.isRegistered<IamBusinessesController>()) {
+      // Load all businesses without pagination
+      final allBusinessesResult = await controller.repository.getBusinesses(
+        page: 1,
+        perPage: 1000, // Get all businesses
+      );
+      debugPrint(
+        'IAM: Loaded ${allBusinessesResult.businesses.length} businesses',
+      );
+
+      // Create map of businessId -> businessTypeId
+      for (final business in allBusinessesResult.businesses) {
+        businessTypeIdMap[business.id] = business.businessTypeId;
+        debugPrint(
+          'IAM: Business ${business.id} (${business.name}) -> Type ${business.businessTypeId}',
+        );
+      }
+    }
+
+    debugPrint('IAM: Starting role fetch loop...');
     for (final entry in assignmentsByBusiness.entries) {
       final businessId = entry.key;
-      final assignments = entry.value;
-      // Assuming all assignments for the same business have the same business type
-      final businessTypeId = assignments.firstOrNull?.businessTypeId;
 
-      if (businessTypeId != null) {
-        final roles = await controller.fetchRoles(
-          businessTypeId: businessTypeId,
-        );
-        businessRoles[businessId] = roles;
+      // Get businessTypeId from the map we loaded from /businesses endpoint
+      final businessTypeId = businessTypeIdMap[businessId];
+
+      debugPrint(
+        'IAM: BusinessId: $businessId, BusinessTypeId from map: $businessTypeId',
+      );
+
+      // Fetch roles filtered by businessTypeId (if null, it will fetch all roles)
+      debugPrint(
+        'IAM: Calling fetchRoles with businessTypeId=$businessTypeId for business $businessId...',
+      );
+      final roles = await controller.fetchRoles(businessTypeId: businessTypeId);
+      debugPrint(
+        'IAM: ✓ Roles fetched for business $businessId: ${roles.length} roles',
+      );
+      for (var r in roles) {
+        debugPrint('IAM:   - ${r.name} (TypeId: ${r.businessTypeId})');
       }
+      businessRoles[businessId] = roles;
+    }
+
+    debugPrint('IAM: businessRoles map summary:');
+    for (var entry in businessRoles.entries) {
+      debugPrint('IAM:   Business ${entry.key} => ${entry.value.length} roles');
     }
 
     if (!context.mounted) return;
@@ -2891,6 +2962,7 @@ Future<void> showAssignRolesDialog(BuildContext context, IamUser user) async {
     }
     controller.initSelectedRoles(initialRoles);
 
+    debugPrint('IAM: About to show _AssignRolesContent dialog...');
     await showDialog(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.2),
@@ -2898,31 +2970,44 @@ Future<void> showAssignRolesDialog(BuildContext context, IamUser user) async {
         user: user,
         assignmentsByBusiness: assignmentsByBusiness,
         businessRoles: businessRoles,
+        businessTypes: businessTypes,
+        businessTypeIdMap: businessTypeIdMap,
         controller: controller,
       ),
     );
+    debugPrint('IAM: Dialog closed');
   } catch (e) {
+    debugPrint('IAM: ✗ ERROR in showAssignRolesDialog: $e');
+    debugPrint('IAM: Stack trace: ${StackTrace.current}');
     if (!context.mounted) return;
     Navigator.of(context, rootNavigator: true).pop(); // Close loading
     _showIamSnackBar(context, 'Error al cargar roles: $e');
   }
+  debugPrint('═══════════════════════════════════════');
 }
 
 class _AssignRolesContent extends StatelessWidget {
   final IamUser user;
   final Map<int, List<IamBusinessRoleAssignment>> assignmentsByBusiness;
   final Map<int, List<Role>> businessRoles;
+  final List<IamBusinessType> businessTypes;
+  final Map<int, int> businessTypeIdMap; // Map businessId -> businessTypeId
   final IamUsersController controller;
 
   const _AssignRolesContent({
     required this.user,
     required this.assignmentsByBusiness,
     required this.businessRoles,
+    required this.businessTypes,
+    required this.businessTypeIdMap,
     required this.controller,
   });
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('IAM UI: _AssignRolesContent.build() called');
+    debugPrint('IAM UI: businessRoles map has ${businessRoles.length} entries');
+
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final tt = theme.textTheme;
@@ -2989,7 +3074,94 @@ class _AssignRolesContent extends StatelessWidget {
                             final businessName =
                                 assignments.firstOrNull?.businessName ??
                                 'Negocio #$businessId';
+
+                            // Get businessTypeId from the businesses map (loaded from /businesses endpoint)
+                            var businessTypeId = businessTypeIdMap[businessId];
+
+                            debugPrint(
+                              'IAM UI: Business $businessId - businessTypeId from map: $businessTypeId',
+                            );
+
+                            // Fallback: Try to get from assignments if not in map
+                            if (businessTypeId == null) {
+                              businessTypeId = assignments
+                                  .map((e) => e.businessTypeId)
+                                  .where((id) => id != null && id > 0)
+                                  .firstOrNull;
+                              debugPrint(
+                                'IAM UI: Business $businessId - businessTypeId from assignments: $businessTypeId',
+                              );
+                            }
+
+                            // Second fallback: Try to infer from the assigned role
+                            if (businessTypeId == null &&
+                                assignments.isNotEmpty) {
+                              final assignedRoleId = assignments.first.roleId;
+                              final roles = businessRoles[businessId] ?? [];
+                              final assignedRole = roles.firstWhereOrNull(
+                                (r) => r.id == assignedRoleId,
+                              );
+                              if (assignedRole != null &&
+                                  assignedRole.businessTypeId != null) {
+                                businessTypeId = assignedRole.businessTypeId;
+                                debugPrint(
+                                  'IAM UI: Business $businessId - businessTypeId inferred from role: $businessTypeId',
+                                );
+                              }
+                            }
+
+                            // Find the business type name
+                            debugPrint(
+                              'IAM UI: --- Business Type Resolution ---',
+                            );
+                            debugPrint('IAM UI: BusinessId: $businessId');
+                            debugPrint(
+                              'IAM UI: Resolved businessTypeId: $businessTypeId',
+                            );
+                            debugPrint(
+                              'IAM UI: Available business types (${businessTypes.length}):',
+                            );
+                            for (var bt in businessTypes) {
+                              debugPrint(
+                                'IAM UI:   - ID: ${bt.id}, Name: ${bt.name}, Icon: ${bt.icon}',
+                              );
+                            }
+
+                            String businessTypeDisplay;
+                            if (businessTypeId != null) {
+                              final type = businessTypes.firstWhereOrNull(
+                                (t) => t.id == businessTypeId,
+                              );
+                              debugPrint(
+                                'IAM UI: Looking for type with ID $businessTypeId... Found: ${type?.name ?? "NOT FOUND"}',
+                              );
+
+                              if (type != null) {
+                                // Only show the icon if it's an actual emoji (Unicode character)
+                                // Icons like "building" are just text, not emojis
+                                final hasEmoji =
+                                    type.icon.isNotEmpty &&
+                                    type.icon.runes.length == 1 &&
+                                    type.icon.runes.first > 0x1F000;
+                                businessTypeDisplay = hasEmoji
+                                    ? '${type.icon} ${type.name}'
+                                    : type.name;
+                              } else {
+                                businessTypeDisplay =
+                                    'Tipo: ID $businessTypeId';
+                              }
+                            } else {
+                              debugPrint(
+                                'IAM UI: ⚠️ businessTypeId is NULL - showing "Sin tipo definido"',
+                              );
+                              businessTypeDisplay = 'Sin tipo definido';
+                            }
+
                             final roles = businessRoles[businessId] ?? [];
+
+                            debugPrint(
+                              'IAM UI: Rendering business $businessId ($businessName) - Type: $businessTypeDisplay - ${roles.length} roles',
+                            );
 
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 16),
@@ -3002,12 +3174,45 @@ class _AssignRolesContent extends StatelessWidget {
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    businessTypeDisplay,
+                                    style: tt.bodySmall?.copyWith(
+                                      color: cs.onSurfaceVariant,
+                                    ),
+                                  ),
                                   const SizedBox(height: 8),
                                   if (roles.isEmpty)
-                                    Text(
-                                      'No hay roles disponibles para este tipo de negocio.',
-                                      style: tt.bodySmall?.copyWith(
-                                        color: cs.error,
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: cs.errorContainer.withValues(
+                                          alpha: 0.3,
+                                        ),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: cs.error.withValues(
+                                            alpha: 0.3,
+                                          ),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.warning_amber_rounded,
+                                            color: cs.error,
+                                            size: 20,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              'No hay roles disponibles para este tipo de negocio.',
+                                              style: tt.bodySmall?.copyWith(
+                                                color: cs.error,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     )
                                   else
@@ -3028,7 +3233,7 @@ class _AssignRolesContent extends StatelessWidget {
                                           ),
                                           contentPadding:
                                               const EdgeInsets.symmetric(
-                                                horizontal: 12,
+                                                horizontal: 2,
                                                 vertical: 8,
                                               ),
                                           filled: true,
@@ -3039,7 +3244,10 @@ class _AssignRolesContent extends StatelessWidget {
                                         items: roles.map((role) {
                                           return DropdownMenuItem<int>(
                                             value: role.id,
-                                            child: Text(role.name),
+                                            child: Text(
+                                              role.name,
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           );
                                         }).toList(),
                                         onChanged: (value) {
@@ -3072,16 +3280,64 @@ class _AssignRolesContent extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     FilledButton(
-                      onPressed: () {
-                        // TODO: Implement API call to save roles
-                        Navigator.of(context).pop();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Funcionalidad de guardado pendiente de integración',
+                      onPressed: () async {
+                        // Build map of business_id -> role_id from selected roles
+                        final assignments = <int, int>{};
+                        for (var entry in controller.selectedRoles.entries) {
+                          final businessId = entry.key;
+                          final roleIds = entry.value;
+                          if (roleIds.isNotEmpty && roleIds.first > 0) {
+                            assignments[businessId] = roleIds.first;
+                          }
+                        }
+
+                        if (assignments.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Debes seleccionar al menos un rol',
+                              ),
                             ),
-                          ),
+                          );
+                          return;
+                        }
+
+                        // Show loading
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (ctx) =>
+                              const Center(child: CircularProgressIndicator()),
                         );
+
+                        try {
+                          final result = await controller.assignRoles(
+                            userId: user.id,
+                            businessRoleAssignments: assignments,
+                          );
+
+                          if (!context.mounted) return;
+                          Navigator.of(
+                            context,
+                            rootNavigator: true,
+                          ).pop(); // Close loading
+                          Navigator.of(context).pop(); // Close dialog
+
+                          _showIamSnackBar(
+                            context,
+                            result.message ?? 'Operación completada',
+                          );
+                        } catch (e) {
+                          if (!context.mounted) return;
+                          Navigator.of(
+                            context,
+                            rootNavigator: true,
+                          ).pop(); // Close loading
+                          _showIamSnackBar(
+                            context,
+                            'Error al asignar roles: $e',
+                          );
+                        }
                       },
                       child: const Text('Asignar Roles'),
                     ),

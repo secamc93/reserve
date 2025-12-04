@@ -34,4 +34,9 @@ abstract class UsersRepository {
   });
 
   Future<UserActionResult> deleteUser({required int id});
+
+  Future<UserActionResult> assignRole({
+    required int userId,
+    required Map<String, dynamic> request,
+  });
 }

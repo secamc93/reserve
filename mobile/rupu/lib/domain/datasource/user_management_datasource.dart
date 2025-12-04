@@ -34,4 +34,9 @@ abstract class UserManagementDatasource {
   });
 
   Future<SimpleResponseModel> deleteUser({required int id});
+
+  Future<SimpleResponseModel> assignRole({
+    required int userId,
+    required Map<String, dynamic> request,
+  });
 }

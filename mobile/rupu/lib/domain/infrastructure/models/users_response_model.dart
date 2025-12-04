@@ -20,19 +20,19 @@ class UsersResponseModel {
       success: json['success'] as bool? ?? false,
       data: data is List
           ? data
-              .whereType<Map<String, dynamic>>()
-              .map(UserModel.fromJson)
-              .toList()
+                .whereType<Map<String, dynamic>>()
+                .map(UserModel.fromJson)
+                .toList()
           : const [],
       count: json['count'] as int? ?? 0,
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'success': success,
-        'data': data.map((e) => e.toJson()).toList(),
-        'count': count,
-      };
+    'success': success,
+    'data': data.map((e) => e.toJson()).toList(),
+    'count': count,
+  };
 }
 
 class UserModel {
@@ -45,6 +45,7 @@ class UserModel {
   final DateTime? lastLoginAt;
   final List<RoleModel> roles;
   final List<BusinessModel> businesses;
+  final List<UserAssignmentModel> assignments;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -58,43 +59,73 @@ class UserModel {
     required this.lastLoginAt,
     required this.roles,
     required this.businesses,
+    required this.assignments,
     required this.createdAt,
     required this.updatedAt,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
-        id: json['id'] as int,
-        name: json['name'] as String? ?? '',
-        email: json['email'] as String? ?? '',
-        phone: json['phone'] as String? ?? '',
-        avatarUrl: json['avatar_url'] as String? ?? '',
-        isActive: json['is_active'] as bool? ?? false,
-        lastLoginAt: _tryParseDate(json['last_login_at'] as String?),
-        roles: (json['roles'] as List<dynamic>? ?? [])
-            .whereType<Map<String, dynamic>>()
-            .map(RoleModel.fromJson)
-            .toList(),
-        businesses: (json['businesses'] as List<dynamic>? ?? [])
-            .whereType<Map<String, dynamic>>()
-            .map(BusinessModel.fromJson)
-            .toList(),
-        createdAt: _tryParseDate(json['created_at'] as String?),
-        updatedAt: _tryParseDate(json['updated_at'] as String?),
-      );
+    id: json['id'] as int,
+    name: json['name'] as String? ?? '',
+    email: json['email'] as String? ?? '',
+    phone: json['phone'] as String? ?? '',
+    avatarUrl: json['avatar_url'] as String? ?? '',
+    isActive: json['is_active'] as bool? ?? false,
+    lastLoginAt: _tryParseDate(json['last_login_at'] as String?),
+    roles: (json['roles'] as List<dynamic>? ?? [])
+        .whereType<Map<String, dynamic>>()
+        .map(RoleModel.fromJson)
+        .toList(),
+    businesses: (json['businesses'] as List<dynamic>? ?? [])
+        .whereType<Map<String, dynamic>>()
+        .map(BusinessModel.fromJson)
+        .toList(),
+    assignments: (json['business_role_assignments'] as List<dynamic>? ?? [])
+        .whereType<Map<String, dynamic>>()
+        .map(UserAssignmentModel.fromJson)
+        .toList(),
+    createdAt: _tryParseDate(json['created_at'] as String?),
+    updatedAt: _tryParseDate(json['updated_at'] as String?),
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'email': email,
-        'phone': phone,
-        'avatar_url': avatarUrl,
-        'is_active': isActive,
-        'last_login_at': lastLoginAt?.toIso8601String(),
-        'roles': roles.map((e) => e.toJson()).toList(),
-        'businesses': businesses.map((e) => e.toJson()).toList(),
-        'created_at': createdAt?.toIso8601String(),
-        'updated_at': updatedAt?.toIso8601String(),
-      };
+    'id': id,
+    'name': name,
+    'email': email,
+    'phone': phone,
+    'avatar_url': avatarUrl,
+    'is_active': isActive,
+    'last_login_at': lastLoginAt?.toIso8601String(),
+    'roles': roles.map((e) => e.toJson()).toList(),
+    'businesses': businesses.map((e) => e.toJson()).toList(),
+    'created_at': createdAt?.toIso8601String(),
+    'updated_at': updatedAt?.toIso8601String(),
+  };
+}
+
+class UserAssignmentModel {
+  final int businessId;
+  final String? businessName;
+  final int roleId;
+  final String? roleName;
+  final int? businessTypeId;
+
+  UserAssignmentModel({
+    required this.businessId,
+    required this.businessName,
+    required this.roleId,
+    required this.roleName,
+    this.businessTypeId,
+  });
+
+  factory UserAssignmentModel.fromJson(Map<String, dynamic> json) =>
+      UserAssignmentModel(
+        businessId: (json['business_id'] as num?)?.toInt() ?? 0,
+        businessName: json['business_name'] as String?,
+        roleId: (json['role_id'] as num?)?.toInt() ?? 0,
+        roleName: json['role_name'] as String?,
+        businessTypeId: (json['business_type_id'] as num?)?.toInt(),
+      );
 }
 
 class RoleModel {
@@ -121,28 +152,28 @@ class RoleModel {
   });
 
   factory RoleModel.fromJson(Map<String, dynamic> json) => RoleModel(
-        id: json['id'] as int,
-        name: json['name'] as String? ?? '',
-        code: json['code'] as String?,
-        description: json['description'] as String?,
-        level: json['level'] as int?,
-        isSystem: json['is_system'] as bool?,
-        scopeId: json['scope_id'] as int?,
-        scopeName: json['scope_name'] as String?,
-        scopeCode: json['scope_code'] as String?,
-      );
+    id: json['id'] as int,
+    name: json['name'] as String? ?? '',
+    code: json['code'] as String?,
+    description: json['description'] as String?,
+    level: json['level'] as int?,
+    isSystem: json['is_system'] as bool?,
+    scopeId: json['scope_id'] as int?,
+    scopeName: json['scope_name'] as String?,
+    scopeCode: json['scope_code'] as String?,
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        if (code != null) 'code': code,
-        if (description != null) 'description': description,
-        if (level != null) 'level': level,
-        if (isSystem != null) 'is_system': isSystem,
-        if (scopeId != null) 'scope_id': scopeId,
-        if (scopeName != null) 'scope_name': scopeName,
-        if (scopeCode != null) 'scope_code': scopeCode,
-      };
+    'id': id,
+    'name': name,
+    if (code != null) 'code': code,
+    if (description != null) 'description': description,
+    if (level != null) 'level': level,
+    if (isSystem != null) 'is_system': isSystem,
+    if (scopeId != null) 'scope_id': scopeId,
+    if (scopeName != null) 'scope_name': scopeName,
+    if (scopeCode != null) 'scope_code': scopeCode,
+  };
 }
 
 class BusinessModel {
@@ -191,49 +222,48 @@ class BusinessModel {
   });
 
   factory BusinessModel.fromJson(Map<String, dynamic> json) => BusinessModel(
-        id: json['id'] as int,
-        name: json['name'] as String? ?? '',
-        code: json['code'] as String? ?? '',
-        businessTypeId: json['business_type_id'] as int?,
-        timezone: json['timezone'] as String?,
-        address: json['address'] as String?,
-        description: json['description'] as String?,
-        logoUrl: json['logo_url'] as String?,
-        primaryColor: json['primary_color'] as String?,
-        secondaryColor: json['secondary_color'] as String?,
-        tertiaryColor: json['tertiary_color'] as String?,
-        quaternaryColor: json['quaternary_color'] as String?,
-        navbarImageUrl: json['navbar_image_url'] as String?,
-        customDomain: json['custom_domain'] as String?,
-        isActive: json['is_active'] as bool?,
-        enableDelivery: json['enable_delivery'] as bool?,
-        enablePickup: json['enable_pickup'] as bool?,
-        enableReservations: json['enable_reservations'] as bool?,
-        businessTypeName: json['business_type_name'] as String?,
-        businessTypeCode: json['business_type_code'] as String?,
-      );
+    id: json['id'] as int,
+    name: json['name'] as String? ?? '',
+    code: json['code'] as String? ?? '',
+    businessTypeId: json['business_type_id'] as int?,
+    timezone: json['timezone'] as String?,
+    address: json['address'] as String?,
+    description: json['description'] as String?,
+    logoUrl: json['logo_url'] as String?,
+    primaryColor: json['primary_color'] as String?,
+    secondaryColor: json['secondary_color'] as String?,
+    tertiaryColor: json['tertiary_color'] as String?,
+    quaternaryColor: json['quaternary_color'] as String?,
+    navbarImageUrl: json['navbar_image_url'] as String?,
+    customDomain: json['custom_domain'] as String?,
+    isActive: json['is_active'] as bool?,
+    enableDelivery: json['enable_delivery'] as bool?,
+    enablePickup: json['enable_pickup'] as bool?,
+    enableReservations: json['enable_reservations'] as bool?,
+    businessTypeName: json['business_type_name'] as String?,
+    businessTypeCode: json['business_type_code'] as String?,
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'code': code,
-        if (businessTypeId != null) 'business_type_id': businessTypeId,
-        if (timezone != null) 'timezone': timezone,
-        if (address != null) 'address': address,
-        if (description != null) 'description': description,
-        if (logoUrl != null) 'logo_url': logoUrl,
-        if (primaryColor != null) 'primary_color': primaryColor,
-        if (secondaryColor != null) 'secondary_color': secondaryColor,
-        if (tertiaryColor != null) 'tertiary_color': tertiaryColor,
-        if (quaternaryColor != null) 'quaternary_color': quaternaryColor,
-        if (navbarImageUrl != null) 'navbar_image_url': navbarImageUrl,
-        if (customDomain != null) 'custom_domain': customDomain,
-        if (isActive != null) 'is_active': isActive,
-        if (enableDelivery != null) 'enable_delivery': enableDelivery,
-        if (enablePickup != null) 'enable_pickup': enablePickup,
-        if (enableReservations != null)
-          'enable_reservations': enableReservations,
-        if (businessTypeName != null) 'business_type_name': businessTypeName,
-        if (businessTypeCode != null) 'business_type_code': businessTypeCode,
-      };
+    'id': id,
+    'name': name,
+    'code': code,
+    if (businessTypeId != null) 'business_type_id': businessTypeId,
+    if (timezone != null) 'timezone': timezone,
+    if (address != null) 'address': address,
+    if (description != null) 'description': description,
+    if (logoUrl != null) 'logo_url': logoUrl,
+    if (primaryColor != null) 'primary_color': primaryColor,
+    if (secondaryColor != null) 'secondary_color': secondaryColor,
+    if (tertiaryColor != null) 'tertiary_color': tertiaryColor,
+    if (quaternaryColor != null) 'quaternary_color': quaternaryColor,
+    if (navbarImageUrl != null) 'navbar_image_url': navbarImageUrl,
+    if (customDomain != null) 'custom_domain': customDomain,
+    if (isActive != null) 'is_active': isActive,
+    if (enableDelivery != null) 'enable_delivery': enableDelivery,
+    if (enablePickup != null) 'enable_pickup': enablePickup,
+    if (enableReservations != null) 'enable_reservations': enableReservations,
+    if (businessTypeName != null) 'business_type_name': businessTypeName,
+    if (businessTypeCode != null) 'business_type_code': businessTypeCode,
+  };
 }

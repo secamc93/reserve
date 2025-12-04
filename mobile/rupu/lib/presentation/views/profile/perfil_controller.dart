@@ -102,6 +102,7 @@ class PerfilController extends GetxController {
     final result = await GoRouter.of(context).pushNamed(
       UserDetailView.name,
       pathParameters: {'page': '0', 'id': '$userId'},
+      queryParameters: {'mode': 'profile'}, // Hide administrative fields
     );
 
     if (result != null && context.mounted) {

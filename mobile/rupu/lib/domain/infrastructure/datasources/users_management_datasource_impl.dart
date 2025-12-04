@@ -112,6 +112,18 @@ class UsersManagementDatasourceImpl extends UserManagementDatasource {
     return SimpleResponseModel.fromJson(response.data as Map<String, dynamic>);
   }
 
+  @override
+  Future<SimpleResponseModel> assignRole({
+    required int userId,
+    required Map<String, dynamic> request,
+  }) async {
+    final response = await _dio.post(
+      '/users/$userId/assign-role',
+      data: request,
+    );
+    return SimpleResponseModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
   Map<String, dynamic> _buildBasePayload({
     String? name,
     String? email,

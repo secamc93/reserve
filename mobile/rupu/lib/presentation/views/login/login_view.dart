@@ -1,7 +1,9 @@
 // presentation/views/login/login_view.dart
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:rupu/presentation/views/login/login_controller.dart';
 import 'package:rupu/config/helpers/design_helper.dart';
 import 'package:rupu/config/helpers/dialog_helper.dart';
@@ -17,6 +19,7 @@ class LoginView extends GetView<LoginController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false, // Manejamos el teclado manualmente
       body: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () => FocusScope.of(context).unfocus(),
@@ -38,9 +41,9 @@ class _MobileLayout extends GetView<LoginController> {
     final cs = Theme.of(context).colorScheme;
     final isLandscape = ResponsiveHelper.isLandscape(context);
 
-    // Adjust logo size and spacing based on orientation
-    final logoHeight = isLandscape ? 80.0 : 140.0;
-    final topSpacing = isLandscape ? 16.0 : 48.0;
+    // Detectar si el teclado está visible
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final isKeyboardVisible = bottomInset > 0;
 
     return Container(
       decoration: BoxDecoration(
@@ -48,48 +51,76 @@ class _MobileLayout extends GetView<LoginController> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            cs.primary.withValues(alpha: 0.1),
-            cs.secondary.withValues(alpha: 0.05),
-            cs.tertiary.withValues(alpha: 0.08),
+            cs.primary.withValues(alpha: 0.15),
+            cs.surface,
+            cs.secondary.withValues(alpha: 0.1),
           ],
+          stops: const [0.0, 0.5, 1.0],
         ),
       ),
       child: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Logo with animation
-                  TweenAnimationBuilder<double>(
-                    duration: const Duration(milliseconds: 800),
-                    tween: Tween(begin: 0.0, end: 1.0),
-                    curve: Curves.easeOutBack,
-                    builder: (context, value, child) {
-                      return Transform.scale(
-                        scale: value.clamp(0.0, 1.0),
-                        child: Opacity(
-                          opacity: value.clamp(0.0, 1.0),
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: CustomLogo(
-                      height: logoHeight,
-                      imagePath: "assets/images/logorufu.png",
-                    ),
-                  ),
-                  SizedBox(height: topSpacing),
-
-                  // Login Form Card
-                  _LoginFormCard(pageIndex: pageIndex),
-                ],
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding: EdgeInsets.only(
+                left: 24,
+                right: 24,
+                top: 16,
+                bottom: bottomInset + 16, // Padding dinámico para el teclado
               ),
-            ),
-          ),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight - bottomInset - 32,
+                  maxWidth: 480,
+                ),
+                child: IntrinsicHeight(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Logo con animación - Se oculta/achica con teclado
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                        height: isKeyboardVisible
+                            ? (isLandscape
+                                  ? 0
+                                  : 60) // Muy pequeño o oculto con teclado
+                            : (isLandscape ? 80 : 140), // Tamaño normal
+                        child: isKeyboardVisible && isLandscape
+                            ? const SizedBox.shrink()
+                            : TweenAnimationBuilder<double>(
+                                duration: const Duration(milliseconds: 800),
+                                tween: Tween(begin: 0.0, end: 1.0),
+                                curve: Curves.easeOutBack,
+                                builder: (context, value, child) {
+                                  return Transform.scale(
+                                    scale: value.clamp(0.0, 1.0),
+                                    child: Opacity(
+                                      opacity: value.clamp(0.0, 1.0),
+                                      child: child,
+                                    ),
+                                  );
+                                },
+                                child: const CustomLogo(
+                                  height: 80,
+                                  imagePath: "assets/images/logorufu.png",
+                                ),
+                              ),
+                      ),
+
+                      SizedBox(height: isKeyboardVisible ? 16 : 48),
+
+                      // Login Form Card
+                      _LoginFormCard(pageIndex: pageIndex),
+
+                      if (!isKeyboardVisible)
+                        const Spacer(), // Empuja contenido al centro si hay espacio
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
@@ -246,11 +277,11 @@ class _LoginFormCard extends GetView<LoginController> {
       child: GlassContainer(
         borderRadius: BorderRadius.circular(isTablet ? 24 : 32),
         blur: isTablet ? 0 : 20,
-        opacity: isTablet ? 0 : 0.7,
+        opacity: isTablet ? 0 : 0.8, // Más opacidad para mejor lectura
         border: isTablet
             ? null
             : Border.all(
-                color: cs.outlineVariant.withValues(alpha: 0.3),
+                color: cs.outlineVariant.withValues(alpha: 0.4),
                 width: 1.5,
               ),
         child: Padding(
@@ -266,6 +297,7 @@ class _LoginFormCard extends GetView<LoginController> {
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.5,
+                    color: cs.primary,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -276,6 +308,7 @@ class _LoginFormCard extends GetView<LoginController> {
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: isTablet ? cs.onSurface : cs.onSurfaceVariant,
+                  fontSize: 24,
                 ),
                 textAlign: isTablet ? TextAlign.left : TextAlign.center,
               ),
@@ -314,6 +347,11 @@ class _LoginFormCard extends GetView<LoginController> {
                         const Spacer(),
                         TextButton(
                           onPressed: () {}, // hook para recuperar contraseña
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: const Size(0, 0),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
                           child: Text(
                             "¿Olvidaste contraseña?",
                             style: TextStyle(
@@ -327,17 +365,122 @@ class _LoginFormCard extends GetView<LoginController> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Submit button
+                    // Biometric authentication button
                     Obx(() {
-                      return controller.isLoading.value
-                          ? const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 12),
-                              child: CircularProgressIndicator(strokeWidth: 3),
-                            )
-                          : CustomButton(
-                              onPressed: () => _handleLogin(context),
-                              textButton: 'Iniciar sesión',
-                            );
+                      final showBiometric =
+                          controller.isBiometricAvailable.value &&
+                          controller.hasSavedCredentials.value;
+
+                      // Estado de carga general para deshabilitar botones
+                      final anyLoading =
+                          controller.isFormLoading.value ||
+                          controller.isBiometricLoading.value;
+
+                      if (!showBiometric) {
+                        // Submit button without biometric option
+                        return controller.isFormLoading.value
+                            ? const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 12),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 3,
+                                ),
+                              )
+                            : CustomButton(
+                                onPressed: anyLoading
+                                    ? null
+                                    : () {
+                                        _handleLogin(context);
+                                      },
+                                textButton: 'Iniciar sesión',
+                              );
+                      }
+
+                      // Show biometric authentication option
+                      return Column(
+                        children: [
+                          // Submit button with email/password
+                          controller.isFormLoading.value
+                              ? const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 12),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 3,
+                                  ),
+                                )
+                              : CustomButton(
+                                  onPressed: anyLoading
+                                      ? null
+                                      : () {
+                                          _handleLogin(context);
+                                        },
+                                  textButton: 'Iniciar sesión',
+                                ),
+
+                          const SizedBox(height: 24),
+
+                          // Divider with text
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  height: 1,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.transparent,
+                                        cs.outlineVariant.withValues(
+                                          alpha: 0.5,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
+                                child: Text(
+                                  'O continuar con',
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: cs.onSurfaceVariant,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  height: 1,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        cs.outlineVariant.withValues(
+                                          alpha: 0.5,
+                                        ),
+                                        Colors.transparent,
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 24),
+
+                          // Biometric button
+                          _BiometricButton(
+                            biometricType: controller.biometricType.value,
+                            description: controller.biometricDescription.value,
+                            onPressed: anyLoading
+                                ? null
+                                : () {
+                                    _handleBiometricLogin(context);
+                                  },
+                            isLoading: controller.isBiometricLoading.value,
+                          ),
+                        ],
+                      );
                     }),
                   ],
                 ),
@@ -349,8 +492,218 @@ class _LoginFormCard extends GetView<LoginController> {
     );
   }
 
-  Future<void> _handleLogin(BuildContext context) async {
-    final ok = await controller.submit();
+  Future<void> _handleLogin(
+    BuildContext context, {
+    bool saveBiometric = false,
+  }) async {
+    final ok = await controller.submit(saveBiometric: saveBiometric);
+    if (!context.mounted) return;
+
+    if (ok) {
+      // Si el login fue exitoso y NO se guardaron credenciales, preguntar si desea guardarlas
+      if (!saveBiometric &&
+          controller.isBiometricAvailable.value &&
+          !controller.hasSavedCredentials.value) {
+        await _askToSaveCredentials(context);
+      }
+
+      if (!context.mounted) return;
+
+      if (controller.isSuperAdmin) {
+        final activated = await controller.activateSuperAdminSession();
+        if (!context.mounted) return;
+        if (activated) {
+          // REDIRECCIÓN SUPER ADMIN A IAM
+          GoRouter.of(
+            context,
+          ).goNamed(IamScreen.name, pathParameters: {'page': '$pageIndex'});
+        } else {
+          _showError(
+            context,
+            controller.errorMessage.value ??
+                'No fue posible completar la sesión del super administrador.',
+          );
+        }
+        return;
+      }
+
+      final businesses = controller.businesses;
+      if (businesses.isEmpty) {
+        const message = 'Tu usuario no tiene negocios disponibles.';
+        controller.errorMessage.value ??= message;
+        _showError(context, controller.errorMessage.value ?? message);
+        return;
+      }
+
+      if (controller.hasBusinessScope) {
+        GoRouter.of(context).goNamed(BusinessSelectorScreen.name);
+        return;
+      }
+
+      if (businesses.length == 1) {
+        final activated = await controller.activateBusinessSession(
+          businesses.first,
+        );
+        if (!context.mounted) return;
+        if (activated) {
+          GoRouter.of(
+            context,
+          ).goNamed(HomeScreen.name, pathParameters: {'page': '$pageIndex'});
+        } else {
+          _showError(
+            context,
+            controller.errorMessage.value ??
+                'No fue posible activar el negocio seleccionado.',
+          );
+        }
+      } else {
+        GoRouter.of(context).goNamed(BusinessSelectorScreen.name);
+      }
+    } else if (controller.errorMessage.value != null) {
+      _showError(context, controller.errorMessage.value!);
+    }
+  }
+
+  /// Pregunta al usuario si desea guardar sus credenciales para login biométrico
+  Future<void> _askToSaveCredentials(BuildContext context) async {
+    final cs = Theme.of(context).colorScheme;
+
+    final shouldSave = await DialogHelper.showBlurredDialog<bool>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.4),
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: cs.primaryContainer,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Icons.fingerprint, color: cs.primary, size: 28),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                '¿Guardar credenciales?',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '¿Deseas guardar tus credenciales para iniciar sesión con ${controller.biometricDescription.value} la próxima vez?',
+              style: TextStyle(
+                fontSize: 15,
+                color: cs.onSurfaceVariant,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: cs.outlineVariant.withValues(alpha: 0.5),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.security, size: 20, color: cs.primary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Tus credenciales se guardarán de forma segura en el llavero del dispositivo.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: cs.onSurfaceVariant,
+                        height: 1.3,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(
+              'Ahora no',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: cs.onSurfaceVariant,
+              ),
+            ),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: cs.primary,
+              foregroundColor: cs.onPrimary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text(
+              'Guardar',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldSave == true && context.mounted) {
+      // Guardar las credenciales
+      await controller.biometricService.saveCredentials(
+        email: controller.emailController.text.trim().toLowerCase(),
+        password: controller.passwordController.text,
+      );
+      controller.hasSavedCredentials.value = true;
+
+      // Mostrar confirmación
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: cs.onPrimary),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Credenciales guardadas. Ahora puedes usar ${controller.biometricDescription.value} para iniciar sesión.',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: cs.onPrimary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: cs.primary,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleBiometricLogin(BuildContext context) async {
+    final ok = await controller.loginWithBiometrics();
     if (!context.mounted) return;
 
     if (ok) {
@@ -358,9 +711,10 @@ class _LoginFormCard extends GetView<LoginController> {
         final activated = await controller.activateSuperAdminSession();
         if (!context.mounted) return;
         if (activated) {
+          // REDIRECCIÓN SUPER ADMIN A IAM
           GoRouter.of(
             context,
-          ).goNamed(HomeScreen.name, pathParameters: {'page': '$pageIndex'});
+          ).goNamed(IamScreen.name, pathParameters: {'page': '$pageIndex'});
         } else {
           _showError(
             context,
@@ -409,16 +763,80 @@ class _LoginFormCard extends GetView<LoginController> {
   }
 
   void _showError(BuildContext context, String message) {
+    final cs = Theme.of(context).colorScheme;
+
+    // Detectar si es un error de cancelación o biometría
+    final isBiometricError =
+        message.contains('biométrica') || message.contains('biométrico');
+
     DialogHelper.showBlurredDialog(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.3),
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
-          'Error',
-          style: TextStyle(fontWeight: FontWeight.w700),
+        title: Row(
+          children: [
+            Icon(
+              isBiometricError ? Icons.fingerprint : Icons.error_outline,
+              color: cs.error,
+            ),
+            const SizedBox(width: 8),
+            const Expanded(
+              child: Text(
+                'Error',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
         ),
-        content: Text(message),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(message),
+            if (isBiometricError && message.contains('cancelada')) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: cs.outlineVariant),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.info_outline, size: 16, color: cs.primary),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Verifica:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: cs.primary,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      Platform.isIOS
+                          ? '• Face ID/Touch ID esté configurado en Ajustes\n• Tengas permiso para usar biometría\n• No hayas cancelado el diálogo'
+                          : '• La huella digital esté configurada en Ajustes\n• Tengas permiso para usar biometría\n• No hayas cancelado el diálogo',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: cs.onSurfaceVariant,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -428,6 +846,147 @@ class _LoginFormCard extends GetView<LoginController> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Botón de autenticación biométrica con diseño moderno
+class _BiometricButton extends StatefulWidget {
+  final BiometricType? biometricType;
+  final String description;
+  final VoidCallback? onPressed;
+  final bool isLoading;
+
+  const _BiometricButton({
+    required this.biometricType,
+    required this.description,
+    required this.onPressed,
+    this.isLoading = false,
+  });
+
+  @override
+  State<_BiometricButton> createState() => _BiometricButtonState();
+}
+
+class _BiometricButtonState extends State<_BiometricButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.08).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  IconData _getBiometricIcon() {
+    // Usar icono específico por plataforma para mejor experiencia nativa
+    if (Platform.isIOS) {
+      // En iOS, siempre mostrar Face ID ya que es lo más común
+      return Icons.face_outlined;
+    } else {
+      // En Android, mostrar huella digital
+      return Icons.fingerprint_outlined;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    if (widget.isLoading) {
+      return const SizedBox(
+        height: 72,
+        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      );
+    }
+
+    return AnimatedBuilder(
+      animation: _pulseAnimation,
+      builder: (context, child) {
+        return Transform.scale(scale: _pulseAnimation.value, child: child);
+      },
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: widget.onPressed,
+          borderRadius: BorderRadius.circular(24),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  cs.primaryContainer.withValues(alpha: 0.9),
+                  cs.secondaryContainer.withValues(alpha: 0.8),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: cs.primary.withValues(alpha: 0.3),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: cs.primary.withValues(alpha: 0.2),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: cs.primary.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(_getBiometricIcon(), color: cs.primary, size: 28),
+                ),
+                const SizedBox(width: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Iniciar con ${widget.description}',
+                      style: tt.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: cs.onPrimaryContainer,
+                      ),
+                    ),
+                    Text(
+                      'Rápido y seguro',
+                      style: tt.bodySmall?.copyWith(
+                        color: cs.onPrimaryContainer.withValues(alpha: 0.7),
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

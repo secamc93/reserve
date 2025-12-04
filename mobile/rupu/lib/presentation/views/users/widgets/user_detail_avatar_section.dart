@@ -9,13 +9,11 @@ import 'package:rupu/presentation/widgets/image_preview_dialog.dart';
 class UserDetailAvatarSection extends StatelessWidget {
   final UserDetailController controller;
   final String userName;
-  final String existingAvatarUrl;
 
   const UserDetailAvatarSection({
     super.key,
     required this.controller,
     required this.userName,
-    required this.existingAvatarUrl,
   });
 
   @override
@@ -33,8 +31,6 @@ class UserDetailAvatarSection extends StatelessWidget {
         imageProvider = FileImage(File(avatarData.path));
       } else if (hasUrl && customUrl.isNotEmpty) {
         imageProvider = NetworkImage(customUrl);
-      } else if (existingAvatarUrl.isNotEmpty) {
-        imageProvider = NetworkImage(existingAvatarUrl);
       }
 
       final processing = controller.avatarProcessing.value;
@@ -46,19 +42,23 @@ class UserDetailAvatarSection extends StatelessWidget {
           Stack(
             clipBehavior: Clip.none,
             children: [
-              GradientAvatar(
-                imageProvider: imageProvider,
-                radius: 60,
-                onTap: imageProvider == null
-                    ? null
-                    : () => showImagePreviewDialog(
-                        context,
-                        imageProvider: imageProvider!,
-                        title: userName,
-                      ),
-                child: imageProvider == null
-                    ? Icon(Icons.person, size: 60, color: cs.onSurfaceVariant)
-                    : null,
+              Hero(
+                tag: 'avatar_$userName',
+                child: GradientAvatar(
+                  imageProvider: imageProvider,
+                  radius: 60,
+                  onTap: imageProvider == null
+                      ? null
+                      : () => showImagePreviewDialog(
+                          context,
+                          imageProvider: imageProvider!,
+                          title: userName,
+                          heroTag: 'avatar_$userName',
+                        ),
+                  child: imageProvider == null
+                      ? Icon(Icons.person, size: 60, color: cs.onSurfaceVariant)
+                      : null,
+                ),
               ),
 
               // Camera button (bottom right)
@@ -79,7 +79,7 @@ class UserDetailAvatarSection extends StatelessWidget {
                   right: 4,
                   child: AvatarActionButton(
                     icon: Icons.close,
-                    onTap: controller.removeAvatarFile,
+                    onTap: () => _confirmDelete(context, controller),
                     isError: true,
                   ),
                 ),
@@ -276,5 +276,39 @@ class UserDetailAvatarSection extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _confirmDelete(
+    BuildContext context,
+    UserDetailController controller,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text('¿Eliminar foto?'),
+          content: const Text(
+            '¿Estás seguro de que quieres eliminar la foto de perfil? Esta acción no se puede deshacer.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.error,
+              ),
+              child: const Text('Eliminar'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true) {
+      controller.removeAvatarFile();
+    }
   }
 }

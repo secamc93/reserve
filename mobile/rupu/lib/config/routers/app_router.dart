@@ -154,6 +154,7 @@ final appRouter = GoRouter(
           path: '/home/:page/iam',
           name: IamScreen.name,
           builder: (context, state) {
+            IamBinding.register();
             final home = Get.isRegistered<HomeController>()
                 ? Get.find<HomeController>()
                 : null;
@@ -318,7 +319,12 @@ final appRouter = GoRouter(
                 }
                 final ctrl = Get.find<UserDetailController>();
                 ctrl.loadUser(id);
-                return UserDetailView(userId: id);
+
+                // Check if accessed from profile (mode=profile query param)
+                final isProfileMode =
+                    state.uri.queryParameters['mode'] == 'profile';
+
+                return UserDetailView(userId: id, isProfileMode: isProfileMode);
               },
             );
           },

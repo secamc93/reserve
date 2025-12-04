@@ -77,8 +77,9 @@ class UsersRepositoryImpl extends UsersRepository {
       avatarFileName: avatarFileName,
     );
 
-    final detail =
-        response.data != null ? UsersMapper.userModelToDetail(response.data!) : null;
+    final detail = response.data != null
+        ? UsersMapper.userModelToDetail(response.data!)
+        : null;
 
     return UserActionResult(
       success: response.success,
@@ -90,6 +91,21 @@ class UsersRepositoryImpl extends UsersRepository {
   @override
   Future<UserActionResult> deleteUser({required int id}) async {
     final response = await datasource.deleteUser(id: id);
+    return UserActionResult(
+      success: response.success,
+      message: response.message,
+    );
+  }
+
+  @override
+  Future<UserActionResult> assignRole({
+    required int userId,
+    required Map<String, dynamic> request,
+  }) async {
+    final response = await datasource.assignRole(
+      userId: userId,
+      request: request,
+    );
     return UserActionResult(
       success: response.success,
       message: response.message,
