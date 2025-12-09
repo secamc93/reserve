@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthSimple as useAuth } from '@modules/auth/ui';
+import { useAuthSimple as useAuth } from '@/services/auth/ui';
 import { Button, Input, Select } from '@shared/ui';
 import { ShieldCheckIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useEffect } from 'react';
@@ -37,12 +37,12 @@ export default function CreateRolePage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-    
-    setFormData(prev => ({ 
-      ...prev, 
-      [name]: type === 'checkbox' ? checked : value 
+
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
     }));
-    
+
     // Limpiar error del campo cuando el usuario empiece a escribir
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
@@ -74,7 +74,7 @@ export default function CreateRolePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -84,7 +84,7 @@ export default function CreateRolePage() {
       // Aquí iría la lógica para crear el rol
       // Por ahora solo simulamos el proceso
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       // Redirigir a la lista de roles
       router.push('/iam/roles');
     } catch (error) {
@@ -134,7 +134,7 @@ export default function CreateRolePage() {
             <div className="card">
               <div className="card-body">
                 <h2 className="text-xl font-semibold mb-6">Información del Rol</h2>
-                
+
                 <div className="space-y-6">
                   {/* Nombre */}
                   <Input

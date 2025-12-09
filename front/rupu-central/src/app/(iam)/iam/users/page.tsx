@@ -1,6 +1,6 @@
 'use client';
 
-import { UsersPage, useAuthSimple as useAuth } from '@modules/auth/ui';
+import { UsersPage, useAuthSimple as useAuth } from '@/services/auth/ui';
 import Link from 'next/link';
 import { HomeIcon, ChevronRightIcon, UserGroupIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { useEffect } from 'react';

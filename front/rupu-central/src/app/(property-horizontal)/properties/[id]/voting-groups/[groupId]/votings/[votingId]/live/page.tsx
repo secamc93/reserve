@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { PropertyNavigation } from '@/modules/property-horizontal/ui/components/property-navigation';
-import { LiveVotingModal } from '@/modules/property-horizontal/ui/voting-groups/live-voting-modal';
-import { getVotingByIdAction } from '@/modules/property-horizontal/infrastructure/actions/voting';
-import { getVotingOptionsAction, getVotesAction } from '@/modules/property-horizontal/infrastructure/actions';
+import { PropertyNavigation } from '@/services/carpeta vieja/ui/components/property-navigation';
+import { LiveVotingModal } from '@/services/modules/horizontal-properties/voting/ui/live-voting-modal';
+import { getVotingByIdAction } from '@/services/modules/horizontal-properties/voting/infrastructure/actions';
+import { getVotingOptionsAction, getVotesAction } from '@/services/carpeta vieja/infrastructure/actions';
 import { TokenStorage } from '@shared/config';
 import { Spinner, Alert } from '@shared/ui';
 
@@ -169,11 +169,10 @@ export default function LiveVotingPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-                (voting as any)?.isActive 
-                  ? 'bg-green-100 text-green-800' 
-                  : 'bg-red-100 text-red-800'
-              }`}>
+              <div className={`px-3 py-1 rounded-full text-sm font-medium ${(voting as any)?.isActive
+                ? 'bg-green-100 text-green-800'
+                : 'bg-red-100 text-red-800'
+                }`}>
                 {(voting as any)?.isActive ? '🟢 Activa' : '🔴 Inactiva'}
               </div>
             </div>
@@ -182,7 +181,7 @@ export default function LiveVotingPage() {
 
         {/* Live Voting Modal Component */}
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-          <LiveVotingModal 
+          <LiveVotingModal
             voting={voting as any}
             businessId={businessId}
             options={options as any}

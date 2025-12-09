@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthSimple as useAuth } from '@modules/auth/ui';
+import { useAuthSimple as useAuth } from '@/services/auth/ui';
 import { Button, Input, Modal, Select } from '@shared/ui';
 import { CubeTransparentIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useEffect } from 'react';
-import { useBusinessTypes } from '@modules/auth/ui/hooks/use-business-types';
+import { useBusinessTypes } from '@/services/auth/ui/hooks/use-business-types';
 
 export default function CreateResourcePage() {
   const { isAuthenticated, loading, token } = useAuth();
@@ -40,7 +40,7 @@ export default function CreateResourcePage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    
+
     // Limpiar error del campo cuando el usuario empiece a escribir
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
@@ -64,22 +64,22 @@ export default function CreateResourcePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const { createResourceAction } = await import('@modules/auth/infrastructure/actions');
-      
+      const { createResourceAction } = await import('@/services/auth/infrastructure/actions');
+
       const result = await createResourceAction({
         name: formData.name,
         description: formData.description,
         business_type_id: formData.business_type_id ? parseInt(formData.business_type_id) : undefined,
         token: token || '',
       });
-      
+
       if (result.success) {
         router.back();
       } else {

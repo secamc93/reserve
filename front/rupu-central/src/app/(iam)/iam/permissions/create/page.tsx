@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthSimple as useAuth } from '@modules/auth/ui';
+import { useAuthSimple as useAuth } from '@/services/auth/ui';
 import { Button, Input, Select, Modal } from '@shared/ui';
 import { KeyIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useEffect } from 'react';
-import { useBusinessTypes, useResources, useActions } from '@modules/auth/ui/hooks';
+import { useBusinessTypes, useResources, useActions } from '@/services/auth/ui/hooks';
 
 export default function CreatePermissionPage() {
   const { isAuthenticated, loading, token } = useAuth();
@@ -48,14 +48,14 @@ export default function CreatePermissionPage() {
     const { name, value } = e.target;
     setFormData(prev => {
       const newData = { ...prev, [name]: value };
-      
+
       // Si cambia el tipo de negocio, limpiar el recurso seleccionado
       if (name === 'businessTypeId') {
         newData.resource = '';
       }
       return newData;
     });
-    
+
     // Limpiar error del campo cuando el usuario empiece a escribir
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
@@ -95,22 +95,22 @@ export default function CreatePermissionPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const { createPermissionAction } = await import('@modules/auth/infrastructure/actions');
-      
+      const { createPermissionAction } = await import('@/services/auth/infrastructure/actions');
+
       // Validar que el nombre no esté vacío antes de enviar
       if (!formData.name.trim()) {
         setErrors({ name: 'El nombre es requerido' });
         setIsSubmitting(false);
         return;
       }
-      
+
       const result = await createPermissionAction(
         {
           name: formData.name.trim(),
@@ -122,7 +122,7 @@ export default function CreatePermissionPage() {
         },
         token || ''
       );
-      
+
       if (result.success) {
         router.back();
       } else {

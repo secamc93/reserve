@@ -6,8 +6,8 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { PropertyNavigation } from '@modules/property-horizontal/ui/components';
-import { AttendanceManagement } from '@modules/property-horizontal/ui/attendance';
+import { PropertyNavigation } from '@/services/carpeta vieja/ui/components';
+import { AttendanceManagement } from '@/services/modules/horizontal-properties/attendance/ui';
 import { TokenStorage } from '@shared/config';
 
 export default function AttendanceManagementPage() {
@@ -56,7 +56,7 @@ export default function AttendanceManagementPage() {
             </svg>
             Volver
           </button>
-          
+
           <h1 className="text-3xl font-bold text-gray-900">
             Gestión de Asistencia
           </h1>

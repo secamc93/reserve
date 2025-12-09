@@ -5,8 +5,8 @@
 
 'use client';
 
-import { LoginForm } from '@modules/auth';
-import { loginAction } from '@modules/auth/infrastructure/actions';
+import { LoginForm } from '@/services/auth';
+import { loginAction } from '@/services/auth/infrastructure/actions';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
 
@@ -51,7 +51,7 @@ function LoginContent() {
             <div className="h-0.5 w-24 mx-auto bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full"></div>
             <p className="text-gray-300 text-sm">Sistema de gestión inteligente</p>
           </div>
-          
+
           {/* Mensaje de error global si viene de redirección */}
           {errorMessage && (
             <div className="mb-6 p-4 bg-red-500/10 border border-red-500/50 text-red-300 rounded-lg backdrop-blur-sm animate-fade-in">

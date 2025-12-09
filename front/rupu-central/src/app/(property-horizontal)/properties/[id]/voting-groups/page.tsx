@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { VotingGroupsSection } from '@/modules/property-horizontal/ui/voting-groups/voting-groups-section';
-import { PropertyNavigation } from '@/modules/property-horizontal/ui/components/property-navigation';
+import { VotingGroupsSection } from '@/services/modules/horizontal-properties/voting/ui/voting-groups-section';
+import { PropertyNavigation } from '@/services/carpeta vieja/ui/components/property-navigation';
 
 export default function VotingGroupsPage() {
   const params = useParams();
@@ -21,7 +21,7 @@ export default function VotingGroupsPage() {
     <div>
       {/* Navegación */}
       <PropertyNavigation businessId={businessId} />
-      
+
       <div className="p-6">
         <VotingGroupsSection businessId={businessId} />
       </div>

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { HomeIcon, ChevronRightIcon, ShieldCheckIcon, PlusIcon } from '@heroicons/react/24/outline';
-import { RolesTable, useAuthSimple as useAuth } from '@modules/auth/ui';
+import { RolesTable, useAuthSimple as useAuth } from '@/services/auth/ui';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 

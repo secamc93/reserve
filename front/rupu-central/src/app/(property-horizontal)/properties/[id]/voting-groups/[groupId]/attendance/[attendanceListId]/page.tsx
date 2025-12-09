@@ -6,12 +6,12 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { PropertyNavigation } from '@modules/property-horizontal/ui/components';
-import { AttendanceListModal } from '@modules/property-horizontal/ui/attendance';
-import { removeAttendanceListAction, getAttendanceListAction, getAttendanceListRecordsAction, getAttendanceListSummaryAction } from '@modules/property-horizontal/infrastructure/actions/attendance';
+import { PropertyNavigation } from '@/services/carpeta vieja/ui/components';
+import { AttendanceListModal } from '@/services/modules/horizontal-properties/attendance/ui';
+import { removeAttendanceListAction, getAttendanceListAction, getAttendanceListRecordsAction, getAttendanceListSummaryAction } from '@/services/modules/horizontal-properties/attendance/infrastructure/actions';
 import { ConfirmModal } from '@shared/ui/confirm-modal';
 import { TokenStorage } from '@shared/config';
-import { AttendanceList } from '@modules/property-horizontal/domain/entities/attendance';
+import { AttendanceList } from '@/services/modules/horizontal-properties/attendance/domain/entities';
 
 export default function AttendanceListPage() {
   const params = useParams();
@@ -46,7 +46,7 @@ export default function AttendanceListPage() {
   const loadAttendanceList = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const [listRes] = await Promise.all([
         getAttendanceListAction({ token, id: attendanceListId }),
@@ -154,8 +154,8 @@ export default function AttendanceListPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
             Volver
-            </button>
-          
+          </button>
+
           <h1 className="text-3xl font-bold text-gray-900">
             {attendanceList.title}
           </h1>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthSimple as useAuth } from '@modules/auth/ui';
+import { useAuthSimple as useAuth } from '@/services/auth/ui';
 import { Button, Input, Select } from '@shared/ui';
 import { UserGroupIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useEffect } from 'react';
@@ -38,7 +38,7 @@ export default function CreateUserPage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    
+
     // Limpiar error del campo cuando el usuario empiece a escribir
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
@@ -82,7 +82,7 @@ export default function CreateUserPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -92,7 +92,7 @@ export default function CreateUserPage() {
       // Aquí iría la lógica para crear el usuario
       // Por ahora solo simulamos el proceso
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       // Redirigir a la lista de usuarios
       router.push('/iam/users');
     } catch (error) {
@@ -140,7 +140,7 @@ export default function CreateUserPage() {
             <div className="card">
               <div className="card-body">
                 <h2 className="text-xl font-semibold mb-6">Información del Usuario</h2>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Nombre */}
                   <div className="md:col-span-2">

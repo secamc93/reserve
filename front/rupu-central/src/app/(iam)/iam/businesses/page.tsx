@@ -1,4 +1,4 @@
-import { BusinessesTable } from '@modules/property-horizontal/ui';
+import { BusinessesTable } from '@/services/carpeta vieja/ui';
 
 export default function IAMBusinessesPage() {
   return (

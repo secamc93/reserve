@@ -7,10 +7,10 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { PublicVotingContext } from '@/modules/property-horizontal/ui/public-voting/public-voting-context';
-import { PublicVotingValidation } from '@/modules/property-horizontal/ui/public-voting/public-voting-validation';
-import { PublicVotingScreen } from '@/modules/property-horizontal/ui/public-voting/public-voting-screen';
-import { PublicVotingProgress } from '@/modules/property-horizontal/ui/public-voting/public-voting-progress';
+import { PublicVotingContext } from '@/services/modules/horizontal-properties/voting/ui/public-voting/public-voting-context';
+import { PublicVotingValidation } from '@/services/modules/horizontal-properties/voting/ui/public-voting/public-voting-validation';
+import { PublicVotingScreen } from '@/services/modules/horizontal-properties/voting/ui/public-voting/public-voting-screen';
+import { PublicVotingProgress } from '@/services/modules/horizontal-properties/voting/ui/public-voting/public-voting-progress';
 import { Spinner } from '@shared/ui';
 
 interface VotingParams {
@@ -59,7 +59,7 @@ function PublicVotePageContent() {
 
   useEffect(() => {
     console.log('🔍 [PUBLIC VOTE] Iniciando validación de parámetros...');
-    
+
     // Extraer parámetros de la URL
     const token = searchParams.get('token');
     let votingId = searchParams.get('voting_id');
@@ -90,14 +90,14 @@ function PublicVotePageContent() {
         if (parts.length === 3) {
           const payload = JSON.parse(atob(parts[1]));
           console.log('📋 [PUBLIC VOTE] Payload del token:', payload);
-          
+
           votingId = votingId || payload.voting_id?.toString();
           businessId = businessId || payload.hp_id?.toString();
-          
-          console.log('✅ [PUBLIC VOTE] Datos extraídos del token:', { 
-            votingId, 
-            businessId, 
-            groupId: payload.voting_group_id 
+
+          console.log('✅ [PUBLIC VOTE] Datos extraídos del token:', {
+            votingId,
+            businessId,
+            groupId: payload.voting_group_id
           });
         }
       } catch (err) {
@@ -113,11 +113,11 @@ function PublicVotePageContent() {
       return;
     }
 
-    console.log('✅ [PUBLIC VOTE] Parámetros validados correctamente:', { 
-      token: 'OK', 
-      voting_id: votingId, 
+    console.log('✅ [PUBLIC VOTE] Parámetros validados correctamente:', {
+      token: 'OK',
+      voting_id: votingId,
       hp_id: businessId,
-      group_id: groupId 
+      group_id: groupId
     });
 
     setVotingParams({ token, voting_id: votingId, hp_id: businessId, group_id: groupId || undefined });
@@ -158,8 +158,8 @@ function PublicVotePageContent() {
             <div className="text-red-500 text-6xl mb-4">❌</div>
             <h1 className="text-xl font-bold text-gray-900 mb-2">Error de Acceso</h1>
             <p className="text-gray-600 mb-4">{error}</p>
-            <button 
-              onClick={() => window.location.reload()} 
+            <button
+              onClick={() => window.location.reload()}
               className="btn btn-primary"
             >
               Reintentar
@@ -180,8 +180,8 @@ function PublicVotePageContent() {
             <p className="text-gray-600 mb-4">
               Su voto ha sido registrado exitosamente. Gracias por participar.
             </p>
-            <button 
-              onClick={() => window.close()} 
+            <button
+              onClick={() => window.close()}
               className="btn btn-primary"
             >
               Cerrar

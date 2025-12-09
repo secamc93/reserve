@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { PropertyUnitsTable } from '@/modules/property-horizontal/ui/property-units/property-units-table';
-import { PropertyNavigation } from '@/modules/property-horizontal/ui/components/property-navigation';
+import { PropertyUnitsTable } from '@/services/modules/horizontal-properties/units/ui/property-units-table';
+import { PropertyNavigation } from '@/services/carpeta vieja/ui/components/property-navigation';
 
 export default function UnitsPage() {
   const params = useParams();
@@ -21,7 +21,7 @@ export default function UnitsPage() {
     <div>
       {/* Navegación */}
       <PropertyNavigation businessId={businessId} />
-      
+
       <div className="p-6">
         <PropertyUnitsTable businessId={businessId} />
       </div>

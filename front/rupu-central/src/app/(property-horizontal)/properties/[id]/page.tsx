@@ -6,13 +6,13 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
+import {
   VotingGroupsSection,
   PropertyUnitsTable,
   ResidentsTable,
-} from '@modules/property-horizontal/ui';
-import { PropertyNavigation } from '@modules/property-horizontal/ui/components/property-navigation';
-import { getHorizontalPropertyByIdAction } from '@modules/property-horizontal/infrastructure/actions';
+} from '@/services/carpeta vieja/ui';
+import { PropertyNavigation } from '@/services/carpeta vieja/ui/components/property-navigation';
+import { getHorizontalPropertyByIdAction } from '@/services/carpeta vieja/infrastructure/actions';
 import { TokenStorage } from '@shared/config';
 import { Spinner, Badge } from '@shared/ui';
 import { use } from 'react';
@@ -108,7 +108,7 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
     <div>
       {/* Navegación */}
       <PropertyNavigation businessId={businessId} propertyName={property.name} />
-      
+
       {/* Contenido del Dashboard */}
       <div className="p-8">
         <div className="max-w-7xl mx-auto">
@@ -241,7 +241,7 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
                 <div className="font-medium text-gray-900">Gestionar Unidades</div>
                 <div className="text-sm text-gray-600">Ver y editar unidades</div>
               </button>
-              
+
               <button
                 onClick={() => router.push(`/properties/${businessId}/residents`)}
                 className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
@@ -250,7 +250,7 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
                 <div className="font-medium text-gray-900">Gestionar Residentes</div>
                 <div className="text-sm text-gray-600">Ver y editar residentes</div>
               </button>
-              
+
               <button
                 onClick={() => router.push(`/properties/${businessId}/voting-groups`)}
                 className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
@@ -259,7 +259,7 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
                 <div className="font-medium text-gray-900">Grupos de Votación</div>
                 <div className="text-sm text-gray-600">Crear y gestionar votaciones</div>
               </button>
-              
+
               <button
                 onClick={() => router.push(`/properties/${businessId}/fees`)}
                 className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"

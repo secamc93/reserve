@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { TokenStorage } from '@shared/config';
 import { Sidebar, Spinner } from '@shared/ui';
-import { BusinessSelector } from '@modules/auth/ui';
+import { BusinessSelector } from '@/services/auth/ui';
 
 export default function AuthLayout({
   children,
@@ -49,7 +49,7 @@ export default function AuthLayout({
         console.log('🔑 Auth Layout - Generando business token para super admin');
         (async () => {
           try {
-            const { businessTokenAction } = await import('@modules/auth/infrastructure/actions');
+            const { businessTokenAction } = await import('@/services/auth/infrastructure/actions');
             const result = await businessTokenAction({ business_id: 0 }, sessionToken);
             if (result.success && result.data) {
               TokenStorage.setBusinessToken(result.data.token);
@@ -87,7 +87,7 @@ export default function AuthLayout({
 
       setUser(userData);
     }
-    
+
     setLoading(false);
   }, [router, isLoginPage, pathname]);
 
@@ -162,10 +162,10 @@ export default function AuthLayout({
       <Sidebar user={user} />
 
       {/* Contenido principal */}
-      <main 
+      <main
         className="flex-1 transition-all duration-300"
-        style={{ 
-          marginLeft: sidebarExpanded ? '250px' : '80px' 
+        style={{
+          marginLeft: sidebarExpanded ? '250px' : '80px'
         }}
         onMouseEnter={() => setSidebarExpanded(false)}
       >

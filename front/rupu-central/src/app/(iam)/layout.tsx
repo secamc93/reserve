@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { TokenStorage } from '@shared/config';
 import { Sidebar, Spinner } from '@shared/ui';
-import { IAMNavigation, BusinessSelector } from '@modules/auth/ui';
+import { IAMNavigation, BusinessSelector } from '@/services/auth/ui';
 
 export default function IamLayout({
   children,
@@ -52,7 +52,7 @@ export default function IamLayout({
       console.log('🔑 IAM Layout - Generando business token para super admin');
       (async () => {
         try {
-          const { businessTokenAction } = await import('@modules/auth/infrastructure/actions');
+          const { businessTokenAction } = await import('@/services/auth/infrastructure/actions');
           const result = await businessTokenAction({ business_id: 0 }, sessionToken);
           if (result.success && result.data) {
             TokenStorage.setBusinessToken(result.data.token);
@@ -158,16 +158,16 @@ export default function IamLayout({
       <Sidebar user={user} />
 
       {/* Contenido principal */}
-      <main 
+      <main
         className="flex-1 transition-all duration-300 w-full"
-        style={{ 
-          marginLeft: sidebarExpanded ? '250px' : '80px' 
+        style={{
+          marginLeft: sidebarExpanded ? '250px' : '80px'
         }}
         onMouseEnter={() => setSidebarExpanded(false)}
       >
         {/* Navegación IAM horizontal */}
         <IAMNavigation />
-        
+
         {/* Contenido de las páginas */}
         {children}
       </main>
