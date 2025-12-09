@@ -1,8 +1,8 @@
 'use server';
 
-import { GetVotingByIdUseCase } from '../../../application';
-import { VotingsRepository } from '../../repositories/voting-groups';
-import { Voting } from '../../../domain/entities';
+import { GetVotingByIdUseCase } from '../../application';
+import { VotingsRepository } from '../repositories';
+import { Voting } from '../../domain/entities/voting.entity';
 
 export interface GetVotingByIdInput {
   token: string;

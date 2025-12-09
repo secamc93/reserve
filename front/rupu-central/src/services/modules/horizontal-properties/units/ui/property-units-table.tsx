@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Table, Badge, Spinner, Alert, ConfirmModal } from '@shared/ui';
-import { getPropertyUnitsAction, deletePropertyUnitAction } from '../../infrastructure/actions';
-import { PropertyUnit, UNIT_TYPE_LABELS } from '../../domain';
-import { TokenStorage } from '@/services/auth/infrastructure/storage';
+import { getPropertyUnitsAction, deletePropertyUnitAction } from '../infrastructure/actions';
+import { PropertyUnit, UNIT_TYPE_LABELS } from '../domain';
+import { TokenStorage } from '@shared/config';
+import { generateBusinessTokenAction } from '@/services/auth/login/infrastructure/actions';
 import { CreatePropertyUnitModal } from './create-property-unit-modal';
 import { EditPropertyUnitModal } from './edit-property-unit-modal';
 import { ImportUnitsModal } from './import-units-modal';
@@ -77,6 +78,31 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
     return () => clearTimeout(handler);
   }, [filterInputs, normalizeFilters, currentPage]);
 
+  const getBusinessToken = useCallback(async (): Promise<string> => {
+    let businessToken = TokenStorage.getBusinessToken();
+    if (businessToken) return businessToken;
+
+    const sessionToken = TokenStorage.getSessionToken();
+    if (!sessionToken) throw new Error('No session token available');
+
+    const user = TokenStorage.getUser();
+    const isSuperAdmin = user?.is_super_admin;
+    const business_id = isSuperAdmin ? 0 : businessId;
+
+    const result = await generateBusinessTokenAction({
+      business_id,
+      session_token: sessionToken,
+    });
+
+    if (!result.success || !result.data) {
+      throw new Error(result.error || 'No se pudo generar business token');
+    }
+
+    TokenStorage.setBusinessToken(result.data.token);
+    TokenStorage.setActiveBusiness(business_id);
+    return result.data.token;
+  }, [businessId]);
+
   const loadUnits = useCallback(async ({ keepData = false }: { keepData?: boolean } = {}) => {
     if (keepData) {
       setIsRefetching(true);
@@ -84,8 +110,7 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
       setLoading(true);
     }
     try {
-      const token = TokenStorage.getToken();
-      if (!token) throw new Error('No token found');
+      const token = await getBusinessToken();
 
       const data = await getPropertyUnitsAction({
         businessId,
@@ -140,9 +165,7 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
     if (!unitToDelete) return;
 
     try {
-      const token = TokenStorage.getToken();
-      if (!token) throw new Error('No token found');
-
+      const token = await getBusinessToken();
       await deletePropertyUnitAction({ businessId, unitId: unitToDelete, token });
       await loadUnits({ keepData: false });
 

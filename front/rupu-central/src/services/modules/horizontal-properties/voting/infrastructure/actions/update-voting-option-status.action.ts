@@ -1,7 +1,7 @@
 'use server';
 
-import { VotingOptionsRepository } from '../../repositories/voting-groups';
-import { UpdateVotingOptionStatusUseCase } from '../../../application';
+import { VotingOptionsRepository } from '../repositories';
+import { UpdateVotingOptionStatusUseCase } from '../../application';
 import { VotingOption } from '../../../domain/entities';
 
 export interface UpdateVotingOptionStatusInput {

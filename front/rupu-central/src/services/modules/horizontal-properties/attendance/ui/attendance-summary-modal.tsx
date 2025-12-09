@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getAttendanceListSummaryAction } from '../../infrastructure/actions/get-attendance-list-summary.action';
+import { getAttendanceListSummaryAction } from '../infrastructure/actions/get-attendance-list-summary.action';
 
 interface AttendanceSummaryModalProps {
   isOpen: boolean;

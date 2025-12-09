@@ -10,11 +10,11 @@ import { TokenStorage } from '@shared/config';
 import { generatePublicUrlAction } from '@/services/modules/horizontal-properties/voting/infrastructure/actions/public-voting';
 import { getVotingDetailsAction } from '@/services/modules/horizontal-properties/voting/infrastructure/actions';
 import { VoteModal } from './vote-modal';
-import { VotesByUnitSection, type ResidentialUnit } from '../components';
+import { VotesByUnitSection, type ResidentialUnit } from './components/votes-by-unit-section';
 import { VotingSummaryBlock } from './voting-summary-block';
 // import { QRCodeSVG } from 'qrcode.react'; // Ya no se usa, se genera dinámicamente
 import { useVotingSSE } from './hooks';
-import { Vote } from '../../domain/entities'; // ✅ Usar la interfaz oficial
+import { Vote } from '../domain/entities'; // ✅ Usar la interfaz oficial
 
 interface Voting {
   id: number;
@@ -322,7 +322,7 @@ export function LiveVotingModal({
     setDetailsError(null);
 
     try {
-      const token = TokenStorage.getToken();
+      const token = TokenStorage.getBusinessToken();
       if (!token) {
         throw new Error('No se encontró el token de autenticación');
       }
@@ -725,7 +725,7 @@ export function LiveVotingModal({
   const generatePublicVotingQR = async () => {
     setGeneratingQR(true);
     try {
-      const token = TokenStorage.getToken();
+      const token = TokenStorage.getBusinessToken();
       if (!token) {
         throw new Error('No se encontró el token de autenticación');
       }
@@ -959,7 +959,7 @@ export function LiveVotingModal({
     setDeletingVote(true);
 
     try {
-      const token = TokenStorage.getToken();
+      const token = TokenStorage.getBusinessToken();
       if (!token) {
         alert('No se encontró el token de autenticación');
         return;

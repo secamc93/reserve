@@ -1,4 +1,4 @@
-import { BusinessesTable } from '@/services/carpeta vieja/ui';
+import { BusinessesTable } from '@/services/auth/businesses/ui';
 
 export default function IAMBusinessesPage() {
   return (

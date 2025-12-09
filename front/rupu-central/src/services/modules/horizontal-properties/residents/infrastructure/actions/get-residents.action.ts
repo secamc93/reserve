@@ -1,6 +1,6 @@
 'use server';
 
-import { ResidentsRepository } from '../../repositories/residents';
+import { ResidentsRepository } from '../repositories';
 import { GetResidentsUseCase } from '../../application';
 import { GetResidentsParams, ResidentsPaginated } from '../../domain';
 

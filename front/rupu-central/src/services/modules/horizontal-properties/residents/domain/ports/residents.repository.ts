@@ -3,7 +3,7 @@
  * Define los métodos para gestionar residentes
  */
 
-import { Resident, ResidentsPaginated, CreateResidentDTO, UpdateResidentDTO, BulkUpdateResidentDTO } from '../entities/residents';
+import { Resident, ResidentsPaginated, CreateResidentDTO, UpdateResidentDTO, BulkUpdateResidentDTO } from '../entities/';
 
 export interface GetResidentsParams {
   businessId: number;

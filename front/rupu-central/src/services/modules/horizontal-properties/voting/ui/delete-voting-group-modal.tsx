@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { Modal, Spinner, Alert } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
 import { VotingGroup } from '../../domain/entities';
-import { deleteVotingGroupAction } from '../../infrastructure/actions/delete-voting-group.action';
+import { deleteVotingGroupAction } from '../infrastructure/actions/delete-voting-group.action';
 
 interface DeleteVotingGroupModalProps {
   isOpen: boolean;
@@ -35,7 +35,7 @@ export function DeleteVotingGroupModal({
     setLoading(true);
 
     try {
-      const token = TokenStorage.getToken();
+      const token = TokenStorage.getBusinessToken();
       
       if (!token) {
         setError('No se encontró el token de autenticación');

@@ -21,7 +21,7 @@ import {
   GetVotesParams,
   CreateVoteParams
 } from '../../../domain/ports/votings.repository';
-import { Voting, VotingsList, VotingOption, VotingOptionsList, Vote, VotesList } from '../../../domain/entities';
+import { Voting, VotingsList, VotingOption, VotingOptionsList, Vote, VotesList } from '../../domain/entities';
 import { env, logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
 import { 
   BackendGetVotingsResponse,

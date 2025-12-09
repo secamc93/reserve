@@ -6,11 +6,10 @@
 
 import { useState, useEffect, useRef } from 'react';
 // Using CSS classes for buttons instead of Button component
-import { markAttendanceSimpleAction, unmarkAttendanceSimpleAction } from '../../infrastructure/actions';
-import { getAttendanceListRecordsAction, getAttendanceListSummaryAction, createProxyAction, updateProxyAction, deleteProxyAction } from '../../infrastructure/actions';
+import { markAttendanceSimpleAction, unmarkAttendanceSimpleAction, getAttendanceListRecordsAction, getAttendanceListSummaryAction, createProxyAction, updateProxyAction, deleteProxyAction } from '../infrastructure/actions/index';
 import { envPublic } from '@shared/config';
-import { getPropertyUnitsAction } from '../../infrastructure/actions/property-units';
-import { AttendanceList } from '../../domain/entities';
+import { getPropertyUnitsAction } from '../../units/infrastructure/actions';
+import { AttendanceList } from '../../../horizontal-properties/attendance/domain/entities';
 
 interface AttendanceListModalProps {
   isOpen: boolean;

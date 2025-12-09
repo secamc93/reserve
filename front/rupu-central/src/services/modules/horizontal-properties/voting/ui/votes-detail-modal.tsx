@@ -7,7 +7,7 @@
 import { useState, useEffect } from 'react';
 import { Modal, Spinner, Badge, Table, type TableColumn } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
-import { getVotesAction } from '../../infrastructure/actions';
+import { getVotesAction } from '../infrastructure/actions';
 
 interface Vote {
   id: number;
@@ -51,7 +51,7 @@ export function VotesDetailModal({
   const loadVotes = async () => {
     setLoading(true);
     try {
-      const token = TokenStorage.getToken();
+      const token = TokenStorage.getBusinessToken();
       if (!token) {
         console.error('❌ No se encontró el token');
         return;

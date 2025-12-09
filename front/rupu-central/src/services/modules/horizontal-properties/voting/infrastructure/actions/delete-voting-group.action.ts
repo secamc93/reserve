@@ -4,8 +4,8 @@
 
 'use server';
 
-import { DeleteVotingGroupUseCase } from '../../../application';
-import { VotingGroupsRepository } from '../../repositories/voting-groups';
+import { DeleteVotingGroupUseCase } from '../../application';
+import { VotingGroupsRepository } from '../repositories';
 
 export interface DeleteVotingGroupInput {
   token: string;

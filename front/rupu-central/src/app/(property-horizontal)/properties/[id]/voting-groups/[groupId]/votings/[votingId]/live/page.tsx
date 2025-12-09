@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { PropertyNavigation } from '@/services/carpeta vieja/ui/components/property-navigation';
+import { PropertyNavigation } from '@/services/modules/horizontal-properties/properties/ui/property-navigation';
 import { LiveVotingModal } from '@/services/modules/horizontal-properties/voting/ui/live-voting-modal';
-import { getVotingByIdAction } from '@/services/modules/horizontal-properties/voting/infrastructure/actions';
-import { getVotingOptionsAction, getVotesAction } from '@/services/carpeta vieja/infrastructure/actions';
+import { getVotingByIdAction, getVotingOptionsAction, getVotesAction } from '@/services/modules/horizontal-properties/voting/infrastructure/actions';
 import { TokenStorage } from '@shared/config';
 import { Spinner, Alert } from '@shared/ui';
 
@@ -30,7 +29,7 @@ export default function LiveVotingPage() {
     setError(null);
 
     try {
-      const token = TokenStorage.getToken();
+      const token = TokenStorage.getBusinessToken();
       if (!token) {
         setError('No se encontró el token de autenticación');
         return;

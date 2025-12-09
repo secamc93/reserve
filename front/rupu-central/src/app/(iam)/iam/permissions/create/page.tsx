@@ -2,11 +2,14 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthSimple as useAuth } from '@/services/auth/ui';
+import { useAuthSimple as useAuth } from '@/services/auth/users/ui/hooks';
 import { Button, Input, Select, Modal } from '@shared/ui';
 import { KeyIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useEffect } from 'react';
-import { useBusinessTypes, useResources, useActions } from '@/services/auth/ui/hooks';
+import { useBusinessTypes } from '@/services/auth/business-types/ui/hooks';
+import { useActions } from '@/services/auth/actions/ui/hooks';
+import { useResources } from '@/services/auth/resources/ui/hooks';
+import { createPermissionAction } from '@/services/auth/permissions/infrastructure/actions';
 
 export default function CreatePermissionPage() {
   const { isAuthenticated, loading, token } = useAuth();
@@ -102,7 +105,6 @@ export default function CreatePermissionPage() {
 
     setIsSubmitting(true);
     try {
-      const { createPermissionAction } = await import('@/services/auth/infrastructure/actions');
 
       // Validar que el nombre no esté vacío antes de enviar
       if (!formData.name.trim()) {

@@ -15,16 +15,20 @@ import (
 // GetRolesHandler maneja la solicitud de obtener todos los roles
 //
 //	@Summary		Obtener todos los roles
-//	@Description	Obtiene la lista completa de roles del sistema con opciones de filtrado
+//	@Description	Obtiene la lista completa de roles del sistema con opciones de filtrado y paginación
 //	@Tags			Roles
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
+//	@Param			page				query		int		false	"Número de página"	default(1)	minimum(1)
+//	@Param			page_size			query		int		false	"Tamaño de página"	default(10)	minimum(1)	maximum(100)
 //	@Param			business_type_id	query		int		false	"Filtrar por tipo de business"
 //	@Param			scope_id			query		int		false	"Filtrar por ID de scope"
 //	@Param			is_system			query		bool	false	"Filtrar por rol de sistema (true/false)"
 //	@Param			name				query		string	false	"Buscar en el nombre del rol (búsqueda parcial)"
 //	@Param			level				query		int		false	"Filtrar por nivel del rol"
+//	@Param			sort_by				query		string	false	"Campo para ordenar"	Enums(id, name, level, created_at, updated_at)	default(created_at)
+//	@Param			sort_order			query		string	false	"Orden de clasificación"	Enums(asc, desc)	default(desc)
 //	@Success		200					{object}	response.RoleListResponse	"Roles obtenidos exitosamente"
 //	@Failure		401					{object}	response.RoleErrorResponse		"Token de acceso requerido"
 //	@Failure		500					{object}	response.RoleErrorResponse		"Error interno del servidor"
@@ -34,6 +38,27 @@ func (h *handlers) GetRolesHandler(c *gin.Context) {
 
 	// Leer todos los query parameters
 	filters := domain.RoleFilters{}
+
+	// Paginación
+	page := 1
+	if pageStr := c.Query("page"); pageStr != "" {
+		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
+			page = p
+		}
+	}
+	filters.Page = page
+
+	pageSize := 10
+	if pageSizeStr := c.Query("page_size"); pageSizeStr != "" {
+		if ps, err := strconv.Atoi(pageSizeStr); err == nil && ps > 0 && ps <= 100 {
+			pageSize = ps
+		}
+	}
+	filters.PageSize = pageSize
+
+	// Ordenamiento
+	filters.SortBy = c.DefaultQuery("sort_by", "created_at")
+	filters.SortOrder = c.DefaultQuery("sort_order", "desc")
 
 	// Si no es super admin, obtener business_type_id del token
 	isSuperAdmin := middleware.IsSuperAdmin(c)
@@ -82,7 +107,7 @@ func (h *handlers) GetRolesHandler(c *gin.Context) {
 		}
 	}
 
-	roles, err := h.usecase.GetRoles(ctx, filters)
+	roleListDTO, err := h.usecase.GetRoles(ctx, filters)
 	if err != nil {
 		h.logger.Error(ctx).Err(err).Msg("Error al obtener roles desde el caso de uso")
 		c.JSON(http.StatusInternalServerError, response.RoleErrorResponse{
@@ -91,8 +116,15 @@ func (h *handlers) GetRolesHandler(c *gin.Context) {
 		return
 	}
 
-	response := mapper.ToRoleListResponse(roles)
+	response := mapper.ToRoleListResponse(roleListDTO)
 
-	h.logger.Info(ctx).Int("count", len(roles)).Bool("is_super_admin", isSuperAdmin).Msg("Roles obtenidos exitosamente")
+	h.logger.Info(ctx).
+		Int("count", len(roleListDTO.Roles)).
+		Int64("total", roleListDTO.Total).
+		Int("current_page", roleListDTO.Page).
+		Int("per_page", roleListDTO.PageSize).
+		Int("last_page", roleListDTO.TotalPages).
+		Bool("is_super_admin", isSuperAdmin).
+		Msg("Roles obtenidos exitosamente con paginación")
 	c.JSON(http.StatusOK, response)
 }

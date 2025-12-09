@@ -4,8 +4,8 @@
 
 'use server';
 
-import { ActivateVotingUseCase } from '../../../application';
-import { VotingsRepository } from '../../repositories/voting-groups';
+import { ActivateVotingUseCase } from '../../application';
+import { VotingsRepository } from '../repositories';
 
 export interface ActivateVotingInput {
   token: string;

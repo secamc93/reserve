@@ -100,18 +100,57 @@ func (r *Repository) GetRoleByID(ctx context.Context, roleID uint) (*domain.Role
 	return domainRole, nil
 }
 
-// GetRoles obtiene todos los roles
-func (r *Repository) GetRoles(ctx context.Context) ([]domain.Role, error) {
+// GetRoles obtiene roles filtrados y paginados
+func (r *Repository) GetRoles(ctx context.Context, filters domain.RoleFilters) ([]domain.Role, int64, error) {
 	var roles []models.Role
+	var total int64
 
-	err := r.database.Conn(ctx).
+	query := r.database.Conn(ctx).Model(&models.Role{}).
 		Preload("Scope").
-		Preload("BusinessType").
-		Find(&roles).Error
+		Preload("BusinessType")
 
-	if err != nil {
+	// Aplicar filtros
+	if filters.BusinessTypeID != nil {
+		query = query.Where("business_type_id = ?", *filters.BusinessTypeID)
+	}
+
+	if filters.ScopeID != nil {
+		query = query.Where("scope_id = ?", *filters.ScopeID)
+	}
+
+	if filters.IsSystem != nil {
+		query = query.Where("is_system = ?", *filters.IsSystem)
+	}
+
+	if filters.Name != nil && *filters.Name != "" {
+		query = query.Where("name ILIKE ?", "%"+*filters.Name+"%")
+	}
+
+	if filters.Level != nil {
+		query = query.Where("level = ?", *filters.Level)
+	}
+
+	// Ordenamiento
+	if filters.SortBy != "" && filters.SortOrder != "" {
+		orderClause := filters.SortBy + " " + filters.SortOrder
+		query = query.Order(orderClause)
+	} else {
+		query = query.Order("created_at desc") // Por defecto
+	}
+
+	// Contar total antes de paginación
+	if err := query.Count(&total).Error; err != nil {
+		r.logger.Error().Err(err).Msg("Error al contar roles")
+		return nil, 0, err
+	}
+
+	// Paginación
+	offset := (filters.Page - 1) * filters.PageSize
+	query = query.Offset(offset).Limit(filters.PageSize)
+
+	if err := query.Find(&roles).Error; err != nil {
 		r.logger.Error().Err(err).Msg("Error al obtener roles")
-		return nil, err
+		return nil, 0, err
 	}
 
 	domainRoles := make([]domain.Role, len(roles))
@@ -149,7 +188,7 @@ func (r *Repository) GetRoles(ctx context.Context) ([]domain.Role, error) {
 		}
 	}
 
-	return domainRoles, nil
+	return domainRoles, total, nil
 }
 
 // GetRolesByLevel obtiene roles por nivel

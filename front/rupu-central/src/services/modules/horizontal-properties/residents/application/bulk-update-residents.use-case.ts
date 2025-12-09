@@ -1,4 +1,4 @@
-import { IResidentsRepository, BulkUpdateResidentsParams, BulkUpdateResidentsResponse } from '../domain/ports';
+import { IResidentsRepository, BulkUpdateResidentsParams, BulkUpdateResidentsResponse } from '../domain/ports/residents.repository';
 
 export class BulkUpdateResidentsUseCase {
   constructor(private residentsRepository: IResidentsRepository) {}

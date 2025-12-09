@@ -65,7 +65,7 @@ export function useVotingSSE(
     }
 
     try {
-      const token = TokenStorage.getToken();
+      const token = TokenStorage.getBusinessToken();
       if (!token) {
         setError('No se encontró el token de autenticación');
         setConnectionStatus('error');

@@ -1,17 +1,17 @@
 'use server';
 
-import { AttendanceRecordRepository } from '../../repositories/attendance/attendance-record.repository';
-import { AttendanceRecord } from '../../../domain/entities/attendance-record.entity';
+import { AttendanceRecordRepository } from '../repositories/attendance-record.repository';
+import { AttendanceRecord } from '../../domain/entities/attendance-record.entity';
 
-export interface MarkAttendanceSimpleInput { 
-  token: string; 
-  recordId: number; 
+export interface MarkAttendanceSimpleInput {
+  token: string;
+  recordId: number;
 }
 
-export interface MarkAttendanceSimpleResult { 
-  success: boolean; 
-  data?: AttendanceRecord; 
-  error?: string; 
+export interface MarkAttendanceSimpleResult {
+  success: boolean;
+  data?: AttendanceRecord;
+  error?: string;
 }
 
 export async function markAttendanceSimpleAction(input: MarkAttendanceSimpleInput): Promise<MarkAttendanceSimpleResult> {

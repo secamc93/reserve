@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Modal, Spinner, Alert } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
-import { bulkUpdateResidentsAction } from '../../infrastructure/actions/bulk-update-residents.action';
+import { bulkUpdateResidentsAction } from '../infrastructure/actions/bulk-update-residents.action';
 
 interface BulkEditResidentsModalProps {
   isOpen: boolean;
@@ -80,7 +80,7 @@ export function BulkEditResidentsModal({ isOpen, onClose, onSuccess, businessId 
       return;
     }
 
-    const token = TokenStorage.getToken();
+    const token = TokenStorage.getBusinessToken();
     if (!token) {
       setError('No se encontró el token de autenticación');
       return;

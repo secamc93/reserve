@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { TokenStorage } from '@shared/config';
 import { Sidebar, Spinner } from '@shared/ui';
-import { BusinessSelector } from '@/services/auth/ui';
+import { BusinessSelector } from '@/services/auth/businesses/ui';
 
 export default function AuthLayout({
   children,
@@ -49,8 +49,11 @@ export default function AuthLayout({
         console.log('🔑 Auth Layout - Generando business token para super admin');
         (async () => {
           try {
-            const { businessTokenAction } = await import('@/services/auth/infrastructure/actions');
-            const result = await businessTokenAction({ business_id: 0 }, sessionToken);
+            const { generateBusinessTokenAction } = await import('@/services/auth/login/infrastructure/actions');
+            const result = await generateBusinessTokenAction({
+              business_id: 0,
+              session_token: sessionToken,
+            });
             if (result.success && result.data) {
               TokenStorage.setBusinessToken(result.data.token);
               TokenStorage.removeUserPermissions(); // Limpiar permisos anteriores

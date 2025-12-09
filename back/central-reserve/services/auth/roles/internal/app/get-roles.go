@@ -3,60 +3,75 @@ package app
 import (
 	"central_reserve/services/auth/roles/internal/domain"
 	"context"
-	"strings"
+	"math"
 )
 
-// GetRoles obtiene todos los roles
-func (uc *RoleUseCase) GetRoles(ctx context.Context, filters domain.RoleFilters) ([]domain.RoleDTO, error) {
-	uc.log.Info().Msg("Iniciando caso de uso: obtener todos los roles")
+// GetRoles obtiene todos los roles con filtros y paginación
+func (uc *RoleUseCase) GetRoles(ctx context.Context, filters domain.RoleFilters) (*domain.RoleListDTO, error) {
+	uc.log.Info().
+		Int("page", filters.Page).
+		Int("page_size", filters.PageSize).
+		Str("sort_by", filters.SortBy).
+		Str("sort_order", filters.SortOrder).
+		Msg("Iniciando caso de uso: obtener roles filtrados y paginados")
 
-	roles, err := uc.repository.GetRoles(ctx)
+	// Validar y normalizar parámetros de paginación
+	if filters.Page < 1 {
+		filters.Page = 1
+	}
+	if filters.PageSize < 1 {
+		filters.PageSize = 10
+	}
+	if filters.PageSize > 100 {
+		filters.PageSize = 100
+	}
+
+	// Validar ordenamiento
+	if filters.SortBy != "" {
+		allowedSortFields := map[string]bool{
+			"id": true, "name": true, "level": true, "created_at": true, "updated_at": true,
+		}
+		if !allowedSortFields[filters.SortBy] {
+			filters.SortBy = "created_at"
+		}
+	}
+
+	if filters.SortOrder != "" {
+		if filters.SortOrder != "asc" && filters.SortOrder != "desc" {
+			filters.SortOrder = "desc"
+		}
+	}
+
+	roles, total, err := uc.repository.GetRoles(ctx, filters)
 	if err != nil {
 		uc.log.Error().Err(err).Msg("Error al obtener roles desde el repositorio")
 		return nil, err
 	}
 
-	// Aplicar filtros
-	filteredRoles := []domain.Role{}
-	for _, role := range roles {
-		// Filtrar por BusinessTypeID
-		if filters.BusinessTypeID != nil && role.BusinessTypeID != *filters.BusinessTypeID {
-			continue
-		}
-
-		// Filtrar por ScopeID
-		if filters.ScopeID != nil && role.ScopeID != *filters.ScopeID {
-			continue
-		}
-
-		// Filtrar por IsSystem
-		if filters.IsSystem != nil && role.IsSystem != *filters.IsSystem {
-			continue
-		}
-
-		// Filtrar por Name (búsqueda parcial case-insensitive)
-		if filters.Name != nil && *filters.Name != "" {
-			if !strings.Contains(strings.ToLower(role.Name), strings.ToLower(*filters.Name)) {
-				continue
-			}
-		}
-
-		// Filtrar por Level
-		if filters.Level != nil && role.Level != *filters.Level {
-			continue
-		}
-
-		filteredRoles = append(filteredRoles, role)
-	}
-
 	// Convertir entidades a DTOs
-	roleDTOs := make([]domain.RoleDTO, len(filteredRoles))
-	for i, role := range filteredRoles {
+	roleDTOs := make([]domain.RoleDTO, len(roles))
+	for i, role := range roles {
 		roleDTOs[i] = entityToRoleDTO(role)
 	}
 
-	uc.log.Info().Int("count", len(roleDTOs)).Msg("Roles obtenidos exitosamente")
-	return roleDTOs, nil
+	// Calcular total de páginas
+	totalPages := int(math.Ceil(float64(total) / float64(filters.PageSize)))
+
+	uc.log.Info().
+		Int("count", len(roleDTOs)).
+		Int64("total", total).
+		Int("current_page", filters.Page).
+		Int("per_page", filters.PageSize).
+		Int("total_pages", totalPages).
+		Msg("Roles obtenidos exitosamente con paginación")
+
+	return &domain.RoleListDTO{
+		Roles:      roleDTOs,
+		Total:      total,
+		Page:       filters.Page,
+		PageSize:   filters.PageSize,
+		TotalPages: totalPages,
+	}, nil
 }
 
 // entityToRoleDTO convierte una entidad Role a RoleDTO

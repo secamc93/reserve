@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthSimple as useAuth } from '@/services/auth/ui';
+import { useAuthSimple as useAuth } from '@/services/auth/users/ui/hooks';
 import { Button, Input, Select } from '@shared/ui';
 import { UserGroupIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useEffect } from 'react';

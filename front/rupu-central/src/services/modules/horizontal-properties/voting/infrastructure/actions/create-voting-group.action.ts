@@ -4,8 +4,8 @@
 
 'use server';
 
-import { CreateVotingGroupUseCase } from '../../../application';
-import { VotingGroupsRepository } from '../../repositories/voting-groups';
+import { CreateVotingGroupUseCase } from '../../application';
+import { VotingGroupsRepository } from '../repositories';
 import { VotingGroup, CreateVotingGroupDTO } from '../../../domain/entities';
 
 export interface CreateVotingGroupInput {

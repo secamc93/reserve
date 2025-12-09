@@ -6,13 +6,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  VotingGroupsSection,
-  PropertyUnitsTable,
-  ResidentsTable,
-} from '@/services/carpeta vieja/ui';
-import { PropertyNavigation } from '@/services/carpeta vieja/ui/components/property-navigation';
-import { getHorizontalPropertyByIdAction } from '@/services/carpeta vieja/infrastructure/actions';
+import { VotingGroupsSection } from '@/services/modules/horizontal-properties/voting/ui';
+import { PropertyUnitsTable } from '@/services/modules/horizontal-properties/units/ui';
+import { ResidentsTable } from '@/services/modules/horizontal-properties/residents/ui';
+import { PropertyNavigation } from '@/services/modules/horizontal-properties/properties/ui';
+import { getHorizontalPropertyByIdAction } from '@/services/modules/horizontal-properties/properties/infrastructure/actions';
+import { generateBusinessTokenAction } from '@/services/auth/login/infrastructure/actions';
 import { TokenStorage } from '@shared/config';
 import { Spinner, Badge } from '@shared/ui';
 import { use } from 'react';
@@ -60,16 +59,43 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
   const loadProperty = async () => {
     setLoading(true);
     try {
-      const token = TokenStorage.getToken();
-      if (!token) {
-        console.error('❌ No hay token disponible');
+      const user = TokenStorage.getUser();
+      const isSuperAdmin = user?.is_super_admin;
+
+      let businessToken = TokenStorage.getBusinessToken();
+
+      // Si no hay business token, intentar generarlo:
+      // - super admin: business_id = 0
+      // - usuario normal: usar el businessId de la ruta
+      if (!businessToken) {
+        const sessionToken = TokenStorage.getSessionToken();
+        if (sessionToken) {
+          try {
+            const resultBT = await generateBusinessTokenAction({
+              business_id: isSuperAdmin ? 0 : businessId,
+              session_token: sessionToken,
+            });
+            if (resultBT.success && resultBT.data) {
+              businessToken = resultBT.data.token;
+              TokenStorage.setBusinessToken(resultBT.data.token);
+              TokenStorage.setActiveBusiness(isSuperAdmin ? 0 : businessId);
+            }
+          } catch (err) {
+            console.error('❌ No se pudo generar business token', err);
+          }
+        }
+      }
+
+      if (!businessToken) {
+        console.error('❌ No hay business token disponible');
         setLoading(false);
         return;
       }
 
       const result = await getHorizontalPropertyByIdAction({
-        token,
+        token: businessToken,
         id: businessId,
+        business_id: isSuperAdmin ? undefined : businessId,
       });
 
       if (result.success && result.data) {

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { VotingGroupsSection } from '@/services/modules/horizontal-properties/voting/ui/voting-groups-section';
-import { PropertyNavigation } from '@/services/carpeta vieja/ui/components/property-navigation';
+import { PropertyNavigation } from '@/services/modules/horizontal-properties/properties/ui/property-navigation';
 
 export default function VotingGroupsPage() {
   const params = useParams();

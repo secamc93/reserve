@@ -5,12 +5,13 @@
 'use server';
 
 import { GetHorizontalPropertyByIdUseCase } from '../../application';
-import { HorizontalPropertiesRepository } from '../../repositories';
+import { HorizontalPropertiesRepository } from '../repositories';
 import { HorizontalProperty } from '../../domain/entities';
 
 export interface GetHorizontalPropertyByIdInput {
   token: string;
   id: number;
+  business_id?: number;
 }
 
 export interface GetHorizontalPropertyByIdResult {

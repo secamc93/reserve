@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import { Modal, Input } from '@shared/ui';
-import { createPropertyUnitAction } from '../../infrastructure/actions';
-import { CreatePropertyUnitDTO, UNIT_TYPES } from '../../domain';
-import { TokenStorage } from '@/services/auth/infrastructure/storage';
+import { createPropertyUnitAction } from '../infrastructure/actions';
+import { CreatePropertyUnitDTO, UNIT_TYPES } from '../domain';
+import { TokenStorage } from '@shared/config';
+import { generateBusinessTokenAction } from '@/services/auth/login/infrastructure/actions';
 
 interface CreatePropertyUnitModalProps {
   businessId: number;
@@ -30,8 +31,19 @@ export function CreatePropertyUnitModal({ businessId, onClose, onSuccess }: Crea
     setLoading(true);
 
     try {
-      const token = TokenStorage.getToken();
-      if (!token) throw new Error('No token found');
+      let token = TokenStorage.getBusinessToken();
+      if (!token) {
+        const sessionToken = TokenStorage.getSessionToken();
+        if (!sessionToken) throw new Error('No session token found');
+        const result = await generateBusinessTokenAction({
+          business_id: businessId,
+          session_token: sessionToken,
+        });
+        if (!result.success || !result.data) throw new Error(result.error || 'No se pudo generar business token');
+        token = result.data.token;
+        TokenStorage.setBusinessToken(token);
+        TokenStorage.setActiveBusiness(businessId);
+      }
 
       await createPropertyUnitAction({
         businessId,

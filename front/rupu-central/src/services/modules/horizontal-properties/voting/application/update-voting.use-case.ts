@@ -2,13 +2,11 @@
  * Use Case: Actualizar votación
  */
 
-import { IVotingsRepository, UpdateVotingParams } from '../../domain/ports';
-import { Voting } from '../../domain/entities';
-import { validateUpdateVoting } from '../../domain/validation/voting-validation';
+import { IVotingsRepository, UpdateVotingParams } from '../domain/ports/votings.repository';
+import { Voting } from '../domain/entities/voting.entity';
+import { validateUpdateVoting } from '../domain/validation/voting-validation';
 
-export interface UpdateVotingInput extends UpdateVotingParams {
-  id: number;
-  token: string;
+export interface UpdateVotingInput extends Omit<UpdateVotingParams, 'data'> {
   data: Record<string, unknown>;
 }
 

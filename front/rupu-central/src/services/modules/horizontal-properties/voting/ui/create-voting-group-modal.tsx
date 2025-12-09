@@ -7,7 +7,7 @@
 import { useState } from 'react';
 import { Modal, Input, Spinner } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
-import { createVotingGroupAction } from '../../infrastructure/actions';
+import { createVotingGroupAction } from '../infrastructure/actions';
 
 interface CreateVotingGroupModalProps {
   isOpen: boolean;
@@ -60,7 +60,7 @@ export function CreateVotingGroupModal({ isOpen, onClose, onSuccess, businessId 
     setLoading(true);
 
     try {
-      const token = TokenStorage.getToken();
+      const token = TokenStorage.getBusinessToken();
       const user = TokenStorage.getUser();
       
       if (!token || !user) {

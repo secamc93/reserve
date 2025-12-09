@@ -4,9 +4,9 @@
 
 'use server';
 
-import { CreateVotingOptionUseCase } from '../../../application';
-import { VotingOptionsRepository } from '../../repositories/voting-groups';
-import { VotingOption, CreateVotingOptionDTO } from '../../../domain/entities';
+import { CreateVotingOptionUseCase } from '../../application';
+import { VotingOptionsRepository } from '../repositories';
+import { VotingOption, CreateVotingOptionDTO } from '../../domain/entities';
 
 export interface CreateVotingOptionInput {
   token: string;

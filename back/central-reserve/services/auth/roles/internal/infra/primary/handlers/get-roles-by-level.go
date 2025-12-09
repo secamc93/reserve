@@ -47,7 +47,7 @@ func (h *handlers) GetRolesByLevelHandler(c *gin.Context) {
 		return
 	}
 
-	rolesResponse := mapper.ToRoleListResponse(roles)
+	rolesResponse := mapper.ToRoleListResponseFromSlice(roles)
 
 	h.logger.Info().Int("level", req.Level).Int("count", len(roles)).Msg("Roles obtenidos exitosamente")
 	c.JSON(http.StatusOK, rolesResponse)

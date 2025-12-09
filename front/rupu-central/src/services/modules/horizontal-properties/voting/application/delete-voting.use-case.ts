@@ -2,7 +2,7 @@
  * Use Case: Eliminar/Desactivar votación
  */
 
-import { VotingsRepository } from '../../infrastructure/repositories/voting-groups';
+import { VotingsRepository } from '../infrastructure/repositories';
 
 export interface DeleteVotingParams {
   token: string;

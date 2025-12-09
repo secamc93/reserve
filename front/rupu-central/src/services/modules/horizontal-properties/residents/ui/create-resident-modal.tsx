@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { Modal, Input, Alert } from '@shared/ui';
-import { createResidentAction } from '../../infrastructure/actions';
-import { getPropertyUnitsAction } from '../../infrastructure/actions';
-import { CreateResidentDTO } from '../../domain';
-import { TokenStorage } from '@/services/auth/infrastructure/storage';
+import { createResidentAction } from '../infrastructure/actions';
+import { getPropertyUnitsAction } from '../../units/infrastructure/actions';
+import { CreateResidentDTO } from '../../domain/entities';
+import { TokenStorage } from '@shared/config';
 
 interface CreateResidentModalProps {
   businessId: number;
@@ -34,7 +34,7 @@ export function CreateResidentModal({ businessId, onClose, onSuccess }: CreateRe
   const loadUnits = async (searchTerm: string = '') => {
     try {
       setLoadingUnits(true);
-      const token = TokenStorage.getToken();
+      const token = TokenStorage.getBusinessToken();
       if (!token) return;
       const data = await getPropertyUnitsAction({
         businessId,
@@ -67,7 +67,7 @@ export function CreateResidentModal({ businessId, onClose, onSuccess }: CreateRe
     setError(null); // Limpiar error previo
 
     try {
-      const token = TokenStorage.getToken();
+      const token = TokenStorage.getBusinessToken();
       if (!token) throw new Error('No se encontró el token de autenticación');
 
       // Validación de unidad seleccionada

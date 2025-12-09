@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Table, Badge, Spinner, Alert, ConfirmModal } from '@shared/ui';
-import { getResidentsAction, deleteResidentAction } from '../../infrastructure/actions';
+import { getResidentsAction, deleteResidentAction } from '../infrastructure/actions';
 import { Resident } from '../../domain';
-import { TokenStorage } from '@/services/auth/infrastructure/storage';
+import { TokenStorage } from '@shared/config';
 import { CreateResidentModal } from './create-resident-modal';
 import { EditResidentModal } from './edit-resident-modal';
 import { ImportResidentsModal } from './import-residents-modal';
@@ -70,9 +70,9 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
   const fetchUnits = useCallback(async (searchTerm: string) => {
     try {
       setUnitLoading(true);
-      const token = TokenStorage.getToken();
+      const token = TokenStorage.getBusinessToken();
       if (!token) return;
-      const { getPropertyUnitsAction } = await import('../../infrastructure/actions');
+        const { getPropertyUnitsAction } = await import('../infrastructure/actions');
       const data = await getPropertyUnitsAction({
         businessId,
         token,
@@ -110,7 +110,7 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
   const loadResidents = async () => {
     setLoading(true);
     try {
-      const token = TokenStorage.getToken();
+      const token = TokenStorage.getBusinessToken();
       if (!token) throw new Error('No token found');
 
       const data = await getResidentsAction({
@@ -182,7 +182,7 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
     if (!residentToDelete) return;
 
     try {
-      const token = TokenStorage.getToken();
+      const token = TokenStorage.getBusinessToken();
       if (!token) throw new Error('No token found');
 
       await deleteResidentAction({ businessId, residentId: residentToDelete, token });

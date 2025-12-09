@@ -32,7 +32,7 @@ func (h *handlers) GetSystemRolesHandler(c *gin.Context) {
 		return
 	}
 
-	response := mapper.ToRoleListResponse(roles)
+	response := mapper.ToRoleListResponseFromSlice(roles)
 
 	h.logger.Info().Int("count", len(roles)).Msg("Roles del sistema obtenidos exitosamente")
 	c.JSON(http.StatusOK, response)

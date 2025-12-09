@@ -7,7 +7,7 @@
 import { useState } from 'react';
 import { Modal, Spinner, Alert } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
-import { importResidentsFromExcelAction } from '../../infrastructure/actions';
+import { importResidentsFromExcelAction } from '../infrastructure/actions';
 
 interface ImportResidentsModalProps {
   isOpen: boolean;
@@ -77,7 +77,7 @@ export function ImportResidentsModal({ isOpen, onClose, onSuccess, businessId }:
     setErrorDetails([]);
 
     try {
-      const token = TokenStorage.getToken();
+      const token = TokenStorage.getBusinessToken();
       if (!token) {
         setError('No se encontró el token de autenticación');
         return;

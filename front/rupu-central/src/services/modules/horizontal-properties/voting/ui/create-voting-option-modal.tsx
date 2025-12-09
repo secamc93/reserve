@@ -7,7 +7,7 @@
 import { useState } from 'react';
 import { Modal, Input, Spinner } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
-import { createVotingOptionAction } from '../../infrastructure/actions';
+import { createVotingOptionAction } from '../infrastructure/actions';
 
 interface CreateVotingOptionModalProps {
   isOpen: boolean;
@@ -48,7 +48,7 @@ export function CreateVotingOptionModal({
     setLoading(true);
 
     try {
-      const token = TokenStorage.getToken();
+      const token = TokenStorage.getBusinessToken();
       
       if (!token) {
         setError('No se encontró el token de autenticación');

@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { PropertyNavigation } from '@/services/carpeta vieja/ui/components';
+import { PropertyNavigation } from '@/services/modules/horizontal-properties/properties/ui/property-navigation';
 import { AttendanceListModal } from '@/services/modules/horizontal-properties/attendance/ui';
 import { removeAttendanceListAction, getAttendanceListAction, getAttendanceListRecordsAction, getAttendanceListSummaryAction } from '@/services/modules/horizontal-properties/attendance/infrastructure/actions';
 import { ConfirmModal } from '@shared/ui/confirm-modal';
@@ -28,7 +28,7 @@ export default function AttendanceListPage() {
   const attendanceListId = parseInt(params.attendanceListId as string);
 
   useEffect(() => {
-    const userToken = TokenStorage.getToken();
+    const userToken = TokenStorage.getBusinessToken();
     if (!userToken) {
       router.push('/login');
       return;

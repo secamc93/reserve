@@ -3,7 +3,7 @@
  */
 
 import { IProxyRepository, CreateProxyParams, GetProxyParams, UpdateProxyParams, DeleteProxyParams, ListProxiesParams, GetProxiesByPropertyUnitParams } from '../../../domain/ports';
-import { Proxy } from '../../../domain/entities';
+import { Proxy } from '../../domain/entities';
 import { logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
 
 export class ProxyRepository implements IProxyRepository {

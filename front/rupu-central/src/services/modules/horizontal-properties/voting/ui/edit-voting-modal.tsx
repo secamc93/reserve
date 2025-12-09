@@ -7,8 +7,8 @@
 import { useState, useEffect } from 'react';
 import { Modal, Input, Spinner, Alert } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
-import { Voting, UpdateVotingDTO } from '../../domain/entities';
-import { updateVotingAction } from '../../infrastructure/actions/update-voting.action';
+import { Voting, UpdateVotingDTO } from '../domain/entities';
+import { updateVotingAction } from '../infrastructure/actions';
 
 interface EditVotingModalProps {
   isOpen: boolean;
@@ -19,13 +19,13 @@ interface EditVotingModalProps {
   voting: Voting;
 }
 
-export function EditVotingModal({ 
-  isOpen, 
-  onClose, 
-  onSuccess, 
+export function EditVotingModal({
+  isOpen,
+  onClose,
+  onSuccess,
   businessId,
   groupId,
-  voting 
+  voting
 }: EditVotingModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -84,8 +84,8 @@ export function EditVotingModal({
     setLoading(true);
 
     try {
-      const token = TokenStorage.getToken();
-      
+      const token = TokenStorage.getBusinessToken();
+
       if (!token) {
         setError('No se encontró el token de autenticación');
         return;
@@ -139,7 +139,7 @@ export function EditVotingModal({
           <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">
             Información Básica
           </h3>
-          
+
           <Input
             label="Título *"
             value={title}
@@ -196,7 +196,7 @@ export function EditVotingModal({
           <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">
             Configuración
           </h3>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">
               Tipo de Votación

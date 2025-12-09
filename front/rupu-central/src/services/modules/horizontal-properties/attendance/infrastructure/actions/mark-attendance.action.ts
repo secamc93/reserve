@@ -4,9 +4,9 @@
 
 'use server';
 
-import { MarkAttendanceUseCase } from '../../../application';
-import { AttendanceRecordRepository } from '../../repositories/attendance/attendance-record.repository';
-import { AttendanceRecord, MarkAttendanceDTO } from '../../../domain/entities';
+import { MarkAttendanceUseCase } from '../../application';
+import { AttendanceRecordRepository } from '../repositories';
+import { AttendanceRecord, MarkAttendanceDTO } from '../../domain/entities';
 import { logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
 
 export interface MarkAttendanceInput {
@@ -54,7 +54,7 @@ export async function markAttendanceAction(
       status: 201,
       statusText: 'Created',
       duration: Date.now() - startTime,
-    summary: `Asistencia marcada para unidad ${input.data.propertyUnitId}`,
+      summary: `Asistencia marcada para unidad ${input.data.propertyUnitId}`,
       data: result.attendanceRecord,
     });
 

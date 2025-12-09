@@ -5,8 +5,8 @@
 import { 
   IHorizontalPropertiesRepository, 
   GetHorizontalPropertiesParams 
-} from '../domain/ports';
-import { HorizontalPropertiesPaginated } from '../domain/entities';
+} from '../domain/ports/horizontal-properties.repository';
+import { HorizontalPropertiesPaginated } from '../domain/entities/horizontal-property.entity';
 
 export interface GetHorizontalPropertiesOutput {
   properties: HorizontalPropertiesPaginated;

@@ -10,9 +10,9 @@ import { CreateVotingGroupModal } from './create-voting-group-modal';
 import { EditVotingGroupModal } from './edit-voting-group-modal';
 import { DeleteVotingGroupModal } from './delete-voting-group-modal';
 import { VotingsList } from './votings-list';
-import { AttendanceManagement } from '../attendance';
+import { AttendanceManagement } from '../../attendance/ui/attendance-management';
 import { TokenStorage } from '@shared/config';
-import { getVotingGroupsAction } from '../../infrastructure/actions';
+import { getVotingGroupsAction } from '../infrastructure/actions';
 
 interface VotingGroup {
   id: number;
@@ -50,7 +50,7 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
   }, [businessId]);
 
   useEffect(() => {
-    const token = TokenStorage.getToken();
+    const token = TokenStorage.getBusinessToken();
     if (token) {
       setUserToken(token);
     }

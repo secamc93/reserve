@@ -1,7 +1,7 @@
 'use server';
 
-import { ProxyRepository } from '../../repositories/attendance/proxy.repository';
-import { Proxy } from '../../../domain/entities';
+import { ProxyRepository } from '../repositories';
+import { Proxy } from '../../domain/entities';
 
 export interface GetProxyInput { token: string; id: number }
 export interface GetProxyResult { success: boolean; data?: Proxy; error?: string }

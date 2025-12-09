@@ -3,7 +3,7 @@
  * Basado en API_DOCUMENTATION.txt de Property Units
  */
 
-import { UNIT_TYPES } from '../entities/property-units/property-unit.entity';
+import { UNIT_TYPES } from '../entities';
 
 export class PropertyUnitValidationError extends Error {
   constructor(message: string) {

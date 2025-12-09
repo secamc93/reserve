@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { VotingOption } from '../../domain/entities';
+import { VotingOption } from '../domain/entities';
 
 interface Voting {
   id: number;
@@ -61,38 +61,38 @@ export function VotingSummaryBlock({ voting, options, votingDetails }: VotingSum
     console.log('🔍 [VotingSummaryBlock] useEffect ejecutándose');
     console.log('🔍 [VotingSummaryBlock] votingDetails:', votingDetails);
     console.log('🔍 [VotingSummaryBlock] options:', options);
-    
+
     if (!votingDetails) {
       console.log('⚠️ [VotingSummaryBlock] No hay votingDetails, saliendo');
       return;
     }
 
     const totalCoefficient = 100;
-    
+
     // Calcular estadísticas de opciones
     const optionStats = options.map(option => {
-      const unitsWithOption = votingDetails.units.filter(unit => 
+      const unitsWithOption = votingDetails.units.filter(unit =>
         unit.option_text === option.optionText && unit.has_voted
       );
-      
+
       console.log(`🔍 [VotingSummaryBlock] Opción "${option.optionText}": ${unitsWithOption.length} votos`);
-      
-      const coefficientSum = unitsWithOption.reduce((sum, unit) => 
+
+      const coefficientSum = unitsWithOption.reduce((sum, unit) =>
         sum + unit.participation_coefficient, 0
       );
-      
+
       const percentageByCoefficient = (coefficientSum / totalCoefficient) * 100;
       const votes = unitsWithOption.length;
-      const percentageOfVoted = votingDetails.total_units > 0 
-        ? (votes / votingDetails.total_units) * 100 
+      const percentageOfVoted = votingDetails.total_units > 0
+        ? (votes / votingDetails.total_units) * 100
         : 0;
-      
+
       console.log(`✅ [VotingSummaryBlock] Opción "${option.optionText}" - stats:`, {
         coefficientSum,
         percentageByCoefficient,
         votes
       });
-      
+
       return {
         id: option.id,
         optionText: option.optionText,
@@ -107,7 +107,7 @@ export function VotingSummaryBlock({ voting, options, votingDetails }: VotingSum
 
     // Calcular "No Votado"
     const notVotedUnits = votingDetails.units.filter(unit => !unit.has_voted);
-    const notVotedCoefficient = notVotedUnits.reduce((sum, unit) => 
+    const notVotedCoefficient = notVotedUnits.reduce((sum, unit) =>
       sum + unit.participation_coefficient, 0
     );
     const notVotedCount = notVotedUnits.length;
@@ -115,10 +115,10 @@ export function VotingSummaryBlock({ voting, options, votingDetails }: VotingSum
 
     // Solo actualizar si hay VOTOS REALES (no solo unidades sin votar)
     const hasRealVotes = optionStats.some(stat => stat.votes > 0);
-    
+
     console.log('🔍 [VotingSummaryBlock] hasRealVotes:', hasRealVotes);
     console.log('🔍 [VotingSummaryBlock] optionStats:', optionStats);
-    
+
     if (hasRealVotes) {
       console.log('✅ [VotingSummaryBlock] Actualizando validStats (hay votos reales)');
       setValidStats({
@@ -184,14 +184,14 @@ export function VotingSummaryBlock({ voting, options, votingDetails }: VotingSum
   const totalVotedUnits = optionStats.reduce((sum: number, option: any) => sum + option.votes, 0);
   const totalPendingUnits = notVotedCount;
   const totalUnits = votingDetails?.total_units || 0; // ✅ Usar el total del backend
-  
+
   console.log('📊 [VotingSummaryBlock] Resumen:', {
     totalVotedUnits,
     totalPendingUnits,
     totalUnits,
     fromBackend: votingDetails?.total_units
   });
-  
+
   const quorumReached = (100 - notVotedPercentage) >= voting.requiredPercentage;
 
   return (
@@ -205,13 +205,12 @@ export function VotingSummaryBlock({ voting, options, votingDetails }: VotingSum
           <div className="grid grid-cols-3 gap-2">
             {allStats.map((option) => {
               const isNotVoted = option.optionCode === 'NOT_VOTED';
-              
+
               return (
-                <div 
-                  key={option.id} 
-                  className={`bg-white border rounded-lg p-2 shadow-sm hover:shadow-md transition-shadow ${
-                    isNotVoted ? 'border-gray-300 bg-gray-50' : 'border-gray-200'
-                  }`}
+                <div
+                  key={option.id}
+                  className={`bg-white border rounded-lg p-2 shadow-sm hover:shadow-md transition-shadow ${isNotVoted ? 'border-gray-300 bg-gray-50' : 'border-gray-200'
+                    }`}
                 >
                   {/* Header compacto */}
                   <div className="flex items-center justify-between mb-2">
@@ -221,7 +220,7 @@ export function VotingSummaryBlock({ voting, options, votingDetails }: VotingSum
                           <span className="text-xs text-white">⏳</span>
                         </div>
                       ) : (
-                        <div 
+                        <div
                           className="w-4 h-4 rounded-full flex items-center justify-center"
                           style={{ backgroundColor: option.color }}
                         >
@@ -234,7 +233,7 @@ export function VotingSummaryBlock({ voting, options, votingDetails }: VotingSum
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Métricas compactas */}
                   <div className="grid grid-cols-3 gap-1 text-xs">
                     <div className="bg-blue-50 border border-blue-200 rounded p-1 text-center">
@@ -250,7 +249,7 @@ export function VotingSummaryBlock({ voting, options, votingDetails }: VotingSum
                       <div className="text-purple-600">Por Cant.</div>
                     </div>
                   </div>
-                  
+
                   {/* Barra de coeficiente compacta */}
                   <div className="mt-2">
                     <div className="flex justify-between text-xs text-gray-600 mb-1">
@@ -258,10 +257,9 @@ export function VotingSummaryBlock({ voting, options, votingDetails }: VotingSum
                       <span>{option.coefficientSum.toFixed(3)}</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-1">
-                      <div 
-                        className={`h-1 rounded-full ${
-                          isNotVoted ? 'bg-gray-400' : ''
-                        }`}
+                      <div
+                        className={`h-1 rounded-full ${isNotVoted ? 'bg-gray-400' : ''
+                          }`}
                         style={{
                           width: `${Math.min(option.percentageByCoefficient, 100)}%`,
                           backgroundColor: isNotVoted ? '#9ca3af' : option.color
@@ -280,7 +278,7 @@ export function VotingSummaryBlock({ voting, options, votingDetails }: VotingSum
           <h3 className="text-sm font-bold text-gray-900 mb-3 border-b pb-1">
             📊 Resumen
           </h3>
-          
+
           {/* Estadísticas compactas en una sola fila - distribuidas uniformemente */}
           <div className="grid grid-cols-4 gap-2 text-xs w-full">
             {/* Total Unidades */}
@@ -288,7 +286,7 @@ export function VotingSummaryBlock({ voting, options, votingDetails }: VotingSum
               <span className="text-gray-600 block">Total</span>
               <span className="font-bold text-lg text-gray-900">{totalUnits}</span>
             </div>
-            
+
             {/* Han Votado */}
             <div className="bg-green-50 rounded p-2 border border-green-200 text-center">
               <span className="text-green-600 block">Votados</span>
@@ -301,7 +299,7 @@ export function VotingSummaryBlock({ voting, options, votingDetails }: VotingSum
                   : '0'}%)
               </span>
             </div>
-            
+
             {/* Pendientes */}
             <div className="bg-orange-50 rounded p-2 border border-orange-200 text-center">
               <span className="text-orange-600 block">Pendientes</span>
@@ -314,7 +312,7 @@ export function VotingSummaryBlock({ voting, options, votingDetails }: VotingSum
                   : '0'}%)
               </span>
             </div>
-            
+
             {/* % Requerido */}
             <div className="bg-purple-50 rounded p-2 border border-purple-200 text-center">
               <span className="text-purple-600 block">% Requerido</span>

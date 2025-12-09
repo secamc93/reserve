@@ -7,8 +7,8 @@
 import { useState, useEffect } from 'react';
 import { Modal, Input, Spinner, Alert } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
-import { VotingGroup, UpdateVotingGroupDTO } from '../../domain/entities';
-import { updateVotingGroupAction } from '../../infrastructure/actions/update-voting-group.action';
+import { VotingGroup, UpdateVotingGroupDTO } from '../domain/entities';
+import { updateVotingGroupAction } from '../infrastructure/actions';
 
 interface EditVotingGroupModalProps {
   isOpen: boolean;
@@ -18,12 +18,12 @@ interface EditVotingGroupModalProps {
   group: VotingGroup;
 }
 
-export function EditVotingGroupModal({ 
-  isOpen, 
-  onClose, 
-  onSuccess, 
-  businessId, 
-  group 
+export function EditVotingGroupModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  businessId,
+  group
 }: EditVotingGroupModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,18 +42,18 @@ export function EditVotingGroupModal({
     if (group && isOpen) {
       setName(group.name);
       setDescription(group.description);
-      
+
       // Convertir fechas ISO a formato local para los inputs datetime-local
       const startDate = new Date(group.votingStartDate);
       const endDate = new Date(group.votingEndDate);
-      
+
       // Ajustar por zona horaria local
       const localStartDate = new Date(startDate.getTime() - startDate.getTimezoneOffset() * 60000);
       const localEndDate = new Date(endDate.getTime() - endDate.getTimezoneOffset() * 60000);
-      
+
       setVotingStartDate(localStartDate.toISOString().slice(0, 16));
       setVotingEndDate(localEndDate.toISOString().slice(0, 16));
-      
+
       setRequiresQuorum(group.requiresQuorum);
       setQuorumPercentage(group.quorumPercentage.toString());
       setNotes(group.notes || '');
@@ -92,8 +92,8 @@ export function EditVotingGroupModal({
     setLoading(true);
 
     try {
-      const token = TokenStorage.getToken();
-      
+      const token = TokenStorage.getBusinessToken();
+
       if (!token) {
         setError('No se encontró el token de autenticación');
         return;
@@ -150,7 +150,7 @@ export function EditVotingGroupModal({
           <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">
             Información Básica
           </h3>
-          
+
           <Input
             label="Nombre *"
             value={name}
@@ -180,7 +180,7 @@ export function EditVotingGroupModal({
           <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">
             Fechas de Votación
           </h3>
-          
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -193,7 +193,7 @@ export function EditVotingGroupModal({
                 disabled={loading}
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              style={{ color: '#111827' }}
+                style={{ color: '#111827' }}
               />
             </div>
 
@@ -208,7 +208,7 @@ export function EditVotingGroupModal({
                 disabled={loading}
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              style={{ color: '#111827' }}
+                style={{ color: '#111827' }}
               />
             </div>
           </div>
@@ -218,7 +218,7 @@ export function EditVotingGroupModal({
           <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">
             Configuración de Quórum
           </h3>
-          
+
           <div className="flex items-center space-x-3">
             <input
               type="checkbox"
@@ -254,7 +254,7 @@ export function EditVotingGroupModal({
           <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">
             Notas Adicionales
           </h3>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Notas

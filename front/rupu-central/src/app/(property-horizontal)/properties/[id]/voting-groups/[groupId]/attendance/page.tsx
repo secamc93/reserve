@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { PropertyNavigation } from '@/services/carpeta vieja/ui/components';
+import { PropertyNavigation } from '@/services/modules/horizontal-properties/properties/ui/property-navigation';
 import { AttendanceManagement } from '@/services/modules/horizontal-properties/attendance/ui';
 import { TokenStorage } from '@shared/config';
 
@@ -19,7 +19,7 @@ export default function AttendanceManagementPage() {
   const groupId = parseInt(params.groupId as string);
 
   useEffect(() => {
-    const userToken = TokenStorage.getToken();
+    const userToken = TokenStorage.getBusinessToken();
     if (!userToken) {
       router.push('/login');
       return;

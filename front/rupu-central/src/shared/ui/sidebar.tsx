@@ -10,7 +10,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { TokenStorage } from '@shared/config';
 import { UserInfoModal } from '@/services/auth';
-import { usePermissions } from '@/services/auth/ui/hooks';
+import { usePermissions } from '@/services/auth/permissions/ui/hooks';
 
 interface SidebarProps {
   user: {

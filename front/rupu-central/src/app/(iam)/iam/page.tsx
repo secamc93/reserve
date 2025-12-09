@@ -58,15 +58,6 @@ export default function IAMPage() {
   return (
     <div className="p-8 w-full">
       <div className="w-full">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Dashboard IAM
-          </h1>
-          <p className="mt-2 text-gray-600">
-            Bienvenido al panel de control de IAM. Aquí puedes gestionar todos los aspectos de la seguridad y el acceso de tu aplicación.
-          </p>
-        </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-10">

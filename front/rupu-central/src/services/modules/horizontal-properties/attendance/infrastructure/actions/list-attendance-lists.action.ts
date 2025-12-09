@@ -1,7 +1,7 @@
 'use server';
 
-import { AttendanceListRepository } from '../../repositories/attendance/attendance-list.repository';
-import { AttendanceList } from '../../../domain/entities';
+import { AttendanceListRepository } from '../repositories';
+import { AttendanceList } from '../../domain/entities';
 
 export interface ListAttendanceListsInput {
   token: string;

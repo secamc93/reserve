@@ -1,6 +1,6 @@
 'use server';
 
-import { ProxyRepository } from '../../repositories/attendance/proxy.repository';
+import { ProxyRepository } from '../repositories';
 
 export interface DeleteProxyInput { token: string; id: number }
 export interface DeleteProxyResult { success: boolean; error?: string }

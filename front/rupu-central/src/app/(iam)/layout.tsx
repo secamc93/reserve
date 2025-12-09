@@ -9,7 +9,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { TokenStorage } from '@shared/config';
 import { Sidebar, Spinner } from '@shared/ui';
-import { IAMNavigation, BusinessSelector } from '@/services/auth/ui';
+import { BusinessSelector } from '@/services/auth/businesses/ui';
+import { IAMNavigation } from '@/services/auth/ui';
 
 export default function IamLayout({
   children,
@@ -52,8 +53,11 @@ export default function IamLayout({
       console.log('🔑 IAM Layout - Generando business token para super admin');
       (async () => {
         try {
-          const { businessTokenAction } = await import('@/services/auth/infrastructure/actions');
-          const result = await businessTokenAction({ business_id: 0 }, sessionToken);
+          const { generateBusinessTokenAction } = await import('@/services/auth/login/infrastructure/actions');
+          const result = await generateBusinessTokenAction({
+            business_id: 0,
+            session_token: sessionToken,
+          });
           if (result.success && result.data) {
             TokenStorage.setBusinessToken(result.data.token);
             TokenStorage.removeUserPermissions(); // Limpiar permisos anteriores
@@ -169,7 +173,9 @@ export default function IamLayout({
         <IAMNavigation />
 
         {/* Contenido de las páginas */}
-        {children}
+        <div className="w-full">
+          {children}
+        </div>
       </main>
     </div>
   );

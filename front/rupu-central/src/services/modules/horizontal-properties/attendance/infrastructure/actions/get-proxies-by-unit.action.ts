@@ -1,7 +1,7 @@
 'use server';
 
-import { ProxyRepository } from '../../repositories/attendance/proxy.repository';
-import { Proxy } from '../../../domain/entities';
+import { ProxyRepository } from '../repositories';
+import { Proxy } from '../../domain/entities';
 
 export interface GetProxiesByUnitInput { token: string; unitId: number }
 export interface GetProxiesByUnitResult { success: boolean; data?: Proxy[]; error?: string }

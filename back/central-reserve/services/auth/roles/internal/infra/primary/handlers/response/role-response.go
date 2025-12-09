@@ -15,11 +15,15 @@ type RoleResponse struct {
 	BusinessTypeName string `json:"business_type_name" example:"Propiedad Horizontal"`
 }
 
-// RoleListResponse representa la respuesta de una lista de roles
+// RoleListResponse representa la respuesta de una lista paginada de roles
 type RoleListResponse struct {
-	Success bool           `json:"success" example:"true"`
-	Data    []RoleResponse `json:"data"`
-	Count   int            `json:"count" example:"5"`
+	Success    bool           `json:"success" example:"true"`
+	Data       []RoleResponse `json:"data"`
+	Count      int            `json:"count" example:"5"`
+	Total      int64          `json:"total" example:"50"`
+	Page       int            `json:"page" example:"1"`
+	PageSize   int            `json:"page_size" example:"10"`
+	TotalPages int            `json:"total_pages" example:"5"`
 }
 
 // RoleSuccessResponse representa la respuesta exitosa de un rol individual

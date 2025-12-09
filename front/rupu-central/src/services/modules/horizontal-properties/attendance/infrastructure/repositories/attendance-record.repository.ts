@@ -3,7 +3,7 @@
  */
 
 import { IAttendanceRecordRepository, MarkAttendanceParams, CreateAttendanceRecordParams, GetAttendanceRecordParams, UpdateAttendanceRecordParams, DeleteAttendanceRecordParams, ListAttendanceRecordsParams, VerifyAttendanceParams } from '../../../domain/ports';
-import { AttendanceRecord } from '../../../domain/entities';
+import { AttendanceRecord } from '../../domain/entities';
 import { logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
 
 export class AttendanceRecordRepository implements IAttendanceRecordRepository {

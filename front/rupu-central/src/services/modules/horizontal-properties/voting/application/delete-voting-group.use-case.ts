@@ -2,7 +2,7 @@
  * Use Case: Eliminar/Desactivar grupo de votación
  */
 
-import { VotingGroupsRepository } from '../../infrastructure/repositories/voting-groups/voting-groups.repository';
+import { VotingGroupsRepository } from '../infrastructure/repositories/voting-groups.repository';
 
 export interface DeleteVotingGroupParams {
   token: string;

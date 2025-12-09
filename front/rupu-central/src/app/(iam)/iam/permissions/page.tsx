@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { HomeIcon, ChevronRightIcon, KeyIcon, PlusIcon } from '@heroicons/react/24/outline';
-import { PermissionsTable, useAuthSimple as useAuth } from '@/services/auth/ui';
+import { PermissionsTable } from '@/services/auth/permissions/ui';
+import { useAuthSimple as useAuth } from '@/services/auth/users/ui/hooks';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -26,17 +27,8 @@ export default function IAMPermissionsPage() {
   return (
     <div className="p-8 w-full">
       <div className="w-full">
-        {/* Header */}
-        <div className="mb-8 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-              <KeyIcon className="w-8 h-8 mr-2" />
-              Gestión de Permisos
-            </h1>
-            <p className="mt-2 text-gray-600">
-              Administra los permisos detallados para cada acción en el sistema.
-            </p>
-          </div>
+        {/* Actions */}
+        <div className="mb-8 flex justify-end">
           <Link href="/iam/permissions/create" className="btn btn-primary">
             <PlusIcon className="w-5 h-5 mr-2" />
             Crear Permiso

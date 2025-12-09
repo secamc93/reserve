@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { PropertyUnitsTable } from '@/services/modules/horizontal-properties/units/ui/property-units-table';
-import { PropertyNavigation } from '@/services/carpeta vieja/ui/components/property-navigation';
+import { PropertyNavigation } from '@/services/modules/horizontal-properties/properties/ui/property-navigation';
 
 export default function UnitsPage() {
   const params = useParams();

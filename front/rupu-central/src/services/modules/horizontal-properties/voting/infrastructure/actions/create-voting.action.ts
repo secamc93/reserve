@@ -4,8 +4,8 @@
 
 'use server';
 
-import { CreateVotingUseCase } from '../../../application';
-import { VotingsRepository } from '../../repositories/voting-groups';
+import { CreateVotingUseCase } from '../../application';
+import { VotingsRepository } from '../repositories';
 import { Voting, CreateVotingDTO } from '../../../domain/entities';
 
 export interface CreateVotingInput {

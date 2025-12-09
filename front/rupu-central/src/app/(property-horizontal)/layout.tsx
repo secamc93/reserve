@@ -22,7 +22,7 @@ export default function PropertyHorizontalLayout({
 
   useEffect(() => {
     // Verificar autenticación
-    const token = TokenStorage.getToken();
+    const token = TokenStorage.getBusinessToken() || TokenStorage.getSessionToken();
     const userData = TokenStorage.getUser();
 
     if (!token || !userData) {

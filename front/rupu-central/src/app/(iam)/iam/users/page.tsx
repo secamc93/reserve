@@ -1,6 +1,7 @@
 'use client';
 
-import { UsersPage, useAuthSimple as useAuth } from '@/services/auth/ui';
+import { UsersPage } from '@/services/auth/users/ui';
+import { useAuthSimple as useAuth } from '@/services/auth/users/ui/hooks';
 import Link from 'next/link';
 import { HomeIcon, ChevronRightIcon, UserGroupIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { useEffect } from 'react';
@@ -27,18 +28,6 @@ export default function IAMUsersPage() {
   return (
     <div className="p-8 w-full">
       <div className="w-full">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-            <UserGroupIcon className="w-8 h-8 mr-2" />
-            Gestión de Usuarios
-          </h1>
-          <p className="mt-2 text-gray-600">
-            Administra los usuarios que tienen acceso al sistema.
-          </p>
-        </div>
-
-        {/* Users Page */}
         <UsersPage />
       </div>
     </div>

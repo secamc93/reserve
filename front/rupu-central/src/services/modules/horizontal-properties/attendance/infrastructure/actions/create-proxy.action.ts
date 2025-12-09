@@ -4,9 +4,9 @@
 
 'use server';
 
-import { CreateProxyUseCase } from '../../../application';
-import { ProxyRepository } from '../../repositories/attendance/proxy.repository';
-import { Proxy, CreateProxyDTO } from '../../../domain/entities';
+import { CreateProxyUseCase } from '../../application';
+import { ProxyRepository } from '../repositories';
+import { Proxy, CreateProxyDTO } from '../../domain/entities/proxy.entity';
 import { logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
 
 export interface CreateProxyInput {

@@ -7,7 +7,8 @@
 import { useState } from 'react';
 import { Modal, Spinner, Alert } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
-import { importUnitsFromExcelAction } from '../../infrastructure/actions';
+import { importUnitsFromExcelAction } from '../infrastructure/actions';
+import { generateBusinessTokenAction } from '@/services/auth/login/infrastructure/actions';
 
 interface ImportUnitsModalProps {
   isOpen: boolean;
@@ -67,10 +68,26 @@ export function ImportUnitsModal({ isOpen, onClose, onSuccess, businessId }: Imp
     setImportResult(null);
 
     try {
-      const token = TokenStorage.getToken();
+      let token = TokenStorage.getBusinessToken();
       if (!token) {
-        setError('No se encontró el token de autenticación');
-        return;
+        const sessionToken = TokenStorage.getSessionToken();
+        if (!sessionToken) {
+          setError('No se encontró el token de sesión');
+          setLoading(false);
+          return;
+        }
+        const result = await generateBusinessTokenAction({
+          business_id: businessId,
+          session_token: sessionToken,
+        });
+        if (!result.success || !result.data) {
+          setError(result.error || 'No se pudo generar business token');
+          setLoading(false);
+          return;
+        }
+        token = result.data.token;
+        TokenStorage.setBusinessToken(token);
+        TokenStorage.setActiveBusiness(businessId);
       }
 
       const result = await importUnitsFromExcelAction({

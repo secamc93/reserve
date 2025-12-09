@@ -1,7 +1,7 @@
 'use server';
 
-import { ProxyRepository } from '../../repositories/attendance/proxy.repository';
-import { Proxy, UpdateProxyDTO } from '../../../domain/entities';
+import { ProxyRepository } from '../repositories';
+import { Proxy, UpdateProxyDTO } from '../../domain/entities';
 
 export interface UpdateProxyInput { token: string; id: number; data: UpdateProxyDTO }
 export interface UpdateProxyResult { success: boolean; data?: Proxy; error?: string }

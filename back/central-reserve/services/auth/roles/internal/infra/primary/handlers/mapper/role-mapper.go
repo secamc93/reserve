@@ -31,17 +31,39 @@ func ToRoleResponse(dto domain.RoleDTO) response.RoleResponse {
 	}
 }
 
-// ToRoleListResponse convierte un slice de RoleDTO a RoleListResponse
-func ToRoleListResponse(roles []domain.RoleDTO) response.RoleListResponse {
+// ToRoleListResponse convierte RoleListDTO a RoleListResponse (con paginación)
+func ToRoleListResponse(roleListDTO *domain.RoleListDTO) response.RoleListResponse {
+	roleResponses := make([]response.RoleResponse, len(roleListDTO.Roles))
+	for i, role := range roleListDTO.Roles {
+		roleResponses[i] = ToRoleResponse(role)
+	}
+
+	return response.RoleListResponse{
+		Success:    true,
+		Data:       roleResponses,
+		Count:      len(roleResponses),
+		Total:      roleListDTO.Total,
+		Page:       roleListDTO.Page,
+		PageSize:   roleListDTO.PageSize,
+		TotalPages: roleListDTO.TotalPages,
+	}
+}
+
+// ToRoleListResponseFromSlice convierte un slice de RoleDTO a RoleListResponse (sin paginación, para compatibilidad)
+func ToRoleListResponseFromSlice(roles []domain.RoleDTO) response.RoleListResponse {
 	roleResponses := make([]response.RoleResponse, len(roles))
 	for i, role := range roles {
 		roleResponses[i] = ToRoleResponse(role)
 	}
 
 	return response.RoleListResponse{
-		Success: true,
-		Data:    roleResponses,
-		Count:   len(roleResponses),
+		Success:    true,
+		Data:       roleResponses,
+		Count:      len(roleResponses),
+		Total:      int64(len(roleResponses)),
+		Page:       1,
+		PageSize:   len(roleResponses),
+		TotalPages: 1,
 	}
 }
 

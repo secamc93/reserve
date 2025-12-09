@@ -9,7 +9,7 @@ import {
   UpdateVotingGroupParams,
   DeleteVotingGroupParams 
 } from '../../../domain/ports';
-import { VotingGroup, VotingGroupsList } from '../../../domain/entities';
+import { VotingGroup, VotingGroupsList } from '../../domain/entities';
 import { env, logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
 import { BackendGetVotingGroupsResponse, BackendCreateVotingGroupResponse, BackendUpdateVotingGroupResponse, BackendDeleteVotingGroupResponse } from '../response';
 

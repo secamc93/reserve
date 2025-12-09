@@ -1,6 +1,6 @@
 'use client';
 
-import { UsersPage } from '@/services/auth/ui';
+import { UsersPage } from '@/services/auth/users/ui';
 
 export default function UsersPageRoute() {
   return (

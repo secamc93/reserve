@@ -1,8 +1,8 @@
 'use server';
 
-import { VotingOptionsRepository } from '../../repositories/voting-groups';
-import { GetVotingOptionByIdUseCase } from '../../../application';
-import { VotingOption } from '../../../domain/entities';
+import { VotingOptionsRepository } from '../repositories';
+import { GetVotingOptionByIdUseCase } from '../../application';
+import { VotingOption } from '../../domain/entities';
 
 export interface GetVotingOptionByIdInput {
   token: string;

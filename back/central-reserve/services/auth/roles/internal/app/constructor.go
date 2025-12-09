@@ -8,7 +8,7 @@ import (
 )
 
 type Iapp interface {
-	GetRoles(ctx context.Context, filters domain.RoleFilters) ([]domain.RoleDTO, error)
+	GetRoles(ctx context.Context, filters domain.RoleFilters) (*domain.RoleListDTO, error)
 	GetRoleByID(ctx context.Context, id uint) (*domain.RoleDTO, error)
 	GetRolesByLevel(ctx context.Context, filters domain.RoleFilters) ([]domain.RoleDTO, error)
 	GetRolesByScopeID(ctx context.Context, scopeID uint) ([]domain.RoleDTO, error)

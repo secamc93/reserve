@@ -45,7 +45,7 @@ func (h *handlers) GetRolesByScopeHandler(c *gin.Context) {
 		return
 	}
 
-	response := mapper.ToRoleListResponse(roles)
+	response := mapper.ToRoleListResponseFromSlice(roles)
 
 	h.logger.Info().Uint64("scope_id", scopeID).Int("count", len(roles)).Msg("Roles por scope obtenidos exitosamente")
 	c.JSON(http.StatusOK, response)

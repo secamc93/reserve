@@ -7,8 +7,8 @@
 import { useState } from 'react';
 import { Modal, Spinner, Alert } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
-import { Voting } from '../../domain/entities';
-import { deleteVotingAction } from '../../infrastructure/actions/delete-voting.action';
+import { Voting } from '../domain/entities';
+import { deleteVotingAction } from '../infrastructure/actions';
 
 interface DeleteVotingModalProps {
   isOpen: boolean;
@@ -19,13 +19,13 @@ interface DeleteVotingModalProps {
   voting: Voting | null;
 }
 
-export function DeleteVotingModal({ 
-  isOpen, 
-  onClose, 
-  onSuccess, 
+export function DeleteVotingModal({
+  isOpen,
+  onClose,
+  onSuccess,
   businessId,
   groupId,
-  voting 
+  voting
 }: DeleteVotingModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,8 +37,8 @@ export function DeleteVotingModal({
     setLoading(true);
 
     try {
-      const token = TokenStorage.getToken();
-      
+      const token = TokenStorage.getBusinessToken();
+
       if (!token) {
         setError('No se encontró el token de autenticación');
         return;
@@ -124,27 +124,24 @@ export function DeleteVotingModal({
             </div>
             <div>
               <span className="font-medium text-gray-700">Estado:</span>
-              <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
-                voting.isActive 
-                  ? 'bg-green-100 text-green-800' 
-                  : 'bg-red-100 text-red-800'
-              }`}>
+              <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${voting.isActive
+                ? 'bg-green-100 text-green-800'
+                : 'bg-red-100 text-red-800'
+                }`}>
                 {voting.isActive ? 'Activa' : 'Inactiva'}
               </span>
             </div>
             <div className="flex items-center gap-4 mt-2">
-              <span className={`text-xs px-2 py-1 rounded ${
-                voting.isSecret 
-                  ? 'bg-yellow-100 text-yellow-800' 
-                  : 'bg-gray-100 text-gray-800'
-              }`}>
+              <span className={`text-xs px-2 py-1 rounded ${voting.isSecret
+                ? 'bg-yellow-100 text-yellow-800'
+                : 'bg-gray-100 text-gray-800'
+                }`}>
                 {voting.isSecret ? '🔒 Secreta' : '👁️ Pública'}
               </span>
-              <span className={`text-xs px-2 py-1 rounded ${
-                voting.allowAbstention 
-                  ? 'bg-blue-100 text-blue-800' 
-                  : 'bg-gray-100 text-gray-800'
-              }`}>
+              <span className={`text-xs px-2 py-1 rounded ${voting.allowAbstention
+                ? 'bg-blue-100 text-blue-800'
+                : 'bg-gray-100 text-gray-800'
+                }`}>
                 {voting.allowAbstention ? '✅ Permite abstención' : '❌ Sin abstención'}
               </span>
             </div>

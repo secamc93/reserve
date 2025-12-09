@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthSimple as useAuth } from '@/services/auth/ui';
+import { useAuthSimple as useAuth } from '@/services/auth/users/ui/hooks';
 import { Button, Input, Modal, Select } from '@shared/ui';
 import { CubeTransparentIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useEffect } from 'react';
-import { useBusinessTypes } from '@/services/auth/ui/hooks/use-business-types';
+import { useBusinessTypes } from '@/services/auth/business-types/ui/hooks';
 
 export default function CreateResourcePage() {
   const { isAuthenticated, loading, token } = useAuth();
@@ -71,7 +71,7 @@ export default function CreateResourcePage() {
 
     setIsSubmitting(true);
     try {
-      const { createResourceAction } = await import('@/services/auth/infrastructure/actions');
+      const { createResourceAction } = await import('@/services/auth/resources/infrastructure/actions');
 
       const result = await createResourceAction({
         name: formData.name,

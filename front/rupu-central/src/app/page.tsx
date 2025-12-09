@@ -22,7 +22,7 @@ export default function HomePage() {
           {/* Logo/Título con animación */}
           <div className="space-y-4 animate-fade-in">
             <h1 className="text-7xl md:text-8xl font-bold bg-gradient-to-r from-cyan-400 via-sky-400 to-blue-500 bg-clip-text text-transparent animate-gradient">
-              Rupu
+              Rupü
             </h1>
             <div className="h-1 w-32 mx-auto bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full animate-shimmer"></div>
           </div>
@@ -30,7 +30,7 @@ export default function HomePage() {
           {/* Mensaje de bienvenida */}
           <div className="space-y-3 animate-fade-in-delay">
             <h2 className="text-3xl md:text-4xl font-light text-gray-100">
-              Bienvenido a Rupu
+              Bienvenido a Rupü
             </h2>
             <p className="text-lg text-gray-400 max-w-md mx-auto">
               Sistema de gestión inteligente para propiedades horizontales

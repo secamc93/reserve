@@ -10,7 +10,7 @@ type IRoleRepository interface {
 	// Métodos de roles
 	CreateRole(ctx context.Context, roleDTO CreateRoleDTO) (*Role, error)
 	GetRoleByID(ctx context.Context, roleID uint) (*Role, error)
-	GetRoles(ctx context.Context) ([]Role, error)
+	GetRoles(ctx context.Context, filters RoleFilters) ([]Role, int64, error)
 	GetRolesByLevel(ctx context.Context, level int) ([]Role, error)
 	GetRolesByScopeID(ctx context.Context, scopeID uint) ([]Role, error)
 	GetSystemRoles(ctx context.Context) ([]Role, error)

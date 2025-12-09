@@ -1,17 +1,17 @@
 'use server';
 
-import { AttendanceRecordRepository } from '../../repositories/attendance/attendance-record.repository';
-import { AttendanceRecord } from '../../../domain/entities/attendance-record.entity';
+import { AttendanceRecordRepository } from '../repositories/attendance-record.repository';
+import { AttendanceRecord } from '../../domain/entities/attendance-record.entity';
 
-export interface UnmarkAttendanceSimpleInput { 
-  token: string; 
-  recordId: number; 
+export interface UnmarkAttendanceSimpleInput {
+  token: string;
+  recordId: number;
 }
 
-export interface UnmarkAttendanceSimpleResult { 
-  success: boolean; 
-  data?: AttendanceRecord; 
-  error?: string; 
+export interface UnmarkAttendanceSimpleResult {
+  success: boolean;
+  data?: AttendanceRecord;
+  error?: string;
 }
 
 export async function unmarkAttendanceSimpleAction(input: UnmarkAttendanceSimpleInput): Promise<UnmarkAttendanceSimpleResult> {

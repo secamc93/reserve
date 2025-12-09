@@ -2,9 +2,9 @@
  * Use Case: Actualizar grupo de votación
  */
 
-import { VotingGroupsRepository } from '../../infrastructure/repositories/voting-groups/voting-groups.repository';
-import { VotingGroup, UpdateVotingGroupDTO } from '../../domain/entities';
-import { validateUpdateVotingGroup } from '../../domain/validation/voting-validation';
+import { VotingGroupsRepository } from '../infrastructure/repositories/voting-groups.repository';
+import { VotingGroup, UpdateVotingGroupDTO } from '../domain/entities/voting-group.entity';
+import { validateUpdateVotingGroup } from '../domain/validation/voting-validation';
 
 export interface UpdateVotingGroupParams {
   token: string;

@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import { Table, Badge, Spinner, Alert, ConfirmModal, type TableColumn } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
 import { getHorizontalPropertiesAction, deleteHorizontalPropertyAction } from '../infrastructure/actions';
-import { businessTokenAction } from '@/services/auth/infrastructure/actions';
+import { businessTokenAction } from '@/services/auth/users/infrastructure/actions';
 import { CreatePropertyModal } from './create-property-modal';
 
 interface HorizontalProperty {
@@ -46,12 +46,12 @@ export function HorizontalPropertiesTable() {
       let token = TokenStorage.getBusinessToken();
       if (!token) {
         // Intento automático para super admin: obtener business token con business_id = 0 usando el token principal
-        const sessionToken = TokenStorage.getMainToken();
+        const sessionToken = TokenStorage.getSessionToken();
         if (sessionToken) {
           try {
             const bt = await businessTokenAction({ business_id: 0 }, sessionToken);
             if (bt.success && bt.data?.token) {
-              TokenStorage.setToken(bt.data.token);
+              TokenStorage.setBusinessToken(bt.data.token);
               token = bt.data.token;
             }
           } catch (_) { }
@@ -94,12 +94,12 @@ export function HorizontalPropertiesTable() {
 
     let token = TokenStorage.getBusinessToken();
     if (!token) {
-      const sessionToken = TokenStorage.getMainToken();
+      const sessionToken = TokenStorage.getSessionToken();
       if (sessionToken) {
         try {
           const bt = await businessTokenAction({ business_id: 0 }, sessionToken);
           if (bt.success && bt.data?.token) {
-            TokenStorage.setToken(bt.data.token);
+            TokenStorage.setBusinessToken(bt.data.token);
             token = bt.data.token;
           }
         } catch (_) { }

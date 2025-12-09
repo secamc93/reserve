@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { Modal, Input, Alert, Spinner } from '@shared/ui';
-import { updateResidentAction, getResidentByIdAction } from '../../infrastructure/actions';
-import { getPropertyUnitsAction } from '../../infrastructure/actions';
-import { Resident, UpdateResidentDTO } from '../../domain';
-import { TokenStorage } from '@/services/auth/infrastructure/storage';
+import { updateResidentAction, getResidentByIdAction } from '../infrastructure/actions';
+import { getPropertyUnitsAction } from '../../units/infrastructure/actions';
+import { Resident, UpdateResidentDTO } from '../../domain/entities';
+import { TokenStorage } from '@shared/config';
 
 interface EditResidentModalProps {
   businessId: number;
@@ -38,7 +38,7 @@ export function EditResidentModal({ businessId, resident, onClose, onSuccess }: 
   const loadUnits = async (searchTerm: string = '') => {
     try {
       setLoadingUnits(true);
-      const token = TokenStorage.getToken();
+      const token = TokenStorage.getBusinessToken();
       if (!token) return;
       const data = await getPropertyUnitsAction({
         businessId,
@@ -69,7 +69,7 @@ export function EditResidentModal({ businessId, resident, onClose, onSuccess }: 
     const loadResident = async () => {
       setLoadingResident(true);
       try {
-        const token = TokenStorage.getToken();
+        const token = TokenStorage.getBusinessToken();
         if (!token) return;
 
         const fullResidentData = await getResidentByIdAction({
@@ -123,7 +123,7 @@ export function EditResidentModal({ businessId, resident, onClose, onSuccess }: 
     setError(null); // Limpiar error previo
 
     try {
-      const token = TokenStorage.getToken();
+      const token = TokenStorage.getBusinessToken();
       if (!token) throw new Error('No se encontró el token de autenticación');
 
       await updateResidentAction({

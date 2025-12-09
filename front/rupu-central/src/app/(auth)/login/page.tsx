@@ -5,8 +5,7 @@
 
 'use client';
 
-import { LoginForm } from '@/services/auth';
-import { loginAction } from '@/services/auth/infrastructure/actions';
+import { LoginForm } from '@/services/auth/login/ui';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
 
@@ -46,7 +45,7 @@ function LoginContent() {
           {/* Header con título animado */}
           <div className="text-center mb-8 space-y-4 animate-fade-in">
             <h1 className="text-5xl font-bold bg-gradient-to-r from-cyan-400 via-sky-400 to-blue-500 bg-clip-text text-transparent animate-gradient">
-              Rupu
+              Rupü
             </h1>
             <div className="h-0.5 w-24 mx-auto bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full"></div>
             <p className="text-gray-300 text-sm">Sistema de gestión inteligente</p>
@@ -66,7 +65,9 @@ function LoginContent() {
 
           {/* Formulario de login */}
           <div className="animate-fade-in-delay">
-            <LoginForm onLogin={loginAction} />
+            <div className="bg-gray-800/50 backdrop-blur-lg border border-gray-700 rounded-2xl p-8 shadow-2xl">
+              <LoginForm />
+            </div>
           </div>
         </div>
       </div>

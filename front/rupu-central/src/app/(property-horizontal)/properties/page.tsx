@@ -6,7 +6,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { HorizontalPropertiesTable } from '@/services/carpeta vieja/ui';
+import { HorizontalPropertiesTable } from '@/services/modules/horizontal-properties/properties/ui';
 import { TokenStorage } from '@shared/config';
 import { Spinner } from '@shared/ui';
 

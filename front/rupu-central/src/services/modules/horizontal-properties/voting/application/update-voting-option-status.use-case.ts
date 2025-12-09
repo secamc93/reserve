@@ -5,8 +5,8 @@
 import {
   IVotingOptionsRepository,
   UpdateVotingOptionStatusParams,
-} from '../../domain/ports';
-import { VotingOption } from '../../domain/entities';
+} from '../domain/ports/votings.repository';
+import { VotingOption } from '../domain/entities/voting-option.entity';
 
 export interface UpdateVotingOptionStatusOutput {
   option: VotingOption;

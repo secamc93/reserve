@@ -10,7 +10,7 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Rupu Central - Sistema de Gestión',
+  title: 'Rupü Central - Sistema de Gestión',
   description: 'Sistema de gestión de propiedades horizontales con arquitectura modular',
 };
 

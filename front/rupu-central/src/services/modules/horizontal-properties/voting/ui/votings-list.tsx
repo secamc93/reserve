@@ -13,9 +13,9 @@ import {
   getVotesAction,
   updateVotingOptionStatusAction,
   deleteVotingOptionAction,
-} from '../../infrastructure/actions';
-import { activateVotingAction } from '../../infrastructure/actions/activate-voting.action';
-import { deactivateVotingAction } from '../../infrastructure/actions/deactivate-voting.action';
+} from '../infrastructure/actions';
+import { activateVotingAction } from '../infrastructure/actions/activate-voting.action';
+import { deactivateVotingAction } from '../infrastructure/actions/deactivate-voting.action';
 import { CreateVotingModal } from './create-voting-modal';
 import { EditVotingModal } from './edit-voting-modal';
 import { DeleteVotingModal } from './delete-voting-modal';
@@ -120,7 +120,7 @@ export function VotingsList({
   const loadVotings = async () => {
     setLoading(true);
     try {
-      const token = TokenStorage.getToken();
+      const token = TokenStorage.getBusinessToken();
       if (!token) {
         console.error('❌ No se encontró el token');
         return;
@@ -140,7 +140,7 @@ export function VotingsList({
 
   const loadVotingOptions = useCallback(async (votingId: number) => {
     try {
-      const token = TokenStorage.getToken();
+      const token = TokenStorage.getBusinessToken();
       if (!token) return;
 
       const result = await getVotingOptionsAction({ token, businessId, groupId, votingId });
@@ -167,7 +167,7 @@ export function VotingsList({
 
   const loadVotes = async (votingId: number) => {
     try {
-      const token = TokenStorage.getToken();
+      const token = TokenStorage.getBusinessToken();
       if (!token) return;
 
       const result = await getVotesAction({ token, businessId, groupId, votingId });
@@ -246,7 +246,7 @@ export function VotingsList({
 
   const handleToggleOptionStatus = async (voting: Voting, option: VotingOption) => {
     try {
-      const token = TokenStorage.getToken();
+      const token = TokenStorage.getBusinessToken();
       if (!token) throw new Error('Token no disponible');
 
       setOptionStatusLoadingId(option.id);
@@ -287,7 +287,7 @@ export function VotingsList({
     if (!optionToDelete) return;
 
     try {
-      const token = TokenStorage.getToken();
+      const token = TokenStorage.getBusinessToken();
       if (!token) throw new Error('Token no disponible');
 
       const result = await deleteVotingOptionAction({
@@ -354,7 +354,7 @@ export function VotingsList({
 
   const handleActivateVoting = async (voting: Voting) => {
     try {
-      const token = TokenStorage.getToken();
+      const token = TokenStorage.getBusinessToken();
 
       if (!token) {
         console.error('❌ No se encontró el token de autenticación');
@@ -384,7 +384,7 @@ export function VotingsList({
 
   const handleDeactivateVoting = async (voting: Voting) => {
     try {
-      const token = TokenStorage.getToken();
+      const token = TokenStorage.getBusinessToken();
 
       if (!token) {
         console.error('❌ No se encontró el token de autenticación');

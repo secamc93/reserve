@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import { Modal, Input } from '@shared/ui';
-import { updatePropertyUnitAction } from '../../infrastructure/actions';
-import { PropertyUnit, UpdatePropertyUnitDTO, UNIT_TYPES } from '../../domain';
-import { TokenStorage } from '@/services/auth/infrastructure/storage';
+import { updatePropertyUnitAction } from '../infrastructure/actions';
+import { PropertyUnit, UpdatePropertyUnitDTO, UNIT_TYPES } from '../domain';
+import { TokenStorage } from '@shared/config';
+import { generateBusinessTokenAction } from '@/services/auth/login/infrastructure/actions';
 
 interface EditPropertyUnitModalProps {
   businessId: number;
@@ -32,8 +33,19 @@ export function EditPropertyUnitModal({ businessId, unit, onClose, onSuccess }: 
     setLoading(true);
 
     try {
-      const token = TokenStorage.getToken();
-      if (!token) throw new Error('No token found');
+      let token = TokenStorage.getBusinessToken();
+      if (!token) {
+        const sessionToken = TokenStorage.getSessionToken();
+        if (!sessionToken) throw new Error('No session token found');
+        const result = await generateBusinessTokenAction({
+          business_id: businessId,
+          session_token: sessionToken,
+        });
+        if (!result.success || !result.data) throw new Error(result.error || 'No se pudo generar business token');
+        token = result.data.token;
+        TokenStorage.setBusinessToken(token);
+        TokenStorage.setActiveBusiness(businessId);
+      }
 
       await updatePropertyUnitAction({
         businessId,

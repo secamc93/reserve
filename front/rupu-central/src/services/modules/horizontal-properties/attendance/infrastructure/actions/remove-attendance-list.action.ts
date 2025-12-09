@@ -1,6 +1,6 @@
 'use server';
 
-import { AttendanceListRepository } from '../../repositories/attendance/attendance-list.repository';
+import { AttendanceListRepository } from '../repositories';
 import { logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
 
 export interface RemoveAttendanceListInput {

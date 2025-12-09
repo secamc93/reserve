@@ -1,7 +1,7 @@
 'use server';
 
-import { AttendanceListRepository } from '../../repositories/attendance/attendance-list.repository';
-import { AttendanceListSummary } from '../../../domain/entities';
+import { AttendanceListRepository } from '../repositories';
+import { AttendanceListSummary } from '../../domain/entities';
 
 export interface GetAttendanceListSummaryInput { token: string; id: number }
 export interface GetAttendanceListSummaryResult { success: boolean; data?: AttendanceListSummary; error?: string }

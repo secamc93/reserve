@@ -17,11 +17,24 @@ type RoleDTO struct {
 
 // RoleFilters representa los filtros para la consulta de roles
 type RoleFilters struct {
+	Page           int
+	PageSize       int
 	BusinessTypeID *uint
 	ScopeID        *uint
 	IsSystem       *bool
 	Name           *string
 	Level          *int
+	SortBy         string
+	SortOrder      string
+}
+
+// RoleListDTO representa una lista paginada de roles
+type RoleListDTO struct {
+	Roles      []RoleDTO
+	Total      int64
+	Page       int
+	PageSize   int
+	TotalPages int
 }
 
 // CreateRoleDTO representa los datos para crear un nuevo rol

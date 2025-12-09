@@ -4,9 +4,9 @@
 
 'use server';
 
-import { GenerateAttendanceListUseCase } from '../../../application';
-import { AttendanceListRepository } from '../../repositories/attendance/attendance-list.repository';
-import { AttendanceList } from '../../../domain/entities';
+import { GenerateAttendanceListUseCase } from '../../application';
+import { AttendanceListRepository } from '../repositories';
+import { AttendanceList } from '../../domain/entities/attendance-list.entity';
 import { logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
 
 export interface GenerateAttendanceListInput {

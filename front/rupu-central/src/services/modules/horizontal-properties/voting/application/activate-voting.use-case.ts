@@ -2,7 +2,7 @@
  * Use Case: Activar votación
  */
 
-import { VotingsRepository } from '../../infrastructure/repositories/voting-groups';
+import { VotingsRepository } from '../infrastructure/repositories';
 
 export interface ActivateVotingParams {
   token: string;
