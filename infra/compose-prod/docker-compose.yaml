@@ -68,6 +68,9 @@ services:
     volumes:
       # Permitir acceso al socket de Docker para leer logs de contenedores
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    group_add:
+      # GID del grupo docker en el host para acceder al socket
+      - "988"
     restart: unless-stopped
   
     networks:
