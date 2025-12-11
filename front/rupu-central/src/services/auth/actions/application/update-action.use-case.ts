@@ -3,7 +3,7 @@
  */
 
 import { IActionsRepository } from '../domain/ports';
-import { UpdateActionParams, UpdateActionResponse } from '../../domain/entities';
+import { UpdateActionParams, UpdateActionResponse } from '../domain/entities';
 
 export class UpdateActionUseCase {
   constructor(private readonly actionsRepository: IActionsRepository) { }

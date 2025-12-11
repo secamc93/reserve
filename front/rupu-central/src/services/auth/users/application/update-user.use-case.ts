@@ -2,8 +2,8 @@
  * Application Layer - Use Case para actualizar un usuario
  */
 
-import { IUsersRepository } from '../../domain/ports/users/users.repository';
-import { UpdateUserParams, UpdateUserResponse } from '../../domain/entities/update-user.entity';
+import { IUsersRepository } from '../domain/ports/users.repository';
+import { UpdateUserParams, UpdateUserResponse } from '../domain/entities/update-user.entity';
 
 export interface UpdateUserInput extends UpdateUserParams {}
 

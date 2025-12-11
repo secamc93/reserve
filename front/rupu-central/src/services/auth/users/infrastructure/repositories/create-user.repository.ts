@@ -7,7 +7,14 @@
 import { CreateUserParams } from '../../domain/entities/create-user.entity';
 import { CreateUserResponse } from '../../domain/entities/create-user.entity';
 import { env, logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
-import { BackendCreateUserResponse } from '../response/users.response';
+// Definir la interfaz localmente ya que no hay un archivo de respuesta compartido
+interface BackendCreateUserResponse {
+  success: boolean;
+  email: string;
+  password: string;
+  message?: string;
+  error?: string;
+}
 
 export class CreateUserRepository {
   async createUser(params: CreateUserParams): Promise<CreateUserResponse> {

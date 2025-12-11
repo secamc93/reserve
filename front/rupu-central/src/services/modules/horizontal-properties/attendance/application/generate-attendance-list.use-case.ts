@@ -2,8 +2,8 @@
  * Use Case: Generate Attendance List
  */
 
-import { IAttendanceListRepository } from '../../domain/ports';
-import { AttendanceList } from '../../domain/entities';
+import { IAttendanceListRepository } from '../domain/ports';
+import { AttendanceList } from '../domain/entities';
 
 export interface GenerateAttendanceListInput {
   token: string;

@@ -65,6 +65,9 @@ services:
       S3_KEY:              "${S3_KEY}"
       S3_SECRET:           "${S3_SECRET}"
       URL_BASE_DOMAIN_S3:  "${URL_BASE_DOMAIN_S3}"
+    volumes:
+      # Permitir acceso al socket de Docker para leer logs de contenedores
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     restart: unless-stopped
   
     networks:

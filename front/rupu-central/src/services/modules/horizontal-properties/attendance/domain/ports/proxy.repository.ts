@@ -2,7 +2,7 @@
  * Repository Interface: Proxy
  */
 
-import { Proxy, CreateProxyDTO, UpdateProxyDTO } from '../../entities/attendance';
+import { Proxy, CreateProxyDTO, UpdateProxyDTO } from '../entities';
 
 export interface CreateProxyParams {
   token: string;

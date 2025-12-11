@@ -1,4 +1,5 @@
 export * from './user.entity';
+export * from './generate-password.entity';
 export * from './user-list.entity';
 export * from './create-user.entity';
 export * from './update-user.entity';

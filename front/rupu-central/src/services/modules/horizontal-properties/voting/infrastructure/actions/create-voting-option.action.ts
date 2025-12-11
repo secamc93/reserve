@@ -6,7 +6,7 @@
 
 import { CreateVotingOptionUseCase } from '../../application';
 import { VotingOptionsRepository } from '../repositories';
-import { VotingOption, CreateVotingOptionDTO } from '../../domain/entities';
+import { VotingOption, CreateVotingOptionDTO } from '../../domain';
 
 export interface CreateVotingOptionInput {
   token: string;

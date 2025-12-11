@@ -2,7 +2,7 @@
  * Repository Interface: AttendanceRecord
  */
 
-import { AttendanceRecord, CreateAttendanceRecordDTO, MarkAttendanceDTO, UpdateAttendanceRecordDTO, VerifyAttendanceDTO } from '../../entities/attendance';
+import { AttendanceRecord, CreateAttendanceRecordDTO, MarkAttendanceDTO, UpdateAttendanceRecordDTO, VerifyAttendanceDTO } from '../entities';
 
 export interface CreateAttendanceRecordParams {
   token: string;

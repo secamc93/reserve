@@ -2,16 +2,16 @@
  * Implementación del repositorio de Grupos de Votación
  */
 
-import { 
-  IVotingGroupsRepository, 
+import {
+  IVotingGroupsRepository,
   GetVotingGroupsParams,
   CreateVotingGroupParams,
   UpdateVotingGroupParams,
-  DeleteVotingGroupParams 
-} from '../../../domain/ports';
-import { VotingGroup, VotingGroupsList } from '../../domain/entities';
+  DeleteVotingGroupParams
+} from '../../domain/ports';
+import { VotingGroup, VotingGroupsList } from '../../domain';
 import { env, logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
-import { BackendGetVotingGroupsResponse, BackendCreateVotingGroupResponse, BackendUpdateVotingGroupResponse, BackendDeleteVotingGroupResponse } from '../response';
+import { BackendGetVotingGroupsResponse, BackendCreateVotingGroupResponse, BackendUpdateVotingGroupResponse, BackendDeleteVotingGroupResponse } from './response/voting-groups.response';
 
 export class VotingGroupsRepository implements IVotingGroupsRepository {
   async getVotingGroups(params: GetVotingGroupsParams): Promise<VotingGroupsList> {
@@ -179,7 +179,7 @@ export class VotingGroupsRepository implements IVotingGroupsRepository {
 
     // Solo incluir campos que no sean undefined
     const requestBody: Record<string, unknown> = { business_id: businessId };
-    
+
     if (data.name !== undefined) requestBody.name = data.name;
     if (data.description !== undefined) requestBody.description = data.description;
     if (data.votingStartDate !== undefined) requestBody.voting_start_date = data.votingStartDate;

@@ -21,15 +21,6 @@ interface RoleData {
   scopeCode: string;
 }
 
-export interface GetRolesResult {
-  success: boolean;
-  data?: {
-    roles: RoleData[];
-    count: number;
-  };
-  error?: string;
-}
-
 export interface GetRolesActionParams {
   page?: number;
   page_size?: number;

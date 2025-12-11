@@ -2,8 +2,8 @@
  * Use Case: Mark Attendance
  */
 
-import { IAttendanceRecordRepository } from '../../domain/ports';
-import { AttendanceRecord, MarkAttendanceDTO } from '../../domain/entities';
+import { IAttendanceRecordRepository } from '../domain/ports';
+import { AttendanceRecord, MarkAttendanceDTO } from '../domain/entities';
 
 export interface MarkAttendanceInput {
   token: string;

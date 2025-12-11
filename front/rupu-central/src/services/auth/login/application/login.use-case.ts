@@ -4,7 +4,7 @@
  */
 
 import { ILoginRepository } from '../domain/ports';
-import { LoginRequest, LoginResponse } from '../../domain/entities';
+import { LoginRequest, LoginResponse } from '../domain/entities';
 
 export class LoginUseCase {
   constructor(private readonly loginRepository: ILoginRepository) {}

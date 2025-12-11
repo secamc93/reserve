@@ -7,7 +7,7 @@
 import { useState } from 'react';
 import { Modal, Spinner, Alert } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
-import { VotingGroup } from '../../domain/entities';
+import { VotingGroup } from '../domain/entities';
 import { deleteVotingGroupAction } from '../infrastructure/actions/delete-voting-group.action';
 
 interface DeleteVotingGroupModalProps {
@@ -18,12 +18,12 @@ interface DeleteVotingGroupModalProps {
   group: VotingGroup | null;
 }
 
-export function DeleteVotingGroupModal({ 
-  isOpen, 
-  onClose, 
-  onSuccess, 
-  businessId, 
-  group 
+export function DeleteVotingGroupModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  businessId,
+  group
 }: DeleteVotingGroupModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +36,7 @@ export function DeleteVotingGroupModal({
 
     try {
       const token = TokenStorage.getBusinessToken();
-      
+
       if (!token) {
         setError('No se encontró el token de autenticación');
         return;
@@ -135,11 +135,10 @@ export function DeleteVotingGroupModal({
             </div>
             <div>
               <span className="font-medium text-gray-700">Estado:</span>
-              <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
-                group.isActive 
-                  ? 'bg-green-100 text-green-800' 
-                  : 'bg-red-100 text-red-800'
-              }`}>
+              <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${group.isActive
+                ? 'bg-green-100 text-green-800'
+                : 'bg-red-100 text-red-800'
+                }`}>
                 {group.isActive ? 'Activo' : 'Inactivo'}
               </span>
             </div>

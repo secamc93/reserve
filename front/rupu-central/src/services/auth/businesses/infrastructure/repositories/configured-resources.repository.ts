@@ -10,7 +10,7 @@ import {
 } from '../../domain/ports';
 import { BusinessConfiguredResources } from '../../domain/entities';
 import { env, logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
-import { BackendBusinessConfiguredResourcesResponse } from '../response';
+import { BackendBusinessConfiguredResourcesResponse } from './response';
 
 export class BusinessConfiguredResourcesRepository implements IBusinessConfiguredResourcesRepository {
   async getBusinessConfiguredResources(params: GetBusinessConfiguredResourcesParams): Promise<BusinessConfiguredResources> {

@@ -5,6 +5,7 @@
 'use client';
 
 import { useRouter, usePathname } from 'next/navigation';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
 interface PropertyNavigationProps {
   businessId: number;
@@ -26,11 +27,23 @@ export function PropertyNavigation({ businessId, propertyName }: PropertyNavigat
   return (
     <div className="bg-white border-b border-gray-200 sticky top-0 z-20">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-        <div>
-          <p className="text-xs text-gray-500 uppercase tracking-wide">Propiedad</p>
-          <p className="text-lg font-semibold text-gray-900">
-            {propertyName || `Propiedad #${businessId}`}
-          </p>
+        <div className="flex items-center gap-3">
+          {/* Botón Volver */}
+          <button
+            onClick={() => router.push('/properties')}
+            className="p-1.5 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+            title="Volver a Propiedades"
+            aria-label="Volver a Propiedades"
+          >
+            <ArrowLeftIcon className="w-4 h-4" />
+          </button>
+          
+          <div>
+            <p className="text-xs text-gray-500 uppercase tracking-wide">Propiedad</p>
+            <p className="text-lg font-semibold text-gray-900">
+              {propertyName || `Propiedad #${businessId}`}
+            </p>
+          </div>
         </div>
         <nav className="flex gap-2">
           {links.map((link) => {

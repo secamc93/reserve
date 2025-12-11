@@ -6,7 +6,7 @@
 
 import { CreateVotingGroupUseCase } from '../../application';
 import { VotingGroupsRepository } from '../repositories';
-import { VotingGroup, CreateVotingGroupDTO } from '../../../domain/entities';
+import { VotingGroup, CreateVotingGroupDTO } from '../../domain';
 
 export interface CreateVotingGroupInput {
   token: string;

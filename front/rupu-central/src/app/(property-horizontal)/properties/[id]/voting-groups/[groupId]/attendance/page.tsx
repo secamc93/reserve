@@ -40,8 +40,6 @@ export default function AttendanceManagementPage() {
       {/* Navigation */}
       <PropertyNavigation
         businessId={businessId}
-        currentSection="attendance"
-        groupId={groupId}
       />
 
       {/* Main Content */}

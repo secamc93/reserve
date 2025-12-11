@@ -9,6 +9,7 @@ export * from './filters';
 export * from './confirm-modal';
 export * from './file-input';
 export * from './form-modal';
+export * from './iam-navigation';
 export * from './input';
 export * from './modal';
 export * from './select';

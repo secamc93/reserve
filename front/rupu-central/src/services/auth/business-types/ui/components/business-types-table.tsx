@@ -20,7 +20,7 @@ import { BusinessTypeForm } from './business-type-form';
 import { Modal } from '@shared/ui/modal';
 import { TokenStorage } from '@shared/config';
 import { createBusinessTypeAction, updateBusinessTypeAction, deleteBusinessTypeAction } from '../../infrastructure/actions';
-import { BusinessType } from '../hooks/use-business-types';
+import { BusinessType } from '../../domain/entities';
 
 interface BusinessTypesTableProps {
   businessTypes: BusinessType[];
@@ -108,7 +108,7 @@ export function BusinessTypesTable({
   const handleDelete = async () => {
     if (!selectedBusinessType) return;
     
-    const token = TokenStorage.getToken();
+    const token = TokenStorage.getBusinessToken() || TokenStorage.getSessionToken();
     if (!token) {
       console.error('No hay token de autenticación disponible');
       return;

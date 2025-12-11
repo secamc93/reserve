@@ -2,7 +2,7 @@
  * Repositorio de Infraestructura: Asignar Permisos a Rol
  */
 
-import { IAssignRolePermissionsRepository } from '../../../domain/ports/roles/assign-role-permissions.repository';
+import { IAssignRolePermissionsRepository } from '../../domain/ports/assign-role-permissions.repository';
 import { AssignRolePermissionsInput, AssignRolePermissionsResult } from '../../domain/entities';
 import { env, logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
 

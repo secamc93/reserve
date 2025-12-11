@@ -5,8 +5,8 @@
 import { 
   IVotesRepository, 
   GetVotesParams 
-} from '../../domain/ports';
-import { VotesList } from '../../domain/entities';
+} from '../domain/ports';
+import { VotesList } from '../domain/entities';
 
 export interface GetVotesOutput {
   votes: VotesList;

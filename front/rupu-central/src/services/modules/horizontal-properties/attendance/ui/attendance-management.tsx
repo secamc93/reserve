@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 // Using CSS classes for buttons instead of Button component
 import { createAttendanceListAction, generateAttendanceListAction, listAttendanceListsAction, removeAttendanceListAction } from '../infrastructure/actions';
-import { AttendanceList } from '../../domain/entities';
+import { AttendanceList } from '../domain/entities';
 import { CreateAttendanceListModal } from './create-attendance-list-modal';
 import { AttendanceListModal } from './attendance-list-modal';
 import { AttendanceSummaryModal } from './attendance-summary-modal';

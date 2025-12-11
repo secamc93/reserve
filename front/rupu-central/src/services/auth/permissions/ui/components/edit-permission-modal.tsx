@@ -53,7 +53,9 @@ export function EditPermissionModal({
     [formState.business_type_id]
   );
   const { resources, loading: resourcesLoading } = useResources(businessTypeNumber);
-  const { actions, loading: actionsLoading } = useActions();
+  const { actions, loading: actionsLoading } = useActions({
+    token: token || '',
+  });
 
   useEffect(() => {
     const fetchPermissionDetails = async () => {

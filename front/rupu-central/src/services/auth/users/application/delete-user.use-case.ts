@@ -2,8 +2,8 @@
  * Application Layer - Use Case para eliminar un usuario
  */
 
-import { IUsersRepository } from '../../domain/ports/users/users.repository';
-import { DeleteUserParams, DeleteUserResponse } from '../../domain/entities/delete-user.entity';
+import { IUsersRepository } from '../domain/ports/users.repository';
+import { DeleteUserParams, DeleteUserResponse } from '../domain/entities/delete-user.entity';
 
 export interface DeleteUserInput extends DeleteUserParams {}
 

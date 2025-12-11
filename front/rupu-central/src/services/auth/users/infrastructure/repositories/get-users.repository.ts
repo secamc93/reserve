@@ -4,10 +4,22 @@
  * IMPORTANTE: Este archivo es server-only
  */
 
-import { GetUsersParams } from '../../../domain/ports/users/users.repository';
+ import { GetUsersParams } from '../../domain/entities/user-list.entity';
 import { UsersList, UserListItem, UserRole, UserBusiness } from '../../domain/entities/user-list.entity';
 import { env, logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
-import { BackendUsersListResponse } from '../response/users.response';
+// Definir la interfaz localmente
+interface BackendUsersListResponse {
+  success: boolean;
+  data?: {
+    users: UserListItem[];
+    total: number;
+    page: number;
+    page_size: number;
+    total_pages: number;
+  };
+  message?: string;
+  error?: string;
+}
 
 export class GetUsersRepository {
   async getUsers(params: GetUsersParams): Promise<UsersList> {

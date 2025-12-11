@@ -3,7 +3,7 @@
  * Define los métodos para gestionar unidades de propiedad
  */
 
-import { PropertyUnit, PropertyUnitsPaginated, CreatePropertyUnitDTO, UpdatePropertyUnitDTO } from '../entities/property-units';
+import { PropertyUnit, PropertyUnitsPaginated, CreatePropertyUnitDTO, UpdatePropertyUnitDTO } from '../entities';
 
 export interface GetPropertyUnitsParams {
   businessId: number;

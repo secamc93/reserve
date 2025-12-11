@@ -3,7 +3,7 @@
  */
 
 import { IPermissionsRepository } from '../domain/ports';
-import { GetPermissionByIdParams, GetPermissionByIdResponse } from '../../domain/entities';
+import { GetPermissionByIdParams, GetPermissionByIdResponse } from '../domain/entities';
 
 export class GetPermissionByIdUseCase {
   constructor(private readonly permissionsRepository: IPermissionsRepository) {}

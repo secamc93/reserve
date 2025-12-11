@@ -173,7 +173,7 @@ export function AssignRolesModal({ isOpen, onClose, user, onSuccess }: AssignRol
     const business = businesses.find(b => b.id === businessId);
     if (!business) return;
 
-    const token = TokenStorage.getToken();
+    const token = TokenStorage.getBusinessToken() || TokenStorage.getSessionToken();
     if (!token) return;
 
     setLoadingRoles(prev => ({ ...prev, [businessId]: true }));
@@ -202,7 +202,7 @@ export function AssignRolesModal({ isOpen, onClose, user, onSuccess }: AssignRol
   const handleSubmit = async () => {
     if (!user) return;
 
-    const token = TokenStorage.getToken();
+    const token = TokenStorage.getBusinessToken() || TokenStorage.getSessionToken();
     if (!token) {
       setError('No hay token de autenticación disponible');
       return;

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Modal, Input, Alert } from '@shared/ui';
 import { createResidentAction } from '../infrastructure/actions';
 import { getPropertyUnitsAction } from '../../units/infrastructure/actions';
-import { CreateResidentDTO } from '../../domain/entities';
+import { CreateResidentDTO } from '../domain/entities';
 import { TokenStorage } from '@shared/config';
 
 interface CreateResidentModalProps {

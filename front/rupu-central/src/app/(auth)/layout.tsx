@@ -88,7 +88,16 @@ export default function AuthLayout({
         }
       }
 
-      setUser(userData);
+      // Mapear UserData al formato esperado por el estado
+      setUser({
+        userId: String(userData.id),
+        name: userData.name,
+        email: userData.email,
+        role: userData.role || '',
+        avatarUrl: userData.avatarUrl,
+        is_super_admin: userData.is_super_admin,
+        scope: userData.scope,
+      });
     }
 
     setLoading(false);

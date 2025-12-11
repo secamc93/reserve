@@ -2,7 +2,7 @@
  * Repository Interface: AttendanceList
  */
 
-import { AttendanceList, CreateAttendanceListDTO, UpdateAttendanceListDTO, AttendanceListSummary, AttendanceRecord } from '../../entities/attendance';
+import { AttendanceList, CreateAttendanceListDTO, UpdateAttendanceListDTO, AttendanceListSummary, AttendanceRecord } from '../entities';
 
 export interface AttendanceListMeta {
   total: number;

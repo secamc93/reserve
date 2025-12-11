@@ -281,7 +281,7 @@ export function Table<T = Record<string, unknown>>({
 
       {/* Tabla */}
       <div 
-        className={`overflow-hidden p-0 w-full bg-white ${filters ? 'rounded-t-none rounded-b-lg border-l border-r border-b border-gray-200' : 'card'}`}
+        className={`overflow-hidden p-0 w-full ${filters ? 'rounded-t-none rounded-b-lg border-l border-r border-b border-gray-200 bg-white' : 'rounded-lg border border-gray-200 bg-white'}`}
         style={filters ? {} : {}}
       >
         <div className="overflow-x-auto w-full">

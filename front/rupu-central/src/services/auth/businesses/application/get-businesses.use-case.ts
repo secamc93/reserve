@@ -3,7 +3,7 @@
  */
 
 import { IBusinessesRepository, GetBusinessesParams } from '../domain/ports';
-import { BusinessesPaginated } from '../../domain/entities';
+import { BusinessesPaginated } from '../domain/entities';
 
 export class GetBusinessesUseCase {
   constructor(private readonly businessesRepository: IBusinessesRepository) { }

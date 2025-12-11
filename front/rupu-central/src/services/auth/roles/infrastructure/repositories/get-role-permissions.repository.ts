@@ -2,7 +2,7 @@
  * Repositorio de Infraestructura: Obtener Permisos de un Rol
  */
 
-import { IGetRolePermissionsRepository } from '../../../domain/ports/roles/get-role-permissions.repository';
+import { IGetRolePermissionsRepository } from '../../domain/ports/get-role-permissions.repository';
 import { GetRolePermissionsInput, GetRolePermissionsResult, RolePermission } from '../../domain/entities';
 import { env, logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
 

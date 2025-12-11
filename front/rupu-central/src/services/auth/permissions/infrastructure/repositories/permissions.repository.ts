@@ -20,7 +20,7 @@ import {
 import {
   GetUserPermissionsParams,
   UserPermissions,
-} from '../../../domain/entities';
+} from '../../domain/entities';
 import { env, logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
 import {
   BackendPermissionsListResponse,

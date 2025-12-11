@@ -15,7 +15,7 @@ export interface GeneratePasswordResult {
   data?: {
     email: string;
     password: string;
-    message: string;
+    message?: string;
   };
   error?: string;
 }

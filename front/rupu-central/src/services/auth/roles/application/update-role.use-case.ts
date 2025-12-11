@@ -2,8 +2,8 @@
  * Caso de uso: Actualizar Rol
  */
 
-import { UpdateRoleInput, UpdateRoleResult } from '../../domain/entities';
-import { IUpdateRoleRepository } from '../../domain/ports/roles/update-role.repository';
+import { UpdateRoleInput, UpdateRoleResult } from '../domain/entities';
+import { IUpdateRoleRepository } from '../domain/ports/update-role.repository';
 
 export class UpdateRoleUseCase {
   constructor(private updateRoleRepository: IUpdateRoleRepository) {}

@@ -2,7 +2,7 @@
  * Implementación del repositorio de Votaciones
  */
 
-import { 
+import {
   IVotingsRepository,
   IVotingOptionsRepository,
   IVotesRepository,
@@ -20,10 +20,10 @@ import {
   DeleteVotingOptionParams,
   GetVotesParams,
   CreateVoteParams
-} from '../../../domain/ports/votings.repository';
-import { Voting, VotingsList, VotingOption, VotingOptionsList, Vote, VotesList } from '../../domain/entities';
+} from '../../domain/ports';
+import { Voting, VotingsList, VotingOption, VotingOptionsList, Vote, VotesList } from '../../domain';
 import { env, logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
-import { 
+import {
   BackendGetVotingsResponse,
   BackendGetVotingByIdResponse,
   BackendCreateVotingResponse,
@@ -37,7 +37,7 @@ import {
   BackendDeleteVotingOptionResponse,
   BackendGetVotesResponse,
   BackendCreateVoteResponse
-} from '../response';
+} from './response/votings.response';
 
 // ============================================
 // VOTINGS REPOSITORY
@@ -46,9 +46,8 @@ import {
 export class VotingsRepository implements IVotingsRepository {
   async getVotings(params: GetVotingsParams): Promise<VotingsList> {
     // URL correcta: mantener groupId en path; business_id por query param
-    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings${
-      params.businessId !== undefined ? `?business_id=${params.businessId}` : ''
-    }`;
+    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings${params.businessId !== undefined ? `?business_id=${params.businessId}` : ''
+      }`;
     const startTime = Date.now();
 
     logHttpRequest({ method: 'GET', url });
@@ -73,7 +72,7 @@ export class VotingsRepository implements IVotingsRepository {
       });
       throw new Error(`Error ${response.status}`);
     }
-    
+
     logHttpSuccess({
       status: response.status,
       statusText: response.statusText,
@@ -105,9 +104,8 @@ export class VotingsRepository implements IVotingsRepository {
   }
 
   async getVotingById(params: GetVotingByIdParams): Promise<Voting> {
-    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings/${params.votingId}${
-      params.businessId !== undefined ? `?business_id=${params.businessId}` : ''
-    }`;
+    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings/${params.votingId}${params.businessId !== undefined ? `?business_id=${params.businessId}` : ''
+      }`;
     const startTime = Date.now();
 
     logHttpRequest({ method: 'GET', url });
@@ -122,14 +120,14 @@ export class VotingsRepository implements IVotingsRepository {
       });
 
       const duration = Date.now() - startTime;
-      
+
       if (!response.ok) {
         // Si el endpoint no existe (404), intentar obtener la votación desde la lista
         if (response.status === 404) {
           console.log(`⚠️ Endpoint específico no encontrado, obteniendo desde lista de votaciones...`);
           return await this.getVotingFromList(params);
         }
-        
+
         const errorData = await response.json();
         logHttpError({
           status: response.status,
@@ -151,7 +149,7 @@ export class VotingsRepository implements IVotingsRepository {
         });
         throw new Error('Votación no encontrada');
       }
-      
+
       logHttpSuccess({
         status: response.status,
         statusText: response.statusText,
@@ -189,9 +187,8 @@ export class VotingsRepository implements IVotingsRepository {
   }
 
   private async getVotingFromList(params: GetVotingByIdParams): Promise<Voting> {
-    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings${
-      params.businessId !== undefined ? `?business_id=${params.businessId}` : ''
-    }`;
+    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings${params.businessId !== undefined ? `?business_id=${params.businessId}` : ''
+      }`;
     const startTime = Date.now();
 
     logHttpRequest({ method: 'GET', url });
@@ -220,7 +217,7 @@ export class VotingsRepository implements IVotingsRepository {
 
       // Buscar la votación específica por ID
       const voting = data.data.find(v => v.id === params.votingId);
-      
+
       if (!voting) {
         logHttpError({
           status: 404,
@@ -266,9 +263,8 @@ export class VotingsRepository implements IVotingsRepository {
   }
 
   async createVoting(params: CreateVotingParams): Promise<Voting> {
-    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings${
-      params.businessId !== undefined ? `?business_id=${params.businessId}` : ''
-    }`;
+    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings${params.businessId !== undefined ? `?business_id=${params.businessId}` : ''
+      }`;
     const startTime = Date.now();
 
     const body = {
@@ -304,7 +300,7 @@ export class VotingsRepository implements IVotingsRepository {
       });
       throw new Error(`Error ${response.status}`);
     }
-    
+
     logHttpSuccess({
       status: response.status,
       statusText: response.statusText,
@@ -332,13 +328,12 @@ export class VotingsRepository implements IVotingsRepository {
 
   async updateVoting(params: UpdateVotingParams): Promise<Voting> {
     const { token, businessId, groupId, votingId, data } = params;
-    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${groupId}/votings/${votingId}${
-      businessId !== undefined ? `?business_id=${businessId}` : ''
-    }`;
+    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${groupId}/votings/${votingId}${businessId !== undefined ? `?business_id=${businessId}` : ''
+      }`;
     const startTime = Date.now();
 
     const requestBody: Record<string, unknown> = {};
-    
+
     if (data.title !== undefined) requestBody.title = data.title;
     if (data.description !== undefined) requestBody.description = data.description;
     if (data.votingType !== undefined) requestBody.voting_type = data.votingType;
@@ -411,9 +406,8 @@ export class VotingsRepository implements IVotingsRepository {
 
   async deleteVoting(params: DeleteVotingParams): Promise<string> {
     const { token, businessId, groupId, votingId } = params;
-    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${groupId}/votings/${votingId}${
-      businessId !== undefined ? `?business_id=${businessId}` : ''
-    }`;
+    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${groupId}/votings/${votingId}${businessId !== undefined ? `?business_id=${businessId}` : ''
+      }`;
     const startTime = Date.now();
 
     logHttpRequest({
@@ -464,9 +458,8 @@ export class VotingsRepository implements IVotingsRepository {
 
   async activateVoting(params: ActivateVotingParams): Promise<string> {
     const { token, businessId, groupId, votingId } = params;
-    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${groupId}/votings/${votingId}/activate${
-      businessId !== undefined ? `?business_id=${businessId}` : ''
-    }`;
+    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${groupId}/votings/${votingId}/activate${businessId !== undefined ? `?business_id=${businessId}` : ''
+      }`;
     const startTime = Date.now();
 
     logHttpRequest({
@@ -517,9 +510,8 @@ export class VotingsRepository implements IVotingsRepository {
 
   async deactivateVoting(params: DeactivateVotingParams): Promise<string> {
     const { token, businessId, groupId, votingId } = params;
-    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${groupId}/votings/${votingId}/deactivate${
-      businessId !== undefined ? `?business_id=${businessId}` : ''
-    }`;
+    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${groupId}/votings/${votingId}/deactivate${businessId !== undefined ? `?business_id=${businessId}` : ''
+      }`;
     const startTime = Date.now();
 
     logHttpRequest({
@@ -576,9 +568,8 @@ export class VotingsRepository implements IVotingsRepository {
 export class VotingOptionsRepository implements IVotingOptionsRepository {
   async getVotingOptions(params: GetVotingOptionsParams): Promise<VotingOptionsList> {
     // Mantener groupId y votingId en la URL; business_id por query param
-    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings/${params.votingId}/options${
-      params.businessId !== undefined ? `?business_id=${params.businessId}` : ''
-    }`;
+    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings/${params.votingId}/options${params.businessId !== undefined ? `?business_id=${params.businessId}` : ''
+      }`;
     const startTime = Date.now();
 
     logHttpRequest({ method: 'GET', url });
@@ -603,7 +594,7 @@ export class VotingOptionsRepository implements IVotingOptionsRepository {
       });
       throw new Error(`Error ${response.status}`);
     }
-    
+
     logHttpSuccess({
       status: response.status,
       statusText: response.statusText,
@@ -630,9 +621,8 @@ export class VotingOptionsRepository implements IVotingOptionsRepository {
   }
 
   async createVotingOption(params: CreateVotingOptionParams): Promise<VotingOption> {
-    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings/${params.votingId}/options${
-      params.businessId !== undefined ? `?business_id=${params.businessId}` : ''
-    }`;
+    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings/${params.votingId}/options${params.businessId !== undefined ? `?business_id=${params.businessId}` : ''
+      }`;
     const startTime = Date.now();
 
     const body = {
@@ -666,7 +656,7 @@ export class VotingOptionsRepository implements IVotingOptionsRepository {
       });
       throw new Error(`Error ${response.status}`);
     }
-    
+
     logHttpSuccess({
       status: response.status,
       statusText: response.statusText,
@@ -677,7 +667,7 @@ export class VotingOptionsRepository implements IVotingOptionsRepository {
 
     // Mapear la respuesta del backend al dominio
     console.log(`🎨 Color devuelto por el backend:`, data.data.color);
-    
+
     return {
       id: data.data.id,
       votingId: data.data.voting_id,
@@ -690,9 +680,8 @@ export class VotingOptionsRepository implements IVotingOptionsRepository {
   }
 
   async getVotingOptionById(params: GetVotingOptionByIdParams): Promise<VotingOption> {
-    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings/${params.votingId}/options/${params.optionId}${
-      params.businessId !== undefined ? `?business_id=${params.businessId}` : ''
-    }`;
+    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings/${params.votingId}/options/${params.optionId}${params.businessId !== undefined ? `?business_id=${params.businessId}` : ''
+      }`;
     const startTime = Date.now();
 
     logHttpRequest({ method: 'GET', url });
@@ -744,9 +733,8 @@ export class VotingOptionsRepository implements IVotingOptionsRepository {
   }
 
   async updateVotingOptionStatus(params: UpdateVotingOptionStatusParams): Promise<VotingOption> {
-    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings/${params.votingId}/options/${params.optionId}/status${
-      params.businessId !== undefined ? `?business_id=${params.businessId}` : ''
-    }`;
+    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings/${params.votingId}/options/${params.optionId}/status${params.businessId !== undefined ? `?business_id=${params.businessId}` : ''
+      }`;
     const startTime = Date.now();
 
     const body = {
@@ -803,9 +791,8 @@ export class VotingOptionsRepository implements IVotingOptionsRepository {
   }
 
   async deleteVotingOption(params: DeleteVotingOptionParams): Promise<string> {
-    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings/${params.votingId}/options/${params.optionId}${
-      params.businessId !== undefined ? `?business_id=${params.businessId}` : ''
-    }`;
+    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings/${params.votingId}/options/${params.optionId}${params.businessId !== undefined ? `?business_id=${params.businessId}` : ''
+      }`;
     const startTime = Date.now();
 
     logHttpRequest({ method: 'DELETE', url });
@@ -858,9 +845,8 @@ export class VotingOptionsRepository implements IVotingOptionsRepository {
 
 export class VotesRepository implements IVotesRepository {
   async getVotes(params: GetVotesParams): Promise<VotesList> {
-    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings/${params.votingId}/votes${
-      params.businessId !== undefined ? `?business_id=${params.businessId}` : ''
-    }`;
+    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings/${params.votingId}/votes${params.businessId !== undefined ? `?business_id=${params.businessId}` : ''
+      }`;
     const startTime = Date.now();
 
     logHttpRequest({ method: 'GET', url });
@@ -885,7 +871,7 @@ export class VotesRepository implements IVotesRepository {
       });
       throw new Error(`Error ${response.status}`);
     }
-    
+
     logHttpSuccess({
       status: response.status,
       statusText: response.statusText,
@@ -948,7 +934,7 @@ export class VotesRepository implements IVotesRepository {
       // Devolver el mensaje de error específico de la API
       throw new Error(data.error || data.message || `Error ${response.status}`);
     }
-    
+
     logHttpSuccess({
       status: response.status,
       statusText: response.statusText,

@@ -5,8 +5,8 @@
 import { 
   IVotingOptionsRepository, 
   GetVotingOptionsParams 
-} from '../../domain/ports';
-import { VotingOptionsList } from '../../domain/entities';
+} from '../domain/ports';
+import { VotingOptionsList } from '../domain/entities';
 
 export interface GetVotingOptionsOutput {
   options: VotingOptionsList;

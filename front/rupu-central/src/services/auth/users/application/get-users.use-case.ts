@@ -2,8 +2,9 @@
  * Caso de uso: Obtener lista de Usuarios
  */
 
-import { IUsersRepository, GetUsersParams } from '../../domain/ports/users/users.repository';
-import { UsersList } from '../../domain/entities/user-list.entity';
+import { IUsersRepository } from '../domain/ports/users.repository';
+import { GetUsersParams } from '../domain/entities/user-list.entity';
+import { UsersList } from '../domain/entities/user-list.entity';
 
 export interface GetUsersInput extends GetUsersParams {}
 

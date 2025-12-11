@@ -6,7 +6,23 @@
 
 import { GetUserByIdParams, GetUserByIdResponse } from '../../domain/entities/get-user-by-id.entity';
 import { env, logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
-import { BackendGetUserByIdResponse } from '../response/users.response';
+// Definir la interfaz localmente
+interface BackendGetUserByIdResponse {
+  success: boolean;
+  data?: {
+    id: number;
+    name: string;
+    email: string;
+    phone?: string;
+    avatar_url?: string;
+    is_active: boolean;
+    last_login_at?: string;
+    is_super_admin?: boolean;
+    [key: string]: any; // Permitir propiedades adicionales
+  };
+  message?: string;
+  error?: string;
+}
 
 export class GetUserByIdRepository {
   async getUserById(params: GetUserByIdParams): Promise<GetUserByIdResponse> {
@@ -49,7 +65,7 @@ export class GetUserByIdRepository {
         status: response.status,
         statusText: response.statusText,
         duration,
-        summary: `Usuario ${backendResponse.data.name} obtenido exitosamente`,
+        summary: `Usuario ${backendResponse.data?.name || 'desconocido'} obtenido exitosamente`,
         data: backendResponse,
       });
 

@@ -3,16 +3,12 @@
  */
 
 import { DashboardStats } from '../domain';
+import { IDashboardRepository, GetDashboardParams } from '../domain/ports';
 
 export class GetDashboardStatsUseCase {
-  async execute(): Promise<DashboardStats> {
-    // Aquí iría la lógica real consultando repositorios
-    return {
-      totalUnits: 24,
-      occupiedUnits: 20,
-      pendingFees: 8,
-      totalRevenue: 125000,
-    };
+  constructor(private repository: IDashboardRepository) {}
+
+  async execute(params: GetDashboardParams): Promise<DashboardStats> {
+    return await this.repository.getDashboard(params);
   }
 }
-

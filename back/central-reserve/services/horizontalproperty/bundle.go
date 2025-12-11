@@ -2,6 +2,7 @@ package horizontalproperty
 
 import (
 	"central_reserve/services/horizontalproperty/attendance"
+	"central_reserve/services/horizontalproperty/dashboard"
 	"central_reserve/services/horizontalproperty/horizontalpropertiy"
 	"central_reserve/services/horizontalproperty/resident"
 	"central_reserve/services/horizontalproperty/unit"
@@ -36,4 +37,7 @@ func New(db db.IDatabase, logger log.ILogger, s3 storage.IS3Service, envConfig e
 
 	// Initialize Attendance Module
 	attendance.New(db, serviceLogger, v1Group)
+
+	// Initialize Dashboard Module
+	dashboard.New(db, envConfig, serviceLogger, v1Group)
 }

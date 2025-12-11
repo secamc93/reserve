@@ -207,7 +207,7 @@ export function UserForm({ isOpen, onClose, onSuccess, user, mode }: UserFormPro
       return;
     }
 
-    const token = TokenStorage.getToken() || '';
+    const token = TokenStorage.getBusinessToken() || TokenStorage.getSessionToken() || '';
     const business_ids = selectedBusinesses.map(b => b.id).join(',');
     const userData: any = {
       name: formData.name,

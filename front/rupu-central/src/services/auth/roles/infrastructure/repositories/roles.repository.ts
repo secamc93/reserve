@@ -4,7 +4,7 @@
  * IMPORTANTE: Este archivo es server-only
  */
 
-import { IRolesRepository } from '../../../domain/ports/roles/roles.repository';
+import { IRolesRepository } from '../../domain/ports/roles.repository';
 import { Role, RolesList } from '../../domain/entities/role.entity';
 import { env, logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
 

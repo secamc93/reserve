@@ -2,8 +2,8 @@
  * Caso de uso: Asignar Permisos a Rol
  */
 
-import { AssignRolePermissionsInput, AssignRolePermissionsResult } from '../../domain/entities';
-import { IAssignRolePermissionsRepository } from '../../domain/ports/roles/assign-role-permissions.repository';
+import { AssignRolePermissionsInput, AssignRolePermissionsResult } from '../domain/entities';
+import { IAssignRolePermissionsRepository } from '../domain/ports/assign-role-permissions.repository';
 
 export class AssignRolePermissionsUseCase {
   constructor(private assignRolePermissionsRepository: IAssignRolePermissionsRepository) {}

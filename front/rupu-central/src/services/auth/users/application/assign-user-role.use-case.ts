@@ -3,8 +3,8 @@
  * Asigna roles a un usuario en sus negocios asociados
  */
 
-import { AssignUserRoleParams, AssignUserRoleResponse } from '../../domain/entities/assign-user-role.entity';
-import { IUsersRepository } from '../../domain/ports/users/users.repository';
+import { AssignUserRoleParams, AssignUserRoleResponse } from '../domain/entities/assign-user-role.entity';
+import { IUsersRepository } from '../domain/ports/users.repository';
 
 export class AssignUserRoleUseCase {
   constructor(private usersRepository: IUsersRepository) {}

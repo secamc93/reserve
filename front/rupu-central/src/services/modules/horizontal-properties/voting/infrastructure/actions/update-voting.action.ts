@@ -6,7 +6,7 @@
 
 import { UpdateVotingUseCase } from '../../application';
 import { VotingsRepository } from '../repositories';
-import { Voting, UpdateVotingDTO } from '../../domain/entities';
+import { Voting, UpdateVotingDTO } from '../../domain';
 
 export interface UpdateVotingInput {
   token: string;

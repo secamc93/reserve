@@ -1,5 +1,5 @@
-import { IVotingsRepository, GetVotingByIdParams } from '../../domain/ports';
-import { Voting } from '../../domain/entities';
+import { IVotingsRepository, GetVotingByIdParams } from '../domain/ports';
+import { Voting } from '../domain/entities';
 
 export interface GetVotingByIdInput extends GetVotingByIdParams {
   id: number;

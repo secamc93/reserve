@@ -2,8 +2,8 @@
  * Repositorio para obtener business token
  */
 
-import { IBusinessTokenRepository } from '../../../domain/ports/users/business-token.repository';
-import { BusinessTokenParams, BusinessTokenResult } from '../../domain/entities/business-token.entity';
+import { IBusinessTokenRepository } from '../../domain/ports/business-token.repository';
+import { BusinessTokenParams, BusinessTokenResult } from '../../../businesses/domain/entities/business-token.entity';
 import { env, logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
 
 interface BackendBusinessTokenRequest {

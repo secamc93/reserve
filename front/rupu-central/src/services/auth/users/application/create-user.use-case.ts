@@ -2,8 +2,9 @@
  * Use Case: Crear Usuario
  */
 
-import { IUsersRepository, CreateUserParams } from '../../domain/ports/users/users.repository';
-import { CreateUserResponse } from '../../domain/entities/create-user.entity';
+import { IUsersRepository } from '../domain/ports/users.repository';
+import { CreateUserParams } from '../domain/entities/create-user.entity';
+import { CreateUserResponse } from '../domain/entities/create-user.entity';
 
 export interface CreateUserInput extends CreateUserParams {}
 

@@ -197,7 +197,7 @@ export function PublicVotingProgress({ votingAuthToken }: PublicVotingProgressPr
       number: unit.unitNumber,
       resident: unit.residentName || 'Sin residente',
       propertyUnitId: unit.unitId,
-      residentId: unit.residentName ? undefined : null,
+      residentId: null,
       hasVoted: unit.hasVoted,
       votedOption: unit.votedOption?.text,
       votedOptionId: unit.votedOption?.id,

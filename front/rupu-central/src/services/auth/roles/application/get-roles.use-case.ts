@@ -3,8 +3,8 @@
  * Lógica de negocio para obtener la lista de roles del sistema
  */
 
-import { IRolesRepository, GetRolesParams } from '../../domain/ports/roles/roles.repository';
-import { RolesList } from '../../domain/entities/role.entity';
+import { IRolesRepository, GetRolesParams } from '../domain/ports/roles.repository';
+import { RolesList } from '../domain/entities/role.entity';
 
 export interface GetRolesInput {
   token: string;

@@ -3,7 +3,7 @@
  */
 
 import { IBusinessConfiguredResourcesRepository, GetBusinessConfiguredResourcesParams } from '../domain/ports';
-import { BusinessConfiguredResources } from '../../domain/entities';
+import { BusinessConfiguredResources } from '../domain/entities';
 
 export class GetBusinessConfiguredResourcesUseCase {
   constructor(private readonly configuredResourcesRepository: IBusinessConfiguredResourcesRepository) {}

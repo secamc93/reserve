@@ -27,7 +27,7 @@
         "./src/*"
       ],
       "@modules/*": [
-        "src/services/*"
+        "./src/services/*"
       ],
       "@shared/*": [
         "./src/shared/*"

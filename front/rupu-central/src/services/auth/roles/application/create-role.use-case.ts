@@ -2,8 +2,8 @@
  * Caso de Uso: Crear Rol
  */
 
-import { CreateRoleInput, CreateRoleResult } from '../../domain/entities';
-import { ICreateRoleRepository } from '../../domain/ports/roles/create-role.repository';
+import { CreateRoleInput, CreateRoleResult } from '../domain/entities';
+import { ICreateRoleRepository } from '../domain/ports/create-role.repository';
 
 export interface CreateRoleUseCaseInput {
   token: string;

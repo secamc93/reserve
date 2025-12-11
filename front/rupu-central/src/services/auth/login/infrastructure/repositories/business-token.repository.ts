@@ -5,7 +5,8 @@
  */
 
 import { IBusinessTokenRepository } from '../../domain/ports';
-import { BusinessTokenParams, BusinessTokenResponse } from '../../domain/entities';
+import { BusinessTokenResponse } from '../../domain/entities';
+import { BusinessTokenParams } from '../../domain/ports';
 import { env, logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
 
 interface BackendBusinessTokenRequest {
@@ -56,19 +57,17 @@ export class BusinessTokenRepository implements IBusinessTokenRepository {
           errorMessage = errorData.error || errorMessage;
           
           logHttpError({
-            method: 'POST',
-            url,
             status: response.status,
-            error: errorMessage,
-            responseTime,
+            statusText: response.statusText || 'Error',
+            duration: responseTime,
+            data: { error: errorMessage },
           });
         } catch {
           logHttpError({
-            method: 'POST',
-            url,
             status: response.status,
-            error: errorMessage,
-            responseTime,
+            statusText: response.statusText || 'Error',
+            duration: responseTime,
+            data: { error: errorMessage },
           });
         }
 
@@ -83,10 +82,9 @@ export class BusinessTokenRepository implements IBusinessTokenRepository {
       }
 
       logHttpSuccess({
-        method: 'POST',
-        url,
         status: response.status,
-        responseTime,
+        statusText: response.statusText || 'OK',
+        duration: responseTime,
       });
 
       console.log('🔑 BusinessTokenRepository - Business token obtenido exitosamente:', {
@@ -100,11 +98,10 @@ export class BusinessTokenRepository implements IBusinessTokenRepository {
       const responseTime = Date.now() - startTime;
       
       logHttpError({
-        method: 'POST',
-        url,
         status: 0,
-        error: error instanceof Error ? error.message : 'Error desconocido',
-        responseTime,
+        statusText: 'Error',
+        duration: responseTime,
+        data: { error: error instanceof Error ? error.message : 'Error desconocido' },
       });
 
       throw error;

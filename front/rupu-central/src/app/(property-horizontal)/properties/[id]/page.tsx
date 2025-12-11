@@ -12,8 +12,9 @@ import { ResidentsTable } from '@/services/modules/horizontal-properties/residen
 import { PropertyNavigation } from '@/services/modules/horizontal-properties/properties/ui';
 import { getHorizontalPropertyByIdAction } from '@/services/modules/horizontal-properties/properties/infrastructure/actions';
 import { generateBusinessTokenAction } from '@/services/auth/login/infrastructure/actions';
+import { DashboardStats, useDashboardStats } from '@/services/modules/horizontal-properties/dashboard/ui';
 import { TokenStorage } from '@shared/config';
-import { Spinner, Badge } from '@shared/ui';
+import { Spinner, Badge, Button } from '@shared/ui';
 import { use } from 'react';
 
 interface PropertyDetailPageProps {
@@ -51,6 +52,12 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
   const [property, setProperty] = useState<PropertyData | null>(null);
   const [loading, setLoading] = useState(true);
   const businessId = parseInt(id);
+  
+  // Hook para obtener estadísticas del dashboard
+  const { stats: dashboardStats, loading: dashboardLoading, error: dashboardError, refresh: refreshDashboard } = useDashboardStats({
+    businessId: businessId,
+    autoLoad: true,
+  });
 
   useEffect(() => {
     loadProperty();
@@ -138,162 +145,164 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
       {/* Contenido del Dashboard */}
       <div className="p-8">
         <div className="max-w-7xl mx-auto">
-          {/* Botón Volver */}
-          <button
-            onClick={() => router.push('/properties')}
-            className="mb-6 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            <span>Volver a Propiedades</span>
-          </button>
-
-          {/* Dashboard Overview */}
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              📊 Dashboard
-            </h2>
-            <p className="text-gray-600">
-              Resumen general de {property.name}
-            </p>
-          </div>
-
           {/* Dashboard Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {/* Unidades */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-              <div className="flex items-center">
-                <div className="p-3 rounded-full bg-blue-100">
-                  <span className="text-2xl">🏢</span>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Unidades</p>
-                  <p className="text-2xl font-bold text-gray-900">{property.totalUnits || 0}</p>
-                </div>
-              </div>
+          {dashboardLoading && !dashboardStats ? (
+            <div className="flex items-center justify-center py-12">
+              <Spinner size="lg" text="Cargando estadísticas del dashboard..." />
             </div>
-
-            {/* Residentes */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-              <div className="flex items-center">
-                <div className="p-3 rounded-full bg-green-100">
-                  <span className="text-2xl">👥</span>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Residentes</p>
-                  <p className="text-2xl font-bold text-gray-900">-</p>
-                </div>
-              </div>
+          ) : dashboardError ? (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-8">
+              <p className="font-medium">Error al cargar estadísticas del dashboard</p>
+              <p className="text-sm mt-1">{dashboardError}</p>
+              <Button onClick={refreshDashboard} className="mt-3" variant="outline">
+                Reintentar
+              </Button>
             </div>
-
-            {/* Grupos de Votación */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-              <div className="flex items-center">
-                <div className="p-3 rounded-full bg-purple-100">
-                  <span className="text-2xl">🗳️</span>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Grupos de Votación</p>
-                  <p className="text-2xl font-bold text-gray-900">-</p>
-                </div>
-              </div>
+          ) : dashboardStats ? (
+            <div className="mb-8">
+              <DashboardStats data={dashboardStats} />
             </div>
-
-            {/* Cuotas */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-              <div className="flex items-center">
-                <div className="p-3 rounded-full bg-yellow-100">
-                  <span className="text-2xl">💰</span>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Cuotas</p>
-                  <p className="text-2xl font-bold text-gray-900">-</p>
-                </div>
-              </div>
-            </div>
-          </div>
+          ) : null}
 
           {/* Información General */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">
-              📋 Información General
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm text-gray-600">Nombre</p>
-                  <p className="font-medium text-gray-900">{property.name}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Código</p>
-                  <p className="font-medium text-gray-900">{property.code}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Dirección</p>
-                  <p className="font-medium text-gray-900">{property.address}</p>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm text-gray-600">Tipo de Negocio</p>
-                  <Badge>{property.businessTypeName}</Badge>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Total de Unidades</p>
-                  <p className="font-medium text-gray-900">{property.totalUnits || 0}</p>
-                </div>
-                {property.description && (
-                  <div>
-                    <p className="text-sm text-gray-600">Descripción</p>
-                    <p className="font-medium text-gray-900">{property.description}</p>
-                  </div>
-                )}
-              </div>
+          <div className="bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden">
+            {/* Header con gradiente */}
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <span className="text-2xl">📋</span>
+                Información General
+              </h3>
             </div>
-          </div>
 
-          {/* Acciones Rápidas */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">
-              🚀 Acciones Rápidas
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <button
-                onClick={() => router.push(`/properties/${businessId}/units`)}
-                className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
-              >
-                <div className="text-2xl mb-2">🏢</div>
-                <div className="font-medium text-gray-900">Gestionar Unidades</div>
-                <div className="text-sm text-gray-600">Ver y editar unidades</div>
-              </button>
+            {/* Contenido */}
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Columna Izquierda */}
+                <div className="space-y-5">
+                  {/* Nombre */}
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-100 hover:shadow-md transition-shadow">
+                    <div className="flex items-start gap-3">
+                      <div className="bg-blue-500 rounded-lg p-2 flex-shrink-0">
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                          Nombre
+                        </p>
+                        <p className="text-lg font-bold text-gray-900 truncate">
+                          {property.name}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
 
-              <button
-                onClick={() => router.push(`/properties/${businessId}/residents`)}
-                className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
-              >
-                <div className="text-2xl mb-2">👥</div>
-                <div className="font-medium text-gray-900">Gestionar Residentes</div>
-                <div className="text-sm text-gray-600">Ver y editar residentes</div>
-              </button>
+                  {/* Código */}
+                  <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-100 hover:shadow-md transition-shadow">
+                    <div className="flex items-start gap-3">
+                      <div className="bg-purple-500 rounded-lg p-2 flex-shrink-0">
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                          Código
+                        </p>
+                        <p className="text-lg font-bold text-gray-900 truncate font-mono">
+                          {property.code}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
 
-              <button
-                onClick={() => router.push(`/properties/${businessId}/voting-groups`)}
-                className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
-              >
-                <div className="text-2xl mb-2">🗳️</div>
-                <div className="font-medium text-gray-900">Grupos de Votación</div>
-                <div className="text-sm text-gray-600">Crear y gestionar votaciones</div>
-              </button>
+                  {/* Dirección */}
+                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-4 border border-green-100 hover:shadow-md transition-shadow">
+                    <div className="flex items-start gap-3">
+                      <div className="bg-green-500 rounded-lg p-2 flex-shrink-0">
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                          Dirección
+                        </p>
+                        <p className="text-lg font-semibold text-gray-900">
+                          {property.address}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-              <button
-                onClick={() => router.push(`/properties/${businessId}/fees`)}
-                className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
-              >
-                <div className="text-2xl mb-2">💰</div>
-                <div className="font-medium text-gray-900">Gestionar Cuotas</div>
-                <div className="text-sm text-gray-600">Ver y editar cuotas</div>
-              </button>
+                {/* Columna Derecha */}
+                <div className="space-y-5">
+                  {/* Tipo de Negocio */}
+                  <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-lg p-4 border border-orange-100 hover:shadow-md transition-shadow">
+                    <div className="flex items-start gap-3">
+                      <div className="bg-orange-500 rounded-lg p-2 flex-shrink-0">
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                          Tipo de Negocio
+                        </p>
+                        <Badge className="bg-orange-500 text-white px-3 py-1 text-sm font-semibold">
+                          {property.businessTypeName}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Total de Unidades */}
+                  <div className="bg-gradient-to-br from-cyan-50 to-blue-50 rounded-lg p-4 border border-cyan-100 hover:shadow-md transition-shadow">
+                    <div className="flex items-start gap-3">
+                      <div className="bg-cyan-500 rounded-lg p-2 flex-shrink-0">
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                          Total de Unidades
+                        </p>
+                        <div className="flex items-baseline gap-2">
+                          <p className="text-2xl font-bold text-gray-900">
+                            {property.totalUnits || 0}
+                          </p>
+                          <span className="text-sm text-gray-500">unidades</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Descripción */}
+                  {property.description && (
+                    <div className="bg-gradient-to-br from-gray-50 to-slate-50 rounded-lg p-4 border border-gray-100 hover:shadow-md transition-shadow">
+                      <div className="flex items-start gap-3">
+                        <div className="bg-gray-500 rounded-lg p-2 flex-shrink-0">
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+                          </svg>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                            Descripción
+                          </p>
+                          <p className="text-base text-gray-700 leading-relaxed">
+                            {property.description}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 

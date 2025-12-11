@@ -6,7 +6,7 @@
 
 import { UpdateVotingGroupUseCase } from '../../application';
 import { VotingGroupsRepository } from '../repositories';
-import { VotingGroup, UpdateVotingGroupDTO } from '../../domain/entities';
+import { VotingGroup, UpdateVotingGroupDTO } from '../../domain';
 
 export interface UpdateVotingGroupInput {
   token: string;

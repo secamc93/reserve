@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 import { TokenStorage } from '@shared/config';
 import { Sidebar, Spinner } from '@shared/ui';
 import { BusinessSelector } from '@/services/auth/businesses/ui';
-import { IAMNavigation } from '@/services/auth/ui';
+import { IAMNavigation } from '@shared/ui';
 
 export default function IamLayout({
   children,
@@ -93,7 +93,16 @@ export default function IamLayout({
       }
     }
 
-    setUser(userData);
+    // Mapear UserData al formato esperado por el estado
+    setUser({
+      userId: String(userData.id),
+      name: userData.name,
+      email: userData.email,
+      role: userData.role || '',
+      avatarUrl: userData.avatarUrl,
+      is_super_admin: userData.is_super_admin,
+      scope: userData.scope,
+    });
     setLoading(false);
   }, [router]);
 
@@ -157,13 +166,13 @@ export default function IamLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-white">
       {/* Sidebar */}
-      <Sidebar user={user} />
+      <Sidebar user={user ? { ...user, is_super_admin: user.is_super_admin } : null} />
 
       {/* Contenido principal */}
       <main
-        className="flex-1 transition-all duration-300 w-full"
+        className="flex-1 transition-all duration-300 w-full overflow-x-hidden"
         style={{
           marginLeft: sidebarExpanded ? '250px' : '80px'
         }}
@@ -173,7 +182,7 @@ export default function IamLayout({
         <IAMNavigation />
 
         {/* Contenido de las páginas */}
-        <div className="w-full">
+        <div className="w-full min-h-screen bg-white">
           {children}
         </div>
       </main>

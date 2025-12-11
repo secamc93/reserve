@@ -6,7 +6,23 @@
 
 import { UpdateUserParams, UpdateUserResponse } from '../../domain/entities/update-user.entity';
 import { env, logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
-import { BackendUpdateUserResponse } from '../response/users.response';
+// Definir la interfaz localmente
+interface BackendUpdateUserResponse {
+  success: boolean;
+  data?: {
+    id: number;
+    name: string;
+    email: string;
+    phone?: string;
+    avatar_url?: string;
+    is_active: boolean;
+    last_login_at?: string;
+    roles?: any[];
+    [key: string]: any; // Permitir propiedades adicionales
+  };
+  message?: string;
+  error?: string;
+}
 
 export class UpdateUserRepository {
   async updateUser(params: UpdateUserParams): Promise<UpdateUserResponse> {
@@ -64,7 +80,7 @@ export class UpdateUserRepository {
         status: response.status,
         statusText: response.statusText,
         duration,
-        summary: `Usuario ${backendResponse.data.name} actualizado exitosamente`,
+        summary: `Usuario ${backendResponse.data?.name || 'desconocido'} actualizado exitosamente`,
         data: backendResponse,
       });
 

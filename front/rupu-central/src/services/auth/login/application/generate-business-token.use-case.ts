@@ -3,7 +3,7 @@
  */
 
 import { IBusinessTokenRepository } from '../domain/ports';
-import { BusinessTokenResponse } from '../../domain/entities';
+import { BusinessTokenResponse } from '../domain/entities';
 
 export interface GenerateBusinessTokenParams {
   business_id: number;

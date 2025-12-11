@@ -30,9 +30,9 @@ export function applyBusinessTheme(business: Business): void {
   // Aplicar a las CSS variables
   if (typeof window !== 'undefined') {
     document.documentElement.style.setProperty('--color-primary', colors.primary);
-    document.documentElement.style.setProperty('--color-secondary', colors.secondary);
-    document.documentElement.style.setProperty('--color-tertiary', colors.tertiary);
-    document.documentElement.style.setProperty('--color-quaternary', colors.quaternary);
+    document.documentElement.style.setProperty('--color-secondary', colors.secondary ?? '');
+    document.documentElement.style.setProperty('--color-tertiary', colors.tertiary ?? '');
+    document.documentElement.style.setProperty('--color-quaternary', colors.quaternary ?? '');
 
     // Disparar evento para que otros componentes se enteren
     window.dispatchEvent(new Event('businessChanged'));
@@ -56,9 +56,9 @@ export function resetTheme(): void {
 
   if (typeof window !== 'undefined') {
     document.documentElement.style.setProperty('--color-primary', defaultColors.primary);
-    document.documentElement.style.setProperty('--color-secondary', defaultColors.secondary);
-    document.documentElement.style.setProperty('--color-tertiary', defaultColors.tertiary);
-    document.documentElement.style.setProperty('--color-quaternary', defaultColors.quaternary);
+    document.documentElement.style.setProperty('--color-secondary', defaultColors.secondary ?? '');
+    document.documentElement.style.setProperty('--color-tertiary', defaultColors.tertiary ?? '');
+    document.documentElement.style.setProperty('--color-quaternary', defaultColors.quaternary ?? '');
   }
 }
 

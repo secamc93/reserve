@@ -42,19 +42,17 @@ export class LoginRepository implements ILoginRepository {
           errorMessage = errorData.error || errorMessage;
           
           logHttpError({
-            method: 'POST',
-            url,
             status: response.status,
-            error: errorMessage,
-            responseTime,
+            statusText: response.statusText || 'Error',
+            duration: responseTime,
+            data: { error: errorMessage },
           });
         } catch {
           logHttpError({
-            method: 'POST',
-            url,
             status: response.status,
-            error: errorMessage,
-            responseTime,
+            statusText: response.statusText || 'Error',
+            duration: responseTime,
+            data: { error: errorMessage },
           });
         }
 
@@ -115,10 +113,9 @@ export class LoginRepository implements ILoginRepository {
       };
 
       logHttpSuccess({
-        method: 'POST',
-        url,
         status: response.status,
-        responseTime,
+        statusText: response.statusText || 'OK',
+        duration: responseTime,
       });
 
       console.log('🔐 LoginRepository - Login exitoso:', {
@@ -134,11 +131,10 @@ export class LoginRepository implements ILoginRepository {
       const responseTime = Date.now() - startTime;
       
       logHttpError({
-        method: 'POST',
-        url,
         status: 0,
-        error: error instanceof Error ? error.message : 'Error desconocido',
-        responseTime,
+        statusText: 'Error',
+        duration: responseTime,
+        data: { error: error instanceof Error ? error.message : 'Error desconocido' },
       });
 
       throw error;

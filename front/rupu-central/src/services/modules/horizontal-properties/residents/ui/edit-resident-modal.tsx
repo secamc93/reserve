@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Modal, Input, Alert, Spinner } from '@shared/ui';
 import { updateResidentAction, getResidentByIdAction } from '../infrastructure/actions';
 import { getPropertyUnitsAction } from '../../units/infrastructure/actions';
-import { Resident, UpdateResidentDTO } from '../../domain/entities';
+import { Resident, UpdateResidentDTO } from '../domain/entities';
 import { TokenStorage } from '@shared/config';
 
 interface EditResidentModalProps {

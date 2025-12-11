@@ -5,8 +5,8 @@
 import { 
   IVotingGroupsRepository, 
   CreateVotingGroupParams 
-} from '../../domain/ports';
-import { VotingGroup } from '../../domain/entities';
+} from '../domain/ports';
+import { VotingGroup } from '../domain/entities';
 
 export interface CreateVotingGroupOutput {
   votingGroup: VotingGroup;

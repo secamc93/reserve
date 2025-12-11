@@ -3,7 +3,7 @@
  */
 
 import { IResourcesRepository } from '../domain/ports';
-import { UpdateResourceParams, UpdateResourceResponse } from '../../domain/entities';
+import { UpdateResourceParams, UpdateResourceResponse } from '../domain/entities';
 
 export class UpdateResourceUseCase {
   constructor(private readonly resourcesRepository: IResourcesRepository) {}

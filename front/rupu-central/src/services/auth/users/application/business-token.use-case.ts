@@ -2,8 +2,8 @@
  * Caso de uso: Obtener business token
  */
 
-import { IBusinessTokenRepository } from '../../domain/ports/users/business-token.repository';
-import { BusinessTokenParams, BusinessTokenResult } from '../../domain/entities/business-token.entity';
+import { IBusinessTokenRepository } from '../domain/ports/business-token.repository';
+import { BusinessTokenParams, BusinessTokenResult } from '../domain/ports/business-token.repository';
 
 export class BusinessTokenUseCase {
   constructor(private readonly businessTokenRepository: IBusinessTokenRepository) {}

@@ -2,7 +2,7 @@
 
 import { VotingOptionsRepository } from '../repositories';
 import { UpdateVotingOptionStatusUseCase } from '../../application';
-import { VotingOption } from '../../../domain/entities';
+import { VotingOption } from '../../domain';
 
 export interface UpdateVotingOptionStatusInput {
   token: string;

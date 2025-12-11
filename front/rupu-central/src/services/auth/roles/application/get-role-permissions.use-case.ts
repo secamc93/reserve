@@ -2,8 +2,8 @@
  * Caso de uso: Obtener Permisos de un Rol
  */
 
-import { GetRolePermissionsInput, GetRolePermissionsResult } from '../../domain/entities';
-import { IGetRolePermissionsRepository } from '../../domain/ports/roles/get-role-permissions.repository';
+import { GetRolePermissionsInput, GetRolePermissionsResult } from '../domain/entities';
+import { IGetRolePermissionsRepository } from '../domain/ports/get-role-permissions.repository';
 
 export class GetRolePermissionsUseCase {
   constructor(private getRolePermissionsRepository: IGetRolePermissionsRepository) {}

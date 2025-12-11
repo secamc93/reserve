@@ -3,7 +3,7 @@
  */
 
 import { IPermissionsRepository } from '../domain/ports';
-import { DeletePermissionParams } from '../../domain/entities';
+import { DeletePermissionParams } from '../domain/entities';
 
 export class DeletePermissionUseCase {
   constructor(private readonly permissionsRepository: IPermissionsRepository) {}

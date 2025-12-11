@@ -2,7 +2,7 @@
 
 import { VotingOptionsRepository } from '../repositories';
 import { GetVotingOptionByIdUseCase } from '../../application';
-import { VotingOption } from '../../domain/entities';
+import { VotingOption } from '../../domain';
 
 export interface GetVotingOptionByIdInput {
   token: string;

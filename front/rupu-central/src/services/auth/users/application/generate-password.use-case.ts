@@ -3,8 +3,8 @@
  * Genera una nueva contraseña aleatoria para un usuario
  */
 
-import { GeneratePasswordParams, GeneratePasswordResponse } from '../../domain/entities/generate-password.entity';
-import { IUsersRepository } from '../../domain/ports/users/users.repository';
+import { GeneratePasswordParams, GeneratePasswordResponse } from '../domain/entities/generate-password.entity';
+import { IUsersRepository } from '../domain/ports/users.repository';
 
 export class GeneratePasswordUseCase {
   constructor(private usersRepository: IUsersRepository) {}

@@ -2,7 +2,7 @@
  * Application Layer - Users Use Cases
  */
 
-import { IUsersRepository } from '../../domain/ports/users/users.repository';
+import { IUsersRepository } from '../domain/ports/users.repository';
 import { GetUsersUseCase } from './get-users.use-case';
 import { CreateUserUseCase } from './create-user.use-case';
 import { DeleteUserUseCase } from './delete-user.use-case';

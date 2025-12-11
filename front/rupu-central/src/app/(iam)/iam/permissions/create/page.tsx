@@ -31,7 +31,9 @@ export default function CreatePermissionPage() {
   const { resources, loading: resourcesLoading } = useResources(
     formData.businessTypeId ? parseInt(formData.businessTypeId) : undefined
   );
-  const { actions, loading: actionsLoading } = useActions();
+  const { actions, loading: actionsLoading } = useActions({
+    token: token || '',
+  });
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {

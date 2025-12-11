@@ -3,7 +3,7 @@
  */
 
 import { IResourcesRepository } from '../domain/ports';
-import { GetResourcesParams, ResourcesList } from '../../domain/entities';
+import { GetResourcesParams, ResourcesList } from '../domain/entities';
 
 export class GetResourcesUseCase {
   constructor(private readonly resourcesRepository: IResourcesRepository) {}

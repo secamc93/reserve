@@ -5,8 +5,8 @@
 import { 
   IVotesRepository, 
   CreateVoteParams 
-} from '../../domain/ports';
-import { Vote } from '../../domain/entities';
+} from '../domain/ports';
+import { Vote } from '../domain/entities';
 
 export interface CreateVoteOutput {
   vote: Vote;

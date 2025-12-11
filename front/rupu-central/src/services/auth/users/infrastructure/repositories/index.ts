@@ -2,14 +2,14 @@
  * Infrastructure Layer - Users Repositories
  */
 
-import { IUsersRepository, GetUsersParams, CreateUserParams, DeleteUserParams, UpdateUserParams, GetUserByIdParams, GeneratePasswordParams, AssignUserRoleParams } from '../../../domain/ports/users/users.repository';
-import { UsersList } from '../../domain/entities/user-list.entity';
-import { CreateUserResponse } from '../../domain/entities/create-user.entity';
-import { DeleteUserResponse } from '../../domain/entities/delete-user.entity';
-import { UpdateUserResponse } from '../../domain/entities/update-user.entity';
-import { GetUserByIdResponse } from '../../domain/entities/get-user-by-id.entity';
-import { GeneratePasswordResponse } from '../../domain/entities/generate-password.entity';
-import { AssignUserRoleResponse } from '../../domain/entities/assign-user-role.entity';
+import { IUsersRepository } from '../../domain/ports/users.repository';
+import { UsersList, GetUsersParams } from '../../domain/entities/user-list.entity';
+import { CreateUserParams, CreateUserResponse } from '../../domain/entities/create-user.entity';
+import { DeleteUserParams, DeleteUserResponse } from '../../domain/entities/delete-user.entity';
+import { UpdateUserParams, UpdateUserResponse } from '../../domain/entities/update-user.entity';
+import { GetUserByIdParams, GetUserByIdResponse } from '../../domain/entities/get-user-by-id.entity';
+import { GeneratePasswordParams, GeneratePasswordResponse } from '../../domain/entities/generate-password.entity';
+import { AssignUserRoleParams, AssignUserRoleResponse } from '../../domain/entities/assign-user-role.entity';
 import { GetUsersRepository } from './get-users.repository';
 import { CreateUserRepository } from './create-user.repository';
 import { DeleteUserRepository } from './delete-user.repository';
@@ -22,7 +22,7 @@ import { AssignUserRoleRepository } from './assign-user-role.repository';
 export class UsersRepository implements IUsersRepository {
   private getUsersRepository: GetUsersRepository;
   private createUserRepository: CreateUserRepository;
-  private deleteUserRepository: DeleteUserRepository;
+  private deleteUserRepository: DeleteUserRepository; 
   private updateUserRepository: UpdateUserRepository;
   private getUserByIdRepository: GetUserByIdRepository;
   private generatePasswordRepository: GeneratePasswordRepository;

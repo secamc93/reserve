@@ -82,7 +82,7 @@ export function CreateVotingGroupModal({ isOpen, onClose, onSuccess, businessId 
           votingEndDate: endDateISO,
           requiresQuorum,
           quorumPercentage: parseFloat(quorumPercentage),
-          createdByUserId: parseInt(user.userId),
+          createdByUserId: parseInt(String(user.id)),
           notes: notes.trim() || undefined,
         },
       });

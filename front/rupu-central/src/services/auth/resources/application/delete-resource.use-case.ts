@@ -3,7 +3,7 @@
  */
 
 import { IResourcesRepository } from '../domain/ports';
-import { DeleteResourceParams, DeleteResourceResponse } from '../../domain/entities';
+import { DeleteResourceParams, DeleteResourceResponse } from '../domain/entities';
 
 export class DeleteResourceUseCase {
   constructor(private readonly resourcesRepository: IResourcesRepository) {}

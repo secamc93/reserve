@@ -20,7 +20,7 @@ import {
   BackendUpdatePropertyUnitResponse,
   BackendDeletePropertyUnitResponse,
   BackendPropertyUnit,
-} from '../response';
+} from './response/property-units.response';
 
 export class PropertyUnitsRepository implements IPropertyUnitsRepository {
   private baseUrl = env.API_BASE_URL;

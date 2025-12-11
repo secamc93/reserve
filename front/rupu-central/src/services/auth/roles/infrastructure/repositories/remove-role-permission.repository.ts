@@ -2,7 +2,7 @@
  * Repositorio de Infraestructura: Remover Permiso de un Rol
  */
 
-import { IRemoveRolePermissionRepository } from '../../../domain/ports/roles/remove-role-permission.repository';
+import { IRemoveRolePermissionRepository } from '../../domain/ports/remove-role-permission.repository';
 import { RemoveRolePermissionInput, RemoveRolePermissionResult } from '../../domain/entities';
 import { env, logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
 

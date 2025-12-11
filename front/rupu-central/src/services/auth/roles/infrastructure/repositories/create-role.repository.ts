@@ -2,7 +2,7 @@
  * Repositorio de Infraestructura: Crear Rol
  */
 
-import { ICreateRoleRepository } from '../../../domain/ports/roles/create-role.repository';
+import { ICreateRoleRepository } from '../../domain/ports/create-role.repository';
 import { CreateRoleInput, CreateRoleResult } from '../../domain/entities';
 import { env, logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
 

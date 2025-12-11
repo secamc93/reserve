@@ -2,8 +2,8 @@
  * Caso de uso: Remover Permiso de un Rol
  */
 
-import { RemoveRolePermissionInput, RemoveRolePermissionResult } from '../../domain/entities';
-import { IRemoveRolePermissionRepository } from '../../domain/ports/roles/remove-role-permission.repository';
+import { RemoveRolePermissionInput, RemoveRolePermissionResult } from '../domain/entities';
+import { IRemoveRolePermissionRepository } from '../domain/ports/remove-role-permission.repository';
 
 export class RemoveRolePermissionUseCase {
   constructor(private removeRolePermissionRepository: IRemoveRolePermissionRepository) {}

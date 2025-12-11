@@ -2,7 +2,7 @@
  * Repositorio de Infraestructura: Actualizar Rol
  */
 
-import { IUpdateRoleRepository } from '../../../domain/ports/roles/update-role.repository';
+import { IUpdateRoleRepository } from '../../domain/ports/update-role.repository';
 import { UpdateRoleInput, UpdateRoleResult } from '../../domain/entities';
 import { env, logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
 

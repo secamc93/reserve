@@ -19,6 +19,7 @@ interface SidebarProps {
     email: string;
     role: string;
     avatarUrl?: string;
+    is_super_admin?: boolean;
   } | null;
 }
 
@@ -42,6 +43,7 @@ export function Sidebar({ user }: SidebarProps) {
   // Verificar permisos para mostrar items
   const canAccessProperties = hasResource('Propiedades') || hasResource('Residentes') || hasRouteAccess('/properties');
   const canAccessIAM = hasResource('Usuarios') || hasResource('Roles') || hasResource('Permisos') || hasResource('Recursos') || hasResource('Tipos de Negocio') || hasResource('Negocios');
+  const canAccessLogs = user?.is_super_admin || false;
 
   return (
     <>
@@ -182,6 +184,39 @@ export function Sidebar({ user }: SidebarProps) {
                     {sidebarExpanded && (
                       <span className="text-sm font-medium transition-opacity duration-300">
                         IAM
+                      </span>
+                    )}
+                  </Link>
+                </li>
+              )}
+
+              {/* Item Logs (Solo Super Admin) */}
+              {canAccessLogs && (
+                <li>
+                  <Link
+                    href="/iam/logs"
+                    className={`
+                      flex items-center gap-3 p-3 rounded-lg transition-all duration-300
+                      ${isActive('/iam/logs') || pathname.startsWith('/iam/logs')
+                        ? 'bg-white/20 text-white shadow-lg scale-105'
+                        : 'text-white/80 hover:bg-white/10 hover:text-white hover:scale-105'
+                      }
+                    `}
+                  >
+                    {/* Indicador activo (barra lateral) */}
+                    {(isActive('/iam/logs') || pathname.startsWith('/iam/logs')) && (
+                      <div
+                        className="absolute left-0 w-1 h-8 rounded-r-full"
+                        style={{ backgroundColor: 'var(--color-tertiary)' }}
+                      />
+                    )}
+
+                    <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    {sidebarExpanded && (
+                      <span className="text-sm font-medium transition-opacity duration-300">
+                        Logs
                       </span>
                     )}
                   </Link>

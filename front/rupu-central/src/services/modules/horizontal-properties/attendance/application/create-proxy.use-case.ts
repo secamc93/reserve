@@ -2,8 +2,8 @@
  * Use Case: Create Proxy
  */
 
-import { IProxyRepository } from '../../domain/ports';
-import { Proxy, CreateProxyDTO } from '../../domain/entities';
+import { IProxyRepository } from '../domain/ports';
+import { Proxy, CreateProxyDTO } from '../domain/entities';
 
 export interface CreateProxyInput {
   token: string;

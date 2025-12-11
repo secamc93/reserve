@@ -2,7 +2,7 @@
  * Repository Implementation: AttendanceRecord
  */
 
-import { IAttendanceRecordRepository, MarkAttendanceParams, CreateAttendanceRecordParams, GetAttendanceRecordParams, UpdateAttendanceRecordParams, DeleteAttendanceRecordParams, ListAttendanceRecordsParams, VerifyAttendanceParams } from '../../../domain/ports';
+import { IAttendanceRecordRepository, MarkAttendanceParams, CreateAttendanceRecordParams, GetAttendanceRecordParams, UpdateAttendanceRecordParams, DeleteAttendanceRecordParams, ListAttendanceRecordsParams, VerifyAttendanceParams } from '../../domain/ports';
 import { AttendanceRecord } from '../../domain/entities';
 import { logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
 

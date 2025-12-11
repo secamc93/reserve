@@ -3,7 +3,7 @@
  */
 
 import { IPermissionsRepository } from '../domain/ports';
-import { UpdatePermissionParams, UpdatePermissionResponse } from '../../domain/entities';
+import { UpdatePermissionParams, UpdatePermissionResponse } from '../domain/entities';
 
 export class UpdatePermissionUseCase {
   constructor(private readonly permissionsRepository: IPermissionsRepository) {}

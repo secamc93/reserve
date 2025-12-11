@@ -6,7 +6,12 @@
 
 import { DeleteUserParams, DeleteUserResponse } from '../../domain/entities/delete-user.entity';
 import { env, logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
-import { BackendDeleteUserResponse } from '../response/users.response';
+// Definir la interfaz localmente
+interface BackendDeleteUserResponse {
+  success: boolean;
+  message?: string;
+  error?: string;
+}
 
 export class DeleteUserRepository {
   async deleteUser(params: DeleteUserParams): Promise<DeleteUserResponse> {
@@ -59,7 +64,7 @@ export class DeleteUserRepository {
 
       return {
         success: backendResponse.success,
-        message: backendResponse.message,
+        message: backendResponse.message || 'Usuario eliminado exitosamente',
       };
     } catch (error) {
       console.error('Error eliminando usuario:', error);

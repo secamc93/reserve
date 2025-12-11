@@ -3,7 +3,7 @@
  */
 
 import { IActionsRepository } from '../domain/ports';
-import { DeleteActionParams, DeleteActionResponse } from '../../domain/entities';
+import { DeleteActionParams, DeleteActionResponse } from '../domain/entities';
 
 export class DeleteActionUseCase {
   constructor(private readonly actionsRepository: IActionsRepository) { }

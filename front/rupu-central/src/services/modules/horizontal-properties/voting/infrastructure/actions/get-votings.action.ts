@@ -6,7 +6,7 @@
 
 import { GetVotingsUseCase } from '../../application';
 import { VotingsRepository } from '../repositories';
-import { Voting } from '../../domain/entities';
+import { Voting } from '../../domain';
 
 export interface GetVotingsInput {
   token: string;

@@ -5,7 +5,7 @@
 import {
   IVotingOptionsRepository,
   DeleteVotingOptionParams,
-} from '../../domain/ports';
+} from '../domain/ports';
 
 export interface DeleteVotingOptionOutput {
   message: string;

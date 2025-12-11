@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Table, Badge, Spinner, Alert, ConfirmModal } from '@shared/ui';
 import { getResidentsAction, deleteResidentAction } from '../infrastructure/actions';
-import { Resident } from '../../domain';
+import { Resident } from '../domain/entities';
 import { TokenStorage } from '@shared/config';
 import { CreateResidentModal } from './create-resident-modal';
 import { EditResidentModal } from './edit-resident-modal';
@@ -72,7 +72,7 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
       setUnitLoading(true);
       const token = TokenStorage.getBusinessToken();
       if (!token) return;
-        const { getPropertyUnitsAction } = await import('../infrastructure/actions');
+        const { getPropertyUnitsAction } = await import('../../units/infrastructure/actions');
       const data = await getPropertyUnitsAction({
         businessId,
         token,

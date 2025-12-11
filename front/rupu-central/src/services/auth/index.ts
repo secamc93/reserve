@@ -10,12 +10,9 @@
  */
 
 // Exportar tipos del dominio (pueden ser útiles en otros módulos)
-export type { User, CreateUserDTO, UpdateUserDTO } from './domain/entities/user.entity';
+export type { User, CreateUserDTO, UpdateUserDTO } from './users/domain/entities/user.entity';
 export type { Resource, ResourcesList } from './resources/domain/entities';
 export type { Permission, PermissionsList } from './permissions/domain/entities';
-
-// Exportar UI común
-export * from './ui';
 
 // Exportar componentes UI desde los módulos migrados
 export * from './users/ui';
@@ -25,6 +22,8 @@ export * from './permissions/ui';
 export * from './roles/ui';
 export * from './business-types/ui';
 export * from './login/ui';
+export * from './dashboard/ui';
+export * from './logs/ui';
 
 // Exportar submódulos
 export * from './resources';

@@ -5,8 +5,8 @@
 import { 
   IHorizontalPropertiesRepository, 
   CreateHorizontalPropertyParams 
-} from '../domain/ports';
-import { HorizontalProperty } from '../../domain/entities';
+} from '../domain/ports/horizontal-properties.repository';
+import { HorizontalProperty } from '../domain/entities';
 
 export interface CreateHorizontalPropertyOutput {
   property: HorizontalProperty;
