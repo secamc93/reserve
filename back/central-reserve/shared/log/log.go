@@ -2,7 +2,9 @@ package log
 
 import (
 	"context"
+	"io"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -40,8 +42,35 @@ func New() ILogger {
 			TimeFormat: "01-02 15:04:05", // Fecha corta (mes-día) y hora
 		}
 
+		// Detectar si estamos en modo local (sin Docker)
+		appEnv := os.Getenv("APP_ENV")
+		isLocal := appEnv == "local" || appEnv == "development" || appEnv == ""
+
+		var writer io.Writer = consoleWriter
+
+		// Si estamos en local, escribir también a archivo
+		if isLocal {
+			logFile := os.Getenv("LOG_FILE")
+			if logFile == "" {
+				// Usar path por defecto
+				logFile = "./logs/app.log"
+			}
+
+			// Crear directorio si no existe
+			if err := os.MkdirAll(filepath.Dir(logFile), 0755); err == nil {
+				// Abrir archivo en modo append
+				file, err := os.OpenFile(logFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+				if err == nil {
+					// Usar MultiWriter para escribir tanto a consola (formato bonito) como a archivo (JSON)
+					// El archivo recibirá JSON puro para facilitar el parsing
+					// Combinar consoleWriter (formato bonito) con file (JSON puro)
+					writer = zerolog.MultiLevelWriter(consoleWriter, file)
+				}
+			}
+		}
+
 		defaultLogger = &logger{
-			log: zerolog.New(consoleWriter).
+			log: zerolog.New(writer).
 				With().
 				Timestamp().
 				Logger().

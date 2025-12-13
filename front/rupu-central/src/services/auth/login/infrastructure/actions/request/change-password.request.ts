@@ -7,3 +7,4 @@ export interface ChangePasswordActionInput {
   new_password: string;
   session_token: string;
 }
+

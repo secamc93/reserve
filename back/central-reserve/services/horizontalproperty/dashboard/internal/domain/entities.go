@@ -52,3 +52,4 @@ type BusinessSummary struct {
 	ActiveAttendanceLists     int64
 	LastActivity              *time.Time
 }
+

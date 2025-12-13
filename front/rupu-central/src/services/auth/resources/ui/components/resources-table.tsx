@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { getResourcesAction, deleteResourceAction } from '../../infrastructure/actions';
-import { Table, TableColumn, Button, Input, ConfirmModal, Filters, FilterField } from '@shared/ui';
+import { Table, TableColumn, Button, ConfirmModal, PaginationProps, TableFiltersProps } from '@shared/ui';
+import { FilterOption, ActiveFilter } from '@shared/ui/dynamic-filters';
 import { PencilIcon, TrashIcon, CubeTransparentIcon } from '@heroicons/react/24/outline';
 import { useBusinessTypes } from '../../../business-types/ui/hooks';
 import { EditResourceModal } from './edit-resource-modal';
@@ -31,10 +32,12 @@ export function ResourcesTable({ token }: ResourcesTableProps) {
   const [resourceToDelete, setResourceToDelete] = useState<ResourceUI | null>(null);
   const [editResource, setEditResource] = useState<ResourceUI | null>(null);
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [filters, setFilters] = useState<Record<string, any>>({});
+  const [sortBy, setSortBy] = useState<string>('created_at');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   // Obtener tipos de negocio para el filtro
   const { businessTypes } = useBusinessTypes();
@@ -51,8 +54,8 @@ export function ResourcesTable({ token }: ResourcesTableProps) {
         name: filters.name || undefined,
         description: filters.description || undefined,
         business_type_id: filters.business_type_id ? parseInt(filters.business_type_id) : undefined,
-        sortBy: filters.sortBy || 'created_at',
-        sortOrder: filters.sortOrder || 'desc',
+        sortBy: sortBy,
+        sortOrder: sortOrder,
       });
 
       if (result.success && result.data) {
@@ -70,70 +73,91 @@ export function ResourcesTable({ token }: ResourcesTableProps) {
     }
   };
 
-  // Definir campos de filtros
-  const filterFields: FilterField[] = [
+  useEffect(() => {
+    loadResources();
+  }, [token, page, pageSize, filters, sortBy, sortOrder]);
+
+  // Convertir filtros a ActiveFilter[]
+  const activeFilters: ActiveFilter[] = [];
+  if (filters.name) {
+    activeFilters.push({
+      key: 'name',
+      label: 'Nombre',
+      value: filters.name,
+      type: 'text',
+    });
+  }
+  if (filters.description) {
+    activeFilters.push({
+      key: 'description',
+      label: 'Descripción',
+      value: filters.description,
+      type: 'text',
+    });
+  }
+  if (filters.business_type_id) {
+    const businessType = businessTypes?.find(bt => bt.id === parseInt(filters.business_type_id));
+    activeFilters.push({
+      key: 'business_type_id',
+      label: 'Tipo de Negocio',
+      value: businessType ? `${businessType.icon} ${businessType.name}` : filters.business_type_id,
+      type: 'select',
+    });
+  }
+
+  // Definir filtros disponibles
+  const availableFilters: FilterOption[] = [
     {
       key: 'name',
-      label: 'Buscar por nombre',
+      label: 'Nombre',
       type: 'text',
-      placeholder: 'Nombre del recurso',
+      placeholder: 'Buscar por nombre',
     },
     {
       key: 'description',
-      label: 'Buscar por descripción',
+      label: 'Descripción',
       type: 'text',
-      placeholder: 'Descripción del recurso',
-      advanced: true,
+      placeholder: 'Buscar por descripción',
     },
     {
       key: 'business_type_id',
       label: 'Tipo de Negocio',
       type: 'select',
-      options: [
-        { value: '', label: 'Todos' },
-        ...(businessTypes?.map((bt) => ({
-          value: bt.id.toString(),
-          label: `${bt.icon} ${bt.name}`
-        })) || [])
-      ],
-      advanced: true,
-    },
-    {
-      key: 'sortBy',
-      label: 'Ordenar por',
-      type: 'select',
-      options: [
-        { value: 'created_at', label: 'Fecha de creación' },
-        { value: 'updated_at', label: 'Fecha de actualización' },
-        { value: 'name', label: 'Nombre' },
-      ],
-      advanced: true,
-    },
-    {
-      key: 'sortOrder',
-      label: 'Orden',
-      type: 'select',
-      options: [
-        { value: 'desc', label: 'Descendente' },
-        { value: 'asc', label: 'Ascendente' },
-      ],
-      advanced: true,
+      options: businessTypes?.map((bt) => ({
+        value: bt.id.toString(),
+        label: `${bt.icon} ${bt.name}`
+      })) || [],
     },
   ];
 
-  const handleFiltersChange = (newFilters: Record<string, any>) => {
+  // Manejar agregar filtro
+  const handleAddFilter = (filterKey: string, value: any) => {
+    const newFilters = { ...filters };
+    
+    if (filterKey === 'business_type_id') {
+      newFilters.business_type_id = value;
+    } else {
+      (newFilters as any)[filterKey] = value;
+    }
+    
     setFilters(newFilters);
     setPage(1); // Reset a la primera página cuando cambian los filtros
   };
 
-  const handleClearFilters = () => {
-    setFilters({});
+  // Manejar remover filtro
+  const handleRemoveFilter = (filterKey: string) => {
+    const newFilters = { ...filters };
+    delete (newFilters as any)[filterKey];
+    setFilters(newFilters);
     setPage(1);
   };
 
-  useEffect(() => {
-    loadResources();
-  }, [token, page, filters]);
+  // Manejar cambio de ordenamiento
+  const handleSortChange = (newSortBy: string, newSortOrder: 'asc' | 'desc') => {
+    setSortBy(newSortBy);
+    setSortOrder(newSortOrder);
+    setPage(1);
+  };
 
   const handleEditClick = (resource: ResourceUI) => {
     setEditResource(resource);
@@ -262,6 +286,34 @@ export function ResourcesTable({ token }: ResourcesTableProps) {
     },
   ];
 
+  // Configurar paginación
+  const pagination: PaginationProps = {
+    currentPage: page,
+    totalPages: totalPages,
+    totalItems: total,
+    itemsPerPage: pageSize,
+    onPageChange: setPage,
+    onItemsPerPageChange: setPageSize,
+    showItemsPerPageSelector: true,
+    itemsPerPageOptions: [5, 10, 25, 50, 100],
+  };
+
+  // Configurar filtros
+  const tableFilters: TableFiltersProps = {
+    availableFilters,
+    activeFilters,
+    onAddFilter: handleAddFilter,
+    onRemoveFilter: handleRemoveFilter,
+    sortBy: sortBy,
+    sortOrder: sortOrder,
+    onSortChange: handleSortChange,
+    sortOptions: [
+      { value: 'created_at', label: 'Fecha de creación' },
+      { value: 'updated_at', label: 'Fecha de actualización' },
+      { value: 'name', label: 'Nombre' },
+    ],
+  };
+
   if (error) {
     return (
       <div className="alert alert-error">
@@ -277,51 +329,17 @@ export function ResourcesTable({ token }: ResourcesTableProps) {
   }
 
   return (
-    <div className="space-y-6 w-full">
-      {/* Filtros */}
-      <Filters
-        fields={filterFields}
-        filters={filters}
-        onFiltersChange={handleFiltersChange}
-        onClearFilters={handleClearFilters}
-      />
-
-      {/* Tabla de recursos */}
+    <div className="w-full">
+      {/* Tabla de recursos con filtros y paginación integrada */}
       <Table
         columns={columns}
         data={resources}
         loading={loading}
-        keyExtractor={(resource) => resource.id}
+        keyExtractor={(resource) => resource.id.toString()}
         emptyMessage={filters.name || filters.description ? "No se encontraron recursos con los criterios de búsqueda." : "No hay recursos disponibles. Comienza creando tu primer recurso del sistema."}
+        pagination={pagination}
+        filters={tableFilters}
       />
-
-      {/* Paginación */}
-      {totalPages > 1 && (
-        <div className="flex justify-between items-center p-4 bg-white rounded-lg border border-gray-200">
-          <div className="text-sm text-gray-600">
-            Mostrando {(page - 1) * pageSize + 1} - {Math.min(page * pageSize, total)} de {total} recursos
-          </div>
-          <div className="flex gap-2">
-            <Button
-              onClick={() => setPage(page - 1)}
-              disabled={page === 1}
-              className="btn-outline btn-sm"
-            >
-              ← Anterior
-            </Button>
-            <span className="px-4 py-2 text-sm text-gray-700">
-              Página {page} de {totalPages}
-            </span>
-            <Button
-              onClick={() => setPage(page + 1)}
-              disabled={page === totalPages}
-              className="btn-outline btn-sm"
-            >
-              Siguiente →
-            </Button>
-          </div>
-        </div>
-      )}
 
       {/* Modal de edición */}
       <EditResourceModal

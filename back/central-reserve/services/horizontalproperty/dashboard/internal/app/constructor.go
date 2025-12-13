@@ -17,3 +17,4 @@ func New(repo domain.DashboardRepository, logger log.ILogger) *DashboardUseCase 
 		logger: contextualLogger,
 	}
 }
+

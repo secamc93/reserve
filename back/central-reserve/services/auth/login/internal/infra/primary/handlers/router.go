@@ -13,7 +13,7 @@ func (h *handlers) RegisterRoutes(v1Group *gin.RouterGroup, handler Ihandlers, l
 		authGroup.POST("/login", handler.LoginHandler)
 		authGroup.GET("/verify", middleware.JWT(), handler.VerifyHandler)
 		authGroup.GET("/roles-permissions", middleware.JWT(), handler.GetUserRolesPermissionsHandler)
-		authGroup.POST("/change-password", middleware.JWT(), handler.ChangePasswordHandler)
+		authGroup.POST("/change-password", middleware.AnyJWT(), handler.ChangePasswordHandler)
 		authGroup.POST("/generate-password", middleware.JWT(), handler.GeneratePasswordHandler)
 		authGroup.POST("/business-token", middleware.BusinessTokenAuth(), handler.GenerateBusinessTokenHandler)
 	}

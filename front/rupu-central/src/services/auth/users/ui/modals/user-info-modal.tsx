@@ -8,7 +8,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { Modal, Badge } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
-import { ChangePasswordModal } from '@/services/auth/login/ui';
+import { ChangePasswordModal } from '@/services/auth/login/ui/components';
 
 // Usar el tipo de TokenStorage en lugar de definir uno local
 import type { BusinessData } from '@shared/config';
@@ -29,8 +29,8 @@ interface UserInfoModalProps {
 export function UserInfoModal({ isOpen, onClose, onLogout, user }: UserInfoModalProps) {
   const [businesses, setBusinesses] = useState<BusinessData[]>([]);
   const [activeBusinessId, setActiveBusinessId] = useState<number | null>(null);
-  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [showImageFullscreen, setShowImageFullscreen] = useState(false);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -227,15 +227,6 @@ export function UserInfoModal({ isOpen, onClose, onLogout, user }: UserInfoModal
         </div>
       </div>
 
-      {/* Modal de Cambio de Contraseña */}
-      <ChangePasswordModal
-        isOpen={showChangePasswordModal}
-        onClose={() => setShowChangePasswordModal(false)}
-        onSuccess={() => {
-          console.log('Contraseña cambiada exitosamente');
-        }}
-      />
-
       {/* Modal de imagen en pantalla completa */}
       {showImageFullscreen && (
         <div 
@@ -285,6 +276,15 @@ export function UserInfoModal({ isOpen, onClose, onLogout, user }: UserInfoModal
           </div>
         </div>
       )}
+
+      {/* Modal de cambiar contraseña */}
+      <ChangePasswordModal
+        isOpen={showChangePasswordModal}
+        onClose={() => setShowChangePasswordModal(false)}
+        onSuccess={() => {
+          setShowChangePasswordModal(false);
+        }}
+      />
     </Modal>
   );
 }

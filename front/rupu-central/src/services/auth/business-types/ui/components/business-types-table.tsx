@@ -14,7 +14,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { Button } from '@shared/ui/button';
 import { Badge } from '@shared/ui/badge';
-import { Table } from '@shared/ui/table';
+import { Table, TableColumn, PaginationProps, TableFiltersProps } from '@shared/ui/table';
 import { ConfirmModal } from '@shared/ui/confirm-modal';
 import { BusinessTypeForm } from './business-type-form';
 import { Modal } from '@shared/ui/modal';
@@ -26,17 +26,32 @@ interface BusinessTypesTableProps {
   businessTypes: BusinessType[];
   loading?: boolean;
   onRefresh?: () => void;
+  // Props de paginación
+  currentPage?: number;
+  totalPages?: number;
+  totalCount?: number;
+  pageSize?: number;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (size: number) => void;
+  // Props de filtros
+  filters?: TableFiltersProps;
+  // Callback para abrir modal de crear (opcional)
+  onCreateClick?: () => void;
 }
 
 export function BusinessTypesTable({ 
   businessTypes = [], 
   loading = false, 
-  onRefresh 
+  onRefresh,
+  currentPage = 1,
+  totalPages = 1,
+  totalCount = 0,
+  pageSize = 10,
+  onPageChange,
+  onPageSizeChange,
+  filters,
+  onCreateClick
 }: BusinessTypesTableProps) {
-  
-  console.log('🔍 BusinessTypesTable - Props recibidas:', { businessTypes, loading });
-  console.log('🔍 BusinessTypesTable - businessTypes.length:', businessTypes.length);
-  console.log('🔍 BusinessTypesTable - businessTypes:', businessTypes);
   
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -144,29 +159,26 @@ export function BusinessTypesTable({
     });
   };
 
-  const columns = [
+  const columns: TableColumn<BusinessType>[] = [
     {
       key: 'name',
       label: 'Nombre',
-      render: (businessType: BusinessType) => {
-        console.log('🔍 Renderizando businessType:', businessType);
-        return (
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold">
-              {businessType.icon || '🏢'}
-            </div>
-            <div>
-              <p className="font-semibold text-gray-900">{businessType.name || 'Sin nombre'}</p>
-              <p className="text-sm text-gray-500">{businessType.code || 'Sin código'}</p>
-            </div>
+      render: (_, businessType) => (
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold">
+            {businessType.icon || '🏢'}
           </div>
-        );
-      },
+          <div>
+            <p className="font-semibold text-gray-900">{businessType.name || 'Sin nombre'}</p>
+            <p className="text-sm text-gray-500">{businessType.code || 'Sin código'}</p>
+          </div>
+        </div>
+      ),
     },
     {
       key: 'description',
       label: 'Descripción',
-      render: (businessType: BusinessType) => (
+      render: (_, businessType) => (
         <p className="text-sm text-gray-600 max-w-xs truncate" title={businessType.description || 'Sin descripción'}>
           {businessType.description || 'Sin descripción'}
         </p>
@@ -175,7 +187,7 @@ export function BusinessTypesTable({
     {
       key: 'is_active',
       label: 'Estado',
-      render: (businessType: BusinessType) => (
+      render: (_, businessType) => (
         <Badge 
           type={businessType.is_active ? "success" : "error"}
           className="text-xs"
@@ -187,7 +199,7 @@ export function BusinessTypesTable({
     {
       key: 'created_at',
       label: 'Creado',
-      render: (businessType: BusinessType) => {
+      render: (_, businessType) => {
         try {
           return (
             <span className="text-sm text-gray-600">
@@ -203,8 +215,9 @@ export function BusinessTypesTable({
     {
       key: 'actions',
       label: 'Acciones',
-      render: (businessType: BusinessType) => (
-        <div className="flex items-center gap-2">
+      align: 'center',
+      render: (_, businessType) => (
+        <div className="flex items-center justify-center gap-2">
           <Button
             variant="outline"
             size="sm"
@@ -213,6 +226,7 @@ export function BusinessTypesTable({
               setShowEditModal(true);
             }}
             className="p-2 hover:bg-green-50 hover:text-green-600"
+            title="Editar tipo de negocio"
           >
             <PencilIcon className="w-4 h-4" />
           </Button>
@@ -224,6 +238,7 @@ export function BusinessTypesTable({
               setShowDeleteModal(true);
             }}
             className="p-2 hover:bg-red-50 hover:text-red-600"
+            title="Eliminar tipo de negocio"
           >
             <TrashIcon className="w-4 h-4" />
           </Button>
@@ -232,112 +247,49 @@ export function BusinessTypesTable({
     },
   ];
 
-  if (loading) {
-    return (
-      <div className="card">
-        <div className="flex items-center justify-center py-12">
-          <div className="spinner"></div>
-          <span className="ml-3 text-gray-600">Cargando tipos de negocio...</span>
-        </div>
-      </div>
-    );
-  }
+  const pagination: PaginationProps | undefined = onPageChange ? {
+    currentPage,
+    totalPages,
+    totalItems: totalCount,
+    itemsPerPage: pageSize,
+    onPageChange,
+    onItemsPerPageChange: onPageSizeChange,
+    showItemsPerPageSelector: true,
+    itemsPerPageOptions: [5, 10, 25, 50, 100],
+  } : undefined;
+
+  // Si hay filtros, agregar el botón de crear si no está presente
+  const filtersWithCreateButton = filters ? {
+    ...filters,
+    headerActions: filters.headerActions || (
+      <Button
+        variant="primary"
+        onClick={() => {
+          if (onCreateClick) {
+            onCreateClick();
+          } else {
+            setShowCreateModal(true);
+          }
+        }}
+        className="btn-primary"
+      >
+        <PlusIcon className="w-4 h-4 mr-2" />
+        Crear Tipo
+      </Button>
+    ),
+  } : undefined;
 
   return (
     <>
-      {/* Header con botón crear */}
-      <div className="card w-full">
-        <div className="card-body">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">Tipos de Negocio</h3>
-            <Button 
-              className="btn-primary" 
-              onClick={() => setShowCreateModal(true)}
-            >
-              <PlusIcon className="w-4 h-4 mr-2" />
-              Crear Tipo
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Tabla de business types */}
-      <div className="card">
-        <div className="overflow-x-auto">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Nombre</th>
-                <th>Descripción</th>
-                <th>Estado</th>
-                <th>Creado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {businessTypes.map((businessType) => (
-                <tr key={businessType.id}>
-                  <td>
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold">
-                        {businessType.icon || '🏢'}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900">{businessType.name || 'Sin nombre'}</p>
-                        <p className="text-sm text-gray-500">{businessType.code || 'Sin código'}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <p className="text-sm text-gray-600 max-w-xs truncate">
-                      {businessType.description || 'Sin descripción'}
-                    </p>
-                  </td>
-                  <td>
-                    <Badge 
-                      type={businessType.is_active ? "success" : "error"}
-                      className="text-xs"
-                    >
-                      {businessType.is_active ? 'Activo' : 'Inactivo'}
-                    </Badge>
-                  </td>
-                  <td>
-                    <span className="text-sm text-gray-600">
-                      {businessType.created_at ? formatDate(businessType.created_at) : 'Sin fecha'}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedBusinessType(businessType);
-                          setShowEditModal(true);
-                        }}
-                        className="p-2 hover:bg-green-50 hover:text-green-600"
-                      >
-                        <PencilIcon className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedBusinessType(businessType);
-                          setShowDeleteModal(true);
-                        }}
-                        className="p-2 hover:bg-red-50 hover:text-red-600"
-                      >
-                        <TrashIcon className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <Table
+        columns={columns}
+        data={businessTypes}
+        loading={loading}
+        emptyMessage="No hay tipos de negocio disponibles"
+        keyExtractor={(businessType) => businessType.id.toString()}
+        pagination={pagination}
+        filters={filtersWithCreateButton}
+      />
 
       {/* Modal para crear */}
       <Modal

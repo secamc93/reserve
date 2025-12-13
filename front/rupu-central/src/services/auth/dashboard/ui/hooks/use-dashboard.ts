@@ -73,3 +73,4 @@ export function useDashboard(options: UseDashboardOptions = {}): UseDashboardRet
     refresh: loadStats,
   };
 }
+

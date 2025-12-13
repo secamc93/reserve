@@ -17,3 +17,4 @@ func New(db db.IDatabase, logger log.ILogger, v1Group *gin.RouterGroup) {
 
 	dashboardHandler.RegisterRoutes(v1Group, dashboardHandler, logger)
 }
+

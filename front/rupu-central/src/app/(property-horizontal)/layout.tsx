@@ -56,7 +56,7 @@ export default function PropertyHorizontalLayout({
 
       {/* Contenido principal */}
       <main 
-        className="flex-1 transition-all duration-300"
+        className="flex-1 min-h-screen bg-gray-50 transition-all duration-300"
         style={{ 
           marginLeft: sidebarExpanded ? '250px' : '80px' 
         }}

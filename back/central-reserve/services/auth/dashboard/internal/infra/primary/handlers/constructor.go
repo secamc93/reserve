@@ -23,3 +23,4 @@ func New(usecase app.IDashboardUseCase, logger log.ILogger) Ihandlers {
 		logger:  logger,
 	}
 }
+

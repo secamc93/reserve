@@ -50,3 +50,4 @@ type BusinessStats struct {
 type BusinessTypeStats struct {
 	Total int64
 }
+

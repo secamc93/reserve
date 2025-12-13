@@ -39,10 +39,18 @@ export function PropertyNavigation({ businessId, propertyName }: PropertyNavigat
           </button>
           
           <div>
-            <p className="text-xs text-gray-500 uppercase tracking-wide">Propiedad</p>
-            <p className="text-lg font-semibold text-gray-900">
-              {propertyName || `Propiedad #${businessId}`}
-            </p>
+            {pathname.includes('/units') ? (
+              <p className="text-lg font-semibold text-gray-900">
+                Unidades de Propiedad
+              </p>
+            ) : (
+              <>
+                <p className="text-xs text-gray-500 uppercase tracking-wide">Propiedad</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {propertyName || `Propiedad #${businessId}`}
+                </p>
+              </>
+            )}
           </div>
         </div>
         <nav className="flex gap-2">

@@ -45,3 +45,4 @@ export interface BusinessStats {
 export interface BusinessTypeStats {
   total: number;
 }
+

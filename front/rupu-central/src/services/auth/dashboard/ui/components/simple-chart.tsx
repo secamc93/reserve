@@ -114,3 +114,4 @@ export function SimpleChart({ data, title, showLegend = true }: SimpleChartProps
     </div>
   );
 }
+

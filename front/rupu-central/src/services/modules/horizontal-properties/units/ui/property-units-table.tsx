@@ -1,7 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Table, Badge, Spinner, Alert, ConfirmModal } from '@shared/ui';
+import { Table, Badge, Alert, ConfirmModal, TableColumn } from '@shared/ui';
+import type { TableFiltersProps } from '@shared/ui/table';
+import type { FilterOption, ActiveFilter } from '@shared/ui/dynamic-filters';
+import { PencilIcon, TrashIcon, PlusIcon, DocumentArrowUpIcon } from '@heroicons/react/24/outline';
+import { Button } from '@shared/ui/button';
 import { getPropertyUnitsAction, deletePropertyUnitAction } from '../infrastructure/actions';
 import { PropertyUnit, UNIT_TYPE_LABELS } from '../domain';
 import { TokenStorage } from '@shared/config';
@@ -14,7 +18,9 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
   const [units, setUnits] = useState<PropertyUnit[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
@@ -26,57 +32,14 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [unitToDelete, setUnitToDelete] = useState<number | null>(null);
 
-  const [filterInputs, setFilterInputs] = useState({
-    number: '',
-    unitType: '',
-    floor: '',
-    block: '',
-    isActive: '',
-  });
-  const [debouncedFilters, setDebouncedFilters] = useState({
-    number: undefined as string | undefined,
-    unitType: undefined as string | undefined,
-    floor: undefined as number | undefined,
-    block: undefined as string | undefined,
-    isActive: undefined as boolean | undefined,
-  });
-  const [isRefetching, setIsRefetching] = useState(false);
-
-  const normalizeFilters = useCallback((inputs: typeof filterInputs) => {
-    return {
-      number: inputs.number.trim() || undefined,
-      unitType: inputs.unitType || undefined,
-      floor: inputs.floor ? Number(inputs.floor) : undefined,
-      block: inputs.block.trim() || undefined,
-      isActive: inputs.isActive ? inputs.isActive === 'true' : undefined,
-    };
-  }, []);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      const newFilters = normalizeFilters(filterInputs);
-      setDebouncedFilters((prev) => {
-        const isEqual =
-          prev.number === newFilters.number &&
-          prev.unitType === newFilters.unitType &&
-          prev.floor === newFilters.floor &&
-          prev.block === newFilters.block &&
-          prev.isActive === newFilters.isActive;
-
-        if (isEqual) {
-          return prev;
-        }
-
-        if (currentPage !== 1) {
-          setCurrentPage(1);
-        }
-
-        return newFilters;
-      });
-    }, 300);
-
-    return () => clearTimeout(handler);
-  }, [filterInputs, normalizeFilters, currentPage]);
+  // Filtros usando el mismo sistema que users
+  const [filters, setFilters] = useState<{
+    number?: string;
+    unitType?: string;
+    floor?: number;
+    block?: string;
+    isActive?: boolean;
+  }>({});
 
   const getBusinessToken = useCallback(async (): Promise<string> => {
     let businessToken = TokenStorage.getBusinessToken();
@@ -103,12 +66,8 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
     return result.data.token;
   }, [businessId]);
 
-  const loadUnits = useCallback(async ({ keepData = false }: { keepData?: boolean } = {}) => {
-    if (keepData) {
-      setIsRefetching(true);
-    } else {
-      setLoading(true);
-    }
+  const loadUnits = useCallback(async () => {
+    setLoading(true);
     try {
       const token = await getBusinessToken();
 
@@ -116,45 +75,37 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
         businessId,
         token,
         page: currentPage,
-        pageSize: 10,
-        ...debouncedFilters,
+        pageSize: pageSize,
+        ...filters,
       });
 
       setUnits(data.units);
       setTotalPages(data.totalPages);
+      setTotalCount(data.total);
     } catch (error) {
       console.error('Error al cargar unidades:', error);
       setAlert({ type: 'error', message: 'Error al cargar las unidades' });
       setTimeout(() => setAlert(null), 5000);
     } finally {
-      if (keepData) {
-        setIsRefetching(false);
-      } else {
-        setLoading(false);
-      }
+      setLoading(false);
     }
-  }, [businessId, currentPage, debouncedFilters]);
+  }, [businessId, currentPage, pageSize, filters, getBusinessToken]);
 
   useEffect(() => {
-    const keepData = !isFirstLoadRef.current;
-    loadUnits({ keepData });
+    loadUnits();
     if (isFirstLoadRef.current) {
       isFirstLoadRef.current = false;
     }
   }, [loadUnits]);
 
-  const handleClearFilters = () => {
-    setFilterInputs({
-      number: '',
-      unitType: '',
-      floor: '',
-      block: '',
-      isActive: '',
-    });
-    setCurrentPage(1);
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
-  const hasActiveFilters = Object.values(debouncedFilters).some(f => f !== undefined);
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1);
+  };
 
   const handleDeleteClick = (unitId: number) => {
     setUnitToDelete(unitId);
@@ -167,7 +118,7 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
     try {
       const token = await getBusinessToken();
       await deletePropertyUnitAction({ businessId, unitId: unitToDelete, token });
-      await loadUnits({ keepData: false });
+      await loadUnits();
 
       setAlert({ type: 'success', message: 'Unidad eliminada correctamente' });
       setTimeout(() => setAlert(null), 3000);
@@ -186,64 +137,227 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
     setShowEditModal(true);
   };
 
-  const columns = [
-    { key: 'number', label: 'Número' },
-    { key: 'unitType', label: 'Tipo' },
-    { key: 'floor', label: 'Piso' },
-    { key: 'block', label: 'Bloque' },
-    { key: 'area', label: 'Área (m²)' },
-    { key: 'bedrooms', label: 'Habitaciones' },
-    { key: 'coefficient', label: 'Coeficiente' },
-    { key: 'isActive', label: 'Estado' },
-    { key: 'actions', label: 'Acciones' },
-  ];
-
-  const data = units.map(unit => ({
-    number: unit.number,
-    unitType: UNIT_TYPE_LABELS[unit.unitType] || unit.unitType,
-    floor: unit.floor || '-',
-    block: unit.block || '-',
-    area: unit.area ? `${unit.area} m²` : '-',
-    bedrooms: unit.bedrooms || '-',
-    coefficient: unit.coefficient ? unit.coefficient.toFixed(6) : '-',
-    isActive: (
-      <Badge type={unit.isActive ? 'success' : 'error'}>
-        {unit.isActive ? 'Activa' : 'Inactiva'}
-      </Badge>
-    ),
-    actions: (
-      <div className="flex gap-2">
-        <button onClick={() => handleEdit(unit)} className="btn btn-sm btn-outline">
-          ✏️ Editar
-        </button>
-        <button onClick={() => handleDeleteClick(unit.id)} className="btn btn-sm btn-error">
-          🗑️
-        </button>
-      </div>
-    ),
-  }));
-
-  if (loading) {
-    return <div className="flex justify-center p-8"><Spinner size="lg" /></div>;
+  // Convertir filtros a ActiveFilter[]
+  const activeFilters: ActiveFilter[] = [];
+  if (filters.number) {
+    activeFilters.push({
+      key: 'number',
+      label: 'Número',
+      value: filters.number,
+      type: 'text',
+    });
+  }
+  if (filters.unitType) {
+    activeFilters.push({
+      key: 'unitType',
+      label: 'Tipo',
+      value: filters.unitType,
+      type: 'select',
+    });
+  }
+  if (filters.floor !== undefined) {
+    activeFilters.push({
+      key: 'floor',
+      label: 'Piso',
+      value: filters.floor.toString(),
+      type: 'text',
+    });
+  }
+  if (filters.block) {
+    activeFilters.push({
+      key: 'block',
+      label: 'Bloque',
+      value: filters.block,
+      type: 'text',
+    });
+  }
+  if (filters.isActive !== undefined) {
+    activeFilters.push({
+      key: 'isActive',
+      label: 'Estado',
+      value: filters.isActive,
+      type: 'boolean',
+    });
   }
 
-  return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Unidades de Propiedad</h2>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setShowImportModal(true)}
-            className="btn btn-secondary"
-          >
-            📊 Importar Excel
-          </button>
-          <button onClick={() => setShowCreateModal(true)} className="btn btn-primary">
-            ➕ Agregar Unidad
-          </button>
-        </div>
-      </div>
+  // Definir filtros disponibles
+  const availableFilters: FilterOption[] = [
+    {
+      key: 'number',
+      label: 'Número',
+      type: 'text',
+      placeholder: 'Buscar por número (ej: 101, A-201)',
+    },
+    {
+      key: 'unitType',
+      label: 'Tipo',
+      type: 'select',
+      options: [
+        { value: 'apartment', label: 'Apartamento' },
+        { value: 'house', label: 'Casa' },
+        { value: 'office', label: 'Oficina' },
+        { value: 'commercial', label: 'Local comercial' },
+        { value: 'parking', label: 'Parqueadero' },
+        { value: 'storage', label: 'Depósito' },
+        { value: 'penthouse', label: 'Penthouse' },
+      ],
+    },
+    {
+      key: 'floor',
+      label: 'Piso',
+      type: 'text',
+      placeholder: 'Buscar por piso',
+    },
+    {
+      key: 'block',
+      label: 'Bloque',
+      type: 'text',
+      placeholder: 'Buscar por bloque (A, B, 1, 2...)',
+    },
+    {
+      key: 'isActive',
+      label: 'Estado',
+      type: 'boolean',
+    },
+  ];
 
+  // Manejar agregar filtro
+  const handleAddFilter = (filterKey: string, value: any) => {
+    const newFilters = { ...filters };
+    
+    if (filterKey === 'isActive') {
+      newFilters.isActive = value === true;
+    } else if (filterKey === 'floor') {
+      newFilters.floor = value ? Number(value) : undefined;
+    } else {
+      (newFilters as any)[filterKey] = value;
+    }
+    
+    setFilters(newFilters);
+    setCurrentPage(1);
+  };
+
+  // Manejar remover filtro
+  const handleRemoveFilter = (filterKey: string) => {
+    const newFilters = { ...filters };
+    delete (newFilters as any)[filterKey];
+    setFilters(newFilters);
+    setCurrentPage(1);
+  };
+
+  const columns: TableColumn<PropertyUnit>[] = [
+    {
+      key: 'number',
+      label: 'Número',
+    },
+    {
+      key: 'unitType',
+      label: 'Tipo',
+      render: (_, unit) => UNIT_TYPE_LABELS[unit.unitType] || unit.unitType,
+    },
+    {
+      key: 'floor',
+      label: 'Piso',
+      render: (_, unit) => unit.floor ?? '-',
+    },
+    {
+      key: 'block',
+      label: 'Bloque',
+      render: (_, unit) => unit.block || '-',
+    },
+    {
+      key: 'area',
+      label: 'Área (m²)',
+      render: (_, unit) => unit.area ? `${unit.area} m²` : '-',
+    },
+    {
+      key: 'bedrooms',
+      label: 'Habitaciones',
+      render: (_, unit) => unit.bedrooms ?? '-',
+    },
+    {
+      key: 'coefficient',
+      label: 'Coeficiente',
+      render: (_, unit) => unit.coefficient ? unit.coefficient.toFixed(6) : '-',
+    },
+    {
+      key: 'isActive',
+      label: 'Estado',
+      render: (_, unit) => (
+        <Badge type={unit.isActive ? 'success' : 'error'}>
+          {unit.isActive ? 'Activa' : 'Inactiva'}
+        </Badge>
+      ),
+    },
+    {
+      key: 'actions',
+      label: 'Acciones',
+      align: 'center',
+      render: (_, unit) => (
+        <div className="flex items-center justify-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleEdit(unit)}
+            className="p-2 hover:bg-blue-50 hover:text-blue-600"
+            title="Editar"
+          >
+            <PencilIcon className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleDeleteClick(unit.id)}
+            className="p-2 hover:bg-red-50 hover:text-red-600"
+            title="Eliminar"
+          >
+            <TrashIcon className="w-4 h-4" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
+  const pagination = {
+    currentPage,
+    totalPages,
+    totalItems: totalCount,
+    itemsPerPage: pageSize,
+    onPageChange: handlePageChange,
+    onItemsPerPageChange: handlePageSizeChange,
+    showItemsPerPageSelector: true,
+    itemsPerPageOptions: [5, 10, 25, 50, 100],
+  };
+
+  const tableFilters: TableFiltersProps = {
+    availableFilters,
+    activeFilters,
+    onAddFilter: handleAddFilter,
+    onRemoveFilter: handleRemoveFilter,
+    headerActions: (
+      <div className="flex gap-2">
+        <Button
+          variant="secondary"
+          onClick={() => setShowImportModal(true)}
+          className="btn-secondary"
+        >
+          <DocumentArrowUpIcon className="w-4 h-4 mr-2" />
+          Importar Excel
+        </Button>
+        <Button
+          variant="primary"
+          onClick={() => setShowCreateModal(true)}
+          className="btn-primary"
+        >
+          <PlusIcon className="w-4 h-4 mr-2" />
+          Agregar Unidad
+        </Button>
+      </div>
+    ),
+  };
+
+  return (
+    <div className="space-y-6">
       {/* Alertas */}
       {alert && (
         <div className="mb-4">
@@ -253,118 +367,16 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
         </div>
       )}
 
-      {/* Filtros */}
-      <div className="mb-4 bg-gray-50 border border-gray-200 rounded-lg p-4">
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">🔍 Filtros de Búsqueda</h3>
-        <div className="grid grid-cols-5 gap-3 mb-3">
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Número</label>
-            <input
-              type="text"
-              placeholder="Ej: 101, A-201..."
-              value={filterInputs.number}
-              onChange={(e) => setFilterInputs({ ...filterInputs, number: e.target.value })}
-              className="input input-sm w-full"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Tipo</label>
-            <select
-              value={filterInputs.unitType}
-              onChange={(e) => setFilterInputs({ ...filterInputs, unitType: e.target.value })}
-              className="input input-sm w-full"
-            >
-              <option value="">Todos</option>
-              <option value="apartment">Apartamento</option>
-              <option value="house">Casa</option>
-              <option value="office">Oficina</option>
-              <option value="commercial">Local comercial</option>
-              <option value="parking">Parqueadero</option>
-              <option value="storage">Depósito</option>
-              <option value="penthouse">Penthouse</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Piso</label>
-            <input
-              type="number"
-              placeholder="Número"
-              value={filterInputs.floor}
-              onChange={(e) => setFilterInputs({ ...filterInputs, floor: e.target.value })}
-              className="input input-sm w-full"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Bloque</label>
-            <input
-              type="text"
-              placeholder="A, B, 1, 2..."
-              value={filterInputs.block}
-              onChange={(e) => setFilterInputs({ ...filterInputs, block: e.target.value })}
-              className="input input-sm w-full"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Estado</label>
-            <select
-              value={filterInputs.isActive}
-              onChange={(e) => setFilterInputs({ ...filterInputs, isActive: e.target.value })}
-              className="input input-sm w-full"
-            >
-              <option value="">Todos</option>
-              <option value="true">Activa</option>
-              <option value="false">Inactiva</option>
-            </select>
-          </div>
-        </div>
-        <div className="flex gap-2 items-center">
-          {hasActiveFilters && (
-            <button
-              onClick={handleClearFilters}
-              className="btn btn-secondary btn-sm"
-            >
-              ✖️ Limpiar Filtros
-            </button>
-          )}
-          <span className="text-xs text-gray-500">
-            ℹ️ Los filtros se aplican automáticamente al escribir.
-          </span>
-          <span className="ml-auto text-xs text-gray-500">
-            {isRefetching ? 'Actualizando resultados...' : `Página ${currentPage} • ${units.length} resultados`}
-          </span>
-        </div>
-      </div>
-
-      <div className="relative">
-        {isRefetching && (
-          <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center z-10">
-            <Spinner size="md" />
-          </div>
-        )}
-        <Table columns={columns} data={data} />
-      </div>
-
-      {totalPages > 1 && (
-        <div className="pagination-alt">
-          <button
-            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className="pagination-button"
-          >
-            ← Anterior
-          </button>
-          <span className="pagination-info">
-            Página {currentPage} de {totalPages}
-          </span>
-          <button
-            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-            className="pagination-button"
-          >
-            Siguiente →
-          </button>
-        </div>
-      )}
+      {/* Tabla con filtros y paginación integrada */}
+      <Table
+        columns={columns}
+        data={units}
+        loading={loading}
+        emptyMessage="No hay unidades disponibles"
+        keyExtractor={(unit) => unit.id.toString()}
+        pagination={pagination}
+        filters={tableFilters}
+      />
 
       {showCreateModal && (
         <CreatePropertyUnitModal
@@ -372,7 +384,7 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
           onClose={() => setShowCreateModal(false)}
           onSuccess={() => {
             setShowCreateModal(false);
-            loadUnits({ keepData: false });
+            loadUnits();
           }}
         />
       )}
@@ -388,7 +400,7 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
           onSuccess={() => {
             setShowEditModal(false);
             setSelectedUnit(null);
-            loadUnits({ keepData: false });
+            loadUnits();
           }}
         />
       )}

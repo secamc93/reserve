@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -110,13 +111,48 @@ func (h *handlers) StreamLogsHandler(c *gin.Context) {
 	c.SSEvent("connected", gin.H{"message": "Stream de logs iniciado"})
 	c.Writer.Flush()
 
+	// Crear un canal para el heartbeat
+	heartbeatTicker := time.NewTicker(30 * time.Second)
+	defer heartbeatTicker.Stop()
+
+	// Canal para señalar cuando terminar
+	done := make(chan bool, 1)
+
+	// Goroutine para heartbeat (keep-alive)
+	go func() {
+		for {
+			select {
+			case <-heartbeatTicker.C:
+				// Enviar comentario SSE para mantener la conexión viva
+				// Los comentarios SSE no se procesan por el cliente pero mantienen la conexión activa
+				if _, err := c.Writer.WriteString(": heartbeat\n\n"); err != nil {
+					done <- true
+					return
+				}
+				c.Writer.Flush()
+			case <-ctx.Done():
+				done <- true
+				return
+			case <-c.Request.Context().Done():
+				done <- true
+				return
+			case <-done:
+				return
+			}
+		}
+	}()
+
 	// Leer del stream y enviar como SSE
 	scanner := bufio.NewScanner(stream)
 	for scanner.Scan() {
 		select {
 		case <-ctx.Done():
+			done <- true
 			return
 		case <-c.Request.Context().Done():
+			done <- true
+			return
+		case <-done:
 			return
 		default:
 			line := scanner.Text()
@@ -127,6 +163,9 @@ func (h *handlers) StreamLogsHandler(c *gin.Context) {
 			}
 		}
 	}
+
+	// Señalar que terminó el scanner
+	done <- true
 
 	if err := scanner.Err(); err != nil && err != io.EOF {
 		h.logger.Error(ctx).Err(err).Msg("Error leyendo stream de logs")

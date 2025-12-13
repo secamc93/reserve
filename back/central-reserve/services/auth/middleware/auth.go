@@ -284,6 +284,74 @@ func validateJWT(c *gin.Context, jwtService IJWTService) (*AuthInfo, error) {
 	return authInfo, nil
 }
 
+// validateAnyJWT valida la autenticación por JWT
+// Acepta tanto main tokens como business tokens
+func validateAnyJWT(c *gin.Context, jwtService IJWTService) (*AuthInfo, error) {
+	token := c.GetHeader("Authorization")
+	if token == "" {
+		return nil, &AuthError{Message: "Token de autorización requerido"}
+	}
+
+	// Remover el prefijo "Bearer " si existe
+	if len(token) > 7 && strings.HasPrefix(token, "Bearer ") {
+		token = token[7:]
+	}
+
+	logger := log.New()
+
+	// Intentar validar como business token primero
+	businessClaims, err := jwtService.ValidateBusinessToken(token)
+	if err == nil && businessClaims.TokenType == "business" {
+		// Es un business token válido
+		isSuperAdmin := businessClaims.BusinessID == 0
+
+		logger.Debug().
+			Uint("user_id", businessClaims.UserID).
+			Uint("business_id", businessClaims.BusinessID).
+			Uint("business_type_id", businessClaims.BusinessTypeID).
+			Uint("role_id", businessClaims.RoleID).
+			Msg("Business token validado exitosamente")
+
+		// Guardar información adicional en el contexto
+		c.Set("business_id", businessClaims.BusinessID)
+		c.Set("business_type_id", businessClaims.BusinessTypeID)
+		c.Set("role_id", businessClaims.RoleID)
+		c.Set("business_token_claims", businessClaims)
+		c.Set("is_super_admin", isSuperAdmin)
+
+		authInfo := &AuthInfo{
+			Type:       AuthTypeJWT,
+			UserID:     businessClaims.UserID,
+			BusinessID: businessClaims.BusinessID,
+		}
+
+		return authInfo, nil
+	}
+
+	// Intentar validar como token principal (main token)
+	mainClaims, err := jwtService.ValidateToken(token)
+	if err != nil {
+		return nil, &AuthError{Message: "Token inválido"}
+	}
+
+	if mainClaims.TokenType != "main" {
+		return nil, &AuthError{Message: fmt.Sprintf("Token type inválido: %s", mainClaims.TokenType)}
+	}
+
+	// Es un main token válido
+	logger.Debug().
+		Uint("user_id", mainClaims.UserID).
+		Msg("Main token validado exitosamente")
+
+	authInfo := &AuthInfo{
+		Type:      AuthTypeJWT,
+		UserID:    mainClaims.UserID,
+		JWTClaims: mainClaims,
+	}
+
+	return authInfo, nil
+}
+
 func extractAPIKey(c *gin.Context) string {
 	apiKey := c.GetHeader("X-API-Key")
 	if apiKey == "" {
@@ -585,6 +653,45 @@ func Auto() gin.HandlerFunc {
 func BusinessTokenAuth() gin.HandlerFunc {
 	ensureInitialized()
 	return BusinessTokenAuthMiddleware(defaultJWTService, defaultLogger)
+}
+
+// AnyJWT retorna un middleware de autenticación JWT que acepta tanto main tokens como business tokens
+// Útil para endpoints como cambio de contraseña que no requieren un contexto de negocio específico
+func AnyJWT() gin.HandlerFunc {
+	ensureInitialized()
+	return AnyJWTAuthMiddleware(defaultJWTService, defaultLogger)
+}
+
+// AnyJWTAuthMiddleware valida cualquier tipo de token JWT (main o business)
+func AnyJWTAuthMiddleware(jwtService IJWTService, logger log.ILogger) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authInfo, err := validateAnyJWT(c, jwtService)
+		if err != nil {
+			logger.Error().Err(err).Msg("Token inválido")
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": err.Error(),
+			})
+			c.Abort()
+			return
+		}
+
+		// Almacenar la información de autenticación en el contexto
+		c.Set("auth_info", authInfo)
+		c.Set("auth_type", authInfo.Type)
+		c.Set("user_id", authInfo.UserID)
+
+		if authInfo.JWTClaims != nil {
+			c.Set("jwt_claims", authInfo.JWTClaims)
+		}
+
+		// Agregar información al logger para trazabilidad
+		logger.Debug().
+			Str("auth_type", string(authInfo.Type)).
+			Uint("user_id", authInfo.UserID).
+			Msg("Usuario autenticado con JWT (main o business)")
+
+		c.Next()
+	}
 }
 
 // BusinessTokenAuthMiddleware valida solo tokens principales para el endpoint de business token

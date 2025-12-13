@@ -14,3 +14,4 @@ func (h *handlers) RegisterRoutes(router *gin.RouterGroup, handler Ihandlers, lo
 		dashboardGroup.GET("/stats", middleware.JWT(), handler.GetDashboardStatsHandler)
 	}
 }
+

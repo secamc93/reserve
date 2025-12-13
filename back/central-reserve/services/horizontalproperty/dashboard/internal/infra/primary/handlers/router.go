@@ -13,3 +13,4 @@ func (h *DashboardHandler) RegisterRoutes(router *gin.RouterGroup) {
 		dashboard.GET("", middleware.JWT(), h.GetDashboard)
 	}
 }
+

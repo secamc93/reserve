@@ -13,3 +13,4 @@ export interface GetDashboardStatsParams {
 export interface IDashboardRepository {
   getDashboardStats(params: GetDashboardStatsParams): Promise<DashboardStats>;
 }
+

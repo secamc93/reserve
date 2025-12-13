@@ -28,3 +28,4 @@ type DashboardUseCase interface {
 	// GetDashboardByBusiness obtiene el dashboard de un business específico (solo super admin)
 	GetDashboardByBusiness(ctx context.Context, businessID uint) (*DashboardResponseDTO, error)
 }
+

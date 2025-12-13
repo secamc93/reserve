@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useBusinesses } from '../hooks';
-import { Table, TableColumn, PaginationProps } from '@shared/ui/table';
+import { Table, TableColumn, PaginationProps, TableFiltersProps, FilterOption, ActiveFilter } from '@shared/ui/table';
 import { Badge, Button } from '@shared/ui';
 import { BuildingOfficeIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { TokenStorage } from '@shared/config';
@@ -28,21 +28,93 @@ interface Business {
   updated_at: string;
 }
 
+interface Filters {
+  name?: string;
+  business_type_id?: number;
+}
+
 export function BusinessesTable({ token }: BusinessesTableProps) {
   const businessToken = token || TokenStorage.getBusinessToken() || '';
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [nameFilter, setNameFilter] = useState<string>('');
-  const [businessTypeFilter, setBusinessTypeFilter] = useState<number | undefined>(undefined);
+  const [filters, setFilters] = useState<Filters>({});
 
   const { businessTypes } = useBusinessTypes();
   const { businesses, loading, error, total, totalPages, refetch } = useBusinesses({
     token: businessToken,
     page: currentPage,
     pageSize,
-    name: nameFilter || undefined,
-    businessTypeId: businessTypeFilter,
+    name: filters.name || undefined,
+    businessTypeId: filters.business_type_id,
   });
+
+  // Convertir businessTypes a opciones de filtro
+  const businessTypeOptions = useMemo(() => {
+    return businessTypes?.map(bt => ({
+      value: bt.id.toString(),
+      label: `${bt.icon || ''} ${bt.name}`.trim(),
+    })) || [];
+  }, [businessTypes]);
+
+  // Definir filtros disponibles
+  const availableFilters: FilterOption[] = useMemo(() => [
+    {
+      key: 'name',
+      label: 'Nombre',
+      type: 'text',
+      placeholder: 'Buscar por nombre',
+    },
+    {
+      key: 'business_type_id',
+      label: 'Tipo de Negocio',
+      type: 'select',
+      options: businessTypeOptions,
+    },
+  ], [businessTypeOptions]);
+
+  // Convertir filtros activos a ActiveFilter[]
+  const activeFilters: ActiveFilter[] = useMemo(() => {
+    const active: ActiveFilter[] = [];
+    if (filters.name) {
+      active.push({
+        key: 'name',
+        label: 'Nombre',
+        value: filters.name,
+        type: 'text',
+      });
+    }
+    if (filters.business_type_id) {
+      active.push({
+        key: 'business_type_id',
+        label: 'Tipo de Negocio',
+        value: filters.business_type_id.toString(),
+        type: 'select',
+      });
+    }
+    return active;
+  }, [filters]);
+
+  // Manejar agregar filtro
+  const handleAddFilter = (filterKey: string, value: any) => {
+    const newFilters = { ...filters };
+    
+    if (filterKey === 'business_type_id') {
+      newFilters.business_type_id = parseInt(value);
+    } else {
+      (newFilters as any)[filterKey] = value;
+    }
+    
+    setFilters(newFilters);
+    setCurrentPage(1); // Resetear a la primera página al agregar filtro
+  };
+
+  // Manejar remover filtro
+  const handleRemoveFilter = (filterKey: string) => {
+    const newFilters = { ...filters };
+    delete (newFilters as any)[filterKey];
+    setFilters(newFilters);
+    setCurrentPage(1); // Resetear a la primera página al remover filtro
+  };
 
   const columns: TableColumn<Business>[] = [
     {
@@ -168,6 +240,15 @@ export function BusinessesTable({ token }: BusinessesTableProps) {
     itemsPerPage: pageSize,
     onPageChange: setCurrentPage,
     onItemsPerPageChange: setPageSize,
+    showItemsPerPageSelector: true,
+    itemsPerPageOptions: [5, 10, 25, 50, 100],
+  };
+
+  const tableFilters: TableFiltersProps = {
+    availableFilters,
+    activeFilters,
+    onAddFilter: handleAddFilter,
+    onRemoveFilter: handleRemoveFilter,
   };
 
   if (error) {
@@ -186,70 +267,15 @@ export function BusinessesTable({ token }: BusinessesTableProps) {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Filtros */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Buscar por nombre
-            </label>
-            <input
-              type="text"
-              value={nameFilter}
-              onChange={(e) => {
-                setNameFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              placeholder="Nombre del negocio..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tipo de Negocio
-            </label>
-            <select
-              value={businessTypeFilter || ''}
-              onChange={(e) => {
-                setBusinessTypeFilter(e.target.value ? parseInt(e.target.value) : undefined);
-                setCurrentPage(1);
-              }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Todos</option>
-              {businessTypes?.map((bt) => (
-                <option key={bt.id} value={bt.id}>
-                  {bt.icon} {bt.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex items-end">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setNameFilter('');
-                setBusinessTypeFilter(undefined);
-                setCurrentPage(1);
-              }}
-              className="w-full"
-            >
-              Limpiar Filtros
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Tabla */}
-      <Table
-        columns={columns}
-        data={businesses.filter(b => b != null)} // Filtrar elementos undefined/null
-        loading={loading}
-        pagination={pagination}
-        emptyMessage="No hay negocios disponibles"
-        keyExtractor={(business) => business?.id?.toString() || Math.random().toString()}
-      />
-    </div>
+    <Table
+      columns={columns}
+      data={businesses.filter(b => b != null)} // Filtrar elementos undefined/null
+      loading={loading}
+      pagination={pagination}
+      filters={tableFilters}
+      emptyMessage="No hay negocios disponibles"
+      keyExtractor={(business) => business?.id?.toString() || Math.random().toString()}
+    />
   );
 }
+

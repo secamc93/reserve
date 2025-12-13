@@ -46,12 +46,6 @@ export default function LogsPage() {
 
   return (
     <div className="h-screen flex flex-col">
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <h1 className="text-2xl font-bold text-gray-900">Monitoreo de Logs</h1>
-        <p className="text-sm text-gray-600 mt-1">
-          Visualiza los logs del sistema en tiempo real
-        </p>
-      </div>
       <div className="flex-1 overflow-hidden">
         <LogsViewer token={token} maxLogs={1000} />
       </div>

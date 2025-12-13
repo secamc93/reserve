@@ -42,10 +42,12 @@ WORKDIR /app
 # Copiar binario desde build stage
 COPY --from=builder /app/central_reserve .
 
-# Instalar certificados SSL y configurar zona horaria
+# Instalar certificados SSL, Docker CLI, wget y configurar zona horaria
 RUN apk update && apk add --no-cache \
     ca-certificates \
-    tzdata && \
+    tzdata \
+    docker-cli \
+    wget && \
     cp /usr/share/zoneinfo/${TZ} /etc/localtime && \
     echo "${TZ}" > /etc/timezone && \
     rm -rf /var/cache/apk/*

@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Table, Badge, Spinner, Alert, ConfirmModal } from '@shared/ui';
+import { Badge, Spinner, Alert, ConfirmModal, Button } from '@shared/ui';
+import { Table, TableColumn, PaginationProps, TableFiltersProps, FilterOption, ActiveFilter } from '@shared/ui/table';
 import { getResidentsAction, deleteResidentAction } from '../infrastructure/actions';
 import { Resident } from '../domain/entities';
 import { TokenStorage } from '@shared/config';
@@ -9,11 +10,13 @@ import { CreateResidentModal } from './create-resident-modal';
 import { EditResidentModal } from './edit-resident-modal';
 import { ImportResidentsModal } from './import-residents-modal';
 import { BulkEditResidentsModal } from './bulk-edit-residents-modal';
+import { PlusIcon } from '@heroicons/react/24/outline';
 
 export function ResidentsTable({ businessId }: { businessId: number }) {
   const [residents, setResidents] = useState<Resident[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalResidents, setTotalResidents] = useState(0);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -27,7 +30,7 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [residentToDelete, setResidentToDelete] = useState<number | null>(null);
 
-  // Estados para filtros
+  // Estados para filtros (formato compatible con API)
   const [filters, setFilters] = useState({
     name: undefined as string | undefined,
     propertyUnitId: undefined as number | undefined,
@@ -36,76 +39,37 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
     isMainResident: undefined as boolean | undefined,
     dni: undefined as string | undefined,
   });
-  const [filterInputs, setFilterInputs] = useState({
-    name: '',
-    propertyUnitId: '',
-    residentTypeId: '',
-    isActive: '',
-    isMainResident: '',
-    dni: '',
-  });
+
+  // Estados para opciones de filtros
   const [units, setUnits] = useState<Array<{ id: number; number: string }>>([]);
-  const [unitSearchTerm, setUnitSearchTerm] = useState('');
-  const [showUnitDropdown, setShowUnitDropdown] = useState(false);
-  const [unitLoading, setUnitLoading] = useState(false);
+  const [unitOptions, setUnitOptions] = useState<Array<{ value: string; label: string }>>([]);
 
-  // Cerrar dropdown al hacer clic fuera
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (!target.closest('.unit-search-dropdown')) {
-        setShowUnitDropdown(false);
-      }
-    };
-
-    if (showUnitDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showUnitDropdown]);
-
-  const fetchUnits = useCallback(async (searchTerm: string) => {
+  // Cargar opciones de unidades para el filtro
+  const fetchUnits = useCallback(async () => {
     try {
-      setUnitLoading(true);
       const token = TokenStorage.getBusinessToken();
       if (!token) return;
-        const { getPropertyUnitsAction } = await import('../../units/infrastructure/actions');
+      const { getPropertyUnitsAction } = await import('../../units/infrastructure/actions');
       const data = await getPropertyUnitsAction({
         businessId,
         token,
         page: 1,
-        pageSize: 10,
-        number: searchTerm ? searchTerm.trim() : undefined,
+        pageSize: 100, // Cargar más unidades para el filtro
       });
-      setUnits(data.units.map(u => ({ id: u.id, number: u.number })));
+      const unitsList = data.units.map(u => ({ id: u.id, number: u.number }));
+      setUnits(unitsList);
+      setUnitOptions(unitsList.map(u => ({ value: u.id.toString(), label: u.number })));
     } catch (error) {
       console.error('Error loading units:', error);
       setUnits([]);
-    } finally {
-      setUnitLoading(false);
+      setUnitOptions([]);
     }
   }, [businessId]);
 
-  // Buscar unidades cada vez que cambia el término (con debounce)
+  // Cargar unidades al montar el componente
   useEffect(() => {
-    if (!showUnitDropdown) return;
-
-    const timeout = setTimeout(() => {
-      fetchUnits(unitSearchTerm);
-    }, 300);
-
-    return () => clearTimeout(timeout);
-  }, [unitSearchTerm, fetchUnits, showUnitDropdown]);
-
-  // Cargar unidades iniciales cuando se abre el dropdown y no hay resultados
-  useEffect(() => {
-    if (showUnitDropdown && units.length === 0 && !unitLoading) {
-      fetchUnits('');
-    }
-  }, [showUnitDropdown, units.length, unitLoading, fetchUnits]);
+    fetchUnits();
+  }, [fetchUnits]);
 
   const loadResidents = async () => {
     setLoading(true);
@@ -117,7 +81,7 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
         businessId,
         token,
         page: currentPage,
-        pageSize: 10,
+        pageSize: pageSize,
         ...filters, // Aplicar filtros activos
       });
 
@@ -135,43 +99,46 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
 
   useEffect(() => {
     loadResidents();
-  }, [currentPage, filters]);
+  }, [currentPage, pageSize, filters]);
 
-  const handleApplyFilters = () => {
-    setFilters({
-      name: filterInputs.name.trim() || undefined,
-      propertyUnitId: filterInputs.propertyUnitId ? Number(filterInputs.propertyUnitId) : undefined,
-      residentTypeId: filterInputs.residentTypeId ? Number(filterInputs.residentTypeId) : undefined,
-      isActive: filterInputs.isActive ? filterInputs.isActive === 'true' : undefined,
-      isMainResident: filterInputs.isMainResident ? filterInputs.isMainResident === 'true' : undefined,
-      dni: filterInputs.dni.trim() || undefined,
-    });
+  // Manejar agregar filtro
+  const handleAddFilter = (filterKey: string, value: any) => {
+    const newFilters = { ...filters };
+    
+    if (filterKey === 'isActive') {
+      newFilters.isActive = value === true;
+    } else if (filterKey === 'isMainResident') {
+      newFilters.isMainResident = value === true;
+    } else if (filterKey === 'propertyUnitId') {
+      newFilters.propertyUnitId = parseInt(value);
+    } else if (filterKey === 'residentTypeId') {
+      newFilters.residentTypeId = parseInt(value);
+    } else {
+      (newFilters as any)[filterKey] = value;
+    }
+    
+    setFilters(newFilters);
     setCurrentPage(1);
   };
 
-  const handleClearFilters = () => {
-    setFilterInputs({
-      name: '',
-      propertyUnitId: '',
-      residentTypeId: '',
-      isActive: '',
-      isMainResident: '',
-      dni: '',
-    });
-    setFilters({
-      name: undefined,
-      propertyUnitId: undefined,
-      residentTypeId: undefined,
-      isActive: undefined,
-      isMainResident: undefined,
-      dni: undefined,
-    });
-    setUnitSearchTerm('');
-    setShowUnitDropdown(false);
-    setCurrentPage(1);
+  // Manejar remover filtro
+  const handleRemoveFilter = (filterKey: string) => {
+    const newFilters = { ...filters };
+    
+    if (filterKey === 'isActive') {
+      delete newFilters.isActive;
+    } else if (filterKey === 'isMainResident') {
+      delete newFilters.isMainResident;
+    } else if (filterKey === 'propertyUnitId') {
+      delete newFilters.propertyUnitId;
+    } else if (filterKey === 'residentTypeId') {
+      delete newFilters.residentTypeId;
+    } else {
+      delete (newFilters as any)[filterKey];
+    }
+    
+    setFilters(newFilters);
   };
-
-  const hasActiveFilters = Object.values(filters).some(f => f !== undefined);
 
   const handleDeleteClick = (residentId: number) => {
     setResidentToDelete(residentId);
@@ -205,248 +172,260 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
     setShowEditModal(true);
   };
 
-  const columns = [
-    { key: 'name', label: 'Nombre' },
-    { key: 'unit', label: 'Unidad' },
-    { key: 'type', label: 'Tipo' },
-    { key: 'email', label: 'Email' },
-    { key: 'phone', label: 'Teléfono' },
-    { key: 'isMain', label: 'Principal' },
-    { key: 'isActive', label: 'Estado' },
-    { key: 'actions', label: 'Acciones' },
-  ];
-
-  const data = residents.map(resident => ({
-    name: resident.name,
-    unit: resident.propertyUnitNumber,
-    type: resident.residentTypeName,
-    email: resident.email,
-    phone: resident.phone || '-',
-    isMain: (
-      <Badge type={resident.isMainResident ? 'success' : 'primary'}>
-        {resident.isMainResident ? 'Sí' : 'No'}
-      </Badge>
-    ),
-    isActive: (
-      <Badge type={resident.isActive ? 'success' : 'error'}>
-        {resident.isActive ? 'Activo' : 'Inactivo'}
-      </Badge>
-    ),
-    actions: (
-      <div className="flex gap-2">
-        <button onClick={() => handleEdit(resident)} className="btn btn-sm btn-outline">
-          ✏️ Editar
-        </button>
-        <button onClick={() => handleDeleteClick(resident.id)} className="btn btn-sm btn-error">
-          🗑️
-        </button>
-      </div>
-    ),
-  }));
-
-  if (loading) {
-    return <div className="flex justify-center p-8"><Spinner size="lg" /></div>;
+  // Convertir filtros a ActiveFilter[]
+  const activeFilters: ActiveFilter[] = [];
+  if (filters.name) {
+    activeFilters.push({
+      key: 'name',
+      label: 'Nombre',
+      value: filters.name,
+      type: 'text',
+    });
+  }
+  if (filters.dni) {
+    activeFilters.push({
+      key: 'dni',
+      label: 'DNI',
+      value: filters.dni,
+      type: 'text',
+    });
+  }
+  if (filters.propertyUnitId) {
+    const unit = units.find(u => u.id === filters.propertyUnitId);
+    activeFilters.push({
+      key: 'propertyUnitId',
+      label: 'Unidad',
+      value: filters.propertyUnitId.toString(),
+      type: 'select',
+    });
+  }
+  if (filters.residentTypeId) {
+    activeFilters.push({
+      key: 'residentTypeId',
+      label: 'Tipo',
+      value: filters.residentTypeId.toString(),
+      type: 'select',
+    });
+  }
+  if (filters.isActive !== undefined) {
+    activeFilters.push({
+      key: 'isActive',
+      label: 'Estado',
+      value: filters.isActive,
+      type: 'boolean',
+    });
+  }
+  if (filters.isMainResident !== undefined) {
+    activeFilters.push({
+      key: 'isMainResident',
+      label: 'Principal',
+      value: filters.isMainResident,
+      type: 'boolean',
+    });
   }
 
-  return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Residentes</h2>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setShowImportModal(true)}
-            className="btn btn-secondary"
+  // Definir filtros disponibles
+  const availableFilters: FilterOption[] = [
+    {
+      key: 'name',
+      label: 'Nombre',
+      type: 'text',
+      placeholder: 'Buscar por nombre',
+    },
+    {
+      key: 'dni',
+      label: 'DNI',
+      type: 'text',
+      placeholder: 'Buscar por DNI',
+    },
+    {
+      key: 'propertyUnitId',
+      label: 'Unidad',
+      type: 'select',
+      options: unitOptions,
+    },
+    {
+      key: 'residentTypeId',
+      label: 'Tipo',
+      type: 'select',
+      options: [
+        { value: '1', label: 'Propietario' },
+        { value: '2', label: 'Arrendatario' },
+        { value: '3', label: 'Familiar' },
+        { value: '4', label: 'Invitado' },
+      ],
+    },
+    {
+      key: 'isActive',
+      label: 'Estado',
+      type: 'boolean',
+    },
+    {
+      key: 'isMainResident',
+      label: 'Principal',
+      type: 'boolean',
+    },
+  ];
+
+  // Definir columnas de la tabla
+  const columns: TableColumn<Resident>[] = [
+    {
+      key: 'name',
+      label: 'Nombre',
+      render: (_, resident) => (
+        <div className="font-semibold text-gray-900">{resident.name}</div>
+      ),
+    },
+    {
+      key: 'propertyUnitNumber',
+      label: 'Unidad',
+      render: (_, resident) => (
+        <span className="text-gray-700">{resident.propertyUnitNumber || '-'}</span>
+      ),
+    },
+    {
+      key: 'residentTypeName',
+      label: 'Tipo',
+      render: (_, resident) => (
+        <span className="text-gray-700">{resident.residentTypeName}</span>
+      ),
+    },
+    {
+      key: 'email',
+      label: 'Email',
+      render: (_, resident) => (
+        <span className="text-gray-700">{resident.email || '-'}</span>
+      ),
+    },
+    {
+      key: 'phone',
+      label: 'Teléfono',
+      render: (_, resident) => (
+        <span className="text-gray-700">{resident.phone || '-'}</span>
+      ),
+    },
+    {
+      key: 'isMainResident',
+      label: 'Principal',
+      render: (_, resident) => (
+        <Badge type={resident.isMainResident ? 'success' : 'primary'}>
+          {resident.isMainResident ? 'Sí' : 'No'}
+        </Badge>
+      ),
+    },
+    {
+      key: 'isActive',
+      label: 'Estado',
+      render: (_, resident) => (
+        <Badge type={resident.isActive ? 'success' : 'error'}>
+          {resident.isActive ? 'Activo' : 'Inactivo'}
+        </Badge>
+      ),
+    },
+    {
+      key: 'actions',
+      label: 'Acciones',
+      align: 'center',
+      render: (_, resident) => (
+        <div className="flex items-center justify-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleEdit(resident)}
+            className="p-2 hover:bg-green-50 hover:text-green-600"
+            title="Editar residente"
           >
-            📊 Importar Excel
-          </button>
-          <button
-            onClick={() => setShowBulkEditModal(true)}
-            className="btn btn-secondary"
+            ✏️
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleDeleteClick(resident.id)}
+            className="p-2 hover:bg-red-50 hover:text-red-600"
+            title="Eliminar residente"
           >
-            ✏️ Edición Masiva
-          </button>
-          <button onClick={() => setShowCreateModal(true)} className="btn btn-primary">
-            ➕ Agregar Residente
-          </button>
+            🗑️
+          </Button>
         </div>
+      ),
+    },
+  ];
+
+  // Configuración de paginación
+  const pagination: PaginationProps = {
+    currentPage,
+    totalPages,
+    totalItems: totalResidents,
+    itemsPerPage: pageSize,
+    onPageChange: setCurrentPage,
+    onItemsPerPageChange: setPageSize,
+    showItemsPerPageSelector: true,
+    itemsPerPageOptions: [5, 10, 25, 50, 100],
+  };
+
+  // Configuración de filtros
+  const tableFilters: TableFiltersProps = {
+    availableFilters,
+    activeFilters,
+    onAddFilter: handleAddFilter,
+    onRemoveFilter: handleRemoveFilter,
+    headerActions: (
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowImportModal(true)}
+          className="btn-outline btn-sm"
+        >
+          📊 Importar Excel
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowBulkEditModal(true)}
+          className="btn-outline btn-sm"
+        >
+          ✏️ Edición Masiva
+        </Button>
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={() => setShowCreateModal(true)}
+          className="btn-primary btn-sm"
+        >
+          <PlusIcon className="w-4 h-4 mr-2" />
+          Agregar Residente
+        </Button>
+      </div>
+    ),
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Título */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-900">Residentes</h2>
       </div>
 
       {/* Alertas */}
       {alert && (
-        <div className="mb-4">
+        <div>
           <Alert type={alert.type} onClose={() => setAlert(null)}>
             {alert.message}
           </Alert>
         </div>
       )}
 
-      {/* Filtros */}
-      <div className="mb-4 bg-gray-50 border border-gray-200 rounded-lg p-4">
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">🔍 Filtros de Búsqueda</h3>
-        <div className="grid grid-cols-6 gap-3 mb-3">
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Nombre</label>
-            <input
-              type="text"
-              placeholder="Buscar por nombre..."
-              value={filterInputs.name}
-              onChange={(e) => setFilterInputs({ ...filterInputs, name: e.target.value })}
-              className="input input-sm w-full"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">DNI</label>
-            <input
-              type="text"
-              placeholder="Buscar por DNI..."
-              value={filterInputs.dni}
-              onChange={(e) => setFilterInputs({ ...filterInputs, dni: e.target.value })}
-              className="input input-sm w-full"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Unidad</label>
-            <div className="relative unit-search-dropdown">
-              <input
-                type="text"
-                placeholder="Buscar unidad..."
-                value={unitSearchTerm}
-                onChange={(e) => {
-                  setUnitSearchTerm(e.target.value);
-                  setShowUnitDropdown(true);
-                }}
-                onFocus={() => setShowUnitDropdown(true)}
-                className="input input-sm w-full pr-8"
-              />
-              <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              {showUnitDropdown && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto">
-                  <div
-                    className="px-3 py-2 text-xs text-gray-600 cursor-pointer hover:bg-gray-50"
-                    onClick={() => {
-                      setFilterInputs({ ...filterInputs, propertyUnitId: '' });
-                      setUnitSearchTerm('');
-                      setShowUnitDropdown(false);
-                    }}
-                  >
-                    Todas las unidades
-                  </div>
-                  {unitLoading && (
-                    <div className="px-3 py-2 text-xs text-gray-500">
-                      Buscando unidades...
-                    </div>
-                  )}
-                  {!unitLoading && units.map(unit => (
-                    <div
-                      key={unit.id}
-                      className="px-3 py-2 text-xs text-gray-700 cursor-pointer hover:bg-gray-50"
-                      onClick={() => {
-                        setFilterInputs({ ...filterInputs, propertyUnitId: unit.id.toString() });
-                        setUnitSearchTerm(unit.number);
-                        setShowUnitDropdown(false);
-                      }}
-                    >
-                      {unit.number}
-                    </div>
-                  ))}
-                  {!unitLoading && units.length === 0 && (
-                    <div className="px-3 py-2 text-xs text-gray-500">
-                      No se encontraron unidades
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Tipo</label>
-            <select
-              value={filterInputs.residentTypeId}
-              onChange={(e) => setFilterInputs({ ...filterInputs, residentTypeId: e.target.value })}
-              className="input input-sm w-full"
-            >
-              <option value="">Todos</option>
-              <option value="1">Propietario</option>
-              <option value="2">Arrendatario</option>
-              <option value="3">Familiar</option>
-              <option value="4">Invitado</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Estado</label>
-            <select
-              value={filterInputs.isActive}
-              onChange={(e) => setFilterInputs({ ...filterInputs, isActive: e.target.value })}
-              className="input input-sm w-full"
-            >
-              <option value="">Todos</option>
-              <option value="true">Activo</option>
-              <option value="false">Inactivo</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Principal</label>
-            <select
-              value={filterInputs.isMainResident}
-              onChange={(e) => setFilterInputs({ ...filterInputs, isMainResident: e.target.value })}
-              className="input input-sm w-full"
-            >
-              <option value="">Todos</option>
-              <option value="true">Sí</option>
-              <option value="false">No</option>
-            </select>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={handleApplyFilters}
-            className="btn btn-primary btn-sm"
-          >
-            🔍 Aplicar Filtros
-          </button>
-          {hasActiveFilters && (
-            <button
-              onClick={handleClearFilters}
-              className="btn btn-secondary btn-sm"
-            >
-              ✖️ Limpiar Filtros
-            </button>
-          )}
-          {hasActiveFilters && (
-            <span className="text-xs text-gray-600 flex items-center ml-2">
-              ℹ️ Filtros activos
-            </span>
-          )}
-        </div>
-      </div>
-
-      <Table columns={columns} data={data} />
-
-      {totalPages > 1 && (
-        <div className="pagination-alt">
-          <button
-            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className="pagination-button"
-          >
-            ← Anterior
-          </button>
-          <span className="pagination-info">
-            Página {currentPage} de {totalPages} • {totalResidents} {totalResidents === 1 ? 'residente' : 'residentes'}
-          </span>
-          <button
-            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-            className="pagination-button"
-          >
-            Siguiente →
-          </button>
-        </div>
-      )}
+      {/* Tabla con filtros y paginación integrados */}
+      <Table
+        columns={columns}
+        data={residents}
+        loading={loading}
+        emptyMessage="No hay residentes disponibles"
+        keyExtractor={(resident) => resident.id.toString()}
+        pagination={pagination}
+        filters={tableFilters}
+      />
 
       {showCreateModal && (
         <CreateResidentModal

@@ -81,3 +81,4 @@ func (h *handlers) GetDashboardStatsHandler(c *gin.Context) {
 	h.logger.Info(ctx).Bool("is_super_admin", isSuperAdmin).Msg("Estadísticas del dashboard obtenidas exitosamente")
 	c.JSON(http.StatusOK, response)
 }
+
