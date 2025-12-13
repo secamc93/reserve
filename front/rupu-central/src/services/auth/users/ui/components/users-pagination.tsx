@@ -13,6 +13,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { Button } from '@shared/ui/button';
 import { Select } from '@shared/ui/select';
+import { RupuLoader } from '@shared/ui/rupu-loader';
 
 interface UsersPaginationProps {
   currentPage: number;
@@ -94,7 +95,7 @@ export function UsersPagination({
       <div className="pagination-info">
         {loading ? (
           <div className="flex items-center gap-2">
-            <div className="spinner w-4 h-4"></div>
+            <RupuLoader size={24} />
             <span>Cargando...</span>
           </div>
         ) : (

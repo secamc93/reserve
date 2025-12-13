@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import { Modal } from '@shared/ui/modal';
 import { Button } from '@shared/ui/button';
 import { XMarkIcon, KeyIcon } from '@heroicons/react/24/outline';
+import { RupuLoader } from '@shared/ui/rupu-loader';
 import { getRolePermissionsAction, removeRolePermissionAction } from '../../infrastructure/actions';
 import { getPermissionsListAction } from '@/services/auth/permissions/infrastructure/actions';
 import { TokenStorage } from '@shared/config';
@@ -134,7 +135,7 @@ export function AssignPermissionsModal({
 
         {fetchLoading ? (
           <div className="flex justify-center py-8">
-            <div className="loading loading-spinner loading-lg"></div>
+            <RupuLoader size={128} />
           </div>
         ) : (
           <div className="space-y-2 max-h-96 overflow-y-auto">

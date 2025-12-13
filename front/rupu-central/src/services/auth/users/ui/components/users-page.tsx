@@ -311,9 +311,9 @@ export function UsersPage() {
               variant="primary"
               onClick={openCreateModal}
               className="btn-primary"
+              title="Nuevo Usuario"
             >
-              <PlusIcon className="w-4 h-4 mr-2" />
-              Nuevo Usuario
+              <PlusIcon className="w-5 h-5" />
             </Button>
           ),
         }}

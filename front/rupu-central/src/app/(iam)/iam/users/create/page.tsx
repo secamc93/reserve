@@ -6,6 +6,7 @@ import { useAuthSimple as useAuth } from '@/services/auth/users/ui/hooks';
 import { Button, Input, Select } from '@shared/ui';
 import { UserGroupIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useEffect } from 'react';
+import { RupuLoader } from '@/shared/ui/rupu-loader';
 
 export default function CreateUserPage() {
   const { isAuthenticated, loading, token } = useAuth();
@@ -30,7 +31,7 @@ export default function CreateUserPage() {
   if (loading || !isAuthenticated) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <div className="loading loading-spinner loading-lg"></div>
+        <RupuLoader size={128} />
       </div>
     );
   }

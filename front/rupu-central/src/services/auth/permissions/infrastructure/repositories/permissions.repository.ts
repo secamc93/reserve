@@ -160,10 +160,15 @@ export class PermissionsRepository implements IPermissionsRepository {
 
       const { is_super, role, resources } = backendResponse.data;
 
+      // Validar que el usuario tenga recursos y permisos asociados
+      if (!is_super && (!resources || resources === null || (Array.isArray(resources) && resources.length === 0))) {
+        throw new Error('Este usuario no tiene rol asociado o no tiene recursos y permisos asignados. Por favor, contacte al administrador.');
+      }
+
       return {
         isSuperAdmin: is_super,
         roles: [role],
-        resources: resources,
+        resources: resources || [],
       };
     } catch (error) {
       console.error('Error obteniendo roles y permisos:', error);

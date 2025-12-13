@@ -1,6 +1,6 @@
 /**
  * Hook: useBusinessTypes
- * Hook personalizado para obtener tipos de negocio con paginación y filtros
+ * Hook personalizado para obtener tipos de negocio con paginaci?n y filtros
  */
 
 'use client';
@@ -22,7 +22,7 @@ export interface UseBusinessTypesResult {
   loading: boolean;
   error: string | null;
   
-  // Paginación
+  // Paginaci?n
   currentPage: number;
   pageSize: number;
   totalPages: number;
@@ -37,6 +37,8 @@ export interface UseBusinessTypesResult {
   
   // Datos paginados y filtrados
   paginatedBusinessTypes: BusinessType[];
+  // Todos los tipos de negocio (sin paginar, con filtros aplicados)
+  allBusinessTypes: BusinessType[];
   
   // Acciones
   loadBusinessTypes: (token?: string) => Promise<void>;
@@ -58,7 +60,7 @@ export function useBusinessTypes(options: UseBusinessTypesOptions = {}): UseBusi
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // Paginación
+  // Paginaci?n
   const [currentPage, setCurrentPage] = useState(initialPage);
   const [pageSize, setPageSizeState] = useState(initialPageSize);
   
@@ -69,7 +71,7 @@ export function useBusinessTypes(options: UseBusinessTypesOptions = {}): UseBusi
   const loadBusinessTypes = useCallback(async (authToken?: string) => {
     const token = authToken || TokenStorage.getBusinessToken();
     if (!token) {
-      setError('Token de autenticación requerido');
+      setError('Token de autenticaci?n requerido');
       return;
     }
 
@@ -120,7 +122,7 @@ export function useBusinessTypes(options: UseBusinessTypesOptions = {}): UseBusi
     return filtered;
   }, [allBusinessTypes, filters]);
 
-  // Calcular paginación
+  // Calcular paginaci?n
   const totalCount = filteredBusinessTypes.length;
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
@@ -131,28 +133,28 @@ export function useBusinessTypes(options: UseBusinessTypesOptions = {}): UseBusi
     return filteredBusinessTypes.slice(startIndex, endIndex);
   }, [filteredBusinessTypes, currentPage, pageSize]);
 
-  // Ajustar página actual si es necesario
+  // Ajustar p?gina actual si es necesario
   useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) {
       setCurrentPage(1);
     }
   }, [currentPage, totalPages]);
 
-  // Cambiar página
+  // Cambiar p?gina
   const setPage = useCallback((page: number) => {
     setCurrentPage(page);
   }, []);
 
-  // Cambiar tamaño de página
+  // Cambiar tama?o de p?gina
   const setPageSize = useCallback((size: number) => {
     setPageSizeState(size);
-    setCurrentPage(1); // Reset a la primera página
+    setCurrentPage(1); // Reset a la primera p?gina
   }, []);
 
   // Cambiar filtros
   const setFilters = useCallback((newFilters: Partial<UseBusinessTypesResult['filters']>) => {
     setFiltersState(prev => ({ ...prev, ...newFilters }));
-    setCurrentPage(1); // Reset a la primera página
+    setCurrentPage(1); // Reset a la primera p?gina
   }, []);
 
   // Refrescar datos
@@ -163,7 +165,7 @@ export function useBusinessTypes(options: UseBusinessTypesOptions = {}): UseBusi
     }
   }, [loadBusinessTypes]);
 
-  // Auto-cargar si está habilitado
+  // Auto-cargar si est? habilitado
   useEffect(() => {
     if (autoLoad) {
       loadBusinessTypes();
@@ -176,7 +178,7 @@ export function useBusinessTypes(options: UseBusinessTypesOptions = {}): UseBusi
     loading,
     error,
     
-    // Paginación
+    // Paginaci?n
     currentPage,
     pageSize,
     totalPages,
@@ -187,6 +189,8 @@ export function useBusinessTypes(options: UseBusinessTypesOptions = {}): UseBusi
     
     // Datos paginados
     paginatedBusinessTypes,
+    // Todos los tipos (sin paginar, con filtros aplicados)
+    allBusinessTypes: filteredBusinessTypes,
     
     // Acciones
     loadBusinessTypes,

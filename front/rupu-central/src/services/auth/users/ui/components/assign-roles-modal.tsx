@@ -9,6 +9,7 @@ import { XMarkIcon } from '@heroicons/react/24/outline';
 import { Button } from '@shared/ui/button';
 import { Select } from '@shared/ui/select';
 import { Modal } from '@shared/ui/modal';
+import { RupuLoader } from '@shared/ui/rupu-loader';
 import { assignUserRoleAction } from '../../../users/infrastructure/actions';
 import { getRolesAction } from '../../../roles/infrastructure/actions';
 import { getBusinessesAction } from '../../../businesses/infrastructure/actions';
@@ -287,7 +288,7 @@ export function AssignRolesModal({ isOpen, onClose, user, onSuccess }: AssignRol
                     </label>
                     {isLoading ? (
                       <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <div className="spinner w-4 h-4"></div>
+                        <RupuLoader size={24} />
                         <span>Cargando roles...</span>
                       </div>
                     ) : businessRoles.length === 0 ? (

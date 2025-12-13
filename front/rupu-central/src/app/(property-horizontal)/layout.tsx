@@ -8,7 +8,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { TokenStorage } from '@shared/config';
-import { Sidebar, Spinner } from '@shared/ui';
+import { Sidebar, Spinner, Alert } from '@shared/ui';
+import { usePermissions } from '@/services/auth/permissions/ui/hooks/use-permissions';
 
 export default function PropertyHorizontalLayout({
   children,
@@ -19,6 +20,7 @@ export default function PropertyHorizontalLayout({
   const [user, setUser] = useState<{ userId: string; name: string; email: string; role: string; avatarUrl?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const { error: permissionsError } = usePermissions();
 
   useEffect(() => {
     // Verificar autenticación
@@ -62,6 +64,14 @@ export default function PropertyHorizontalLayout({
         }}
         onMouseEnter={() => setSidebarExpanded(false)}
       >
+        {/* Mostrar error de permisos si existe */}
+        {permissionsError && (
+          <div className="p-4">
+            <Alert type="error" onClose={() => {}}>
+              {permissionsError}
+            </Alert>
+          </div>
+        )}
         {children}
       </main>
     </div>

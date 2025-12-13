@@ -366,11 +366,6 @@ export function DynamicFilters({
 
                 {/* Acciones del header y selectores de ordenamiento */}
                 <div className="flex items-center gap-2 flex-shrink-0">
-                    {headerActions && (
-                        <div className="flex items-center gap-2">
-                            {headerActions}
-                        </div>
-                    )}
                     {onSortChange && (
                         <>
                             <select
@@ -393,6 +388,11 @@ export function DynamicFilters({
                                 <option value="asc">Ascendente</option>
                             </select>
                         </>
+                    )}
+                    {headerActions && (
+                        <div className="flex items-center gap-2">
+                            {headerActions}
+                        </div>
                     )}
                 </div>
             </div>

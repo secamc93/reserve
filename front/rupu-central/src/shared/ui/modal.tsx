@@ -17,13 +17,13 @@ interface ModalProps {
 }
 
 const sizeClasses = {
-  sm: 'max-w-sm',
-  md: 'max-w-md',
-  lg: 'max-w-lg',
-  xl: 'max-w-xl',
-  '2xl': 'max-w-2xl',
-  '4xl': 'max-w-4xl',
-  '6xl': 'max-w-6xl',
+  sm: 'max-w-sm w-[calc(100%-2rem)] sm:w-full',
+  md: 'max-w-md w-[calc(100%-2rem)] sm:w-full',
+  lg: 'max-w-lg w-[calc(100%-2rem)] sm:w-full',
+  xl: 'max-w-xl w-[calc(100%-2rem)] sm:w-full',
+  '2xl': 'max-w-2xl w-[calc(100%-2rem)] sm:w-full',
+  '4xl': 'max-w-4xl w-[calc(100%-2rem)] sm:w-full',
+  '6xl': 'max-w-6xl w-[calc(100%-2rem)] sm:w-full',
   'full': 'max-w-[90vw] w-[90vw] max-h-[90vh] h-[90vh] mx-auto my-[5vh]',
 };
 
@@ -64,7 +64,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md', glass = f
       <div className={size === 'full' ? 'fixed inset-0 z-50 flex items-center justify-center' : 'modal'}>
         {size === 'full' ? (
           <div 
-            className={`${glass ? 'bg-white/80 backdrop-blur-xl border border-white/20' : 'bg-white'} rounded-3xl shadow-2xl flex flex-col overflow-hidden`}
+            className={`${glass ? 'bg-transparent' : 'bg-transparent'} flex flex-col overflow-hidden`}
             style={{
               width: '90vw',
               height: '90vh',
@@ -78,16 +78,17 @@ export function Modal({ isOpen, onClose, title, children, size = 'md', glass = f
             <div className="flex-1 overflow-hidden">{children}</div>
           </div>
         ) : (
-          <div className={`${glass ? 'modal-glass' : 'modal-content'} ${sizeClasses[size]}`}>
+          <div className={`${glass ? 'modal-glass' : 'modal-content'} ${sizeClasses[size]} max-h-[90vh] flex flex-col`}>
             {/* Header */}
             {title && (
-              <div className="relative mb-4">
-                <h3 className="text-xl font-bold text-gray-900 text-center">{title}</h3>
+              <div className="relative mb-4 flex-shrink-0">
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 text-center pr-8">{title}</h3>
                 <button
                   onClick={onClose}
-                  className="absolute right-0 top-0 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute right-0 top-0 text-gray-400 hover:text-gray-600 transition-colors p-1"
+                  aria-label="Cerrar modal"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
@@ -95,7 +96,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md', glass = f
             )}
 
             {/* Content */}
-            <div>{children}</div>
+            <div className="flex-1 overflow-y-auto min-h-0">{children}</div>
           </div>
         )}
       </div>

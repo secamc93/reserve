@@ -272,9 +272,9 @@ export function BusinessTypesTable({
           }
         }}
         className="btn-primary"
+        title="Crear Tipo"
       >
-        <PlusIcon className="w-4 h-4 mr-2" />
-        Crear Tipo
+        <PlusIcon className="w-5 h-5" />
       </Button>
     ),
   } : undefined;
@@ -296,7 +296,7 @@ export function BusinessTypesTable({
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         title="Crear Nuevo Tipo de Negocio"
-        size="lg"
+        size="2xl"
       >
         <BusinessTypeForm
           onSubmit={handleCreate}
@@ -314,7 +314,7 @@ export function BusinessTypesTable({
           setSelectedBusinessType(null);
         }}
         title="Editar Tipo de Negocio"
-        size="lg"
+        size="2xl"
       >
         <BusinessTypeForm
           onSubmit={handleEdit}

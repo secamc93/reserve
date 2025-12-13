@@ -237,16 +237,16 @@ body {
 
 /* Modal container */
 .modal {
-  @apply fixed inset-0 z-50 flex items-center justify-center p-4;
+  @apply fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4;
 }
 
 .modal-content {
-  @apply bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all;
+  @apply bg-white rounded-2xl shadow-2xl max-w-md w-full p-4 sm:p-6 transform transition-all;
 }
 
 /* Modal glassmorphism - fondo transparente con blur */
 .modal-glass {
-  @apply bg-white/80 backdrop-blur-xl border border-white/20 shadow-2xl rounded-2xl max-w-md w-full p-6 transform transition-all;
+  @apply bg-white/80 backdrop-blur-xl border border-white/20 shadow-2xl rounded-2xl max-w-md w-full p-4 sm:p-6 transform transition-all;
 }
 
 /* Listas - usando colores dinámicos */
@@ -484,4 +484,51 @@ body {
 
 .delay-1000 {
   animation-delay: 1s;
+}
+
+/* Estilos para Lottie - Asegurar fondo transparente */
+.rupu-loader-wrapper,
+.rupu-loader-wrapper *,
+.lottie-container,
+.lottie-container *,
+.lottie-animation,
+.lottie-animation svg,
+.lottie-animation canvas {
+  background-color: transparent !important;
+}
+
+/* Contenedor de Lottie sin fondo */
+[class*="lottie"],
+.rupu-loader-wrapper svg,
+.rupu-loader-wrapper canvas {
+  background-color: transparent !important;
+}
+
+/* Asegurar que los elementos SVG y canvas de Lottie sean transparentes */
+.rupu-loader-wrapper svg,
+.rupu-loader-wrapper canvas,
+.lottie-container svg,
+.lottie-container canvas {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Animación de rotación para el loader de Rupü */
+@keyframes rupuRotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.rupu-rotate {
+  animation: rupuRotate 4.68s linear infinite;
+  transform-origin: center center;
+}
+
+.rupu-rotate svg,
+.rupu-rotate canvas {
+  transform-origin: center center;
 }

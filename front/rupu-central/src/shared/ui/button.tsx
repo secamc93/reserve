@@ -6,6 +6,7 @@
 'use client';
 
 import { ButtonHTMLAttributes, ReactNode, forwardRef } from 'react';
+import { RupuLoader } from './rupu-loader';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'tertiary' | 'quaternary' | 'outline' | 'success' | 'danger' | 'error';
@@ -54,7 +55,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
       {...props}
     >
       {loading && (
-        <div className="spinner w-4 h-4 mr-2" />
+        <span className="mr-2 inline-flex items-center">
+          <RupuLoader size={24} />
+        </span>
       )}
       {!loading && leftIcon && (
         <span className="mr-2">{leftIcon}</span>

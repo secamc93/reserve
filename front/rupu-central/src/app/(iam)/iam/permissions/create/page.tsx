@@ -6,6 +6,7 @@ import { useAuthSimple as useAuth } from '@/services/auth/users/ui/hooks';
 import { Button, Input, Select, Modal } from '@shared/ui';
 import { KeyIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useEffect } from 'react';
+import { RupuLoader } from '@/shared/ui/rupu-loader';
 import { useBusinessTypes } from '@/services/auth/business-types/ui/hooks';
 import { useActions } from '@/services/auth/actions/ui/hooks';
 import { useResources } from '@/services/auth/resources/ui/hooks';
@@ -44,7 +45,7 @@ export default function CreatePermissionPage() {
   if (loading || !isAuthenticated) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <div className="loading loading-spinner loading-lg"></div>
+        <RupuLoader size={128} />
       </div>
     );
   }

@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { EnvelopeIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 import { Button } from '@shared/ui/button';
 import { Input } from '@shared/ui/input';
+import { RupuLoader } from '@shared/ui/rupu-loader';
 import { TokenStorage } from '@shared/config';
 import { loginAction, generateBusinessTokenAction } from '../../infrastructure/actions';
 import { BusinessSelector } from '../../../businesses/ui';
@@ -275,45 +276,42 @@ export function LoginForm({ onLogin }: LoginFormProps) {
       )}
 
       {/* Botón de Submit con efecto hover moderno */}
-      <Button
-        type="submit"
-        disabled={loading}
-        className="group/btn relative w-full overflow-hidden
-                   bg-gradient-to-r from-cyan-500 via-blue-500 to-cyan-500 
-                   hover:from-cyan-400 hover:via-blue-400 hover:to-cyan-400
-                   text-white font-semibold py-3 px-4 rounded-lg 
-                   transition-all duration-500 ease-in-out
-                   shadow-lg hover:shadow-2xl hover:shadow-cyan-500/50
-                   transform hover:scale-[1.02] hover:-translate-y-0.5
-                   disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:translate-y-0
-                   before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent
-                   before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-700"
-      >
-        {/* Efecto de brillo animado */}
-        <span className="relative z-10 flex items-center justify-center">
-          {loading ? (
-            <>
-              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Iniciando sesión...
-            </>
-          ) : (
-            <>
-              Iniciar Sesión
-              <svg 
-                className="ml-2 h-5 w-5 transition-transform duration-300 group-hover/btn:translate-x-1" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </>
-          )}
-        </span>
-      </Button>
+      {loading ? (
+        <div className="w-full flex flex-col items-center justify-center py-8 min-h-[200px] relative z-10">
+          <div className="relative">
+            <RupuLoader size={96} />
+          </div>
+          <p className="mt-4 text-gray-300 font-medium animate-pulse">Iniciando sesión...</p>
+        </div>
+      ) : (
+        <Button
+          type="submit"
+          disabled={loading}
+          className="group/btn relative w-full overflow-hidden
+                     bg-gradient-to-r from-cyan-500 via-blue-500 to-cyan-500 
+                     hover:from-cyan-400 hover:via-blue-400 hover:to-cyan-400
+                     text-white font-semibold py-3 px-4 rounded-lg 
+                     transition-all duration-500 ease-in-out
+                     shadow-lg hover:shadow-2xl hover:shadow-cyan-500/50
+                     transform hover:scale-[1.02] hover:-translate-y-0.5
+                     disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:translate-y-0
+                     before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent
+                     before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-700"
+        >
+          {/* Efecto de brillo animado */}
+          <span className="relative z-10 flex items-center justify-center">
+            Iniciar Sesión
+            <svg 
+              className="ml-2 h-5 w-5 transition-transform duration-300 group-hover/btn:translate-x-1" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </span>
+        </Button>
+      )}
     </form>
   );
 }

@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { getResourcesAction, deleteResourceAction } from '../../infrastructure/actions';
 import { Table, TableColumn, Button, ConfirmModal, PaginationProps, TableFiltersProps } from '@shared/ui';
 import { FilterOption, ActiveFilter } from '@shared/ui/dynamic-filters';
-import { PencilIcon, TrashIcon, CubeTransparentIcon } from '@heroicons/react/24/outline';
+import { PencilIcon, TrashIcon, CubeTransparentIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { useBusinessTypes } from '../../../business-types/ui/hooks';
 import { EditResourceModal } from './edit-resource-modal';
 import type { Resource } from '../../domain/entities';
@@ -312,6 +313,11 @@ export function ResourcesTable({ token }: ResourcesTableProps) {
       { value: 'updated_at', label: 'Fecha de actualización' },
       { value: 'name', label: 'Nombre' },
     ],
+    headerActions: (
+      <Link href="/iam/resources/create" className="btn btn-primary" title="Crear Recurso">
+        <PlusIcon className="w-5 h-5" />
+      </Link>
+    ),
   };
 
   if (error) {

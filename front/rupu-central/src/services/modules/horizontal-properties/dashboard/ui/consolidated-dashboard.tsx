@@ -55,43 +55,43 @@ export function ConsolidatedDashboard({
       label: 'Propiedades',
       value: summary.total_horizontal_properties,
       icon: BuildingOfficeIcon,
-      color: 'bg-blue-500',
+      color: 'bg-gray-100',
     },
     {
       label: 'Unidades',
       value: summary.total_units,
       icon: HomeIcon,
-      color: 'bg-green-500',
+      color: 'bg-gray-100',
     },
     {
       label: 'Residentes',
       value: summary.total_residents,
       icon: UsersIcon,
-      color: 'bg-purple-500',
+      color: 'bg-gray-100',
     },
     {
       label: 'Votaciones Activas',
       value: voting_stats.active_votings,
       icon: ClipboardDocumentCheckIcon,
-      color: 'bg-orange-500',
+      color: 'bg-gray-100',
     },
     {
       label: 'Votaciones Completadas',
       value: voting_stats.completed_votings,
       icon: CheckCircleIcon,
-      color: 'bg-blue-600',
+      color: 'bg-gray-100',
     },
     {
       label: 'Listas Activas',
       value: attendance_stats.active_lists,
       icon: ListBulletIcon,
-      color: 'bg-green-600',
+      color: 'bg-gray-100',
     },
     {
       label: 'Total de Votos',
       value: voting_stats.total_votes,
       icon: ChartBarIcon,
-      color: 'bg-indigo-500',
+      color: 'bg-gray-100',
     },
   ];
 
@@ -126,7 +126,7 @@ export function ConsolidatedDashboard({
               <div key={index} className="bg-white rounded-lg shadow-sm p-3 border border-gray-200 flex-1 min-w-[140px]">
                 <div className="flex items-center gap-2">
                   <div className={`${stat.color} w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0`}>
-                    <Icon className="w-4 h-4 text-white" />
+                    <Icon className="w-4 h-4 text-gray-600" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-gray-500 mb-0.5 leading-tight">{stat.label}</p>
@@ -271,8 +271,8 @@ export function ConsolidatedDashboard({
         {/* Quejas - Pendiente */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="bg-red-100 rounded-lg p-2">
-              <ExclamationTriangleIcon className="w-6 h-6 text-red-600" />
+            <div className="bg-gray-100 rounded-lg p-2">
+              <ExclamationTriangleIcon className="w-6 h-6 text-gray-600" />
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900">Quejas</h3>
@@ -288,8 +288,8 @@ export function ConsolidatedDashboard({
         {/* Reuniones y Asambleas - Pendiente */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="bg-blue-100 rounded-lg p-2">
-              <CalendarIcon className="w-6 h-6 text-blue-600" />
+            <div className="bg-gray-100 rounded-lg p-2">
+              <CalendarIcon className="w-6 h-6 text-gray-600" />
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900">Reuniones y Asambleas</h3>
@@ -305,8 +305,8 @@ export function ConsolidatedDashboard({
         {/* Comunicaciones - Pendiente */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="bg-green-100 rounded-lg p-2">
-              <ChatBubbleLeftRightIcon className="w-6 h-6 text-green-600" />
+            <div className="bg-gray-100 rounded-lg p-2">
+              <ChatBubbleLeftRightIcon className="w-6 h-6 text-gray-600" />
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900">Comunicaciones</h3>

@@ -8,6 +8,7 @@
 import React, { ReactNode } from 'react';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { DynamicFilters, FilterOption, ActiveFilter } from './dynamic-filters';
+import { RupuLoader } from './rupu-loader';
 
 export interface TableColumn<T = Record<string, unknown>> {
   key: string;
@@ -307,7 +308,7 @@ export function Table<T = Record<string, unknown>>({
               <tr>
                 <td colSpan={columns.length} className="px-6 py-12 text-center text-gray-500">
                   <div className="flex justify-center items-center gap-3">
-                    <div className="spinner"></div>
+                    <RupuLoader size={64} />
                     <span>Cargando...</span>
                   </div>
                 </td>

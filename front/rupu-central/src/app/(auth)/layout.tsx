@@ -8,8 +8,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { TokenStorage } from '@shared/config';
-import { Sidebar, Spinner } from '@shared/ui';
+import { Sidebar, Spinner, Alert } from '@shared/ui';
 import { BusinessSelector } from '@/services/auth/businesses/ui';
+import { usePermissions } from '@/services/auth/permissions/ui/hooks/use-permissions';
 
 export default function AuthLayout({
   children,
@@ -22,6 +23,7 @@ export default function AuthLayout({
   const [loading, setLoading] = useState(true);
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [showBusinessSelector, setShowBusinessSelector] = useState(false);
+  const { error: permissionsError } = usePermissions();
 
   // Páginas que NO deben tener sidebar (login)
   const isLoginPage = pathname === '/login';
@@ -181,6 +183,14 @@ export default function AuthLayout({
         }}
         onMouseEnter={() => setSidebarExpanded(false)}
       >
+        {/* Mostrar error de permisos si existe */}
+        {permissionsError && (
+          <div className="p-4">
+            <Alert type="error" onClose={() => {}}>
+              {permissionsError}
+            </Alert>
+          </div>
+        )}
         {children}
       </main>
     </div>

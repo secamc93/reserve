@@ -112,6 +112,8 @@ export function UsersTable({
   const [generatingPassword, setGeneratingPassword] = useState(false);
   const [passwordCopied, setPasswordCopied] = useState(false);
   const [emailCopied, setEmailCopied] = useState(false);
+  const [showConfirmPasswordModal, setShowConfirmPasswordModal] = useState(false);
+  const [userToGeneratePassword, setUserToGeneratePassword] = useState<User | null>(null);
 
   const handleDelete = async () => {
     if (!selectedUser) return;
@@ -145,7 +147,19 @@ export function UsersTable({
     }
   };
 
-  const handleGeneratePassword = async (user: User) => {
+  const handleOpenConfirmPasswordModal = (user: User) => {
+    setUserToGeneratePassword(user);
+    setShowConfirmPasswordModal(true);
+  };
+
+  const handleCloseConfirmPasswordModal = () => {
+    setShowConfirmPasswordModal(false);
+    setUserToGeneratePassword(null);
+  };
+
+  const handleGeneratePassword = async () => {
+    if (!userToGeneratePassword) return;
+    
     const token = TokenStorage.getBusinessToken();
     if (!token) {
       console.error('No hay token de autenticación disponible');
@@ -155,11 +169,12 @@ export function UsersTable({
     setGeneratingPassword(true);
     setPasswordCopied(false);
     setEmailCopied(false);
+    setShowConfirmPasswordModal(false);
     
     try {
       const result = await generatePasswordAction({
         token,
-        user_id: user.id,
+        user_id: userToGeneratePassword.id,
       });
       
       if (result.success && result.data) {
@@ -174,6 +189,7 @@ export function UsersTable({
       alert('Error al generar contraseña');
     } finally {
       setGeneratingPassword(false);
+      setUserToGeneratePassword(null);
     }
   };
 
@@ -348,7 +364,7 @@ export function UsersTable({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => handleGeneratePassword(user)}
+            onClick={() => handleOpenConfirmPasswordModal(user)}
             disabled={generatingPassword}
             className="p-2 hover:bg-yellow-50 hover:text-yellow-600 disabled:opacity-50"
             title="Generar nueva contraseña"
@@ -403,6 +419,18 @@ export function UsersTable({
         cancelText="Cancelar"
       />
 
+      {/* Modal de confirmación para generar contraseña */}
+      <ConfirmModal
+        isOpen={showConfirmPasswordModal}
+        onClose={handleCloseConfirmPasswordModal}
+        onConfirm={handleGeneratePassword}
+        title="Generar Nueva Contraseña"
+        message={`¿Estás seguro de que quieres generar una nueva contraseña para el usuario "${userToGeneratePassword?.name}" (${userToGeneratePassword?.email})? Esta acción cambiará la contraseña actual y solo podrás ver la nueva contraseña una vez.`}
+        confirmText="Generar Contraseña"
+        cancelText="Cancelar"
+        type="warning"
+      />
+
       {/* Modal de detalles del usuario */}
       <UserDetailModal
         isOpen={isViewModalOpen || false}
@@ -418,72 +446,55 @@ export function UsersTable({
         size="md"
       >
         <div className="space-y-6">
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <p className="text-sm text-green-800 mb-4">
-              {generatedPasswordData?.message || 'Nueva contraseña generada exitosamente. Guarda esta información de forma segura.'}
-            </p>
-            
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Email:</label>
-                <div className="flex items-center space-x-2">
-                  <code className="flex-1 px-3 py-2 bg-white border border-gray-300 rounded text-sm font-mono text-gray-900">
-                    {generatedPasswordData?.email || 'N/A'}
-                  </code>
-                  <button
-                    type="button"
-                    onClick={handleCopyEmail}
-                    className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
-                    title="Copiar email"
-                  >
-                    {emailCopied ? (
-                      <CheckIcon className="w-5 h-5 text-green-600" />
-                    ) : (
-                      <DocumentDuplicateIcon className="w-5 h-5" />
-                    )}
-                  </button>
-                </div>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Email:</label>
+              <div className="flex items-center space-x-2">
+                <code className="flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm font-mono text-gray-900">
+                  {generatedPasswordData?.email || 'N/A'}
+                </code>
+                <button
+                  type="button"
+                  onClick={handleCopyEmail}
+                  className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                  title="Copiar email"
+                >
+                  {emailCopied ? (
+                    <CheckIcon className="w-5 h-5 text-gray-600" />
+                  ) : (
+                    <DocumentDuplicateIcon className="w-5 h-5" />
+                  )}
+                </button>
               </div>
+            </div>
 
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Contraseña generada <span className="text-red-600">(solo se muestra una vez)</span>:
-                </label>
-                <div className="flex items-center space-x-2">
-                  <code className="flex-1 px-3 py-2 bg-yellow-50 border-2 border-yellow-400 rounded text-sm font-mono font-bold text-gray-900">
-                    {generatedPasswordData?.password || 'N/A'}
-                  </code>
-                  <button
-                    type="button"
-                    onClick={handleCopyPassword}
-                    className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
-                    title="Copiar contraseña"
-                  >
-                    {passwordCopied ? (
-                      <CheckIcon className="w-5 h-5 text-green-600" />
-                    ) : (
-                      <DocumentDuplicateIcon className="w-5 h-5" />
-                    )}
-                  </button>
-                </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Contraseña generada:
+              </label>
+              <div className="flex items-center space-x-2">
+                <code className="flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm font-mono text-gray-900">
+                  {generatedPasswordData?.password || 'N/A'}
+                </code>
+                <button
+                  type="button"
+                  onClick={handleCopyPassword}
+                  className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                  title="Copiar contraseña"
+                >
+                  {passwordCopied ? (
+                    <CheckIcon className="w-5 h-5 text-gray-600" />
+                  ) : (
+                    <DocumentDuplicateIcon className="w-5 h-5" />
+                  )}
+                </button>
               </div>
             </div>
           </div>
 
-          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-yellow-700">
-                  <strong>Importante:</strong> Esta contraseña solo se muestra una vez. Asegúrate de copiarla y guardarla de forma segura antes de cerrar este mensaje.
-                </p>
-              </div>
-            </div>
-          </div>
+          <p className="text-sm text-gray-600">
+            Esta contraseña solo se muestra una vez. Asegúrate de copiarla y guardarla de forma segura.
+          </p>
 
           <div className="flex justify-end pt-4 border-t border-gray-200">
             <Button

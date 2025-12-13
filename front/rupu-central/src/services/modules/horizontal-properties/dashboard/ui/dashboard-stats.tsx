@@ -17,25 +17,25 @@ export function DashboardStats({ data }: DashboardStatsProps) {
     { 
       label: 'Propiedades Horizontales', 
       value: summary.total_horizontal_properties, 
-      color: 'bg-blue-500',
+      color: 'bg-gray-100',
       icon: '🏢'
     },
     { 
       label: 'Unidades', 
       value: summary.total_units, 
-      color: 'bg-green-500',
+      color: 'bg-gray-100',
       icon: '🏠'
     },
     { 
       label: 'Residentes', 
       value: summary.total_residents, 
-      color: 'bg-purple-500',
+      color: 'bg-gray-100',
       icon: '👥'
     },
     { 
       label: 'Grupos de Votación', 
       value: summary.total_voting_groups, 
-      color: 'bg-orange-500',
+      color: 'bg-gray-100',
       icon: '🗳️'
     },
   ];
@@ -44,25 +44,25 @@ export function DashboardStats({ data }: DashboardStatsProps) {
     { 
       label: 'Votaciones Activas', 
       value: voting_stats.active_votings, 
-      color: 'bg-green-500',
+      color: 'bg-gray-100',
       icon: '✅'
     },
     { 
       label: 'Votaciones Completadas', 
       value: voting_stats.completed_votings, 
-      color: 'bg-blue-500',
+      color: 'bg-gray-100',
       icon: '✔️'
     },
     { 
       label: 'Votaciones Pendientes', 
       value: voting_stats.pending_votings, 
-      color: 'bg-yellow-500',
+      color: 'bg-gray-100',
       icon: '⏳'
     },
     { 
       label: 'Total de Votos', 
       value: voting_stats.total_votes, 
-      color: 'bg-purple-500',
+      color: 'bg-gray-100',
       icon: '📊'
     },
   ];
@@ -71,25 +71,25 @@ export function DashboardStats({ data }: DashboardStatsProps) {
     { 
       label: 'Listas Activas', 
       value: attendance_stats.active_lists, 
-      color: 'bg-green-500',
+      color: 'bg-gray-100',
       icon: '📋'
     },
     { 
       label: 'Total de Registros', 
       value: attendance_stats.total_records, 
-      color: 'bg-blue-500',
+      color: 'bg-gray-100',
       icon: '📝'
     },
     { 
       label: 'Asistencias Confirmadas', 
       value: attendance_stats.attended_records, 
-      color: 'bg-green-600',
+      color: 'bg-gray-100',
       icon: '✓'
     },
     { 
       label: 'Apoderados', 
       value: attendance_stats.total_proxies, 
-      color: 'bg-indigo-500',
+      color: 'bg-gray-100',
       icon: '👤'
     },
   ];
@@ -103,7 +103,7 @@ export function DashboardStats({ data }: DashboardStatsProps) {
         <div key={index} className="bg-white rounded-lg shadow-sm p-3 border border-gray-200">
           <div className="flex items-center gap-2">
             <div className={`${stat.color} w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0`}>
-              <span className="text-white text-sm">{stat.icon}</span>
+              <span className="text-gray-600 text-sm">{stat.icon}</span>
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-gray-700 text-xs font-medium mb-0.5 truncate">{stat.label}</h3>

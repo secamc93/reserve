@@ -6,6 +6,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { RupuLoader } from '@shared/ui/rupu-loader';
 import {
   UserIcon,
   EnvelopeIcon,
@@ -473,7 +474,9 @@ export function UserForm({ isOpen, onClose, onSuccess, user, mode }: UserFormPro
             >
               {loading ? (
                 <>
-                  <div className="spinner w-4 h-4 mr-2"></div>
+                  <span className="mr-2 inline-flex items-center">
+                    <RupuLoader size={24} />
+                  </span>
                   {mode === 'create' ? 'Creando...' : 'Actualizando...'}
                 </>
               ) : (

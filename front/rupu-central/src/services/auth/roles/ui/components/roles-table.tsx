@@ -403,9 +403,8 @@ export function RolesTable({ token }: RolesTableProps) {
     onAddFilter: handleAddFilter,
     onRemoveFilter: handleRemoveFilter,
     headerActions: (
-      <Link href="/iam/roles/create" className="btn btn-primary">
-        <PlusIcon className="w-4 h-4 mr-2" />
-        Crear Rol
+      <Link href="/iam/roles/create" className="btn btn-primary" title="Crear Rol">
+        <PlusIcon className="w-5 h-5" />
       </Link>
     ),
   };

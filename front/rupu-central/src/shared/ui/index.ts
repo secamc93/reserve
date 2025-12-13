@@ -12,6 +12,7 @@ export * from './form-modal';
 export * from './iam-navigation';
 export * from './input';
 export * from './modal';
+export * from './rupu-loader';
 export * from './select';
 export * from './sidebar';
 export * from './spinner';

@@ -165,9 +165,8 @@ export function ActionsTable({ token, onEdit, onCreate }: ActionsTableProps) {
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="text-lg font-semibold">Acciones del Sistema</h3>
                         {onCreate && (
-                            <Button onClick={onCreate} className="btn-primary">
-                                <PlusIcon className="w-4 h-4 mr-2" />
-                                Nueva Acción
+                            <Button onClick={onCreate} className="btn-primary" title="Nueva Acción">
+                                <PlusIcon className="w-5 h-5" />
                             </Button>
                         )}
                     </div>

@@ -4,7 +4,6 @@
 
 'use client';
 
-import Link from 'next/link';
 import { 
   UsersIcon, 
   ShieldCheckIcon, 
@@ -54,32 +53,6 @@ export function DashboardPage() {
       {/* Contenido principal */}
       <div className="w-full">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12 max-w-7xl">
-          {/* Quick Actions */}
-          <div className="mb-6 sm:mb-8">
-            <div className="flex flex-wrap gap-3 sm:gap-4">
-              <Link 
-                href="/iam/users/create" 
-                className="btn btn-primary w-full sm:w-auto justify-center"
-              >
-                Crear Nuevo Usuario
-              </Link>
-              <Link 
-                href="/iam/roles/create" 
-                className="btn w-full sm:w-auto justify-center"
-                style={{ backgroundColor: '#10b981', color: '#ffffff' }}
-              >
-                Crear Nuevo Rol
-              </Link>
-              <Link 
-                href="/iam/resources/create" 
-                className="btn w-full sm:w-auto justify-center"
-                style={{ backgroundColor: '#f59e0b', color: '#ffffff' }}
-              >
-                Crear Nuevo Recurso
-              </Link>
-            </div>
-          </div>
-
           {/* Tabla de Resumen */}
           <div className="mb-6 sm:mb-8">
             <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
@@ -95,7 +68,7 @@ export function DashboardPage() {
                     <tr className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="py-3 px-3">
                         <div className="flex items-center gap-2">
-                          <UsersIcon className="h-4 w-4 text-blue-500" />
+                          <UsersIcon className="h-4 w-4 text-gray-400" />
                           <span className="text-sm font-medium text-gray-900">Usuarios</span>
                         </div>
                       </td>
@@ -119,7 +92,7 @@ export function DashboardPage() {
                     <tr className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="py-3 px-3">
                         <div className="flex items-center gap-2">
-                          <ShieldCheckIcon className="h-4 w-4 text-green-500" />
+                          <ShieldCheckIcon className="h-4 w-4 text-gray-400" />
                           <span className="text-sm font-medium text-gray-900">Roles</span>
                         </div>
                       </td>
@@ -137,7 +110,7 @@ export function DashboardPage() {
                     <tr className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="py-3 px-3">
                         <div className="flex items-center gap-2">
-                          <KeyIcon className="h-4 w-4 text-purple-500" />
+                          <KeyIcon className="h-4 w-4 text-gray-400" />
                           <span className="text-sm font-medium text-gray-900">Permisos</span>
                         </div>
                       </td>
@@ -155,7 +128,7 @@ export function DashboardPage() {
                     <tr className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="py-3 px-3">
                         <div className="flex items-center gap-2">
-                          <CubeTransparentIcon className="h-4 w-4 text-orange-500" />
+                          <CubeTransparentIcon className="h-4 w-4 text-gray-400" />
                           <span className="text-sm font-medium text-gray-900">Recursos</span>
                         </div>
                       </td>
@@ -173,7 +146,7 @@ export function DashboardPage() {
                     <tr className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="py-3 px-3">
                         <div className="flex items-center gap-2">
-                          <BuildingOfficeIcon className="h-4 w-4 text-indigo-500" />
+                          <BuildingOfficeIcon className="h-4 w-4 text-gray-400" />
                           <span className="text-sm font-medium text-gray-900">Negocios</span>
                         </div>
                       </td>
@@ -191,7 +164,7 @@ export function DashboardPage() {
                     <tr className="hover:bg-gray-50">
                       <td className="py-3 px-3">
                         <div className="flex items-center gap-2">
-                          <TagIcon className="h-4 w-4 text-cyan-500" />
+                          <TagIcon className="h-4 w-4 text-gray-400" />
                           <span className="text-sm font-medium text-gray-900">Tipos de Negocio</span>
                         </div>
                       </td>

@@ -6,6 +6,7 @@ import { useAuthSimple as useAuth } from '@/services/auth/users/ui/hooks';
 import { Button, Input, Modal, Select } from '@shared/ui';
 import { CubeTransparentIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useEffect } from 'react';
+import { RupuLoader } from '@/shared/ui/rupu-loader';
 import { useBusinessTypes } from '@/services/auth/business-types/ui/hooks';
 
 export default function CreateResourcePage() {
@@ -21,7 +22,10 @@ export default function CreateResourcePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Obtener tipos de negocio para el filtro
-  const { businessTypes } = useBusinessTypes();
+  const { allBusinessTypes } = useBusinessTypes({
+    autoLoad: true,
+    pageSize: 1000, // Obtener todos los tipos sin paginación
+  });
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -32,7 +36,7 @@ export default function CreateResourcePage() {
   if (loading || !isAuthenticated) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <div className="loading loading-spinner loading-lg"></div>
+        <RupuLoader size={128} />
       </div>
     );
   }
@@ -93,8 +97,8 @@ export default function CreateResourcePage() {
   };
 
   const businessTypeOptions = [
-    { value: '', label: 'Todos' },
-    ...(businessTypes?.map((bt) => ({
+    { value: '', label: 'Genérico' },
+    ...(allBusinessTypes?.map((bt) => ({
       value: bt.id.toString(),
       label: `${bt.icon} ${bt.name}`
     })) || []),

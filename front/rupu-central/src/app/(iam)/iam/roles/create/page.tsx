@@ -3,13 +3,15 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthSimple as useAuth } from '@/services/auth/users/ui/hooks';
-import { Button, Input, Select } from '@shared/ui';
-import { ShieldCheckIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { Button, Input, Select, Modal } from '@shared/ui';
+import { ShieldCheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useEffect } from 'react';
+import { RupuLoader } from '@/shared/ui/rupu-loader';
 
 export default function CreateRolePage() {
   const { isAuthenticated, loading, token } = useAuth();
   const router = useRouter();
+  const [isOpen, setIsOpen] = useState(true);
   const [formData, setFormData] = useState({
     name: '',
     code: '',
@@ -29,7 +31,7 @@ export default function CreateRolePage() {
   if (loading || !isAuthenticated) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <div className="loading loading-spinner loading-lg"></div>
+        <RupuLoader size={128} />
       </div>
     );
   }
@@ -104,128 +106,105 @@ export default function CreateRolePage() {
   ];
 
   return (
-    <div className="p-8 w-full">
-      <div className="w-full">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => router.back()}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeftIcon className="w-4 h-4" />
-              Volver
-            </Button>
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-            <ShieldCheckIcon className="w-8 h-8 mr-2" />
-            Crear Rol
-          </h1>
-          <p className="mt-2 text-gray-600">
-            Define un nuevo rol con sus permisos y configuraciones.
-          </p>
+    <Modal
+      isOpen={isOpen}
+      onClose={() => {
+        setIsOpen(false);
+        router.back();
+      }}
+      title="Crear Rol"
+      size="lg"
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Nombre */}
+        <Input
+          label="Nombre del rol"
+          name="name"
+          value={formData.name}
+          onChange={handleInputChange}
+          error={errors.name}
+          placeholder="Ej: Administrador de Ventas"
+          required
+        />
+
+        {/* Código */}
+        <Input
+          label="Código del rol"
+          name="code"
+          value={formData.code}
+          onChange={handleInputChange}
+          error={errors.code}
+          placeholder="Ej: ADMIN_SALES"
+          required
+        />
+
+        {/* Descripción */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Descripción
+          </label>
+          <textarea
+            name="description"
+            value={formData.description}
+            onChange={handleInputChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white min-h-[100px] resize-none"
+            placeholder="Describe las responsabilidades y permisos de este rol..."
+            required
+          />
+          {errors.description && (
+            <p className="text-sm text-red-500 mt-1">{errors.description}</p>
+          )}
         </div>
 
-        {/* Formulario */}
-        <div className="max-w-2xl">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="card">
-              <div className="card-body">
-                <h2 className="text-xl font-semibold mb-6">Información del Rol</h2>
+        {/* Nivel */}
+        <Select
+          label="Nivel del rol"
+          name="level"
+          value={formData.level}
+          onChange={handleInputChange}
+          error={errors.level}
+          options={levelOptions}
+          required
+        />
 
-                <div className="space-y-6">
-                  {/* Nombre */}
-                  <Input
-                    label="Nombre del rol"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    error={errors.name}
-                    placeholder="Ej: Administrador de Ventas"
-                    required
-                  />
-
-                  {/* Código */}
-                  <Input
-                    label="Código del rol"
-                    name="code"
-                    value={formData.code}
-                    onChange={handleInputChange}
-                    error={errors.code}
-                    placeholder="Ej: ADMIN_SALES"
-                    required
-                  />
-
-                  {/* Descripción */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Descripción
-                    </label>
-                    <textarea
-                      name="description"
-                      value={formData.description}
-                      onChange={handleInputChange}
-                      className="input min-h-[100px] resize-none"
-                      placeholder="Describe las responsabilidades y permisos de este rol..."
-                      required
-                    />
-                    {errors.description && (
-                      <p className="text-sm text-red-500 mt-1">{errors.description}</p>
-                    )}
-                  </div>
-
-                  {/* Nivel */}
-                  <Select
-                    label="Nivel del rol"
-                    name="level"
-                    value={formData.level}
-                    onChange={handleInputChange}
-                    error={errors.level}
-                    options={levelOptions}
-                    required
-                  />
-
-                  {/* Es sistema */}
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      name="isSystem"
-                      checked={formData.isSystem}
-                      onChange={handleInputChange}
-                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <label className="ml-2 text-sm text-gray-700">
-                      Rol del sistema (no se puede eliminar)
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Botones */}
-            <div className="flex gap-4 justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.back()}
-                disabled={isSubmitting}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                loading={isSubmitting}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Creando...' : 'Crear Rol'}
-              </Button>
-            </div>
-          </form>
+        {/* Es sistema */}
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            name="isSystem"
+            checked={formData.isSystem}
+            onChange={handleInputChange}
+            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+          />
+          <label className="ml-2 text-sm text-gray-700">
+            Rol del sistema (no se puede eliminar)
+          </label>
         </div>
-      </div>
-    </div>
+
+        {/* Botones */}
+        <div className="flex gap-3 justify-end pt-4 border-t">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setIsOpen(false);
+              router.back();
+            }}
+            disabled={isSubmitting}
+          >
+            <XMarkIcon className="w-4 h-4 mr-2" />
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            variant="primary"
+            loading={isSubmitting}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Creando...' : 'Crear Rol'}
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 }

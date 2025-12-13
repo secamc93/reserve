@@ -3,8 +3,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { getPermissionsListAction, deletePermissionAction } from '../../infrastructure/actions';
 import { Table, TableColumn, Badge, Button, ConfirmModal, PaginationProps, TableFiltersProps, FilterOption, ActiveFilter } from '@shared/ui';
-import { PencilIcon, TrashIcon, EyeIcon } from '@heroicons/react/24/outline';
+import { PencilIcon, TrashIcon, EyeIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { EditPermissionModal } from './edit-permission-modal';
+import Link from 'next/link';
 
 interface PermissionsTableProps {
   token: string;
@@ -340,6 +341,11 @@ export function PermissionsTable({ token }: PermissionsTableProps) {
     activeFilters,
     onAddFilter: handleAddFilter,
     onRemoveFilter: handleRemoveFilter,
+    headerActions: (
+      <Link href="/iam/permissions/create" className="btn btn-primary" title="Crear Permiso">
+        <PlusIcon className="w-5 h-5" />
+      </Link>
+    ),
   };
 
   if (error) {

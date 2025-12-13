@@ -130,16 +130,6 @@ export default function BusinessTypesPage() {
   return (
     <div className="p-8 w-full">
       <div className="w-full">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Gestión de Tipos de Negocio
-          </h1>
-          <p className="mt-2 text-gray-600">
-            Administra los tipos de negocio disponibles en el sistema.
-          </p>
-        </div>
-
         {/* Business Types Table con filtros y paginación */}
         <BusinessTypesTable 
           businessTypes={businessTypes} 

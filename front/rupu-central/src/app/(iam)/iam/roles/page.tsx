@@ -6,6 +6,7 @@ import { RolesTable } from '@/services/auth/roles/ui';
 import { useAuthSimple as useAuth } from '@/services/auth/users/ui/hooks';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { RupuLoader } from '@/shared/ui/rupu-loader';
 
 export default function IAMRolesPage() {
   const { isAuthenticated, loading, token } = useAuth();
@@ -20,7 +21,7 @@ export default function IAMRolesPage() {
   if (loading || !isAuthenticated) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <div className="loading loading-spinner loading-lg"></div>
+        <RupuLoader size={128} />
       </div>
     );
   }

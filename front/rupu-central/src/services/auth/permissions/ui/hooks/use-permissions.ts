@@ -35,29 +35,34 @@ export function usePermissions() {
         return;
       }
 
-      // Intentar obtener permisos del cache primero
-      const cachedPermissions = TokenStorage.getUserPermissions();
-      if (cachedPermissions) {
-        setPermissions(cachedPermissions);
-        setLoading(false);
-      }
-
-      // Consultar el endpoint
+      // Consultar el endpoint (siempre consultar para validar estado actual)
       const result = await getPermissionsAction({
         businessId: activeBusiness,
         token: businessToken,
       });
 
       if (result.success && result.data) {
+        // Validar que el usuario tenga recursos y permisos asociados
+        if (!result.data.isSuperAdmin && (!result.data.resources || result.data.resources.length === 0)) {
+          const errorMessage = 'Este usuario no tiene rol asociado o no tiene recursos y permisos asignados. Por favor, contacte al administrador.';
+          setError(errorMessage);
+          setLoading(false);
+          // Limpiar permisos en cache si hay error
+          TokenStorage.removeUserPermissions();
+          return;
+        }
+
         const userPermissions: UserPermissions = {
           isSuperAdmin: result.data.isSuperAdmin,
           roles: result.data.roles,
-          resources: result.data.resources,
+          resources: result.data.resources || [],
         };
         setPermissions(userPermissions);
         TokenStorage.setUserPermissions(userPermissions);
       } else {
         setError(result.error || 'Error al obtener permisos');
+        // Limpiar permisos en cache si hay error
+        TokenStorage.removeUserPermissions();
       }
     } catch (err) {
       console.error('Error cargando permisos:', err);
