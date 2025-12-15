@@ -7,6 +7,7 @@ import 'package:rupu/domain/entities/horizontal_property_voting.dart';
 import 'package:rupu/presentation/widgets/shared/custom_bottom_navigation.dart';
 import '../../presentation/screens/screens.dart';
 import '../../presentation/views/views.dart';
+import '../../presentation/widgets/widgets.dart';
 
 int _calculateIndex(String location) {
   if (location.contains('/perfil')) return 1;
@@ -33,7 +34,7 @@ Widget _guardAccess({
   }
 
   if (home.rolesPermisos.value == null) {
-    return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    return const Scaffold(body: Center(child: RupuLoader()));
   }
 
   final hasAccess = home.canAccessResource(
@@ -63,10 +64,10 @@ HorizontalPropertyVotingGroup? _resolveVotingGroup({
 }
 
 final appRouter = GoRouter(
-  initialLocation: '/login/0',
+  initialLocation: '/splash',
   errorBuilder: (context, state) {
     // Handle navigation errors gracefully (e.g., during deeplink initialization)
-    return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    return const Scaffold(body: Center(child: RupuLoader()));
   },
   routes: [
     // --------------- Shell para /home ---------------
@@ -460,6 +461,13 @@ final appRouter = GoRouter(
     ),
 
     // Redirect de comodín
-    GoRoute(path: '/', redirect: (_, __) => '/login/0'),
+    GoRoute(path: '/', redirect: (_, __) => '/splash'),
+
+    // Splash Screen
+    GoRoute(
+      path: '/splash',
+      name: SplashScreen.name,
+      builder: (context, state) => const SplashScreen(),
+    ),
   ],
 );

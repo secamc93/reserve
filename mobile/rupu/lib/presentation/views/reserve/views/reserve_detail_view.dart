@@ -278,7 +278,7 @@ class ReserveDetailView extends GetView<ReserveDetailController> {
       ),
       body: Obx(() {
         if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: RupuLoader());
         }
 
         final r = controller.reserva.value;

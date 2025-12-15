@@ -3,6 +3,7 @@ import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
+import 'package:rupu/presentation/widgets/shared/rupu_loader.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
@@ -30,7 +31,7 @@ class ClientsView extends StatelessWidget {
         onRefresh: () => controller.cargarClientes(silent: true),
         child: Obx(() {
           if (controller.isLoading.value && controller.clientes.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: RupuLoader());
           }
           final error = controller.errorMessage.value;
           if (error != null && controller.clientes.isEmpty) {

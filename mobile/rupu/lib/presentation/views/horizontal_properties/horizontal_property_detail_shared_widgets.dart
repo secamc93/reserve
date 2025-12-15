@@ -488,7 +488,7 @@ class SummaryHeader extends StatelessWidget {
           const SizedBox(
             width: 26,
             height: 26,
-            child: CircularProgressIndicator(strokeWidth: 2),
+            child: RupuLoader.small(),
           )
         else
           IconButton(

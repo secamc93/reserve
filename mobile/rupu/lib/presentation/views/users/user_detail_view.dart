@@ -7,6 +7,7 @@ import 'package:rupu/config/helpers/dialog_helper.dart';
 import 'package:rupu/config/helpers/responsive_helper.dart';
 import 'widgets/user_detail_widgets.dart';
 import 'widgets/user_detail_avatar_section.dart';
+import 'package:rupu/presentation/widgets/widgets.dart';
 
 class UserDetailView extends GetView<UserDetailController> {
   static const name = 'user-detail';
@@ -37,7 +38,7 @@ class UserDetailView extends GetView<UserDetailController> {
       ),
       body: Obx(() {
         if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: RupuLoader());
         }
 
         if (controller.errorMessage.value != null &&
@@ -350,22 +351,7 @@ class UserDetailView extends GetView<UserDetailController> {
                                             elevation: 2,
                                           ),
                                           child: controller.isSaving.value
-                                              ? SizedBox(
-                                                  width: 20,
-                                                  height: 20,
-                                                  child: CircularProgressIndicator(
-                                                    strokeWidth: 2,
-                                                    valueColor:
-                                                        AlwaysStoppedAnimation<
-                                                          Color
-                                                        >(
-                                                          cs.onPrimary
-                                                              .withValues(
-                                                                alpha: 0.7,
-                                                              ),
-                                                        ),
-                                                  ),
-                                                )
+                                              ? const RupuLoader.small()
                                               : Text(
                                                   'Guardar cambios',
                                                   style: tt.titleSmall
@@ -429,7 +415,7 @@ class UserDetailView extends GetView<UserDetailController> {
     );
   }
 
-  Future<bool> _confirmDelete(BuildContext context) async {
+  Future<bool> confirmDelete(BuildContext context) async {
     return await DialogHelper.showBlurredDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
@@ -468,7 +454,7 @@ class UserDetailView extends GetView<UserDetailController> {
     );
   }
 
-  Future<void> _showAssignRoleDialog(BuildContext context) async {
+  Future<void> showAssignRoleDialog(BuildContext context) async {
     controller.businessSearchCtrl.clear();
     controller.searchBusinesses('');
     // Ensure roles are loaded
@@ -550,7 +536,7 @@ class _AssignRoleDialogContentState extends State<_AssignRoleDialogContent> {
                   ),
                   child: Obx(() {
                     if (widget.controller.businessSuggestionsLoading.value) {
-                      return const Center(child: CircularProgressIndicator());
+                      return const Center(child: RupuLoader());
                     }
                     final suggestions = widget.controller.businessSuggestions;
                     if (suggestions.isEmpty) {
@@ -607,7 +593,7 @@ class _AssignRoleDialogContentState extends State<_AssignRoleDialogContent> {
                   ),
                   child: Obx(() {
                     if (widget.controller.rolesLoading.value) {
-                      return const Center(child: CircularProgressIndicator());
+                      return const Center(child: RupuLoader());
                     }
                     final roles = widget.controller.filteredRoles;
                     if (roles.isEmpty) {
@@ -700,14 +686,7 @@ class _AssignRoleDialogContentState extends State<_AssignRoleDialogContent> {
                                 }
                               },
                         child: widget.controller.isAssigningRole.value
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
+                            ? const RupuLoader.small()
                             : const Text('Asignar'),
                       ),
                     ),
@@ -780,7 +759,7 @@ class _BusinessPickerContent extends StatelessWidget {
                     final suggestions = controller.businessSuggestions;
 
                     if (isLoading) {
-                      return const Center(child: CircularProgressIndicator());
+                      return const Center(child: RupuLoader());
                     }
                     if (error != null) {
                       return Center(

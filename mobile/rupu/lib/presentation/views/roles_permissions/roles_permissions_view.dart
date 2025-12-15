@@ -11,6 +11,7 @@ import 'package:rupu/domain/entities/role_action_result.dart';
 import 'package:rupu/domain/infrastructure/repositories/iam_repository_impl.dart';
 import 'package:rupu/presentation/views/roles_permissions/roles_permissions_controller.dart';
 import 'package:rupu/presentation/views/users/widgets/user_detail_widgets.dart';
+import 'package:rupu/presentation/widgets/shared/rupu_loader.dart';
 
 class RolesPermissionsView extends GetView<RolesPermissionsController> {
   static const name = 'roles-permissions';
@@ -160,7 +161,7 @@ class RolesPermissionsView extends GetView<RolesPermissionsController> {
                   sliver: Obx(() {
                     if (controller.isLoading.value) {
                       return const SliverFillRemaining(
-                        child: Center(child: CircularProgressIndicator()),
+                        child: Center(child: RupuLoader()),
                       );
                     }
 
@@ -708,7 +709,8 @@ Future<void> showRoleFormDialog(BuildContext context, {Role? role}) async {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<int>(
-                    initialValue: selectedLevel,
+                    value: selectedLevel,
+                    isExpanded: true,
                     decoration: DesignHelper.inputDecoration(
                       label: 'Nivel del rol',
                       icon: Icons.layers_outlined,
@@ -742,7 +744,8 @@ Future<void> showRoleFormDialog(BuildContext context, {Role? role}) async {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<int>(
-                    initialValue: selectedScope,
+                    value: selectedScope,
+                    isExpanded: true,
                     decoration: DesignHelper.inputDecoration(
                       label: 'Ámbito',
                       icon: Icons.public,
@@ -758,7 +761,8 @@ Future<void> showRoleFormDialog(BuildContext context, {Role? role}) async {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<int?>(
-                    initialValue: selectedBusinessType,
+                    value: selectedBusinessType,
+                    isExpanded: true,
                     decoration: DesignHelper.inputDecoration(
                       label: 'Tipo de negocio',
                       icon: Icons.business,
@@ -1654,7 +1658,7 @@ class RolesPermissionsStandaloneTab
       final totalCount = items.length;
 
       if (isLoading && items.isEmpty) {
-        return const Center(child: CircularProgressIndicator());
+        return const Center(child: RupuLoader());
       }
 
       return RefreshIndicator(
@@ -1674,7 +1678,7 @@ class RolesPermissionsStandaloneTab
                   const SizedBox(
                     width: 18,
                     height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: RupuLoader.small(),
                   ),
               ],
             ),

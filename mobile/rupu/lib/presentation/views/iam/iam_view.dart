@@ -25,6 +25,7 @@ import 'package:rupu/config/helpers/responsive_helper.dart';
 import 'package:rupu/presentation/views/users/user_detail_view.dart';
 import 'package:rupu/presentation/views/users/users_controller.dart';
 import 'package:rupu/presentation/widgets/image_preview_dialog.dart';
+import 'package:rupu/presentation/widgets/shared/rupu_loader.dart';
 
 class IamView extends StatelessWidget {
   final int pageIndex;
@@ -318,7 +319,7 @@ class _IamUsersTab extends GetView<IamUsersController> {
       final users = controller.users;
 
       if (isLoading && users.isEmpty) {
-        return const Center(child: CircularProgressIndicator());
+        return const Center(child: RupuLoader());
       }
 
       final totalCount = controller.pagination.value?.total ?? users.length;
@@ -362,7 +363,7 @@ class _IamUsersTab extends GetView<IamUsersController> {
                         const SizedBox(
                           width: 18,
                           height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: RupuLoader.small(),
                         ),
                     ],
                   ),
@@ -451,7 +452,7 @@ class _IamUsersTab extends GetView<IamUsersController> {
                     ),
                   if (controller.isLoadingMore.value) ...[
                     const SizedBox(height: 16),
-                    const Center(child: CircularProgressIndicator()),
+                    const Center(child: RupuLoader()),
                   ],
                 ],
               ),
@@ -532,7 +533,7 @@ class _IamResourcesTab extends GetView<IamResourcesController> {
       final resources = controller.resources;
 
       if (isLoading && resources.isEmpty) {
-        return const Center(child: CircularProgressIndicator());
+        return const Center(child: RupuLoader());
       }
 
       return RefreshIndicator(
@@ -557,7 +558,7 @@ class _IamResourcesTab extends GetView<IamResourcesController> {
                       const SizedBox(
                         width: 18,
                         height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        child: RupuLoader.small(),
                       ),
                   ],
                 ),
@@ -810,7 +811,7 @@ class _IamBusinessTypesTab extends GetView<IamBusinessTypesController> {
       final types = controller.filteredTypes;
 
       if (isLoading && controller.types.isEmpty) {
-        return const Center(child: CircularProgressIndicator());
+        return const Center(child: RupuLoader());
       }
 
       return RefreshIndicator(
@@ -835,7 +836,7 @@ class _IamBusinessTypesTab extends GetView<IamBusinessTypesController> {
                       const SizedBox(
                         width: 18,
                         height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        child: RupuLoader.small(),
                       ),
                   ],
                 ),
@@ -912,41 +913,43 @@ class _IamBusinessTypesTab extends GetView<IamBusinessTypesController> {
                             style: const TextStyle(fontSize: 24),
                           ),
                         ),
-                        title: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                type.name,
-                                style: tt.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            _IamStatusChip(active: type.isActive),
-                          ],
+                        title: Text(
+                          type.name,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: tt.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const SizedBox(height: 4),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: cs.secondaryContainer.withValues(
-                                  alpha: 0.5,
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 4,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: cs.secondaryContainer.withValues(
+                                      alpha: 0.5,
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    type.code,
+                                    style: tt.labelSmall?.copyWith(
+                                      color: cs.onSecondaryContainer,
+                                      fontFamily: 'monospace',
+                                    ),
+                                  ),
                                 ),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                type.code,
-                                style: tt.labelSmall?.copyWith(
-                                  color: cs.onSecondaryContainer,
-                                  fontFamily: 'monospace',
-                                ),
-                              ),
+                                _IamStatusChip(active: type.isActive),
+                              ],
                             ),
                             const SizedBox(height: 8),
                             Text(
@@ -1095,7 +1098,7 @@ class _IamBusinessesTab extends GetView<IamBusinessesController> {
                 content = const SizedBox(
                   height: 220,
                   width: 420,
-                  child: Center(child: CircularProgressIndicator()),
+                  child: Center(child: RupuLoader()),
                 );
               } else if (error != null) {
                 content = SizedBox(
@@ -1210,7 +1213,7 @@ class _IamBusinessesTab extends GetView<IamBusinessesController> {
       final businesses = controller.businesses;
 
       if (isLoading && businesses.isEmpty) {
-        return const Center(child: CircularProgressIndicator());
+        return const Center(child: RupuLoader());
       }
 
       return RefreshIndicator(
@@ -1235,7 +1238,7 @@ class _IamBusinessesTab extends GetView<IamBusinessesController> {
                       const SizedBox(
                         width: 18,
                         height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        child: RupuLoader.small(),
                       ),
                   ],
                 ),
@@ -2583,7 +2586,7 @@ Future<void> showBusinessTypeFormDialog(
                     ? const SizedBox(
                         width: 18,
                         height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        child: RupuLoader.small(),
                       )
                     : const Text('Guardar'),
               ),
@@ -2681,7 +2684,7 @@ Future<void> showGeneratePasswordDialog(
   showDialog(
     context: context,
     barrierDismissible: false,
-    builder: (ctx) => const Center(child: CircularProgressIndicator()),
+    builder: (ctx) => const Center(child: RupuLoader()),
   );
 
   try {
@@ -2882,7 +2885,7 @@ Future<void> showAssignRolesDialog(BuildContext context, IamUser user) async {
   showDialog(
     context: context,
     barrierDismissible: false,
-    builder: (ctx) => const Center(child: CircularProgressIndicator()),
+    builder: (ctx) => const Center(child: RupuLoader()),
   );
 
   try {
@@ -3306,8 +3309,7 @@ class _AssignRolesContent extends StatelessWidget {
                         showDialog(
                           context: context,
                           barrierDismissible: false,
-                          builder: (ctx) =>
-                              const Center(child: CircularProgressIndicator()),
+                          builder: (ctx) => const Center(child: RupuLoader()),
                         );
 
                         try {

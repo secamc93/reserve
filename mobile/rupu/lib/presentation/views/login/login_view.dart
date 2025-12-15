@@ -1,6 +1,8 @@
 // presentation/views/login/login_view.dart
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:lottie/lottie.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:local_auth/local_auth.dart';
@@ -102,13 +104,13 @@ class _MobileLayout extends GetView<LoginController> {
                                   );
                                 },
                                 child: const CustomLogo(
-                                  height: 80,
+                                  height: 170,
                                   imagePath: "assets/images/logorufu.png",
                                 ),
                               ),
                       ),
 
-                      SizedBox(height: isKeyboardVisible ? 16 : 48),
+                      SizedBox(height: isKeyboardVisible ? 6 : 20),
 
                       // Login Form Card
                       _LoginFormCard(pageIndex: pageIndex),
@@ -379,10 +381,17 @@ class _LoginFormCard extends GetView<LoginController> {
                       if (!showBiometric) {
                         // Submit button without biometric option
                         return controller.isFormLoading.value
-                            ? const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 12),
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 3,
+                            ? Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                child: SizedBox(
+                                  width: 60,
+                                  height: 60,
+                                  child: Lottie.asset(
+                                    'assets/animation/loader/rupu_loader.json',
+                                    fit: BoxFit.contain,
+                                  ),
                                 ),
                               )
                             : CustomButton(
@@ -400,10 +409,17 @@ class _LoginFormCard extends GetView<LoginController> {
                         children: [
                           // Submit button with email/password
                           controller.isFormLoading.value
-                              ? const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 12),
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 3,
+                              ? Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
+                                  child: SizedBox(
+                                    width: 60,
+                                    height: 60,
+                                    child: Lottie.asset(
+                                      'assets/animation/loader/rupu_loader.json',
+                                      fit: BoxFit.contain,
+                                    ),
                                   ),
                                 )
                               : CustomButton(
@@ -893,14 +909,19 @@ class _BiometricButtonState extends State<_BiometricButton>
     super.dispose();
   }
 
-  IconData _getBiometricIcon() {
+  Widget _getBiometricIcon(Color color) {
     // Usar icono específico por plataforma para mejor experiencia nativa
     if (Platform.isIOS) {
-      // En iOS, siempre mostrar Face ID ya que es lo más común
-      return Icons.face_outlined;
+      // En iOS, usar el SVG de Face ID para una experiencia más nativa
+      return SvgPicture.asset(
+        'assets/images/svg/face_id.svg',
+        width: 28,
+        height: 28,
+        colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+      );
     } else {
       // En Android, mostrar huella digital
-      return Icons.fingerprint_outlined;
+      return Icon(Icons.fingerprint_outlined, color: color, size: 28);
     }
   }
 
@@ -910,9 +931,18 @@ class _BiometricButtonState extends State<_BiometricButton>
     final tt = Theme.of(context).textTheme;
 
     if (widget.isLoading) {
-      return const SizedBox(
+      return SizedBox(
         height: 72,
-        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+        child: Center(
+          child: SizedBox(
+            width: 60,
+            height: 60,
+            child: Lottie.asset(
+              'assets/animation/loader/rupu_loader.json',
+              fit: BoxFit.contain,
+            ),
+          ),
+        ),
       );
     }
 
@@ -960,7 +990,7 @@ class _BiometricButtonState extends State<_BiometricButton>
                     color: cs.primary.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(_getBiometricIcon(), color: cs.primary, size: 28),
+                  child: _getBiometricIcon(cs.primary),
                 ),
                 const SizedBox(width: 16),
                 Column(

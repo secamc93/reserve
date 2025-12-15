@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:rupu/presentation/views/horizontal_properties/widgets/vote_creation_sheet.dart';
+import 'package:rupu/presentation/widgets/shared/rupu_loader.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
 import 'package:rupu/domain/entities/horizontal_property_voting.dart';
@@ -110,7 +111,7 @@ class VotingLiveView extends GetView<VotingLiveController> {
         final units = controller.filteredUnits;
 
         if (controller.isPriming.value) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: RupuLoader());
         }
 
         if (controller.errorMessage.value != null) {
@@ -717,7 +718,7 @@ class _UnitCard extends StatelessWidget {
                     child: SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: RupuLoader.small(),
                     ),
                   ),
                 ),

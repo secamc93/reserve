@@ -19,7 +19,7 @@ class ChangePasswordDatasourceImpl extends CambiarContrasenasDatasource {
     );
     try {
       final response = await _dio.post(
-        '/change-password',
+        '/auth/change-password',
         data: {
           'current_password': currentPassword,
           'new_password': newPassword,

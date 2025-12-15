@@ -27,32 +27,53 @@ class CustomBottomNavigation extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
 
     final items = const <_NavItem>[
-      _NavItem(icon: Icons.home_max, label: 'Inicio'),
-      _NavItem(icon: Icons.person, label: 'Perfil'),
-      _NavItem(icon: Icons.settings_outlined, label: ' Ajustes'),
+      _NavItem(
+        icon: Icons.home_outlined,
+        selectedIcon: Icons.home_rounded,
+        label: 'Inicio',
+      ),
+      _NavItem(
+        icon: Icons.person_outline_rounded,
+        selectedIcon: Icons.person_rounded,
+        label: 'Perfil',
+      ),
+      _NavItem(
+        icon: Icons.settings_outlined,
+        selectedIcon: Icons.settings_rounded,
+        label: 'Ajustes',
+      ),
     ];
 
     return SafeArea(
       minimum: const EdgeInsets.fromLTRB(16, 0, 16, 10),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(24),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
           child: Container(
-            height: 72,
+            height: 76,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(28),
-              color: cs.surface.withValues(alpha: .90),
-              border: Border.all(color: cs.outline.withValues(alpha: .06)),
+              borderRadius: BorderRadius.circular(24),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  cs.surface.withValues(alpha: 0.85),
+                  cs.surface.withValues(alpha: 0.75),
+                ],
+              ),
+              border: Border.all(
+                color: cs.outlineVariant.withValues(alpha: 0.2),
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: cs.shadow.withValues(alpha: .25),
-                  blurRadius: 24,
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
               ],
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: List.generate(items.length, (i) {
@@ -61,9 +82,6 @@ class CustomBottomNavigation extends StatelessWidget {
                 return _NavButton(
                   item: it,
                   selected: selected,
-                  activeColor: cs.primary,
-                  inactiveColor: cs.onSurfaceVariant,
-                  accentColor: cs.primary,
                   onTap: () => _onItemTapped(context, i),
                 );
               }),
@@ -76,8 +94,13 @@ class CustomBottomNavigation extends StatelessWidget {
 }
 
 class _NavItem {
-  const _NavItem({required this.icon, required this.label});
+  const _NavItem({
+    required this.icon,
+    required this.selectedIcon,
+    required this.label,
+  });
   final IconData icon;
+  final IconData selectedIcon;
   final String label;
 }
 
@@ -86,46 +109,53 @@ class _NavButton extends StatelessWidget {
     required this.item,
     required this.selected,
     required this.onTap,
-    required this.activeColor,
-    required this.inactiveColor,
-    required this.accentColor,
   });
 
   final _NavItem item;
   final bool selected;
   final VoidCallback onTap;
-  final Color activeColor;
-  final Color inactiveColor;
-  final Color accentColor;
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? activeColor : inactiveColor;
+    final cs = Theme.of(context).colorScheme;
+    final color = selected ? cs.primary : cs.onSurfaceVariant;
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      splashColor: accentColor.withValues(alpha: .06),
-      highlightColor: accentColor.withValues(alpha: .04),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      borderRadius: BorderRadius.circular(16),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutQuint,
+        padding: EdgeInsets.symmetric(
+          horizontal: selected ? 20 : 16,
+          vertical: 8,
+        ),
+        decoration: BoxDecoration(
+          color: selected
+              ? cs.primary.withValues(alpha: 0.1)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              item.icon,
+              selected ? item.selectedIcon : item.icon,
               color: color,
-              size: selected ? 26 : 24, // sin barrita; sutil énfasis con tamaño
+              size: 26,
             ),
-            const SizedBox(height: 6),
-            Text(
-              item.label,
+            const SizedBox(height: 4),
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 200),
               style: TextStyle(
                 color: color,
                 fontSize: 12,
-                fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-                letterSpacing: .2,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                letterSpacing: 0.3,
+                fontFamily: 'Inter', // Ensuring consistent font if available
               ),
+              child: Text(item.label),
             ),
           ],
         ),

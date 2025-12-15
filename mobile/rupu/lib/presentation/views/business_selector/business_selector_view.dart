@@ -7,6 +7,7 @@ import 'business_selector_controller.dart';
 import 'widgets/business_card.dart';
 import 'widgets/business_header.dart';
 import 'widgets/empty_businesses.dart';
+import 'package:rupu/presentation/widgets/widgets.dart';
 
 class BusinessSelectorView extends GetView<BusinessSelectorController> {
   const BusinessSelectorView({super.key});
@@ -172,11 +173,7 @@ class BusinessSelectorView extends GetView<BusinessSelectorController> {
                         ? () => controller.confirmSelection(context)
                         : null,
                     child: isProcessing
-                        ? const SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
+                        ? const RupuLoader.small()
                         : const Text('Continuar'),
                   ),
                 ),

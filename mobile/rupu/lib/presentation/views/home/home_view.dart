@@ -20,7 +20,7 @@ class HomeView extends GetView<HomeController> {
     return Scaffold(
       body: Obx(() {
         if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: RupuLoader());
         }
 
         final error = controller.errorMessage.value;

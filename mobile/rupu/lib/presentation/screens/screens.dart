@@ -16,3 +16,4 @@ export 'package:rupu/presentation/screens/users_permissions/iam_screen.dart';
 export 'package:rupu/presentation/screens/horizontal_properties/horizontal_properties_screen.dart';
 export 'package:rupu/presentation/screens/horizontal_properties/horizontal_property_detail_screen.dart';
 export 'package:rupu/presentation/screens/horizontal_properties/attendance_management_screen.dart';
+export 'package:rupu/presentation/screens/splash/splash_screen.dart';

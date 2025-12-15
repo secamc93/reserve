@@ -21,7 +21,7 @@ class _DashboardTab extends GetWidget<HorizontalPropertyDashboardController> {
       final votingController = controller.votingController;
 
       if (isLoading && detail == null) {
-        return const Center(child: CircularProgressIndicator());
+        return const Center(child: RupuLoader());
       }
 
       return LayoutBuilder(

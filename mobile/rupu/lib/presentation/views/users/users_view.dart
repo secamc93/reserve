@@ -11,6 +11,7 @@ import 'user_detail_view.dart';
 import 'users_controller.dart';
 import 'widgets/user_list_card.dart';
 import 'widgets/users_filters_panel.dart';
+import 'package:rupu/presentation/widgets/widgets.dart';
 
 class UsersView extends GetView<UsersController> {
   static const name = 'users';
@@ -49,7 +50,7 @@ class UsersView extends GetView<UsersController> {
   Widget _buildBody(BuildContext context) {
     return Obx(() {
       if (controller.isLoading.value && controller.users.isEmpty) {
-        return const Center(child: CircularProgressIndicator());
+        return const Center(child: RupuLoader());
       }
 
       final hasError = controller.errorMessage.value != null;
@@ -115,7 +116,7 @@ class UsersView extends GetView<UsersController> {
                       const SizedBox(
                         width: 24,
                         height: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        child: RupuLoader.small(),
                       ),
                   ],
                 ),

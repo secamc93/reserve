@@ -8,6 +8,7 @@ import 'package:rupu/config/helpers/design_helper.dart' as design;
 import 'package:rupu/config/helpers/responsive_helper.dart';
 
 import 'package:rupu/presentation/widgets/premium_reserve_card.dart';
+import 'package:rupu/presentation/widgets/widgets.dart';
 import '../widgets.dart';
 
 class ReserveView extends GetView<ReserveController> {
@@ -198,16 +199,7 @@ class ReserveView extends GetView<ReserveController> {
                                     }
                                   },
                             child: working
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation(
-                                        Colors.white,
-                                      ),
-                                    ),
-                                  )
+                                ? const RupuLoader.small()
                                 : const Text('Cancelar'),
                           ),
                         ),
@@ -296,7 +288,7 @@ class ReserveView extends GetView<ReserveController> {
               if (controller.isLoading.value)
                 const SliverFillRemaining(
                   hasScrollBody: false,
-                  child: Center(child: CircularProgressIndicator()),
+                  child: Center(child: RupuLoader()),
                 )
               else if (controller.errorMessage.value != null)
                 SliverToBoxAdapter(

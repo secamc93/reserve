@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:rupu/domain/entities/attendance.dart';
+import 'package:rupu/presentation/widgets/shared/rupu_loader.dart';
 
 import 'controllers/attendance_management_controller.dart';
 import 'package:rupu/config/helpers/design_helper.dart';
@@ -37,7 +38,7 @@ class AttendanceManagementView extends GetView<AttendanceManagementController> {
           final loading =
               controller.isLoadingLists.value && controller.lists.isEmpty;
           if (loading) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: RupuLoader());
           }
 
           return RefreshIndicator(
@@ -360,7 +361,7 @@ class _SummaryHighlights extends StatelessWidget {
       final summary = controller.summary.value;
       final isLoading = controller.isLoadingSummary.value && summary == null;
       if (isLoading) {
-        return const Center(child: CircularProgressIndicator());
+        return const Center(child: RupuLoader());
       }
       if (summary == null) {
         return Text(
@@ -1177,7 +1178,7 @@ class _ProxySection extends StatelessWidget {
                   ? const SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: RupuLoader.small(),
                     )
                   : const Icon(Icons.add_outlined),
               label: Text(isProcessing ? 'Procesando…' : 'Agregar apoderado'),
@@ -1400,7 +1401,7 @@ class _AttendanceSummarySheet extends StatelessWidget {
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 700),
                         child: isLoading
-                            ? const Center(child: CircularProgressIndicator())
+                            ? const Center(child: RupuLoader())
                             : summary == null
                             ? const Center(
                                 child: _EmptyState(
@@ -1987,11 +1988,11 @@ class _StatusChip extends StatelessWidget {
 }
 
 // Simple pill chip for quick stats
-class _StatChip extends StatelessWidget {
+class StatChip extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
-  const _StatChip({
+  const StatChip({
     required this.icon,
     required this.label,
     required this.value,
@@ -2163,7 +2164,7 @@ class _AttendanceRecordsContent extends StatelessWidget {
                 if (loadingRecords)
                   const SliverFillRemaining(
                     hasScrollBody: false,
-                    child: Center(child: CircularProgressIndicator()),
+                    child: Center(child: RupuLoader()),
                   )
                 else if (error != null)
                   SliverFillRemaining(
@@ -2212,7 +2213,7 @@ class _AttendanceRecordsContent extends StatelessWidget {
                         return const Center(
                           child: Padding(
                             padding: EdgeInsets.symmetric(vertical: 16),
-                            child: CircularProgressIndicator(strokeWidth: 2.6),
+                            child: RupuLoader.small(),
                           ),
                         );
                       }

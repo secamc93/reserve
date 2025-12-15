@@ -11,6 +11,7 @@ import '../controllers/reserve_update_controller.dart';
 import '../controllers/reserves_controller.dart';
 import '../controllers/reserve_status_controller.dart';
 import 'package:rupu/domain/entities/reserve_status.dart';
+import 'package:rupu/presentation/widgets/widgets.dart';
 
 class UpdateReserveView extends StatelessWidget {
   UpdateReserveView({super.key});
@@ -72,7 +73,7 @@ class UpdateReserveView extends StatelessWidget {
         if (ctrl.isLoading.value || ctrl.reserva.value == null) {
           return Scaffold(
             appBar: AppBar(title: const Text('Actualizar reserva')),
-            body: const Center(child: CircularProgressIndicator()),
+            body: const Center(child: RupuLoader()),
           );
         }
 
@@ -90,7 +91,7 @@ class UpdateReserveView extends StatelessWidget {
             final end = formController.end.value;
 
             if (start == null || end == null) {
-              return const Center(child: CircularProgressIndicator());
+              return const Center(child: RupuLoader());
             }
 
             return Center(
@@ -322,13 +323,7 @@ class UpdateReserveView extends StatelessWidget {
                                     }
                                   },
                             icon: formController.saving.value
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
+                                ? const RupuLoader.small()
                                 : const Icon(Icons.save_outlined),
                             label: Text(
                               formController.saving.value

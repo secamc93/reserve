@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 
 class DialogHelper {
   static Future<T?> showBlurredDialog<T>({
@@ -69,7 +70,16 @@ class DialogHelper {
     return showBlurredDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => const Center(child: CircularProgressIndicator()),
+      builder: (ctx) => Center(
+        child: SizedBox(
+          width: 150,
+          height: 150,
+          child: Lottie.asset(
+            'assets/animation/loader/rupu_loader.json',
+            fit: BoxFit.contain,
+          ),
+        ),
+      ),
     );
   }
 }

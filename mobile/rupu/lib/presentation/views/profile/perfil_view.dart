@@ -171,7 +171,7 @@ class PerfilView extends GetView<PerfilController> {
                               trailing: Switch.adaptive(
                                 value: ctrl.isDarkRx.value,
                                 onChanged: (_) => ctrl.toggleTheme(),
-                                activeColor: cs.primary,
+                                activeThumbColor: cs.primary,
                               ),
                             ),
                           ),

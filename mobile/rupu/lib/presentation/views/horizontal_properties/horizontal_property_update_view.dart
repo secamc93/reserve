@@ -1,8 +1,10 @@
 // presentation/views/horizontal_property/update/horizontal_property_update_sheet.dart
+
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:rupu/config/helpers/responsive_helper.dart';
+import 'package:rupu/presentation/widgets/shared/rupu_loader.dart';
 
 import 'horizontal_property_update_controller.dart';
 import 'models/property_file_data.dart';
@@ -53,274 +55,510 @@ class HorizontalPropertyUpdateSheet
               }
             },
             child: Scaffold(
-              backgroundColor: cs.surface,
-              appBar: AppBar(
-                title: const Text('Actualizar propiedad horizontal'),
-                elevation: 0,
-                surfaceTintColor: Colors.transparent,
-              ),
-              body: Obx(() {
-                if (controller.isLoading.value) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                final error = controller.errorMessage.value;
-                if (controller.property.value == null && error != null) {
-                  return _ErrorPlaceholder(
-                    message: error,
-                    onRetry: controller.loadProperty,
-                  );
-                }
-
-                return Form(
-                  key: controller.formKey,
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (error != null)
-                          Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: cs.errorContainer,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: cs.error.withValues(alpha: .2),
-                              ),
-                            ),
-                            child: Text(
-                              error,
-                              style: TextStyle(color: cs.onErrorContainer),
-                            ),
-                          ),
-
-                        // ——— Información base
-                        _TextField(
-                          controller: controller.nameCtrl,
-                          label: 'Nombre *',
-                          validator: (v) => (v == null || v.trim().isEmpty)
-                              ? 'El nombre es obligatorio'
-                              : null,
-                        ),
-                        const SizedBox(height: 12),
-                        _TextField(
-                          controller: controller.codeCtrl,
-                          label: 'Código único',
-                        ),
-                        const SizedBox(height: 12),
-                        _TextField(
-                          controller: controller.addressCtrl,
-                          label: 'Dirección *',
-                          validator: (v) => (v == null || v.trim().isEmpty)
-                              ? 'La dirección es obligatoria'
-                              : null,
-                        ),
-                        const SizedBox(height: 12),
-                        _TextField(
-                          controller: controller.descriptionCtrl,
-                          label: 'Descripción',
-                          maxLines: 3,
-                        ),
-                        const SizedBox(height: 12),
-                        _TextField(
-                          controller: controller.timezoneCtrl,
-                          label: 'Zona horaria',
-                        ),
-                        const SizedBox(height: 12),
-
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _TextField(
-                                controller: controller.totalUnitsCtrl,
-                                label: 'Total de unidades',
-                                keyboardType: TextInputType.number,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _TextField(
-                                controller: controller.totalFloorsCtrl,
-                                label: 'Total de pisos',
-                                keyboardType: TextInputType.number,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 12),
-                        _BoolTile(
-                          title: '¿Tiene ascensor?',
-                          value: controller.hasElevator,
-                        ),
-                        _BoolTile(
-                          title: '¿Tiene parqueadero?',
-                          value: controller.hasParking,
-                        ),
-                        _BoolTile(
-                          title: '¿Tiene piscina?',
-                          value: controller.hasPool,
-                        ),
-                        _BoolTile(
-                          title: '¿Tiene gimnasio?',
-                          value: controller.hasGym,
-                        ),
-                        _BoolTile(
-                          title: '¿Tiene área social?',
-                          value: controller.hasSocialArea,
-                        ),
-                        const SizedBox(height: 8),
-
-                        // ——— Colores (WHEEL + slider)
-                        _ColorWheelField(
-                          label: 'Color primario',
-                          controller: controller.primaryColorCtrl,
-                          color: controller.primaryColor,
-                          onColorChanged: controller.setPrimaryColor,
-                        ),
-                        const SizedBox(height: 12),
-                        _ColorWheelField(
-                          label: 'Color secundario',
-                          controller: controller.secondaryColorCtrl,
-                          color: controller.secondaryColor,
-                          onColorChanged: controller.setSecondaryColor,
-                        ),
-                        const SizedBox(height: 12),
-                        _ColorWheelField(
-                          label: 'Color terciario',
-                          controller: controller.tertiaryColorCtrl,
-                          color: controller.tertiaryColor,
-                          onColorChanged: controller.setTertiaryColor,
-                        ),
-                        const SizedBox(height: 12),
-                        _ColorWheelField(
-                          label: 'Color cuaternario',
-                          controller: controller.quaternaryColorCtrl,
-                          color: controller.quaternaryColor,
-                          onColorChanged: controller.setQuaternaryColor,
-                        ),
-                        const SizedBox(height: 12),
-
-                        _TextField(
-                          controller: controller.customDomainCtrl,
-                          label: 'Dominio personalizado',
-                        ),
-                        const SizedBox(height: 12),
-
-                        Obx(
-                          () => SwitchListTile.adaptive(
-                            contentPadding: EdgeInsets.zero,
-                            title: const Text('Propiedad activa'),
-                            value: controller.isActive.value,
-                            onChanged: (v) => controller.isActive.value = v,
-                          ),
-                        ),
-
-                        const SizedBox(height: 12),
-                        _FilePickerTile(
-                          title: 'Logo',
-                          currentUrl: controller.logoUrl,
-                          isClearing: controller.clearLogo,
-                          file: controller.logoFile,
-                          isProcessing: controller.logoProcessing,
-                          onPick: controller.pickLogo,
-                          onRemoveFile: controller.removeLogoFile,
-                          onClearExisting: controller.clearExistingLogo,
-                          onRestoreExisting: controller.restoreExistingLogo,
-                          formatSize: controller.formatFileSize,
-                        ),
-                        const SizedBox(height: 12),
-                        _FilePickerTile(
-                          title: 'Imagen del navbar',
-                          currentUrl: controller.navbarUrl,
-                          isClearing: controller.clearNavbarImage,
-                          file: controller.navbarImageFile,
-                          isProcessing: controller.navbarProcessing,
-                          onPick: controller.pickNavbarImage,
-                          onRemoveFile: controller.removeNavbarImageFile,
-                          onClearExisting: controller.clearExistingNavbarImage,
-                          onRestoreExisting:
-                              controller.restoreExistingNavbarImage,
-                          formatSize: controller.formatFileSize,
-                        ),
-
-                        const SizedBox(height: 22),
-
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Obx(
-                                () => OutlinedButton(
-                                  onPressed: controller.isSaving.value
-                                      ? null
-                                      : () {
-                                          if (Get.isRegistered<
-                                            HorizontalPropertyUpdateController
-                                          >(tag: controllerTag)) {
-                                            Get.delete<
-                                              HorizontalPropertyUpdateController
-                                            >(tag: controllerTag);
-                                          }
-                                          Navigator.of(context).pop();
-                                        },
-                                  child: const Text('Cancelar'),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Obx(
-                                () => FilledButton(
-                                  onPressed: controller.isSaving.value
-                                      ? null
-                                      : () async {
-                                          final result = await controller
-                                              .submit();
-                                          if (!context.mounted ||
-                                              result == null) {
-                                            return;
-                                          }
-                                          if (result.success) {
-                                            if (Get.isRegistered<
-                                              HorizontalPropertyUpdateController
-                                            >(tag: controllerTag)) {
-                                              Get.delete<
-                                                HorizontalPropertyUpdateController
-                                              >(tag: controllerTag);
-                                            }
-                                            Navigator.of(context).pop(result);
-                                          } else if (result.message != null) {
-                                            ScaffoldMessenger.of(
-                                              context,
-                                            ).showSnackBar(
-                                              SnackBar(
-                                                content: Text(result.message!),
-                                              ),
-                                            );
-                                          }
-                                        },
-                                  child: controller.isSaving.value
-                                      ? const SizedBox(
-                                          height: 20,
-                                          width: 20,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                          ),
-                                        )
-                                      : const Text('Actualizar'),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+              backgroundColor: Colors.transparent,
+              body: Container(
+                decoration: BoxDecoration(
+                  color: cs.surface,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(28),
                   ),
-                );
-              }),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 20,
+                      offset: const Offset(0, -5),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    // Handle bar
+                    Center(
+                      child: Container(
+                        margin: const EdgeInsets.only(top: 12, bottom: 8),
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: cs.onSurfaceVariant.withValues(alpha: 0.4),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    // Header
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: cs.primaryContainer.withValues(alpha: 0.3),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.edit_location_alt_outlined,
+                              color: cs.primary,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Actualizar Propiedad',
+                                  style: theme.textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  'Modifica los detalles de tu conjunto',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: cs.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            icon: const Icon(Icons.close_rounded),
+                            style: IconButton.styleFrom(
+                              backgroundColor: cs.surfaceContainerHighest
+                                  .withValues(alpha: 0.5),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 1),
+                    // Content
+                    Expanded(
+                      child: Obx(() {
+                        if (controller.isLoading.value) {
+                          return const Center(
+                            child: RupuLoader(),
+                          );
+                        }
+
+                        final error = controller.errorMessage.value;
+                        if (controller.property.value == null &&
+                            error != null) {
+                          return _ErrorPlaceholder(
+                            message: error,
+                            onRetry: controller.loadProperty,
+                          );
+                        }
+
+                        return Form(
+                          key: controller.formKey,
+                          child: ListView(
+                            physics: const BouncingScrollPhysics(),
+                            padding: const EdgeInsets.all(24),
+                            children: [
+                              if (error != null)
+                                Container(
+                                  margin: const EdgeInsets.only(bottom: 24),
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: cs.errorContainer.withValues(
+                                      alpha: 0.5,
+                                    ),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: cs.error.withValues(alpha: 0.2),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.error_outline_rounded,
+                                        color: cs.error,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          error,
+                                          style: TextStyle(
+                                            color: cs.onErrorContainer,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                              _SectionHeader(
+                                title: 'Información General',
+                                icon: Icons.info_outline_rounded,
+                              ),
+                              const SizedBox(height: 16),
+                              _StyledContainer(
+                                child: Column(
+                                  children: [
+                                    _TextField(
+                                      controller: controller.nameCtrl,
+                                      label: 'Nombre de la propiedad',
+                                      hint: 'Ej. Edificio Altavista',
+                                      prefixIcon: Icons.business_rounded,
+                                      validator: (v) =>
+                                          (v == null || v.trim().isEmpty)
+                                          ? 'El nombre es obligatorio'
+                                          : null,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _TextField(
+                                      controller: controller.codeCtrl,
+                                      label: 'Código único',
+                                      hint: 'Código identificador',
+                                      prefixIcon: Icons.qr_code_rounded,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _TextField(
+                                      controller: controller.addressCtrl,
+                                      label: 'Dirección',
+                                      hint: 'Dirección física',
+                                      prefixIcon: Icons.location_on_outlined,
+                                      validator: (v) =>
+                                          (v == null || v.trim().isEmpty)
+                                          ? 'La dirección es obligatoria'
+                                          : null,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _TextField(
+                                      controller: controller.descriptionCtrl,
+                                      label: 'Descripción',
+                                      hint: 'Breve descripción...',
+                                      maxLines: 3,
+                                      prefixIcon: Icons.description_outlined,
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              const SizedBox(height: 24),
+                              _SectionHeader(
+                                title: 'Detalles y Amenidades',
+                                icon: Icons.category_outlined,
+                              ),
+                              const SizedBox(height: 16),
+                              _StyledContainer(
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: _TextField(
+                                            controller:
+                                                controller.totalUnitsCtrl,
+                                            label: 'Unidades',
+                                            hint: '0',
+                                            keyboardType: TextInputType.number,
+                                            prefixIcon:
+                                                Icons.home_work_outlined,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 16),
+                                        Expanded(
+                                          child: _TextField(
+                                            controller:
+                                                controller.totalFloorsCtrl,
+                                            label: 'Pisos',
+                                            hint: '0',
+                                            keyboardType: TextInputType.number,
+                                            prefixIcon: Icons.layers_outlined,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _TextField(
+                                      controller: controller.timezoneCtrl,
+                                      label: 'Zona Horaria',
+                                      prefixIcon: Icons.schedule_rounded,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Divider(
+                                      color: cs.outlineVariant.withValues(
+                                        alpha: 0.5,
+                                      ),
+                                    ),
+                                    _BoolTile(
+                                      title: 'Ascensor',
+                                      icon: Icons.elevator_outlined,
+                                      value: controller.hasElevator,
+                                    ),
+                                    _BoolTile(
+                                      title: 'Parqueadero',
+                                      icon: Icons.local_parking_rounded,
+                                      value: controller.hasParking,
+                                    ),
+                                    _BoolTile(
+                                      title: 'Piscina',
+                                      icon: Icons.pool_rounded,
+                                      value: controller.hasPool,
+                                    ),
+                                    _BoolTile(
+                                      title: 'Gimnasio',
+                                      icon: Icons.fitness_center_rounded,
+                                      value: controller.hasGym,
+                                    ),
+                                    _BoolTile(
+                                      title: 'Área Social',
+                                      icon: Icons.deck_outlined,
+                                      value: controller.hasSocialArea,
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              const SizedBox(height: 24),
+                              _SectionHeader(
+                                title: 'Personalización',
+                                icon: Icons.palette_outlined,
+                              ),
+                              const SizedBox(height: 16),
+                              _StyledContainer(
+                                child: Column(
+                                  children: [
+                                    _ColorWheelField(
+                                      label: 'Color Primario',
+                                      controller: controller.primaryColorCtrl,
+                                      color: controller.primaryColor,
+                                      onColorChanged:
+                                          controller.setPrimaryColor,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _ColorWheelField(
+                                      label: 'Color Secundario',
+                                      controller: controller.secondaryColorCtrl,
+                                      color: controller.secondaryColor,
+                                      onColorChanged:
+                                          controller.setSecondaryColor,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _ColorWheelField(
+                                      label: 'Color Terciario',
+                                      controller: controller.tertiaryColorCtrl,
+                                      color: controller.tertiaryColor,
+                                      onColorChanged:
+                                          controller.setTertiaryColor,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _ColorWheelField(
+                                      label: 'Color Cuaternario',
+                                      controller:
+                                          controller.quaternaryColorCtrl,
+                                      color: controller.quaternaryColor,
+                                      onColorChanged:
+                                          controller.setQuaternaryColor,
+                                    ),
+                                    const SizedBox(height: 24),
+                                    _TextField(
+                                      controller: controller.customDomainCtrl,
+                                      label: 'Dominio Personalizado',
+                                      hint: 'ejemplo.com',
+                                      prefixIcon: Icons.public_rounded,
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              const SizedBox(height: 24),
+                              _SectionHeader(
+                                title: 'Recursos',
+                                icon: Icons.image_outlined,
+                              ),
+                              const SizedBox(height: 16),
+                              _StyledContainer(
+                                child: Column(
+                                  children: [
+                                    _FilePickerTile(
+                                      title: 'Logo de la Propiedad',
+                                      currentUrl: controller.logoUrl,
+                                      isClearing: controller.clearLogo,
+                                      file: controller.logoFile,
+                                      isProcessing: controller.logoProcessing,
+                                      onPick: controller.pickLogo,
+                                      onRemoveFile: controller.removeLogoFile,
+                                      onClearExisting:
+                                          controller.clearExistingLogo,
+                                      onRestoreExisting:
+                                          controller.restoreExistingLogo,
+                                      formatSize: controller.formatFileSize,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Divider(
+                                      color: cs.outlineVariant.withValues(
+                                        alpha: 0.5,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _FilePickerTile(
+                                      title: 'Imagen del Navbar',
+                                      currentUrl: controller.navbarUrl,
+                                      isClearing: controller.clearNavbarImage,
+                                      file: controller.navbarImageFile,
+                                      isProcessing: controller.navbarProcessing,
+                                      onPick: controller.pickNavbarImage,
+                                      onRemoveFile:
+                                          controller.removeNavbarImageFile,
+                                      onClearExisting:
+                                          controller.clearExistingNavbarImage,
+                                      onRestoreExisting:
+                                          controller.restoreExistingNavbarImage,
+                                      formatSize: controller.formatFileSize,
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              const SizedBox(height: 24),
+                              _StyledContainer(
+                                color: cs.primaryContainer.withValues(
+                                  alpha: 0.3,
+                                ),
+                                child: Obx(
+                                  () => SwitchListTile.adaptive(
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                    ),
+                                    title: const Text(
+                                      'Propiedad Activa',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    subtitle: const Text(
+                                      'Habilitar acceso a usuarios',
+                                    ),
+                                    value: controller.isActive.value,
+                                    onChanged: (v) =>
+                                        controller.isActive.value = v,
+                                    secondary: Icon(
+                                      Icons.verified_user_outlined,
+                                      color: cs.primary,
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(height: 32),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Obx(
+                                      () => OutlinedButton(
+                                        onPressed: controller.isSaving.value
+                                            ? null
+                                            : () {
+                                                if (Get.isRegistered<
+                                                  HorizontalPropertyUpdateController
+                                                >(tag: controllerTag)) {
+                                                  Get.delete<
+                                                    HorizontalPropertyUpdateController
+                                                  >(tag: controllerTag);
+                                                }
+                                                Navigator.of(context).pop();
+                                              },
+                                        style: OutlinedButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 16,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
+                                          ),
+                                        ),
+                                        child: const Text('Cancelar'),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Obx(
+                                      () => FilledButton(
+                                        onPressed: controller.isSaving.value
+                                            ? null
+                                            : () async {
+                                                final result = await controller
+                                                    .submit();
+                                                if (!context.mounted ||
+                                                    result == null) {
+                                                  return;
+                                                }
+                                                if (result.success) {
+                                                  if (Get.isRegistered<
+                                                    HorizontalPropertyUpdateController
+                                                  >(tag: controllerTag)) {
+                                                    Get.delete<
+                                                      HorizontalPropertyUpdateController
+                                                    >(tag: controllerTag);
+                                                  }
+                                                  Navigator.of(
+                                                    context,
+                                                  ).pop(result);
+                                                } else if (result.message !=
+                                                    null) {
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(
+                                                        result.message!,
+                                                      ),
+                                                      behavior: SnackBarBehavior
+                                                          .floating,
+                                                      backgroundColor: cs.error,
+                                                    ),
+                                                  );
+                                                }
+                                              },
+                                        style: FilledButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 16,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
+                                          ),
+                                        ),
+                                        child: controller.isSaving.value
+                                            ? SizedBox(
+                                                height: 20,
+                                                width: 20,
+                                                child:
+                                                    CircularProgressIndicator(
+                                                      strokeWidth: 2,
+                                                      color: cs.onPrimary,
+                                                    ),
+                                              )
+                                            : const Text(
+                                                'Guardar Cambios',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 24),
+                            ],
+                          ),
+                        );
+                      }),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
@@ -333,20 +571,71 @@ class HorizontalPropertyUpdateSheet
 // Reusables
 // ─────────────────────────────────────────────
 
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  final IconData icon;
+
+  const _SectionHeader({required this.title, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: cs.primary),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: cs.onSurface,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StyledContainer extends StatelessWidget {
+  final Widget child;
+  final Color? color;
+
+  const _StyledContainer({required this.child, this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color ?? cs.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.3)),
+      ),
+      child: child,
+    );
+  }
+}
+
 class _TextField extends StatelessWidget {
   const _TextField({
     required this.controller,
     required this.label,
+    this.hint,
     this.maxLines = 1,
     this.keyboardType,
     this.validator,
+    this.prefixIcon,
   });
 
   final TextEditingController controller;
   final String label;
+  final String? hint;
   final int maxLines;
   final TextInputType? keyboardType;
   final String? Function(String?)? validator;
+  final IconData? prefixIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -355,32 +644,68 @@ class _TextField extends StatelessWidget {
       maxLines: maxLines,
       keyboardType: keyboardType,
       validator: validator,
-      decoration: InputDecoration(labelText: label),
-    );
-  }
-}
-
-class _BoolTile extends StatelessWidget {
-  const _BoolTile({required this.title, required this.value});
-  final String title;
-  final RxBool value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(
-      () => SwitchListTile.adaptive(
-        contentPadding: EdgeInsets.zero,
-        title: Text(title),
-        value: value.value,
-        onChanged: (v) => value.value = v,
+      style: const TextStyle(fontSize: 15),
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        prefixIcon: prefixIcon != null ? Icon(prefixIcon, size: 22) : null,
+        filled: true,
+        fillColor: Theme.of(context).colorScheme.surface,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.primary,
+            width: 1.5,
+          ),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
       ),
     );
   }
 }
 
-/// Selector “Color Wheel” estilo premium:
-/// - Campo HEX sincronizado (#RRGGBB).
-/// - Rueda de color.
+class _BoolTile extends StatelessWidget {
+  const _BoolTile({
+    required this.title,
+    required this.value,
+    required this.icon,
+  });
+  final String title;
+  final RxBool value;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Obx(
+      () => SwitchListTile.adaptive(
+        contentPadding: EdgeInsets.zero,
+        title: Row(
+          children: [
+            Icon(icon, size: 20, color: cs.onSurfaceVariant),
+            const SizedBox(width: 12),
+            Text(title, style: const TextStyle(fontSize: 15)),
+          ],
+        ),
+        value: value.value,
+        onChanged: (v) => value.value = v,
+        activeThumbColor: cs.primary,
+      ),
+    );
+  }
+}
+
 class _ColorWheelField extends StatelessWidget {
   const _ColorWheelField({
     required this.label,
@@ -404,19 +729,47 @@ class _ColorWheelField extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: tt.titleSmall!.copyWith(fontWeight: FontWeight.w800),
+          Row(
+            children: [
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: current,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: cs.outlineVariant, width: 2),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                label,
+                style: tt.titleSmall!.copyWith(fontWeight: FontWeight.w700),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
                 child: TextFormField(
                   controller: controller,
-                  decoration: const InputDecoration(
+                  style: const TextStyle(
+                    fontFamily: 'monospace',
+                    fontWeight: FontWeight.w600,
+                  ),
+                  decoration: InputDecoration(
                     prefixText: '# ',
-                    labelText: 'HEX (RRGGBB)',
+                    hintText: 'RRGGBB',
+                    filled: true,
+                    fillColor: cs.surface,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                   onChanged: (v) {
                     final parsed = _parse(v);
@@ -426,30 +779,18 @@ class _ColorWheelField extends StatelessWidget {
                   },
                 ),
               ),
-              const SizedBox(width: 10),
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: current,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: cs.outlineVariant),
-                ),
+              const SizedBox(width: 12),
+              IconButton.filledTonal(
+                onPressed: () async {
+                  final picked = await _openWheelPicker(context, current);
+                  if (picked != null) {
+                    onColorChanged(picked);
+                  }
+                },
+                icon: const Icon(Icons.colorize_rounded),
+                tooltip: 'Seleccionar color',
               ),
             ],
-          ),
-          const SizedBox(height: 10),
-
-          // Color wheel + Brightness slider (en un dialog estilizado)
-          OutlinedButton.icon(
-            icon: const Icon(Icons.color_lens_outlined),
-            label: const Text('Abrir selector'),
-            onPressed: () async {
-              final picked = await _openWheelPicker(context, current);
-              if (picked != null) {
-                onColorChanged(picked);
-              }
-            },
           ),
         ],
       );
@@ -465,12 +806,23 @@ class _ColorWheelField extends StatelessWidget {
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          titlePadding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-          contentPadding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-          title: Text(
-            'Selecciona un color',
-            style: theme.textTheme.titleMedium,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+          contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+          actionsPadding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+          title: Row(
+            children: [
+              Icon(Icons.palette_rounded, color: cs.primary),
+              const SizedBox(width: 12),
+              Text(
+                'Seleccionar Color',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -478,31 +830,22 @@ class _ColorWheelField extends StatelessWidget {
               ColorPicker(
                 color: temp,
                 onColorChanged: (c) => temp = c,
-
-                // — Wheel puro
                 pickersEnabled: const <ColorPickerType, bool>{
                   ColorPickerType.wheel: true,
                   ColorPickerType.accent: false,
                   ColorPickerType.primary: false,
                   ColorPickerType.both: false,
                 },
-
-                // Tamaños dentro de los rangos válidos
-                wheelDiameter: 220,
+                wheelDiameter: 200,
                 wheelHasBorder: true,
-
-                // wheelBorderColor: cs.outlineVariant,
-                width: 32, // 15–150
-                height: 36, // 15–150
-                // UX
+                width: 32,
+                height: 36,
                 hasBorder: true,
                 showColorName: false,
                 showColorCode: true,
                 colorCodeHasColor: true,
                 colorCodeReadOnly: false,
                 enableShadesSelection: true,
-
-                // Tipografías
                 materialNameTextStyle: theme.textTheme.labelSmall?.copyWith(
                   color: cs.onSurfaceVariant,
                 ),
@@ -510,7 +853,6 @@ class _ColorWheelField extends StatelessWidget {
                 heading: const SizedBox.shrink(),
                 subheading: const SizedBox.shrink(),
               ),
-              const SizedBox(height: 12),
             ],
           ),
           actions: [
@@ -520,7 +862,7 @@ class _ColorWheelField extends StatelessWidget {
             ),
             FilledButton(
               onPressed: () => Navigator.of(ctx).pop(temp),
-              child: const Text('Usar color'),
+              child: const Text('Usar Color'),
             ),
           ],
         );
@@ -537,8 +879,6 @@ class _ColorWheelField extends StatelessWidget {
   }
 }
 
-// ———————————————————— Archivos/errores (tus mismos tiles estilizados) ————————————————————
-
 class _ErrorPlaceholder extends StatelessWidget {
   final String message;
   final Future<void> Function()? onRetry;
@@ -548,14 +888,28 @@ class _ErrorPlaceholder extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(message, textAlign: TextAlign.center),
+            Icon(
+              Icons.error_outline_rounded,
+              size: 48,
+              color: Theme.of(context).colorScheme.error,
+            ),
             const SizedBox(height: 16),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            const SizedBox(height: 24),
             if (onRetry != null)
-              FilledButton(onPressed: onRetry, child: const Text('Reintentar')),
+              FilledButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Reintentar'),
+              ),
           ],
         ),
       ),
@@ -599,68 +953,159 @@ class _FilePickerTile extends StatelessWidget {
       final clearing = isClearing.value;
 
       return Container(
-        margin: const EdgeInsets.only(top: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: cs.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: cs.outlineVariant),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: Theme.of(context).textTheme.titleSmall),
-                  const SizedBox(height: 4),
-                  if (processing)
-                    const Text('Procesando archivo...')
-                  else if (fileValue != null)
-                    Text(
-                      '${fileValue.fileName} • ${formatSize(fileValue.sizeInBytes)}',
-                    )
-                  else if (clearing)
-                    const Text('Se eliminará la imagen actual')
-                  else if (hasUrl)
-                    Text('Actual: $urlValue')
-                  else
-                    const Text('Sin archivo seleccionado'),
-                ],
-              ),
+            Row(
+              children: [
+                Icon(
+                  Icons.insert_drive_file_outlined,
+                  size: 20,
+                  color: cs.primary,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
-            if (processing)
-              const SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            else ...[
-              if (fileValue != null)
-                IconButton(
-                  tooltip: 'Quitar archivo',
-                  onPressed: onRemoveFile,
-                  icon: const Icon(Icons.close),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (processing)
+                        Row(
+                          children: [
+                            SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: cs.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Text(
+                              'Procesando...',
+                              style: TextStyle(fontSize: 13),
+                            ),
+                          ],
+                        )
+                      else if (fileValue != null)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              fileValue.fileName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              formatSize(fileValue.sizeInBytes),
+                              style: TextStyle(
+                                color: cs.onSurfaceVariant,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        )
+                      else if (clearing)
+                        Text(
+                          'Se eliminará la imagen actual',
+                          style: TextStyle(
+                            color: cs.error,
+                            fontSize: 13,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        )
+                      else if (hasUrl)
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.check_circle_outline,
+                              size: 16,
+                              color: cs.tertiary,
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                'Imagen actual cargada',
+                                style: TextStyle(
+                                  color: cs.tertiary,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      else
+                        Text(
+                          'Ningún archivo seleccionado',
+                          style: TextStyle(
+                            color: cs.onSurfaceVariant,
+                            fontSize: 13,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-              if (hasUrl && !clearing && fileValue == null)
-                IconButton(
-                  tooltip: 'Limpiar imagen',
-                  onPressed: onClearExisting,
-                  icon: const Icon(Icons.delete_outline),
-                ),
-              if (clearing)
-                IconButton(
-                  tooltip: 'Deshacer limpieza',
-                  onPressed: onRestoreExisting,
-                  icon: const Icon(Icons.undo),
-                ),
-              IconButton(
-                tooltip: 'Seleccionar archivo',
-                onPressed: onPick,
-                icon: const Icon(Icons.upload_file_outlined),
-              ),
-            ],
+                const SizedBox(width: 8),
+                if (!processing) ...[
+                  if (fileValue != null)
+                    IconButton(
+                      tooltip: 'Quitar archivo',
+                      onPressed: onRemoveFile,
+                      icon: const Icon(Icons.close_rounded),
+                      style: IconButton.styleFrom(
+                        backgroundColor: cs.errorContainer,
+                        foregroundColor: cs.error,
+                      ),
+                    ),
+                  if (hasUrl && !clearing && fileValue == null)
+                    IconButton(
+                      tooltip: 'Eliminar imagen actual',
+                      onPressed: onClearExisting,
+                      icon: const Icon(Icons.delete_outline_rounded),
+                      style: IconButton.styleFrom(
+                        backgroundColor: cs.surfaceContainerHighest,
+                      ),
+                    ),
+                  if (clearing)
+                    IconButton(
+                      tooltip: 'Deshacer',
+                      onPressed: onRestoreExisting,
+                      icon: const Icon(Icons.undo_rounded),
+                      style: IconButton.styleFrom(
+                        backgroundColor: cs.tertiaryContainer,
+                        foregroundColor: cs.tertiary,
+                      ),
+                    ),
+                  IconButton(
+                    tooltip: 'Subir archivo',
+                    onPressed: onPick,
+                    icon: const Icon(Icons.upload_file_rounded),
+                    style: IconButton.styleFrom(
+                      backgroundColor: cs.primaryContainer,
+                      foregroundColor: cs.primary,
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ],
         ),
       );

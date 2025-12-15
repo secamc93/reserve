@@ -216,7 +216,7 @@ class _MainAppState extends State<MainApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
+    return GetMaterialApp.router(
       debugShowCheckedModeBanner: false,
 
       // GoRouter
@@ -227,7 +227,7 @@ class _MainAppState extends State<MainApp> {
       // Temas
       theme: AppTheme.instance.lightTheme,
       darkTheme: AppTheme.instance.darkTheme,
-      themeMode: ThemeMode.light,
+      // themeMode: ThemeMode.light, // Removed to allow dynamic switching
 
       // 🌎 Localización (Material + Cupertino + Syncfusion)
       locale: const Locale(

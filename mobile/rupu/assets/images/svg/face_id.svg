@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+  <!-- Face ID frame corners -->
+  <path d="M4 8V6a2 2 0 0 1 2-2h2"/>
+  <path d="M16 4h2a2 2 0 0 1 2 2v2"/>
+  <path d="M20 16v2a2 2 0 0 1-2 2h-2"/>
+  <path d="M8 20H6a2 2 0 0 1-2-2v-2"/>
+  <!-- Face elements -->
+  <circle cx="9" cy="10" r="0.5" fill="currentColor"/>
+  <circle cx="15" cy="10" r="0.5" fill="currentColor"/>
+  <path d="M12 10v3"/>
+  <path d="M9 15c.6 1 1.5 1.5 3 1.5s2.4-.5 3-1.5"/>
+</svg>

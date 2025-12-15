@@ -676,7 +676,7 @@ class _UnitCard extends StatelessWidget {
         if (!dialogCompleter.isCompleted) {
           dialogCompleter.complete(ctx);
         }
-        return const Center(child: CircularProgressIndicator());
+        return const Center(child: RupuLoader());
       },
     );
 

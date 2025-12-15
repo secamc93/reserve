@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:rupu/domain/entities/create_user_result.dart';
+import 'package:rupu/presentation/widgets/shared/rupu_loader.dart';
 import '../controllers/create_user_controller.dart';
 
 class CreateUserView extends GetView<CreateUserController> {
@@ -1353,7 +1354,7 @@ Future<void> _openBusinessPicker(
                     return const Center(
                       child: Padding(
                         padding: EdgeInsets.all(40),
-                        child: CircularProgressIndicator(),
+                        child: RupuLoader(),
                       ),
                     );
                   }

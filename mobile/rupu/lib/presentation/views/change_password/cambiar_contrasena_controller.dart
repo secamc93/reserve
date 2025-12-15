@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:dio/dio.dart';
+import 'package:rupu/config/services/biometric_auth_service.dart';
 import 'package:rupu/domain/infrastructure/datasources/change_password_datasource_impl.dart';
 import 'package:rupu/domain/infrastructure/repositories/change_password_repository_impl.dart';
 import 'package:rupu/domain/repositories/change_password_repository.dart';
@@ -9,9 +10,11 @@ import 'package:rupu/domain/repositories/change_password_repository.dart';
 /// Controlador para la vista de cambio de contraseña.
 class ChangePasswordController extends GetxController {
   final ChangePasswordRepository repository;
+  final BiometricAuthService biometricService;
 
   ChangePasswordController()
-    : repository = ChangePasswordRepositoryImpl(ChangePasswordDatasourceImpl());
+    : repository = ChangePasswordRepositoryImpl(ChangePasswordDatasourceImpl()),
+      biometricService = BiometricAuthService();
 
   final formKey = GlobalKey<FormState>();
   final currentPasswordController = TextEditingController();
@@ -21,6 +24,37 @@ class ChangePasswordController extends GetxController {
   final isLoading = false.obs;
   final RxnString errorMessage = RxnString();
   final RxnString successMessage = RxnString();
+
+  /// Verifica si hay credenciales biométricas guardadas
+  Future<bool> hasBiometricCredentials() async {
+    return await biometricService.hasStoredCredentials();
+  }
+
+  /// Obtiene la descripción del tipo de biometría disponible
+  Future<String> getBiometricDescription() async {
+    return await biometricService.getBiometricDescription();
+  }
+
+  /// Actualiza las credenciales biométricas con la nueva contraseña
+  Future<bool> updateBiometricCredentials() async {
+    try {
+      // Obtener el email guardado actualmente
+      final credentials = await biometricService.getStoredCredentials();
+      if (credentials == null || credentials['email'] == null) {
+        return false;
+      }
+
+      // Guardar con la nueva contraseña
+      await biometricService.saveCredentials(
+        email: credentials['email']!,
+        password: newPasswordController.text.trim(),
+      );
+      return true;
+    } catch (e) {
+      print('Error actualizando credenciales biométricas: $e');
+      return false;
+    }
+  }
 
   /// Ejecuta la lógica de cambio de contraseña.
   Future<bool> submit() async {

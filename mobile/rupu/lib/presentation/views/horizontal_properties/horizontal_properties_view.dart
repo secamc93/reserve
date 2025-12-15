@@ -7,6 +7,7 @@ import 'package:rupu/config/helpers/dialog_helper.dart';
 import 'package:rupu/config/helpers/responsive_helper.dart';
 
 import 'package:rupu/domain/entities/horizontal_property_update_result.dart';
+import 'package:rupu/presentation/widgets/shared/rupu_loader.dart';
 import 'horizontal_properties_controller.dart';
 import 'horizontal_property_update_view.dart';
 
@@ -59,7 +60,7 @@ class HorizontalPropertiesView extends GetView<HorizontalPropertiesController> {
 
           if (loading) {
             return const Center(
-              child: CircularProgressIndicator(strokeWidth: 2),
+              child: RupuLoader.small(),
             );
           }
 

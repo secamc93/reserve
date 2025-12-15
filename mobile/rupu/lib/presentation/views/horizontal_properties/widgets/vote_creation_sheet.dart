@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import 'package:rupu/domain/entities/horizontal_property_voting.dart';
 import 'package:rupu/presentation/views/horizontal_properties/controllers/voting_live_controller.dart';
+import 'package:rupu/presentation/widgets/shared/rupu_loader.dart';
 
 class VoteCreationSheet extends StatefulWidget {
   final VotingLiveController controller;
@@ -102,7 +103,7 @@ class _VoteCreationSheetState extends State<VoteCreationSheet> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(.18),
+                  color: Colors.black.withValues(alpha: .18),
                   blurRadius: 28,
                   offset: const Offset(0, 22),
                 ),
@@ -161,7 +162,7 @@ class _VoteCreationSheetState extends State<VoteCreationSheet> {
                                       ),
                                       filled: true,
                                       fillColor: cs.surfaceContainerHighest
-                                          .withOpacity(0.5),
+                                          .withValues(alpha: 0.5),
                                     ),
                                     onChanged: (value) {
                                       widget.controller.searchUnits(value);
@@ -176,7 +177,7 @@ class _VoteCreationSheetState extends State<VoteCreationSheet> {
                                       return const Center(
                                         child: Padding(
                                           padding: EdgeInsets.all(16),
-                                          child: CircularProgressIndicator(),
+                                          child: RupuLoader(),
                                         ),
                                       );
                                     }
