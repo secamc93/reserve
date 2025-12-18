@@ -8,3 +8,4 @@ export interface IChangePasswordRepository {
   changePassword(request: ChangePasswordRequest): Promise<ChangePasswordResponse>;
 }
 
+

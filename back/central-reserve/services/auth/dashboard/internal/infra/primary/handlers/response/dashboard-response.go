@@ -62,3 +62,4 @@ type DashboardErrorResponse struct {
 	Error string `json:"error" example:"Error interno del servidor"`
 }
 
+

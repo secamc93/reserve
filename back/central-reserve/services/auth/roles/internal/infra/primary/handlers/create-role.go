@@ -3,24 +3,25 @@ package handlers
 import (
 	"central_reserve/services/auth/roles/internal/infra/primary/handlers/mapper"
 	"central_reserve/services/auth/roles/internal/infra/primary/handlers/request"
+	_ "central_reserve/services/auth/roles/internal/infra/primary/handlers/response" // Para documentación Swagger
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
 // CreateRole crea un nuevo rol
-// @Summary Crear un nuevo rol
-// @Description Crea un nuevo rol en el sistema con todos los campos obligatorios
-// @Tags Roles
-// @Accept json
-// @Produce json
-// @Param role body request.CreateRoleRequest true "Datos del rol a crear"
-// @Success 201 {object} response.CreateRoleResponse
-// @Failure 400 {object} map[string]interface{} "Datos de entrada inválidos"
-// @Failure 500 {object} map[string]interface{} "Error interno del servidor"
-// @Router /roles [post]
 //
+//	@Summary		Crear un nuevo rol
+//	@Description	Crea un nuevo rol en el sistema con todos los campos obligatorios
+//	@Tags			Roles
+//	@Accept			json
+//	@Produce		json
 //	@Security		BearerAuth
+//	@Param			role	body		request.CreateRoleRequest	true	"Datos del rol a crear"
+//	@Success		201		{object}	response.CreateRoleResponse	"Rol creado exitosamente"
+//	@Failure		400		{object}	map[string]interface{}		"Datos de entrada inválidos"
+//	@Failure		500		{object}	map[string]interface{}		"Error interno del servidor"
+//	@Router			/roles [post]
 func (h *handlers) CreateRole(c *gin.Context) {
 	var req request.CreateRoleRequest
 

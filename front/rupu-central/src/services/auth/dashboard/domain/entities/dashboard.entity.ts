@@ -46,3 +46,4 @@ export interface BusinessTypeStats {
   total: number;
 }
 
+

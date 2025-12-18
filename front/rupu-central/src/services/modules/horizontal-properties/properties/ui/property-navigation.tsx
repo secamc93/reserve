@@ -20,6 +20,10 @@ export function PropertyNavigation({ businessId, propertyName }: PropertyNavigat
     { href: `/properties/${businessId}`, label: 'Resumen' },
     { href: `/properties/${businessId}/units`, label: 'Unidades' },
     { href: `/properties/${businessId}/residents`, label: 'Residentes' },
+    { href: `/properties/${businessId}/visits`, label: 'Visitas' },
+    { href: `/properties/${businessId}/packages`, label: 'Paquetería' },
+    { href: `/properties/${businessId}/common-areas`, label: 'Zonas Comunes' },
+    { href: `/properties/${businessId}/parking`, label: 'Parqueaderos' },
     { href: `/properties/${businessId}/voting-groups`, label: 'Votaciones' },
     { href: `/properties/${businessId}/fees`, label: 'Cuotas' },
   ];
@@ -43,6 +47,18 @@ export function PropertyNavigation({ businessId, propertyName }: PropertyNavigat
               <p className="text-lg font-semibold text-gray-900">
                 Unidades de Propiedad
               </p>
+            ) : pathname.includes('/common-areas') ? (
+              <p className="text-lg font-semibold text-gray-900">
+                Zonas Comunes
+              </p>
+            ) : pathname.includes('/parking') ? (
+              <p className="text-lg font-semibold text-gray-900">
+                Parqueaderos
+              </p>
+            ) : pathname.includes('/packages') ? (
+              <p className="text-lg font-semibold text-gray-900">
+                Paquetería
+              </p>
             ) : (
               <>
                 <p className="text-xs text-gray-500 uppercase tracking-wide">Propiedad</p>
@@ -55,7 +71,7 @@ export function PropertyNavigation({ businessId, propertyName }: PropertyNavigat
         </div>
         <nav className="flex gap-2">
           {links.map((link) => {
-            const active = pathname === link.href;
+            const active = pathname === link.href || pathname.startsWith(link.href + '/');
             return (
               <button
                 key={link.href}

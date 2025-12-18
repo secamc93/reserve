@@ -15,3 +15,4 @@ export interface GeneratePasswordResponse {
   error?: string;
 }
 
+

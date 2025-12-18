@@ -51,3 +51,4 @@ type BusinessTypeStats struct {
 	Total int64
 }
 
+

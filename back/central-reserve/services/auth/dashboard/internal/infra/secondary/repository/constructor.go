@@ -18,3 +18,4 @@ func New(database db.IDatabase, logger log.ILogger) domain.IDashboardRepository 
 	}
 }
 
+

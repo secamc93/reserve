@@ -2,10 +2,14 @@ package horizontalproperty
 
 import (
 	"central_reserve/services/horizontalproperty/attendance"
+	"central_reserve/services/horizontalproperty/commonarea"
 	"central_reserve/services/horizontalproperty/dashboard"
 	"central_reserve/services/horizontalproperty/horizontalpropertiy"
+	"central_reserve/services/horizontalproperty/packages"
+	"central_reserve/services/horizontalproperty/parking"
 	"central_reserve/services/horizontalproperty/resident"
 	"central_reserve/services/horizontalproperty/unit"
+	"central_reserve/services/horizontalproperty/visit"
 	"central_reserve/services/horizontalproperty/vote"
 	"central_reserve/shared/db"
 	"central_reserve/shared/env"
@@ -40,4 +44,16 @@ func New(db db.IDatabase, logger log.ILogger, s3 storage.IS3Service, envConfig e
 
 	// Initialize Dashboard Module
 	dashboard.New(db, envConfig, serviceLogger, v1Group)
+
+	// Initialize Visit Module
+	visit.New(db, serviceLogger, v1Group)
+
+	// Initialize Common Areas and Reservations Module
+	commonarea.New(db, serviceLogger, v1Group)
+
+	// Initialize Parking Module
+	parking.New(db, serviceLogger, v1Group)
+
+	// Initialize Package Module
+	packages.New(db, serviceLogger, v1Group)
 }

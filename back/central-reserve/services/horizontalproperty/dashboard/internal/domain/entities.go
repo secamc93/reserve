@@ -53,3 +53,4 @@ type BusinessSummary struct {
 	LastActivity              *time.Time
 }
 
+

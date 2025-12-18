@@ -3,6 +3,7 @@ package handlers
 import (
 	"central_reserve/services/auth/roles/internal/infra/primary/handlers/mapper"
 	"central_reserve/services/auth/roles/internal/infra/primary/handlers/request"
+	_ "central_reserve/services/auth/roles/internal/infra/primary/handlers/response" // Para documentación Swagger
 	"net/http"
 	"strconv"
 	"strings"

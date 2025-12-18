@@ -208,3 +208,4 @@ export function ChangePasswordModal({ isOpen, onClose, onSuccess }: ChangePasswo
     </Modal>
   );
 }
+

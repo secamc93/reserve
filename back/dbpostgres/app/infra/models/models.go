@@ -92,11 +92,22 @@ type Business struct {
 	BusinessResourcesConfigured []BusinessResourceConfigured `gorm:"foreignKey:BusinessID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 
 	// Relaciones para propiedades horizontales
-	PropertyUnits []PropertyUnit  `gorm:"foreignKey:BusinessID"` // Unidades de propiedad (apartamentos/casas)
-	Residents     []Resident      `gorm:"foreignKey:BusinessID"` // Residentes de la propiedad
-	Committees    []Committee     `gorm:"foreignKey:BusinessID"` // Comités y consejos de la propiedad
-	PropertyStaff []PropertyStaff `gorm:"foreignKey:BusinessID"` // Empleados/staff de la propiedad
-	VotingGroups  []VotingGroup   `gorm:"foreignKey:BusinessID"` // Grupos de votaciones de la propiedad
+	PropertyUnits                []PropertyUnit                `gorm:"foreignKey:BusinessID"` // Unidades de propiedad (apartamentos/casas)
+	Residents                    []Resident                    `gorm:"foreignKey:BusinessID"` // Residentes de la propiedad
+	Committees                   []Committee                   `gorm:"foreignKey:BusinessID"` // Comités y consejos de la propiedad
+	PropertyStaff                []PropertyStaff               `gorm:"foreignKey:BusinessID"` // Empleados/staff de la propiedad
+	VotingGroups                 []VotingGroup                 `gorm:"foreignKey:BusinessID"` // Grupos de votaciones de la propiedad
+	Visitors                     []Visitor                     `gorm:"foreignKey:BusinessID"` // Visitantes de la propiedad
+	Visits                       []Visit                       `gorm:"foreignKey:BusinessID"` // Visitas de la propiedad
+	VisitorVehicles              []VisitorVehicle              `gorm:"foreignKey:BusinessID"` // Vehículos de visitantes
+	VisitBlacklist               []VisitBlacklist              `gorm:"foreignKey:BusinessID"` // Lista negra de visitantes
+	VisitRestrictions            []VisitRestriction            `gorm:"foreignKey:BusinessID"` // Restricciones de visitas
+	CommonAreas                  []CommonArea                  `gorm:"foreignKey:BusinessID"` // Zonas comunes de la propiedad
+	CommonAreaReservations       []CommonAreaReservation       `gorm:"foreignKey:BusinessID"` // Reservas de zonas comunes
+	RecurringReservationPatterns []RecurringReservationPattern `gorm:"foreignKey:BusinessID"` // Patrones de reservas recurrentes
+	ParkingZones                 []ParkingZone                 `gorm:"foreignKey:BusinessID"` // Zonas de parqueo
+	ParkingAssignments           []ParkingAssignment           `gorm:"foreignKey:BusinessID"` // Asignaciones de parqueaderos
+	ParkingReservations          []ParkingReservation          `gorm:"foreignKey:BusinessID"` // Reservas de parqueaderos
 }
 
 // ───────────────────────────────────────────

@@ -16,11 +16,13 @@ func LogStartupInfo(ctx context.Context, logger log.ILogger, e env.IConfig) {
 	if swaggerBaseURL == "" {
 		swaggerBaseURL = serverURL
 	}
-	docsURL := fmt.Sprintf("%s/docs/index.html", swaggerBaseURL)
+	authDocsURL := fmt.Sprintf("%s/docs/auth/index.html", swaggerBaseURL)
+	propertiesDocsURL := fmt.Sprintf("%s/docs/properties/index.html", swaggerBaseURL)
 
 	// Colores ANSI para URLs
-	coloredURL := fmt.Sprintf("\033[34;4m%s\033[0m", serverURL) // azul subrayado
-	coloredDocs := fmt.Sprintf("\033[33;4m%s\033[0m", docsURL)  // amarillo subrayado
+	coloredURL := fmt.Sprintf("\033[34;4m%s\033[0m", serverURL)                    // azul subrayado
+	coloredAuthDocs := fmt.Sprintf("\033[33;4m%s\033[0m", authDocsURL)             // amarillo subrayado
+	coloredPropertiesDocs := fmt.Sprintf("\033[33;4m%s\033[0m", propertiesDocsURL) // amarillo subrayado
 
 	// Espacio inicial
 	logger.Info().Msg(" ")
@@ -28,7 +30,8 @@ func LogStartupInfo(ctx context.Context, logger log.ILogger, e env.IConfig) {
 	// Cabecera
 	logger.Info().Msg(" 🚀 Servidor HTTP iniciado correctamente")
 	logger.Info().Msgf(" 📍 Disponible en: %s", coloredURL)
-	logger.Info().Msgf(" 📖 Documentación: %s", coloredDocs)
+	logger.Info().Msgf(" 📖 Documentación Auth: %s", coloredAuthDocs)
+	logger.Info().Msgf(" 📖 Documentación Properties: %s", coloredPropertiesDocs)
 	logger.Info().Msg(" ")
 
 	// PostgreSQL (si aplica)

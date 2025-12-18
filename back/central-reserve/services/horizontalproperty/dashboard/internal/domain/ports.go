@@ -29,3 +29,4 @@ type DashboardUseCase interface {
 	GetDashboardByBusiness(ctx context.Context, businessID uint) (*DashboardResponseDTO, error)
 }
 
+

@@ -22,3 +22,4 @@ func New(repository domain.IDashboardRepository, log log.ILogger) IDashboardUseC
 	}
 }
 
+

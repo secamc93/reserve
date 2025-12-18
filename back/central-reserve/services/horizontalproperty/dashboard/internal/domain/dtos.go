@@ -70,3 +70,4 @@ type BusinessSummariesPagination struct {
 	TotalPages int   `json:"total_pages"`
 }
 
+

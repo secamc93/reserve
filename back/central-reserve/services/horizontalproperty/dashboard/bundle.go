@@ -18,3 +18,4 @@ func New(db db.IDatabase, env env.IConfig, logger log.ILogger, router *gin.Route
 	handler.RegisterRoutes(router)
 }
 
+

@@ -124,3 +124,4 @@ func (uc *DashboardUseCase) GetDashboardByBusiness(ctx context.Context, business
 	return uc.GetDashboard(ctx, businessID, false, 1, 10)
 }
 
+
