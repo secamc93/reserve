@@ -105,6 +105,50 @@ export function VisitsTable({ businessId }: VisitsTableProps) {
     setTimeout(() => setAlert(null), 5000);
   }, [loadVisits]);
 
+  const handleRegisterEntry = useCallback(async (visitId: number) => {
+    setProcessingVisitId(visitId);
+    try {
+      const token = await getBusinessToken();
+      await registerEntryAction({ 
+        businessId, 
+        visitId, 
+        data: { gate: 'Principal', method: 'manual' },
+        token 
+      });
+      setAlert({ type: 'success', message: 'Entrada registrada exitosamente' });
+      setTimeout(() => setAlert(null), 5000);
+      loadVisits();
+    } catch (error: any) {
+      const errorMessage = error?.message || 'Error al registrar la entrada';
+      setAlert({ type: 'error', message: errorMessage });
+      setTimeout(() => setAlert(null), 5000);
+    } finally {
+      setProcessingVisitId(null);
+    }
+  }, [businessId, getBusinessToken, loadVisits]);
+
+  const handleRegisterExit = useCallback(async (visitId: number) => {
+    setProcessingVisitId(visitId);
+    try {
+      const token = await getBusinessToken();
+      await registerExitAction({ 
+        businessId, 
+        visitId, 
+        data: { gate: 'Principal' },
+        token 
+      });
+      setAlert({ type: 'success', message: 'Salida registrada exitosamente' });
+      setTimeout(() => setAlert(null), 5000);
+      loadVisits();
+    } catch (error: any) {
+      const errorMessage = error?.message || 'Error al registrar la salida';
+      setAlert({ type: 'error', message: errorMessage });
+      setTimeout(() => setAlert(null), 5000);
+    } finally {
+      setProcessingVisitId(null);
+    }
+  }, [businessId, getBusinessToken, loadVisits]);
+
   const columns: TableColumn<VisitListDTO>[] = [
     {
       key: 'visitorName',

@@ -10,7 +10,7 @@ import { getPropertyUnitsAction } from '@/services/modules/horizontal-properties
 import { PropertyUnit } from '@/services/modules/horizontal-properties/units/domain';
 import { getResidentsAction } from '@/services/modules/horizontal-properties/residents/infrastructure/actions';
 import { Resident } from '@/services/modules/horizontal-properties/residents/domain';
-import { GetResidentsParams } from '@/services/modules/horizontal-properties/residents/domain/ports';
+import { GetResidentsParams } from '@/services/modules/horizontal-properties/residents/domain';
 
 interface ReceivePackageModalProps {
   isOpen: boolean;
@@ -172,14 +172,15 @@ export function ReceivePackageModal({ isOpen, onClose, onSuccess, businessId }: 
               setFormData({ ...formData, propertyUnitId: unitId, residentId: undefined });
             }}
             required
-          >
-            <option value="0">Seleccione una unidad</option>
-            {propertyUnits.map((unit) => (
-              <option key={unit.id} value={unit.id}>
-                {unit.number} {unit.block ? `- Bloque ${unit.block}` : ''}
-              </option>
-            ))}
-          </Select>
+            options={[
+              { value: '0', label: 'Seleccione una unidad' },
+              ...propertyUnits.map((unit) => ({
+                value: unit.id.toString(),
+                label: `${unit.number}${unit.block ? ` - Bloque ${unit.block}` : ''}`,
+              })),
+            ]}
+            placeholder="Seleccione una unidad"
+          />
         </div>
 
         {selectedUnitId && residents.length > 0 && (
@@ -193,14 +194,15 @@ export function ReceivePackageModal({ isOpen, onClose, onSuccess, businessId }: 
                 const residentId = e.target.value ? parseInt(e.target.value) : undefined;
                 setFormData({ ...formData, residentId });
               }}
-            >
-              <option value="">Seleccione un residente (opcional)</option>
-              {residents.map((resident) => (
-                <option key={resident.id} value={resident.id}>
-                  {resident.fullName}
-                </option>
-              ))}
-            </Select>
+              options={[
+                { value: '', label: 'Seleccione un residente (opcional)' },
+                ...residents.map((resident) => ({
+                  value: resident.id.toString(),
+                  label: resident.name,
+                })),
+              ]}
+              placeholder="Seleccione un residente (opcional)"
+            />
           </div>
         )}
 

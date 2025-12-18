@@ -170,13 +170,18 @@ export class CommonAreasRepository implements ICommonAreasRepository {
         },
       });
 
-      const result: BackendCommonAreasPaginatedResponse = await response.json();
-
       if (!response.ok) {
-        throw new Error(result.message || 'Error obteniendo zonas comunes');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error((errorData as any).message || errorData.error || response.statusText || 'Error obteniendo zonas comunes');
       }
 
-      logHttpSuccess({ method, url, status: response.status, duration: Date.now() - startTime });
+      const result: BackendCommonAreasPaginatedResponse = await response.json();
+
+      logHttpSuccess({ 
+        status: response.status, 
+        statusText: response.statusText, 
+        duration: Date.now() - startTime 
+      });
 
       return {
         data: result.data.map((area) => this.mapBackendCommonAreaList(area)),
@@ -186,7 +191,13 @@ export class CommonAreasRepository implements ICommonAreasRepository {
         totalPages: result.total_pages,
       };
     } catch (error) {
-      logHttpError({ method, url, error: String(error) });
+      const duration = Date.now() - startTime;
+      logHttpError({ 
+        status: 0, 
+        statusText: 'Error', 
+        duration,
+        data: { error: error instanceof Error ? error.message : String(error) }
+      });
       throw error;
     }
   }
@@ -215,11 +226,21 @@ export class CommonAreasRepository implements ICommonAreasRepository {
         throw new Error(result.message || 'Error obteniendo zona común');
       }
 
-      logHttpSuccess({ method, url, status: response.status, duration: Date.now() - startTime });
+      logHttpSuccess({ 
+        status: response.status, 
+        statusText: response.statusText, 
+        duration: Date.now() - startTime 
+      });
 
       return this.mapBackendCommonArea(result.data);
     } catch (error) {
-      logHttpError({ method, url, error: String(error) });
+      const duration = Date.now() - startTime;
+      logHttpError({ 
+        status: 0, 
+        statusText: 'Error', 
+        duration,
+        data: { error: error instanceof Error ? error.message : String(error) }
+      });
       throw error;
     }
   }
@@ -249,11 +270,21 @@ export class CommonAreasRepository implements ICommonAreasRepository {
         throw new Error(result.message || 'Error creando zona común');
       }
 
-      logHttpSuccess({ method, url, status: response.status, duration: Date.now() - startTime });
+      logHttpSuccess({ 
+        status: response.status, 
+        statusText: response.statusText, 
+        duration: Date.now() - startTime 
+      });
 
       return this.mapBackendCommonArea(result.data);
     } catch (error) {
-      logHttpError({ method, url, error: String(error) });
+      const duration = Date.now() - startTime;
+      logHttpError({ 
+        status: 0, 
+        statusText: 'Error', 
+        duration,
+        data: { error: error instanceof Error ? error.message : String(error) }
+      });
       throw error;
     }
   }
@@ -283,11 +314,21 @@ export class CommonAreasRepository implements ICommonAreasRepository {
         throw new Error(result.message || 'Error creando reserva');
       }
 
-      logHttpSuccess({ method, url, status: response.status, duration: Date.now() - startTime });
+      logHttpSuccess({ 
+        status: response.status, 
+        statusText: response.statusText, 
+        duration: Date.now() - startTime 
+      });
 
       return this.mapBackendReservation(result.data);
     } catch (error) {
-      logHttpError({ method, url, error: String(error) });
+      const duration = Date.now() - startTime;
+      logHttpError({ 
+        status: 0, 
+        statusText: 'Error', 
+        duration,
+        data: { error: error instanceof Error ? error.message : String(error) }
+      });
       throw error;
     }
   }
@@ -317,14 +358,24 @@ export class CommonAreasRepository implements ICommonAreasRepository {
         throw new Error(result.message || 'Error verificando disponibilidad');
       }
 
-      logHttpSuccess({ method, url, status: response.status, duration: Date.now() - startTime });
+      logHttpSuccess({ 
+        status: response.status, 
+        statusText: response.statusText, 
+        duration: Date.now() - startTime 
+      });
 
       return {
         available: result.available,
         message: result.message,
       };
     } catch (error) {
-      logHttpError({ method, url, error: String(error) });
+      const duration = Date.now() - startTime;
+      logHttpError({ 
+        status: 0, 
+        statusText: 'Error', 
+        duration,
+        data: { error: error instanceof Error ? error.message : String(error) }
+      });
       throw error;
     }
   }
@@ -368,13 +419,18 @@ export class CommonAreasRepository implements ICommonAreasRepository {
         },
       });
 
-      const result: BackendReservationsPaginatedResponse = await response.json();
-
       if (!response.ok) {
-        throw new Error(result.message || 'Error obteniendo reservas');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error((errorData as any).message || errorData.error || response.statusText || 'Error obteniendo reservas');
       }
 
-      logHttpSuccess({ method, url, status: response.status, duration: Date.now() - startTime });
+      const result: BackendReservationsPaginatedResponse = await response.json();
+
+      logHttpSuccess({ 
+        status: response.status, 
+        statusText: response.statusText, 
+        duration: Date.now() - startTime 
+      });
 
       return {
         data: result.data.map((reservation) => this.mapBackendReservationList(reservation)),
@@ -384,7 +440,13 @@ export class CommonAreasRepository implements ICommonAreasRepository {
         totalPages: result.total_pages,
       };
     } catch (error) {
-      logHttpError({ method, url, error: String(error) });
+      const duration = Date.now() - startTime;
+      logHttpError({ 
+        status: 0, 
+        statusText: 'Error', 
+        duration,
+        data: { error: error instanceof Error ? error.message : String(error) }
+      });
       throw error;
     }
   }
@@ -413,11 +475,21 @@ export class CommonAreasRepository implements ICommonAreasRepository {
         throw new Error(result.message || 'Error obteniendo reserva');
       }
 
-      logHttpSuccess({ method, url, status: response.status, duration: Date.now() - startTime });
+      logHttpSuccess({ 
+        status: response.status, 
+        statusText: response.statusText, 
+        duration: Date.now() - startTime 
+      });
 
       return this.mapBackendReservation(result.data);
     } catch (error) {
-      logHttpError({ method, url, error: String(error) });
+      const duration = Date.now() - startTime;
+      logHttpError({ 
+        status: 0, 
+        statusText: 'Error', 
+        duration,
+        data: { error: error instanceof Error ? error.message : String(error) }
+      });
       throw error;
     }
   }
@@ -446,11 +518,21 @@ export class CommonAreasRepository implements ICommonAreasRepository {
         throw new Error(result.message || 'Error aprobando reserva');
       }
 
-      logHttpSuccess({ method, url, status: response.status, duration: Date.now() - startTime });
+      logHttpSuccess({ 
+        status: response.status, 
+        statusText: response.statusText, 
+        duration: Date.now() - startTime 
+      });
 
       return this.mapBackendReservation(result.data);
     } catch (error) {
-      logHttpError({ method, url, error: String(error) });
+      const duration = Date.now() - startTime;
+      logHttpError({ 
+        status: 0, 
+        statusText: 'Error', 
+        duration,
+        data: { error: error instanceof Error ? error.message : String(error) }
+      });
       throw error;
     }
   }
@@ -480,11 +562,21 @@ export class CommonAreasRepository implements ICommonAreasRepository {
         throw new Error(result.message || 'Error rechazando reserva');
       }
 
-      logHttpSuccess({ method, url, status: response.status, duration: Date.now() - startTime });
+      logHttpSuccess({ 
+        status: response.status, 
+        statusText: response.statusText, 
+        duration: Date.now() - startTime 
+      });
 
       return this.mapBackendReservation(result.data);
     } catch (error) {
-      logHttpError({ method, url, error: String(error) });
+      const duration = Date.now() - startTime;
+      logHttpError({ 
+        status: 0, 
+        statusText: 'Error', 
+        duration,
+        data: { error: error instanceof Error ? error.message : String(error) }
+      });
       throw error;
     }
   }
@@ -513,11 +605,21 @@ export class CommonAreasRepository implements ICommonAreasRepository {
         throw new Error(result.message || 'Error registrando check-in');
       }
 
-      logHttpSuccess({ method, url, status: response.status, duration: Date.now() - startTime });
+      logHttpSuccess({ 
+        status: response.status, 
+        statusText: response.statusText, 
+        duration: Date.now() - startTime 
+      });
 
       return this.mapBackendReservation(result.data);
     } catch (error) {
-      logHttpError({ method, url, error: String(error) });
+      const duration = Date.now() - startTime;
+      logHttpError({ 
+        status: 0, 
+        statusText: 'Error', 
+        duration,
+        data: { error: error instanceof Error ? error.message : String(error) }
+      });
       throw error;
     }
   }
@@ -546,11 +648,21 @@ export class CommonAreasRepository implements ICommonAreasRepository {
         throw new Error(result.message || 'Error registrando check-out');
       }
 
-      logHttpSuccess({ method, url, status: response.status, duration: Date.now() - startTime });
+      logHttpSuccess({ 
+        status: response.status, 
+        statusText: response.statusText, 
+        duration: Date.now() - startTime 
+      });
 
       return this.mapBackendReservation(result.data);
     } catch (error) {
-      logHttpError({ method, url, error: String(error) });
+      const duration = Date.now() - startTime;
+      logHttpError({ 
+        status: 0, 
+        statusText: 'Error', 
+        duration,
+        data: { error: error instanceof Error ? error.message : String(error) }
+      });
       throw error;
     }
   }
@@ -580,11 +692,21 @@ export class CommonAreasRepository implements ICommonAreasRepository {
         throw new Error(result.message || 'Error cancelando reserva');
       }
 
-      logHttpSuccess({ method, url, status: response.status, duration: Date.now() - startTime });
+      logHttpSuccess({ 
+        status: response.status, 
+        statusText: response.statusText, 
+        duration: Date.now() - startTime 
+      });
 
       return this.mapBackendReservation(result.data);
     } catch (error) {
-      logHttpError({ method, url, error: String(error) });
+      const duration = Date.now() - startTime;
+      logHttpError({ 
+        status: 0, 
+        statusText: 'Error', 
+        duration,
+        data: { error: error instanceof Error ? error.message : String(error) }
+      });
       throw error;
     }
   }

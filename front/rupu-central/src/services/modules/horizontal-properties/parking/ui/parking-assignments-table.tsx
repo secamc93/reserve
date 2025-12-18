@@ -49,24 +49,28 @@ export function ParkingAssignmentsTable({ businessId, propertyUnitId }: ParkingA
 
   const columns = [
     {
+      key: 'slot',
       label: 'Espacio',
-      render: (assignment: ParkingAssignmentListDTO) => (
+      render: (_: unknown, assignment: ParkingAssignmentListDTO) => (
         <span className="font-medium">{assignment.parkingSlotNumber}</span>
       ),
     },
     {
+      key: 'unit',
       label: 'Unidad',
-      render: (assignment: ParkingAssignmentListDTO) => 
+      render: (_: unknown, assignment: ParkingAssignmentListDTO) => 
         assignment.propertyUnitNumber || '-',
     },
     {
+      key: 'resident',
       label: 'Residente',
-      render: (assignment: ParkingAssignmentListDTO) => 
+      render: (_: unknown, assignment: ParkingAssignmentListDTO) => 
         assignment.residentName || '-',
     },
     {
+      key: 'vehicle',
       label: 'Vehículo',
-      render: (assignment: ParkingAssignmentListDTO) => (
+      render: (_: unknown, assignment: ParkingAssignmentListDTO) => (
         <div>
           <div className="font-medium">{assignment.vehiclePlate}</div>
           {assignment.vehicleBrand && assignment.vehicleModel && (
@@ -78,23 +82,26 @@ export function ParkingAssignmentsTable({ businessId, propertyUnitId }: ParkingA
       ),
     },
     {
+      key: 'startDate',
       label: 'Fecha Inicio',
-      render: (assignment: ParkingAssignmentListDTO) => {
+      render: (_: unknown, assignment: ParkingAssignmentListDTO) => {
         const date = new Date(assignment.startDate);
         return <span>{date.toLocaleDateString('es-CO')}</span>;
       },
     },
     {
+      key: 'endDate',
       label: 'Fecha Fin',
-      render: (assignment: ParkingAssignmentListDTO) => {
+      render: (_: unknown, assignment: ParkingAssignmentListDTO) => {
         if (!assignment.endDate) return <span className="text-gray-400">Permanente</span>;
         const date = new Date(assignment.endDate);
         return <span>{date.toLocaleDateString('es-CO')}</span>;
       },
     },
     {
+      key: 'status',
       label: 'Estado',
-      render: (assignment: ParkingAssignmentListDTO) => (
+      render: (_: unknown, assignment: ParkingAssignmentListDTO) => (
         <Badge color={assignment.isActive ? 'success' : 'danger'}>
           {assignment.isActive ? 'Activa' : 'Inactiva'}
         </Badge>
@@ -121,7 +128,9 @@ export function ParkingAssignmentsTable({ businessId, propertyUnitId }: ParkingA
       </div>
 
       {error && (
-        <Alert variant="error" title="Error" message={error} onClose={() => setError(null)} />
+        <Alert type="error" onClose={() => setError(null)}>
+          {error}
+        </Alert>
       )}
 
       <Table
@@ -130,7 +139,7 @@ export function ParkingAssignmentsTable({ businessId, propertyUnitId }: ParkingA
         loading={loading}
         pagination={{
           currentPage: page,
-          totalPages,
+          totalPages: Math.ceil(total / pageSize),
           totalItems: total,
           itemsPerPage: pageSize,
           onPageChange: setPage,

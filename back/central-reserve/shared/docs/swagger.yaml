@@ -1358,6 +1358,145 @@ definitions:
         example: apartment
         type: string
     type: object
+  central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_request.DeliverPackageRequest:
+    properties:
+      notes:
+        type: string
+    type: object
+  central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_request.ReceivePackageRequest:
+    properties:
+      carrier:
+        type: string
+      description:
+        type: string
+      notes:
+        type: string
+      notify_resident:
+        type: boolean
+      property_unit_id:
+        type: integer
+      resident_id:
+        type: integer
+      tracking_number:
+        type: string
+    required:
+    - carrier
+    - property_unit_id
+    - tracking_number
+    type: object
+  central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_request.UpdatePackageStatusRequest:
+    properties:
+      notes:
+        type: string
+      package_status_id:
+        type: integer
+    required:
+    - package_status_id
+    type: object
+  central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse:
+    properties:
+      error:
+        type: string
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageData:
+    properties:
+      business_id:
+        type: integer
+      carrier:
+        type: string
+      created_at:
+        type: string
+      delivered_at:
+        type: string
+      delivered_by_user_id:
+        type: integer
+      description:
+        type: string
+      id:
+        type: integer
+      notes:
+        type: string
+      notification_sent_at:
+        type: string
+      notify_resident:
+        type: boolean
+      package_status_id:
+        type: integer
+      property_unit_id:
+        type: integer
+      property_unit_number:
+        description: Relaciones
+        type: string
+      qr_code:
+        type: string
+      received_at:
+        type: string
+      received_by_user_id:
+        type: integer
+      resident_id:
+        type: integer
+      resident_name:
+        type: string
+      status_code:
+        type: string
+      status_name:
+        type: string
+      tracking_number:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageListData:
+    properties:
+      carrier:
+        type: string
+      created_at:
+        type: string
+      delivered_at:
+        type: string
+      id:
+        type: integer
+      property_unit_number:
+        type: string
+      received_at:
+        type: string
+      resident_name:
+        type: string
+      status_code:
+        type: string
+      status_name:
+        type: string
+      tracking_number:
+        type: string
+    type: object
+  central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageResponse:
+    properties:
+      data:
+        $ref: '#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageData'
+      success:
+        type: boolean
+    type: object
+  central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PaginatedPackagesResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageListData'
+        type: array
+      page:
+        type: integer
+      page_size:
+        type: integer
+      success:
+        type: boolean
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
   central_reserve_services_horizontalproperty_resident_internal_infra_primary_handlers_request.CreateResidentRequest:
     properties:
       dni:
@@ -1566,6 +1705,21 @@ definitions:
     - visit_type_id
     - visitor_id
     type: object
+  central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_request.CreateVisitorRequest:
+    properties:
+      dni:
+        type: string
+      email:
+        type: string
+      full_name:
+        type: string
+      phone:
+        type: string
+    required:
+    - dni
+    - full_name
+    - phone
+    type: object
   central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_request.RegisterAssetsRequest:
     properties:
       assets:
@@ -1606,7 +1760,7 @@ definitions:
     properties:
       data:
         items:
-          $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitData'
+          $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitListData'
         type: array
       page:
         type: integer
@@ -1653,6 +1807,29 @@ definitions:
         type: integer
       visitor_id:
         type: integer
+    type: object
+  central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitListData:
+    properties:
+      actual_entry_time:
+        type: string
+      actual_exit_time:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      property_unit_number:
+        type: string
+      scheduled_date:
+        type: string
+      visit_status_name:
+        type: string
+      visit_type_name:
+        type: string
+      visitor_dni:
+        type: string
+      visitor_name:
+        type: string
     type: object
   central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitResponse:
     properties:
@@ -4068,6 +4245,232 @@ paths:
       summary: Actualizar propiedad horizontal
       tags:
       - Propiedades Horizontales
+  /horizontal-properties/packages:
+    get:
+      consumes:
+      - application/json
+      description: Lista paquetes con filtros y paginación
+      parameters:
+      - default: 1
+        description: Página
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Tamaño de página
+        in: query
+        name: page_size
+        type: integer
+      - description: ID de la unidad
+        in: query
+        name: property_unit_id
+        type: integer
+      - description: ID del residente
+        in: query
+        name: resident_id
+        type: integer
+      - description: ID del estado
+        in: query
+        name: package_status_id
+        type: integer
+      - description: Fecha inicio (YYYY-MM-DD)
+        in: query
+        name: start_date
+        type: string
+      - description: Fecha fin (YYYY-MM-DD)
+        in: query
+        name: end_date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PaginatedPackagesResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar paquetes
+      tags:
+      - Packages
+    post:
+      consumes:
+      - application/json
+      description: Registra la recepción de un nuevo paquete
+      parameters:
+      - description: Datos del paquete
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_request.ReceivePackageRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Recibir paquete
+      tags:
+      - Packages
+  /horizontal-properties/packages/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene los detalles de un paquete por su ID
+      parameters:
+      - description: ID del paquete
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obtener paquete por ID
+      tags:
+      - Packages
+  /horizontal-properties/packages/{id}/deliver:
+    post:
+      consumes:
+      - application/json
+      description: Registra la entrega de un paquete al residente
+      parameters:
+      - description: ID del paquete
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Notas adicionales
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_request.DeliverPackageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Entregar paquete
+      tags:
+      - Packages
+  /horizontal-properties/packages/{id}/status:
+    put:
+      consumes:
+      - application/json
+      description: Actualiza el estado de un paquete manualmente
+      parameters:
+      - description: ID del paquete
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Datos de actualización
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_request.UpdatePackageStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Actualizar estado de paquete
+      tags:
+      - Packages
+  /horizontal-properties/packages/qr/{qr_code}:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene los detalles de un paquete por su código QR
+      parameters:
+      - description: Código QR del paquete
+        in: path
+        name: qr_code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obtener paquete por QR
+      tags:
+      - Packages
   /horizontal-properties/property-units:
     get:
       consumes:
@@ -4873,6 +5276,38 @@ paths:
       security:
       - BearerAuth: []
       summary: Buscar visitante por DNI
+      tags:
+      - Visits
+  /horizontal-properties/visits/visitors:
+    post:
+      consumes:
+      - application/json
+      description: Crea un nuevo visitante o lo obtiene si ya existe por DNI
+      parameters:
+      - description: Datos del visitante
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_request.CreateVisitorRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitorResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Crear o obtener visitante
       tags:
       - Visits
   /horizontal-properties/voting-groups:

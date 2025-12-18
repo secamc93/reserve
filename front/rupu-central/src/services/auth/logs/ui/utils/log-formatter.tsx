@@ -126,7 +126,7 @@ export function formatLogEntry(log: LogEntry): React.ReactNode {
   }
   
   // El mensaje puede venir con códigos ANSI o sin ellos
-  const hasAnsi = /(?:\x1b\[|\033\[|\[)([0-9;]+)m/.test(log.message);
+  const hasAnsi = /(?:\x1b\[|\[)([0-9;]+)m/.test(log.message);
   
   // Si el mensaje ya tiene formato completo (como logs GIN), usarlo directamente
   // Si no, construir el formato completo
@@ -156,7 +156,7 @@ export function formatLogEntrySimple(log: LogEntry): React.ReactNode {
   const timestamp = formatTimestamp(log.timestamp);
   const levelAbbr = getLevelAbbreviation(log.level);
   const levelColor = getLevelColor(log.level);
-  const hasAnsi = /(?:\x1b\[|\033\[|\[)([0-9;]+)m/.test(log.message);
+  const hasAnsi = /(?:\x1b\[|\[)([0-9;]+)m/.test(log.message);
   
   // Si el mensaje ya tiene formato completo (como [GIN] logs), no agregar timestamp duplicado
   const messageStartsWithTimestamp = /^\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}/.test(log.message);

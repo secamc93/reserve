@@ -44,32 +44,39 @@ export function ReservationsTable({ businessId }: ReservationsTableProps) {
 
   const columns = [
     {
+      key: 'commonArea',
       label: 'Zona Común',
-      render: (reservation: ReservationListDTO) => reservation.commonAreaName,
+      render: (_: unknown, reservation: ReservationListDTO) => reservation.commonAreaName,
     },
     {
+      key: 'unit',
       label: 'Unidad',
-      render: (reservation: ReservationListDTO) => reservation.propertyUnitNumber,
+      render: (_: unknown, reservation: ReservationListDTO) => reservation.propertyUnitNumber,
     },
     {
+      key: 'resident',
       label: 'Residente',
-      render: (reservation: ReservationListDTO) => reservation.residentName || '-',
+      render: (_: unknown, reservation: ReservationListDTO) => reservation.residentName || '-',
     },
     {
+      key: 'status',
       label: 'Estado',
-      render: (reservation: ReservationListDTO) => reservation.statusName,
+      render: (_: unknown, reservation: ReservationListDTO) => reservation.statusName,
     },
     {
+      key: 'date',
       label: 'Fecha',
-      render: (reservation: ReservationListDTO) => new Date(reservation.reservationDate).toLocaleDateString(),
+      render: (_: unknown, reservation: ReservationListDTO) => new Date(reservation.reservationDate).toLocaleDateString(),
     },
     {
+      key: 'time',
       label: 'Horario',
-      render: (reservation: ReservationListDTO) => `${reservation.startTime} - ${reservation.endTime}`,
+      render: (_: unknown, reservation: ReservationListDTO) => `${reservation.startTime} - ${reservation.endTime}`,
     },
     {
+      key: 'guests',
       label: 'Invitados',
-      render: (reservation: ReservationListDTO) => reservation.numberOfGuests,
+      render: (_: unknown, reservation: ReservationListDTO) => reservation.numberOfGuests,
     },
   ];
 
@@ -89,19 +96,25 @@ export function ReservationsTable({ businessId }: ReservationsTableProps) {
       </div>
 
       {error && (
-        <Alert variant="error" title="Error" message={error} onClose={() => setError(null)} />
+        <Alert type="error" onClose={() => setError(null)}>
+          {error}
+        </Alert>
       )}
 
       <Table
         data={reservations}
         columns={columns}
-        currentPage={page}
-        totalItems={total}
-        itemsPerPage={pageSize}
-        onPageChange={setPage}
-        onItemsPerPageChange={setPageSize}
-        showItemsPerPageSelector={true}
-        itemsPerPageOptions={[5, 10, 25, 50, 100]}
+        loading={loading}
+        pagination={{
+          currentPage: page,
+          totalItems: total,
+          totalPages: Math.ceil(total / pageSize),
+          itemsPerPage: pageSize,
+          onPageChange: setPage,
+          onItemsPerPageChange: setPageSize,
+          showItemsPerPageSelector: true,
+          itemsPerPageOptions: [5, 10, 25, 50, 100],
+        }}
       />
     </div>
   );

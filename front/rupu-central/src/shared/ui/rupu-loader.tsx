@@ -90,7 +90,6 @@ export function RupuLoader({ size = 128, className = '' }: RupuLoaderProps) {
           }}
           loop={true}
           autoplay={true}
-          speed={0.74}
           onError={(error: any) => {
             console.error('Error cargando animación Lottie:', error);
             setHasError(true);
@@ -103,7 +102,6 @@ export function RupuLoader({ size = 128, className = '' }: RupuLoaderProps) {
           }}
           rendererSettings={{
             preserveAspectRatio: 'xMidYMid slice',
-            clearCanvas: true,
             className: 'lottie-animation',
             hideOnTransparent: true,
           }}

@@ -120,7 +120,9 @@ export function ParkingSlotsTable({ businessId, parkingZoneId }: ParkingSlotsTab
       </div>
 
       {error && (
-        <Alert variant="error" title="Error" message={error} onClose={() => setError(null)} />
+        <Alert type="error" onClose={() => setError(null)}>
+          {error}
+        </Alert>
       )}
 
       <Table

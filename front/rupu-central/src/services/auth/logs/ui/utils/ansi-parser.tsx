@@ -47,8 +47,8 @@ interface AnsiSegment {
 export function parseAnsi(text: string): AnsiSegment[] {
   const segments: AnsiSegment[] = [];
   // Regex mejorado para capturar códigos ANSI en diferentes formatos
-  // Soporta: \x1b[ o \033[ o [ (sin escape, como en algunos logs)
-  const ansiRegex = /(?:\x1b\[|\033\[|\[)([0-9;]+)m/g;
+  // Soporta: \x1b[ (hexadecimal) o [ (sin escape, como en algunos logs)
+  const ansiRegex = /(?:\x1b\[|\[)([0-9;]+)m/g;
   let lastIndex = 0;
   let currentColor: string | undefined;
   let currentBold = false;

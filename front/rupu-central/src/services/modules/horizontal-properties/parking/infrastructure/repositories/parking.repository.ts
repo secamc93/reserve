@@ -214,10 +214,12 @@ export class ParkingRepository implements IParkingRepository {
       queryParams.append('page_size', params.pageSize.toString());
     }
 
-    logHttpRequest('GET', `${url}?${queryParams.toString()}`);
+    const fullUrl = `${url}?${queryParams.toString()}`;
+    const startTime = Date.now();
+    logHttpRequest({ method: 'GET', url: fullUrl });
 
     try {
-      const response = await fetch(`${url}?${queryParams.toString()}`, {
+      const response = await fetch(fullUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -230,7 +232,8 @@ export class ParkingRepository implements IParkingRepository {
       }
 
       const data: BackendParkingZonesPaginatedResponse = await response.json();
-      logHttpSuccess('GET', url);
+      const duration = Date.now() - startTime;
+      logHttpSuccess({ status: response.status, statusText: response.statusText, duration });
 
       return {
         data: data.data.map((zone) => this.mapBackendParkingZoneList(zone)),
@@ -240,14 +243,16 @@ export class ParkingRepository implements IParkingRepository {
         totalPages: data.total_pages,
       };
     } catch (error) {
-      logHttpError('GET', url, error);
+      const duration = Date.now() - startTime;
+      logHttpError({ status: 0, statusText: 'Error', duration, data: { error: error instanceof Error ? error.message : String(error) } });
       throw error;
     }
   }
 
   async createParkingZone(params: { businessId: number; data: CreateParkingZoneDTO }): Promise<ParkingZone> {
     const url = `${this.baseUrl}/v1/horizontal-properties/parking/zones`;
-    logHttpRequest('POST', url, params.data);
+    const startTime = Date.now();
+    logHttpRequest({ method: 'POST', url, body: params.data });
 
     try {
       const response = await fetch(url, {
@@ -264,11 +269,13 @@ export class ParkingRepository implements IParkingRepository {
       }
 
       const result: BackendParkingZoneResponse = await response.json();
-      logHttpSuccess('POST', url);
+      const duration = Date.now() - startTime;
+      logHttpSuccess({ status: response.status, statusText: response.statusText, duration });
 
       return this.mapBackendParkingZone(result.data);
     } catch (error) {
-      logHttpError('POST', url, error);
+      const duration = Date.now() - startTime;
+      logHttpError({ status: 0, statusText: 'Error', duration, data: { error: error instanceof Error ? error.message : String(error) } });
       throw error;
     }
   }
@@ -296,10 +303,12 @@ export class ParkingRepository implements IParkingRepository {
       queryParams.append('page_size', params.pageSize.toString());
     }
 
-    logHttpRequest('GET', `${url}?${queryParams.toString()}`);
+    const fullUrl = `${url}?${queryParams.toString()}`;
+    const startTime = Date.now();
+    logHttpRequest({ method: 'GET', url: fullUrl });
 
     try {
-      const response = await fetch(`${url}?${queryParams.toString()}`, {
+      const response = await fetch(fullUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -312,7 +321,8 @@ export class ParkingRepository implements IParkingRepository {
       }
 
       const data: BackendParkingSlotsPaginatedResponse = await response.json();
-      logHttpSuccess('GET', url);
+      const duration = Date.now() - startTime;
+      logHttpSuccess({ status: response.status, statusText: response.statusText, duration });
 
       return {
         data: data.data.map((slot) => this.mapBackendParkingSlotList(slot)),
@@ -322,14 +332,16 @@ export class ParkingRepository implements IParkingRepository {
         totalPages: data.total_pages,
       };
     } catch (error) {
-      logHttpError('GET', url, error);
+      const duration = Date.now() - startTime;
+      logHttpError({ status: 0, statusText: 'Error', duration, data: { error: error instanceof Error ? error.message : String(error) } });
       throw error;
     }
   }
 
   async createParkingSlot(params: { data: CreateParkingSlotDTO }): Promise<ParkingSlot> {
     const url = `${this.baseUrl}/v1/horizontal-properties/parking/slots`;
-    logHttpRequest('POST', url, params.data);
+    const startTime = Date.now();
+    logHttpRequest({ method: 'POST', url, body: params.data });
 
     try {
       const response = await fetch(url, {
@@ -346,11 +358,13 @@ export class ParkingRepository implements IParkingRepository {
       }
 
       const result: BackendParkingSlotResponse = await response.json();
-      logHttpSuccess('POST', url);
+      const duration = Date.now() - startTime;
+      logHttpSuccess({ status: response.status, statusText: response.statusText, duration });
 
       return this.mapBackendParkingSlot(result.data);
     } catch (error) {
-      logHttpError('POST', url, error);
+      const duration = Date.now() - startTime;
+      logHttpError({ status: 0, statusText: 'Error', duration, data: { error: error instanceof Error ? error.message : String(error) } });
       throw error;
     }
   }
@@ -378,10 +392,12 @@ export class ParkingRepository implements IParkingRepository {
       queryParams.append('page_size', params.pageSize.toString());
     }
 
-    logHttpRequest('GET', `${url}?${queryParams.toString()}`);
+    const fullUrl = `${url}?${queryParams.toString()}`;
+    const startTime = Date.now();
+    logHttpRequest({ method: 'GET', url: fullUrl });
 
     try {
-      const response = await fetch(`${url}?${queryParams.toString()}`, {
+      const response = await fetch(fullUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -394,7 +410,8 @@ export class ParkingRepository implements IParkingRepository {
       }
 
       const data: BackendParkingAssignmentsPaginatedResponse = await response.json();
-      logHttpSuccess('GET', url);
+      const duration = Date.now() - startTime;
+      logHttpSuccess({ status: response.status, statusText: response.statusText, duration });
 
       return {
         data: data.data.map((assignment) => this.mapBackendParkingAssignmentList(assignment)),
@@ -404,14 +421,16 @@ export class ParkingRepository implements IParkingRepository {
         totalPages: data.total_pages,
       };
     } catch (error) {
-      logHttpError('GET', url, error);
+      const duration = Date.now() - startTime;
+      logHttpError({ status: 0, statusText: 'Error', duration, data: { error: error instanceof Error ? error.message : String(error) } });
       throw error;
     }
   }
 
   async assignParking(params: { businessId: number; data: AssignParkingDTO }): Promise<ParkingAssignment> {
     const url = `${this.baseUrl}/v1/horizontal-properties/parking/assignments`;
-    logHttpRequest('POST', url, params.data);
+    const startTime = Date.now();
+    logHttpRequest({ method: 'POST', url, body: params.data });
 
     try {
       const response = await fetch(url, {
@@ -428,11 +447,13 @@ export class ParkingRepository implements IParkingRepository {
       }
 
       const result: BackendParkingAssignmentResponse = await response.json();
-      logHttpSuccess('POST', url);
+      const duration = Date.now() - startTime;
+      logHttpSuccess({ status: response.status, statusText: response.statusText, duration });
 
       return this.mapBackendParkingAssignment(result.data);
     } catch (error) {
-      logHttpError('POST', url, error);
+      const duration = Date.now() - startTime;
+      logHttpError({ status: 0, statusText: 'Error', duration, data: { error: error instanceof Error ? error.message : String(error) } });
       throw error;
     }
   }
@@ -469,10 +490,12 @@ export class ParkingRepository implements IParkingRepository {
       queryParams.append('page_size', params.pageSize.toString());
     }
 
-    logHttpRequest('GET', `${url}?${queryParams.toString()}`);
+    const fullUrl = `${url}?${queryParams.toString()}`;
+    const startTime = Date.now();
+    logHttpRequest({ method: 'GET', url: fullUrl });
 
     try {
-      const response = await fetch(`${url}?${queryParams.toString()}`, {
+      const response = await fetch(fullUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -485,7 +508,8 @@ export class ParkingRepository implements IParkingRepository {
       }
 
       const data: BackendParkingReservationsPaginatedResponse = await response.json();
-      logHttpSuccess('GET', url);
+      const duration = Date.now() - startTime;
+      logHttpSuccess({ status: response.status, statusText: response.statusText, duration });
 
       return {
         data: data.data.map((reservation) => this.mapBackendParkingReservationList(reservation)),
@@ -495,14 +519,16 @@ export class ParkingRepository implements IParkingRepository {
         totalPages: data.total_pages,
       };
     } catch (error) {
-      logHttpError('GET', url, error);
+      const duration = Date.now() - startTime;
+      logHttpError({ status: 0, statusText: 'Error', duration, data: { error: error instanceof Error ? error.message : String(error) } });
       throw error;
     }
   }
 
   async createParkingReservation(params: { businessId: number; data: CreateParkingReservationDTO }): Promise<ParkingReservation> {
     const url = `${this.baseUrl}/v1/horizontal-properties/parking/reservations`;
-    logHttpRequest('POST', url, params.data);
+    const startTime = Date.now();
+    logHttpRequest({ method: 'POST', url, body: params.data });
 
     try {
       const response = await fetch(url, {
@@ -519,18 +545,21 @@ export class ParkingRepository implements IParkingRepository {
       }
 
       const result: BackendParkingReservationResponse = await response.json();
-      logHttpSuccess('POST', url);
+      const duration = Date.now() - startTime;
+      logHttpSuccess({ status: response.status, statusText: response.statusText, duration });
 
       return this.mapBackendParkingReservation(result.data);
     } catch (error) {
-      logHttpError('POST', url, error);
+      const duration = Date.now() - startTime;
+      logHttpError({ status: 0, statusText: 'Error', duration, data: { error: error instanceof Error ? error.message : String(error) } });
       throw error;
     }
   }
 
   async checkParkingAvailability(params: { data: CheckParkingAvailabilityDTO }): Promise<{ available: boolean; message?: string }> {
     const url = `${this.baseUrl}/v1/horizontal-properties/parking/check-availability`;
-    logHttpRequest('POST', url, params.data);
+    const startTime = Date.now();
+    logHttpRequest({ method: 'POST', url, body: params.data });
 
     try {
       const response = await fetch(url, {
@@ -547,21 +576,24 @@ export class ParkingRepository implements IParkingRepository {
       }
 
       const result: BackendCheckParkingAvailabilityResponse = await response.json();
-      logHttpSuccess('POST', url);
+      const duration = Date.now() - startTime;
+      logHttpSuccess({ status: response.status, statusText: response.statusText, duration });
 
       return {
         available: result.available,
         message: result.message,
       };
     } catch (error) {
-      logHttpError('POST', url, error);
+      const duration = Date.now() - startTime;
+      logHttpError({ status: 0, statusText: 'Error', duration, data: { error: error instanceof Error ? error.message : String(error) } });
       throw error;
     }
   }
 
   async checkInParking(params: { id: number }): Promise<ParkingReservation> {
     const url = `${this.baseUrl}/v1/horizontal-properties/parking/reservations/${params.id}/check-in`;
-    logHttpRequest('POST', url);
+    const startTime = Date.now();
+    logHttpRequest({ method: 'POST', url });
 
     try {
       const response = await fetch(url, {
@@ -577,18 +609,21 @@ export class ParkingRepository implements IParkingRepository {
       }
 
       const result: BackendParkingReservationResponse = await response.json();
-      logHttpSuccess('POST', url);
+      const duration = Date.now() - startTime;
+      logHttpSuccess({ status: response.status, statusText: response.statusText, duration });
 
       return this.mapBackendParkingReservation(result.data);
     } catch (error) {
-      logHttpError('POST', url, error);
+      const duration = Date.now() - startTime;
+      logHttpError({ status: 0, statusText: 'Error', duration, data: { error: error instanceof Error ? error.message : String(error) } });
       throw error;
     }
   }
 
   async checkOutParking(params: { id: number }): Promise<ParkingReservation> {
     const url = `${this.baseUrl}/v1/horizontal-properties/parking/reservations/${params.id}/check-out`;
-    logHttpRequest('POST', url);
+    const startTime = Date.now();
+    logHttpRequest({ method: 'POST', url });
 
     try {
       const response = await fetch(url, {
@@ -604,18 +639,21 @@ export class ParkingRepository implements IParkingRepository {
       }
 
       const result: BackendParkingReservationResponse = await response.json();
-      logHttpSuccess('POST', url);
+      const duration = Date.now() - startTime;
+      logHttpSuccess({ status: response.status, statusText: response.statusText, duration });
 
       return this.mapBackendParkingReservation(result.data);
     } catch (error) {
-      logHttpError('POST', url, error);
+      const duration = Date.now() - startTime;
+      logHttpError({ status: 0, statusText: 'Error', duration, data: { error: error instanceof Error ? error.message : String(error) } });
       throw error;
     }
   }
 
   async cancelParkingReservation(params: { id: number; reason?: string }): Promise<ParkingReservation> {
     const url = `${this.baseUrl}/v1/horizontal-properties/parking/reservations/${params.id}/cancel`;
-    logHttpRequest('POST', url, { reason: params.reason });
+    const startTime = Date.now();
+    logHttpRequest({ method: 'POST', url, body: { reason: params.reason } });
 
     try {
       const response = await fetch(url, {
@@ -632,11 +670,13 @@ export class ParkingRepository implements IParkingRepository {
       }
 
       const result: BackendParkingReservationResponse = await response.json();
-      logHttpSuccess('POST', url);
+      const duration = Date.now() - startTime;
+      logHttpSuccess({ status: response.status, statusText: response.statusText, duration });
 
       return this.mapBackendParkingReservation(result.data);
     } catch (error) {
-      logHttpError('POST', url, error);
+      const duration = Date.now() - startTime;
+      logHttpError({ status: 0, statusText: 'Error', duration, data: { error: error instanceof Error ? error.message : String(error) } });
       throw error;
     }
   }

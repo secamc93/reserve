@@ -3090,6 +3090,360 @@ const docTemplate = `{
                 }
             }
         },
+        "/horizontal-properties/packages": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Lista paquetes con filtros y paginación",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Packages"
+                ],
+                "summary": "Listar paquetes",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Página",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Tamaño de página",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la unidad",
+                        "name": "property_unit_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID del residente",
+                        "name": "resident_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID del estado",
+                        "name": "package_status_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Fecha inicio (YYYY-MM-DD)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Fecha fin (YYYY-MM-DD)",
+                        "name": "end_date",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PaginatedPackagesResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Registra la recepción de un nuevo paquete",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Packages"
+                ],
+                "summary": "Recibir paquete",
+                "parameters": [
+                    {
+                        "description": "Datos del paquete",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_request.ReceivePackageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/packages/qr/{qr_code}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene los detalles de un paquete por su código QR",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Packages"
+                ],
+                "summary": "Obtener paquete por QR",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Código QR del paquete",
+                        "name": "qr_code",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/packages/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene los detalles de un paquete por su ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Packages"
+                ],
+                "summary": "Obtener paquete por ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del paquete",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/packages/{id}/deliver": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Registra la entrega de un paquete al residente",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Packages"
+                ],
+                "summary": "Entregar paquete",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del paquete",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Notas adicionales",
+                        "name": "request",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_request.DeliverPackageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/packages/{id}/status": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Actualiza el estado de un paquete manualmente",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Packages"
+                ],
+                "summary": "Actualizar estado de paquete",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del paquete",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos de actualización",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_request.UpdatePackageStatusRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/horizontal-properties/property-units": {
             "get": {
                 "security": [
@@ -4091,6 +4445,57 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/visits/visitors": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Crea un nuevo visitante o lo obtiene si ya existe por DNI",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Visits"
+                ],
+                "summary": "Crear o obtener visitante",
+                "parameters": [
+                    {
+                        "description": "Datos del visitante",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_request.CreateVisitorRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitorResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse"
                         }
@@ -10487,6 +10892,217 @@ const docTemplate = `{
                 }
             }
         },
+        "central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_request.DeliverPackageRequest": {
+            "type": "object",
+            "properties": {
+                "notes": {
+                    "type": "string"
+                }
+            }
+        },
+        "central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_request.ReceivePackageRequest": {
+            "type": "object",
+            "required": [
+                "carrier",
+                "property_unit_id",
+                "tracking_number"
+            ],
+            "properties": {
+                "carrier": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "notify_resident": {
+                    "type": "boolean"
+                },
+                "property_unit_id": {
+                    "type": "integer"
+                },
+                "resident_id": {
+                    "type": "integer"
+                },
+                "tracking_number": {
+                    "type": "string"
+                }
+            }
+        },
+        "central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_request.UpdatePackageStatusRequest": {
+            "type": "object",
+            "required": [
+                "package_status_id"
+            ],
+            "properties": {
+                "notes": {
+                    "type": "string"
+                },
+                "package_status_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageData": {
+            "type": "object",
+            "properties": {
+                "business_id": {
+                    "type": "integer"
+                },
+                "carrier": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "delivered_at": {
+                    "type": "string"
+                },
+                "delivered_by_user_id": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "notification_sent_at": {
+                    "type": "string"
+                },
+                "notify_resident": {
+                    "type": "boolean"
+                },
+                "package_status_id": {
+                    "type": "integer"
+                },
+                "property_unit_id": {
+                    "type": "integer"
+                },
+                "property_unit_number": {
+                    "description": "Relaciones",
+                    "type": "string"
+                },
+                "qr_code": {
+                    "type": "string"
+                },
+                "received_at": {
+                    "type": "string"
+                },
+                "received_by_user_id": {
+                    "type": "integer"
+                },
+                "resident_id": {
+                    "type": "integer"
+                },
+                "resident_name": {
+                    "type": "string"
+                },
+                "status_code": {
+                    "type": "string"
+                },
+                "status_name": {
+                    "type": "string"
+                },
+                "tracking_number": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageListData": {
+            "type": "object",
+            "properties": {
+                "carrier": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "delivered_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "property_unit_number": {
+                    "type": "string"
+                },
+                "received_at": {
+                    "type": "string"
+                },
+                "resident_name": {
+                    "type": "string"
+                },
+                "status_code": {
+                    "type": "string"
+                },
+                "status_name": {
+                    "type": "string"
+                },
+                "tracking_number": {
+                    "type": "string"
+                }
+            }
+        },
+        "central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageData"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PaginatedPackagesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageListData"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "success": {
+                    "type": "boolean"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "type": "integer"
+                }
+            }
+        },
         "central_reserve_services_horizontalproperty_resident_internal_infra_primary_handlers_request.CreateResidentRequest": {
             "type": "object",
             "required": [
@@ -10775,6 +11391,28 @@ const docTemplate = `{
                 }
             }
         },
+        "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_request.CreateVisitorRequest": {
+            "type": "object",
+            "required": [
+                "dni",
+                "full_name",
+                "phone"
+            ],
+            "properties": {
+                "dni": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "full_name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                }
+            }
+        },
         "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_request.RegisterAssetsRequest": {
             "type": "object",
             "required": [
@@ -10836,7 +11474,7 @@ const docTemplate = `{
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitData"
+                        "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitListData"
                     }
                 },
                 "page": {
@@ -10906,6 +11544,41 @@ const docTemplate = `{
                 },
                 "visitor_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitListData": {
+            "type": "object",
+            "properties": {
+                "actual_entry_time": {
+                    "type": "string"
+                },
+                "actual_exit_time": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "property_unit_number": {
+                    "type": "string"
+                },
+                "scheduled_date": {
+                    "type": "string"
+                },
+                "visit_status_name": {
+                    "type": "string"
+                },
+                "visit_type_name": {
+                    "type": "string"
+                },
+                "visitor_dni": {
+                    "type": "string"
+                },
+                "visitor_name": {
+                    "type": "string"
                 }
             }
         },

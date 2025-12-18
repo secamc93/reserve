@@ -44,32 +44,38 @@ export function CommonAreasTable({ businessId }: CommonAreasTableProps) {
 
   const columns = [
     {
+      key: 'name',
       label: 'Nombre',
-      render: (area: CommonAreaListDTO) => area.name,
+      render: (_: unknown, area: CommonAreaListDTO) => area.name,
     },
     {
+      key: 'type',
       label: 'Tipo',
-      render: (area: CommonAreaListDTO) => area.typeName,
+      render: (_: unknown, area: CommonAreaListDTO) => area.typeName,
     },
     {
+      key: 'location',
       label: 'Ubicación',
-      render: (area: CommonAreaListDTO) => area.location || '-',
+      render: (_: unknown, area: CommonAreaListDTO) => area.location || '-',
     },
     {
+      key: 'capacity',
       label: 'Capacidad',
-      render: (area: CommonAreaListDTO) => area.maxCapacity,
+      render: (_: unknown, area: CommonAreaListDTO) => area.maxCapacity,
     },
     {
+      key: 'status',
       label: 'Estado',
-      render: (area: CommonAreaListDTO) => (
+      render: (_: unknown, area: CommonAreaListDTO) => (
         <span className={area.isActive ? 'text-green-600' : 'text-red-600'}>
           {area.isActive ? 'Activa' : 'Inactiva'}
         </span>
       ),
     },
     {
+      key: 'requiresApproval',
       label: 'Requiere Aprobación',
-      render: (area: CommonAreaListDTO) => (area.requiresApproval ? 'Sí' : 'No'),
+      render: (_: unknown, area: CommonAreaListDTO) => (area.requiresApproval ? 'Sí' : 'No'),
     },
   ];
 
@@ -89,19 +95,25 @@ export function CommonAreasTable({ businessId }: CommonAreasTableProps) {
       </div>
 
       {error && (
-        <Alert variant="error" title="Error" message={error} onClose={() => setError(null)} />
+        <Alert type="error" onClose={() => setError(null)}>
+          {error}
+        </Alert>
       )}
 
       <Table
         data={commonAreas}
         columns={columns}
-        currentPage={page}
-        totalItems={total}
-        itemsPerPage={pageSize}
-        onPageChange={setPage}
-        onItemsPerPageChange={setPageSize}
-        showItemsPerPageSelector={true}
-        itemsPerPageOptions={[5, 10, 25, 50, 100]}
+        loading={loading}
+        pagination={{
+          currentPage: page,
+          totalItems: total,
+          totalPages: Math.ceil(total / pageSize),
+          itemsPerPage: pageSize,
+          onPageChange: setPage,
+          onItemsPerPageChange: setPageSize,
+          showItemsPerPageSelector: true,
+          itemsPerPageOptions: [5, 10, 25, 50, 100],
+        }}
       />
     </div>
   );

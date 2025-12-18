@@ -3,19 +3,6872 @@ package auth
 
 import "github.com/swaggo/swag"
 
-const docTemplate = `{"swagger": "2.0", "info": {"description": "Servicio REST para la gestión de reservas multi-restaurante.", "title": "Restaurant Reservation API", "termsOfService": "https://ejemplo.com/terminos", "contact": {"name": "Equipo de Backend", "email": "backend@example.com"}, "license": {"name": "MIT", "url": "https://opensource.org/licenses/MIT"}, "version": "1.0"}, "host": "localhost:3050", "basePath": "/api/v1", "schemes": null, "paths": {"/actions": {"get": {"security": [{"BearerAuth": []}], "description": "Obtiene una lista paginada de actions del sistema con opciones de filtrado", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Actions"], "summary": "Obtener actions", "parameters": [{"minimum": 1, "type": "integer", "default": 1, "description": "Número de página", "name": "page", "in": "query"}, {"maximum": 100, "minimum": 1, "type": "integer", "default": 10, "description": "Tamaño de página", "name": "page_size", "in": "query"}, {"type": "string", "description": "Filtrar por nombre (búsqueda parcial)", "name": "name", "in": "query"}], "responses": {"200": {"description": "Lista de actions obtenida exitosamente", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "400": {"description": "Parámetros de consulta inválidos", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "401": {"description": "No autorizado", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"type": "object", "additionalProperties": true{{"}}"}}{{"}}"}}, "post": {"security": [{"BearerAuth": []}], "description": "Crea un nuevo action en el sistema con nombre y descripción únicos", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Actions"], "summary": "Crear action", "parameters": [{"description": "Datos del action a crear", "name": "request", "in": "body", "required": true, "schema": {"$ref": "#/definitions/central_reserve_services_auth_actions_internal_infra_primary_handlers_request.CreateActionRequest"{{"}}"}}], "responses": {"201": {"description": "Action creado exitosamente", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "400": {"description": "Datos de entrada inválidos", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "401": {"description": "No autorizado", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "403": {"description": "Solo super usuarios pueden crear actions", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "409": {"description": "Action ya existe", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"type": "object", "additionalProperties": true{{"}}"}}{{"}}"}}}, "/actions/{id}": {"get": {"security": [{"BearerAuth": []}], "description": "Obtiene un action específico del sistema por su ID único", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Actions"], "summary": "Obtener action por ID", "parameters": [{"minimum": 1, "type": "integer", "description": "ID del action", "name": "id", "in": "path", "required": true}], "responses": {"200": {"description": "Action obtenido exitosamente", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "400": {"description": "ID de action inválido", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "401": {"description": "No autorizado", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "404": {"description": "Action no encontrado", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"type": "object", "additionalProperties": true{{"}}"}}{{"}}"}}, "put": {"security": [{"BearerAuth": []}], "description": "Actualiza un action existente en el sistema", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Actions"], "summary": "Actualizar action", "parameters": [{"minimum": 1, "type": "integer", "description": "ID del action", "name": "id", "in": "path", "required": true}, {"description": "Datos del action a actualizar", "name": "request", "in": "body", "required": true, "schema": {"$ref": "#/definitions/central_reserve_services_auth_actions_internal_infra_primary_handlers_request.UpdateActionRequest"{{"}}"}}], "responses": {"200": {"description": "Action actualizado exitosamente", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "400": {"description": "Datos de entrada inválidos", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "401": {"description": "No autorizado", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "403": {"description": "Solo super usuarios pueden actualizar actions", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "404": {"description": "Action no encontrado", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "409": {"description": "Conflicto con action existente", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"type": "object", "additionalProperties": true{{"}}"}}{{"}}"}}, "delete": {"security": [{"BearerAuth": []}], "description": "Elimina un action del sistema por su ID único. No se puede eliminar si tiene permisos asociados.", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Actions"], "summary": "Eliminar action", "parameters": [{"minimum": 1, "type": "integer", "description": "ID del action", "name": "id", "in": "path", "required": true}], "responses": {"200": {"description": "Action eliminado exitosamente", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "400": {"description": "ID de action inválido", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "401": {"description": "No autorizado", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "403": {"description": "Solo super usuarios pueden eliminar actions", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "404": {"description": "Action no encontrado", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "409": {"description": "Action tiene permisos asociados", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"type": "object", "additionalProperties": true{{"}}"}}{{"}}"}}}, "/auth/business-token": {"post": {"security": [{"BusinessTokenAuth": []}], "description": "Genera un token específico para un business basado en el token principal del usuario. Para super admins (scope platform), usar business_id = 0", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Auth"], "summary": "Generar token de business", "parameters": [{"description": "Datos del business (business_id = 0 para super admin)", "name": "request", "in": "body", "required": true, "schema": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_request.GenerateBusinessTokenRequest"{{"}}"}}], "responses": {"200": {"description": "Token generado exitosamente", "schema": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.GenerateBusinessTokenSuccessResponse"{{"}}"}}, "400": {"description": "Datos de entrada inválidos", "schema": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.GenerateBusinessTokenErrorResponse"{{"}}"}}, "401": {"description": "No autorizado", "schema": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.GenerateBusinessTokenErrorResponse"{{"}}"}}, "404": {"description": "Business no encontrado o sin acceso", "schema": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.GenerateBusinessTokenErrorResponse"{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.GenerateBusinessTokenErrorResponse"{{"}}"}}{{"}}"}}}, "/auth/change-password": {"post": {"security": [{"BearerAuth": []}], "description": "Cambia la contraseña del usuario autenticado", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Auth"], "summary": "Cambiar contraseña", "parameters": [{"description": "Datos para cambiar contraseña", "name": "password", "in": "body", "required": true, "schema": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_request.ChangePasswordRequest"{{"}}"}}], "responses": {"200": {"description": "Contraseña cambiada exitosamente", "schema": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.ChangePasswordResponse"{{"}}"}}, "400": {"description": "Datos inválidos", "schema": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginErrorResponse"{{"}}"}}, "401": {"description": "Token de acceso requerido", "schema": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginErrorResponse"{{"}}"}}, "403": {"description": "Contraseña actual incorrecta", "schema": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginErrorResponse"{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginErrorResponse"{{"}}"}}{{"}}"}}}, "/auth/generate-password": {"post": {"security": [{"BearerAuth": []}], "description": "Genera una nueva contraseña aleatoria. Si el usuario es super admin, puede especificar user_id para generar contraseña de otro usuario. Si no se envía user_id, se genera para el usuario autenticado. La contraseña solo se muestra una vez en esta respuesta.", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Auth"], "summary": "Generar nueva contraseña aleatoria", "parameters": [{"description": "Request body (user_id opcional, solo para super usuarios)", "name": "request", "in": "body", "schema": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_request.GeneratePasswordRequest"{{"}}"}}], "responses": {"200": {"description": "Nueva contraseña generada exitosamente (solo se muestra una vez)", "schema": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.GeneratePasswordResponse"{{"}}"}}, "400": {"description": "Datos inválidos", "schema": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginErrorResponse"{{"}}"}}, "401": {"description": "Token de acceso requerido", "schema": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginErrorResponse"{{"}}"}}, "403": {"description": "No tienes permisos para generar contraseña de otro usuario o usuario inactivo", "schema": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginErrorResponse"{{"}}"}}, "404": {"description": "Usuario no encontrado", "schema": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginErrorResponse"{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginErrorResponse"{{"}}"}}{{"}}"}}}, "/auth/login": {"post": {"description": "Autentica un usuario con email y contraseña, retornando información del usuario y token de acceso", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Auth"], "summary": "Autenticar usuario", "parameters": [{"description": "Credenciales de login", "name": "request", "in": "body", "required": true, "schema": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_request.LoginRequest"{{"}}"}}], "responses": {"200": {"description": "Login exitoso", "schema": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginSuccessResponse"{{"}}"}}, "400": {"description": "Datos de entrada inválidos", "schema": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginBadRequestResponse"{{"}}"}}, "401": {"description": "Credenciales inválidas", "schema": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginErrorResponse"{{"}}"}}, "403": {"description": "Usuario inactivo", "schema": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginErrorResponse"{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginErrorResponse"{{"}}"}}{{"}}"}}}, "/auth/roles-permissions": {"get": {"security": [{"BearerAuth": []}], "description": "Obtiene los roles y permisos del usuario autenticado desde el token", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Auth"], "summary": "Obtener roles y permisos del usuario", "responses": {"200": {"description": "Roles y permisos obtenidos exitosamente", "schema": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.UserRolesPermissionsSuccessResponse"{{"}}"}}, "401": {"description": "Token de acceso requerido", "schema": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginErrorResponse"{{"}}"}}, "404": {"description": "Usuario no encontrado", "schema": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginErrorResponse"{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginErrorResponse"{{"}}"}}{{"}}"}}}, "/business-types": {"get": {"security": [{"BearerAuth": []}], "description": "Obtiene una lista de todos los tipos de negocio del sistema", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["business-types"], "summary": "Obtener lista de tipos de negocio", "responses": {"201": {"description": "Tipos de negocio obtenidos exitosamente", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "400": {"description": "Solicitud inválida", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "401": {"description": "Token de acceso requerido", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"type": "object", "additionalProperties": true{{"}}"}}{{"}}"}}, "post": {"security": [{"BearerAuth": []}], "description": "Crea un nuevo tipo de negocio en el sistema", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["business-types"], "summary": "Crear un nuevo tipo de negocio", "parameters": [{"description": "Datos del tipo de negocio a crear", "name": "businessType", "in": "body", "required": true, "schema": {"$ref": "#/definitions/central_reserve_services_auth_business_internal_infra_primary_controllers_businesstypehandler_request.BusinessTypeRequest"{{"}}"}}], "responses": {"201": {"description": "Tipo de negocio creado exitosamente", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "400": {"description": "Solicitud inválida", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "401": {"description": "Token de acceso requerido", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"type": "object", "additionalProperties": true{{"}}"}}{{"}}"}}}, "/business-types/{id}": {"get": {"security": [{"BearerAuth": []}], "description": "Obtiene un tipo de negocio específico por su ID", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["business-types"], "summary": "Obtener tipo de negocio por ID", "parameters": [{"type": "integer", "description": "ID del tipo de negocio", "name": "id", "in": "path", "required": true}], "responses": {"201": {"description": "Tipo de negocio obtenido exitosamente", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "400": {"description": "Solicitud inválida", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "401": {"description": "Token de acceso requerido", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"type": "object", "additionalProperties": true{{"}}"}}{{"}}"}}, "put": {"security": [{"BearerAuth": []}], "description": "Actualiza un tipo de negocio existente", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["business-types"], "summary": "Actualizar tipo de negocio", "parameters": [{"type": "integer", "description": "ID del tipo de negocio", "name": "id", "in": "path", "required": true}, {"description": "Datos del tipo de negocio a actualizar", "name": "businessType", "in": "body", "required": true, "schema": {"$ref": "#/definitions/central_reserve_services_auth_business_internal_infra_primary_controllers_businesstypehandler_request.BusinessTypeRequest"{{"}}"}}], "responses": {"201": {"description": "Tipo de negocio actualizado exitosamente", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "400": {"description": "Solicitud inválida", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "401": {"description": "Token de acceso requerido", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"type": "object", "additionalProperties": true{{"}}"}}{{"}}"}}, "delete": {"security": [{"BearerAuth": []}], "description": "Elimina un tipo de negocio del sistema", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["business-types"], "summary": "Eliminar tipo de negocio", "parameters": [{"type": "integer", "description": "ID del tipo de negocio", "name": "id", "in": "path", "required": true}], "responses": {"201": {"description": "Tipo de negocio eliminado exitosamente", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "400": {"description": "Solicitud inválida", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "401": {"description": "Token de acceso requerido", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"type": "object", "additionalProperties": true{{"}}"}}{{"}}"}}}, "/businesses": {"get": {"security": [{"BearerAuth": []}], "description": "Obtiene una lista paginada de todos los negocios del sistema", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["businesses"], "summary": "Obtener lista de negocios", "parameters": [{"type": "integer", "description": "Número de página (por defecto 1)", "name": "page", "in": "query"}, {"type": "integer", "description": "Elementos por página (por defecto 10)", "name": "per_page", "in": "query"}, {"type": "string", "description": "Filtrar por nombre de negocio", "name": "name", "in": "query"}, {"type": "integer", "description": "Filtrar por tipo de negocio", "name": "business_type_id", "in": "query"}, {"type": "boolean", "description": "Filtrar por estado activo/inactivo", "name": "is_active", "in": "query"}], "responses": {"201": {"description": "Negocios obtenidos exitosamente", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "400": {"description": "Solicitud inválida", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "401": {"description": "Token de acceso requerido", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"type": "object", "additionalProperties": true{{"}}"}}{{"}}"}}, "post": {"security": [{"BearerAuth": []}], "description": "Crea un nuevo negocio en el sistema", "consumes": ["multipart/form-data"], "produces": ["application/json"], "tags": ["businesses"], "summary": "Crear un nuevo negocio", "parameters": [{"type": "string", "description": "Nombre del negocio", "name": "name", "in": "formData", "required": true}, {"type": "string", "description": "Código del negocio", "name": "code", "in": "formData", "required": true}, {"type": "integer", "description": "ID del tipo de negocio", "name": "business_type_id", "in": "formData", "required": true}, {"type": "string", "description": "Zona horaria", "name": "timezone", "in": "formData"}, {"type": "string", "description": "Dirección", "name": "address", "in": "formData"}, {"type": "string", "description": "Descripción", "name": "description", "in": "formData"}, {"type": "file", "description": "Logo del negocio", "name": "logo_url", "in": "formData"}, {"type": "string", "description": "Color primario", "name": "primary_color", "in": "formData"}, {"type": "string", "description": "Color secundario", "name": "secondary_color", "in": "formData"}, {"type": "string", "description": "Dominio personalizado", "name": "custom_domain", "in": "formData"}, {"type": "boolean", "description": "Habilitar delivery", "name": "enable_delivery", "in": "formData"}, {"type": "boolean", "description": "Habilitar pickup", "name": "enable_pickup", "in": "formData"}, {"type": "boolean", "description": "Habilitar reservas", "name": "enable_reservations", "in": "formData"}], "responses": {"201": {"description": "Negocio creado exitosamente", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "400": {"description": "Solicitud inválida", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "401": {"description": "Token de acceso requerido", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"type": "object", "additionalProperties": true{{"}}"}}{{"}}"}}}, "/businesses/configured-resources": {"get": {"security": [{"BearerAuth": []}], "description": "Obtiene una lista paginada de businesses con sus recursos configurados y su estado (activo/inactivo)", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Business Resources"], "summary": "Obtener configuración de recursos de businesses", "parameters": [{"minimum": 1, "type": "integer", "default": 1, "description": "Número de página", "name": "page", "in": "query"}, {"maximum": 100, "minimum": 1, "type": "integer", "default": 10, "description": "Elementos por página", "name": "per_page", "in": "query"}, {"type": "integer", "description": "Filtrar por ID de business", "name": "business_id", "in": "query"}, {"type": "integer", "description": "Filtrar por ID de tipo de business", "name": "business_type_id", "in": "query"}], "responses": {"200": {"description": "Lista de businesses con recursos obtenida exitosamente", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "400": {"description": "Parámetros de consulta inválidos", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "401": {"description": "No autorizado", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "403": {"description": "Sin permisos", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"type": "object", "additionalProperties": true{{"}}"}}{{"}}"}}}, "/businesses/configured-resources/{resource_id}/activate": {"put": {"security": [{"BearerAuth": []}], "description": "Activa un recurso configurado para un business específico", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Business Resources"], "summary": "Activar recurso de business", "parameters": [{"minimum": 1, "type": "integer", "description": "ID del recurso", "name": "resource_id", "in": "path", "required": true}, {"minimum": 1, "type": "integer", "description": "ID del business (solo super admin)", "name": "business_id", "in": "query"}], "responses": {"200": {"description": "Recurso activado exitosamente", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "400": {"description": "Parámetros inválidos", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "401": {"description": "No autorizado", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "403": {"description": "Sin permisos", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "404": {"description": "Business o recurso no encontrado", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"type": "object", "additionalProperties": true{{"}}"}}{{"}}"}}}, "/businesses/configured-resources/{resource_id}/deactivate": {"put": {"security": [{"BearerAuth": []}], "description": "Desactiva un recurso configurado para un business específico", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Business Resources"], "summary": "Desactivar recurso de business", "parameters": [{"minimum": 1, "type": "integer", "description": "ID del recurso", "name": "resource_id", "in": "path", "required": true}, {"minimum": 1, "type": "integer", "description": "ID del business (solo super admin)", "name": "business_id", "in": "query"}], "responses": {"200": {"description": "Recurso desactivado exitosamente", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "400": {"description": "Parámetros inválidos", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "401": {"description": "No autorizado", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "403": {"description": "Sin permisos", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "404": {"description": "Business o recurso no encontrado", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"type": "object", "additionalProperties": true{{"}}"}}{{"}}"}}}, "/businesses/{id}": {"get": {"security": [{"BearerAuth": []}], "description": "Obtiene un negocio específico por su ID", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["businesses"], "summary": "Obtener negocio por ID", "parameters": [{"type": "integer", "description": "ID del negocio", "name": "id", "in": "path", "required": true}], "responses": {"200": {"description": "Negocio obtenido exitosamente", "schema": {"$ref": "#/definitions/central_reserve_services_auth_business_internal_infra_primary_controllers_businesshandler_response.GetBusinessByIDResponse"{{"}}"}}, "400": {"description": "Solicitud inválida", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "401": {"description": "Token de acceso requerido", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"type": "object", "additionalProperties": true{{"}}"}}{{"}}"}}, "put": {"security": [{"BearerAuth": []}], "description": "Actualiza un negocio existente", "consumes": ["multipart/form-data"], "produces": ["application/json"], "tags": ["businesses"], "summary": "Actualizar negocio", "parameters": [{"type": "integer", "description": "ID del negocio", "name": "id", "in": "path", "required": true}, {"type": "string", "description": "Nombre del negocio", "name": "name", "in": "formData"}, {"type": "string", "description": "Código del negocio", "name": "code", "in": "formData"}, {"type": "integer", "description": "ID del tipo de negocio", "name": "business_type_id", "in": "formData"}, {"type": "string", "description": "Zona horaria", "name": "timezone", "in": "formData"}, {"type": "string", "description": "Dirección", "name": "address", "in": "formData"}, {"type": "string", "description": "Descripción", "name": "description", "in": "formData"}, {"type": "file", "description": "Logo del negocio", "name": "logo_url", "in": "formData"}, {"type": "string", "description": "Color primario", "name": "primary_color", "in": "formData"}, {"type": "string", "description": "Color secundario", "name": "secondary_color", "in": "formData"}, {"type": "string", "description": "Dominio personalizado", "name": "custom_domain", "in": "formData"}, {"type": "boolean", "description": "¿Activo?", "name": "is_active", "in": "formData"}, {"type": "boolean", "description": "Habilitar delivery", "name": "enable_delivery", "in": "formData"}, {"type": "boolean", "description": "Habilitar pickup", "name": "enable_pickup", "in": "formData"}, {"type": "boolean", "description": "Habilitar reservas", "name": "enable_reservations", "in": "formData"}], "responses": {"201": {"description": "Negocio actualizado exitosamente", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "400": {"description": "Solicitud inválida", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "401": {"description": "Token de acceso requerido", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"type": "object", "additionalProperties": true{{"}}"}}{{"}}"}}, "delete": {"security": [{"BearerAuth": []}], "description": "Elimina un negocio del sistema", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["businesses"], "summary": "Eliminar negocio", "parameters": [{"type": "integer", "description": "ID del negocio", "name": "id", "in": "path", "required": true}], "responses": {"201": {"description": "Negocio eliminado exitosamente", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "400": {"description": "Solicitud inválida", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "401": {"description": "Token de acceso requerido", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"type": "object", "additionalProperties": true{{"}}"}}{{"}}"}}}, "/businesses/{id}/configured-resources": {"get": {"security": [{"BearerAuth": []}], "description": "Obtiene la configuración de recursos de un business específico por su ID, incluyendo todos los recursos asociados y su estado (activo/inactivo)", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Business Resources"], "summary": "Obtener configuración de recursos de un business por ID", "parameters": [{"type": "integer", "description": "ID del business", "name": "id", "in": "path", "required": true}], "responses": {"200": {"description": "Configuración de recursos del business obtenida exitosamente", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "400": {"description": "Parámetros inválidos", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "401": {"description": "No autorizado", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "403": {"description": "Sin permisos", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "404": {"description": "Business no encontrado", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"type": "object", "additionalProperties": true{{"}}"}}{{"}}"}}}, "/dashboard": {"get": {"security": [{"BearerAuth": []}], "description": "Obtiene el resumen completo del dashboard según el tipo de usuario (business o super admin)", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Dashboard"], "summary": "Obtener dashboard", "parameters": [{"type": "integer", "description": "ID del business (opcional para super admin, si no se envía ve todo)", "name": "business_id", "in": "query"}, {"type": "integer", "description": "Página para business summaries (solo super admin, default: 1)", "name": "page", "in": "query"}, {"type": "integer", "description": "Tamaño de página para business summaries (solo super admin, default: 10, max: 100)", "name": "page_size", "in": "query"}], "responses": {"200": {"description": "OK", "schema": {"type": "object"{{"}}"}}, "400": {"description": "Bad Request", "schema": {"type": "object"{{"}}"}}, "500": {"description": "Internal Server Error", "schema": {"type": "object"{{"}}"}}{{"}}"}}}, "/dashboard/stats": {"get": {"security": [{"BearerAuth": []}], "description": "Obtiene estadísticas resumidas de todos los módulos IAM (usuarios, roles, permisos, recursos, negocios, tipos de negocio)", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Dashboard"], "summary": "Obtener estadísticas del dashboard IAM", "parameters": [{"type": "integer", "description": "Filtrar por tipo de business", "name": "business_type_id", "in": "query"}, {"type": "integer", "description": "Filtrar por ID de business", "name": "business_id", "in": "query"}], "responses": {"200": {"description": "Estadísticas obtenidas exitosamente", "schema": {"$ref": "#/definitions/central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.DashboardStatsResponse"{{"}}"}}, "401": {"description": "Token de acceso requerido", "schema": {"$ref": "#/definitions/central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.DashboardErrorResponse"{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"$ref": "#/definitions/central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.DashboardErrorResponse"{{"}}"}}{{"}}"}}}, "/logs/stream": {"get": {"security": [{"BearerAuth": []}], "description": "Obtiene un stream de logs del sistema en tiempo real usando Server-Sent Events (SSE)", "consumes": ["application/json"], "produces": ["text/event-stream"], "tags": ["Logs"], "summary": "Stream de logs en tiempo real", "parameters": [{"type": "string", "description": "Nivel de log (error, warn, info, debug)", "name": "level", "in": "query"}, {"type": "string", "description": "Filtrar por servicio", "name": "service", "in": "query"}, {"type": "string", "description": "Filtrar por módulo", "name": "module", "in": "query"}, {"type": "string", "description": "Filtrar por función", "name": "function", "in": "query"}, {"type": "integer", "description": "Filtrar por business_id", "name": "business_id", "in": "query"}, {"type": "integer", "description": "Filtrar por user_id", "name": "user_id", "in": "query"}, {"type": "string", "description": "Buscar en mensaje", "name": "search", "in": "query"}], "responses": {"200": {"description": "Stream de logs en formato SSE", "schema": {"type": "string"{{"}}"}}, "401": {"description": "Token de acceso requerido", "schema": {"type": "object"{{"}}"}}, "403": {"description": "Solo super administradores pueden ver logs", "schema": {"type": "object"{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"type": "object"{{"}}"}}{{"}}"}}}, "/permissions": {"get": {"security": [{"BearerAuth": []}], "description": "Obtiene la lista completa de permisos del sistema con filtros opcionales por tipo de business, nombre y scope", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Permissions"], "summary": "Obtener todos los permisos", "parameters": [{"type": "integer", "description": "Filtrar por tipo de business (incluye genéricos)", "name": "business_type_id", "in": "query"}, {"type": "string", "description": "Filtrar por nombre de permiso (búsqueda parcial)", "name": "name", "in": "query"}, {"type": "integer", "description": "Filtrar por ID de scope", "name": "scope_id", "in": "query"}], "responses": {"200": {"description": "Lista de permisos obtenida exitosamente", "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionListResponse"{{"}}"}}, "401": {"description": "Token de acceso requerido", "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"{{"}}"}}{{"}}"}}, "post": {"security": [{"BearerAuth": []}], "description": "Crea un nuevo permiso en el sistema", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Permissions"], "summary": "Crear nuevo permiso", "parameters": [{"description": "Datos del permiso a crear", "name": "permission", "in": "body", "required": true, "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_request.CreatePermissionRequest"{{"}}"}}], "responses": {"201": {"description": "Permiso creado exitosamente", "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionMessageResponse"{{"}}"}}, "400": {"description": "Datos de entrada inválidos", "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"{{"}}"}}, "401": {"description": "Token de acceso requerido", "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"{{"}}"}}, "409": {"description": "Permiso con código o nombre duplicado", "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"{{"}}"}}{{"}}"}}}, "/permissions/resource/{resource}": {"get": {"security": [{"BearerAuth": []}], "description": "Obtiene todos los permisos de un recurso específico", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Permissions"], "summary": "Obtener permisos por recurso", "parameters": [{"type": "string", "example": "\"users\"", "description": "Recurso de los permisos", "name": "resource", "in": "path", "required": true}], "responses": {"200": {"description": "Permisos por recurso obtenidos exitosamente", "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionListResponse"{{"}}"}}, "400": {"description": "Recurso inválido", "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"{{"}}"}}, "401": {"description": "Token de acceso requerido", "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"{{"}}"}}{{"}}"}}}, "/permissions/scope/{scope_id}": {"get": {"security": [{"BearerAuth": []}], "description": "Obtiene todos los permisos de un scope específico", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Permissions"], "summary": "Obtener permisos por scope", "parameters": [{"minimum": 1, "type": "integer", "description": "ID del scope", "name": "scope_id", "in": "path", "required": true}], "responses": {"200": {"description": "Permisos por scope obtenidos exitosamente", "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionListResponse"{{"}}"}}, "400": {"description": "Scope ID inválido", "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"{{"}}"}}, "401": {"description": "Token de acceso requerido", "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"{{"}}"}}{{"}}"}}}, "/permissions/{id}": {"get": {"security": [{"BearerAuth": []}], "description": "Obtiene un permiso específico por su ID", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Permissions"], "summary": "Obtener permiso por ID", "parameters": [{"minimum": 1, "type": "integer", "description": "ID del permiso", "name": "id", "in": "path", "required": true}], "responses": {"200": {"description": "Permiso obtenido exitosamente", "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionSuccessResponse"{{"}}"}}, "400": {"description": "ID inválido", "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"{{"}}"}}, "401": {"description": "Token de acceso requerido", "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"{{"}}"}}, "404": {"description": "Permiso no encontrado", "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"{{"}}"}}{{"}}"}}, "put": {"security": [{"BearerAuth": []}], "description": "Actualiza un permiso existente en el sistema", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Permissions"], "summary": "Actualizar permiso", "parameters": [{"minimum": 1, "type": "integer", "description": "ID del permiso", "name": "id", "in": "path", "required": true}, {"description": "Datos del permiso a actualizar", "name": "permission", "in": "body", "required": true, "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_request.UpdatePermissionRequest"{{"}}"}}], "responses": {"200": {"description": "Permiso actualizado exitosamente", "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionMessageResponse"{{"}}"}}, "400": {"description": "Datos de entrada inválidos", "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"{{"}}"}}, "401": {"description": "Token de acceso requerido", "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"{{"}}"}}, "404": {"description": "Permiso no encontrado", "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"{{"}}"}}, "409": {"description": "Permiso con código duplicado", "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"{{"}}"}}{{"}}"}}, "delete": {"security": [{"BearerAuth": []}], "description": "Elimina permanentemente un permiso del sistema (eliminación física, no se puede recuperar)", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Permissions"], "summary": "Eliminar permiso permanentemente", "parameters": [{"minimum": 1, "type": "integer", "description": "ID del permiso", "name": "id", "in": "path", "required": true}], "responses": {"200": {"description": "Permiso eliminado exitosamente", "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionMessageResponse"{{"}}"}}, "400": {"description": "ID inválido", "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"{{"}}"}}, "401": {"description": "Token de acceso requerido", "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"{{"}}"}}, "404": {"description": "Permiso no encontrado", "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"{{"}}"}}{{"}}"}}}, "/resources": {"get": {"security": [{"BearerAuth": []}], "description": "Obtiene una lista paginada de recursos del sistema con opciones de filtrado y ordenamiento", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Resources"], "summary": "Obtener recursos", "parameters": [{"minimum": 1, "type": "integer", "default": 1, "description": "Número de página", "name": "page", "in": "query"}, {"maximum": 100, "minimum": 1, "type": "integer", "default": 10, "description": "Tamaño de página", "name": "page_size", "in": "query"}, {"type": "string", "description": "Filtrar por nombre (búsqueda parcial)", "name": "name", "in": "query"}, {"type": "string", "description": "Filtrar por descripción (búsqueda parcial)", "name": "description", "in": "query"}, {"type": "integer", "description": "Filtrar por tipo de business (incluye genéricos)", "name": "business_type_id", "in": "query"}, {"enum": ["name", "created_at", "updated_at"], "type": "string", "description": "Campo para ordenar", "name": "sort_by", "in": "query"}, {"enum": ["asc", "desc"], "type": "string", "description": "Orden", "name": "sort_order", "in": "query"}], "responses": {"200": {"description": "Lista de recursos obtenida exitosamente", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "400": {"description": "Parámetros de consulta inválidos", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "401": {"description": "No autorizado", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"type": "object", "additionalProperties": true{{"}}"}}{{"}}"}}, "post": {"security": [{"BearerAuth": []}], "description": "Crea un nuevo recurso en el sistema con nombre y descripción únicos", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Resources"], "summary": "Crear recurso", "parameters": [{"description": "Datos del recurso a crear", "name": "request", "in": "body", "required": true, "schema": {"$ref": "#/definitions/central_reserve_services_auth_resources_internal_infra_primary_handlers_request.CreateResourceRequest"{{"}}"}}], "responses": {"201": {"description": "Recurso creado exitosamente", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "400": {"description": "Datos de entrada inválidos", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "401": {"description": "No autorizado", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "409": {"description": "Recurso ya existe", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"type": "object", "additionalProperties": true{{"}}"}}{{"}}"}}}, "/resources/{id}": {"get": {"security": [{"BearerAuth": []}], "description": "Obtiene un recurso específico del sistema por su ID único", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Resources"], "summary": "Obtener recurso por ID", "parameters": [{"minimum": 1, "type": "integer", "description": "ID del recurso", "name": "id", "in": "path", "required": true}], "responses": {"200": {"description": "Recurso obtenido exitosamente", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "400": {"description": "ID de recurso inválido", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "401": {"description": "No autorizado", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "404": {"description": "Recurso no encontrado", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"type": "object", "additionalProperties": true{{"}}"}}{{"}}"}}, "put": {"security": [{"BearerAuth": []}], "description": "Actualiza un recurso existente en el sistema", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Resources"], "summary": "Actualizar recurso", "parameters": [{"minimum": 1, "type": "integer", "description": "ID del recurso", "name": "id", "in": "path", "required": true}, {"description": "Datos del recurso a actualizar", "name": "request", "in": "body", "required": true, "schema": {"$ref": "#/definitions/central_reserve_services_auth_resources_internal_infra_primary_handlers_request.UpdateResourceRequest"{{"}}"}}], "responses": {"200": {"description": "Recurso actualizado exitosamente", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "400": {"description": "Datos de entrada inválidos", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "401": {"description": "No autorizado", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "404": {"description": "Recurso no encontrado", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "409": {"description": "Conflicto con recurso existente", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"type": "object", "additionalProperties": true{{"}}"}}{{"}}"}}, "delete": {"security": [{"BearerAuth": []}], "description": "Elimina permanentemente un recurso del sistema por su ID único con eliminación en cascada", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Resources"], "summary": "Eliminar recurso", "parameters": [{"minimum": 1, "type": "integer", "description": "ID del recurso", "name": "id", "in": "path", "required": true}], "responses": {"200": {"description": "Recurso eliminado exitosamente", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "400": {"description": "ID de recurso inválido", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "401": {"description": "No autorizado", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "404": {"description": "Recurso no encontrado", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"type": "object", "additionalProperties": true{{"}}"}}{{"}}"}}}, "/roles": {"get": {"security": [{"BearerAuth": []}], "description": "Obtiene la lista completa de roles del sistema con opciones de filtrado y paginación", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Roles"], "summary": "Obtener todos los roles", "parameters": [{"minimum": 1, "type": "integer", "default": 1, "description": "Número de página", "name": "page", "in": "query"}, {"maximum": 100, "minimum": 1, "type": "integer", "default": 10, "description": "Tamaño de página", "name": "page_size", "in": "query"}, {"type": "integer", "description": "Filtrar por tipo de business", "name": "business_type_id", "in": "query"}, {"type": "integer", "description": "Filtrar por ID de scope", "name": "scope_id", "in": "query"}, {"type": "boolean", "description": "Filtrar por rol de sistema (true/false)", "name": "is_system", "in": "query"}, {"type": "string", "description": "Buscar en el nombre del rol (búsqueda parcial)", "name": "name", "in": "query"}, {"type": "integer", "description": "Filtrar por nivel del rol", "name": "level", "in": "query"}, {"enum": ["id", "name", "level", "created_at", "updated_at"], "type": "string", "default": "created_at", "description": "Campo para ordenar", "name": "sort_by", "in": "query"}, {"enum": ["asc", "desc"], "type": "string", "default": "desc", "description": "Orden de clasificación", "name": "sort_order", "in": "query"}], "responses": {"200": {"description": "Roles obtenidos exitosamente", "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleListResponse"{{"}}"}}, "401": {"description": "Token de acceso requerido", "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"{{"}}"}}{{"}}"}}, "post": {"security": [{"BearerAuth": []}], "description": "Crea un nuevo rol en el sistema con todos los campos obligatorios", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Roles"], "summary": "Crear un nuevo rol", "parameters": [{"description": "Datos del rol a crear", "name": "role", "in": "body", "required": true, "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_request.CreateRoleRequest"{{"}}"}}], "responses": {"201": {"description": "Rol creado exitosamente", "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.CreateRoleResponse"{{"}}"}}, "400": {"description": "Datos de entrada inválidos", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"type": "object", "additionalProperties": true{{"}}"}}{{"}}"}}}, "/roles/by-level": {"get": {"security": [{"BearerAuth": []}], "description": "Obtiene todos los roles de un nivel específico con información del scope", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Roles"], "summary": "Obtener roles por nivel", "parameters": [{"maximum": 10, "minimum": 1, "type": "integer", "description": "Nivel del rol", "name": "level", "in": "query", "required": true}], "responses": {"200": {"description": "Roles obtenidos exitosamente", "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleListResponse"{{"}}"}}, "400": {"description": "Nivel inválido", "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"{{"}}"}}, "401": {"description": "Token de acceso requerido", "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"{{"}}"}}{{"}}"}}}, "/roles/scope/{scope_id}": {"get": {"security": [{"BearerAuth": []}], "description": "Obtiene todos los roles de un scope específico", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Roles"], "summary": "Obtener roles por scope", "parameters": [{"minimum": 1, "type": "integer", "description": "ID del scope", "name": "scope_id", "in": "path", "required": true}], "responses": {"200": {"description": "Roles por scope obtenidos exitosamente", "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleListResponse"{{"}}"}}, "400": {"description": "Scope ID inválido", "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"{{"}}"}}, "401": {"description": "Token de acceso requerido", "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"{{"}}"}}{{"}}"}}}, "/roles/system": {"get": {"security": [{"BearerAuth": []}], "description": "Obtiene solo los roles del sistema (is_system = true)", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Roles"], "summary": "Obtener roles del sistema", "responses": {"200": {"description": "Roles del sistema obtenidos exitosamente", "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleListResponse"{{"}}"}}, "401": {"description": "Token de acceso requerido", "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"{{"}}"}}{{"}}"}}}, "/roles/{id}": {"get": {"security": [{"BearerAuth": []}], "description": "Obtiene un rol específico por su ID con información del scope", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Roles"], "summary": "Obtener rol por ID", "parameters": [{"minimum": 1, "type": "integer", "description": "ID del rol", "name": "id", "in": "path", "required": true}], "responses": {"200": {"description": "Rol obtenido exitosamente", "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleSuccessResponse"{{"}}"}}, "400": {"description": "ID inválido", "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"{{"}}"}}, "401": {"description": "Token de acceso requerido", "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"{{"}}"}}, "404": {"description": "Rol no encontrado", "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"{{"}}"}}{{"}}"}}, "put": {"security": [{"BearerAuth": []}], "description": "Actualiza un rol existente en el sistema (actualización parcial)", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Roles"], "summary": "Actualizar un rol", "parameters": [{"type": "integer", "description": "ID del rol a actualizar", "name": "id", "in": "path", "required": true}, {"description": "Datos del rol a actualizar", "name": "role", "in": "body", "required": true, "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_request.UpdateRoleRequest"{{"}}"}}], "responses": {"200": {"description": "OK", "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.UpdateRoleResponse"{{"}}"}}, "400": {"description": "Datos de entrada inválidos", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "404": {"description": "Rol no encontrado", "schema": {"type": "object", "additionalProperties": true{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"type": "object", "additionalProperties": true{{"}}"}}{{"}}"}}}, "/roles/{id}/permissions": {"get": {"security": [{"BearerAuth": []}], "description": "Obtiene la lista de permisos asignados a un rol", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Roles"], "summary": "Obtener permisos de un rol", "parameters": [{"type": "integer", "description": "ID del rol", "name": "id", "in": "path", "required": true}], "responses": {"200": {"description": "OK", "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.GetRolePermissionsResponse"{{"}}"}}, "400": {"description": "ID de rol inválido", "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"{{"}}"}}, "404": {"description": "Rol no encontrado", "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"{{"}}"}}{{"}}"}}, "post": {"security": [{"BearerAuth": []}], "description": "Asigna permisos a un rol. Solo se pueden asignar permisos que pertenezcan al mismo business_type que el rol", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Roles"], "summary": "Asignar permisos a un rol", "parameters": [{"type": "integer", "description": "ID del rol", "name": "id", "in": "path", "required": true}, {"description": "IDs de permisos a asignar", "name": "request", "in": "body", "required": true, "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_request.AssignPermissionsToRoleRequest"{{"}}"}}], "responses": {"200": {"description": "OK", "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.AssignPermissionsToRoleResponse"{{"}}"}}, "400": {"description": "Datos de entrada inválidos", "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"{{"}}"}}, "404": {"description": "Rol no encontrado", "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"{{"}}"}}{{"}}"}}}, "/roles/{id}/permissions/{permission_id}": {"delete": {"security": [{"BearerAuth": []}], "description": "Elimina un permiso específico de un rol", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Roles"], "summary": "Eliminar permiso de un rol", "parameters": [{"type": "integer", "description": "ID del rol", "name": "id", "in": "path", "required": true}, {"type": "integer", "description": "ID del permiso", "name": "permission_id", "in": "path", "required": true}], "responses": {"200": {"description": "OK", "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleSuccessResponse"{{"}}"}}, "400": {"description": "Datos de entrada inválidos", "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"{{"}}"}}, "404": {"description": "Rol o permiso no encontrado", "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"{{"}}"}}{{"}}"}}}, "/users": {"get": {"security": [{"BearerAuth": []}], "description": "Obtiene la lista filtrada y paginada de usuarios del sistema con sus roles y businesses", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Users"], "summary": "Obtener usuarios filtrados y paginados", "parameters": [{"minimum": 1, "type": "integer", "default": 1, "description": "Número de página", "name": "page", "in": "query"}, {"maximum": 100, "minimum": 1, "type": "integer", "default": 10, "description": "Tamaño de página", "name": "page_size", "in": "query"}, {"type": "string", "description": "Filtrar por nombre (búsqueda parcial)", "name": "name", "in": "query"}, {"type": "string", "description": "Filtrar por email (búsqueda parcial)", "name": "email", "in": "query"}, {"type": "string", "description": "Filtrar por teléfono (búsqueda parcial)", "name": "phone", "in": "query"}, {"type": "string", "description": "Filtrar por IDs de usuarios separados por comas (ej: 1,2,3)", "name": "user_ids", "in": "query"}, {"type": "boolean", "description": "Filtrar por estado activo", "name": "is_active", "in": "query"}, {"type": "integer", "description": "Filtrar por ID de rol", "name": "role_id", "in": "query"}, {"type": "integer", "description": "Filtrar por ID de business", "name": "business_id", "in": "query"}, {"type": "string", "description": "Filtrar por fecha de creación (YYYY-MM-DD o YYYY-MM-DD,YYYY-MM-DD para rango)", "name": "created_at", "in": "query"}, {"enum": ["id", "name", "email", "phone", "is_active", "created_at", "updated_at"], "type": "string", "default": "created_at", "description": "Campo para ordenar", "name": "sort_by", "in": "query"}, {"enum": ["asc", "desc"], "type": "string", "default": "desc", "description": "Orden de clasificación", "name": "sort_order", "in": "query"}], "responses": {"200": {"description": "Usuarios obtenidos exitosamente", "schema": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserListResponse"{{"}}"}}, "400": {"description": "Parámetros de filtro inválidos", "schema": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"{{"}}"}}, "401": {"description": "Token de acceso requerido", "schema": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"{{"}}"}}{{"}}"}}, "post": {"security": [{"BearerAuth": []}], "description": "Crea un nuevo usuario.\nENVÍO: SOLO multipart/form-data (no JSON body)", "consumes": ["multipart/form-data"], "produces": ["application/json"], "tags": ["Users"], "summary": "Crear usuario", "parameters": [{"type": "string", "description": "Nombre (2-100)", "name": "name", "in": "formData", "required": true}, {"type": "string", "description": "Email válido", "name": "email", "in": "formData", "required": true}, {"type": "string", "description": "Teléfono (exactamente 10 dígitos)", "name": "phone", "in": "formData"}, {"type": "boolean", "description": "¿Activo? (true/false)", "name": "is_active", "in": "formData"}, {"type": "file", "description": "Imagen de avatar (sube a S3)", "name": "avatarFile", "in": "formData"}, {"type": "string", "description": "IDs de negocios separados por comas. Ej: '16,21'", "name": "business_ids", "in": "formData"}], "responses": {"201": {"description": "Usuario creado exitosamente (incluye contraseña generada)", "schema": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserCreatedResponse"{{"}}"}}, "400": {"description": "Datos inválidos (mensajes claros de validación)", "schema": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"{{"}}"}}, "401": {"description": "Token de acceso requerido", "schema": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"{{"}}"}}, "409": {"description": "Email ya existe", "schema": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"{{"}}"}}{{"}}"}}}, "/users/{id}": {"get": {"security": [{"BearerAuth": []}], "description": "Obtiene un usuario específico por su ID con sus roles y businesses", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Users"], "summary": "Obtener usuario por ID", "parameters": [{"minimum": 1, "type": "integer", "description": "ID del usuario", "name": "id", "in": "path", "required": true}], "responses": {"200": {"description": "Usuario obtenido exitosamente", "schema": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserSuccessResponse"{{"}}"}}, "400": {"description": "ID inválido", "schema": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"{{"}}"}}, "401": {"description": "Token de acceso requerido", "schema": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"{{"}}"}}, "404": {"description": "Usuario no encontrado", "schema": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"{{"}}"}}{{"}}"}}, "put": {"security": [{"BearerAuth": []}], "description": "Actualiza un usuario existente.\nENVÍO: SOLO multipart/form-data (no JSON body)", "consumes": ["multipart/form-data"], "produces": ["application/json"], "tags": ["Users"], "summary": "Actualizar usuario", "parameters": [{"type": "integer", "description": "ID del usuario", "name": "id", "in": "path", "required": true}, {"type": "string", "description": "Nombre (2-100)", "name": "name", "in": "formData"}, {"type": "string", "description": "Email válido", "name": "email", "in": "formData"}, {"type": "string", "description": "Teléfono (exactamente 10 dígitos)", "name": "phone", "in": "formData"}, {"type": "boolean", "description": "¿Activo?", "name": "is_active", "in": "formData"}, {"type": "boolean", "description": "Eliminar avatar actual (true/false)", "name": "remove_avatar", "in": "formData"}, {"type": "file", "description": "Imagen de avatar (sube a S3)", "name": "avatarFile", "in": "formData"}, {"type": "string", "description": "IDs de negocios separados por comas. Ej: '16,21'", "name": "business_ids", "in": "formData"}], "responses": {"200": {"description": "Usuario actualizado (data con usuario)", "schema": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserSuccessResponse"{{"}}"}}, "400": {"description": "Datos inválidos o IDs inexistentes", "schema": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"{{"}}"}}, "401": {"description": "Token de acceso requerido", "schema": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"{{"}}"}}, "404": {"description": "Usuario no encontrado", "schema": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"{{"}}"}}, "409": {"description": "Email ya existe", "schema": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"{{"}}"}}{{"}}"}}, "delete": {"security": [{"BearerAuth": []}], "description": "Elimina un usuario del sistema", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Users"], "summary": "Eliminar usuario", "parameters": [{"minimum": 1, "type": "integer", "description": "ID del usuario", "name": "id", "in": "path", "required": true}], "responses": {"200": {"description": "Usuario eliminado exitosamente", "schema": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserMessageResponse"{{"}}"}}, "400": {"description": "ID inválido", "schema": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"{{"}}"}}, "401": {"description": "Token de acceso requerido", "schema": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"{{"}}"}}, "404": {"description": "Usuario no encontrado", "schema": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"{{"}}"}}{{"}}"}}}, "/users/{id}/assign-role": {"post": {"security": [{"BearerAuth": []}], "description": "Asigna o actualiza roles de un usuario en múltiples businesses. El usuario debe estar previamente asociado a cada business. Solo se permite un rol por business y cada rol debe ser del mismo tipo de business que su business asociado.", "consumes": ["application/json"], "produces": ["application/json"], "tags": ["Users"], "summary": "Asignar roles a usuario en businesses", "parameters": [{"type": "integer", "description": "ID del usuario", "name": "id", "in": "path", "required": true}, {"description": "Lista de asignaciones (business_id y role_id por cada asignación)", "name": "request", "in": "body", "required": true, "schema": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_request.AssignRoleToUserBusinessRequest"{{"}}"}}], "responses": {"200": {"description": "Roles asignados exitosamente", "schema": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.AssignRoleToUserBusinessResponse"{{"}}"}}, "400": {"description": "Datos inválidos", "schema": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"{{"}}"}}, "401": {"description": "Token de acceso requerido", "schema": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"{{"}}"}}, "403": {"description": "El usuario no está asociado a algún business o algún rol no corresponde al tipo de business", "schema": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"{{"}}"}}, "404": {"description": "Usuario, business o rol no encontrado", "schema": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"{{"}}"}}, "500": {"description": "Error interno del servidor", "schema": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"{{"}}"}}{{"}}"}}{{"}}"}}, "definitions": {"central_reserve_services_auth_actions_internal_infra_primary_handlers_request.CreateActionRequest": {"description": "Solicitud para crear un nuevo action en el sistema", "type": "object", "required": ["name"], "properties": {"description": {"type": "string", "example": "Permite crear nuevos registros"}, "name": {"type": "string", "example": "create"{{"}}"}}}, "central_reserve_services_auth_actions_internal_infra_primary_handlers_request.UpdateActionRequest": {"description": "Solicitud para actualizar un action existente", "type": "object", "required": ["name"], "properties": {"description": {"type": "string", "example": "Permite crear nuevos registros"}, "name": {"type": "string", "example": "create"{{"}}"}}}, "central_reserve_services_auth_business_internal_infra_primary_controllers_businesshandler_response.BusinessDetailResponse": {"type": "object", "properties": {"address": {"type": "string"}, "business_type": {"$ref": "#/definitions/central_reserve_services_auth_business_internal_infra_primary_controllers_businesshandler_response.BusinessTypeDetailResponse"}, "code": {"type": "string"}, "created_at": {"type": "string"}, "custom_domain": {"type": "string"}, "description": {"type": "string"}, "enable_delivery": {"type": "boolean"}, "enable_pickup": {"type": "boolean"}, "enable_reservations": {"type": "boolean"}, "id": {"type": "integer"}, "is_active": {"type": "boolean"}, "logo_url": {"type": "string"}, "name": {"type": "string"}, "navbar_image_url": {"type": "string"}, "primary_color": {"type": "string"}, "quaternary_color": {"type": "string"}, "secondary_color": {"type": "string"}, "tertiary_color": {"type": "string"}, "timezone": {"type": "string"}, "updated_at": {"type": "string"{{"}}"}}}, "central_reserve_services_auth_business_internal_infra_primary_controllers_businesshandler_response.BusinessTypeDetailResponse": {"type": "object", "properties": {"code": {"type": "string"}, "created_at": {"type": "string"}, "description": {"type": "string"}, "icon": {"type": "string"}, "id": {"type": "integer"}, "is_active": {"type": "boolean"}, "name": {"type": "string"}, "updated_at": {"type": "string"{{"}}"}}}, "central_reserve_services_auth_business_internal_infra_primary_controllers_businesshandler_response.GetBusinessByIDResponse": {"type": "object", "properties": {"data": {"$ref": "#/definitions/central_reserve_services_auth_business_internal_infra_primary_controllers_businesshandler_response.BusinessDetailResponse"}, "message": {"type": "string"}, "success": {"type": "boolean"{{"}}"}}}, "central_reserve_services_auth_business_internal_infra_primary_controllers_businesstypehandler_request.BusinessTypeRequest": {"type": "object", "required": ["code", "name"], "properties": {"code": {"type": "string"}, "description": {"type": "string"}, "icon": {"type": "string"}, "is_active": {"type": "boolean"}, "name": {"type": "string"{{"}}"}}}, "central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.BusinessStatsResponse": {"type": "object", "properties": {"active": {"type": "integer", "example": 45}, "inactive": {"type": "integer", "example": 5}, "total": {"type": "integer", "example": 50{{"}}"}}}, "central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.BusinessTypeStatsResponse": {"type": "object", "properties": {"total": {"type": "integer", "example": 5{{"}}"}}}, "central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.DashboardErrorResponse": {"type": "object", "properties": {"error": {"type": "string", "example": "Error interno del servidor"{{"}}"}}}, "central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.DashboardStatsData": {"type": "object", "properties": {"business_types": {"$ref": "#/definitions/central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.BusinessTypeStatsResponse"}, "businesses": {"$ref": "#/definitions/central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.BusinessStatsResponse"}, "permissions": {"$ref": "#/definitions/central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.PermissionStatsResponse"}, "resources": {"$ref": "#/definitions/central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.ResourceStatsResponse"}, "roles": {"$ref": "#/definitions/central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.RoleStatsResponse"}, "users": {"$ref": "#/definitions/central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.UserStatsResponse"{{"}}"}}}, "central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.DashboardStatsResponse": {"type": "object", "properties": {"data": {"$ref": "#/definitions/central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.DashboardStatsData"}, "success": {"type": "boolean", "example": true{{"}}"}}}, "central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.PermissionStatsResponse": {"type": "object", "properties": {"assigned": {"type": "integer", "example": 200}, "total": {"type": "integer", "example": 250}, "unassigned": {"type": "integer", "example": 50{{"}}"}}}, "central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.ResourceStatsResponse": {"type": "object", "properties": {"active": {"type": "integer", "example": 25}, "inactive": {"type": "integer", "example": 5}, "total": {"type": "integer", "example": 30{{"}}"}}}, "central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.RoleStatsResponse": {"type": "object", "properties": {"custom": {"type": "integer", "example": 10}, "system": {"type": "integer", "example": 5}, "total": {"type": "integer", "example": 15{{"}}"}}}, "central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.UserStatsResponse": {"type": "object", "properties": {"active": {"type": "integer", "example": 100}, "inactive": {"type": "integer", "example": 20}, "super_users": {"type": "integer", "example": 5}, "total": {"type": "integer", "example": 120{{"}}"}}}, "central_reserve_services_auth_login_internal_infra_primary_handlers_request.ChangePasswordRequest": {"type": "object", "required": ["current_password", "new_password"], "properties": {"current_password": {"type": "string", "maxLength": 100, "minLength": 6}, "new_password": {"type": "string", "maxLength": 100, "minLength": 6{{"}}"}}}, "central_reserve_services_auth_login_internal_infra_primary_handlers_request.GenerateBusinessTokenRequest": {"type": "object", "properties": {"business_id": {"description": "0 para super admin, >0 para usuarios normales", "type": "integer"{{"}}"}}}, "central_reserve_services_auth_login_internal_infra_primary_handlers_request.GeneratePasswordRequest": {"type": "object", "properties": {"user_id": {"description": "Opcional: solo para super usuarios", "type": "integer", "minimum": 1, "example": 10{{"}}"}}}, "central_reserve_services_auth_login_internal_infra_primary_handlers_request.LoginRequest": {"type": "object", "required": ["email", "password"], "properties": {"email": {"type": "string"}, "password": {"type": "string"{{"}}"}}}, "central_reserve_services_auth_login_internal_infra_primary_handlers_response.BusinessInfo": {"type": "object", "properties": {"address": {"type": "string"}, "business_type": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.BusinessTypeInfo"}, "business_type_id": {"type": "integer"}, "code": {"type": "string"}, "custom_domain": {"type": "string"}, "description": {"type": "string"}, "enable_delivery": {"type": "boolean"}, "enable_pickup": {"type": "boolean"}, "enable_reservations": {"type": "boolean"}, "id": {"type": "integer"}, "is_active": {"type": "boolean"}, "logo_url": {"type": "string"}, "name": {"type": "string"}, "navbar_image_url": {"type": "string"}, "primary_color": {"type": "string"}, "quaternary_color": {"type": "string"}, "secondary_color": {"type": "string"}, "tertiary_color": {"type": "string"}, "timezone": {"type": "string"{{"}}"}}}, "central_reserve_services_auth_login_internal_infra_primary_handlers_response.BusinessTokenResponse": {"type": "object", "properties": {"token": {"type": "string"{{"}}"}}}, "central_reserve_services_auth_login_internal_infra_primary_handlers_response.BusinessTypeInfo": {"type": "object", "properties": {"code": {"type": "string"}, "description": {"type": "string"}, "icon": {"type": "string"}, "id": {"type": "integer"}, "name": {"type": "string"{{"}}"}}}, "central_reserve_services_auth_login_internal_infra_primary_handlers_response.ChangePasswordResponse": {"type": "object", "properties": {"message": {"type": "string"}, "success": {"type": "boolean"{{"}}"}}}, "central_reserve_services_auth_login_internal_infra_primary_handlers_response.GenerateBusinessTokenErrorResponse": {"type": "object", "properties": {"error": {"type": "string"{{"}}"}}}, "central_reserve_services_auth_login_internal_infra_primary_handlers_response.GenerateBusinessTokenSuccessResponse": {"type": "object", "properties": {"data": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.BusinessTokenResponse"}, "message": {"type": "string"}, "success": {"type": "boolean"{{"}}"}}}, "central_reserve_services_auth_login_internal_infra_primary_handlers_response.GeneratePasswordResponse": {"type": "object", "properties": {"email": {"type": "string", "example": "usuario@ejemplo.com"}, "message": {"type": "string", "example": "Nueva contraseña generada para el usuario usuario@ejemplo.com"}, "password": {"type": "string", "example": "aB3$kL9mP2xQ"}, "success": {"type": "boolean", "example": true{{"}}"}}}, "central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginBadRequestResponse": {"type": "object", "properties": {"details": {"type": "string"}, "error": {"type": "string"{{"}}"}}}, "central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginErrorResponse": {"type": "object", "properties": {"details": {"type": "string"}, "error": {"type": "string"{{"}}"}}}, "central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginResponse": {"type": "object", "properties": {"businesses": {"type": "array", "items": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.BusinessInfo"{{"}}"}}, "is_super_admin": {"description": "Indica si es super admin (scope platform o scope_id 1)", "type": "boolean"}, "require_password_change": {"type": "boolean"}, "scope": {"description": "Scope del usuario (platform, business, etc.)", "type": "string"}, "token": {"type": "string"}, "user": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.UserInfo"{{"}}"}}}, "central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginSuccessResponse": {"type": "object", "properties": {"data": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginResponse"}, "success": {"type": "boolean"{{"}}"}}}, "central_reserve_services_auth_login_internal_infra_primary_handlers_response.ResourcePermissions": {"type": "object", "properties": {"actions": {"type": "array", "items": {"type": "string"{{"}}"}}, "active": {"description": "Indica si el recurso está activo para el business", "type": "boolean"}, "resource": {"type": "string"{{"}}"}}}, "central_reserve_services_auth_login_internal_infra_primary_handlers_response.RoleInfo": {"type": "object", "properties": {"description": {"type": "string"}, "id": {"type": "integer"}, "name": {"type": "string"{{"}}"}}}, "central_reserve_services_auth_login_internal_infra_primary_handlers_response.UserInfo": {"type": "object", "properties": {"avatar_url": {"type": "string"}, "email": {"type": "string"}, "id": {"type": "integer"}, "is_active": {"type": "boolean"}, "last_login_at": {"type": "string"}, "name": {"type": "string"}, "phone": {"type": "string"{{"}}"}}}, "central_reserve_services_auth_login_internal_infra_primary_handlers_response.UserRolesPermissionsResponse": {"type": "object", "properties": {"business_id": {"type": "integer"}, "business_name": {"type": "string"}, "business_type_id": {"type": "integer"}, "business_type_name": {"type": "string"}, "is_super": {"type": "boolean"}, "resources": {"type": "array", "items": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.ResourcePermissions"{{"}}"}}, "role": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.RoleInfo"{{"}}"}}}, "central_reserve_services_auth_login_internal_infra_primary_handlers_response.UserRolesPermissionsSuccessResponse": {"type": "object", "properties": {"data": {"$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.UserRolesPermissionsResponse"}, "success": {"type": "boolean"{{"}}"}}}, "central_reserve_services_auth_permisions_internal_infra_primary_handlers_request.CreatePermissionRequest": {"type": "object", "required": ["action_id", "name", "resource_id", "scope_id"], "properties": {"action_id": {"description": "ID de la action", "type": "integer", "example": 1}, "business_type_id": {"type": "integer", "example": 11}, "code": {"description": "Opcional, se genera automáticamente si no se proporciona", "type": "string", "example": "horizontalproperty_createuser"}, "description": {"type": "string", "example": "Permite crear nuevos usuarios en el sistema"}, "name": {"type": "string", "example": "Crear usuario"}, "resource_id": {"description": "ID del resource", "type": "integer", "example": 1}, "scope_id": {"type": "integer", "example": 1{{"}}"}}}, "central_reserve_services_auth_permisions_internal_infra_primary_handlers_request.UpdatePermissionRequest": {"type": "object", "required": ["action_id", "name", "resource_id", "scope_id"], "properties": {"action_id": {"description": "ID de la action", "type": "integer", "example": 1}, "business_type_id": {"type": "integer", "example": 11}, "code": {"type": "string", "example": "users:create"}, "description": {"type": "string", "example": "Permite crear nuevos usuarios en el sistema"}, "name": {"type": "string", "example": "Crear usuarios"}, "resource_id": {"description": "ID del resource", "type": "integer", "example": 1}, "scope_id": {"type": "integer", "example": 1{{"}}"}}}, "central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse": {"type": "object", "properties": {"error": {"type": "string", "example": "Error al procesar la solicitud"{{"}}"}}}, "central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionListResponse": {"type": "object", "properties": {"data": {"type": "array", "items": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionResponse"{{"}}"}}, "success": {"type": "boolean", "example": true}, "total": {"type": "integer", "example": 10{{"}}"}}}, "central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionMessageResponse": {"type": "object", "properties": {"message": {"type": "string", "example": "Permiso creado exitosamente"}, "success": {"type": "boolean", "example": true{{"}}"}}}, "central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionResponse": {"type": "object", "properties": {"action": {"type": "string", "example": "create"}, "action_id": {"type": "integer", "example": 5}, "business_type_id": {"type": "integer", "example": 11}, "business_type_name": {"type": "string", "example": "Propiedad Horizontal"}, "code": {"type": "string", "example": "users:create"}, "description": {"type": "string", "example": "Permite crear nuevos usuarios en el sistema"}, "id": {"type": "integer", "example": 1}, "name": {"type": "string", "example": "Crear usuarios"}, "resource": {"type": "string", "example": "users"}, "resource_id": {"type": "integer", "example": 3}, "scope_code": {"type": "string", "example": "system"}, "scope_id": {"type": "integer", "example": 1}, "scope_name": {"type": "string", "example": "Sistema"{{"}}"}}}, "central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionSuccessResponse": {"type": "object", "properties": {"data": {"$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionResponse"}, "success": {"type": "boolean", "example": true{{"}}"}}}, "central_reserve_services_auth_resources_internal_infra_primary_handlers_request.CreateResourceRequest": {"description": "Solicitud para crear un nuevo recurso en el sistema", "type": "object", "required": ["name"], "properties": {"business_type_id": {"type": "integer", "example": 11}, "description": {"type": "string", "example": "Gestión de usuarios del sistema"}, "name": {"type": "string", "example": "users"{{"}}"}}}, "central_reserve_services_auth_resources_internal_infra_primary_handlers_request.UpdateResourceRequest": {"description": "Solicitud para actualizar un recurso existente", "type": "object", "required": ["name"], "properties": {"business_type_id": {"type": "integer", "example": 11}, "description": {"type": "string", "example": "Gestión de usuarios del sistema"}, "name": {"type": "string", "example": "users"{{"}}"}}}, "central_reserve_services_auth_roles_internal_infra_primary_handlers_request.AssignPermissionsToRoleRequest": {"type": "object", "required": ["permission_ids"], "properties": {"permission_ids": {"type": "array", "items": {"type": "integer"{{"}}"}}{{"}}"}}, "central_reserve_services_auth_roles_internal_infra_primary_handlers_request.CreateRoleRequest": {"type": "object", "required": ["business_type_id", "description", "level", "name", "scope_id"], "properties": {"business_type_id": {"type": "integer", "example": 1}, "description": {"type": "string", "example": "Rol de administrador del sistema"}, "is_system": {"type": "boolean", "example": false}, "level": {"type": "integer", "maximum": 10, "minimum": 1, "example": 2}, "name": {"type": "string", "example": "Administrador"}, "scope_id": {"type": "integer", "example": 1{{"}}"}}}, "central_reserve_services_auth_roles_internal_infra_primary_handlers_request.UpdateRoleRequest": {"type": "object", "properties": {"business_type_id": {"type": "integer", "example": 1}, "description": {"type": "string", "example": "Rol de administrador actualizado"}, "is_system": {"type": "boolean", "example": false}, "level": {"type": "integer", "maximum": 10, "minimum": 1, "example": 3}, "name": {"type": "string", "example": "Administrador Actualizado"}, "scope_id": {"type": "integer", "example": 1{{"}}"}}}, "central_reserve_services_auth_roles_internal_infra_primary_handlers_response.AssignPermissionsToRoleResponse": {"type": "object", "properties": {"message": {"type": "string", "example": "Permisos asignados exitosamente al rol"}, "permission_ids": {"type": "array", "items": {"type": "integer"{{"}}"}}, "role_id": {"type": "integer", "example": 1}, "success": {"type": "boolean", "example": true{{"}}"}}}, "central_reserve_services_auth_roles_internal_infra_primary_handlers_response.CreateRoleResponse": {"type": "object", "properties": {"data": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleData"}, "message": {"type": "string", "example": "Rol creado exitosamente"}, "success": {"type": "boolean", "example": true{{"}}"}}}, "central_reserve_services_auth_roles_internal_infra_primary_handlers_response.GetRolePermissionsResponse": {"type": "object", "properties": {"count": {"type": "integer", "example": 3}, "message": {"type": "string", "example": "Permisos del rol obtenidos exitosamente"}, "permissions": {"type": "array", "items": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.PermissionResponse"{{"}}"}}, "role_id": {"type": "integer", "example": 1}, "role_name": {"type": "string", "example": "Administrador"}, "success": {"type": "boolean", "example": true{{"}}"}}}, "central_reserve_services_auth_roles_internal_infra_primary_handlers_response.PermissionResponse": {"type": "object", "properties": {"action": {"type": "string", "example": "create"}, "description": {"type": "string", "example": "Crear usuarios"}, "id": {"type": "integer", "example": 1}, "resource": {"type": "string", "example": "users"}, "scope_code": {"type": "string", "example": "system"}, "scope_id": {"type": "integer", "example": 1}, "scope_name": {"type": "string", "example": "Sistema"{{"}}"}}}, "central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleData": {"type": "object", "properties": {"business_type_id": {"type": "integer", "example": 1}, "created_at": {"type": "string", "example": "2024-01-01T00:00:00Z"}, "description": {"type": "string", "example": "Rol de administrador del sistema"}, "id": {"type": "integer", "example": 1}, "is_system": {"type": "boolean", "example": false}, "level": {"type": "integer", "example": 2}, "name": {"type": "string", "example": "Administrador"}, "scope_id": {"type": "integer", "example": 1}, "updated_at": {"type": "string", "example": "2024-01-01T00:00:00Z"{{"}}"}}}, "central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse": {"type": "object", "properties": {"error": {"type": "string", "example": "Error interno del servidor"{{"}}"}}}, "central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleListResponse": {"type": "object", "properties": {"count": {"type": "integer", "example": 5}, "data": {"type": "array", "items": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleResponse"{{"}}"}}, "page": {"type": "integer", "example": 1}, "page_size": {"type": "integer", "example": 10}, "success": {"type": "boolean", "example": true}, "total": {"type": "integer", "example": 50}, "total_pages": {"type": "integer", "example": 5{{"}}"}}}, "central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleResponse": {"type": "object", "properties": {"business_type_id": {"type": "integer", "example": 1}, "business_type_name": {"type": "string", "example": "Propiedad Horizontal"}, "code": {"type": "string", "example": "admin"}, "description": {"type": "string", "example": "Rol de administrador del sistema"}, "id": {"type": "integer", "example": 1}, "is_system": {"type": "boolean", "example": true}, "level": {"type": "integer", "example": 2}, "name": {"type": "string", "example": "Administrador"}, "scope_code": {"type": "string", "example": "system"}, "scope_id": {"type": "integer", "example": 1}, "scope_name": {"type": "string", "example": "Sistema"{{"}}"}}}, "central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleSuccessResponse": {"type": "object", "properties": {"data": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleResponse"}, "success": {"type": "boolean", "example": true{{"}}"}}}, "central_reserve_services_auth_roles_internal_infra_primary_handlers_response.UpdateRoleResponse": {"type": "object", "properties": {"data": {"$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleData"}, "message": {"type": "string", "example": "Rol actualizado exitosamente"}, "success": {"type": "boolean", "example": true{{"}}"}}}, "central_reserve_services_auth_users_internal_infra_primary_handlers_request.AssignRoleToUserBusinessRequest": {"type": "object", "required": ["assignments"], "properties": {"assignments": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_request.BusinessRoleAssignmentItem"{{"}}"}}{{"}}"}}, "central_reserve_services_auth_users_internal_infra_primary_handlers_request.BusinessRoleAssignmentItem": {"type": "object", "required": ["business_id", "role_id"], "properties": {"business_id": {"type": "integer", "minimum": 1, "example": 16}, "role_id": {"type": "integer", "minimum": 1, "example": 4{{"}}"}}}, "central_reserve_services_auth_users_internal_infra_primary_handlers_response.AssignRoleToUserBusinessResponse": {"type": "object", "properties": {"message": {"type": "string", "example": "Rol asignado exitosamente al usuario en el business"}, "success": {"type": "boolean", "example": true{{"}}"}}}, "central_reserve_services_auth_users_internal_infra_primary_handlers_response.BusinessRoleAssignmentResponse": {"type": "object", "properties": {"business_id": {"type": "integer"}, "business_name": {"type": "string"}, "role_id": {"type": "integer"}, "role_name": {"type": "string"{{"}}"}}}, "central_reserve_services_auth_users_internal_infra_primary_handlers_response.PaginationInfo": {"type": "object", "properties": {"current_page": {"type": "integer"}, "has_next": {"type": "boolean"}, "has_prev": {"type": "boolean"}, "last_page": {"type": "integer"}, "per_page": {"type": "integer"}, "total": {"type": "integer"{{"}}"}}}, "central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserCreatedResponse": {"type": "object", "properties": {"email": {"type": "string"}, "message": {"type": "string"}, "password": {"type": "string"}, "success": {"type": "boolean"{{"}}"}}}, "central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse": {"type": "object", "properties": {"error": {"type": "string"{{"}}"}}}, "central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserListResponse": {"type": "object", "properties": {"data": {"type": "array", "items": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserResponse"{{"}}"}}, "pagination": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.PaginationInfo"}, "success": {"type": "boolean"{{"}}"}}}, "central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserMessageResponse": {"type": "object", "properties": {"message": {"type": "string"}, "success": {"type": "boolean"{{"}}"}}}, "central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserResponse": {"type": "object", "properties": {"avatar_url": {"type": "string"}, "business_role_assignments": {"type": "array", "items": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.BusinessRoleAssignmentResponse"{{"}}"}}, "created_at": {"type": "string"}, "email": {"type": "string"}, "id": {"type": "integer"}, "is_active": {"type": "boolean"}, "is_super_user": {"type": "boolean"}, "last_login_at": {"type": "string"}, "name": {"type": "string"}, "phone": {"type": "string"}, "updated_at": {"type": "string"{{"}}"}}}, "central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserSuccessResponse": {"type": "object", "properties": {"data": {"$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserResponse"}, "success": {"type": "boolean"{{"}}"}}}, "central_reserve_services_horizontalproperty_attendance_internal_infra_primary_handlers_request.CreateAttendanceListRequest": {"type": "object", "required": ["title", "voting_group_id"], "properties": {"created_by_user_id": {"type": "integer", "example": 5}, "description": {"type": "string", "maxLength": 1000, "example": "Lista de asistencia para la asamblea ordinaria"}, "notes": {"type": "string", "maxLength": 2000, "example": "Notas adicionales"}, "title": {"type": "string", "maxLength": 200, "minLength": 3, "example": "Asistencia Asamblea Ordinaria 2024"}, "voting_group_id": {"type": "integer", "example": 1{{"}}"}}}, "central_reserve_services_horizontalproperty_attendance_internal_infra_primary_handlers_request.CreateProxyRequest": {"type": "object", "required": ["business_id", "property_unit_id", "proxy_name"], "properties": {"business_id": {"type": "integer", "example": 1}, "end_date": {"type": "string", "example": "2025-12-31T23:59:59Z"}, "notes": {"type": "string", "maxLength": 1000, "example": "Notas adicionales"}, "power_of_attorney": {"type": "string", "maxLength": 1000, "example": "Poder para representar en asambleas"}, "property_unit_id": {"type": "integer", "example": 123}, "proxy_address": {"type": "string", "maxLength": 500, "example": "Calle 123 #45-67"}, "proxy_dni": {"type": "string", "maxLength": 30, "minLength": 5, "example": "12345678"}, "proxy_email": {"type": "string", "maxLength": 255, "example": "maria@email.com"}, "proxy_name": {"type": "string", "maxLength": 255, "minLength": 3, "example": "María García López"}, "proxy_phone": {"type": "string", "maxLength": 20, "example": "+57 300 123 4567"}, "proxy_type": {"type": "string", "enum": ["external", "resident", "family"], "example": "external"}, "start_date": {"type": "string", "example": "2025-01-15T00:00:00Z"{{"}}"}}}, "central_reserve_services_horizontalproperty_attendance_internal_infra_primary_handlers_request.UpdateProxyRequest": {"type": "object", "properties": {"end_date": {"type": "string", "example": "2025-12-31T23:59:59Z"}, "is_active": {"type": "boolean", "example": true}, "notes": {"type": "string", "maxLength": 1000, "example": "Notas adicionales"}, "power_of_attorney": {"type": "string", "maxLength": 1000, "example": "Poder para representar en asambleas"}, "proxy_address": {"type": "string", "maxLength": 500, "example": "Calle 123 #45-67"}, "proxy_dni": {"type": "string", "maxLength": 30, "minLength": 5, "example": "12345678"}, "proxy_email": {"type": "string", "maxLength": 255, "example": "maria@email.com"}, "proxy_name": {"type": "string", "maxLength": 255, "minLength": 3, "example": "María García López"}, "proxy_phone": {"type": "string", "maxLength": 20, "example": "+57 300 123 4567"}, "proxy_type": {"type": "string", "enum": ["external", "resident", "family"], "example": "external"}, "start_date": {"type": "string", "example": "2025-01-15T00:00:00Z"{{"}}"}}}, "central_reserve_services_horizontalproperty_horizontalpropertiy_internal_infra_primary_handlers_response.CommitteeResponse": {"type": "object", "properties": {"committee_type_id": {"type": "integer", "example": 1}, "end_date": {"type": "string", "example": "2026-12-31T23:59:59Z"}, "id": {"type": "integer", "example": 1}, "is_active": {"type": "boolean", "example": true}, "name": {"type": "string", "example": "Consejo de Administración 2025"}, "notes": {"type": "string", "example": "Comité creado automáticamente"}, "start_date": {"type": "string", "example": "2025-01-01T00:00:00Z"}, "type_code": {"type": "string", "example": "admin_council"}, "type_name": {"type": "string", "example": "Consejo de Administración"{{"}}"}}}, "central_reserve_services_horizontalproperty_horizontalpropertiy_internal_infra_primary_handlers_response.HorizontalPropertyDeleteSuccessResponse": {"type": "object", "properties": {"message": {"type": "string", "example": "Propiedad horizontal eliminada exitosamente"}, "success": {"type": "boolean", "example": true{{"}}"}}}, "central_reserve_services_horizontalproperty_horizontalpropertiy_internal_infra_primary_handlers_response.HorizontalPropertyListResponse": {"type": "object", "properties": {"address": {"type": "string", "example": "Carrera 15 #45-67, Bogotá"}, "business_type_name": {"type": "string", "example": "Propiedad Horizontal"}, "code": {"type": "string", "example": "los-pinos"}, "created_at": {"type": "string", "example": "2024-01-15T10:30:00Z"}, "id": {"type": "integer", "example": 1}, "is_active": {"type": "boolean", "example": true}, "logo_url": {"type": "string", "example": "https://example.com/logos/los-pinos.png"}, "name": {"type": "string", "example": "Conjunto Residencial Los Pinos"}, "total_units": {"type": "integer", "example": 120{{"}}"}}}, "central_reserve_services_horizontalproperty_horizontalpropertiy_internal_infra_primary_handlers_response.HorizontalPropertyListSuccessResponse": {"type": "object", "properties": {"data": {"$ref": "#/definitions/central_reserve_services_horizontalproperty_horizontalpropertiy_internal_infra_primary_handlers_response.PaginatedHorizontalPropertyResponse"}, "message": {"type": "string", "example": "Lista obtenida exitosamente"}, "success": {"type": "boolean", "example": true{{"}}"}}}, "central_reserve_services_horizontalproperty_horizontalpropertiy_internal_infra_primary_handlers_response.HorizontalPropertyResponse": {"type": "object", "properties": {"address": {"type": "string", "example": "Carrera 15 #45-67, Bogotá"}, "business_type_id": {"type": "integer", "example": 1}, "business_type_name": {"type": "string", "example": "Propiedad Horizontal"}, "code": {"type": "string", "example": "los-pinos"}, "committees": {"type": "array", "items": {"$ref": "#/definitions/central_reserve_services_horizontalproperty_horizontalpropertiy_internal_infra_primary_handlers_response.CommitteeResponse"{{"}}"}}, "created_at": {"type": "string", "example": "2024-01-15T10:30:00Z"}, "custom_domain": {"type": "string", "example": "lospinos.example.com"}, "description": {"type": "string", "example": "Conjunto residencial familiar con amplias zonas verdes"}, "has_elevator": {"type": "boolean", "example": true}, "has_gym": {"type": "boolean", "example": false}, "has_parking": {"type": "boolean", "example": true}, "has_pool": {"type": "boolean", "example": true}, "has_social_area": {"type": "boolean", "example": true}, "id": {"type": "integer", "example": 1}, "is_active": {"type": "boolean", "example": true}, "logo_url": {"description": "Configuración de marca blanca", "type": "string", "example": "https://example.com/logo.png"}, "name": {"type": "string", "example": "Conjunto Residencial Los Pinos"}, "navbar_image_url": {"type": "string", "example": "https://example.com/navbar.jpg"}, "parent_business_id": {"type": "integer"}, "primary_color": {"type": "string", "example": "#1f2937"}, "property_units": {"description": "Información detallada (solo en GET by ID)", "type": "array", "items": {"$ref": "#/definitions/central_reserve_services_horizontalproperty_horizontalpropertiy_internal_infra_primary_handlers_response.PropertyUnitResponse"{{"}}"}}, "quaternary_color": {"type": "string", "example": "#fbbf24"}, "secondary_color": {"type": "string", "example": "#3b82f6"}, "tertiary_color": {"type": "string", "example": "#10b981"}, "timezone": {"type": "string", "example": "America/Bogota"}, "total_floors": {"type": "integer", "example": 15}, "total_units": {"description": "Configuración específica para propiedades horizontales", "type": "integer", "example": 120}, "updated_at": {"type": "string", "example": "2024-01-15T10:30:00Z"{{"}}"}}}, "central_reserve_services_horizontalproperty_horizontalpropertiy_internal_infra_primary_handlers_response.HorizontalPropertySuccessResponse": {"type": "object", "properties": {"data": {"$ref": "#/definitions/central_reserve_services_horizontalproperty_horizontalpropertiy_internal_infra_primary_handlers_response.HorizontalPropertyResponse"}, "message": {"type": "string", "example": "Operación realizada exitosamente"}, "success": {"type": "boolean", "example": true{{"}}"}}}, "central_reserve_services_horizontalproperty_horizontalpropertiy_internal_infra_primary_handlers_response.PaginatedHorizontalPropertyResponse": {"type": "object", "properties": {"data": {"type": "array", "items": {"$ref": "#/definitions/central_reserve_services_horizontalproperty_horizontalpropertiy_internal_infra_primary_handlers_response.HorizontalPropertyListResponse"{{"}}"}}, "page": {"type": "integer", "example": 1}, "page_size": {"type": "integer", "example": 10}, "total": {"type": "integer", "example": 150}, "total_pages": {"type": "integer", "example": 15{{"}}"}}}, "central_reserve_services_horizontalproperty_horizontalpropertiy_internal_infra_primary_handlers_response.PropertyUnitResponse": {"type": "object", "properties": {"area": {"type": "number", "example": 85.5}, "bathrooms": {"type": "integer", "example": 2}, "bedrooms": {"type": "integer", "example": 3}, "block": {"type": "string", "example": "A"}, "description": {"type": "string", "example": "Apto 101 - Piso 1"}, "floor": {"type": "integer", "example": 1}, "id": {"type": "integer", "example": 1}, "is_active": {"type": "boolean", "example": true}, "number": {"type": "string", "example": "101"}, "unit_type": {"type": "string", "example": "apartment"{{"}}"}}}, "central_reserve_services_horizontalproperty_resident_internal_infra_primary_handlers_request.CreateResidentRequest": {"type": "object", "required": ["dni", "email", "name", "property_unit_id", "resident_type_id"], "properties": {"dni": {"type": "string", "example": "123456789"}, "email": {"type": "string", "example": "juan@email.com"}, "emergency_contact": {"type": "string", "example": "María Pérez - 3009876543"}, "is_main_resident": {"type": "boolean", "example": true}, "lease_end_date": {"type": "string", "example": "2024-12-31T23:59:59Z"}, "lease_start_date": {"type": "string", "example": "2024-01-01T00:00:00Z"}, "monthly_rent": {"type": "number", "example": 1500000}, "move_in_date": {"type": "string", "example": "2024-01-15T00:00:00Z"}, "name": {"type": "string", "example": "Juan Pérez"}, "phone": {"type": "string", "example": "+573001234567"}, "property_unit_id": {"type": "integer", "example": 1}, "resident_type_id": {"type": "integer", "example": 1{{"}}"}}}, "central_reserve_services_horizontalproperty_resident_internal_infra_primary_handlers_request.UpdateResidentRequest": {"type": "object", "properties": {"dni": {"type": "string", "example": "123456789"}, "email": {"type": "string", "example": "juan@email.com"}, "emergency_contact": {"type": "string", "example": "María Pérez - 3009876543"}, "is_active": {"type": "boolean", "example": true}, "is_main_resident": {"type": "boolean", "example": true}, "lease_end_date": {"type": "string", "example": "2024-12-31T23:59:59Z"}, "lease_start_date": {"type": "string", "example": "2024-01-01T00:00:00Z"}, "monthly_rent": {"type": "number", "example": 1500000}, "move_in_date": {"type": "string", "example": "2024-01-15T00:00:00Z"}, "move_out_date": {"type": "string", "example": "2025-01-15T00:00:00Z"}, "name": {"type": "string", "example": "Juan Pérez"}, "phone": {"type": "string", "example": "+573001234567"}, "property_unit_id": {"type": "integer", "example": 1}, "resident_type_id": {"type": "integer", "example": 1{{"}}"}}}, "central_reserve_services_horizontalproperty_unit_internal_infra_primary_handlers_request.CreatePropertyUnitRequest": {"type": "object", "required": ["number", "unit_type"], "properties": {"area": {"type": "number", "example": 85.5}, "bathrooms": {"type": "integer", "example": 2}, "bedrooms": {"type": "integer", "example": 3}, "block": {"type": "string", "example": "A"}, "description": {"type": "string", "example": "Apartamento esquinero con vista"}, "floor": {"type": "integer", "example": 1}, "number": {"type": "string", "example": "101"}, "participation_coefficient": {"type": "number", "example": 0.008333}, "unit_type": {"type": "string", "example": "apartment"{{"}}"}}}, "central_reserve_services_horizontalproperty_unit_internal_infra_primary_handlers_request.UpdatePropertyUnitRequest": {"type": "object", "properties": {"area": {"type": "number", "example": 85.5}, "bathrooms": {"type": "integer", "example": 2}, "bedrooms": {"type": "integer", "example": 3}, "block": {"type": "string", "example": "A"}, "description": {"type": "string", "example": "Apartamento esquinero con vista"}, "floor": {"type": "integer", "example": 1}, "is_active": {"type": "boolean", "example": true}, "number": {"type": "string", "example": "101"}, "participation_coefficient": {"type": "number", "example": 0.008333}, "unit_type": {"type": "string", "example": "apartment"{{"}}"}}}, "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_request.CreateVoteRequest": {"type": "object", "required": ["property_unit_id", "voting_option_id"], "properties": {"ip_address": {"type": "string"}, "property_unit_id": {"type": "integer"}, "user_agent": {"type": "string"}, "voting_option_id": {"type": "integer"{{"}}"}}}, "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_request.CreateVotingGroupRequest": {"type": "object", "required": ["name", "voting_end_date", "voting_start_date"], "properties": {"created_by_user_id": {"type": "integer"}, "description": {"type": "string", "maxLength": 1000}, "name": {"type": "string", "maxLength": 150, "minLength": 3}, "notes": {"type": "string", "maxLength": 2000}, "quorum_percentage": {"type": "number"}, "requires_quorum": {"type": "boolean"}, "voting_end_date": {"type": "string"}, "voting_start_date": {"type": "string"{{"}}"}}}, "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_request.CreateVotingOptionRequest": {"type": "object", "required": ["color", "option_code", "option_text"], "properties": {"color": {"type": "string"}, "display_order": {"type": "integer", "minimum": 1}, "option_code": {"type": "string", "maxLength": 20, "minLength": 1}, "option_text": {"type": "string", "maxLength": 100, "minLength": 1{{"}}"}}}, "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_request.CreateVotingRequest": {"type": "object", "required": ["description", "title", "voting_type"], "properties": {"allow_abstention": {"type": "boolean"}, "description": {"type": "string", "maxLength": 2000}, "display_order": {"type": "integer", "minimum": 1}, "is_secret": {"type": "boolean"}, "required_percentage": {"type": "number"}, "title": {"type": "string", "maxLength": 200, "minLength": 3}, "voting_type": {"type": "string", "enum": ["simple", "majority", "unanimity"]{{"}}"}}}, "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_request.UpdateVotingOptionStatusRequest": {"type": "object", "required": ["is_active"], "properties": {"is_active": {"type": "boolean"{{"}}"}}}, "services_horizontalproperty_vote_internal_infra_primary_handlers_handlerpublic.CreatePublicVoteRequest": {"type": "object", "required": ["voting_option_id"], "properties": {"dni": {"description": "Opcional - viene del token", "type": "string"}, "property_unit_id": {"description": "Opcional - viene del token", "type": "integer"}, "voting_option_id": {"type": "integer", "example": 1{{"}}"}}}, "services_horizontalproperty_vote_internal_infra_primary_handlers_handlerpublic.GeneratePublicVotingURLRequest": {"type": "object", "properties": {"business_id": {"description": "ID del business (solo para super admin, opcional en body)", "type": "integer", "example": 19}, "duration_hours": {"description": "Duración del token en horas", "type": "integer", "example": 24}, "frontend_url": {"description": "URL base del frontend (opcional, usa URL_BASE_SWAGGER + /public/vote si está vacío)", "type": "string", "example": "https://votacion.miconjunto.com/vote"{{"}}"}}}, "services_horizontalproperty_vote_internal_infra_primary_handlers_handlerpublic.ValidateResidentRequest": {"type": "object", "required": ["dni", "property_unit_id"], "properties": {"dni": {"type": "string", "example": "123456789"}, "property_unit_id": {"type": "integer", "example": 1{{"}}"}}{{"}}"}}, "securityDefinitions": {"BearerAuth": {"description": "Token de business JWT con el prefijo **Bearer** (para todos los endpoints)", "type": "apiKey", "name": "Authorization", "in": "header"}, "BusinessTokenAuth": {"description": "Token principal JWT con el prefijo **Bearer** (solo para /auth/business-token)", "type": "apiKey", "name": "Authorization", "in": "header"{{"}}"}}}`
+const docTemplate = `{
+  "swagger": "2.0",
+  "info": {
+    "description": "API para la gestión de autenticación, usuarios, roles y permisos.",
+    "title": "Auth API",
+    "termsOfService": "https://ejemplo.com/terminos",
+    "contact": {
+      "name": "Equipo de Backend",
+      "email": "backend@example.com"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    },
+    "version": "1.0"
+  },
+  "host": "localhost:3050",
+  "basePath": "/api/v1",
+  "schemes": [
+    "http"
+  ],
+  "paths": {
+    "/actions": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Obtiene una lista paginada de actions del sistema con opciones de filtrado",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Actions"
+        ],
+        "summary": "Obtener actions",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "default": 1,
+            "description": "Número de página",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+            "default": 10,
+            "description": "Tamaño de página",
+            "name": "page_size",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Filtrar por nombre (búsqueda parcial)",
+            "name": "name",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de actions obtenida exitosamente",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "400": {
+            "description": "Parámetros de consulta inválidos",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "401": {
+            "description": "No autorizado",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Crea un nuevo action en el sistema con nombre y descripción únicos",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Actions"
+        ],
+        "summary": "Crear action",
+        "parameters": [
+          {
+            "description": "Datos del action a crear",
+            "name": "request",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_actions_internal_infra_primary_handlers_request.CreateActionRequest"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Action creado exitosamente",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "400": {
+            "description": "Datos de entrada inválidos",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "401": {
+            "description": "No autorizado",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "403": {
+            "description": "Solo super usuarios pueden crear actions",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "409": {
+            "description": "Action ya existe",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      }
+    },
+    "/actions/{id}": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Obtiene un action específico del sistema por su ID único",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Actions"
+        ],
+        "summary": "Obtener action por ID",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "description": "ID del action",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Action obtenido exitosamente",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "400": {
+            "description": "ID de action inválido",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "401": {
+            "description": "No autorizado",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "404": {
+            "description": "Action no encontrado",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      },
+      "put": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Actualiza un action existente en el sistema",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Actions"
+        ],
+        "summary": "Actualizar action",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "description": "ID del action",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "Datos del action a actualizar",
+            "name": "request",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_actions_internal_infra_primary_handlers_request.UpdateActionRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Action actualizado exitosamente",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "400": {
+            "description": "Datos de entrada inválidos",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "401": {
+            "description": "No autorizado",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "403": {
+            "description": "Solo super usuarios pueden actualizar actions",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "404": {
+            "description": "Action no encontrado",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "409": {
+            "description": "Conflicto con action existente",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      },
+      "delete": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Elimina un action del sistema por su ID único. No se puede eliminar si tiene permisos asociados.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Actions"
+        ],
+        "summary": "Eliminar action",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "description": "ID del action",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Action eliminado exitosamente",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "400": {
+            "description": "ID de action inválido",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "401": {
+            "description": "No autorizado",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "403": {
+            "description": "Solo super usuarios pueden eliminar actions",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "404": {
+            "description": "Action no encontrado",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "409": {
+            "description": "Action tiene permisos asociados",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      }
+    },
+    "/auth/business-token": {
+      "post": {
+        "security": [
+          {
+            "BusinessTokenAuth": []
+          }
+        ],
+        "description": "Genera un token específico para un business basado en el token principal del usuario. Para super admins (scope platform), usar business_id = 0",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Generar token de business",
+        "parameters": [
+          {
+            "description": "Datos del business (business_id = 0 para super admin)",
+            "name": "request",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_request.GenerateBusinessTokenRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Token generado exitosamente",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.GenerateBusinessTokenSuccessResponse"
+            }
+          },
+          "400": {
+            "description": "Datos de entrada inválidos",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.GenerateBusinessTokenErrorResponse"
+            }
+          },
+          "401": {
+            "description": "No autorizado",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.GenerateBusinessTokenErrorResponse"
+            }
+          },
+          "404": {
+            "description": "Business no encontrado o sin acceso",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.GenerateBusinessTokenErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.GenerateBusinessTokenErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/auth/change-password": {
+      "post": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Cambia la contraseña del usuario autenticado",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Cambiar contraseña",
+        "parameters": [
+          {
+            "description": "Datos para cambiar contraseña",
+            "name": "password",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_request.ChangePasswordRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contraseña cambiada exitosamente",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.ChangePasswordResponse"
+            }
+          },
+          "400": {
+            "description": "Datos inválidos",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginErrorResponse"
+            }
+          },
+          "401": {
+            "description": "Token de acceso requerido",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginErrorResponse"
+            }
+          },
+          "403": {
+            "description": "Contraseña actual incorrecta",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/auth/generate-password": {
+      "post": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Genera una nueva contraseña aleatoria. Si el usuario es super admin, puede especificar user_id para generar contraseña de otro usuario. Si no se envía user_id, se genera para el usuario autenticado. La contraseña solo se muestra una vez en esta respuesta.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Generar nueva contraseña aleatoria",
+        "parameters": [
+          {
+            "description": "Request body (user_id opcional, solo para super usuarios)",
+            "name": "request",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_request.GeneratePasswordRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Nueva contraseña generada exitosamente (solo se muestra una vez)",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.GeneratePasswordResponse"
+            }
+          },
+          "400": {
+            "description": "Datos inválidos",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginErrorResponse"
+            }
+          },
+          "401": {
+            "description": "Token de acceso requerido",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginErrorResponse"
+            }
+          },
+          "403": {
+            "description": "No tienes permisos para generar contraseña de otro usuario o usuario inactivo",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginErrorResponse"
+            }
+          },
+          "404": {
+            "description": "Usuario no encontrado",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "description": "Autentica un usuario con email y contraseña, retornando información del usuario y token de acceso",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Autenticar usuario",
+        "parameters": [
+          {
+            "description": "Credenciales de login",
+            "name": "request",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_request.LoginRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Login exitoso",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginSuccessResponse"
+            }
+          },
+          "400": {
+            "description": "Datos de entrada inválidos",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginBadRequestResponse"
+            }
+          },
+          "401": {
+            "description": "Credenciales inválidas",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginErrorResponse"
+            }
+          },
+          "403": {
+            "description": "Usuario inactivo",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/auth/roles-permissions": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Obtiene los roles y permisos del usuario autenticado desde el token",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Obtener roles y permisos del usuario",
+        "responses": {
+          "200": {
+            "description": "Roles y permisos obtenidos exitosamente",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.UserRolesPermissionsSuccessResponse"
+            }
+          },
+          "401": {
+            "description": "Token de acceso requerido",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginErrorResponse"
+            }
+          },
+          "404": {
+            "description": "Usuario no encontrado",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/business-types": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Obtiene una lista de todos los tipos de negocio del sistema",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "business-types"
+        ],
+        "summary": "Obtener lista de tipos de negocio",
+        "responses": {
+          "201": {
+            "description": "Tipos de negocio obtenidos exitosamente",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "401": {
+            "description": "Token de acceso requerido",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Crea un nuevo tipo de negocio en el sistema",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "business-types"
+        ],
+        "summary": "Crear un nuevo tipo de negocio",
+        "parameters": [
+          {
+            "description": "Datos del tipo de negocio a crear",
+            "name": "businessType",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_business_internal_infra_primary_controllers_businesstypehandler_request.BusinessTypeRequest"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Tipo de negocio creado exitosamente",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "401": {
+            "description": "Token de acceso requerido",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      }
+    },
+    "/business-types/{id}": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Obtiene un tipo de negocio específico por su ID",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "business-types"
+        ],
+        "summary": "Obtener tipo de negocio por ID",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "ID del tipo de negocio",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Tipo de negocio obtenido exitosamente",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "401": {
+            "description": "Token de acceso requerido",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      },
+      "put": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Actualiza un tipo de negocio existente",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "business-types"
+        ],
+        "summary": "Actualizar tipo de negocio",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "ID del tipo de negocio",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "Datos del tipo de negocio a actualizar",
+            "name": "businessType",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_business_internal_infra_primary_controllers_businesstypehandler_request.BusinessTypeRequest"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Tipo de negocio actualizado exitosamente",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "401": {
+            "description": "Token de acceso requerido",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      },
+      "delete": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Elimina un tipo de negocio del sistema",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "business-types"
+        ],
+        "summary": "Eliminar tipo de negocio",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "ID del tipo de negocio",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Tipo de negocio eliminado exitosamente",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "401": {
+            "description": "Token de acceso requerido",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      }
+    },
+    "/businesses": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Obtiene una lista paginada de todos los negocios del sistema",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "businesses"
+        ],
+        "summary": "Obtener lista de negocios",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "Número de página (por defecto 1)",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "Elementos por página (por defecto 10)",
+            "name": "per_page",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Filtrar por nombre de negocio",
+            "name": "name",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "Filtrar por tipo de negocio",
+            "name": "business_type_id",
+            "in": "query"
+          },
+          {
+            "type": "boolean",
+            "description": "Filtrar por estado activo/inactivo",
+            "name": "is_active",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Negocios obtenidos exitosamente",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "401": {
+            "description": "Token de acceso requerido",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Crea un nuevo negocio en el sistema",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "businesses"
+        ],
+        "summary": "Crear un nuevo negocio",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Nombre del negocio",
+            "name": "name",
+            "in": "formData",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Código del negocio",
+            "name": "code",
+            "in": "formData",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "description": "ID del tipo de negocio",
+            "name": "business_type_id",
+            "in": "formData",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Zona horaria",
+            "name": "timezone",
+            "in": "formData"
+          },
+          {
+            "type": "string",
+            "description": "Dirección",
+            "name": "address",
+            "in": "formData"
+          },
+          {
+            "type": "string",
+            "description": "Descripción",
+            "name": "description",
+            "in": "formData"
+          },
+          {
+            "type": "file",
+            "description": "Logo del negocio",
+            "name": "logo_url",
+            "in": "formData"
+          },
+          {
+            "type": "string",
+            "description": "Color primario",
+            "name": "primary_color",
+            "in": "formData"
+          },
+          {
+            "type": "string",
+            "description": "Color secundario",
+            "name": "secondary_color",
+            "in": "formData"
+          },
+          {
+            "type": "string",
+            "description": "Dominio personalizado",
+            "name": "custom_domain",
+            "in": "formData"
+          },
+          {
+            "type": "boolean",
+            "description": "Habilitar delivery",
+            "name": "enable_delivery",
+            "in": "formData"
+          },
+          {
+            "type": "boolean",
+            "description": "Habilitar pickup",
+            "name": "enable_pickup",
+            "in": "formData"
+          },
+          {
+            "type": "boolean",
+            "description": "Habilitar reservas",
+            "name": "enable_reservations",
+            "in": "formData"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Negocio creado exitosamente",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "401": {
+            "description": "Token de acceso requerido",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      }
+    },
+    "/businesses/configured-resources": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Obtiene una lista paginada de businesses con sus recursos configurados y su estado (activo/inactivo)",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Business Resources"
+        ],
+        "summary": "Obtener configuración de recursos de businesses",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "default": 1,
+            "description": "Número de página",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+            "default": 10,
+            "description": "Elementos por página",
+            "name": "per_page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "Filtrar por ID de business",
+            "name": "business_id",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "Filtrar por ID de tipo de business",
+            "name": "business_type_id",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de businesses con recursos obtenida exitosamente",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "400": {
+            "description": "Parámetros de consulta inválidos",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "401": {
+            "description": "No autorizado",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "403": {
+            "description": "Sin permisos",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      }
+    },
+    "/businesses/configured-resources/{resource_id}/activate": {
+      "put": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Activa un recurso configurado para un business específico",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Business Resources"
+        ],
+        "summary": "Activar recurso de business",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "description": "ID del recurso",
+            "name": "resource_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "minimum": 1,
+            "type": "integer",
+            "description": "ID del business (solo super admin)",
+            "name": "business_id",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recurso activado exitosamente",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "400": {
+            "description": "Parámetros inválidos",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "401": {
+            "description": "No autorizado",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "403": {
+            "description": "Sin permisos",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "404": {
+            "description": "Business o recurso no encontrado",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      }
+    },
+    "/businesses/configured-resources/{resource_id}/deactivate": {
+      "put": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Desactiva un recurso configurado para un business específico",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Business Resources"
+        ],
+        "summary": "Desactivar recurso de business",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "description": "ID del recurso",
+            "name": "resource_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "minimum": 1,
+            "type": "integer",
+            "description": "ID del business (solo super admin)",
+            "name": "business_id",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recurso desactivado exitosamente",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "400": {
+            "description": "Parámetros inválidos",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "401": {
+            "description": "No autorizado",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "403": {
+            "description": "Sin permisos",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "404": {
+            "description": "Business o recurso no encontrado",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      }
+    },
+    "/businesses/{id}": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Obtiene un negocio específico por su ID",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "businesses"
+        ],
+        "summary": "Obtener negocio por ID",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "ID del negocio",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Negocio obtenido exitosamente",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_business_internal_infra_primary_controllers_businesshandler_response.GetBusinessByIDResponse"
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "401": {
+            "description": "Token de acceso requerido",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      },
+      "put": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Actualiza un negocio existente",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "businesses"
+        ],
+        "summary": "Actualizar negocio",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "ID del negocio",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Nombre del negocio",
+            "name": "name",
+            "in": "formData"
+          },
+          {
+            "type": "string",
+            "description": "Código del negocio",
+            "name": "code",
+            "in": "formData"
+          },
+          {
+            "type": "integer",
+            "description": "ID del tipo de negocio",
+            "name": "business_type_id",
+            "in": "formData"
+          },
+          {
+            "type": "string",
+            "description": "Zona horaria",
+            "name": "timezone",
+            "in": "formData"
+          },
+          {
+            "type": "string",
+            "description": "Dirección",
+            "name": "address",
+            "in": "formData"
+          },
+          {
+            "type": "string",
+            "description": "Descripción",
+            "name": "description",
+            "in": "formData"
+          },
+          {
+            "type": "file",
+            "description": "Logo del negocio",
+            "name": "logo_url",
+            "in": "formData"
+          },
+          {
+            "type": "string",
+            "description": "Color primario",
+            "name": "primary_color",
+            "in": "formData"
+          },
+          {
+            "type": "string",
+            "description": "Color secundario",
+            "name": "secondary_color",
+            "in": "formData"
+          },
+          {
+            "type": "string",
+            "description": "Dominio personalizado",
+            "name": "custom_domain",
+            "in": "formData"
+          },
+          {
+            "type": "boolean",
+            "description": "¿Activo?",
+            "name": "is_active",
+            "in": "formData"
+          },
+          {
+            "type": "boolean",
+            "description": "Habilitar delivery",
+            "name": "enable_delivery",
+            "in": "formData"
+          },
+          {
+            "type": "boolean",
+            "description": "Habilitar pickup",
+            "name": "enable_pickup",
+            "in": "formData"
+          },
+          {
+            "type": "boolean",
+            "description": "Habilitar reservas",
+            "name": "enable_reservations",
+            "in": "formData"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Negocio actualizado exitosamente",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "401": {
+            "description": "Token de acceso requerido",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      },
+      "delete": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Elimina un negocio del sistema",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "businesses"
+        ],
+        "summary": "Eliminar negocio",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "ID del negocio",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Negocio eliminado exitosamente",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "401": {
+            "description": "Token de acceso requerido",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      }
+    },
+    "/businesses/{id}/configured-resources": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Obtiene la configuración de recursos de un business específico por su ID, incluyendo todos los recursos asociados y su estado (activo/inactivo)",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Business Resources"
+        ],
+        "summary": "Obtener configuración de recursos de un business por ID",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "ID del business",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Configuración de recursos del business obtenida exitosamente",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "400": {
+            "description": "Parámetros inválidos",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "401": {
+            "description": "No autorizado",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "403": {
+            "description": "Sin permisos",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "404": {
+            "description": "Business no encontrado",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      }
+    },
+    "/dashboard": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Obtiene el resumen completo del dashboard según el tipo de usuario (business o super admin)",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Obtener dashboard",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "ID del business (opcional para super admin, si no se envía ve todo)",
+            "name": "business_id",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "Página para business summaries (solo super admin, default: 1)",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "Tamaño de página para business summaries (solo super admin, default: 10, max: 100)",
+            "name": "page_size",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "/dashboard/stats": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Obtiene estadísticas resumidas de todos los módulos IAM (usuarios, roles, permisos, recursos, negocios, tipos de negocio)",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Obtener estadísticas del dashboard IAM",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "Filtrar por tipo de business",
+            "name": "business_type_id",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "Filtrar por ID de business",
+            "name": "business_id",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Estadísticas obtenidas exitosamente",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.DashboardStatsResponse"
+            }
+          },
+          "401": {
+            "description": "Token de acceso requerido",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.DashboardErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.DashboardErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/logs/stream": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Obtiene un stream de logs del sistema en tiempo real usando Server-Sent Events (SSE)",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "text/event-stream"
+        ],
+        "tags": [
+          "Logs"
+        ],
+        "summary": "Stream de logs en tiempo real",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Nivel de log (error, warn, info, debug)",
+            "name": "level",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Filtrar por servicio",
+            "name": "service",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Filtrar por módulo",
+            "name": "module",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Filtrar por función",
+            "name": "function",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "Filtrar por business_id",
+            "name": "business_id",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "Filtrar por user_id",
+            "name": "user_id",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Buscar en mensaje",
+            "name": "search",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Stream de logs en formato SSE",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "401": {
+            "description": "Token de acceso requerido",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "403": {
+            "description": "Solo super administradores pueden ver logs",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "/permissions": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Obtiene la lista completa de permisos del sistema con filtros opcionales por tipo de business, nombre y scope",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Permissions"
+        ],
+        "summary": "Obtener todos los permisos",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "Filtrar por tipo de business (incluye genéricos)",
+            "name": "business_type_id",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Filtrar por nombre de permiso (búsqueda parcial)",
+            "name": "name",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "Filtrar por ID de scope",
+            "name": "scope_id",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de permisos obtenida exitosamente",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionListResponse"
+            }
+          },
+          "401": {
+            "description": "Token de acceso requerido",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"
+            }
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Crea un nuevo permiso en el sistema",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Permissions"
+        ],
+        "summary": "Crear nuevo permiso",
+        "parameters": [
+          {
+            "description": "Datos del permiso a crear",
+            "name": "permission",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_request.CreatePermissionRequest"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Permiso creado exitosamente",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionMessageResponse"
+            }
+          },
+          "400": {
+            "description": "Datos de entrada inválidos",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"
+            }
+          },
+          "401": {
+            "description": "Token de acceso requerido",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"
+            }
+          },
+          "409": {
+            "description": "Permiso con código o nombre duplicado",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/permissions/resource/{resource}": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Obtiene todos los permisos de un recurso específico",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Permissions"
+        ],
+        "summary": "Obtener permisos por recurso",
+        "parameters": [
+          {
+            "type": "string",
+            "example": "\"users\"",
+            "description": "Recurso de los permisos",
+            "name": "resource",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Permisos por recurso obtenidos exitosamente",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionListResponse"
+            }
+          },
+          "400": {
+            "description": "Recurso inválido",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"
+            }
+          },
+          "401": {
+            "description": "Token de acceso requerido",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/permissions/scope/{scope_id}": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Obtiene todos los permisos de un scope específico",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Permissions"
+        ],
+        "summary": "Obtener permisos por scope",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "description": "ID del scope",
+            "name": "scope_id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Permisos por scope obtenidos exitosamente",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionListResponse"
+            }
+          },
+          "400": {
+            "description": "Scope ID inválido",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"
+            }
+          },
+          "401": {
+            "description": "Token de acceso requerido",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/permissions/{id}": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Obtiene un permiso específico por su ID",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Permissions"
+        ],
+        "summary": "Obtener permiso por ID",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "description": "ID del permiso",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Permiso obtenido exitosamente",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionSuccessResponse"
+            }
+          },
+          "400": {
+            "description": "ID inválido",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"
+            }
+          },
+          "401": {
+            "description": "Token de acceso requerido",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"
+            }
+          },
+          "404": {
+            "description": "Permiso no encontrado",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"
+            }
+          }
+        }
+      },
+      "put": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Actualiza un permiso existente en el sistema",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Permissions"
+        ],
+        "summary": "Actualizar permiso",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "description": "ID del permiso",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "Datos del permiso a actualizar",
+            "name": "permission",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_request.UpdatePermissionRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Permiso actualizado exitosamente",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionMessageResponse"
+            }
+          },
+          "400": {
+            "description": "Datos de entrada inválidos",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"
+            }
+          },
+          "401": {
+            "description": "Token de acceso requerido",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"
+            }
+          },
+          "404": {
+            "description": "Permiso no encontrado",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"
+            }
+          },
+          "409": {
+            "description": "Permiso con código duplicado",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"
+            }
+          }
+        }
+      },
+      "delete": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Elimina permanentemente un permiso del sistema (eliminación física, no se puede recuperar)",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Permissions"
+        ],
+        "summary": "Eliminar permiso permanentemente",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "description": "ID del permiso",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Permiso eliminado exitosamente",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionMessageResponse"
+            }
+          },
+          "400": {
+            "description": "ID inválido",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"
+            }
+          },
+          "401": {
+            "description": "Token de acceso requerido",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"
+            }
+          },
+          "404": {
+            "description": "Permiso no encontrado",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/resources": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Obtiene una lista paginada de recursos del sistema con opciones de filtrado y ordenamiento",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Resources"
+        ],
+        "summary": "Obtener recursos",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "default": 1,
+            "description": "Número de página",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+            "default": 10,
+            "description": "Tamaño de página",
+            "name": "page_size",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Filtrar por nombre (búsqueda parcial)",
+            "name": "name",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Filtrar por descripción (búsqueda parcial)",
+            "name": "description",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "Filtrar por tipo de business (incluye genéricos)",
+            "name": "business_type_id",
+            "in": "query"
+          },
+          {
+            "enum": [
+              "name",
+              "created_at",
+              "updated_at"
+            ],
+            "type": "string",
+            "description": "Campo para ordenar",
+            "name": "sort_by",
+            "in": "query"
+          },
+          {
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "type": "string",
+            "description": "Orden",
+            "name": "sort_order",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de recursos obtenida exitosamente",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "400": {
+            "description": "Parámetros de consulta inválidos",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "401": {
+            "description": "No autorizado",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Crea un nuevo recurso en el sistema con nombre y descripción únicos",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Resources"
+        ],
+        "summary": "Crear recurso",
+        "parameters": [
+          {
+            "description": "Datos del recurso a crear",
+            "name": "request",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_resources_internal_infra_primary_handlers_request.CreateResourceRequest"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Recurso creado exitosamente",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "400": {
+            "description": "Datos de entrada inválidos",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "401": {
+            "description": "No autorizado",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "409": {
+            "description": "Recurso ya existe",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      }
+    },
+    "/resources/{id}": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Obtiene un recurso específico del sistema por su ID único",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Resources"
+        ],
+        "summary": "Obtener recurso por ID",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "description": "ID del recurso",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recurso obtenido exitosamente",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "400": {
+            "description": "ID de recurso inválido",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "401": {
+            "description": "No autorizado",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "404": {
+            "description": "Recurso no encontrado",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      },
+      "put": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Actualiza un recurso existente en el sistema",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Resources"
+        ],
+        "summary": "Actualizar recurso",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "description": "ID del recurso",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "Datos del recurso a actualizar",
+            "name": "request",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_resources_internal_infra_primary_handlers_request.UpdateResourceRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recurso actualizado exitosamente",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "400": {
+            "description": "Datos de entrada inválidos",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "401": {
+            "description": "No autorizado",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "404": {
+            "description": "Recurso no encontrado",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "409": {
+            "description": "Conflicto con recurso existente",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      },
+      "delete": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Elimina permanentemente un recurso del sistema por su ID único con eliminación en cascada",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Resources"
+        ],
+        "summary": "Eliminar recurso",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "description": "ID del recurso",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recurso eliminado exitosamente",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "400": {
+            "description": "ID de recurso inválido",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "401": {
+            "description": "No autorizado",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "404": {
+            "description": "Recurso no encontrado",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      }
+    },
+    "/roles": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Obtiene la lista completa de roles del sistema con opciones de filtrado y paginación",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Roles"
+        ],
+        "summary": "Obtener todos los roles",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "default": 1,
+            "description": "Número de página",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+            "default": 10,
+            "description": "Tamaño de página",
+            "name": "page_size",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "Filtrar por tipo de business",
+            "name": "business_type_id",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "Filtrar por ID de scope",
+            "name": "scope_id",
+            "in": "query"
+          },
+          {
+            "type": "boolean",
+            "description": "Filtrar por rol de sistema (true/false)",
+            "name": "is_system",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Buscar en el nombre del rol (búsqueda parcial)",
+            "name": "name",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "Filtrar por nivel del rol",
+            "name": "level",
+            "in": "query"
+          },
+          {
+            "enum": [
+              "id",
+              "name",
+              "level",
+              "created_at",
+              "updated_at"
+            ],
+            "type": "string",
+            "default": "created_at",
+            "description": "Campo para ordenar",
+            "name": "sort_by",
+            "in": "query"
+          },
+          {
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "type": "string",
+            "default": "desc",
+            "description": "Orden de clasificación",
+            "name": "sort_order",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Roles obtenidos exitosamente",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleListResponse"
+            }
+          },
+          "401": {
+            "description": "Token de acceso requerido",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"
+            }
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Crea un nuevo rol en el sistema con todos los campos obligatorios",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Roles"
+        ],
+        "summary": "Crear un nuevo rol",
+        "parameters": [
+          {
+            "description": "Datos del rol a crear",
+            "name": "role",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_request.CreateRoleRequest"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Rol creado exitosamente",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.CreateRoleResponse"
+            }
+          },
+          "400": {
+            "description": "Datos de entrada inválidos",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      }
+    },
+    "/roles/by-level": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Obtiene todos los roles de un nivel específico con información del scope",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Roles"
+        ],
+        "summary": "Obtener roles por nivel",
+        "parameters": [
+          {
+            "maximum": 10,
+            "minimum": 1,
+            "type": "integer",
+            "description": "Nivel del rol",
+            "name": "level",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Roles obtenidos exitosamente",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleListResponse"
+            }
+          },
+          "400": {
+            "description": "Nivel inválido",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"
+            }
+          },
+          "401": {
+            "description": "Token de acceso requerido",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/roles/scope/{scope_id}": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Obtiene todos los roles de un scope específico",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Roles"
+        ],
+        "summary": "Obtener roles por scope",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "description": "ID del scope",
+            "name": "scope_id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Roles por scope obtenidos exitosamente",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleListResponse"
+            }
+          },
+          "400": {
+            "description": "Scope ID inválido",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"
+            }
+          },
+          "401": {
+            "description": "Token de acceso requerido",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/roles/system": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Obtiene solo los roles del sistema (is_system = true)",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Roles"
+        ],
+        "summary": "Obtener roles del sistema",
+        "responses": {
+          "200": {
+            "description": "Roles del sistema obtenidos exitosamente",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleListResponse"
+            }
+          },
+          "401": {
+            "description": "Token de acceso requerido",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/roles/{id}": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Obtiene un rol específico por su ID con información del scope",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Roles"
+        ],
+        "summary": "Obtener rol por ID",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "description": "ID del rol",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rol obtenido exitosamente",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleSuccessResponse"
+            }
+          },
+          "400": {
+            "description": "ID inválido",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"
+            }
+          },
+          "401": {
+            "description": "Token de acceso requerido",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"
+            }
+          },
+          "404": {
+            "description": "Rol no encontrado",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"
+            }
+          }
+        }
+      },
+      "put": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Actualiza un rol existente en el sistema (actualización parcial)",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Roles"
+        ],
+        "summary": "Actualizar un rol",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "ID del rol a actualizar",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "Datos del rol a actualizar",
+            "name": "role",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_request.UpdateRoleRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.UpdateRoleResponse"
+            }
+          },
+          "400": {
+            "description": "Datos de entrada inválidos",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "404": {
+            "description": "Rol no encontrado",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      }
+    },
+    "/roles/{id}/permissions": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Obtiene la lista de permisos asignados a un rol",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Roles"
+        ],
+        "summary": "Obtener permisos de un rol",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "ID del rol",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.GetRolePermissionsResponse"
+            }
+          },
+          "400": {
+            "description": "ID de rol inválido",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"
+            }
+          },
+          "404": {
+            "description": "Rol no encontrado",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"
+            }
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Asigna permisos a un rol. Solo se pueden asignar permisos que pertenezcan al mismo business_type que el rol",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Roles"
+        ],
+        "summary": "Asignar permisos a un rol",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "ID del rol",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "IDs de permisos a asignar",
+            "name": "request",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_request.AssignPermissionsToRoleRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.AssignPermissionsToRoleResponse"
+            }
+          },
+          "400": {
+            "description": "Datos de entrada inválidos",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"
+            }
+          },
+          "404": {
+            "description": "Rol no encontrado",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/roles/{id}/permissions/{permission_id}": {
+      "delete": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Elimina un permiso específico de un rol",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Roles"
+        ],
+        "summary": "Eliminar permiso de un rol",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "ID del rol",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "description": "ID del permiso",
+            "name": "permission_id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleSuccessResponse"
+            }
+          },
+          "400": {
+            "description": "Datos de entrada inválidos",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"
+            }
+          },
+          "404": {
+            "description": "Rol o permiso no encontrado",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Obtiene la lista filtrada y paginada de usuarios del sistema con sus roles y businesses",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Users"
+        ],
+        "summary": "Obtener usuarios filtrados y paginados",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "default": 1,
+            "description": "Número de página",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+            "default": 10,
+            "description": "Tamaño de página",
+            "name": "page_size",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Filtrar por nombre (búsqueda parcial)",
+            "name": "name",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Filtrar por email (búsqueda parcial)",
+            "name": "email",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Filtrar por teléfono (búsqueda parcial)",
+            "name": "phone",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Filtrar por IDs de usuarios separados por comas (ej: 1,2,3)",
+            "name": "user_ids",
+            "in": "query"
+          },
+          {
+            "type": "boolean",
+            "description": "Filtrar por estado activo",
+            "name": "is_active",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "Filtrar por ID de rol",
+            "name": "role_id",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "Filtrar por ID de business",
+            "name": "business_id",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Filtrar por fecha de creación (YYYY-MM-DD o YYYY-MM-DD,YYYY-MM-DD para rango)",
+            "name": "created_at",
+            "in": "query"
+          },
+          {
+            "enum": [
+              "id",
+              "name",
+              "email",
+              "phone",
+              "is_active",
+              "created_at",
+              "updated_at"
+            ],
+            "type": "string",
+            "default": "created_at",
+            "description": "Campo para ordenar",
+            "name": "sort_by",
+            "in": "query"
+          },
+          {
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "type": "string",
+            "default": "desc",
+            "description": "Orden de clasificación",
+            "name": "sort_order",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Usuarios obtenidos exitosamente",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserListResponse"
+            }
+          },
+          "400": {
+            "description": "Parámetros de filtro inválidos",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"
+            }
+          },
+          "401": {
+            "description": "Token de acceso requerido",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"
+            }
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Crea un nuevo usuario.\nENVÍO: SOLO multipart/form-data (no JSON body)",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Users"
+        ],
+        "summary": "Crear usuario",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Nombre (2-100)",
+            "name": "name",
+            "in": "formData",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Email válido",
+            "name": "email",
+            "in": "formData",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Teléfono (exactamente 10 dígitos)",
+            "name": "phone",
+            "in": "formData"
+          },
+          {
+            "type": "boolean",
+            "description": "¿Activo? (true/false)",
+            "name": "is_active",
+            "in": "formData"
+          },
+          {
+            "type": "file",
+            "description": "Imagen de avatar (sube a S3)",
+            "name": "avatarFile",
+            "in": "formData"
+          },
+          {
+            "type": "string",
+            "description": "IDs de negocios separados por comas. Ej: '16,21'",
+            "name": "business_ids",
+            "in": "formData"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Usuario creado exitosamente (incluye contraseña generada)",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserCreatedResponse"
+            }
+          },
+          "400": {
+            "description": "Datos inválidos (mensajes claros de validación)",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"
+            }
+          },
+          "401": {
+            "description": "Token de acceso requerido",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"
+            }
+          },
+          "409": {
+            "description": "Email ya existe",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Obtiene un usuario específico por su ID con sus roles y businesses",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Users"
+        ],
+        "summary": "Obtener usuario por ID",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "description": "ID del usuario",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Usuario obtenido exitosamente",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserSuccessResponse"
+            }
+          },
+          "400": {
+            "description": "ID inválido",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"
+            }
+          },
+          "401": {
+            "description": "Token de acceso requerido",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"
+            }
+          },
+          "404": {
+            "description": "Usuario no encontrado",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"
+            }
+          }
+        }
+      },
+      "put": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Actualiza un usuario existente.\nENVÍO: SOLO multipart/form-data (no JSON body)",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Users"
+        ],
+        "summary": "Actualizar usuario",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "ID del usuario",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Nombre (2-100)",
+            "name": "name",
+            "in": "formData"
+          },
+          {
+            "type": "string",
+            "description": "Email válido",
+            "name": "email",
+            "in": "formData"
+          },
+          {
+            "type": "string",
+            "description": "Teléfono (exactamente 10 dígitos)",
+            "name": "phone",
+            "in": "formData"
+          },
+          {
+            "type": "boolean",
+            "description": "¿Activo?",
+            "name": "is_active",
+            "in": "formData"
+          },
+          {
+            "type": "boolean",
+            "description": "Eliminar avatar actual (true/false)",
+            "name": "remove_avatar",
+            "in": "formData"
+          },
+          {
+            "type": "file",
+            "description": "Imagen de avatar (sube a S3)",
+            "name": "avatarFile",
+            "in": "formData"
+          },
+          {
+            "type": "string",
+            "description": "IDs de negocios separados por comas. Ej: '16,21'",
+            "name": "business_ids",
+            "in": "formData"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Usuario actualizado (data con usuario)",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserSuccessResponse"
+            }
+          },
+          "400": {
+            "description": "Datos inválidos o IDs inexistentes",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"
+            }
+          },
+          "401": {
+            "description": "Token de acceso requerido",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"
+            }
+          },
+          "404": {
+            "description": "Usuario no encontrado",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"
+            }
+          },
+          "409": {
+            "description": "Email ya existe",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"
+            }
+          }
+        }
+      },
+      "delete": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Elimina un usuario del sistema",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Users"
+        ],
+        "summary": "Eliminar usuario",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "description": "ID del usuario",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Usuario eliminado exitosamente",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserMessageResponse"
+            }
+          },
+          "400": {
+            "description": "ID inválido",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"
+            }
+          },
+          "401": {
+            "description": "Token de acceso requerido",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"
+            }
+          },
+          "404": {
+            "description": "Usuario no encontrado",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/users/{id}/assign-role": {
+      "post": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Asigna o actualiza roles de un usuario en múltiples businesses. El usuario debe estar previamente asociado a cada business. Solo se permite un rol por business y cada rol debe ser del mismo tipo de business que su business asociado.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Users"
+        ],
+        "summary": "Asignar roles a usuario en businesses",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "ID del usuario",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "Lista de asignaciones (business_id y role_id por cada asignación)",
+            "name": "request",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_request.AssignRoleToUserBusinessRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Roles asignados exitosamente",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.AssignRoleToUserBusinessResponse"
+            }
+          },
+          "400": {
+            "description": "Datos inválidos",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"
+            }
+          },
+          "401": {
+            "description": "Token de acceso requerido",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"
+            }
+          },
+          "403": {
+            "description": "El usuario no está asociado a algún business o algún rol no corresponde al tipo de business",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"
+            }
+          },
+          "404": {
+            "description": "Usuario, business o rol no encontrado",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "central_reserve_services_auth_actions_internal_infra_primary_handlers_request.CreateActionRequest": {
+      "description": "Solicitud para crear un nuevo action en el sistema",
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "description": {
+          "type": "string",
+          "example": "Permite crear nuevos registros"
+        },
+        "name": {
+          "type": "string",
+          "example": "create"
+        }
+      }
+    },
+    "central_reserve_services_auth_actions_internal_infra_primary_handlers_request.UpdateActionRequest": {
+      "description": "Solicitud para actualizar un action existente",
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "description": {
+          "type": "string",
+          "example": "Permite crear nuevos registros"
+        },
+        "name": {
+          "type": "string",
+          "example": "create"
+        }
+      }
+    },
+    "central_reserve_services_auth_business_internal_infra_primary_controllers_businesshandler_response.BusinessDetailResponse": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "business_type": {
+          "$ref": "#/definitions/central_reserve_services_auth_business_internal_infra_primary_controllers_businesshandler_response.BusinessTypeDetailResponse"
+        },
+        "code": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "custom_domain": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "enable_delivery": {
+          "type": "boolean"
+        },
+        "enable_pickup": {
+          "type": "boolean"
+        },
+        "enable_reservations": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "is_active": {
+          "type": "boolean"
+        },
+        "logo_url": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "navbar_image_url": {
+          "type": "string"
+        },
+        "primary_color": {
+          "type": "string"
+        },
+        "quaternary_color": {
+          "type": "string"
+        },
+        "secondary_color": {
+          "type": "string"
+        },
+        "tertiary_color": {
+          "type": "string"
+        },
+        "timezone": {
+          "type": "string"
+        },
+        "updated_at": {
+          "type": "string"
+        }
+      }
+    },
+    "central_reserve_services_auth_business_internal_infra_primary_controllers_businesshandler_response.BusinessTypeDetailResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "is_active": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "updated_at": {
+          "type": "string"
+        }
+      }
+    },
+    "central_reserve_services_auth_business_internal_infra_primary_controllers_businesshandler_response.GetBusinessByIDResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/central_reserve_services_auth_business_internal_infra_primary_controllers_businesshandler_response.BusinessDetailResponse"
+        },
+        "message": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "central_reserve_services_auth_business_internal_infra_primary_controllers_businesstypehandler_request.BusinessTypeRequest": {
+      "type": "object",
+      "required": [
+        "code",
+        "name"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "is_active": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.BusinessStatsResponse": {
+      "type": "object",
+      "properties": {
+        "active": {
+          "type": "integer",
+          "example": 45
+        },
+        "inactive": {
+          "type": "integer",
+          "example": 5
+        },
+        "total": {
+          "type": "integer",
+          "example": 50
+        }
+      }
+    },
+    "central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.BusinessTypeStatsResponse": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "integer",
+          "example": 5
+        }
+      }
+    },
+    "central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.DashboardErrorResponse": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string",
+          "example": "Error interno del servidor"
+        }
+      }
+    },
+    "central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.DashboardStatsData": {
+      "type": "object",
+      "properties": {
+        "business_types": {
+          "$ref": "#/definitions/central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.BusinessTypeStatsResponse"
+        },
+        "businesses": {
+          "$ref": "#/definitions/central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.BusinessStatsResponse"
+        },
+        "permissions": {
+          "$ref": "#/definitions/central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.PermissionStatsResponse"
+        },
+        "resources": {
+          "$ref": "#/definitions/central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.ResourceStatsResponse"
+        },
+        "roles": {
+          "$ref": "#/definitions/central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.RoleStatsResponse"
+        },
+        "users": {
+          "$ref": "#/definitions/central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.UserStatsResponse"
+        }
+      }
+    },
+    "central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.DashboardStatsResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.DashboardStatsData"
+        },
+        "success": {
+          "type": "boolean",
+          "example": true
+        }
+      }
+    },
+    "central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.PermissionStatsResponse": {
+      "type": "object",
+      "properties": {
+        "assigned": {
+          "type": "integer",
+          "example": 200
+        },
+        "total": {
+          "type": "integer",
+          "example": 250
+        },
+        "unassigned": {
+          "type": "integer",
+          "example": 50
+        }
+      }
+    },
+    "central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.ResourceStatsResponse": {
+      "type": "object",
+      "properties": {
+        "active": {
+          "type": "integer",
+          "example": 25
+        },
+        "inactive": {
+          "type": "integer",
+          "example": 5
+        },
+        "total": {
+          "type": "integer",
+          "example": 30
+        }
+      }
+    },
+    "central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.RoleStatsResponse": {
+      "type": "object",
+      "properties": {
+        "custom": {
+          "type": "integer",
+          "example": 10
+        },
+        "system": {
+          "type": "integer",
+          "example": 5
+        },
+        "total": {
+          "type": "integer",
+          "example": 15
+        }
+      }
+    },
+    "central_reserve_services_auth_dashboard_internal_infra_primary_handlers_response.UserStatsResponse": {
+      "type": "object",
+      "properties": {
+        "active": {
+          "type": "integer",
+          "example": 100
+        },
+        "inactive": {
+          "type": "integer",
+          "example": 20
+        },
+        "super_users": {
+          "type": "integer",
+          "example": 5
+        },
+        "total": {
+          "type": "integer",
+          "example": 120
+        }
+      }
+    },
+    "central_reserve_services_auth_login_internal_infra_primary_handlers_request.ChangePasswordRequest": {
+      "type": "object",
+      "required": [
+        "current_password",
+        "new_password"
+      ],
+      "properties": {
+        "current_password": {
+          "type": "string",
+          "maxLength": 100,
+          "minLength": 6
+        },
+        "new_password": {
+          "type": "string",
+          "maxLength": 100,
+          "minLength": 6
+        }
+      }
+    },
+    "central_reserve_services_auth_login_internal_infra_primary_handlers_request.GenerateBusinessTokenRequest": {
+      "type": "object",
+      "properties": {
+        "business_id": {
+          "description": "0 para super admin, >0 para usuarios normales",
+          "type": "integer"
+        }
+      }
+    },
+    "central_reserve_services_auth_login_internal_infra_primary_handlers_request.GeneratePasswordRequest": {
+      "type": "object",
+      "properties": {
+        "user_id": {
+          "description": "Opcional: solo para super usuarios",
+          "type": "integer",
+          "minimum": 1,
+          "example": 10
+        }
+      }
+    },
+    "central_reserve_services_auth_login_internal_infra_primary_handlers_request.LoginRequest": {
+      "type": "object",
+      "required": [
+        "email",
+        "password"
+      ],
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      }
+    },
+    "central_reserve_services_auth_login_internal_infra_primary_handlers_response.BusinessInfo": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "business_type": {
+          "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.BusinessTypeInfo"
+        },
+        "business_type_id": {
+          "type": "integer"
+        },
+        "code": {
+          "type": "string"
+        },
+        "custom_domain": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "enable_delivery": {
+          "type": "boolean"
+        },
+        "enable_pickup": {
+          "type": "boolean"
+        },
+        "enable_reservations": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "is_active": {
+          "type": "boolean"
+        },
+        "logo_url": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "navbar_image_url": {
+          "type": "string"
+        },
+        "primary_color": {
+          "type": "string"
+        },
+        "quaternary_color": {
+          "type": "string"
+        },
+        "secondary_color": {
+          "type": "string"
+        },
+        "tertiary_color": {
+          "type": "string"
+        },
+        "timezone": {
+          "type": "string"
+        }
+      }
+    },
+    "central_reserve_services_auth_login_internal_infra_primary_handlers_response.BusinessTokenResponse": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string"
+        }
+      }
+    },
+    "central_reserve_services_auth_login_internal_infra_primary_handlers_response.BusinessTypeInfo": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "central_reserve_services_auth_login_internal_infra_primary_handlers_response.ChangePasswordResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "central_reserve_services_auth_login_internal_infra_primary_handlers_response.GenerateBusinessTokenErrorResponse": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        }
+      }
+    },
+    "central_reserve_services_auth_login_internal_infra_primary_handlers_response.GenerateBusinessTokenSuccessResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.BusinessTokenResponse"
+        },
+        "message": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "central_reserve_services_auth_login_internal_infra_primary_handlers_response.GeneratePasswordResponse": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "example": "usuario@ejemplo.com"
+        },
+        "message": {
+          "type": "string",
+          "example": "Nueva contraseña generada para el usuario usuario@ejemplo.com"
+        },
+        "password": {
+          "type": "string",
+          "example": "aB3$kL9mP2xQ"
+        },
+        "success": {
+          "type": "boolean",
+          "example": true
+        }
+      }
+    },
+    "central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginBadRequestResponse": {
+      "type": "object",
+      "properties": {
+        "details": {
+          "type": "string"
+        },
+        "error": {
+          "type": "string"
+        }
+      }
+    },
+    "central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginErrorResponse": {
+      "type": "object",
+      "properties": {
+        "details": {
+          "type": "string"
+        },
+        "error": {
+          "type": "string"
+        }
+      }
+    },
+    "central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginResponse": {
+      "type": "object",
+      "properties": {
+        "businesses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.BusinessInfo"
+          }
+        },
+        "is_super_admin": {
+          "description": "Indica si es super admin (scope platform o scope_id 1)",
+          "type": "boolean"
+        },
+        "require_password_change": {
+          "type": "boolean"
+        },
+        "scope": {
+          "description": "Scope del usuario (platform, business, etc.)",
+          "type": "string"
+        },
+        "token": {
+          "type": "string"
+        },
+        "user": {
+          "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.UserInfo"
+        }
+      }
+    },
+    "central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginSuccessResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.LoginResponse"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "central_reserve_services_auth_login_internal_infra_primary_handlers_response.ResourcePermissions": {
+      "type": "object",
+      "properties": {
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "active": {
+          "description": "Indica si el recurso está activo para el business",
+          "type": "boolean"
+        },
+        "resource": {
+          "type": "string"
+        }
+      }
+    },
+    "central_reserve_services_auth_login_internal_infra_primary_handlers_response.RoleInfo": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "central_reserve_services_auth_login_internal_infra_primary_handlers_response.UserInfo": {
+      "type": "object",
+      "properties": {
+        "avatar_url": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "is_active": {
+          "type": "boolean"
+        },
+        "last_login_at": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "phone": {
+          "type": "string"
+        }
+      }
+    },
+    "central_reserve_services_auth_login_internal_infra_primary_handlers_response.UserRolesPermissionsResponse": {
+      "type": "object",
+      "properties": {
+        "business_id": {
+          "type": "integer"
+        },
+        "business_name": {
+          "type": "string"
+        },
+        "business_type_id": {
+          "type": "integer"
+        },
+        "business_type_name": {
+          "type": "string"
+        },
+        "is_super": {
+          "type": "boolean"
+        },
+        "resources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.ResourcePermissions"
+          }
+        },
+        "role": {
+          "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.RoleInfo"
+        }
+      }
+    },
+    "central_reserve_services_auth_login_internal_infra_primary_handlers_response.UserRolesPermissionsSuccessResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/central_reserve_services_auth_login_internal_infra_primary_handlers_response.UserRolesPermissionsResponse"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "central_reserve_services_auth_permisions_internal_infra_primary_handlers_request.CreatePermissionRequest": {
+      "type": "object",
+      "required": [
+        "action_id",
+        "name",
+        "resource_id",
+        "scope_id"
+      ],
+      "properties": {
+        "action_id": {
+          "description": "ID de la action",
+          "type": "integer",
+          "example": 1
+        },
+        "business_type_id": {
+          "type": "integer",
+          "example": 11
+        },
+        "code": {
+          "description": "Opcional, se genera automáticamente si no se proporciona",
+          "type": "string",
+          "example": "horizontalproperty_createuser"
+        },
+        "description": {
+          "type": "string",
+          "example": "Permite crear nuevos usuarios en el sistema"
+        },
+        "name": {
+          "type": "string",
+          "example": "Crear usuario"
+        },
+        "resource_id": {
+          "description": "ID del resource",
+          "type": "integer",
+          "example": 1
+        },
+        "scope_id": {
+          "type": "integer",
+          "example": 1
+        }
+      }
+    },
+    "central_reserve_services_auth_permisions_internal_infra_primary_handlers_request.UpdatePermissionRequest": {
+      "type": "object",
+      "required": [
+        "action_id",
+        "name",
+        "resource_id",
+        "scope_id"
+      ],
+      "properties": {
+        "action_id": {
+          "description": "ID de la action",
+          "type": "integer",
+          "example": 1
+        },
+        "business_type_id": {
+          "type": "integer",
+          "example": 11
+        },
+        "code": {
+          "type": "string",
+          "example": "users:create"
+        },
+        "description": {
+          "type": "string",
+          "example": "Permite crear nuevos usuarios en el sistema"
+        },
+        "name": {
+          "type": "string",
+          "example": "Crear usuarios"
+        },
+        "resource_id": {
+          "description": "ID del resource",
+          "type": "integer",
+          "example": 1
+        },
+        "scope_id": {
+          "type": "integer",
+          "example": 1
+        }
+      }
+    },
+    "central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionErrorResponse": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string",
+          "example": "Error al procesar la solicitud"
+        }
+      }
+    },
+    "central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionListResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionResponse"
+          }
+        },
+        "success": {
+          "type": "boolean",
+          "example": true
+        },
+        "total": {
+          "type": "integer",
+          "example": 10
+        }
+      }
+    },
+    "central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionMessageResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "example": "Permiso creado exitosamente"
+        },
+        "success": {
+          "type": "boolean",
+          "example": true
+        }
+      }
+    },
+    "central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionResponse": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "example": "create"
+        },
+        "action_id": {
+          "type": "integer",
+          "example": 5
+        },
+        "business_type_id": {
+          "type": "integer",
+          "example": 11
+        },
+        "business_type_name": {
+          "type": "string",
+          "example": "Propiedad Horizontal"
+        },
+        "code": {
+          "type": "string",
+          "example": "users:create"
+        },
+        "description": {
+          "type": "string",
+          "example": "Permite crear nuevos usuarios en el sistema"
+        },
+        "id": {
+          "type": "integer",
+          "example": 1
+        },
+        "name": {
+          "type": "string",
+          "example": "Crear usuarios"
+        },
+        "resource": {
+          "type": "string",
+          "example": "users"
+        },
+        "resource_id": {
+          "type": "integer",
+          "example": 3
+        },
+        "scope_code": {
+          "type": "string",
+          "example": "system"
+        },
+        "scope_id": {
+          "type": "integer",
+          "example": 1
+        },
+        "scope_name": {
+          "type": "string",
+          "example": "Sistema"
+        }
+      }
+    },
+    "central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionSuccessResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/central_reserve_services_auth_permisions_internal_infra_primary_handlers_response.PermissionResponse"
+        },
+        "success": {
+          "type": "boolean",
+          "example": true
+        }
+      }
+    },
+    "central_reserve_services_auth_resources_internal_infra_primary_handlers_request.CreateResourceRequest": {
+      "description": "Solicitud para crear un nuevo recurso en el sistema",
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "business_type_id": {
+          "type": "integer",
+          "example": 11
+        },
+        "description": {
+          "type": "string",
+          "example": "Gestión de usuarios del sistema"
+        },
+        "name": {
+          "type": "string",
+          "example": "users"
+        }
+      }
+    },
+    "central_reserve_services_auth_resources_internal_infra_primary_handlers_request.UpdateResourceRequest": {
+      "description": "Solicitud para actualizar un recurso existente",
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "business_type_id": {
+          "type": "integer",
+          "example": 11
+        },
+        "description": {
+          "type": "string",
+          "example": "Gestión de usuarios del sistema"
+        },
+        "name": {
+          "type": "string",
+          "example": "users"
+        }
+      }
+    },
+    "central_reserve_services_auth_roles_internal_infra_primary_handlers_request.AssignPermissionsToRoleRequest": {
+      "type": "object",
+      "required": [
+        "permission_ids"
+      ],
+      "properties": {
+        "permission_ids": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "central_reserve_services_auth_roles_internal_infra_primary_handlers_request.CreateRoleRequest": {
+      "type": "object",
+      "required": [
+        "business_type_id",
+        "description",
+        "level",
+        "name",
+        "scope_id"
+      ],
+      "properties": {
+        "business_type_id": {
+          "type": "integer",
+          "example": 1
+        },
+        "description": {
+          "type": "string",
+          "example": "Rol de administrador del sistema"
+        },
+        "is_system": {
+          "type": "boolean",
+          "example": false
+        },
+        "level": {
+          "type": "integer",
+          "maximum": 10,
+          "minimum": 1,
+          "example": 2
+        },
+        "name": {
+          "type": "string",
+          "example": "Administrador"
+        },
+        "scope_id": {
+          "type": "integer",
+          "example": 1
+        }
+      }
+    },
+    "central_reserve_services_auth_roles_internal_infra_primary_handlers_request.UpdateRoleRequest": {
+      "type": "object",
+      "properties": {
+        "business_type_id": {
+          "type": "integer",
+          "example": 1
+        },
+        "description": {
+          "type": "string",
+          "example": "Rol de administrador actualizado"
+        },
+        "is_system": {
+          "type": "boolean",
+          "example": false
+        },
+        "level": {
+          "type": "integer",
+          "maximum": 10,
+          "minimum": 1,
+          "example": 3
+        },
+        "name": {
+          "type": "string",
+          "example": "Administrador Actualizado"
+        },
+        "scope_id": {
+          "type": "integer",
+          "example": 1
+        }
+      }
+    },
+    "central_reserve_services_auth_roles_internal_infra_primary_handlers_response.AssignPermissionsToRoleResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "example": "Permisos asignados exitosamente al rol"
+        },
+        "permission_ids": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "role_id": {
+          "type": "integer",
+          "example": 1
+        },
+        "success": {
+          "type": "boolean",
+          "example": true
+        }
+      }
+    },
+    "central_reserve_services_auth_roles_internal_infra_primary_handlers_response.CreateRoleResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleData"
+        },
+        "message": {
+          "type": "string",
+          "example": "Rol creado exitosamente"
+        },
+        "success": {
+          "type": "boolean",
+          "example": true
+        }
+      }
+    },
+    "central_reserve_services_auth_roles_internal_infra_primary_handlers_response.GetRolePermissionsResponse": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "example": 3
+        },
+        "message": {
+          "type": "string",
+          "example": "Permisos del rol obtenidos exitosamente"
+        },
+        "permissions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.PermissionResponse"
+          }
+        },
+        "role_id": {
+          "type": "integer",
+          "example": 1
+        },
+        "role_name": {
+          "type": "string",
+          "example": "Administrador"
+        },
+        "success": {
+          "type": "boolean",
+          "example": true
+        }
+      }
+    },
+    "central_reserve_services_auth_roles_internal_infra_primary_handlers_response.PermissionResponse": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "example": "create"
+        },
+        "description": {
+          "type": "string",
+          "example": "Crear usuarios"
+        },
+        "id": {
+          "type": "integer",
+          "example": 1
+        },
+        "resource": {
+          "type": "string",
+          "example": "users"
+        },
+        "scope_code": {
+          "type": "string",
+          "example": "system"
+        },
+        "scope_id": {
+          "type": "integer",
+          "example": 1
+        },
+        "scope_name": {
+          "type": "string",
+          "example": "Sistema"
+        }
+      }
+    },
+    "central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleData": {
+      "type": "object",
+      "properties": {
+        "business_type_id": {
+          "type": "integer",
+          "example": 1
+        },
+        "created_at": {
+          "type": "string",
+          "example": "2024-01-01T00:00:00Z"
+        },
+        "description": {
+          "type": "string",
+          "example": "Rol de administrador del sistema"
+        },
+        "id": {
+          "type": "integer",
+          "example": 1
+        },
+        "is_system": {
+          "type": "boolean",
+          "example": false
+        },
+        "level": {
+          "type": "integer",
+          "example": 2
+        },
+        "name": {
+          "type": "string",
+          "example": "Administrador"
+        },
+        "scope_id": {
+          "type": "integer",
+          "example": 1
+        },
+        "updated_at": {
+          "type": "string",
+          "example": "2024-01-01T00:00:00Z"
+        }
+      }
+    },
+    "central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleErrorResponse": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string",
+          "example": "Error interno del servidor"
+        }
+      }
+    },
+    "central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleListResponse": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "example": 5
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleResponse"
+          }
+        },
+        "page": {
+          "type": "integer",
+          "example": 1
+        },
+        "page_size": {
+          "type": "integer",
+          "example": 10
+        },
+        "success": {
+          "type": "boolean",
+          "example": true
+        },
+        "total": {
+          "type": "integer",
+          "example": 50
+        },
+        "total_pages": {
+          "type": "integer",
+          "example": 5
+        }
+      }
+    },
+    "central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleResponse": {
+      "type": "object",
+      "properties": {
+        "business_type_id": {
+          "type": "integer",
+          "example": 1
+        },
+        "business_type_name": {
+          "type": "string",
+          "example": "Propiedad Horizontal"
+        },
+        "code": {
+          "type": "string",
+          "example": "admin"
+        },
+        "description": {
+          "type": "string",
+          "example": "Rol de administrador del sistema"
+        },
+        "id": {
+          "type": "integer",
+          "example": 1
+        },
+        "is_system": {
+          "type": "boolean",
+          "example": true
+        },
+        "level": {
+          "type": "integer",
+          "example": 2
+        },
+        "name": {
+          "type": "string",
+          "example": "Administrador"
+        },
+        "scope_code": {
+          "type": "string",
+          "example": "system"
+        },
+        "scope_id": {
+          "type": "integer",
+          "example": 1
+        },
+        "scope_name": {
+          "type": "string",
+          "example": "Sistema"
+        }
+      }
+    },
+    "central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleSuccessResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleResponse"
+        },
+        "success": {
+          "type": "boolean",
+          "example": true
+        }
+      }
+    },
+    "central_reserve_services_auth_roles_internal_infra_primary_handlers_response.UpdateRoleResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/central_reserve_services_auth_roles_internal_infra_primary_handlers_response.RoleData"
+        },
+        "message": {
+          "type": "string",
+          "example": "Rol actualizado exitosamente"
+        },
+        "success": {
+          "type": "boolean",
+          "example": true
+        }
+      }
+    },
+    "central_reserve_services_auth_users_internal_infra_primary_handlers_request.AssignRoleToUserBusinessRequest": {
+      "type": "object",
+      "required": [
+        "assignments"
+      ],
+      "properties": {
+        "assignments": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_request.BusinessRoleAssignmentItem"
+          }
+        }
+      }
+    },
+    "central_reserve_services_auth_users_internal_infra_primary_handlers_request.BusinessRoleAssignmentItem": {
+      "type": "object",
+      "required": [
+        "business_id",
+        "role_id"
+      ],
+      "properties": {
+        "business_id": {
+          "type": "integer",
+          "minimum": 1,
+          "example": 16
+        },
+        "role_id": {
+          "type": "integer",
+          "minimum": 1,
+          "example": 4
+        }
+      }
+    },
+    "central_reserve_services_auth_users_internal_infra_primary_handlers_response.AssignRoleToUserBusinessResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "example": "Rol asignado exitosamente al usuario en el business"
+        },
+        "success": {
+          "type": "boolean",
+          "example": true
+        }
+      }
+    },
+    "central_reserve_services_auth_users_internal_infra_primary_handlers_response.BusinessRoleAssignmentResponse": {
+      "type": "object",
+      "properties": {
+        "business_id": {
+          "type": "integer"
+        },
+        "business_name": {
+          "type": "string"
+        },
+        "role_id": {
+          "type": "integer"
+        },
+        "role_name": {
+          "type": "string"
+        }
+      }
+    },
+    "central_reserve_services_auth_users_internal_infra_primary_handlers_response.PaginationInfo": {
+      "type": "object",
+      "properties": {
+        "current_page": {
+          "type": "integer"
+        },
+        "has_next": {
+          "type": "boolean"
+        },
+        "has_prev": {
+          "type": "boolean"
+        },
+        "last_page": {
+          "type": "integer"
+        },
+        "per_page": {
+          "type": "integer"
+        },
+        "total": {
+          "type": "integer"
+        }
+      }
+    },
+    "central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserCreatedResponse": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserErrorResponse": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        }
+      }
+    },
+    "central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserListResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserResponse"
+          }
+        },
+        "pagination": {
+          "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.PaginationInfo"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserMessageResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserResponse": {
+      "type": "object",
+      "properties": {
+        "avatar_url": {
+          "type": "string"
+        },
+        "business_role_assignments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.BusinessRoleAssignmentResponse"
+          }
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "is_active": {
+          "type": "boolean"
+        },
+        "is_super_user": {
+          "type": "boolean"
+        },
+        "last_login_at": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "phone": {
+          "type": "string"
+        },
+        "updated_at": {
+          "type": "string"
+        }
+      }
+    },
+    "central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserSuccessResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/central_reserve_services_auth_users_internal_infra_primary_handlers_response.UserResponse"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_attendance_internal_infra_primary_handlers_request.CreateAttendanceListRequest": {
+      "type": "object",
+      "required": [
+        "title",
+        "voting_group_id"
+      ],
+      "properties": {
+        "created_by_user_id": {
+          "type": "integer",
+          "example": 5
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 1000,
+          "example": "Lista de asistencia para la asamblea ordinaria"
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 2000,
+          "example": "Notas adicionales"
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 200,
+          "minLength": 3,
+          "example": "Asistencia Asamblea Ordinaria 2024"
+        },
+        "voting_group_id": {
+          "type": "integer",
+          "example": 1
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_attendance_internal_infra_primary_handlers_request.CreateProxyRequest": {
+      "type": "object",
+      "required": [
+        "business_id",
+        "property_unit_id",
+        "proxy_name"
+      ],
+      "properties": {
+        "business_id": {
+          "type": "integer",
+          "example": 1
+        },
+        "end_date": {
+          "type": "string",
+          "example": "2025-12-31T23:59:59Z"
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 1000,
+          "example": "Notas adicionales"
+        },
+        "power_of_attorney": {
+          "type": "string",
+          "maxLength": 1000,
+          "example": "Poder para representar en asambleas"
+        },
+        "property_unit_id": {
+          "type": "integer",
+          "example": 123
+        },
+        "proxy_address": {
+          "type": "string",
+          "maxLength": 500,
+          "example": "Calle 123 #45-67"
+        },
+        "proxy_dni": {
+          "type": "string",
+          "maxLength": 30,
+          "minLength": 5,
+          "example": "12345678"
+        },
+        "proxy_email": {
+          "type": "string",
+          "maxLength": 255,
+          "example": "maria@email.com"
+        },
+        "proxy_name": {
+          "type": "string",
+          "maxLength": 255,
+          "minLength": 3,
+          "example": "María García López"
+        },
+        "proxy_phone": {
+          "type": "string",
+          "maxLength": 20,
+          "example": "+57 300 123 4567"
+        },
+        "proxy_type": {
+          "type": "string",
+          "enum": [
+            "external",
+            "resident",
+            "family"
+          ],
+          "example": "external"
+        },
+        "start_date": {
+          "type": "string",
+          "example": "2025-01-15T00:00:00Z"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_attendance_internal_infra_primary_handlers_request.UpdateProxyRequest": {
+      "type": "object",
+      "properties": {
+        "end_date": {
+          "type": "string",
+          "example": "2025-12-31T23:59:59Z"
+        },
+        "is_active": {
+          "type": "boolean",
+          "example": true
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 1000,
+          "example": "Notas adicionales"
+        },
+        "power_of_attorney": {
+          "type": "string",
+          "maxLength": 1000,
+          "example": "Poder para representar en asambleas"
+        },
+        "proxy_address": {
+          "type": "string",
+          "maxLength": 500,
+          "example": "Calle 123 #45-67"
+        },
+        "proxy_dni": {
+          "type": "string",
+          "maxLength": 30,
+          "minLength": 5,
+          "example": "12345678"
+        },
+        "proxy_email": {
+          "type": "string",
+          "maxLength": 255,
+          "example": "maria@email.com"
+        },
+        "proxy_name": {
+          "type": "string",
+          "maxLength": 255,
+          "minLength": 3,
+          "example": "María García López"
+        },
+        "proxy_phone": {
+          "type": "string",
+          "maxLength": 20,
+          "example": "+57 300 123 4567"
+        },
+        "proxy_type": {
+          "type": "string",
+          "enum": [
+            "external",
+            "resident",
+            "family"
+          ],
+          "example": "external"
+        },
+        "start_date": {
+          "type": "string",
+          "example": "2025-01-15T00:00:00Z"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_horizontalpropertiy_internal_infra_primary_handlers_response.CommitteeResponse": {
+      "type": "object",
+      "properties": {
+        "committee_type_id": {
+          "type": "integer",
+          "example": 1
+        },
+        "end_date": {
+          "type": "string",
+          "example": "2026-12-31T23:59:59Z"
+        },
+        "id": {
+          "type": "integer",
+          "example": 1
+        },
+        "is_active": {
+          "type": "boolean",
+          "example": true
+        },
+        "name": {
+          "type": "string",
+          "example": "Consejo de Administración 2025"
+        },
+        "notes": {
+          "type": "string",
+          "example": "Comité creado automáticamente"
+        },
+        "start_date": {
+          "type": "string",
+          "example": "2025-01-01T00:00:00Z"
+        },
+        "type_code": {
+          "type": "string",
+          "example": "admin_council"
+        },
+        "type_name": {
+          "type": "string",
+          "example": "Consejo de Administración"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_horizontalpropertiy_internal_infra_primary_handlers_response.HorizontalPropertyDeleteSuccessResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "example": "Propiedad horizontal eliminada exitosamente"
+        },
+        "success": {
+          "type": "boolean",
+          "example": true
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_horizontalpropertiy_internal_infra_primary_handlers_response.HorizontalPropertyListResponse": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string",
+          "example": "Carrera 15 #45-67, Bogotá"
+        },
+        "business_type_name": {
+          "type": "string",
+          "example": "Propiedad Horizontal"
+        },
+        "code": {
+          "type": "string",
+          "example": "los-pinos"
+        },
+        "created_at": {
+          "type": "string",
+          "example": "2024-01-15T10:30:00Z"
+        },
+        "id": {
+          "type": "integer",
+          "example": 1
+        },
+        "is_active": {
+          "type": "boolean",
+          "example": true
+        },
+        "logo_url": {
+          "type": "string",
+          "example": "https://example.com/logos/los-pinos.png"
+        },
+        "name": {
+          "type": "string",
+          "example": "Conjunto Residencial Los Pinos"
+        },
+        "total_units": {
+          "type": "integer",
+          "example": 120
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_horizontalpropertiy_internal_infra_primary_handlers_response.HorizontalPropertyListSuccessResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/central_reserve_services_horizontalproperty_horizontalpropertiy_internal_infra_primary_handlers_response.PaginatedHorizontalPropertyResponse"
+        },
+        "message": {
+          "type": "string",
+          "example": "Lista obtenida exitosamente"
+        },
+        "success": {
+          "type": "boolean",
+          "example": true
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_horizontalpropertiy_internal_infra_primary_handlers_response.HorizontalPropertyResponse": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string",
+          "example": "Carrera 15 #45-67, Bogotá"
+        },
+        "business_type_id": {
+          "type": "integer",
+          "example": 1
+        },
+        "business_type_name": {
+          "type": "string",
+          "example": "Propiedad Horizontal"
+        },
+        "code": {
+          "type": "string",
+          "example": "los-pinos"
+        },
+        "committees": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/central_reserve_services_horizontalproperty_horizontalpropertiy_internal_infra_primary_handlers_response.CommitteeResponse"
+          }
+        },
+        "created_at": {
+          "type": "string",
+          "example": "2024-01-15T10:30:00Z"
+        },
+        "custom_domain": {
+          "type": "string",
+          "example": "lospinos.example.com"
+        },
+        "description": {
+          "type": "string",
+          "example": "Conjunto residencial familiar con amplias zonas verdes"
+        },
+        "has_elevator": {
+          "type": "boolean",
+          "example": true
+        },
+        "has_gym": {
+          "type": "boolean",
+          "example": false
+        },
+        "has_parking": {
+          "type": "boolean",
+          "example": true
+        },
+        "has_pool": {
+          "type": "boolean",
+          "example": true
+        },
+        "has_social_area": {
+          "type": "boolean",
+          "example": true
+        },
+        "id": {
+          "type": "integer",
+          "example": 1
+        },
+        "is_active": {
+          "type": "boolean",
+          "example": true
+        },
+        "logo_url": {
+          "description": "Configuración de marca blanca",
+          "type": "string",
+          "example": "https://example.com/logo.png"
+        },
+        "name": {
+          "type": "string",
+          "example": "Conjunto Residencial Los Pinos"
+        },
+        "navbar_image_url": {
+          "type": "string",
+          "example": "https://example.com/navbar.jpg"
+        },
+        "parent_business_id": {
+          "type": "integer"
+        },
+        "primary_color": {
+          "type": "string",
+          "example": "#1f2937"
+        },
+        "property_units": {
+          "description": "Información detallada (solo en GET by ID)",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/central_reserve_services_horizontalproperty_horizontalpropertiy_internal_infra_primary_handlers_response.PropertyUnitResponse"
+          }
+        },
+        "quaternary_color": {
+          "type": "string",
+          "example": "#fbbf24"
+        },
+        "secondary_color": {
+          "type": "string",
+          "example": "#3b82f6"
+        },
+        "tertiary_color": {
+          "type": "string",
+          "example": "#10b981"
+        },
+        "timezone": {
+          "type": "string",
+          "example": "America/Bogota"
+        },
+        "total_floors": {
+          "type": "integer",
+          "example": 15
+        },
+        "total_units": {
+          "description": "Configuración específica para propiedades horizontales",
+          "type": "integer",
+          "example": 120
+        },
+        "updated_at": {
+          "type": "string",
+          "example": "2024-01-15T10:30:00Z"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_horizontalpropertiy_internal_infra_primary_handlers_response.HorizontalPropertySuccessResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/central_reserve_services_horizontalproperty_horizontalpropertiy_internal_infra_primary_handlers_response.HorizontalPropertyResponse"
+        },
+        "message": {
+          "type": "string",
+          "example": "Operación realizada exitosamente"
+        },
+        "success": {
+          "type": "boolean",
+          "example": true
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_horizontalpropertiy_internal_infra_primary_handlers_response.PaginatedHorizontalPropertyResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/central_reserve_services_horizontalproperty_horizontalpropertiy_internal_infra_primary_handlers_response.HorizontalPropertyListResponse"
+          }
+        },
+        "page": {
+          "type": "integer",
+          "example": 1
+        },
+        "page_size": {
+          "type": "integer",
+          "example": 10
+        },
+        "total": {
+          "type": "integer",
+          "example": 150
+        },
+        "total_pages": {
+          "type": "integer",
+          "example": 15
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_horizontalpropertiy_internal_infra_primary_handlers_response.PropertyUnitResponse": {
+      "type": "object",
+      "properties": {
+        "area": {
+          "type": "number",
+          "example": 85.5
+        },
+        "bathrooms": {
+          "type": "integer",
+          "example": 2
+        },
+        "bedrooms": {
+          "type": "integer",
+          "example": 3
+        },
+        "block": {
+          "type": "string",
+          "example": "A"
+        },
+        "description": {
+          "type": "string",
+          "example": "Apto 101 - Piso 1"
+        },
+        "floor": {
+          "type": "integer",
+          "example": 1
+        },
+        "id": {
+          "type": "integer",
+          "example": 1
+        },
+        "is_active": {
+          "type": "boolean",
+          "example": true
+        },
+        "number": {
+          "type": "string",
+          "example": "101"
+        },
+        "unit_type": {
+          "type": "string",
+          "example": "apartment"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_request.DeliverPackageRequest": {
+      "type": "object",
+      "properties": {
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_request.ReceivePackageRequest": {
+      "type": "object",
+      "required": [
+        "carrier",
+        "property_unit_id",
+        "tracking_number"
+      ],
+      "properties": {
+        "carrier": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        },
+        "notify_resident": {
+          "type": "boolean"
+        },
+        "property_unit_id": {
+          "type": "integer"
+        },
+        "resident_id": {
+          "type": "integer"
+        },
+        "tracking_number": {
+          "type": "string"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_request.UpdatePackageStatusRequest": {
+      "type": "object",
+      "required": [
+        "package_status_id"
+      ],
+      "properties": {
+        "notes": {
+          "type": "string"
+        },
+        "package_status_id": {
+          "type": "integer"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageData": {
+      "type": "object",
+      "properties": {
+        "business_id": {
+          "type": "integer"
+        },
+        "carrier": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "delivered_at": {
+          "type": "string"
+        },
+        "delivered_by_user_id": {
+          "type": "integer"
+        },
+        "description": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "notes": {
+          "type": "string"
+        },
+        "notification_sent_at": {
+          "type": "string"
+        },
+        "notify_resident": {
+          "type": "boolean"
+        },
+        "package_status_id": {
+          "type": "integer"
+        },
+        "property_unit_id": {
+          "type": "integer"
+        },
+        "property_unit_number": {
+          "description": "Relaciones",
+          "type": "string"
+        },
+        "qr_code": {
+          "type": "string"
+        },
+        "received_at": {
+          "type": "string"
+        },
+        "received_by_user_id": {
+          "type": "integer"
+        },
+        "resident_id": {
+          "type": "integer"
+        },
+        "resident_name": {
+          "type": "string"
+        },
+        "status_code": {
+          "type": "string"
+        },
+        "status_name": {
+          "type": "string"
+        },
+        "tracking_number": {
+          "type": "string"
+        },
+        "updated_at": {
+          "type": "string"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageListData": {
+      "type": "object",
+      "properties": {
+        "carrier": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "delivered_at": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "property_unit_number": {
+          "type": "string"
+        },
+        "received_at": {
+          "type": "string"
+        },
+        "resident_name": {
+          "type": "string"
+        },
+        "status_code": {
+          "type": "string"
+        },
+        "status_name": {
+          "type": "string"
+        },
+        "tracking_number": {
+          "type": "string"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageData"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PaginatedPackagesResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageListData"
+          }
+        },
+        "page": {
+          "type": "integer"
+        },
+        "page_size": {
+          "type": "integer"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "total": {
+          "type": "integer"
+        },
+        "total_pages": {
+          "type": "integer"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_resident_internal_infra_primary_handlers_request.CreateResidentRequest": {
+      "type": "object",
+      "required": [
+        "dni",
+        "email",
+        "name",
+        "property_unit_id",
+        "resident_type_id"
+      ],
+      "properties": {
+        "dni": {
+          "type": "string",
+          "example": "123456789"
+        },
+        "email": {
+          "type": "string",
+          "example": "juan@email.com"
+        },
+        "emergency_contact": {
+          "type": "string",
+          "example": "María Pérez - 3009876543"
+        },
+        "is_main_resident": {
+          "type": "boolean",
+          "example": true
+        },
+        "lease_end_date": {
+          "type": "string",
+          "example": "2024-12-31T23:59:59Z"
+        },
+        "lease_start_date": {
+          "type": "string",
+          "example": "2024-01-01T00:00:00Z"
+        },
+        "monthly_rent": {
+          "type": "number",
+          "example": 1500000
+        },
+        "move_in_date": {
+          "type": "string",
+          "example": "2024-01-15T00:00:00Z"
+        },
+        "name": {
+          "type": "string",
+          "example": "Juan Pérez"
+        },
+        "phone": {
+          "type": "string",
+          "example": "+573001234567"
+        },
+        "property_unit_id": {
+          "type": "integer",
+          "example": 1
+        },
+        "resident_type_id": {
+          "type": "integer",
+          "example": 1
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_resident_internal_infra_primary_handlers_request.UpdateResidentRequest": {
+      "type": "object",
+      "properties": {
+        "dni": {
+          "type": "string",
+          "example": "123456789"
+        },
+        "email": {
+          "type": "string",
+          "example": "juan@email.com"
+        },
+        "emergency_contact": {
+          "type": "string",
+          "example": "María Pérez - 3009876543"
+        },
+        "is_active": {
+          "type": "boolean",
+          "example": true
+        },
+        "is_main_resident": {
+          "type": "boolean",
+          "example": true
+        },
+        "lease_end_date": {
+          "type": "string",
+          "example": "2024-12-31T23:59:59Z"
+        },
+        "lease_start_date": {
+          "type": "string",
+          "example": "2024-01-01T00:00:00Z"
+        },
+        "monthly_rent": {
+          "type": "number",
+          "example": 1500000
+        },
+        "move_in_date": {
+          "type": "string",
+          "example": "2024-01-15T00:00:00Z"
+        },
+        "move_out_date": {
+          "type": "string",
+          "example": "2025-01-15T00:00:00Z"
+        },
+        "name": {
+          "type": "string",
+          "example": "Juan Pérez"
+        },
+        "phone": {
+          "type": "string",
+          "example": "+573001234567"
+        },
+        "property_unit_id": {
+          "type": "integer",
+          "example": 1
+        },
+        "resident_type_id": {
+          "type": "integer",
+          "example": 1
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_unit_internal_infra_primary_handlers_request.CreatePropertyUnitRequest": {
+      "type": "object",
+      "required": [
+        "number",
+        "unit_type"
+      ],
+      "properties": {
+        "area": {
+          "type": "number",
+          "example": 85.5
+        },
+        "bathrooms": {
+          "type": "integer",
+          "example": 2
+        },
+        "bedrooms": {
+          "type": "integer",
+          "example": 3
+        },
+        "block": {
+          "type": "string",
+          "example": "A"
+        },
+        "description": {
+          "type": "string",
+          "example": "Apartamento esquinero con vista"
+        },
+        "floor": {
+          "type": "integer",
+          "example": 1
+        },
+        "number": {
+          "type": "string",
+          "example": "101"
+        },
+        "participation_coefficient": {
+          "type": "number",
+          "example": 0.008333
+        },
+        "unit_type": {
+          "type": "string",
+          "example": "apartment"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_unit_internal_infra_primary_handlers_request.UpdatePropertyUnitRequest": {
+      "type": "object",
+      "properties": {
+        "area": {
+          "type": "number",
+          "example": 85.5
+        },
+        "bathrooms": {
+          "type": "integer",
+          "example": 2
+        },
+        "bedrooms": {
+          "type": "integer",
+          "example": 3
+        },
+        "block": {
+          "type": "string",
+          "example": "A"
+        },
+        "description": {
+          "type": "string",
+          "example": "Apartamento esquinero con vista"
+        },
+        "floor": {
+          "type": "integer",
+          "example": 1
+        },
+        "is_active": {
+          "type": "boolean",
+          "example": true
+        },
+        "number": {
+          "type": "string",
+          "example": "101"
+        },
+        "participation_coefficient": {
+          "type": "number",
+          "example": 0.008333
+        },
+        "unit_type": {
+          "type": "string",
+          "example": "apartment"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_request.CreateAssetRequest": {
+      "type": "object",
+      "required": [
+        "asset_name"
+      ],
+      "properties": {
+        "asset_brand": {
+          "type": "string"
+        },
+        "asset_description": {
+          "type": "string"
+        },
+        "asset_name": {
+          "type": "string"
+        },
+        "asset_serial": {
+          "type": "string"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_request.CreateVisitRequest": {
+      "type": "object",
+      "required": [
+        "property_unit_id",
+        "scheduled_date",
+        "scheduled_start_time",
+        "visit_type_id",
+        "visitor_id"
+      ],
+      "properties": {
+        "has_assets": {
+          "type": "boolean"
+        },
+        "has_companions": {
+          "type": "boolean"
+        },
+        "notes": {
+          "type": "string"
+        },
+        "notify_resident": {
+          "type": "boolean"
+        },
+        "notify_security": {
+          "type": "boolean"
+        },
+        "number_of_visitors": {
+          "type": "integer"
+        },
+        "property_unit_id": {
+          "type": "integer"
+        },
+        "purpose": {
+          "type": "string"
+        },
+        "resident_id": {
+          "type": "integer"
+        },
+        "scheduled_date": {
+          "type": "string"
+        },
+        "scheduled_end_time": {
+          "type": "string"
+        },
+        "scheduled_start_time": {
+          "type": "string"
+        },
+        "visit_type_id": {
+          "type": "integer"
+        },
+        "visitor_id": {
+          "type": "integer"
+        },
+        "visitor_vehicle_id": {
+          "type": "integer"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_request.CreateVisitorRequest": {
+      "type": "object",
+      "required": [
+        "dni",
+        "full_name",
+        "phone"
+      ],
+      "properties": {
+        "dni": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "full_name": {
+          "type": "string"
+        },
+        "phone": {
+          "type": "string"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_request.RegisterAssetsRequest": {
+      "type": "object",
+      "required": [
+        "assets"
+      ],
+      "properties": {
+        "assets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_request.CreateAssetRequest"
+          }
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_request.RegisterEntryRequest": {
+      "type": "object",
+      "required": [
+        "gate",
+        "method"
+      ],
+      "properties": {
+        "gate": {
+          "type": "string"
+        },
+        "method": {
+          "description": "qr_code, manual, ocr, lpr",
+          "type": "string"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_request.RegisterExitRequest": {
+      "type": "object",
+      "required": [
+        "gate"
+      ],
+      "properties": {
+        "gate": {
+          "type": "string"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.PaginatedVisitsResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitListData"
+          }
+        },
+        "page": {
+          "type": "integer"
+        },
+        "page_size": {
+          "type": "integer"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "total": {
+          "type": "integer"
+        },
+        "total_pages": {
+          "type": "integer"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitData": {
+      "type": "object",
+      "properties": {
+        "actual_entry_time": {
+          "type": "string"
+        },
+        "actual_exit_time": {
+          "type": "string"
+        },
+        "authorization_code": {
+          "type": "string"
+        },
+        "business_id": {
+          "type": "integer"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "notes": {
+          "type": "string"
+        },
+        "property_unit_id": {
+          "type": "integer"
+        },
+        "purpose": {
+          "type": "string"
+        },
+        "qr_code": {
+          "type": "string"
+        },
+        "resident_id": {
+          "type": "integer"
+        },
+        "scheduled_date": {
+          "type": "string"
+        },
+        "scheduled_end_time": {
+          "type": "string"
+        },
+        "scheduled_start_time": {
+          "type": "string"
+        },
+        "visit_status_id": {
+          "type": "integer"
+        },
+        "visit_type_id": {
+          "type": "integer"
+        },
+        "visitor_id": {
+          "type": "integer"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitListData": {
+      "type": "object",
+      "properties": {
+        "actual_entry_time": {
+          "type": "string"
+        },
+        "actual_exit_time": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "property_unit_number": {
+          "type": "string"
+        },
+        "scheduled_date": {
+          "type": "string"
+        },
+        "visit_status_name": {
+          "type": "string"
+        },
+        "visit_type_name": {
+          "type": "string"
+        },
+        "visitor_dni": {
+          "type": "string"
+        },
+        "visitor_name": {
+          "type": "string"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitData"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitorData": {
+      "type": "object",
+      "properties": {
+        "business_id": {
+          "type": "integer"
+        },
+        "dni": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "full_name": {
+          "type": "string"
+        },
+        "has_blacklist": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "is_verified": {
+          "type": "boolean"
+        },
+        "phone": {
+          "type": "string"
+        },
+        "photo_url": {
+          "type": "string"
+        },
+        "total_visits": {
+          "type": "integer"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitorResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitorData"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_request.CreateVoteRequest": {
+      "type": "object",
+      "required": [
+        "property_unit_id",
+        "voting_option_id"
+      ],
+      "properties": {
+        "ip_address": {
+          "type": "string"
+        },
+        "property_unit_id": {
+          "type": "integer"
+        },
+        "user_agent": {
+          "type": "string"
+        },
+        "voting_option_id": {
+          "type": "integer"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_request.CreateVotingGroupRequest": {
+      "type": "object",
+      "required": [
+        "name",
+        "voting_end_date",
+        "voting_start_date"
+      ],
+      "properties": {
+        "created_by_user_id": {
+          "type": "integer"
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 150,
+          "minLength": 3
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "quorum_percentage": {
+          "type": "number"
+        },
+        "requires_quorum": {
+          "type": "boolean"
+        },
+        "voting_end_date": {
+          "type": "string"
+        },
+        "voting_start_date": {
+          "type": "string"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_request.CreateVotingOptionRequest": {
+      "type": "object",
+      "required": [
+        "color",
+        "option_code",
+        "option_text"
+      ],
+      "properties": {
+        "color": {
+          "type": "string"
+        },
+        "display_order": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "option_code": {
+          "type": "string",
+          "maxLength": 20,
+          "minLength": 1
+        },
+        "option_text": {
+          "type": "string",
+          "maxLength": 100,
+          "minLength": 1
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_request.CreateVotingRequest": {
+      "type": "object",
+      "required": [
+        "description",
+        "title",
+        "voting_type"
+      ],
+      "properties": {
+        "allow_abstention": {
+          "type": "boolean"
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "display_order": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "is_secret": {
+          "type": "boolean"
+        },
+        "required_percentage": {
+          "type": "number"
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 200,
+          "minLength": 3
+        },
+        "voting_type": {
+          "type": "string",
+          "enum": [
+            "simple",
+            "majority",
+            "unanimity"
+          ]
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_request.UpdateVotingOptionStatusRequest": {
+      "type": "object",
+      "required": [
+        "is_active"
+      ],
+      "properties": {
+        "is_active": {
+          "type": "boolean"
+        }
+      }
+    },
+    "services_horizontalproperty_vote_internal_infra_primary_handlers_handlerpublic.CreatePublicVoteRequest": {
+      "type": "object",
+      "required": [
+        "voting_option_id"
+      ],
+      "properties": {
+        "dni": {
+          "description": "Opcional - viene del token",
+          "type": "string"
+        },
+        "property_unit_id": {
+          "description": "Opcional - viene del token",
+          "type": "integer"
+        },
+        "voting_option_id": {
+          "type": "integer",
+          "example": 1
+        }
+      }
+    },
+    "services_horizontalproperty_vote_internal_infra_primary_handlers_handlerpublic.GeneratePublicVotingURLRequest": {
+      "type": "object",
+      "properties": {
+        "business_id": {
+          "description": "ID del business (solo para super admin, opcional en body)",
+          "type": "integer",
+          "example": 19
+        },
+        "duration_hours": {
+          "description": "Duración del token en horas",
+          "type": "integer",
+          "example": 24
+        },
+        "frontend_url": {
+          "description": "URL base del frontend (opcional, usa URL_BASE_SWAGGER + /public/vote si está vacío)",
+          "type": "string",
+          "example": "https://votacion.miconjunto.com/vote"
+        }
+      }
+    },
+    "services_horizontalproperty_vote_internal_infra_primary_handlers_handlerpublic.ValidateResidentRequest": {
+      "type": "object",
+      "required": [
+        "dni",
+        "property_unit_id"
+      ],
+      "properties": {
+        "dni": {
+          "type": "string",
+          "example": "123456789"
+        },
+        "property_unit_id": {
+          "type": "integer",
+          "example": 1
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "BearerAuth": {
+      "description": "Token de business JWT con el prefijo **Bearer** (para todos los endpoints)",
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header"
+    },
+    "BusinessTokenAuth": {
+      "description": "Token principal JWT con el prefijo **Bearer** (solo para /auth/business-token)",
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header"
+    }
+  }
+}`
 
 var SwaggerInfo = &swag.Spec{
-	Version: "1.0",
-	Host: "localhost:3050",
-	BasePath: "/api/v1",
-	Schemes: []string{},
-	Title: "Auth API",
-	Description: "API para la gestión de autenticación, usuarios, roles y permisos.",
+	Version:          "1.0",
+	Host:             "localhost:3050",
+	BasePath:         "/api/v1",
+	Schemes:          []string{"http"},
+	Title:            "Auth API",
+	Description:      "API para la gestión de autenticación, usuarios, roles y permisos.",
 	InfoInstanceName: "auth",
-	SwaggerTemplate: docTemplate,
-	LeftDelim: "{{",
-	RightDelim: "}}",
+	SwaggerTemplate:  docTemplate,
+	LeftDelim:        "{{",
+	RightDelim:       "}}",
 }
 
 func init() {

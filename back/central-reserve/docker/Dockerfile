@@ -4,7 +4,19 @@ FROM golang:1.24-alpine AS builder
 # Variables de compilación (solo para build)
 ENV CGO_ENABLED=0 \
     GOOS=linux \
-    GOARCH=arm64
+    GOARCH=arm64 \
+    APP_ENV=production
+
+# Instalar herramientas necesarias para generar Swagger
+RUN apk add --no-cache \
+    jq \
+    python3 \
+    bash \
+    make
+
+# Instalar swag (herramienta de swaggo) y agregar al PATH
+RUN go install github.com/swaggo/swag/cmd/swag@latest
+ENV PATH="${PATH}:/go/bin:/root/go/bin"
 
 # Crear usuario no root para build
 RUN adduser -D -g '' appuser
@@ -24,6 +36,10 @@ COPY central-reserve .
 RUN sed -i 's|replace dbpostgres => ../dbpostgres|replace dbpostgres => ./dbpostgres|' go.mod
 
 RUN go mod download
+
+# Generar documentación Swagger para producción antes de compilar
+RUN chmod +x scripts/generate-swagger.sh && \
+    APP_ENV=production ./scripts/generate-swagger.sh all || echo "⚠️  Advertencia: La generación de Swagger falló, continuando con el build..."
 
 # Compilar la aplicación
 RUN go build -o central_reserve ./cmd/main.go

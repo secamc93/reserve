@@ -148,7 +148,9 @@ export function ParkingReservationsTable({ businessId }: ParkingReservationsTabl
       </div>
 
       {error && (
-        <Alert variant="error" title="Error" message={error} onClose={() => setError(null)} />
+        <Alert type="error" onClose={() => setError(null)}>
+          {error}
+        </Alert>
       )}
 
       <Table
