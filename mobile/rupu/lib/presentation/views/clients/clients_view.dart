@@ -26,6 +26,7 @@ class ClientsView extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: const Text('Clientes'), centerTitle: true),
       body: RefreshIndicator(
         onRefresh: () => controller.cargarClientes(silent: true),

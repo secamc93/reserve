@@ -56,7 +56,7 @@ class VotingLiveView extends GetView<VotingLiveController> {
     }
 
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -286,10 +286,13 @@ class VotingLiveView extends GetView<VotingLiveController> {
         );
       }),
       floatingActionButton: voting.isActive
-          ? FloatingActionButton.extended(
-              onPressed: () => _openVoteSheet(context),
-              icon: const Icon(Icons.add),
-              label: const Text('Registrar Voto'),
+          ? Padding(
+              padding: const EdgeInsets.only(bottom: 80),
+              child: FloatingActionButton.extended(
+                onPressed: () => _openVoteSheet(context),
+                icon: const Icon(Icons.add),
+                label: const Text('Registrar Voto'),
+              ),
             )
           : null,
     );

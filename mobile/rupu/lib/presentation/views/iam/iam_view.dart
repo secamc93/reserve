@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
@@ -26,6 +28,7 @@ import 'package:rupu/presentation/views/users/user_detail_view.dart';
 import 'package:rupu/presentation/views/users/users_controller.dart';
 import 'package:rupu/presentation/widgets/image_preview_dialog.dart';
 import 'package:rupu/presentation/widgets/shared/rupu_loader.dart';
+import 'package:rupu/presentation/views/iam/tabs/iam_logs_tab.dart';
 
 class IamView extends StatelessWidget {
   final int pageIndex;
@@ -39,7 +42,104 @@ class IamView extends StatelessWidget {
     _IamTabDefinition('Recursos', Icons.category_outlined),
     _IamTabDefinition('Tipos de negocio', Icons.storefront_outlined),
     _IamTabDefinition('Negocios', Icons.apartment_outlined),
+    _IamTabDefinition('Logs', Icons.terminal_outlined),
   ];
+
+  /// iOS-style scrollable pill chips with blur effect
+  Widget _buildCupertinoSegmentedControl(
+    TabController tabController,
+    TextTheme tt,
+  ) {
+    return SizedBox(
+      height: 48,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        itemCount: _tabs.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final isSelected = tabController.index == index;
+          final tab = _tabs[index];
+
+          return GestureDetector(
+            onTap: () => tabController.animateTo(index),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutCubic,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? Colors.white.withValues(alpha: 0.25)
+                    : Colors.white.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isSelected
+                      ? Colors.white.withValues(alpha: 0.4)
+                      : Colors.white.withValues(alpha: 0.15),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    tab.icon,
+                    size: 18,
+                    color: isSelected
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.7),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    tab.label,
+                    style: tt.labelMedium?.copyWith(
+                      color: isSelected
+                          ? Colors.white
+                          : Colors.white.withValues(alpha: 0.7),
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  /// Material-style TabBar
+  Widget _buildMaterialTabBar(TabController tabController, TextTheme tt) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: TabBar(
+        controller: tabController,
+        isScrollable: true,
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+        labelPadding: const EdgeInsets.symmetric(horizontal: 6),
+        indicator: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.18),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        indicatorSize: TabBarIndicatorSize.label,
+        labelColor: Colors.white,
+        unselectedLabelColor: Colors.white.withValues(alpha: 0.8),
+        labelStyle: tt.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+        unselectedLabelStyle: tt.labelLarge,
+        tabs: _tabs
+            .map(
+              (tab) => Tab(
+                iconMargin: const EdgeInsets.only(bottom: 2),
+                icon: Icon(tab.icon, size: 20),
+                text: tab.label,
+              ),
+            )
+            .toList(growable: false),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +153,7 @@ class IamView extends StatelessWidget {
         builder: (context) {
           final tabController = DefaultTabController.of(context);
           return Scaffold(
-            backgroundColor: cs.surface,
+            backgroundColor: Colors.transparent,
             appBar: AppBar(
               elevation: 0,
               scrolledUnderElevation: 0,
@@ -85,34 +185,11 @@ class IamView extends StatelessWidget {
               ),
               bottom: PreferredSize(
                 preferredSize: const Size.fromHeight(60),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: TabBar(
-                    controller: tabController,
-                    isScrollable: true,
-                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-                    labelPadding: const EdgeInsets.symmetric(horizontal: 6),
-                    indicator: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.18),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    indicatorSize: TabBarIndicatorSize.label,
-                    labelColor: Colors.white,
-                    unselectedLabelColor: Colors.white.withValues(alpha: 0.8),
-                    labelStyle: tt.labelLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                    unselectedLabelStyle: tt.labelLarge,
-                    tabs: _tabs
-                        .map(
-                          (tab) => Tab(
-                            iconMargin: const EdgeInsets.only(bottom: 2),
-                            icon: Icon(tab.icon, size: 20),
-                            text: tab.label,
-                          ),
-                        )
-                        .toList(growable: false),
-                  ),
+                child: AnimatedBuilder(
+                  animation: tabController,
+                  builder: (context, _) => Platform.isIOS
+                      ? _buildCupertinoSegmentedControl(tabController, tt)
+                      : _buildMaterialTabBar(tabController, tt),
                 ),
               ),
             ),
@@ -170,6 +247,14 @@ class IamView extends StatelessWidget {
                   const _IamTabPage(
                     child: SafeArea(top: false, child: _IamBusinessesTab()),
                   ),
+                  // Logs tab - terminal-style SSE logs console
+                  const _IamTabPage(
+                    child: SafeArea(
+                      top: false,
+                      bottom: false,
+                      child: IamLogsTab(),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -180,45 +265,59 @@ class IamView extends StatelessWidget {
   }
 
   Widget? _buildFloatingActionButton(BuildContext context, int index) {
+    // Add bottom padding to account for the transparent bottom navigation bar
+    const double fabBottomPadding = 80.0;
+
+    Widget? fab;
     switch (index) {
       case 0:
         if (!Get.isRegistered<UsersController>()) return null;
-        return _IamUsersFab(pageIndex: pageIndex);
+        fab = _IamUsersFab(pageIndex: pageIndex);
+        break;
       case 1:
         if (!Get.isRegistered<RolesPermissionsController>()) return null;
-        return FloatingActionButton.extended(
+        fab = FloatingActionButton.extended(
           onPressed: () => showRoleFormDialog(context),
           tooltip: 'Crear rol',
           icon: const Icon(Icons.add),
           label: const Text('Nuevo rol'),
         );
+        break;
       case 2:
         if (!Get.isRegistered<RolesPermissionsController>()) return null;
-        return FloatingActionButton.extended(
+        fab = FloatingActionButton.extended(
           onPressed: () => showPermissionFormDialog(context),
           tooltip: 'Crear permiso',
           icon: const Icon(Icons.add),
           label: const Text('Nuevo permiso'),
         );
+        break;
       case 3:
         if (!Get.isRegistered<IamResourcesController>()) return null;
-        return FloatingActionButton.extended(
+        fab = FloatingActionButton.extended(
           onPressed: () => showResourceFormDialog(context),
           tooltip: 'Crear recurso',
           icon: const Icon(Icons.add),
           label: const Text('Nuevo recurso'),
         );
+        break;
       case 4:
         if (!Get.isRegistered<IamBusinessTypesController>()) return null;
-        return FloatingActionButton.extended(
+        fab = FloatingActionButton.extended(
           onPressed: () => showBusinessTypeFormDialog(context),
           tooltip: 'Crear tipo de negocio',
           icon: const Icon(Icons.add_business),
           label: const Text('Nuevo tipo'),
         );
+        break;
       default:
         return null;
     }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: fabBottomPadding),
+      child: fab,
+    );
   }
 }
 
@@ -272,7 +371,11 @@ class _IamTabPageState extends State<_IamTabPage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return widget.child;
+    // Add bottom padding to prevent content from blocking the bottom navigation bar
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 80),
+      child: widget.child,
+    );
   }
 }
 

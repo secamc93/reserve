@@ -25,7 +25,7 @@ class RolesPermissionsView extends GetView<RolesPermissionsController> {
     final tt = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         elevation: 0,
@@ -40,20 +40,23 @@ class RolesPermissionsView extends GetView<RolesPermissionsController> {
       ),
       floatingActionButton: Obx(() {
         final tab = controller.selectedTab.value;
-        return FloatingActionButton(
-          onPressed: () {
-            if (tab == RolesPermissionsTab.roles) {
-              showRoleFormDialog(context);
-            } else {
-              showPermissionFormDialog(context);
-            }
-          },
-          backgroundColor: cs.primary,
-          foregroundColor: cs.onPrimary,
-          tooltip: tab == RolesPermissionsTab.roles
-              ? 'Crear rol'
-              : 'Crear permiso',
-          child: const Icon(Icons.add),
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 80),
+          child: FloatingActionButton(
+            onPressed: () {
+              if (tab == RolesPermissionsTab.roles) {
+                showRoleFormDialog(context);
+              } else {
+                showPermissionFormDialog(context);
+              }
+            },
+            backgroundColor: cs.primary,
+            foregroundColor: cs.onPrimary,
+            tooltip: tab == RolesPermissionsTab.roles
+                ? 'Crear rol'
+                : 'Crear permiso',
+            child: const Icon(Icons.add),
+          ),
         );
       }),
       body: Stack(

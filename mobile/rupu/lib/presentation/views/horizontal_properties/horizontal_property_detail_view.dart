@@ -1,6 +1,7 @@
 library horizontal_property_detail_view;
 
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'package:rupu/presentation/views/horizontal_properties/voting_live_view.dart';
 import 'dart:math' as math;
 
@@ -138,6 +139,83 @@ class _PillTabBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (Platform.isIOS) {
+      return _buildIOSPillChips(context);
+    }
+    return _buildMaterialTabBar(context);
+  }
+
+  /// iOS-style scrollable pill chips
+  Widget _buildIOSPillChips(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final tt = theme.textTheme;
+    final tabController = DefaultTabController.of(context);
+
+    return AnimatedBuilder(
+      animation: tabController,
+      builder: (context, _) => SizedBox(
+        height: 44,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          itemCount: items.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 8),
+          itemBuilder: (context, index) {
+            final isSelected = tabController.index == index;
+            final item = items[index];
+
+            return GestureDetector(
+              onTap: () => tabController.animateTo(index),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOutCubic,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? cs.primary.withValues(alpha: 0.15)
+                      : cs.surfaceContainerHighest.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isSelected
+                        ? cs.primary.withValues(alpha: 0.4)
+                        : cs.outlineVariant.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      item.icon,
+                      size: 18,
+                      color: isSelected ? cs.primary : cs.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      item.label,
+                      style: tt.labelMedium?.copyWith(
+                        color: isSelected ? cs.primary : cs.onSurfaceVariant,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  /// Material-style TabBar
+  Widget _buildMaterialTabBar(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
 
@@ -148,7 +226,6 @@ class _PillTabBar extends StatelessWidget {
     return TabBar(
       tabs: tabs,
       isScrollable: true,
-      // 🔹 Lo más cercano a nativo: sin container, sin decoraciones extras
       indicatorColor: cs.primary,
       labelColor: cs.primary,
       unselectedLabelColor: cs.onSurfaceVariant,

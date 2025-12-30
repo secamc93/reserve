@@ -1,5 +1,7 @@
 // lib/presentation/widgets/custom_bottom_navigation.dart
+import 'dart:io' show Platform;
 import 'dart:ui' show ImageFilter;
+import 'package:cupertino_native/cupertino_native.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -9,14 +11,23 @@ class CustomBottomNavigation extends StatelessWidget {
   final int currentIndex;
 
   void _onItemTapped(BuildContext context, int index) {
+    debugPrint('🔵 BottomNav tapped: index=$index, current=$currentIndex');
+
+    // Always navigate - even if currentIndex matches
     switch (index) {
       case 0:
-        context.go('/home/0');
+        debugPrint('🏠 Going back to Home');
+        // Pop until we're at /home/0 (mimics swipe gesture)
+        while (context.canPop()) {
+          context.pop();
+        }
         break;
       case 1:
+        debugPrint('👤 Navigating to /home/0/perfil');
         context.go('/home/0/perfil');
         break;
       case 2:
+        debugPrint('⚙️ Navigating to /home/0/ajustes');
         context.go('/home/0/ajustes');
         break;
     }
@@ -24,67 +35,78 @@ class CustomBottomNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // iOS: Native Liquid Glass CNTabBar, Android: Material NavigationBar
+    if (Platform.isIOS) {
+      return _buildCupertinoNativeTabBar(context);
+    }
+    return _buildMaterialNavigation(context);
+  }
+
+  /// iOS Native Liquid Glass Tab Bar using cupertino_native package
+  Widget _buildCupertinoNativeTabBar(BuildContext context) {
+    return CNTabBar(
+      items: const [
+        CNTabBarItem(label: 'Inicio', icon: CNSymbol('house.fill')),
+        CNTabBarItem(label: 'Perfil', icon: CNSymbol('person.crop.circle')),
+        CNTabBarItem(label: 'Ajustes', icon: CNSymbol('gearshape.fill')),
+      ],
+      currentIndex: currentIndex,
+      onTap: (index) => _onItemTapped(context, index),
+    );
+  }
+
+  /// Android Material 3 NavigationBar with blur effect
+  Widget _buildMaterialNavigation(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
 
-    final items = const <_NavItem>[
-      _NavItem(
-        icon: Icons.home_outlined,
-        selectedIcon: Icons.home_rounded,
-        label: 'Inicio',
-      ),
-      _NavItem(
-        icon: Icons.person_outline_rounded,
-        selectedIcon: Icons.person_rounded,
-        label: 'Perfil',
-      ),
-      _NavItem(
-        icon: Icons.settings_outlined,
-        selectedIcon: Icons.settings_rounded,
-        label: 'Ajustes',
-      ),
-    ];
-
-    return SafeArea(
-      minimum: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-          child: Container(
-            height: 76,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  cs.surface.withValues(alpha: 0.85),
-                  cs.surface.withValues(alpha: 0.75),
-                ],
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+        child: Container(
+          padding: EdgeInsets.fromLTRB(
+            16,
+            0,
+            16,
+            bottomPadding > 0 ? bottomPadding : 10,
+          ),
+          decoration: BoxDecoration(
+            color: cs.surface.withValues(alpha: 0.85),
+            border: Border(
+              top: BorderSide(
+                color: cs.outlineVariant.withValues(alpha: 0.15),
+                width: 0.5,
               ),
-              border: Border.all(
-                color: cs.outlineVariant.withValues(alpha: 0.2),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 8),
+          ),
+          child: SizedBox(
+            height: 65,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: List.generate(items.length, (i) {
-                final it = items[i];
-                final selected = i == currentIndex;
-                return _NavButton(
-                  item: it,
-                  selected: selected,
-                  onTap: () => _onItemTapped(context, i),
-                );
-              }),
+              children: [
+                _NavButton(
+                  icon: Icons.home_outlined,
+                  selectedIcon: Icons.home_rounded,
+                  label: 'Inicio',
+                  selected: currentIndex == 0,
+                  onTap: () => _onItemTapped(context, 0),
+                ),
+                _NavButton(
+                  icon: Icons.person_outline_rounded,
+                  selectedIcon: Icons.person_rounded,
+                  label: 'Perfil',
+                  selected: currentIndex == 1,
+                  onTap: () => _onItemTapped(context, 1),
+                ),
+                _NavButton(
+                  icon: Icons.settings_outlined,
+                  selectedIcon: Icons.settings_rounded,
+                  label: 'Ajustes',
+                  selected: currentIndex == 2,
+                  onTap: () => _onItemTapped(context, 2),
+                ),
+              ],
             ),
           ),
         ),
@@ -93,25 +115,18 @@ class CustomBottomNavigation extends StatelessWidget {
   }
 }
 
-class _NavItem {
-  const _NavItem({
+class _NavButton extends StatelessWidget {
+  const _NavButton({
     required this.icon,
     required this.selectedIcon,
     required this.label,
-  });
-  final IconData icon;
-  final IconData selectedIcon;
-  final String label;
-}
-
-class _NavButton extends StatelessWidget {
-  const _NavButton({
-    required this.item,
     required this.selected,
     required this.onTap,
   });
 
-  final _NavItem item;
+  final IconData icon;
+  final IconData selectedIcon;
+  final String label;
   final bool selected;
   final VoidCallback onTap;
 
@@ -140,22 +155,15 @@ class _NavButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              selected ? item.selectedIcon : item.icon,
-              color: color,
-              size: 26,
-            ),
+            Icon(selected ? selectedIcon : icon, color: color, size: 26),
             const SizedBox(height: 4),
-            AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 200),
+            Text(
+              label,
               style: TextStyle(
                 color: color,
                 fontSize: 12,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                letterSpacing: 0.3,
-                fontFamily: 'Inter', // Ensuring consistent font if available
               ),
-              child: Text(item.label),
             ),
           ],
         ),

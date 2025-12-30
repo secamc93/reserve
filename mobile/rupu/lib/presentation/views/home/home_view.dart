@@ -18,6 +18,7 @@ class HomeView extends GetView<HomeController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: Obx(() {
         if (controller.isLoading.value) {
           return const Center(child: RupuLoader());
@@ -39,6 +40,7 @@ class HomeView extends GetView<HomeController> {
 
         return Scaffold(
           key: _scaffoldKey,
+          backgroundColor: Colors.transparent,
           appBar: CustomHomeAppBar(
             avatarUrl: "https://randomuser.me/api/portraits/men/70.jpg",
             onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),

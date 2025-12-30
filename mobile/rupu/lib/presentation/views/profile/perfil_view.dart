@@ -19,7 +19,7 @@ class PerfilView extends GetView<PerfilController> {
     return GetBuilder<PerfilController>(
       builder: (ctrl) {
         return Scaffold(
-          backgroundColor: cs.surface,
+          backgroundColor: Colors.transparent,
           body: Stack(
             children: [
               // Background Image with Blur
@@ -40,6 +40,7 @@ class PerfilView extends GetView<PerfilController> {
                 ),
 
               SafeArea(
+                bottom: false, // Allow content to extend behind bottom nav
                 child: ListView(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,

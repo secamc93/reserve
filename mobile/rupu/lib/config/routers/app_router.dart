@@ -76,6 +76,7 @@ final appRouter = GoRouter(
       builder: (BuildContext context, GoRouterState state, Widget child) {
         final idx = _calculateIndex(state.matchedLocation);
         return Scaffold(
+          extendBody: true,
           body: child,
           bottomNavigationBar: CustomBottomNavigation(currentIndex: idx),
         );

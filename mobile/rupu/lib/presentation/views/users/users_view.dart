@@ -27,20 +27,24 @@ class UsersView extends GetView<UsersController> {
       return body;
     }
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: const Text('Usuarios'), centerTitle: true),
       floatingActionButton: Obx(() {
         if (!controller.canCreate) return const SizedBox.shrink();
-        return FloatingActionButton(
-          onPressed: () async {
-            final result = await GoRouter.of(context).pushNamed(
-              CreateUserView.name,
-              pathParameters: {'page': '$pageIndex'},
-            );
-            if (result == true) {
-              await controller.fetchUsers();
-            }
-          },
-          child: const Icon(Icons.add),
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 80),
+          child: FloatingActionButton(
+            onPressed: () async {
+              final result = await GoRouter.of(context).pushNamed(
+                CreateUserView.name,
+                pathParameters: {'page': '$pageIndex'},
+              );
+              if (result == true) {
+                await controller.fetchUsers();
+              }
+            },
+            child: const Icon(Icons.add),
+          ),
         );
       }),
       body: body,

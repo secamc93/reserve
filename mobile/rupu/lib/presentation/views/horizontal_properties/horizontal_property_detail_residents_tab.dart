@@ -194,7 +194,9 @@ class _ResidentsTab extends GetWidget<HorizontalPropertyResidentsController> {
               Positioned.fill(child: listContent),
               Positioned(
                 right: 24,
-                bottom: 24 + bottomPadding,
+                bottom:
+                    104 +
+                    bottomPadding, // Increased for transparent bottom nav bar
                 child: _AddResidentFab(controllerTag: controllerTag),
               ),
             ],

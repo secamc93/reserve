@@ -17,6 +17,7 @@ class SettingsView extends GetView<SettingsController> {
     final tt = Theme.of(context).textTheme;
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: const Text('Ajustes'), centerTitle: true),
       body: GetBuilder<SettingsController>(
         initState: (_) => controller.checkBiometricStatus(),

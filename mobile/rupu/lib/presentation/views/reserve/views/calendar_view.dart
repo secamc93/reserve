@@ -33,8 +33,10 @@ class CalendarViewReserve extends StatelessWidget {
         : Get.put(ReserveController());
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: const Text('Calendario'), centerTitle: true),
       body: SafeArea(
+        bottom: false, // Allow content to extend behind bottom nav
         child: Obx(() {
           final appts = toAppointments(reserve.reservasTodas);
           final merged = [...appts, ...calendarController.localEvents];
@@ -68,7 +70,8 @@ class CalendarViewReserve extends StatelessWidget {
 
               Positioned(
                 right: 16,
-                bottom: 16,
+                bottom:
+                    96, // Increased to account for transparent bottom nav bar
                 child: FloatingActionButton.extended(
                   onPressed: () {
                     final base =

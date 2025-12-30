@@ -23,7 +23,8 @@ class HorizontalPropertiesView extends GetView<HorizontalPropertiesController> {
     final cs = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor:
+          Colors.transparent, // Transparent for bottom nav glass effect
       appBar: AppBar(
         backgroundColor: cs.surface,
         surfaceTintColor: Colors.transparent,
@@ -47,21 +48,23 @@ class HorizontalPropertiesView extends GetView<HorizontalPropertiesController> {
         ),
       ),
       // ✅ CAMBIO 2: Se agregó el FloatingActionButton
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showCreatePropertyDialog(context),
-        backgroundColor: cs.primary,
-        child: Icon(Icons.add, color: cs.onPrimary),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 80),
+        child: FloatingActionButton(
+          onPressed: () => _showCreatePropertyDialog(context),
+          backgroundColor: cs.primary,
+          child: Icon(Icons.add, color: cs.onPrimary),
+        ),
       ),
       body: SafeArea(
+        bottom: false, // Don't apply bottom safe area - let content extend
         child: Obx(() {
           final loading =
               controller.isLoading.value && controller.properties.isEmpty;
           final error = controller.errorMessage.value;
 
           if (loading) {
-            return const Center(
-              child: RupuLoader.small(),
-            );
+            return const Center(child: RupuLoader.small());
           }
 
           return RefreshIndicator(

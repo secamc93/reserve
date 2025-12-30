@@ -154,7 +154,8 @@ class _UnitsTab extends GetWidget<HorizontalPropertyUnitsController> {
           Positioned.fill(child: listContent),
           Positioned(
             right: 24,
-            bottom: 24 + bottomPadding,
+            bottom:
+                104 + bottomPadding, // Increased for transparent bottom nav bar
             child: _AddUnitFab(controllerTag: controllerTag),
           ),
         ],
