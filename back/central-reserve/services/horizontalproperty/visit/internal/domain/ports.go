@@ -20,6 +20,9 @@ type VisitRepository interface {
 	UpdateVisit(ctx context.Context, visit *Visit) error
 	ListVisits(ctx context.Context, filters VisitFiltersDTO) (*PaginatedVisitsDTO, error)
 	GetActiveVisits(ctx context.Context, businessID uint) ([]*Visit, error)
+	// Tipos y estados
+	GetVisitTypes(ctx context.Context, businessID uint) ([]*VisitType, error)
+	GetVisitStatuses(ctx context.Context) ([]*VisitStatus, error)
 }
 
 // VisitCompanionRepository - Puerto para repositorio de acompañantes
@@ -54,9 +57,19 @@ type VisitUseCase interface {
 	CreateOrGetVisitor(ctx context.Context, businessID *uint, dni string, name string, phone string) (*Visitor, error)
 	CreateVisit(ctx context.Context, dto CreateVisitDTO) (*Visit, error)
 	ListVisits(ctx context.Context, filters VisitFiltersDTO) (*PaginatedVisitsDTO, error)
+	GetVisitByID(ctx context.Context, visitID uint) (*Visit, error)
+	UpdateVisit(ctx context.Context, visitID uint, dto UpdateVisitDTO) (*Visit, error)
+	DeleteVisit(ctx context.Context, visitID uint) error
 	RegisterEntry(ctx context.Context, visitID uint, userID uint, gate string, method string) (*Visit, error)
 	RegisterExit(ctx context.Context, visitID uint, userID uint, gate string) (*Visit, error)
 	GetVisitByQRCode(ctx context.Context, qrCode string) (*Visit, error)
 	ValidateBlacklist(ctx context.Context, businessID uint, visitorID uint) (bool, error)
 	RegisterAssets(ctx context.Context, visitID uint, assets []CreateVisitAssetDTO) error
+	// Tipos y estados
+	GetVisitTypes(ctx context.Context, businessID uint) ([]*VisitType, error)
+	GetVisitStatuses(ctx context.Context) ([]*VisitStatus, error)
+	// Acompañantes
+	GetCompanionsByVisitID(ctx context.Context, visitID uint) ([]*VisitCompanion, error)
+	CreateCompanion(ctx context.Context, visitID uint, dto CreateVisitCompanionDTO) (*VisitCompanion, error)
+	DeleteCompanion(ctx context.Context, companionID uint) error
 }

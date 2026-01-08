@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"central_reserve/services/horizontalproperty/packages/internal/domain"
+	"central_reserve/services/horizontalproperty/packages/internal/infra/secondary/repository"
 	"central_reserve/shared/log"
 )
 
@@ -24,6 +25,20 @@ func (uc *packageUseCase) ReceivePackage(ctx context.Context, dto domain.CreateP
 		return nil, fmt.Errorf("tracking_number es requerido")
 	}
 
+	// Si business_id es 0 (super admin), obtener el business_id desde la property_unit
+	businessID := dto.BusinessID
+	if businessID == 0 {
+		packageRepo, ok := uc.packageRepo.(*repository.PackageRepository)
+		if !ok {
+			return nil, fmt.Errorf("repositorio de paquetes no es del tipo esperado")
+		}
+		var err error
+		businessID, err = packageRepo.GetPropertyUnitBusinessID(ctx, dto.PropertyUnitID)
+		if err != nil {
+			return nil, fmt.Errorf("error obteniendo business_id desde unidad de propiedad: %w", err)
+		}
+	}
+
 	// Obtener estado inicial (received)
 	status, err := uc.getPackageStatusByCode(ctx, "received")
 	if err != nil {
@@ -35,9 +50,9 @@ func (uc *packageUseCase) ReceivePackage(ctx context.Context, dto domain.CreateP
 
 	now := time.Now()
 
-	// Crear entidad de paquete
+	// Crear entidad de paquete usando el businessID correcto
 	pkg := &domain.Package{
-		BusinessID:       dto.BusinessID,
+		BusinessID:       businessID,
 		PropertyUnitID:   dto.PropertyUnitID,
 		ResidentID:       dto.ResidentID,
 		PackageStatusID:  status.ID,

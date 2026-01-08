@@ -1480,6 +1480,30 @@ definitions:
       success:
         type: boolean
     type: object
+  central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageStatusData:
+    properties:
+      code:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      is_final:
+        type: boolean
+      name:
+        type: string
+    type: object
+  central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageStatusesResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageStatusData'
+        type: array
+      success:
+        type: boolean
+    type: object
   central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PaginatedPackagesResponse:
     properties:
       data:
@@ -1496,6 +1520,13 @@ definitions:
         type: integer
       total_pages:
         type: integer
+    type: object
+  central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.SuccessResponse:
+    properties:
+      message:
+        type: string
+      success:
+        type: boolean
     type: object
   central_reserve_services_horizontalproperty_resident_internal_infra_primary_handlers_request.CreateResidentRequest:
     properties:
@@ -1666,6 +1697,24 @@ definitions:
     required:
     - asset_name
     type: object
+  central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_request.CreateCompanionRequest:
+    properties:
+      companion_dni:
+        type: string
+      companion_name:
+        type: string
+      companion_phone:
+        type: string
+      is_minor:
+        type: boolean
+      notes:
+        type: string
+      relationship:
+        type: string
+    required:
+    - companion_dni
+    - companion_name
+    type: object
   central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_request.CreateVisitRequest:
     properties:
       has_assets:
@@ -1747,6 +1796,66 @@ definitions:
     required:
     - gate
     type: object
+  central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_request.UpdateVisitRequest:
+    properties:
+      notes:
+        type: string
+      notify_resident:
+        type: boolean
+      notify_security:
+        type: boolean
+      number_of_visitors:
+        type: integer
+      property_unit_id:
+        type: integer
+      purpose:
+        type: string
+      resident_id:
+        type: integer
+      scheduled_date:
+        type: string
+      scheduled_end_time:
+        type: string
+      scheduled_start_time:
+        type: string
+      visit_type_id:
+        type: integer
+    type: object
+  central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.CompanionData:
+    properties:
+      companion_dni:
+        type: string
+      companion_name:
+        type: string
+      companion_phone:
+        type: string
+      id:
+        type: integer
+      is_minor:
+        type: boolean
+      notes:
+        type: string
+      relationship:
+        type: string
+      visit_id:
+        type: integer
+    type: object
+  central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.CompanionResponse:
+    properties:
+      data:
+        $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.CompanionData'
+      success:
+        type: boolean
+    type: object
+  central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.CompanionsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.CompanionData'
+        type: array
+      success:
+        type: boolean
+    type: object
   central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse:
     properties:
       error:
@@ -1772,6 +1881,13 @@ definitions:
         type: integer
       total_pages:
         type: integer
+    type: object
+  central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.SuccessResponse:
+    properties:
+      message:
+        type: string
+      success:
+        type: boolean
     type: object
   central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitData:
     properties:
@@ -1835,6 +1951,64 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitData'
+      success:
+        type: boolean
+    type: object
+  central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitStatusData:
+    properties:
+      code:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      is_final:
+        type: boolean
+      name:
+        type: string
+    type: object
+  central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitStatusesResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitStatusData'
+        type: array
+      success:
+        type: boolean
+    type: object
+  central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitTypeData:
+    properties:
+      code:
+        type: string
+      default_duration_minutes:
+        type: integer
+      description:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      max_duration_hours:
+        type: integer
+      name:
+        type: string
+      requires_assets_tracking:
+        type: boolean
+      requires_authorization:
+        type: boolean
+      requires_companions:
+        type: boolean
+      requires_vehicle_registration:
+        type: boolean
+    type: object
+  central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitTypesResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitTypeData'
+        type: array
       success:
         type: boolean
     type: object
@@ -4329,6 +4503,40 @@ paths:
       tags:
       - Packages
   /horizontal-properties/packages/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Marca un paquete como retornado (soft delete)
+      parameters:
+      - description: ID del paquete
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Eliminar paquete
+      tags:
+      - Packages
     get:
       consumes:
       - application/json
@@ -4469,6 +4677,27 @@ paths:
       security:
       - BearerAuth: []
       summary: Obtener paquete por QR
+      tags:
+      - Packages
+  /horizontal-properties/packages/statuses:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene todos los estados de paquete activos
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageStatusesResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar estados de paquete
       tags:
       - Packages
   /horizontal-properties/property-units:
@@ -5067,6 +5296,40 @@ paths:
       tags:
       - Visits
   /horizontal-properties/visits/{visit_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Cancela una visita (soft delete)
+      parameters:
+      - description: ID de la visita
+        in: path
+        name: visit_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Eliminar visita
+      tags:
+      - Visits
     get:
       consumes:
       - application/json
@@ -5095,6 +5358,46 @@ paths:
       security:
       - BearerAuth: []
       summary: Obtener visita por ID
+      tags:
+      - Visits
+    put:
+      consumes:
+      - application/json
+      description: Actualiza los datos de una visita existente
+      parameters:
+      - description: ID de la visita
+        in: path
+        name: visit_id
+        required: true
+        type: integer
+      - description: Datos a actualizar
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_request.UpdateVisitRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Actualizar visita
       tags:
       - Visits
   /horizontal-properties/visits/{visit_id}/assets:
@@ -5132,6 +5435,113 @@ paths:
       security:
       - BearerAuth: []
       summary: Registrar activos de visita
+      tags:
+      - Visits
+  /horizontal-properties/visits/{visit_id}/companions:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene todos los acompañantes de una visita
+      parameters:
+      - description: ID de la visita
+        in: path
+        name: visit_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.CompanionsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar acompañantes
+      tags:
+      - Visits
+    post:
+      consumes:
+      - application/json
+      description: Agrega un acompañante a una visita
+      parameters:
+      - description: ID de la visita
+        in: path
+        name: visit_id
+        required: true
+        type: integer
+      - description: Datos del acompañante
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_request.CreateCompanionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.CompanionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Crear acompañante
+      tags:
+      - Visits
+  /horizontal-properties/visits/{visit_id}/companions/{companion_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Elimina un acompañante de una visita
+      parameters:
+      - description: ID de la visita
+        in: path
+        name: visit_id
+        required: true
+        type: integer
+      - description: ID del acompañante
+        in: path
+        name: companion_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Eliminar acompañante
       tags:
       - Visits
   /horizontal-properties/visits/{visit_id}/register-entry:
@@ -5276,6 +5686,48 @@ paths:
       security:
       - BearerAuth: []
       summary: Buscar visitante por DNI
+      tags:
+      - Visits
+  /horizontal-properties/visits/statuses:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene todos los estados de visita activos
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitStatusesResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar estados de visita
+      tags:
+      - Visits
+  /horizontal-properties/visits/types:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene todos los tipos de visita activos
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitTypesResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar tipos de visita
       tags:
       - Visits
   /horizontal-properties/visits/visitors:

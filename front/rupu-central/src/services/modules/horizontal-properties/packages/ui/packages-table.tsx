@@ -1,14 +1,15 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Table, Badge, Alert, TableColumn, Button, Spinner } from '@shared/ui';
-import { getPackagesAction, deliverPackageAction } from '../infrastructure/actions';
-import { PackageListDTO } from '../domain';
+import { Table, Badge, Alert, TableColumn, Button, Spinner, Select, Input } from '@shared/ui';
+import { getPackagesAction, getPackageStatusesAction, deletePackageAction } from '../infrastructure/actions';
+import { PackageListDTO, PackageStatus } from '../domain';
 import { TokenStorage } from '@shared/config';
 import { generateBusinessTokenAction } from '@/services/auth/login/infrastructure/actions';
 import { ReceivePackageModal } from './receive-package-modal';
 import { DeliverPackageModal } from './deliver-package-modal';
-import { PlusIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { PackageDetailModal } from './package-detail-modal';
+import { PlusIcon, CheckCircleIcon, EyeIcon, TrashIcon, FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 interface PackagesTableProps {
   businessId: number;
@@ -24,8 +25,17 @@ export function PackagesTable({ businessId }: PackagesTableProps) {
   const [alert, setAlert] = useState<{ type: 'success' | 'error' | 'warning' | 'info'; message: string } | null>(null);
   const [isReceiveModalOpen, setIsReceiveModalOpen] = useState(false);
   const [isDeliverModalOpen, setIsDeliverModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<PackageListDTO | null>(null);
+  const [selectedPackageId, setSelectedPackageId] = useState<number | null>(null);
   const [processingPackageId, setProcessingPackageId] = useState<number | null>(null);
+
+  // Filtros
+  const [showFilters, setShowFilters] = useState(false);
+  const [packageStatuses, setPackageStatuses] = useState<PackageStatus[]>([]);
+  const [filterStatusId, setFilterStatusId] = useState<number | undefined>(undefined);
+  const [filterStartDate, setFilterStartDate] = useState<string>('');
+  const [filterEndDate, setFilterEndDate] = useState<string>('');
 
   const getBusinessToken = useCallback(async (): Promise<string> => {
     let businessToken = TokenStorage.getBusinessToken();
@@ -52,6 +62,20 @@ export function PackagesTable({ businessId }: PackagesTableProps) {
     return result.data.token;
   }, [businessId]);
 
+  const loadPackageStatuses = useCallback(async () => {
+    try {
+      const token = await getBusinessToken();
+      const statuses = await getPackageStatusesAction({ token });
+      setPackageStatuses(statuses.filter(s => s.isActive));
+    } catch (error) {
+      console.error('Error cargando estados:', error);
+    }
+  }, [getBusinessToken]);
+
+  useEffect(() => {
+    loadPackageStatuses();
+  }, [loadPackageStatuses]);
+
   const loadPackages = useCallback(async () => {
     setLoading(true);
     setAlert(null);
@@ -63,6 +87,9 @@ export function PackagesTable({ businessId }: PackagesTableProps) {
         token,
         page: currentPage,
         pageSize: pageSize,
+        packageStatusId: filterStatusId,
+        startDate: filterStartDate || undefined,
+        endDate: filterEndDate || undefined,
       });
 
       setPackages(data.packages);
@@ -83,11 +110,49 @@ export function PackagesTable({ businessId }: PackagesTableProps) {
     } finally {
       setLoading(false);
     }
-  }, [businessId, currentPage, pageSize, getBusinessToken]);
+  }, [businessId, currentPage, pageSize, filterStatusId, filterStartDate, filterEndDate, getBusinessToken]);
 
   useEffect(() => {
     loadPackages();
   }, [loadPackages]);
+
+  const handleClearFilters = () => {
+    setFilterStatusId(undefined);
+    setFilterStartDate('');
+    setFilterEndDate('');
+    setCurrentPage(1);
+  };
+
+  const hasActiveFilters = filterStatusId !== undefined || filterStartDate !== '' || filterEndDate !== '';
+
+  const handleViewDetails = (pkg: PackageListDTO) => {
+    setSelectedPackageId(pkg.id);
+    setIsDetailModalOpen(true);
+  };
+
+  const handleDeletePackage = async (pkg: PackageListDTO) => {
+    if (!confirm(`¿Estás seguro de que deseas marcar el paquete ${pkg.trackingNumber} como retornado?`)) {
+      return;
+    }
+    setProcessingPackageId(pkg.id);
+    try {
+      const token = await getBusinessToken();
+      await deletePackageAction({
+        businessId,
+        packageId: pkg.id,
+        token,
+      });
+      setAlert({ type: 'success', message: 'Paquete marcado como retornado' });
+      setTimeout(() => setAlert(null), 5000);
+      loadPackages();
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Error eliminando paquete';
+      setAlert({ type: 'error', message: errorMessage });
+      setTimeout(() => setAlert(null), 5000);
+    } finally {
+      setProcessingPackageId(null);
+    }
+  };
 
   const getStatusBadgeColor = (status: string): 'success' | 'warning' | 'danger' | 'info' => {
     const statusLower = status.toLowerCase();
@@ -172,10 +237,19 @@ export function PackagesTable({ businessId }: PackagesTableProps) {
       render: (_, pkg) => {
         const isProcessing = processingPackageId === pkg.id;
         const isDelivered = pkg.statusCode === 'delivered' || pkg.deliveredAt;
-        const canDeliver = pkg.statusCode === 'received' || pkg.statusCode === 'in_storage';
+        const canDeliver = pkg.statusCode === 'received' || pkg.statusCode === 'in_storage' || pkg.statusCode === 'notified';
+        const canDelete = !isDelivered && pkg.statusCode !== 'returned' && pkg.statusCode !== 'lost';
 
         return (
           <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => handleViewDetails(pkg)}
+              title="Ver detalles"
+            >
+              <EyeIcon className="h-4 w-4" />
+            </Button>
             {canDeliver && !isDelivered && (
               <Button
                 size="sm"
@@ -185,6 +259,17 @@ export function PackagesTable({ businessId }: PackagesTableProps) {
                 title="Entregar paquete"
               >
                 <CheckCircleIcon className="h-4 w-4 text-green-600" />
+              </Button>
+            )}
+            {canDelete && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleDeletePackage(pkg)}
+                disabled={isProcessing}
+                title="Marcar como retornado"
+              >
+                <TrashIcon className="h-4 w-4 text-red-600" />
               </Button>
             )}
           </div>
@@ -205,11 +290,74 @@ export function PackagesTable({ businessId }: PackagesTableProps) {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Paquetes</h2>
-        <Button onClick={() => setIsReceiveModalOpen(true)}>
-          <PlusIcon className="h-5 w-5 mr-2" />
-          Recibir Paquete
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
+            <FunnelIcon className="h-5 w-5 mr-2" />
+            Filtros
+            {hasActiveFilters && <span className="ml-2 bg-blue-500 text-white text-xs rounded-full px-2 py-0.5">!</span>}
+          </Button>
+          <Button onClick={() => setIsReceiveModalOpen(true)}>
+            <PlusIcon className="h-5 w-5 mr-2" />
+            Recibir Paquete
+          </Button>
+        </div>
       </div>
+
+      {/* Panel de Filtros */}
+      {showFilters && (
+        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-medium">Filtros</h3>
+            {hasActiveFilters && (
+              <Button variant="secondary" size="sm" onClick={handleClearFilters}>
+                <XMarkIcon className="h-4 w-4 mr-1" />
+                Limpiar
+              </Button>
+            )}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Select
+                label="Estado"
+                value={filterStatusId?.toString() || ''}
+                onChange={(e) => {
+                  setFilterStatusId(e.target.value ? Number(e.target.value) : undefined);
+                  setCurrentPage(1);
+                }}
+                options={[
+                  { value: '', label: 'Todos los estados' },
+                  ...packageStatuses.map((status) => ({
+                    value: status.id.toString(),
+                    label: status.name,
+                  })),
+                ]}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Fecha desde</label>
+              <Input
+                type="date"
+                value={filterStartDate}
+                onChange={(e) => {
+                  setFilterStartDate(e.target.value);
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Fecha hasta</label>
+              <Input
+                type="date"
+                value={filterEndDate}
+                onChange={(e) => {
+                  setFilterEndDate(e.target.value);
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {alert && (
         <Alert type={alert.type} onClose={() => setAlert(null)}>
@@ -252,6 +400,18 @@ export function PackagesTable({ businessId }: PackagesTableProps) {
           businessId={businessId}
           packageId={selectedPackage.id}
           packageInfo={selectedPackage}
+        />
+      )}
+
+      {selectedPackageId && (
+        <PackageDetailModal
+          isOpen={isDetailModalOpen}
+          onClose={() => {
+            setIsDetailModalOpen(false);
+            setSelectedPackageId(null);
+          }}
+          packageId={selectedPackageId}
+          businessId={businessId}
         />
       )}
     </div>

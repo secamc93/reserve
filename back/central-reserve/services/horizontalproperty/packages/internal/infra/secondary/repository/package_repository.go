@@ -131,7 +131,12 @@ func (r *PackageRepository) UpdatePackage(ctx context.Context, pkg *domain.Packa
 func (r *PackageRepository) ListPackages(ctx context.Context, filters domain.PackageFiltersDTO) (*domain.PaginatedPackagesDTO, error) {
 	// Conteo total
 	var total int64
-	countQuery := r.db.Conn(ctx).Model(&models.Package{}).Where("business_id = ?", filters.BusinessID)
+	countQuery := r.db.Conn(ctx).Model(&models.Package{})
+
+	// Aplicar filtro de business_id solo si no es 0 (super admin)
+	if filters.BusinessID != 0 {
+		countQuery = countQuery.Where("business_id = ?", filters.BusinessID)
+	}
 
 	if filters.PropertyUnitID != nil {
 		countQuery = countQuery.Where("property_unit_id = ?", *filters.PropertyUnitID)
@@ -170,12 +175,16 @@ func (r *PackageRepository) ListPackages(ctx context.Context, filters domain.Pac
 	rows := []row{}
 	query := r.db.Conn(ctx).Table("horizontal_property.packages p").
 		Select("p.id, p.tracking_number, p.carrier, pu.number as property_unit_number, "+
-			"COALESCE(r.full_name, '') as resident_name, ps.name as status_name, ps.code as status_code, "+
+			"COALESCE(r.name, '') as resident_name, ps.name as status_name, ps.code as status_code, "+
 			"p.received_at, p.delivered_at, p.created_at").
 		Joins("JOIN horizontal_property.property_units pu ON pu.id = p.property_unit_id").
 		Joins("LEFT JOIN horizontal_property.residents r ON r.id = p.resident_id").
-		Joins("JOIN horizontal_property.package_statuses ps ON ps.id = p.package_status_id").
-		Where("p.business_id = ?", filters.BusinessID)
+		Joins("JOIN horizontal_property.package_statuses ps ON ps.id = p.package_status_id")
+
+	// Aplicar filtro de business_id solo si no es 0 (super admin)
+	if filters.BusinessID != 0 {
+		query = query.Where("p.business_id = ?", filters.BusinessID)
+	}
 
 	if filters.PropertyUnitID != nil {
 		query = query.Where("p.property_unit_id = ?", *filters.PropertyUnitID)
@@ -241,6 +250,28 @@ func (r *PackageRepository) GetPackageStatusByCode(ctx context.Context, code str
 		IsFinal:     status.IsFinal,
 		IsActive:    status.IsActive,
 	}, nil
+}
+
+// GetPackageStatuses obtiene todos los estados de paquete activos
+func (r *PackageRepository) GetPackageStatuses(ctx context.Context) ([]*domain.PackageStatus, error) {
+	var statuses []models.PackageStatus
+	if err := r.db.Conn(ctx).Where("is_active = ?", true).Order("id ASC").Find(&statuses).Error; err != nil {
+		return nil, fmt.Errorf("error obteniendo estados de paquete: %w", err)
+	}
+
+	result := make([]*domain.PackageStatus, len(statuses))
+	for i, s := range statuses {
+		result[i] = &domain.PackageStatus{
+			ID:          s.ID,
+			Code:        s.Code,
+			Name:        s.Name,
+			Description: s.Description,
+			IsFinal:     s.IsFinal,
+			IsActive:    s.IsActive,
+		}
+	}
+
+	return result, nil
 }
 
 // mapPackageToDomain mapea modelo a entidad de dominio
@@ -313,4 +344,19 @@ func mapPackageToDomain(m *models.Package) *domain.Package {
 	}
 
 	return pkg
+}
+
+// GetPropertyUnitBusinessID obtiene el business_id de una property_unit
+func (r *PackageRepository) GetPropertyUnitBusinessID(ctx context.Context, propertyUnitID uint) (uint, error) {
+	var propertyUnit models.PropertyUnit
+	if err := r.db.Conn(ctx).Select("business_id").First(&propertyUnit, propertyUnitID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return 0, fmt.Errorf("unidad de propiedad no encontrada")
+		}
+		return 0, fmt.Errorf("error obteniendo unidad de propiedad: %w", err)
+	}
+	if propertyUnit.BusinessID == 0 {
+		return 0, fmt.Errorf("la unidad de propiedad no tiene un business_id válido")
+	}
+	return propertyUnit.BusinessID, nil
 }

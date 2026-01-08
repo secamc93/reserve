@@ -10,6 +10,8 @@ type PackageRepository interface {
 	UpdatePackage(ctx context.Context, pkg *Package) error
 	ListPackages(ctx context.Context, filters PackageFiltersDTO) (*PaginatedPackagesDTO, error)
 	GetPackageStatusByCode(ctx context.Context, code string) (*PackageStatus, error)
+	GetPackageStatuses(ctx context.Context) ([]*PackageStatus, error)
+	GetPropertyUnitBusinessID(ctx context.Context, propertyUnitID uint) (uint, error)
 }
 
 // PackageUseCase - Puerto para casos de uso de paquetes
@@ -20,4 +22,6 @@ type PackageUseCase interface {
 	GetPackageByID(ctx context.Context, id uint) (*Package, error)
 	GetPackageByQRCode(ctx context.Context, qrCode string) (*Package, error)
 	UpdatePackageStatus(ctx context.Context, dto UpdatePackageStatusDTO) (*Package, error)
+	GetPackageStatuses(ctx context.Context) ([]*PackageStatus, error)
+	DeletePackage(ctx context.Context, id uint) error
 }

@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"fmt"
 
 	"central_reserve/services/horizontalproperty/packages/internal/domain"
 	"central_reserve/shared/log"
@@ -11,11 +10,6 @@ import (
 // ListPackages lista paquetes con filtros y paginación
 func (uc *packageUseCase) ListPackages(ctx context.Context, filters domain.PackageFiltersDTO) (*domain.PaginatedPackagesDTO, error) {
 	ctx = log.WithFunctionCtx(ctx, "ListPackages")
-
-	// Validar que businessID esté presente
-	if filters.BusinessID == 0 {
-		return nil, fmt.Errorf("business_id es requerido")
-	}
 
 	// Validar paginación
 	if filters.Page < 1 {

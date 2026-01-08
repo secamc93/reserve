@@ -14,7 +14,7 @@ type VisitStateMachine struct{}
 
 // AllowedTransitions define las transiciones permitidas
 var AllowedTransitions = map[string][]string{
-	"pending":     {"authorized", "rejected", "cancelled"},
+	"pending":     {"authorized", "in_progress", "rejected", "cancelled"}, // Permitir transición directa a in_progress para registro de entrada
 	"authorized":  {"in_progress", "expired", "cancelled"},
 	"in_progress": {"completed", "cancelled"},
 }
@@ -80,9 +80,10 @@ func ChangeVisitStatus(visitModel *models.Visit, newStatusCode string, db *gorm.
 
 // RegisterVisitEntry registra la entrada de una visita
 func RegisterVisitEntry(visitModel *models.Visit, userID uint, gate string, method string, db *gorm.DB) error {
-	// Validar estado actual
-	if visitModel.VisitStatus.Code != "authorized" {
-		return fmt.Errorf("solo se puede registrar entrada de visitas autorizadas (estado actual: %s)", visitModel.VisitStatus.Code)
+	// Validar estado actual - permitir entrada desde "pending" o "authorized"
+	currentStatus := visitModel.VisitStatus.Code
+	if currentStatus != "pending" && currentStatus != "authorized" {
+		return fmt.Errorf("solo se puede registrar entrada de visitas pendientes o autorizadas (estado actual: %s)", currentStatus)
 	}
 
 	now := time.Now()
@@ -91,7 +92,23 @@ func RegisterVisitEntry(visitModel *models.Visit, userID uint, gate string, meth
 	visitModel.EntryGate = gate
 	visitModel.EntryMethod = method
 
-	// Cambiar estado usando state machine
+	// Si está en pending, permitir transición directa a in_progress
+	// Si el tipo de visita requiere autorización, auto-autorizar primero
+	if currentStatus == "pending" {
+		// Verificar si el tipo de visita requiere autorización (ya debería estar preloaded)
+		if visitModel.VisitType.ID > 0 && visitModel.VisitType.RequiresAuthorization {
+			// Auto-autorizar la visita primero
+			if err := ChangeVisitStatus(visitModel, "authorized", db); err != nil {
+				return fmt.Errorf("error auto-autorizando visita: %w", err)
+			}
+			// Recargar el estado después de la autorización
+			if err := db.Preload("VisitStatus").Preload("VisitType").First(visitModel, visitModel.ID).Error; err != nil {
+				return fmt.Errorf("error recargando visita: %w", err)
+			}
+		}
+	}
+
+	// Cambiar estado a in_progress usando state machine
 	return ChangeVisitStatus(visitModel, "in_progress", db)
 }
 

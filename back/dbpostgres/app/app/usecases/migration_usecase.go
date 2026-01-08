@@ -70,11 +70,70 @@ func (uc *MigrationUseCase) MigrateDB() error {
 		&models.Proxy{},
 		&models.AttendanceRecord{},
 		&models.AttendanceList{},
+		// Modelos de Sistema de Visitas
+		&models.VisitType{},
+		&models.VisitStatus{},
+		&models.Visitor{},
+		&models.VisitorVehicle{},
+		&models.Visit{},
+		&models.VisitCompanion{},
+		&models.VisitAsset{},
+		&models.VisitBlacklist{},
+		&models.VisitRecurringPattern{},
+		&models.VisitRestriction{},
+		// Modelos de Sistema de Paquetes
+		&models.PackageStatus{},
+		&models.Package{},
 	); err != nil {
 		return err
 	}
 
+	// Seedear datos iniciales
+	if err := uc.seedInitialData(); err != nil {
+		return err
+	}
+
 	uc.logger.Info().Msg("✅ Migración de esquema completada exitosamente")
+	return nil
+}
+
+// seedInitialData inserta datos iniciales necesarios para el sistema
+func (uc *MigrationUseCase) seedInitialData() error {
+	uc.logger.Info().Msg("Sembrando datos iniciales...")
+
+	// Estados de paquete iniciales
+	packageStatuses := []models.PackageStatus{
+		{Code: "received", Name: "Recibido", Description: "Paquete recibido en portería", IsFinal: false, IsActive: true},
+		{Code: "in_storage", Name: "En Almacén", Description: "Paquete en almacenamiento esperando entrega", IsFinal: false, IsActive: true},
+		{Code: "notified", Name: "Notificado", Description: "Residente ha sido notificado de la llegada", IsFinal: false, IsActive: true},
+		{Code: "delivered", Name: "Entregado", Description: "Paquete entregado al residente", IsFinal: true, IsActive: true},
+		{Code: "returned", Name: "Retornado", Description: "Paquete retornado al remitente", IsFinal: true, IsActive: true},
+		{Code: "lost", Name: "Perdido", Description: "Paquete reportado como perdido", IsFinal: true, IsActive: true},
+	}
+
+	for _, status := range packageStatuses {
+		var existing models.PackageStatus
+		result := uc.db.Where("code = ?", status.Code).First(&existing)
+		if result.Error != nil {
+			// Si no existe, crearlo
+			if err := uc.db.Create(&status).Error; err != nil {
+				uc.logger.Warn().Err(err).Str("code", status.Code).Msg("Error creando estado de paquete (puede ser que ya exista)")
+			} else {
+				uc.logger.Info().Str("code", status.Code).Msg("Estado de paquete creado")
+			}
+		} else {
+			// Si existe, actualizarlo para asegurar que esté activo y tenga los valores correctos
+			existing.Name = status.Name
+			existing.Description = status.Description
+			existing.IsFinal = status.IsFinal
+			existing.IsActive = status.IsActive
+			if err := uc.db.Save(&existing).Error; err != nil {
+				uc.logger.Warn().Err(err).Str("code", status.Code).Msg("Error actualizando estado de paquete")
+			}
+		}
+	}
+
+	uc.logger.Info().Msg("✅ Datos iniciales sembrados correctamente")
 	return nil
 }
 

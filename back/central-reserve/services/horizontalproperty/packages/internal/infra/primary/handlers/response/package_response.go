@@ -65,3 +65,25 @@ type PaginatedPackagesResponse struct {
 	PageSize   int               `json:"page_size"`
 	TotalPages int               `json:"total_pages"`
 }
+
+// PackageStatusData - Datos de estado de paquete
+type PackageStatusData struct {
+	ID          uint   `json:"id"`
+	Code        string `json:"code"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	IsFinal     bool   `json:"is_final"`
+	IsActive    bool   `json:"is_active"`
+}
+
+// PackageStatusesResponse - Respuesta para listar estados
+type PackageStatusesResponse struct {
+	Success bool                `json:"success"`
+	Data    []PackageStatusData `json:"data"`
+}
+
+// SuccessResponse - Respuesta generica de exito
+type SuccessResponse struct {
+	Success bool   `json:"success"`
+	Message string `json:"message"`
+}

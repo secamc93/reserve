@@ -66,3 +66,28 @@ type CreateVisitAssetDTO struct {
 	AssetSerial      string
 	AssetBrand       string
 }
+
+// UpdateVisitDTO - DTO para actualizar visita
+type UpdateVisitDTO struct {
+	PropertyUnitID     *uint
+	ResidentID         *uint
+	VisitTypeID        *uint
+	ScheduledDate      *time.Time
+	ScheduledStartTime *time.Time
+	ScheduledEndTime   *time.Time
+	Purpose            *string
+	NumberOfVisitors   *int
+	Notes              *string
+	NotifyResident     *bool
+	NotifySecurity     *bool
+}
+
+// CreateVisitCompanionDTO - DTO para crear acompañante
+type CreateVisitCompanionDTO struct {
+	CompanionName  string
+	CompanionDNI   string
+	CompanionPhone string
+	IsMinor        bool
+	Relationship   string
+	Notes          string
+}

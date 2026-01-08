@@ -106,3 +106,84 @@ export interface CreateVisitAssetDTO {
 export interface RegisterAssetsDTO {
   assets: CreateVisitAssetDTO[];
 }
+
+// DTOs para Update y Delete
+export interface UpdateVisitDTO {
+  propertyUnitId?: number;
+  residentId?: number;
+  visitTypeId?: number;
+  scheduledDate?: string;
+  scheduledStartTime?: string;
+  scheduledEndTime?: string;
+  purpose?: string;
+  numberOfVisitors?: number;
+  notes?: string;
+  notifyResident?: boolean;
+  notifySecurity?: boolean;
+}
+
+// Tipos de visita
+export interface VisitType {
+  id: number;
+  name: string;
+  code: string;
+  description: string;
+  requiresAuthorization: boolean;
+  requiresVehicleRegistration: boolean;
+  requiresCompanions: boolean;
+  requiresAssetsTracking: boolean;
+  maxDurationHours?: number;
+  defaultDurationMinutes?: number;
+  isActive: boolean;
+}
+
+// Estados de visita
+export interface VisitStatus {
+  id: number;
+  code: string;
+  name: string;
+  description: string;
+  isFinal: boolean;
+  isActive: boolean;
+}
+
+// Acompañantes
+export interface VisitCompanion {
+  id: number;
+  visitId: number;
+  visitorId?: number;
+  companionName: string;
+  companionDni: string;
+  companionPhone?: string;
+  isMinor: boolean;
+  relationship?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateVisitCompanionDTO {
+  companionName: string;
+  companionDni: string;
+  companionPhone?: string;
+  isMinor?: boolean;
+  relationship?: string;
+  notes?: string;
+}
+
+// Activos
+export interface VisitAsset {
+  id: number;
+  visitId: number;
+  assetName: string;
+  assetDescription?: string;
+  assetSerial?: string;
+  assetBrand?: string;
+  entryRegistered: boolean;
+  entryRegisteredAt?: string;
+  exitRegistered: boolean;
+  exitRegisteredAt?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}

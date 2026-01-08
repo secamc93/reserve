@@ -75,3 +75,8 @@ docker-compose.override.yml
 # Archivos grandes - AWS CLI
 infra/nginx/awscliv2.zip
 *.zip
+
+# Claude Code
+CLAUDE.md
+claude.md
+.claude/

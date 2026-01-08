@@ -10,6 +10,7 @@ import {
   CreatePackageDTO,
   DeliverPackageDTO,
   UpdatePackageStatusDTO,
+  PackageStatus,
 } from '../entities';
 
 export interface GetPackagesParams {
@@ -55,6 +56,16 @@ export interface UpdatePackageStatusParams {
   token: string;
 }
 
+export interface GetPackageStatusesParams {
+  token: string;
+}
+
+export interface DeletePackageParams {
+  businessId: number;
+  packageId: number;
+  token: string;
+}
+
 export interface IPackagesRepository {
   getPackages(params: GetPackagesParams): Promise<PackagesPaginated>;
   getPackageById(params: GetPackageByIdParams): Promise<Package>;
@@ -62,4 +73,6 @@ export interface IPackagesRepository {
   receivePackage(params: ReceivePackageParams): Promise<Package>;
   deliverPackage(params: DeliverPackageParams): Promise<Package>;
   updatePackageStatus(params: UpdatePackageStatusParams): Promise<Package>;
+  getPackageStatuses(params: GetPackageStatusesParams): Promise<PackageStatus[]>;
+  deletePackage(params: DeletePackageParams): Promise<void>;
 }

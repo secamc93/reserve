@@ -78,3 +78,70 @@ type PaginatedVisitsResponse struct {
 	PageSize   int             `json:"page_size"`
 	TotalPages int             `json:"total_pages"`
 }
+
+// VisitTypeData - Datos de tipo de visita
+type VisitTypeData struct {
+	ID                          uint   `json:"id"`
+	Name                        string `json:"name"`
+	Code                        string `json:"code"`
+	Description                 string `json:"description"`
+	RequiresAuthorization       bool   `json:"requires_authorization"`
+	RequiresVehicleRegistration bool   `json:"requires_vehicle_registration"`
+	RequiresCompanions          bool   `json:"requires_companions"`
+	RequiresAssetsTracking      bool   `json:"requires_assets_tracking"`
+	MaxDurationHours            *int   `json:"max_duration_hours"`
+	DefaultDurationMinutes      *int   `json:"default_duration_minutes"`
+	IsActive                    bool   `json:"is_active"`
+}
+
+// VisitTypesResponse - Respuesta de tipos de visita
+type VisitTypesResponse struct {
+	Success bool            `json:"success"`
+	Data    []VisitTypeData `json:"data"`
+}
+
+// VisitStatusData - Datos de estado de visita
+type VisitStatusData struct {
+	ID          uint   `json:"id"`
+	Code        string `json:"code"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	IsFinal     bool   `json:"is_final"`
+	IsActive    bool   `json:"is_active"`
+}
+
+// VisitStatusesResponse - Respuesta de estados de visita
+type VisitStatusesResponse struct {
+	Success bool              `json:"success"`
+	Data    []VisitStatusData `json:"data"`
+}
+
+// CompanionData - Datos de acompañante
+type CompanionData struct {
+	ID             uint   `json:"id"`
+	VisitID        uint   `json:"visit_id"`
+	CompanionName  string `json:"companion_name"`
+	CompanionDNI   string `json:"companion_dni"`
+	CompanionPhone string `json:"companion_phone"`
+	IsMinor        bool   `json:"is_minor"`
+	Relationship   string `json:"relationship"`
+	Notes          string `json:"notes"`
+}
+
+// CompanionResponse - Respuesta de acompañante
+type CompanionResponse struct {
+	Success bool          `json:"success"`
+	Data    CompanionData `json:"data"`
+}
+
+// CompanionsResponse - Respuesta de lista de acompañantes
+type CompanionsResponse struct {
+	Success bool            `json:"success"`
+	Data    []CompanionData `json:"data"`
+}
+
+// SuccessResponse - Respuesta de éxito genérica
+type SuccessResponse struct {
+	Success bool   `json:"success"`
+	Message string `json:"message"`
+}

@@ -68,3 +68,12 @@ export interface UpdatePackageStatusDTO {
   packageStatusId: number;
   notes?: string;
 }
+
+export interface PackageStatus {
+  id: number;
+  code: string;
+  name: string;
+  description: string;
+  isFinal: boolean;
+  isActive: boolean;
+}

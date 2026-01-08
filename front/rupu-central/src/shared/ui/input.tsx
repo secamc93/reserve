@@ -52,7 +52,7 @@ export function Input({
         {/* Input */}
         <input
           id={inputId}
-          className={`input ${error ? 'input-error' : ''} ${leftIcon ? 'pl-10' : ''} ${rightIcon ? 'pr-10' : ''} ${className}`}
+          className={`input text-gray-900 ${error ? 'input-error' : ''} ${leftIcon ? 'pl-10' : ''} ${rightIcon ? 'pr-10' : ''} ${className}`}
           {...props}
         />
 

@@ -6085,6 +6085,43 @@ const docTemplate = `{
         }
       }
     },
+    "central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageStatusData": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "is_active": {
+          "type": "boolean"
+        },
+        "is_final": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageStatusesResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageStatusData"
+          }
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
     "central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PaginatedPackagesResponse": {
       "type": "object",
       "properties": {
@@ -6108,6 +6145,17 @@ const docTemplate = `{
         },
         "total_pages": {
           "type": "integer"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.SuccessResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
         }
       }
     },
@@ -6342,6 +6390,33 @@ const docTemplate = `{
         }
       }
     },
+    "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_request.CreateCompanionRequest": {
+      "type": "object",
+      "required": [
+        "companion_dni",
+        "companion_name"
+      ],
+      "properties": {
+        "companion_dni": {
+          "type": "string"
+        },
+        "companion_name": {
+          "type": "string"
+        },
+        "companion_phone": {
+          "type": "string"
+        },
+        "is_minor": {
+          "type": "boolean"
+        },
+        "notes": {
+          "type": "string"
+        },
+        "relationship": {
+          "type": "string"
+        }
+      }
+    },
     "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_request.CreateVisitRequest": {
       "type": "object",
       "required": [
@@ -6462,6 +6537,98 @@ const docTemplate = `{
         }
       }
     },
+    "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_request.UpdateVisitRequest": {
+      "type": "object",
+      "properties": {
+        "notes": {
+          "type": "string"
+        },
+        "notify_resident": {
+          "type": "boolean"
+        },
+        "notify_security": {
+          "type": "boolean"
+        },
+        "number_of_visitors": {
+          "type": "integer"
+        },
+        "property_unit_id": {
+          "type": "integer"
+        },
+        "purpose": {
+          "type": "string"
+        },
+        "resident_id": {
+          "type": "integer"
+        },
+        "scheduled_date": {
+          "type": "string"
+        },
+        "scheduled_end_time": {
+          "type": "string"
+        },
+        "scheduled_start_time": {
+          "type": "string"
+        },
+        "visit_type_id": {
+          "type": "integer"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.CompanionData": {
+      "type": "object",
+      "properties": {
+        "companion_dni": {
+          "type": "string"
+        },
+        "companion_name": {
+          "type": "string"
+        },
+        "companion_phone": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "is_minor": {
+          "type": "boolean"
+        },
+        "notes": {
+          "type": "string"
+        },
+        "relationship": {
+          "type": "string"
+        },
+        "visit_id": {
+          "type": "integer"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.CompanionResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.CompanionData"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.CompanionsResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.CompanionData"
+          }
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
     "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse": {
       "type": "object",
       "properties": {
@@ -6499,6 +6666,17 @@ const docTemplate = `{
         },
         "total_pages": {
           "type": "integer"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.SuccessResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
         }
       }
     },
@@ -6595,6 +6773,95 @@ const docTemplate = `{
       "properties": {
         "data": {
           "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitData"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitStatusData": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "is_active": {
+          "type": "boolean"
+        },
+        "is_final": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitStatusesResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitStatusData"
+          }
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitTypeData": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "default_duration_minutes": {
+          "type": "integer"
+        },
+        "description": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "is_active": {
+          "type": "boolean"
+        },
+        "max_duration_hours": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "requires_assets_tracking": {
+          "type": "boolean"
+        },
+        "requires_authorization": {
+          "type": "boolean"
+        },
+        "requires_companions": {
+          "type": "boolean"
+        },
+        "requires_vehicle_registration": {
+          "type": "boolean"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitTypesResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitTypeData"
+          }
         },
         "success": {
           "type": "boolean"

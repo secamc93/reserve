@@ -26,7 +26,7 @@ func (h *VisitHandler) GetVisitByID(c *gin.Context) {
 	ctx = log.WithFunctionCtx(ctx, "GetVisitByID")
 
 	visitIDParam := c.Param("visit_id")
-	_, err := strconv.ParseUint(visitIDParam, 10, 32)
+	visitID, err := strconv.ParseUint(visitIDParam, 10, 32)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{
 			Success: false,
@@ -35,10 +35,42 @@ func (h *VisitHandler) GetVisitByID(c *gin.Context) {
 		return
 	}
 
-	// Necesitamos agregar método GetVisitByID al useCase
-	// Por ahora, retornamos error
-	c.JSON(http.StatusNotImplemented, response.ErrorResponse{
-		Success: false,
-		Message: "Obtener visita por ID no implementado aún",
+	visit, err := h.useCase.GetVisitByID(ctx, uint(visitID))
+	if err != nil {
+		if err.Error() == "visita no encontrada" {
+			c.JSON(http.StatusNotFound, response.ErrorResponse{
+				Success: false,
+				Message: "Visita no encontrada",
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, response.ErrorResponse{
+			Success: false,
+			Message: "Error obteniendo visita",
+			Error:   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, response.VisitResponse{
+		Success: true,
+		Data: response.VisitData{
+			ID:                 visit.ID,
+			BusinessID:         visit.BusinessID,
+			VisitorID:          visit.VisitorID,
+			PropertyUnitID:     visit.PropertyUnitID,
+			ResidentID:         visit.ResidentID,
+			VisitTypeID:        visit.VisitTypeID,
+			VisitStatusID:      visit.VisitStatusID,
+			ScheduledDate:      visit.ScheduledDate,
+			ScheduledStartTime: visit.ScheduledStartTime,
+			ScheduledEndTime:   visit.ScheduledEndTime,
+			ActualEntryTime:    visit.ActualEntryTime,
+			ActualExitTime:     visit.ActualExitTime,
+			AuthorizationCode:  visit.AuthorizationCode,
+			QRCode:             visit.QRCode,
+			Purpose:            visit.Purpose,
+			Notes:              visit.Notes,
+		},
 	})
 }

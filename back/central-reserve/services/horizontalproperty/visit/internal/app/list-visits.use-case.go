@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"fmt"
 
 	"central_reserve/services/horizontalproperty/visit/internal/domain"
 	"central_reserve/shared/log"
@@ -12,10 +11,8 @@ import (
 func (uc *visitUseCase) ListVisits(ctx context.Context, filters domain.VisitFiltersDTO) (*domain.PaginatedVisitsDTO, error) {
 	ctx = log.WithFunctionCtx(ctx, "ListVisits")
 
-	// Validar que businessID esté presente
-	if filters.BusinessID == 0 {
-		return nil, fmt.Errorf("business_id es requerido")
-	}
+	// Nota: Si BusinessID es 0, es un super admin y puede ver todas las visitas
+	// El repositorio manejará el filtro apropiadamente
 
 	// Validar paginación
 	if filters.Page < 1 {

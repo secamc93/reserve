@@ -26,8 +26,22 @@ func (uc *visitUseCase) CreateVisit(ctx context.Context, dto domain.CreateVisitD
 		return nil, fmt.Errorf("visit_type_id es requerido")
 	}
 
-	// Validar blacklist
-	isBlacklisted, err := uc.ValidateBlacklist(ctx, dto.BusinessID, dto.VisitorID)
+	// Si business_id es 0 (super admin), obtener el business_id desde la property_unit
+	businessID := dto.BusinessID
+	if businessID == 0 {
+		visitRepo, ok := uc.visitRepo.(*repository.VisitRepository)
+		if !ok {
+			return nil, fmt.Errorf("repositorio de visitas no es del tipo esperado")
+		}
+		var err error
+		businessID, err = visitRepo.GetPropertyUnitBusinessID(ctx, dto.PropertyUnitID)
+		if err != nil {
+			return nil, fmt.Errorf("error obteniendo business_id desde unidad de propiedad: %w", err)
+		}
+	}
+
+	// Validar blacklist usando el business_id correcto
+	isBlacklisted, err := uc.ValidateBlacklist(ctx, businessID, dto.VisitorID)
 	if err != nil && err != domain.ErrVisitorBlacklisted {
 		return nil, err
 	}
@@ -50,9 +64,9 @@ func (uc *visitUseCase) CreateVisit(ctx context.Context, dto domain.CreateVisitD
 	// Calcular expiración del QR (24 horas por defecto)
 	qrExpiresAt := time.Now().Add(24 * time.Hour)
 
-	// Crear entidad de visita
+	// Crear entidad de visita usando el business_id correcto
 	visit := &domain.Visit{
-		BusinessID:         dto.BusinessID,
+		BusinessID:         businessID,
 		VisitorID:          dto.VisitorID,
 		PropertyUnitID:     dto.PropertyUnitID,
 		ResidentID:         dto.ResidentID,

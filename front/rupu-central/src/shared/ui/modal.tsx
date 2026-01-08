@@ -14,6 +14,7 @@ interface ModalProps {
   children: ReactNode;
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '4xl' | '6xl' | 'full';
   glass?: boolean; // Efecto glassmorphism
+  className?: string; // Clases adicionales para el contenedor del modal
 }
 
 const sizeClasses = {
@@ -27,7 +28,7 @@ const sizeClasses = {
   'full': 'max-w-[90vw] w-[90vw] max-h-[90vh] h-[90vh] mx-auto my-[5vh]',
 };
 
-export function Modal({ isOpen, onClose, title, children, size = 'md', glass = false }: ModalProps) {
+export function Modal({ isOpen, onClose, title, children, size = 'md', glass = false, className = '' }: ModalProps) {
   console.log('🔧 Modal - isOpen:', isOpen, 'title:', title);
   
   // Cerrar con ESC
@@ -78,7 +79,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md', glass = f
             <div className="flex-1 overflow-hidden">{children}</div>
           </div>
         ) : (
-          <div className={`${glass ? 'modal-glass' : 'modal-content'} ${sizeClasses[size]} max-h-[90vh] flex flex-col`}>
+          <div className={`${glass ? 'modal-glass' : 'modal-content'} ${sizeClasses[size]} max-h-[90vh] flex flex-col ${className}`}>
             {/* Header */}
             {title && (
               <div className="relative mb-4 flex-shrink-0">

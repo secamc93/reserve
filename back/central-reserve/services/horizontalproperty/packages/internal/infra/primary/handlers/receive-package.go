@@ -1,6 +1,9 @@
 package handlers
 
 import (
+	"errors"
+	"fmt"
+	"strings"
 	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/packages/internal/domain"
 	"central_reserve/services/horizontalproperty/packages/internal/infra/primary/handlers/request"
@@ -9,6 +12,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 // ReceivePackage registra la recepción de un paquete
@@ -29,10 +33,12 @@ func (h *PackageHandler) ReceivePackage(c *gin.Context) {
 
 	var req request.ReceivePackageRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		// Formatear errores de validación en español
+		validationErrors := formatValidationErrors(err)
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{
 			Success: false,
 			Message: "Datos inválidos",
-			Error:   err.Error(),
+			Error:   validationErrors,
 		})
 		return
 	}
@@ -119,4 +125,67 @@ func mapPackageToResponse(pkg *domain.Package) response.PackageData {
 	}
 
 	return data
+}
+
+// formatValidationErrors formatea los errores de validación de Gin en un mensaje más amigable
+func formatValidationErrors(err error) string {
+	var validationErrs validator.ValidationErrors
+	if errors.As(err, &validationErrs) {
+		var errorMessages []string
+
+		fieldNames := map[string]string{
+			"PropertyUnitID":   "Unidad de propiedad",
+			"ResidentID":       "Residente",
+			"Carrier":          "Transportadora",
+			"TrackingNumber":   "Número de rastreo",
+			"Description":      "Descripción",
+			"Notes":            "Notas",
+			"NotifyResident":   "Notificar residente",
+			// También soportar nombres en snake_case
+			"property_unit_id":  "Unidad de propiedad",
+			"resident_id":       "Residente",
+			"carrier":           "Transportadora",
+			"tracking_number":   "Número de rastreo",
+			"description":       "Descripción",
+			"notes":             "Notas",
+			"notify_resident":   "Notificar residente",
+		}
+
+		for _, fieldErr := range validationErrs {
+			fieldName := fieldNames[fieldErr.Field()]
+			if fieldName == "" {
+				fieldName = strings.ReplaceAll(fieldErr.Field(), "_", " ")
+				fieldName = strings.Title(strings.ToLower(fieldName))
+			}
+
+			var msg string
+			switch fieldErr.Tag() {
+			case "required":
+				msg = fmt.Sprintf("%s es requerido", fieldName)
+			case "min":
+				msg = fmt.Sprintf("%s no cumple con el valor mínimo", fieldName)
+			case "max":
+				msg = fmt.Sprintf("%s excede el valor máximo", fieldName)
+			case "email":
+				msg = fmt.Sprintf("%s debe ser un email válido", fieldName)
+			default:
+				msg = fmt.Sprintf("%s: valor inválido (%s)", fieldName, fieldErr.Tag())
+			}
+			errorMessages = append(errorMessages, msg)
+		}
+
+		if len(errorMessages) > 0 {
+			return strings.Join(errorMessages, "; ")
+		}
+	}
+
+	// Si es un error de tipo gin.ErrorTypeBind, extraer mensaje más limpio
+	var ginErr *gin.Error
+	if errors.As(err, &ginErr) {
+		if ginErr.Type == gin.ErrorTypeBind {
+			return fmt.Sprintf("Error al procesar los datos de entrada: %s", err.Error())
+		}
+	}
+
+	return err.Error()
 }

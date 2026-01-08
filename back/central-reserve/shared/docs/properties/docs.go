@@ -1393,6 +1393,40 @@ const docTemplate = `{
         }
       }
     },
+    "/horizontal-properties/packages/statuses": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Obtiene todos los estados de paquete activos",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Packages"
+        ],
+        "summary": "Listar estados de paquete",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageStatusesResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse"
+            }
+          }
+        }
+      }
+    },
     "/horizontal-properties/packages/{id}": {
       "get": {
         "security": [
@@ -1425,6 +1459,59 @@ const docTemplate = `{
             "description": "OK",
             "schema": {
               "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageResponse"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse"
+            }
+          }
+        }
+      },
+      "delete": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Marca un paquete como retornado (soft delete)",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Packages"
+        ],
+        "summary": "Eliminar paquete",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "ID del paquete",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.SuccessResponse"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.ErrorResponse"
             }
           },
           "404": {
@@ -2583,6 +2670,74 @@ const docTemplate = `{
         }
       }
     },
+    "/horizontal-properties/visits/statuses": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Obtiene todos los estados de visita activos",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Visits"
+        ],
+        "summary": "Listar estados de visita",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitStatusesResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/horizontal-properties/visits/types": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Obtiene todos los tipos de visita activos",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Visits"
+        ],
+        "summary": "Listar tipos de visita",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitTypesResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse"
+            }
+          }
+        }
+      }
+    },
     "/horizontal-properties/visits/visitors": {
       "post": {
         "security": [
@@ -2681,6 +2836,121 @@ const docTemplate = `{
             }
           }
         }
+      },
+      "put": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Actualiza los datos de una visita existente",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Visits"
+        ],
+        "summary": "Actualizar visita",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "ID de la visita",
+            "name": "visit_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "Datos a actualizar",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_request.UpdateVisitRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitResponse"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse"
+            }
+          }
+        }
+      },
+      "delete": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Cancela una visita (soft delete)",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Visits"
+        ],
+        "summary": "Eliminar visita",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "ID de la visita",
+            "name": "visit_id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.SuccessResponse"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse"
+            }
+          }
+        }
       }
     },
     "/horizontal-properties/visits/{visit_id}/assets": {
@@ -2724,6 +2994,173 @@ const docTemplate = `{
             "description": "OK",
             "schema": {
               "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/horizontal-properties/visits/{visit_id}/companions": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Obtiene todos los acompañantes de una visita",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Visits"
+        ],
+        "summary": "Listar acompañantes",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "ID de la visita",
+            "name": "visit_id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.CompanionsResponse"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse"
+            }
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Agrega un acompañante a una visita",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Visits"
+        ],
+        "summary": "Crear acompañante",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "ID de la visita",
+            "name": "visit_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "Datos del acompañante",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_request.CreateCompanionRequest"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.CompanionResponse"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/horizontal-properties/visits/{visit_id}/companions/{companion_id}": {
+      "delete": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Elimina un acompañante de una visita",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Visits"
+        ],
+        "summary": "Eliminar acompañante",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "ID de la visita",
+            "name": "visit_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "description": "ID del acompañante",
+            "name": "companion_id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.SuccessResponse"
             }
           },
           "400": {
@@ -7136,6 +7573,43 @@ const docTemplate = `{
         }
       }
     },
+    "central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageStatusData": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "is_active": {
+          "type": "boolean"
+        },
+        "is_final": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageStatusesResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PackageStatusData"
+          }
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
     "central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.PaginatedPackagesResponse": {
       "type": "object",
       "properties": {
@@ -7159,6 +7633,17 @@ const docTemplate = `{
         },
         "total_pages": {
           "type": "integer"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_packages_internal_infra_primary_handlers_response.SuccessResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
         }
       }
     },
@@ -7393,6 +7878,33 @@ const docTemplate = `{
         }
       }
     },
+    "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_request.CreateCompanionRequest": {
+      "type": "object",
+      "required": [
+        "companion_dni",
+        "companion_name"
+      ],
+      "properties": {
+        "companion_dni": {
+          "type": "string"
+        },
+        "companion_name": {
+          "type": "string"
+        },
+        "companion_phone": {
+          "type": "string"
+        },
+        "is_minor": {
+          "type": "boolean"
+        },
+        "notes": {
+          "type": "string"
+        },
+        "relationship": {
+          "type": "string"
+        }
+      }
+    },
     "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_request.CreateVisitRequest": {
       "type": "object",
       "required": [
@@ -7513,6 +8025,98 @@ const docTemplate = `{
         }
       }
     },
+    "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_request.UpdateVisitRequest": {
+      "type": "object",
+      "properties": {
+        "notes": {
+          "type": "string"
+        },
+        "notify_resident": {
+          "type": "boolean"
+        },
+        "notify_security": {
+          "type": "boolean"
+        },
+        "number_of_visitors": {
+          "type": "integer"
+        },
+        "property_unit_id": {
+          "type": "integer"
+        },
+        "purpose": {
+          "type": "string"
+        },
+        "resident_id": {
+          "type": "integer"
+        },
+        "scheduled_date": {
+          "type": "string"
+        },
+        "scheduled_end_time": {
+          "type": "string"
+        },
+        "scheduled_start_time": {
+          "type": "string"
+        },
+        "visit_type_id": {
+          "type": "integer"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.CompanionData": {
+      "type": "object",
+      "properties": {
+        "companion_dni": {
+          "type": "string"
+        },
+        "companion_name": {
+          "type": "string"
+        },
+        "companion_phone": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "is_minor": {
+          "type": "boolean"
+        },
+        "notes": {
+          "type": "string"
+        },
+        "relationship": {
+          "type": "string"
+        },
+        "visit_id": {
+          "type": "integer"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.CompanionResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.CompanionData"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.CompanionsResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.CompanionData"
+          }
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
     "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.ErrorResponse": {
       "type": "object",
       "properties": {
@@ -7550,6 +8154,17 @@ const docTemplate = `{
         },
         "total_pages": {
           "type": "integer"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.SuccessResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
         }
       }
     },
@@ -7646,6 +8261,95 @@ const docTemplate = `{
       "properties": {
         "data": {
           "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitData"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitStatusData": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "is_active": {
+          "type": "boolean"
+        },
+        "is_final": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitStatusesResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitStatusData"
+          }
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitTypeData": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "default_duration_minutes": {
+          "type": "integer"
+        },
+        "description": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "is_active": {
+          "type": "boolean"
+        },
+        "max_duration_hours": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "requires_assets_tracking": {
+          "type": "boolean"
+        },
+        "requires_authorization": {
+          "type": "boolean"
+        },
+        "requires_companions": {
+          "type": "boolean"
+        },
+        "requires_vehicle_registration": {
+          "type": "boolean"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitTypesResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/central_reserve_services_horizontalproperty_visit_internal_infra_primary_handlers_response.VisitTypeData"
+          }
         },
         "success": {
           "type": "boolean"

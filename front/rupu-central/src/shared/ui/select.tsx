@@ -50,7 +50,7 @@ export function Select({
       <div className="relative">
         <select
           id={selectId}
-          className={`input appearance-none ${error ? 'input-error' : ''} ${className}`}
+          className={`input appearance-none text-gray-900 ${error ? 'input-error' : ''} ${className}`}
           {...props}
         >
           {placeholder && (

@@ -52,3 +52,28 @@ type CreateVisitorRequest struct {
 	Phone    string `json:"phone" binding:"required"`
 	Email    string `json:"email"`
 }
+
+// UpdateVisitRequest - Request para actualizar visita
+type UpdateVisitRequest struct {
+	PropertyUnitID     *uint      `json:"property_unit_id"`
+	ResidentID         *uint      `json:"resident_id"`
+	VisitTypeID        *uint      `json:"visit_type_id"`
+	ScheduledDate      *time.Time `json:"scheduled_date"`
+	ScheduledStartTime *time.Time `json:"scheduled_start_time"`
+	ScheduledEndTime   *time.Time `json:"scheduled_end_time"`
+	Purpose            *string    `json:"purpose"`
+	NumberOfVisitors   *int       `json:"number_of_visitors"`
+	Notes              *string    `json:"notes"`
+	NotifyResident     *bool      `json:"notify_resident"`
+	NotifySecurity     *bool      `json:"notify_security"`
+}
+
+// CreateCompanionRequest - Request para crear acompañante
+type CreateCompanionRequest struct {
+	CompanionName  string `json:"companion_name" binding:"required"`
+	CompanionDNI   string `json:"companion_dni" binding:"required"`
+	CompanionPhone string `json:"companion_phone"`
+	IsMinor        bool   `json:"is_minor"`
+	Relationship   string `json:"relationship"`
+	Notes          string `json:"notes"`
+}

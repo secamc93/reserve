@@ -9,4 +9,5 @@ var (
 	ErrPackageNotDeliverable   = errors.New("paquete no puede ser entregado en su estado actual")
 	ErrPropertyUnitNotFound    = errors.New("unidad de propiedad no encontrada")
 	ErrResidentNotFound        = errors.New("residente no encontrado")
+	ErrPackageAlreadyFinal     = errors.New("el paquete ya esta en un estado final")
 )

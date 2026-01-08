@@ -137,6 +137,8 @@ func (r *VisitRepository) GetVisitByAuthorizationCode(ctx context.Context, authC
 func (r *VisitRepository) UpdateVisit(ctx context.Context, visit *domain.Visit) error {
 	updates := map[string]interface{}{
 		"visit_status_id":             visit.VisitStatusID,
+		"property_unit_id":            visit.PropertyUnitID,
+		"visit_type_id":               visit.VisitTypeID,
 		"scheduled_date":              visit.ScheduledDate,
 		"scheduled_start_time":        visit.ScheduledStartTime,
 		"actual_entry_time":           visit.ActualEntryTime,
@@ -150,8 +152,16 @@ func (r *VisitRepository) UpdateVisit(ctx context.Context, visit *domain.Visit) 
 		"duration_exceeded":           visit.DurationExceeded,
 		"duration_exceeded_at":        visit.DurationExceededAt,
 		"alert_sent":                  visit.AlertSent,
+		"purpose":                     visit.Purpose,
+		"number_of_visitors":          visit.NumberOfVisitors,
+		"notes":                       visit.Notes,
+		"notify_resident":             visit.NotifyResident,
+		"notify_security":             visit.NotifySecurity,
 	}
 
+	if visit.ResidentID != nil {
+		updates["resident_id"] = visit.ResidentID
+	}
 	if visit.ScheduledEndTime != nil {
 		updates["scheduled_end_time"] = visit.ScheduledEndTime
 	}
@@ -176,7 +186,12 @@ func (r *VisitRepository) UpdateVisit(ctx context.Context, visit *domain.Visit) 
 func (r *VisitRepository) ListVisits(ctx context.Context, filters domain.VisitFiltersDTO) (*domain.PaginatedVisitsDTO, error) {
 	// Conteo total
 	var total int64
-	countQuery := r.db.Conn(ctx).Model(&models.Visit{}).Where("business_id = ?", filters.BusinessID)
+	countQuery := r.db.Conn(ctx).Model(&models.Visit{})
+	
+	// Si BusinessID > 0, filtrar por negocio; si es 0 (super admin), mostrar todas
+	if filters.BusinessID > 0 {
+		countQuery = countQuery.Where("business_id = ?", filters.BusinessID)
+	}
 
 	if filters.VisitorID != nil {
 		countQuery = countQuery.Where("visitor_id = ?", *filters.VisitorID)
@@ -226,8 +241,12 @@ func (r *VisitRepository) ListVisits(ctx context.Context, filters domain.VisitFi
 		Joins("JOIN horizontal_property.visitors vis ON vis.id = v.visitor_id").
 		Joins("JOIN horizontal_property.property_units pu ON pu.id = v.property_unit_id").
 		Joins("JOIN horizontal_property.visit_types vt ON vt.id = v.visit_type_id").
-		Joins("JOIN horizontal_property.visit_statuses vs ON vs.id = v.visit_status_id").
-		Where("v.business_id = ?", filters.BusinessID)
+		Joins("JOIN horizontal_property.visit_statuses vs ON vs.id = v.visit_status_id")
+	
+	// Si BusinessID > 0, filtrar por negocio; si es 0 (super admin), mostrar todas
+	if filters.BusinessID > 0 {
+		query = query.Where("v.business_id = ?", filters.BusinessID)
+	}
 
 	if filters.VisitorID != nil {
 		query = query.Where("v.visitor_id = ?", *filters.VisitorID)
@@ -326,6 +345,55 @@ func (r *VisitRepository) GetActiveVisits(ctx context.Context, businessID uint) 
 	return result, nil
 }
 
+// GetVisitTypes obtiene todos los tipos de visita activos
+func (r *VisitRepository) GetVisitTypes(ctx context.Context, businessID uint) ([]*domain.VisitType, error) {
+	var types []models.VisitType
+	if err := r.db.Conn(ctx).Where("is_active = ?", true).Order("name ASC").Find(&types).Error; err != nil {
+		return nil, fmt.Errorf("error obteniendo tipos de visita: %w", err)
+	}
+
+	result := make([]*domain.VisitType, len(types))
+	for i, t := range types {
+		result[i] = &domain.VisitType{
+			ID:                          t.ID,
+			Name:                        t.Name,
+			Code:                        t.Code,
+			Description:                 t.Description,
+			RequiresAuthorization:       t.RequiresAuthorization,
+			RequiresVehicleRegistration: t.RequiresVehicleRegistration,
+			RequiresCompanions:          t.RequiresCompanions,
+			RequiresAssetsTracking:      t.RequiresAssetsTracking,
+			MaxDurationHours:            t.MaxDurationHours,
+			DefaultDurationMinutes:      t.DefaultDurationMinutes,
+			IsActive:                    t.IsActive,
+		}
+	}
+
+	return result, nil
+}
+
+// GetVisitStatuses obtiene todos los estados de visita activos
+func (r *VisitRepository) GetVisitStatuses(ctx context.Context) ([]*domain.VisitStatus, error) {
+	var statuses []models.VisitStatus
+	if err := r.db.Conn(ctx).Where("is_active = ?", true).Order("id ASC").Find(&statuses).Error; err != nil {
+		return nil, fmt.Errorf("error obteniendo estados de visita: %w", err)
+	}
+
+	result := make([]*domain.VisitStatus, len(statuses))
+	for i, s := range statuses {
+		result[i] = &domain.VisitStatus{
+			ID:          s.ID,
+			Code:        s.Code,
+			Name:        s.Name,
+			Description: s.Description,
+			IsFinal:     s.IsFinal,
+			IsActive:    s.IsActive,
+		}
+	}
+
+	return result, nil
+}
+
 // mapVisitToDomain mapea modelo a entidad de dominio
 func mapVisitToDomain(m *models.Visit) *domain.Visit {
 	return &domain.Visit{
@@ -372,4 +440,19 @@ func mapVisitToDomain(m *models.Visit) *domain.Visit {
 		CreatedAt:               m.CreatedAt,
 		UpdatedAt:               m.UpdatedAt,
 	}
+}
+
+// GetPropertyUnitBusinessID obtiene el business_id de una property_unit
+func (r *VisitRepository) GetPropertyUnitBusinessID(ctx context.Context, propertyUnitID uint) (uint, error) {
+	var propertyUnit models.PropertyUnit
+	if err := r.db.Conn(ctx).Select("business_id").First(&propertyUnit, propertyUnitID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return 0, fmt.Errorf("unidad de propiedad no encontrada")
+		}
+		return 0, fmt.Errorf("error obteniendo unidad de propiedad: %w", err)
+	}
+	if propertyUnit.BusinessID == 0 {
+		return 0, fmt.Errorf("la unidad de propiedad no tiene un business_id válido")
+	}
+	return propertyUnit.BusinessID, nil
 }
