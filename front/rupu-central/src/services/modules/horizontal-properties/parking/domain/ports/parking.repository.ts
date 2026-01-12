@@ -4,6 +4,7 @@
  */
 
 import {
+  ParkingType,
   ParkingZone,
   ParkingSlot,
   ParkingAssignment,
@@ -25,6 +26,7 @@ import {
 
 export interface GetParkingZonesParams {
   businessId: number;
+  token: string;
   isActive?: boolean;
   page?: number;
   pageSize?: number;
@@ -32,6 +34,7 @@ export interface GetParkingZonesParams {
 
 export interface GetParkingSlotsParams {
   businessId: number;
+  token: string;
   parkingZoneId?: number;
   parkingTypeId?: number;
   isActive?: boolean;
@@ -42,6 +45,7 @@ export interface GetParkingSlotsParams {
 
 export interface GetParkingAssignmentsParams {
   businessId: number;
+  token: string;
   parkingSlotId?: number;
   propertyUnitId?: number;
   residentId?: number;
@@ -52,6 +56,7 @@ export interface GetParkingAssignmentsParams {
 
 export interface GetParkingReservationsParams {
   businessId: number;
+  token: string;
   parkingSlotId?: number;
   propertyUnitId?: number;
   residentId?: number;
@@ -64,23 +69,26 @@ export interface GetParkingReservationsParams {
 }
 
 export interface IParkingRepository {
+  // Tipos de parqueadero
+  getParkingTypes(token: string): Promise<ParkingType[]>;
+
   // Zonas de parqueo
   getParkingZones(params: GetParkingZonesParams): Promise<ParkingZonesPaginated>;
-  createParkingZone(params: { businessId: number; data: CreateParkingZoneDTO }): Promise<ParkingZone>;
+  createParkingZone(params: { businessId: number; token: string; data: CreateParkingZoneDTO }): Promise<ParkingZone>;
 
   // Espacios de parqueo
   getParkingSlots(params: GetParkingSlotsParams): Promise<ParkingSlotsPaginated>;
-  createParkingSlot(params: { data: CreateParkingSlotDTO }): Promise<ParkingSlot>;
+  createParkingSlot(params: { token: string; data: CreateParkingSlotDTO }): Promise<ParkingSlot>;
 
   // Asignaciones
   getParkingAssignments(params: GetParkingAssignmentsParams): Promise<ParkingAssignmentsPaginated>;
-  assignParking(params: { businessId: number; data: AssignParkingDTO }): Promise<ParkingAssignment>;
+  assignParking(params: { businessId: number; token: string; data: AssignParkingDTO }): Promise<ParkingAssignment>;
 
   // Reservas
   getParkingReservations(params: GetParkingReservationsParams): Promise<ParkingReservationsPaginated>;
-  createParkingReservation(params: { businessId: number; data: CreateParkingReservationDTO }): Promise<ParkingReservation>;
-  checkParkingAvailability(params: { data: CheckParkingAvailabilityDTO }): Promise<{ available: boolean; message?: string }>;
-  checkInParking(params: { id: number }): Promise<ParkingReservation>;
-  checkOutParking(params: { id: number }): Promise<ParkingReservation>;
-  cancelParkingReservation(params: { id: number; reason?: string }): Promise<ParkingReservation>;
+  createParkingReservation(params: { businessId: number; token: string; data: CreateParkingReservationDTO }): Promise<ParkingReservation>;
+  checkParkingAvailability(params: { token: string; data: CheckParkingAvailabilityDTO }): Promise<{ available: boolean; message?: string }>;
+  checkInParking(params: { id: number; token: string }): Promise<ParkingReservation>;
+  checkOutParking(params: { id: number; token: string }): Promise<ParkingReservation>;
+  cancelParkingReservation(params: { id: number; token: string; reason?: string }): Promise<ParkingReservation>;
 }

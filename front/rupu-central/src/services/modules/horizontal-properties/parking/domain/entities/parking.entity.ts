@@ -3,6 +3,16 @@
  * Representa las entidades del módulo de parqueaderos
  */
 
+export interface ParkingType {
+  id: number;
+  name: string;
+  code: string;
+  description?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ParkingZone {
   id: number;
   businessId: number;

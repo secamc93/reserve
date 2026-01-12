@@ -1,3 +1,4 @@
+export * from './get-parking-types.use-case';
 export * from './get-parking-zones.use-case';
 export * from './create-parking-zone.use-case';
 export * from './get-parking-slots.use-case';

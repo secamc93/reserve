@@ -13,6 +13,7 @@ type CommonAreaRepository interface {
 	DeleteCommonArea(ctx context.Context, id uint) error
 	ListCommonAreas(ctx context.Context, filters CommonAreaFiltersDTO) (*PaginatedCommonAreasDTO, error)
 	GetCommonAreasByBusinessID(ctx context.Context, businessID uint) ([]*CommonArea, error)
+	GetCommonAreaTypes(ctx context.Context) ([]*CommonAreaType, error)
 }
 
 // CommonAreaScheduleRepository - Puerto para repositorio de horarios
@@ -48,6 +49,7 @@ type CommonAreaUseCase interface {
 	CreateCommonArea(ctx context.Context, dto CreateCommonAreaDTO) (*CommonArea, error)
 	GetCommonAreaByID(ctx context.Context, id uint) (*CommonArea, error)
 	ListCommonAreas(ctx context.Context, filters CommonAreaFiltersDTO) (*PaginatedCommonAreasDTO, error)
+	GetCommonAreaTypes(ctx context.Context) ([]*CommonAreaType, error)
 	CreateReservation(ctx context.Context, dto CreateReservationDTO) (*CommonAreaReservation, error)
 	ApproveReservation(ctx context.Context, reservationID uint, userID uint) (*CommonAreaReservation, error)
 	RejectReservation(ctx context.Context, reservationID uint, userID uint, reason string) (*CommonAreaReservation, error)

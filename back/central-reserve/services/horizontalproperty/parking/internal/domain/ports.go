@@ -58,6 +58,13 @@ type ParkingOccupancyRepository interface {
 	GetOccupanciesBySlotID(ctx context.Context, slotID uint, startDate, endDate string) ([]*ParkingOccupancy, error)
 }
 
+// ParkingTypeRepository - Puerto para repositorio de tipos de parqueadero
+type ParkingTypeRepository interface {
+	GetAllParkingTypes(ctx context.Context) ([]*ParkingType, error)
+	GetActiveParkingTypes(ctx context.Context) ([]*ParkingType, error)
+	GetParkingTypeByID(ctx context.Context, id uint) (*ParkingType, error)
+}
+
 // ParkingUseCase - Puerto para casos de uso
 type ParkingUseCase interface {
 	CreateParkingZone(ctx context.Context, dto CreateParkingZoneDTO) (*ParkingZone, error)
@@ -76,4 +83,5 @@ type ParkingUseCase interface {
 	CheckInParking(ctx context.Context, reservationID uint, userID uint) (*ParkingReservation, error)
 	CheckOutParking(ctx context.Context, reservationID uint, userID uint) (*ParkingReservation, error)
 	CancelParkingReservation(ctx context.Context, reservationID uint, userID uint, reason string) (*ParkingReservation, error)
+	GetParkingTypes(ctx context.Context) ([]*ParkingType, error)
 }

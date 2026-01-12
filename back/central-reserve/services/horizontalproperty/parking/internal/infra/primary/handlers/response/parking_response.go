@@ -196,3 +196,20 @@ type ErrorResponse struct {
 	Message string `json:"message"`
 	Error   string `json:"error,omitempty"`
 }
+
+// ParkingTypeResponse - Response de tipo de parqueadero
+type ParkingTypeResponse struct {
+	ID          uint      `json:"id"`
+	Name        string    `json:"name"`
+	Code        string    `json:"code"`
+	Description string    `json:"description"`
+	IsActive    bool      `json:"is_active"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+// ParkingTypesResponse - Response de lista de tipos de parqueadero
+type ParkingTypesResponse struct {
+	Success bool                  `json:"success"`
+	Data    []ParkingTypeResponse `json:"data"`
+}

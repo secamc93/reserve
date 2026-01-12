@@ -23,6 +23,7 @@ import {
   CommonAreaReservation,
   ReservationListDTO,
   ReservationsPaginated,
+  CommonAreaType,
 } from '../../domain';
 import {
   BackendCommonAreaResponse,
@@ -34,6 +35,8 @@ import {
   BackendReservation,
   BackendReservationList,
   BackendCheckAvailabilityResponse,
+  BackendCommonAreaType,
+  BackendCommonAreaTypesResponse,
 } from './response/common-areas.response';
 
 export class CommonAreasRepository implements ICommonAreasRepository {
@@ -145,8 +148,60 @@ export class CommonAreasRepository implements ICommonAreasRepository {
     };
   }
 
+  async getCommonAreaTypes(token: string): Promise<CommonAreaType[]> {
+    const url = `${this.baseUrl}/horizontal-properties/common-areas/types`;
+    const method = 'GET';
+    const startTime = Date.now();
+
+    logHttpRequest({ method, url });
+
+    try {
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error((errorData as any).message || errorData.error || response.statusText || 'Error obteniendo tipos de zonas comunes');
+      }
+
+      const result: BackendCommonAreaTypesResponse = await response.json();
+
+      logHttpSuccess({ 
+        status: response.status, 
+        statusText: response.statusText, 
+        duration: Date.now() - startTime 
+      });
+
+      return result.data.map((type) => ({
+        id: type.id,
+        name: type.name,
+        code: type.code,
+        description: type.description,
+        icon: type.icon,
+        defaultMaxCapacity: type.default_max_capacity,
+        requiresApproval: type.requires_approval,
+        allowsRecurring: type.allows_recurring,
+        isActive: type.is_active,
+      }));
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      logHttpError({ 
+        status: 0, 
+        statusText: 'Error', 
+        duration,
+        data: { error: error instanceof Error ? error.message : String(error) }
+      });
+      throw error;
+    }
+  }
+
   async getCommonAreas(params: GetCommonAreasParams): Promise<CommonAreasPaginated> {
-    const { businessId, commonAreaTypeId, isActive, page = 1, pageSize = 10 } = params;
+    const { businessId, token, commonAreaTypeId, isActive, page = 1, pageSize = 10 } = params;
 
     const queryParams = new URLSearchParams();
     queryParams.set('page', page.toString());
@@ -161,7 +216,6 @@ export class CommonAreasRepository implements ICommonAreasRepository {
     logHttpRequest({ method, url });
 
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(url, {
         method,
         headers: {
@@ -203,7 +257,7 @@ export class CommonAreasRepository implements ICommonAreasRepository {
   }
 
   async getCommonAreaById(params: GetCommonAreaByIdParams): Promise<CommonArea> {
-    const { id } = params;
+    const { id, token } = params;
     const url = `${this.baseUrl}/horizontal-properties/common-areas/${id}`;
     const method = 'GET';
     const startTime = Date.now();
@@ -211,7 +265,6 @@ export class CommonAreasRepository implements ICommonAreasRepository {
     logHttpRequest({ method, url });
 
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(url, {
         method,
         headers: {
@@ -246,7 +299,7 @@ export class CommonAreasRepository implements ICommonAreasRepository {
   }
 
   async createCommonArea(params: CreateCommonAreaParams): Promise<CommonArea> {
-    const { data } = params;
+    const { data, token } = params;
     const url = `${this.baseUrl}/horizontal-properties/common-areas`;
     const method = 'POST';
     const startTime = Date.now();
@@ -254,7 +307,6 @@ export class CommonAreasRepository implements ICommonAreasRepository {
     logHttpRequest({ method, url });
 
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(url, {
         method,
         headers: {
@@ -290,7 +342,7 @@ export class CommonAreasRepository implements ICommonAreasRepository {
   }
 
   async createReservation(params: CreateReservationParams): Promise<CommonAreaReservation> {
-    const { data } = params;
+    const { data, token } = params;
     const url = `${this.baseUrl}/horizontal-properties/common-areas/reservations`;
     const method = 'POST';
     const startTime = Date.now();
@@ -298,7 +350,6 @@ export class CommonAreasRepository implements ICommonAreasRepository {
     logHttpRequest({ method, url });
 
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(url, {
         method,
         headers: {
@@ -334,7 +385,7 @@ export class CommonAreasRepository implements ICommonAreasRepository {
   }
 
   async checkAvailability(params: CheckAvailabilityParams): Promise<{ available: boolean; message?: string }> {
-    const { data } = params;
+    const { data, token } = params;
     const url = `${this.baseUrl}/horizontal-properties/common-areas/check-availability`;
     const method = 'POST';
     const startTime = Date.now();
@@ -342,7 +393,6 @@ export class CommonAreasRepository implements ICommonAreasRepository {
     logHttpRequest({ method, url });
 
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(url, {
         method,
         headers: {
@@ -383,6 +433,7 @@ export class CommonAreasRepository implements ICommonAreasRepository {
   async getReservations(params: GetReservationsParams): Promise<ReservationsPaginated> {
     const {
       businessId,
+      token,
       commonAreaId,
       propertyUnitId,
       residentId,
@@ -410,7 +461,6 @@ export class CommonAreasRepository implements ICommonAreasRepository {
     logHttpRequest({ method, url });
 
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(url, {
         method,
         headers: {
@@ -452,7 +502,7 @@ export class CommonAreasRepository implements ICommonAreasRepository {
   }
 
   async getReservationById(params: GetReservationByIdParams): Promise<CommonAreaReservation> {
-    const { id } = params;
+    const { id, token } = params;
     const url = `${this.baseUrl}/horizontal-properties/common-areas/reservations/${id}`;
     const method = 'GET';
     const startTime = Date.now();
@@ -460,7 +510,6 @@ export class CommonAreasRepository implements ICommonAreasRepository {
     logHttpRequest({ method, url });
 
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(url, {
         method,
         headers: {
@@ -495,7 +544,7 @@ export class CommonAreasRepository implements ICommonAreasRepository {
   }
 
   async approveReservation(params: ApproveReservationParams): Promise<CommonAreaReservation> {
-    const { id } = params;
+    const { id, token } = params;
     const url = `${this.baseUrl}/horizontal-properties/common-areas/reservations/${id}/approve`;
     const method = 'POST';
     const startTime = Date.now();
@@ -503,7 +552,6 @@ export class CommonAreasRepository implements ICommonAreasRepository {
     logHttpRequest({ method, url });
 
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(url, {
         method,
         headers: {
@@ -538,7 +586,7 @@ export class CommonAreasRepository implements ICommonAreasRepository {
   }
 
   async rejectReservation(params: RejectReservationParams): Promise<CommonAreaReservation> {
-    const { id, reason } = params;
+    const { id, reason, token } = params;
     const url = `${this.baseUrl}/horizontal-properties/common-areas/reservations/${id}/reject`;
     const method = 'POST';
     const startTime = Date.now();
@@ -546,7 +594,6 @@ export class CommonAreasRepository implements ICommonAreasRepository {
     logHttpRequest({ method, url });
 
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(url, {
         method,
         headers: {
@@ -582,7 +629,7 @@ export class CommonAreasRepository implements ICommonAreasRepository {
   }
 
   async checkInReservation(params: CheckInReservationParams): Promise<CommonAreaReservation> {
-    const { id } = params;
+    const { id, token } = params;
     const url = `${this.baseUrl}/horizontal-properties/common-areas/reservations/${id}/check-in`;
     const method = 'POST';
     const startTime = Date.now();
@@ -590,7 +637,6 @@ export class CommonAreasRepository implements ICommonAreasRepository {
     logHttpRequest({ method, url });
 
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(url, {
         method,
         headers: {
@@ -625,7 +671,7 @@ export class CommonAreasRepository implements ICommonAreasRepository {
   }
 
   async checkOutReservation(params: CheckOutReservationParams): Promise<CommonAreaReservation> {
-    const { id } = params;
+    const { id, token } = params;
     const url = `${this.baseUrl}/horizontal-properties/common-areas/reservations/${id}/check-out`;
     const method = 'POST';
     const startTime = Date.now();
@@ -633,7 +679,6 @@ export class CommonAreasRepository implements ICommonAreasRepository {
     logHttpRequest({ method, url });
 
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(url, {
         method,
         headers: {
@@ -668,7 +713,7 @@ export class CommonAreasRepository implements ICommonAreasRepository {
   }
 
   async cancelReservation(params: CancelReservationParams): Promise<CommonAreaReservation> {
-    const { id, reason } = params;
+    const { id, reason, token } = params;
     const url = `${this.baseUrl}/horizontal-properties/common-areas/reservations/${id}/cancel`;
     const method = 'POST';
     const startTime = Date.now();
@@ -676,7 +721,6 @@ export class CommonAreasRepository implements ICommonAreasRepository {
     logHttpRequest({ method, url });
 
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(url, {
         method,
         headers: {

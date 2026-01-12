@@ -106,20 +106,25 @@ func (r *ParkingSlotRepository) DeleteParkingSlot(ctx context.Context, id uint) 
 func (r *ParkingSlotRepository) ListParkingSlots(ctx context.Context, filters domain.ParkingSlotFiltersDTO) (*domain.PaginatedParkingSlotsDTO, error) {
 	var total int64
 
-	query := r.db.Conn(ctx).Table("horizontal_property.parking_slots ps").
-		Select("ps.*, pz.name as parking_zone_name, pt.name as parking_type_name").
-		Joins("JOIN horizontal_property.parking_zones pz ON pz.id = ps.parking_zone_id").
-		Joins("JOIN horizontal_property.parking_types pt ON pt.id = ps.parking_type_id").
-		Where("pz.business_id = ?", filters.BusinessID)
+	query := r.db.Conn(ctx).
+		Model(&models.ParkingSlot{}).
+		Select("parking_slots.*, pz.name as parking_zone_name, pt.name as parking_type_name").
+		Joins("JOIN horizontal_property.parking_zones pz ON pz.id = parking_slots.parking_zone_id").
+		Joins("JOIN horizontal_property.parking_types pt ON pt.id = parking_slots.parking_type_id")
+	
+	// Aplicar filtro de business_id solo si no es 0 (super admin puede ver todo si business_id = 0)
+	if filters.BusinessID != 0 {
+		query = query.Where("pz.business_id = ?", filters.BusinessID)
+	}
 
 	if filters.ParkingZoneID != nil {
-		query = query.Where("ps.parking_zone_id = ?", *filters.ParkingZoneID)
+		query = query.Where("parking_slots.parking_zone_id = ?", *filters.ParkingZoneID)
 	}
 	if filters.ParkingTypeID != nil {
-		query = query.Where("ps.parking_type_id = ?", *filters.ParkingTypeID)
+		query = query.Where("parking_slots.parking_type_id = ?", *filters.ParkingTypeID)
 	}
 	if filters.IsActive != nil {
-		query = query.Where("ps.is_active = ?", *filters.IsActive)
+		query = query.Where("parking_slots.is_active = ?", *filters.IsActive)
 	}
 
 	// Contar total

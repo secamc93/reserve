@@ -1,3 +1,4 @@
+export * from './get-parking-types.action';
 export * from './get-parking-zones.action';
 export * from './create-parking-zone.action';
 export * from './get-parking-slots.action';

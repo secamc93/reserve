@@ -9,6 +9,7 @@ import {
   GetParkingSlotsParams,
   GetParkingAssignmentsParams,
   GetParkingReservationsParams,
+  ParkingType,
   ParkingZone,
   ParkingSlot,
   ParkingAssignment,
@@ -28,6 +29,8 @@ import {
   ParkingReservationsPaginated,
 } from '../../domain';
 import {
+  BackendParkingTypesResponse,
+  BackendParkingType,
   BackendParkingZoneResponse,
   BackendParkingZonesPaginatedResponse,
   BackendParkingZone,
@@ -49,6 +52,35 @@ import {
 
 export class ParkingRepository implements IParkingRepository {
   private baseUrl = env.API_BASE_URL;
+
+  // Helper function to convert camelCase to snake_case
+  private toSnakeCase(str: string): string {
+    return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+  }
+
+  // Convert object keys from camelCase to snake_case
+  private convertToSnakeCase<T extends Record<string, unknown>>(obj: T): Record<string, unknown> {
+    const result: Record<string, unknown> = {};
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        const snakeKey = this.toSnakeCase(key);
+        result[snakeKey] = obj[key];
+      }
+    }
+    return result;
+  }
+
+  private mapBackendParkingType(type: BackendParkingType): ParkingType {
+    return {
+      id: type.id,
+      name: type.name,
+      code: type.code,
+      description: type.description,
+      isActive: type.is_active,
+      createdAt: type.created_at,
+      updatedAt: type.updated_at,
+    };
+  }
 
   private mapBackendParkingZone(zone: BackendParkingZone): ParkingZone {
     return {
@@ -200,8 +232,38 @@ export class ParkingRepository implements IParkingRepository {
     };
   }
 
+  async getParkingTypes(token: string): Promise<ParkingType[]> {
+    const url = `${this.baseUrl}/horizontal-properties/parking/types`;
+    const startTime = Date.now();
+    logHttpRequest({ method: 'GET', url });
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: BackendParkingTypesResponse = await response.json();
+      const duration = Date.now() - startTime;
+      logHttpSuccess({ status: response.status, statusText: response.statusText, duration });
+
+      return data.data.map((type) => this.mapBackendParkingType(type));
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      logHttpError({ status: 0, statusText: 'Error', duration, data: { error: error instanceof Error ? error.message : String(error) } });
+      throw error;
+    }
+  }
+
   async getParkingZones(params: GetParkingZonesParams): Promise<ParkingZonesPaginated> {
-    const url = `${this.baseUrl}/v1/horizontal-properties/parking/zones`;
+    const url = `${this.baseUrl}/horizontal-properties/parking/zones`;
     const queryParams = new URLSearchParams();
     queryParams.append('business_id', params.businessId.toString());
     if (params.isActive !== undefined) {
@@ -222,9 +284,9 @@ export class ParkingRepository implements IParkingRepository {
       const response = await fetch(fullUrl, {
         method: 'GET',
         headers: {
+          'Authorization': `Bearer ${params.token}`,
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -249,19 +311,23 @@ export class ParkingRepository implements IParkingRepository {
     }
   }
 
-  async createParkingZone(params: { businessId: number; data: CreateParkingZoneDTO }): Promise<ParkingZone> {
-    const url = `${this.baseUrl}/v1/horizontal-properties/parking/zones`;
+  async createParkingZone(params: { businessId: number; token: string; data: CreateParkingZoneDTO }): Promise<ParkingZone> {
+    const url = `${this.baseUrl}/horizontal-properties/parking/zones`;
+    const queryParams = new URLSearchParams();
+    queryParams.append('business_id', params.businessId.toString());
+    const fullUrl = `${url}?${queryParams.toString()}`;
     const startTime = Date.now();
-    logHttpRequest({ method: 'POST', url, body: params.data });
+    const snakeCaseData = this.convertToSnakeCase(params.data as unknown as Record<string, unknown>);
+    logHttpRequest({ method: 'POST', url: fullUrl, body: snakeCaseData });
 
     try {
-      const response = await fetch(url, {
+      const response = await fetch(fullUrl, {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${params.token}`,
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
-        body: JSON.stringify(params.data),
+        body: JSON.stringify(snakeCaseData),
       });
 
       if (!response.ok) {
@@ -281,7 +347,7 @@ export class ParkingRepository implements IParkingRepository {
   }
 
   async getParkingSlots(params: GetParkingSlotsParams): Promise<ParkingSlotsPaginated> {
-    const url = `${this.baseUrl}/v1/horizontal-properties/parking/slots`;
+    const url = `${this.baseUrl}/horizontal-properties/parking/slots`;
     const queryParams = new URLSearchParams();
     queryParams.append('business_id', params.businessId.toString());
     if (params.parkingZoneId) {
@@ -311,9 +377,9 @@ export class ParkingRepository implements IParkingRepository {
       const response = await fetch(fullUrl, {
         method: 'GET',
         headers: {
+          'Authorization': `Bearer ${params.token}`,
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -338,19 +404,20 @@ export class ParkingRepository implements IParkingRepository {
     }
   }
 
-  async createParkingSlot(params: { data: CreateParkingSlotDTO }): Promise<ParkingSlot> {
-    const url = `${this.baseUrl}/v1/horizontal-properties/parking/slots`;
+  async createParkingSlot(params: { token: string; data: CreateParkingSlotDTO }): Promise<ParkingSlot> {
+    const url = `${this.baseUrl}/horizontal-properties/parking/slots`;
     const startTime = Date.now();
-    logHttpRequest({ method: 'POST', url, body: params.data });
+    const snakeCaseData = this.convertToSnakeCase(params.data as unknown as Record<string, unknown>);
+    logHttpRequest({ method: 'POST', url, body: snakeCaseData });
 
     try {
       const response = await fetch(url, {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${params.token}`,
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
-        body: JSON.stringify(params.data),
+        body: JSON.stringify(snakeCaseData),
       });
 
       if (!response.ok) {
@@ -370,7 +437,7 @@ export class ParkingRepository implements IParkingRepository {
   }
 
   async getParkingAssignments(params: GetParkingAssignmentsParams): Promise<ParkingAssignmentsPaginated> {
-    const url = `${this.baseUrl}/v1/horizontal-properties/parking/assignments`;
+    const url = `${this.baseUrl}/horizontal-properties/parking/assignments`;
     const queryParams = new URLSearchParams();
     queryParams.append('business_id', params.businessId.toString());
     if (params.parkingSlotId) {
@@ -400,9 +467,9 @@ export class ParkingRepository implements IParkingRepository {
       const response = await fetch(fullUrl, {
         method: 'GET',
         headers: {
+          'Authorization': `Bearer ${params.token}`,
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -427,19 +494,23 @@ export class ParkingRepository implements IParkingRepository {
     }
   }
 
-  async assignParking(params: { businessId: number; data: AssignParkingDTO }): Promise<ParkingAssignment> {
-    const url = `${this.baseUrl}/v1/horizontal-properties/parking/assignments`;
+  async assignParking(params: { businessId: number; token: string; data: AssignParkingDTO }): Promise<ParkingAssignment> {
+    const url = `${this.baseUrl}/horizontal-properties/parking/assignments`;
+    const queryParams = new URLSearchParams();
+    queryParams.append('business_id', params.businessId.toString());
+    const fullUrl = `${url}?${queryParams.toString()}`;
     const startTime = Date.now();
-    logHttpRequest({ method: 'POST', url, body: params.data });
+    const snakeCaseData = this.convertToSnakeCase(params.data as unknown as Record<string, unknown>);
+    logHttpRequest({ method: 'POST', url: fullUrl, body: snakeCaseData });
 
     try {
-      const response = await fetch(url, {
+      const response = await fetch(fullUrl, {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${params.token}`,
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
-        body: JSON.stringify(params.data),
+        body: JSON.stringify(snakeCaseData),
       });
 
       if (!response.ok) {
@@ -459,7 +530,7 @@ export class ParkingRepository implements IParkingRepository {
   }
 
   async getParkingReservations(params: GetParkingReservationsParams): Promise<ParkingReservationsPaginated> {
-    const url = `${this.baseUrl}/v1/horizontal-properties/parking/reservations`;
+    const url = `${this.baseUrl}/horizontal-properties/parking/reservations`;
     const queryParams = new URLSearchParams();
     queryParams.append('business_id', params.businessId.toString());
     if (params.parkingSlotId) {
@@ -498,9 +569,9 @@ export class ParkingRepository implements IParkingRepository {
       const response = await fetch(fullUrl, {
         method: 'GET',
         headers: {
+          'Authorization': `Bearer ${params.token}`,
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -525,19 +596,23 @@ export class ParkingRepository implements IParkingRepository {
     }
   }
 
-  async createParkingReservation(params: { businessId: number; data: CreateParkingReservationDTO }): Promise<ParkingReservation> {
-    const url = `${this.baseUrl}/v1/horizontal-properties/parking/reservations`;
+  async createParkingReservation(params: { businessId: number; token: string; data: CreateParkingReservationDTO }): Promise<ParkingReservation> {
+    const url = `${this.baseUrl}/horizontal-properties/parking/reservations`;
+    const queryParams = new URLSearchParams();
+    queryParams.append('business_id', params.businessId.toString());
+    const fullUrl = `${url}?${queryParams.toString()}`;
     const startTime = Date.now();
-    logHttpRequest({ method: 'POST', url, body: params.data });
+    const snakeCaseData = this.convertToSnakeCase(params.data as unknown as Record<string, unknown>);
+    logHttpRequest({ method: 'POST', url: fullUrl, body: snakeCaseData });
 
     try {
-      const response = await fetch(url, {
+      const response = await fetch(fullUrl, {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${params.token}`,
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
-        body: JSON.stringify(params.data),
+        body: JSON.stringify(snakeCaseData),
       });
 
       if (!response.ok) {
@@ -556,19 +631,20 @@ export class ParkingRepository implements IParkingRepository {
     }
   }
 
-  async checkParkingAvailability(params: { data: CheckParkingAvailabilityDTO }): Promise<{ available: boolean; message?: string }> {
-    const url = `${this.baseUrl}/v1/horizontal-properties/parking/check-availability`;
+  async checkParkingAvailability(params: { token: string; data: CheckParkingAvailabilityDTO }): Promise<{ available: boolean; message?: string }> {
+    const url = `${this.baseUrl}/horizontal-properties/parking/check-availability`;
     const startTime = Date.now();
-    logHttpRequest({ method: 'POST', url, body: params.data });
+    const snakeCaseData = this.convertToSnakeCase(params.data as unknown as Record<string, unknown>);
+    logHttpRequest({ method: 'POST', url, body: snakeCaseData });
 
     try {
       const response = await fetch(url, {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${params.token}`,
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
-        body: JSON.stringify(params.data),
+        body: JSON.stringify(snakeCaseData),
       });
 
       if (!response.ok) {
@@ -590,8 +666,8 @@ export class ParkingRepository implements IParkingRepository {
     }
   }
 
-  async checkInParking(params: { id: number }): Promise<ParkingReservation> {
-    const url = `${this.baseUrl}/v1/horizontal-properties/parking/reservations/${params.id}/check-in`;
+  async checkInParking(params: { id: number; token: string }): Promise<ParkingReservation> {
+    const url = `${this.baseUrl}/horizontal-properties/parking/reservations/${params.id}/check-in`;
     const startTime = Date.now();
     logHttpRequest({ method: 'POST', url });
 
@@ -599,9 +675,9 @@ export class ParkingRepository implements IParkingRepository {
       const response = await fetch(url, {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${params.token}`,
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -620,8 +696,8 @@ export class ParkingRepository implements IParkingRepository {
     }
   }
 
-  async checkOutParking(params: { id: number }): Promise<ParkingReservation> {
-    const url = `${this.baseUrl}/v1/horizontal-properties/parking/reservations/${params.id}/check-out`;
+  async checkOutParking(params: { id: number; token: string }): Promise<ParkingReservation> {
+    const url = `${this.baseUrl}/horizontal-properties/parking/reservations/${params.id}/check-out`;
     const startTime = Date.now();
     logHttpRequest({ method: 'POST', url });
 
@@ -629,9 +705,9 @@ export class ParkingRepository implements IParkingRepository {
       const response = await fetch(url, {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${params.token}`,
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -650,8 +726,8 @@ export class ParkingRepository implements IParkingRepository {
     }
   }
 
-  async cancelParkingReservation(params: { id: number; reason?: string }): Promise<ParkingReservation> {
-    const url = `${this.baseUrl}/v1/horizontal-properties/parking/reservations/${params.id}/cancel`;
+  async cancelParkingReservation(params: { id: number; token: string; reason?: string }): Promise<ParkingReservation> {
+    const url = `${this.baseUrl}/horizontal-properties/parking/reservations/${params.id}/cancel`;
     const startTime = Date.now();
     logHttpRequest({ method: 'POST', url, body: { reason: params.reason } });
 
@@ -659,9 +735,9 @@ export class ParkingRepository implements IParkingRepository {
       const response = await fetch(url, {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${params.token}`,
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
         body: JSON.stringify({ reason: params.reason || '' }),
       });
 

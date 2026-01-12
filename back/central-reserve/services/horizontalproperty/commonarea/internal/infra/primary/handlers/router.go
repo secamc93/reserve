@@ -9,6 +9,9 @@ import (
 func (h *CommonAreaHandler) RegisterRoutes(router *gin.RouterGroup) {
 	commonAreas := router.Group("/horizontal-properties/common-areas")
 	{
+		// Tipos de zonas comunes
+		commonAreas.GET("/types", middleware.JWT(), h.GetCommonAreaTypes)
+
 		// Zonas comunes
 		commonAreas.POST("", middleware.JWT(), h.CreateCommonArea)
 		commonAreas.GET("", middleware.JWT(), h.ListCommonAreas)

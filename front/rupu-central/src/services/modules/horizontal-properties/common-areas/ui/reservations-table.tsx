@@ -1,12 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { getReservationsAction } from '../infrastructure/actions/get-reservations.action';
 import { ReservationListDTO } from '../domain';
 import { Table } from '@shared/ui/table';
 import { Button } from '@shared/ui/button';
 import { Alert } from '@shared/ui/alert';
 import { Spinner } from '@shared/ui/spinner';
+import { TokenStorage } from '@shared/config';
+import { generateBusinessTokenAction } from '@/services/auth/login/infrastructure/actions';
 
 interface ReservationsTableProps {
   businessId: number;
@@ -20,6 +22,31 @@ export function ReservationsTable({ businessId }: ReservationsTableProps) {
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
 
+  const getBusinessToken = useCallback(async (): Promise<string> => {
+    let businessToken = TokenStorage.getBusinessToken();
+    if (businessToken) return businessToken;
+
+    const sessionToken = TokenStorage.getSessionToken();
+    if (!sessionToken) throw new Error('No session token available');
+
+    const user = TokenStorage.getUser();
+    const isSuperAdmin = user?.is_super_admin;
+    const business_id = isSuperAdmin ? 0 : businessId;
+
+    const result = await generateBusinessTokenAction({
+      business_id,
+      session_token: sessionToken,
+    });
+
+    if (!result.success || !result.data) {
+      throw new Error(result.error || 'No se pudo generar business token');
+    }
+
+    TokenStorage.setBusinessToken(result.data.token);
+    TokenStorage.setActiveBusiness(business_id);
+    return result.data.token;
+  }, [businessId]);
+
   useEffect(() => {
     loadReservations();
   }, [businessId, page, pageSize]);
@@ -28,8 +55,10 @@ export function ReservationsTable({ businessId }: ReservationsTableProps) {
     try {
       setLoading(true);
       setError(null);
+      const token = await getBusinessToken();
       const result = await getReservationsAction({
         businessId,
+        token,
         page,
         pageSize,
       });

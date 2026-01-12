@@ -13,10 +13,12 @@ import {
   CreateReservationDTO,
   CheckAvailabilityDTO,
   ReservationsPaginated,
+  CommonAreaType,
 } from '../entities';
 
 export interface GetCommonAreasParams {
   businessId: number;
+  token: string;
   commonAreaTypeId?: number;
   isActive?: boolean;
   page?: number;
@@ -25,24 +27,29 @@ export interface GetCommonAreasParams {
 
 export interface GetCommonAreaByIdParams {
   id: number;
+  token: string;
 }
 
 export interface CreateCommonAreaParams {
   businessId: number;
+  token: string;
   data: CreateCommonAreaDTO;
 }
 
 export interface CreateReservationParams {
   businessId: number;
+  token: string;
   data: CreateReservationDTO;
 }
 
 export interface CheckAvailabilityParams {
+  token: string;
   data: CheckAvailabilityDTO;
 }
 
 export interface GetReservationsParams {
   businessId: number;
+  token: string;
   commonAreaId?: number;
   propertyUnitId?: number;
   residentId?: number;
@@ -55,31 +62,38 @@ export interface GetReservationsParams {
 
 export interface GetReservationByIdParams {
   id: number;
+  token: string;
 }
 
 export interface ApproveReservationParams {
   id: number;
+  token: string;
 }
 
 export interface RejectReservationParams {
   id: number;
+  token: string;
   reason: string;
 }
 
 export interface CheckInReservationParams {
   id: number;
+  token: string;
 }
 
 export interface CheckOutReservationParams {
   id: number;
+  token: string;
 }
 
 export interface CancelReservationParams {
   id: number;
+  token: string;
   reason?: string;
 }
 
 export interface ICommonAreasRepository {
+  getCommonAreaTypes(token: string): Promise<CommonAreaType[]>;
   getCommonAreas(params: GetCommonAreasParams): Promise<CommonAreasPaginated>;
   getCommonAreaById(params: GetCommonAreaByIdParams): Promise<CommonArea>;
   createCommonArea(params: CreateCommonAreaParams): Promise<CommonArea>;

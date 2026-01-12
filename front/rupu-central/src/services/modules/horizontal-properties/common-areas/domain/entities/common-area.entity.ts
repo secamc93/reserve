@@ -59,3 +59,15 @@ export interface CommonAreasPaginated {
   pageSize: number;
   totalPages: number;
 }
+
+export interface CommonAreaType {
+  id: number;
+  name: string;
+  code: string;
+  description?: string;
+  icon?: string;
+  defaultMaxCapacity?: number;
+  requiresApproval: boolean;
+  allowsRecurring: boolean;
+  isActive: boolean;
+}

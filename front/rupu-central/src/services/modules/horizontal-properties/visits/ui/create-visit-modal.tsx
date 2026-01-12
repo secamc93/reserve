@@ -471,34 +471,34 @@ export function CreateVisitModal({ isOpen, onClose, onSuccess, businessId }: Cre
           <div className="space-y-4">
             <h3 className="font-semibold text-lg">Datos del Visitante</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label="DNI *"
-                value={newVisitor.dni}
-                onChange={(e) => setNewVisitor({ ...newVisitor, dni: e.target.value })}
-                placeholder="Número de documento"
-                required
-              />
-              <Input
-                label="Nombre Completo *"
-                value={newVisitor.fullName}
-                onChange={(e) => setNewVisitor({ ...newVisitor, fullName: e.target.value })}
-                placeholder="Nombre y apellidos"
-                required
-              />
-              <Input
-                label="Teléfono *"
-                value={newVisitor.phone}
-                onChange={(e) => setNewVisitor({ ...newVisitor, phone: e.target.value })}
-                placeholder="Número de teléfono"
-                required
-              />
-              <Input
-                label="Email"
-                type="email"
-                value={newVisitor.email}
-                onChange={(e) => setNewVisitor({ ...newVisitor, email: e.target.value })}
-                placeholder="Correo electrónico (opcional)"
-              />
+            <Input
+              label="DNI *"
+              value={newVisitor.dni}
+              onChange={(e) => setNewVisitor({ ...newVisitor, dni: e.target.value })}
+              placeholder="Número de documento"
+              required
+            />
+            <Input
+              label="Nombre Completo *"
+              value={newVisitor.fullName}
+              onChange={(e) => setNewVisitor({ ...newVisitor, fullName: e.target.value })}
+              placeholder="Nombre y apellidos"
+              required
+            />
+            <Input
+              label="Teléfono *"
+              value={newVisitor.phone}
+              onChange={(e) => setNewVisitor({ ...newVisitor, phone: e.target.value })}
+              placeholder="Número de teléfono"
+              required
+            />
+            <Input
+              label="Email"
+              type="email"
+              value={newVisitor.email}
+              onChange={(e) => setNewVisitor({ ...newVisitor, email: e.target.value })}
+              placeholder="Correo electrónico (opcional)"
+            />
             </div>
             <div className="flex gap-2 pt-4">
               <Button onClick={() => setStep('search')} variant="outline" className="flex-1">
@@ -526,11 +526,11 @@ export function CreateVisitModal({ isOpen, onClose, onSuccess, businessId }: Cre
                     <span>Tel: <strong>{visitor.phone}</strong></span>
                   </div>
                 </div>
-                {visitor.hasBlacklist && (
+              {visitor.hasBlacklist && (
                   <div className="bg-red-100 text-red-700 px-4 py-2 rounded-lg font-semibold text-sm">
                     ⚠️ Lista negra
                   </div>
-                )}
+              )}
               </div>
             </div>
 
@@ -550,29 +550,29 @@ export function CreateVisitModal({ isOpen, onClose, onSuccess, businessId }: Cre
                         onChange={(id) => setFormData({ ...formData, propertyUnitId: id })}
                         businessId={businessId}
                         token={businessToken}
-                        required
-                      />
+              required
+            />
                     )}
-                    <Select
-                      label="Tipo de Visita *"
-                      value={formData.visitTypeId?.toString() || ''}
-                      onChange={(e) => setFormData({ ...formData, visitTypeId: parseInt(e.target.value) })}
-                      options={[
+            <Select
+              label="Tipo de Visita *"
+              value={formData.visitTypeId?.toString() || ''}
+              onChange={(e) => setFormData({ ...formData, visitTypeId: parseInt(e.target.value) })}
+              options={[
                         { value: '', label: loadingTypes ? 'Cargando tipos...' : 'Seleccione un tipo' },
-                        ...visitTypes.map((type) => ({
-                          value: type.id.toString(),
-                          label: type.name,
-                        })),
-                      ]}
-                      required
+                ...visitTypes.map((type) => ({
+                  value: type.id.toString(),
+                  label: type.name,
+                })),
+              ]}
+              required
                       disabled={loadingTypes || visitTypes.length === 0}
-                    />
-                    <Input
+              />
+              <Input
                       label="Propósito de la Visita"
-                      value={formData.purpose || ''}
-                      onChange={(e) => setFormData({ ...formData, purpose: e.target.value })}
+              value={formData.purpose || ''}
+              onChange={(e) => setFormData({ ...formData, purpose: e.target.value })}
                       placeholder="Ej: Visita familiar, entrega de paquete, mantenimiento..."
-                    />
+            />
                   </div>
                 </div>
 
@@ -583,51 +583,51 @@ export function CreateVisitModal({ isOpen, onClose, onSuccess, businessId }: Cre
                     Opciones Adicionales
                   </h4>
                   <div className="space-y-4">
-                    <Input
-                      label="Número de Visitantes"
-                      type="number"
-                      min="1"
+            <Input
+              label="Número de Visitantes"
+              type="number"
+              min="1"
                       max="20"
-                      value={formData.numberOfVisitors?.toString() || '1'}
-                      onChange={(e) => setFormData({ ...formData, numberOfVisitors: parseInt(e.target.value) || 1 })}
-                    />
+              value={formData.numberOfVisitors?.toString() || '1'}
+              onChange={(e) => setFormData({ ...formData, numberOfVisitors: parseInt(e.target.value) || 1 })}
+            />
                     <div className="grid grid-cols-2 gap-3">
                       <label className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
-                        <input
-                          type="checkbox"
-                          checked={formData.hasCompanions || false}
-                          onChange={(e) => setFormData({ ...formData, hasCompanions: e.target.checked })}
+                <input
+                  type="checkbox"
+                  checked={formData.hasCompanions || false}
+                  onChange={(e) => setFormData({ ...formData, hasCompanions: e.target.checked })}
                           className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                        />
+                />
                         <span className="text-sm text-slate-700">Tiene acompañantes</span>
-                      </label>
+              </label>
                       <label className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
-                        <input
-                          type="checkbox"
-                          checked={formData.hasAssets || false}
-                          onChange={(e) => setFormData({ ...formData, hasAssets: e.target.checked })}
+                <input
+                  type="checkbox"
+                  checked={formData.hasAssets || false}
+                  onChange={(e) => setFormData({ ...formData, hasAssets: e.target.checked })}
                           className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                        />
+                />
                         <span className="text-sm text-slate-700">Trae equipos/activos</span>
-                      </label>
+              </label>
                       <label className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
-                        <input
-                          type="checkbox"
-                          checked={formData.notifyResident ?? true}
-                          onChange={(e) => setFormData({ ...formData, notifyResident: e.target.checked })}
+                <input
+                  type="checkbox"
+                  checked={formData.notifyResident ?? true}
+                  onChange={(e) => setFormData({ ...formData, notifyResident: e.target.checked })}
                           className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                        />
+                />
                         <span className="text-sm text-slate-700">Notificar residente</span>
-                      </label>
+              </label>
                       <label className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
-                        <input
-                          type="checkbox"
-                          checked={formData.notifySecurity || false}
-                          onChange={(e) => setFormData({ ...formData, notifySecurity: e.target.checked })}
+                <input
+                  type="checkbox"
+                  checked={formData.notifySecurity || false}
+                  onChange={(e) => setFormData({ ...formData, notifySecurity: e.target.checked })}
                           className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                        />
+                />
                         <span className="text-sm text-slate-700">Notificar seguridad</span>
-                      </label>
+              </label>
                     </div>
                   </div>
                 </div>
@@ -885,14 +885,14 @@ export function CreateVisitModal({ isOpen, onClose, onSuccess, businessId }: Cre
                                 {dayObj.date.getDate()}
                               </button>
                             ))}
-                          </div>
-                          
+            </div>
+
                           {/* Selector de hora */}
                           <div className="border-t border-slate-200 pt-4 mt-4">
                             <label className="block text-sm font-medium text-slate-700 mb-2">
                               <ClockIcon className="w-4 h-4 inline mr-1" />
                               Hora de Fin
-                            </label>
+              </label>
                             <div className="flex flex-wrap gap-2 mb-3">
                               {[14, 15, 16, 17, 18, 19, 20].map((hour) => (
                                 <button
@@ -977,13 +977,13 @@ export function CreateVisitModal({ isOpen, onClose, onSuccess, businessId }: Cre
                     <span className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-sm">4</span>
                     Notas Adicionales
                   </h4>
-                    <textarea
-                      value={formData.notes || ''}
-                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              <textarea
+                value={formData.notes || ''}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                       placeholder="Observaciones adicionales sobre la visita..."
                       rows={4}
                       className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-gray-900 bg-white"
-                    />
+              />
                 </div>
               </div>
             </div>

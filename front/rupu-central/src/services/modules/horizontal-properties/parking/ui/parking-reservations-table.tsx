@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { getParkingReservationsAction } from '../infrastructure/actions/get-parking-reservations.action';
 import { ParkingReservationListDTO } from '../domain';
 import { Table } from '@shared/ui/table';
@@ -9,6 +9,8 @@ import { Alert } from '@shared/ui/alert';
 import { Spinner } from '@shared/ui/spinner';
 import { Badge } from '@shared/ui/badge';
 import { PlusIcon, ArrowRightCircleIcon, ArrowLeftCircleIcon } from '@heroicons/react/24/outline';
+import { TokenStorage } from '@shared/config';
+import { generateBusinessTokenAction } from '@/services/auth/login/infrastructure/actions';
 
 interface ParkingReservationsTableProps {
   businessId: number;
@@ -22,6 +24,37 @@ export function ParkingReservationsTable({ businessId }: ParkingReservationsTabl
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
 
+  const getBusinessToken = useCallback(async (): Promise<string> => {
+    const user = TokenStorage.getUser();
+    const isSuperAdmin = user?.is_super_admin || false;
+    
+    // Super admin siempre usa business_id = 0 en el token
+    const tokenBusinessId = isSuperAdmin ? 0 : businessId;
+    
+    let businessToken = TokenStorage.getBusinessToken();
+    const activeBusiness = TokenStorage.getActiveBusiness();
+    
+    if (businessToken && activeBusiness === tokenBusinessId) {
+      return businessToken;
+    }
+
+    const sessionToken = TokenStorage.getSessionToken();
+    if (!sessionToken) throw new Error('No session token available');
+
+    const result = await generateBusinessTokenAction({
+      business_id: tokenBusinessId,
+      session_token: sessionToken,
+    });
+
+    if (!result.success || !result.data) {
+      throw new Error(result.error || 'No se pudo generar business token');
+    }
+
+    TokenStorage.setBusinessToken(result.data.token);
+    TokenStorage.setActiveBusiness(tokenBusinessId);
+    return result.data.token;
+  }, [businessId]);
+
   useEffect(() => {
     loadReservations();
   }, [businessId, page, pageSize]);
@@ -30,8 +63,10 @@ export function ParkingReservationsTable({ businessId }: ParkingReservationsTabl
     try {
       setLoading(true);
       setError(null);
+      const token = await getBusinessToken();
       const result = await getParkingReservationsAction({
         businessId,
+        token,
         page,
         pageSize,
       });

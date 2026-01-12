@@ -36,6 +36,25 @@ type CommonAreaListResponse struct {
 	RequiresApproval bool   `json:"requires_approval"`
 }
 
+// CommonAreaTypeResponse - Response de tipo de zona comun
+type CommonAreaTypeResponse struct {
+	ID                 uint   `json:"id"`
+	Name               string `json:"name"`
+	Code               string `json:"code"`
+	Description        string `json:"description"`
+	Icon               string `json:"icon"`
+	DefaultMaxCapacity *int   `json:"default_max_capacity"`
+	RequiresApproval   bool   `json:"requires_approval"`
+	AllowsRecurring    bool   `json:"allows_recurring"`
+	IsActive           bool   `json:"is_active"`
+}
+
+// CommonAreaTypesResponse - Response de lista de tipos de zonas comunes
+type CommonAreaTypesResponse struct {
+	Success bool                     `json:"success"`
+	Data    []CommonAreaTypeResponse `json:"data"`
+}
+
 // PaginatedCommonAreasResponse - Response paginado de zonas comunes
 type PaginatedCommonAreasResponse struct {
 	Success    bool                     `json:"success"`

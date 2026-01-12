@@ -11,6 +11,7 @@ type parkingUseCase struct {
 	parkingAssignmentRepo  domain.ParkingAssignmentRepository
 	parkingReservationRepo domain.ParkingReservationRepository
 	parkingOccupancyRepo   domain.ParkingOccupancyRepository
+	parkingTypeRepo        domain.ParkingTypeRepository
 	logger                 log.ILogger
 }
 
@@ -21,6 +22,7 @@ func New(
 	parkingAssignmentRepo domain.ParkingAssignmentRepository,
 	parkingReservationRepo domain.ParkingReservationRepository,
 	parkingOccupancyRepo domain.ParkingOccupancyRepository,
+	parkingTypeRepo domain.ParkingTypeRepository,
 	logger log.ILogger,
 ) domain.ParkingUseCase {
 	contextualLogger := logger.WithModule("parqueaderos")
@@ -30,6 +32,7 @@ func New(
 		parkingAssignmentRepo:  parkingAssignmentRepo,
 		parkingReservationRepo: parkingReservationRepo,
 		parkingOccupancyRepo:   parkingOccupancyRepo,
+		parkingTypeRepo:        parkingTypeRepo,
 		logger:                 contextualLogger,
 	}
 }

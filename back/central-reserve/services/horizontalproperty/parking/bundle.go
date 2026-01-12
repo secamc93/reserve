@@ -20,6 +20,7 @@ func New(db db.IDatabase, logger log.ILogger, v1Group *gin.RouterGroup) {
 	parkingAssignmentRepo := repository.NewParkingAssignmentRepository(db, serviceLogger)
 	parkingReservationRepo := repository.NewParkingReservationRepository(db, serviceLogger)
 	parkingOccupancyRepo := repository.NewParkingOccupancyRepository(db, serviceLogger)
+	parkingTypeRepo := repository.NewParkingTypeRepository(db, serviceLogger)
 
 	// Crear caso de uso
 	useCase := app.New(
@@ -28,6 +29,7 @@ func New(db db.IDatabase, logger log.ILogger, v1Group *gin.RouterGroup) {
 		parkingAssignmentRepo,
 		parkingReservationRepo,
 		parkingOccupancyRepo,
+		parkingTypeRepo,
 		serviceLogger,
 	)
 

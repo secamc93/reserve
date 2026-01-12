@@ -7,7 +7,7 @@
 
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { EnvelopeIcon, LockClosedIcon } from '@heroicons/react/24/outline';
+import { EnvelopeIcon, LockClosedIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { Button } from '@shared/ui/button';
 import { Input } from '@shared/ui/input';
 import { RupuLoader } from '@shared/ui/rupu-loader';
@@ -23,6 +23,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showBusinessSelector, setShowBusinessSelector] = useState(false);
@@ -244,18 +245,31 @@ export function LoginForm({ onLogin }: LoginFormProps) {
           </div>
           <Input
             id="password"
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
-            className="pl-10 w-full bg-gray-800/50 border-gray-700 text-white placeholder-gray-500 
+            className="pl-10 pr-10 w-full bg-gray-800/50 border-gray-700 text-white placeholder-gray-500 
                      focus:bg-gray-800/70 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 
                      transition-all duration-300 ease-in-out
                      hover:border-gray-600 hover:bg-gray-800/60
                      disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={loading}
           />
+          {/* Icono de mostrar/ocultar contraseña */}
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-300 transition-colors duration-300"
+            disabled={loading}
+          >
+            {showPassword ? (
+              <EyeSlashIcon className="h-5 w-5" />
+            ) : (
+              <EyeIcon className="h-5 w-5" />
+            )}
+          </button>
           {/* Efecto de brillo en el borde al hacer focus */}
           <div className="absolute inset-0 rounded-lg pointer-events-none opacity-0 group-focus-within:opacity-100 transition-opacity duration-300">
             <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-cyan-400/20 via-transparent to-blue-400/20 blur-sm"></div>

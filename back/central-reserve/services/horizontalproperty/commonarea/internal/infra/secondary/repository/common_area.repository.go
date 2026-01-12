@@ -202,6 +202,39 @@ func (r *CommonAreaRepository) GetCommonAreasByBusinessID(ctx context.Context, b
 	return result, nil
 }
 
+// GetCommonAreaTypes obtiene todos los tipos de zonas comunes activos
+func (r *CommonAreaRepository) GetCommonAreaTypes(ctx context.Context) ([]*domain.CommonAreaType, error) {
+	var types []models.CommonAreaType
+	if err := r.db.Conn(ctx).
+		Where("is_active = ?", true).
+		Order("name ASC").
+		Find(&types).Error; err != nil {
+		return nil, fmt.Errorf("error obteniendo tipos de zonas comunes: %w", err)
+	}
+
+	result := make([]*domain.CommonAreaType, len(types))
+	for i, t := range types {
+		result[i] = mapCommonAreaTypeToDomain(&t)
+	}
+
+	return result, nil
+}
+
+// mapCommonAreaTypeToDomain mapea modelo de tipo a entidad de dominio
+func mapCommonAreaTypeToDomain(m *models.CommonAreaType) *domain.CommonAreaType {
+	return &domain.CommonAreaType{
+		ID:                 m.ID,
+		Name:               m.Name,
+		Code:               m.Code,
+		Description:        m.Description,
+		Icon:               m.Icon,
+		DefaultMaxCapacity: m.DefaultMaxCapacity,
+		RequiresApproval:   m.RequiresApproval,
+		AllowsRecurring:    m.AllowsRecurring,
+		IsActive:           m.IsActive,
+	}
+}
+
 // mapCommonAreaToDomain mapea modelo a entidad de dominio
 func mapCommonAreaToDomain(m *models.CommonArea) *domain.CommonArea {
 	return &domain.CommonArea{

@@ -84,6 +84,21 @@ func (uc *MigrationUseCase) MigrateDB() error {
 		// Modelos de Sistema de Paquetes
 		&models.PackageStatus{},
 		&models.Package{},
+		&models.CommonAreaType{},
+		&models.CommonArea{},
+		&models.CommonAreaReservation{},
+		&models.CommonAreaReservationStatus{},
+		&models.CommonAreaSchedule{},
+		&models.CommonAreaRestriction{},
+		&models.RecurringReservationPattern{},
+		// Modelos de Sistema de Parqueaderos
+		&models.ParkingType{},
+		&models.ParkingZone{},
+		&models.ParkingSlot{},
+		&models.ParkingAssignment{},
+		&models.ParkingReservationStatus{},
+		&models.ParkingReservation{},
+		&models.ParkingOccupancy{},
 	); err != nil {
 		return err
 	}

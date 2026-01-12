@@ -3,7 +3,7 @@ import { IParkingRepository, ParkingAssignment, AssignParkingDTO } from '../doma
 export class AssignParkingUseCase {
   constructor(private repository: IParkingRepository) {}
 
-  async execute(businessId: number, data: AssignParkingDTO): Promise<ParkingAssignment> {
-    return await this.repository.assignParking({ businessId, data });
+  async execute(businessId: number, token: string, data: AssignParkingDTO): Promise<ParkingAssignment> {
+    return await this.repository.assignParking({ businessId, token, data });
   }
 }

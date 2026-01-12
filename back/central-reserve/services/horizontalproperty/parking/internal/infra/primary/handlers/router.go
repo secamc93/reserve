@@ -9,6 +9,9 @@ import (
 func (h *ParkingHandler) RegisterRoutes(router *gin.RouterGroup) {
 	parking := router.Group("/horizontal-properties/parking")
 	{
+		// Tipos de parqueadero (maestro)
+		parking.GET("/types", middleware.JWT(), h.GetParkingTypes)
+
 		// Zonas de parqueo
 		zones := parking.Group("/zones")
 		{

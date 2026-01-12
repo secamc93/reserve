@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { getParkingSlotsAction } from '../infrastructure/actions/get-parking-slots.action';
 import { ParkingSlotListDTO } from '../domain';
 import { Table } from '@shared/ui/table';
@@ -9,6 +9,9 @@ import { Alert } from '@shared/ui/alert';
 import { Spinner } from '@shared/ui/spinner';
 import { Badge } from '@shared/ui/badge';
 import { PlusIcon } from '@heroicons/react/24/outline';
+import { CreateParkingSlotModal } from './create-parking-slot-modal';
+import { TokenStorage } from '@shared/config';
+import { generateBusinessTokenAction } from '@/services/auth/login/infrastructure/actions';
 
 interface ParkingSlotsTableProps {
   businessId: number;
@@ -22,6 +25,38 @@ export function ParkingSlotsTable({ businessId, parkingZoneId }: ParkingSlotsTab
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  const getBusinessToken = useCallback(async (): Promise<string> => {
+    const user = TokenStorage.getUser();
+    const isSuperAdmin = user?.is_super_admin || false;
+    
+    // Super admin siempre usa business_id = 0 en el token
+    const tokenBusinessId = isSuperAdmin ? 0 : businessId;
+    
+    let businessToken = TokenStorage.getBusinessToken();
+    const activeBusiness = TokenStorage.getActiveBusiness();
+    
+    if (businessToken && activeBusiness === tokenBusinessId) {
+      return businessToken;
+    }
+
+    const sessionToken = TokenStorage.getSessionToken();
+    if (!sessionToken) throw new Error('No session token available');
+
+    const result = await generateBusinessTokenAction({
+      business_id: tokenBusinessId,
+      session_token: sessionToken,
+    });
+
+    if (!result.success || !result.data) {
+      throw new Error(result.error || 'No se pudo generar business token');
+    }
+
+    TokenStorage.setBusinessToken(result.data.token);
+    TokenStorage.setActiveBusiness(tokenBusinessId);
+    return result.data.token;
+  }, [businessId]);
 
   useEffect(() => {
     loadSlots();
@@ -31,8 +66,10 @@ export function ParkingSlotsTable({ businessId, parkingZoneId }: ParkingSlotsTab
     try {
       setLoading(true);
       setError(null);
+      const token = await getBusinessToken();
       const result = await getParkingSlotsAction({
         businessId,
+        token,
         parkingZoneId,
         page,
         pageSize,
@@ -46,10 +83,14 @@ export function ParkingSlotsTable({ businessId, parkingZoneId }: ParkingSlotsTab
     }
   };
 
+  const handleCreateSuccess = () => {
+    loadSlots();
+  };
+
   const columns = [
     {
       key: 'slotNumber',
-      label: 'Número',
+      label: 'Numero',
       render: (_: unknown, slot: ParkingSlotListDTO) => <span className="font-medium">{slot.slotNumber}</span>,
     },
     {
@@ -89,11 +130,12 @@ export function ParkingSlotsTable({ businessId, parkingZoneId }: ParkingSlotsTab
     },
     {
       key: 'features',
-      label: 'Características',
+      label: 'Caracteristicas',
       render: (_: unknown, slot: ParkingSlotListDTO) => (
         <div className="flex gap-2 text-sm">
           {slot.isCovered && <span className="text-blue-600">Cubierto</span>}
           {slot.hasCharger && <span className="text-green-600">Cargador</span>}
+          {!slot.isCovered && !slot.hasCharger && <span className="text-gray-400">-</span>}
         </div>
       ),
     },
@@ -113,7 +155,7 @@ export function ParkingSlotsTable({ businessId, parkingZoneId }: ParkingSlotsTab
     <div className="space-y-6">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Espacios de Parqueo</h2>
-        <Button>
+        <Button onClick={() => setShowCreateModal(true)}>
           <PlusIcon className="w-4 h-4 mr-2" />
           Nuevo Espacio
         </Button>
@@ -140,6 +182,14 @@ export function ParkingSlotsTable({ businessId, parkingZoneId }: ParkingSlotsTab
           itemsPerPageOptions: [5, 10, 25, 50, 100],
         }}
         emptyMessage="No hay espacios de parqueo registrados"
+      />
+
+      <CreateParkingSlotModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={handleCreateSuccess}
+        businessId={businessId}
+        defaultZoneId={parkingZoneId}
       />
     </div>
   );

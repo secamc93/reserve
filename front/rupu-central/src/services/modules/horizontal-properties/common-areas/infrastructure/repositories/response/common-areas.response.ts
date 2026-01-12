@@ -135,3 +135,20 @@ export interface BackendCheckAvailabilityResponse {
   available: boolean;
   message?: string;
 }
+
+export interface BackendCommonAreaType {
+  id: number;
+  name: string;
+  code: string;
+  description?: string;
+  icon?: string;
+  default_max_capacity?: number;
+  requires_approval: boolean;
+  allows_recurring: boolean;
+  is_active: boolean;
+}
+
+export interface BackendCommonAreaTypesResponse {
+  success: boolean;
+  data: BackendCommonAreaType[];
+}
