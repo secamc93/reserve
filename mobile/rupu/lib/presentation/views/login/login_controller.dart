@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:get/get.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:rupu/config/helpers/error_message_helper.dart';
 import 'package:rupu/config/theme/app_theme.dart';
 import 'package:rupu/config/constants/secure_storage/token_storage.dart';
 import 'package:rupu/config/services/biometric_auth_service.dart';
@@ -86,7 +87,10 @@ class LoginController extends GetxController {
     } on DioException catch (e) {
       errorMessage.value = (e.response?.statusCode == 401)
           ? 'Email o contraseña incorrectos.'
-          : 'Error: ${e.message}';
+          : ErrorMessageHelper.getUserFriendlyMessage(
+              e,
+              fallbackMessage: 'No se pudo iniciar sesión. Intenta nuevamente.',
+            );
       return false;
     } finally {
       isFormLoading.value = false;
@@ -144,7 +148,10 @@ class LoginController extends GetxController {
     } on DioException catch (e) {
       errorMessage.value = (e.response?.statusCode == 401)
           ? 'Las credenciales guardadas ya no son válidas. Por favor, inicia sesión nuevamente.'
-          : 'Error: ${e.message}';
+          : ErrorMessageHelper.getUserFriendlyMessage(
+              e,
+              fallbackMessage: 'No se pudo completar el login biométrico.',
+            );
 
       // Si las credenciales ya no son válidas, limpiarlas
       if (e.response?.statusCode == 401) {

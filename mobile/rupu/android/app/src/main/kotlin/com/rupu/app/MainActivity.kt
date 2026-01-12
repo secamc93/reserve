@@ -1,4 +1,4 @@
-package com.example.rupu
+package com.rupu.app
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 
