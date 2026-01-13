@@ -24,7 +24,7 @@ env:
 jobs:
   build-and-push:
     name: Build and Push to ECR
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm  # Runner ARM64 nativo - más rápido y barato
     
     steps:
       - name: Checkout code
@@ -38,9 +38,7 @@ jobs:
       - name: Install Podman
         run: |
           sudo apt-get update
-          sudo apt-get install -y podman podman-compose qemu-user-static binfmt-support
-          # Configurar emulación para ARM64
-          sudo podman run --rm --privileged multiarch/qemu-user-static --reset -p yes || true
+          sudo apt-get install -y podman podman-compose
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4

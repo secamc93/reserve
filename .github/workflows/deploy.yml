@@ -49,7 +49,7 @@ jobs:
 
   build-frontend:
     name: Build and Push Frontend
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm  # Runner ARM64 nativo - más rápido y barato
     needs: detect-changes
     if: needs.detect-changes.outputs.frontend == 'true'
     steps:
@@ -59,9 +59,7 @@ jobs:
       - name: Install Podman
         run: |
           sudo apt-get update
-          sudo apt-get install -y podman qemu-user-static binfmt-support
-          # Configurar emulación para ARM64
-          sudo podman run --rm --privileged multiarch/qemu-user-static --reset -p yes || true
+          sudo apt-get install -y podman
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -102,7 +100,7 @@ jobs:
 
   build-backend:
     name: Build and Push Backend
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm  # Runner ARM64 nativo - más rápido y barato
     needs: detect-changes
     if: needs.detect-changes.outputs.backend == 'true'
     steps:
@@ -112,9 +110,7 @@ jobs:
       - name: Install Podman
         run: |
           sudo apt-get update
-          sudo apt-get install -y podman qemu-user-static binfmt-support
-          # Configurar emulación para ARM64
-          sudo podman run --rm --privileged multiarch/qemu-user-static --reset -p yes || true
+          sudo apt-get install -y podman
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -151,7 +147,7 @@ jobs:
 
   build-nginx:
     name: Build and Push Nginx
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm  # Runner ARM64 nativo - más rápido y barato
     needs: detect-changes
     if: needs.detect-changes.outputs.nginx == 'true'
     steps:
@@ -161,9 +157,7 @@ jobs:
       - name: Install Podman
         run: |
           sudo apt-get update
-          sudo apt-get install -y podman qemu-user-static binfmt-support
-          # Configurar emulación para ARM64
-          sudo podman run --rm --privileged multiarch/qemu-user-static --reset -p yes || true
+          sudo apt-get install -y podman
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
