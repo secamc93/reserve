@@ -147,5 +147,6 @@ networks:
     driver: bridge
 
 volumes:
-  postgres_data:
-    driver: local
+  # postgres_data ya no se usa, estamos usando el volumen de Docker directamente
+  # postgres_data:
+  #   driver: local
