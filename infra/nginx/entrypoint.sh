@@ -36,35 +36,32 @@ echo "🔗 Resolviendo symlinks:"
 echo "   SSL_CERT_PATH: $SSL_CERT_PATH -> $REAL_CERT_PATH"
 echo "   SSL_KEY_PATH: $SSL_KEY_PATH -> $REAL_KEY_PATH"
 
-# Verificar si los certificados existen (siguiendo symlinks con -L)
-if [ ! -L "$SSL_CERT_PATH" ] && [ ! -f "$SSL_CERT_PATH" ]; then
-  # Si no es un symlink y no existe como archivo, verificar la ruta real
-  if [ ! -f "$REAL_CERT_PATH" ]; then
-    CERT_EXISTS=false
-  else
+# Verificar si los certificados existen usando -L para seguir symlinks
+# -L hace que -f siga los symlinks y verifique el archivo real
+if [ -f "$SSL_CERT_PATH" ] || [ -L "$SSL_CERT_PATH" ]; then
+  # Verificar que el archivo real al que apunta el symlink existe y es legible
+  if [ -f "$REAL_CERT_PATH" ] && [ -r "$REAL_CERT_PATH" ]; then
     CERT_EXISTS=true
+  elif [ -r "$SSL_CERT_PATH" ]; then
+    # Si el symlink mismo es legible, intentar leerlo directamente
+    CERT_EXISTS=true
+  else
+    CERT_EXISTS=false
   fi
 else
-  # Es un symlink o archivo, verificar que se pueda leer
-  if [ -r "$SSL_CERT_PATH" ] || [ -r "$REAL_CERT_PATH" ]; then
-    CERT_EXISTS=true
-  else
-    CERT_EXISTS=false
-  fi
+  CERT_EXISTS=false
 fi
 
-if [ ! -L "$SSL_KEY_PATH" ] && [ ! -f "$SSL_KEY_PATH" ]; then
-  if [ ! -f "$REAL_KEY_PATH" ]; then
-    KEY_EXISTS=false
-  else
+if [ -f "$SSL_KEY_PATH" ] || [ -L "$SSL_KEY_PATH" ]; then
+  if [ -f "$REAL_KEY_PATH" ] && [ -r "$REAL_KEY_PATH" ]; then
     KEY_EXISTS=true
+  elif [ -r "$SSL_KEY_PATH" ]; then
+    KEY_EXISTS=true
+  else
+    KEY_EXISTS=false
   fi
 else
-  if [ -r "$SSL_KEY_PATH" ] || [ -r "$REAL_KEY_PATH" ]; then
-    KEY_EXISTS=true
-  else
-    KEY_EXISTS=false
-  fi
+  KEY_EXISTS=false
 fi
 
 if [ "$CERT_EXISTS" = false ] || [ "$KEY_EXISTS" = false ]; then
