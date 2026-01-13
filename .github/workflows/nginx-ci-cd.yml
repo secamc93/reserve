@@ -127,18 +127,30 @@ jobs:
             
             # Configurar permisos de /etc/letsencrypt para que Podman rootless pueda leerlos
             echo "🔐 Configurando permisos de certificados SSL..."
-            if [ -d "/etc/letsencrypt/live" ]; then
-              # Hacer el directorio legible por el grupo y otros (manteniendo seguridad)
-              sudo chmod -R 755 /etc/letsencrypt/live 2>/dev/null || {
-                echo "⚠️ No se pudieron ajustar permisos de /etc/letsencrypt/live"
-                echo "💡 Esto puede ser normal si ya están configurados correctamente"
-              }
-              # Asegurar que los archivos de certificados sean legibles
-              sudo find /etc/letsencrypt/live -type f -exec chmod 644 {} \; 2>/dev/null || true
-              sudo find /etc/letsencrypt/live -type d -exec chmod 755 {} \; 2>/dev/null || true
+            if [ -d "/etc/letsencrypt" ]; then
+              # Ajustar permisos del directorio archive (donde están los archivos reales)
+              if [ -d "/etc/letsencrypt/archive" ]; then
+                echo "📁 Ajustando permisos de /etc/letsencrypt/archive..."
+                sudo chmod -R 755 /etc/letsencrypt/archive 2>/dev/null || {
+                  echo "⚠️ No se pudieron ajustar permisos de archive (puede ser normal)"
+                }
+                sudo find /etc/letsencrypt/archive -type f -exec chmod 644 {} \; 2>/dev/null || true
+                sudo find /etc/letsencrypt/archive -type d -exec chmod 755 {} \; 2>/dev/null || true
+              fi
+              
+              # Ajustar permisos del directorio live (donde están los symlinks)
+              if [ -d "/etc/letsencrypt/live" ]; then
+                echo "📁 Ajustando permisos de /etc/letsencrypt/live..."
+                sudo chmod -R 755 /etc/letsencrypt/live 2>/dev/null || {
+                  echo "⚠️ No se pudieron ajustar permisos de live (puede ser normal)"
+                }
+                sudo find /etc/letsencrypt/live -type f -exec chmod 644 {} \; 2>/dev/null || true
+                sudo find /etc/letsencrypt/live -type d -exec chmod 755 {} \; 2>/dev/null || true
+              fi
+              
               echo "✅ Permisos de certificados configurados"
             else
-              echo "⚠️ Directorio /etc/letsencrypt/live no existe"
+              echo "⚠️ Directorio /etc/letsencrypt no existe"
             fi
             
             # Login a ECR usando el IAM Role
