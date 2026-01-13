@@ -134,10 +134,8 @@ services:
     ports:
       - "80:80"
       - "443:443"
-    environment:
-      DOMAIN: "${DOMAIN}"
-      SSL_CERT_PATH: "${SSL_CERT_PATH}"
-      SSL_KEY_PATH: "${SSL_KEY_PATH}"
+    env_file:
+      - .env
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
