@@ -6,7 +6,7 @@
 # ============================================
 # Stage 1: Dependencies
 # ============================================
-FROM --platform=linux/arm64 node:20-alpine AS deps
+FROM node:20-alpine AS deps
 
 WORKDIR /app
 
@@ -26,7 +26,7 @@ RUN \
 # ============================================
 # Stage 2: Builder
 # ============================================
-FROM --platform=linux/arm64 node:20-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
@@ -59,7 +59,7 @@ RUN \
 # ============================================
 # Stage 3: Runner (Imagen final)
 # ============================================
-FROM --platform=linux/arm64 node:20-alpine AS runner
+FROM node:20-alpine AS runner
 
 WORKDIR /app
 

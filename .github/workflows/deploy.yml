@@ -87,7 +87,6 @@ jobs:
           API_BASE_URL: ${{ secrets.API_BASE_URL || 'http://central_reserve:3050/api/v1' }}
         run: |
           podman build \
-            --platform linux/arm64 \
             --build-arg NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL} \
             --build-arg API_BASE_URL=${API_BASE_URL} \
             -f docker/Dockerfile \
@@ -136,7 +135,6 @@ jobs:
         run: |
           cd ../..
           podman build \
-            --platform linux/arm64 \
             -f back/central-reserve/docker/Dockerfile \
             -t ${{ steps.get_account.outputs.ECR_REGISTRY }}/rupu-backend:latest \
             -t ${{ steps.get_account.outputs.ECR_REGISTRY }}/rupu-backend:$(date +%Y%m%d-%H%M%S) \
@@ -182,7 +180,6 @@ jobs:
         working-directory: infra/nginx
         run: |
           podman build \
-            --platform linux/arm64 \
             -f Dockerfile \
             -t ${{ steps.get_account.outputs.ECR_REGISTRY }}/rupu-nginx:latest \
             -t ${{ steps.get_account.outputs.ECR_REGISTRY }}/rupu-nginx:$(date +%Y%m%d-%H%M%S) \
