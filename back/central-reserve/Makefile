@@ -1,12 +1,12 @@
 # Makefile para Central Reserve Backend
 # Uso: make [comando]
 
-.PHONY: help build run test clean docker-build docker-dev docker-prod docker-stop docker-logs
+.PHONY: help build run test clean podman-build podman-dev podman-prod podman-stop podman-logs
 
 # Variables
 APP_NAME=central_reserve
-DOCKER_IMAGE=central-reserve
-DOCKER_TAG=latest
+PODMAN_IMAGE=central-reserve
+PODMAN_TAG=latest
 
 # Comandos principales
 help: ## Mostrar esta ayuda
@@ -27,13 +27,13 @@ clean: ## Limpiar archivos generados
 	rm -rf bin/
 	go clean
 
-# Docker
-docker-build: ## Construir imagen Docker
-	docker build -f docker/Dockerfile -t $(DOCKER_IMAGE):$(DOCKER_TAG) .
+# Podman
+podman-build: ## Construir imagen Podman
+	podman build -f docker/Dockerfile -t $(PODMAN_IMAGE):$(PODMAN_TAG) .
 
-docker-dev: ## Levantar entorno de desarrollo con Docker
+podman-dev: ## Levantar entorno de desarrollo con Podman
 	@echo "🚀 Levantando entorno de desarrollo..."
-	cd docker && docker-compose -f docker-compose.dev.yml up -d
+	cd docker && podman-compose -f docker-compose.dev.yml up -d
 	@echo "✅ Entorno listo!"
 	@echo "📋 Servicios disponibles:"
 	@echo "  - API: http://localhost:3050"
@@ -41,28 +41,28 @@ docker-dev: ## Levantar entorno de desarrollo con Docker
 	@echo "  - NATS Dashboard: http://localhost:8111"
 	@echo "  - Adminer: http://localhost:8080"
 
-docker-prod: ## Levantar entorno de producción con Docker
+podman-prod: ## Levantar entorno de producción con Podman
 	@echo "🚀 Levantando entorno de producción..."
-	cd docker && docker-compose -f docker-compose.prod.yml up -d
+	cd docker && podman-compose -f docker-compose.prod.yml up -d
 	@echo "✅ Entorno de producción listo!"
 
-docker-stop: ## Detener contenedores Docker
+podman-stop: ## Detener contenedores Podman
 	@echo "🛑 Deteniendo contenedores..."
-	cd docker && docker-compose -f docker-compose.dev.yml down
-	cd docker && docker-compose -f docker-compose.prod.yml down
+	cd docker && podman-compose -f docker-compose.dev.yml down
+	cd docker && podman-compose -f docker-compose.prod.yml down
 
-docker-logs: ## Ver logs de la aplicación
-	cd docker && docker-compose -f docker-compose.dev.yml logs -f central_reserve
+podman-logs: ## Ver logs de la aplicación
+	cd docker && podman-compose -f docker-compose.dev.yml logs -f central_reserve
 
-docker-logs-all: ## Ver logs de todos los servicios
-	cd docker && docker-compose -f docker-compose.dev.yml logs -f
+podman-logs-all: ## Ver logs de todos los servicios
+	cd docker && podman-compose -f docker-compose.dev.yml logs -f
 
 # Scripts automatizados
 build-and-run: ## Build y ejecutar con script automatizado
-	./scripts/build-docker.sh dev
+	./scripts/build-podman.sh dev
 
 build-prod: ## Build para producción
-	./scripts/build-docker.sh prod
+	./scripts/build-podman.sh prod
 
 # Utilidades
 deps: ## Instalar dependencias
@@ -88,8 +88,8 @@ db-migrate: ## Ejecutar migraciones de base de datos
 
 db-reset: ## Resetear base de datos (¡CUIDADO!)
 	@echo "⚠️  Reseteando base de datos..."
-	cd docker && docker-compose -f docker-compose.dev.yml down -v
-	cd docker && docker-compose -f docker-compose.dev.yml up -d postgres
+	cd docker && podman-compose -f docker-compose.dev.yml down -v
+	cd docker && podman-compose -f docker-compose.dev.yml up -d postgres
 
 # Email testing
 test-email: ## Probar envío de emails
@@ -102,18 +102,18 @@ health: ## Verificar salud de los servicios
 	@curl -f http://localhost:8111 || echo "❌ NATS Dashboard no responde"
 
 # Limpieza completa
-clean-all: ## Limpieza completa (Docker + binarios)
+clean-all: ## Limpieza completa (Podman + binarios)
 	@echo "🧹 Limpieza completa..."
 	make clean
-	make docker-stop
-	docker system prune -f
-	docker volume prune -f
+	make podman-stop
+	podman system prune -f
+	podman volume prune -f
 
 # Información del sistema
 info: ## Mostrar información del sistema
 	@echo "📊 Información del sistema:"
 	@echo "  - Go version: $(shell go version)"
-	@echo "  - Docker version: $(shell docker --version)"
-	@echo "  - Docker Compose version: $(shell docker-compose --version)"
+	@echo "  - Podman version: $(shell podman --version)"
+	@echo "  - Podman Compose version: $(shell podman-compose --version)"
 	@echo "  - Contenedores activos:"
-	@docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "(central_reserve|postgres|redis|nats)" || echo "  No hay contenedores activos" 
+	@podman ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "(central_reserve|postgres|redis|nats)" || echo "  No hay contenedores activos" 

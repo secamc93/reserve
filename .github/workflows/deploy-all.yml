@@ -1,0 +1,82 @@
+name: Deploy All Services
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'infra/compose-prod/**'
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  deploy:
+    name: Deploy All Services
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Get AWS Account ID
+        id: get_account
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "account_id=$ACCOUNT_ID" >> $GITHUB_OUTPUT
+          echo "ECR_REGISTRY=$ACCOUNT_ID.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com" >> $GITHUB_OUTPUT
+
+      - name: Deploy all services
+        run: |
+          # Crear directorio en EC2 si no existe
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'SETUP_EOF'
+            set -e
+            mkdir -p ~/reserve/infra/compose-prod
+          SETUP_EOF
+          
+          # Subir podman-compose.yaml
+          scp -o StrictHostKeyChecking=no \
+            infra/compose-prod/podman-compose.yaml \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/reserve/infra/compose-prod/
+          
+          # Ejecutar despliegue
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+            set -e
+            cd ~/reserve/infra/compose-prod || exit 1
+            
+            echo "🚀 Desplegando todos los servicios..."
+            
+            # Login a ECR
+            aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
+              podman login --username AWS --password-stdin ${{ steps.get_account.outputs.ECR_REGISTRY }}
+            
+            # Pull latest images
+            echo "🔄 Pulling latest images from ECR..."
+            podman-compose -f podman-compose.yaml pull
+            
+            # Update and restart all services
+            echo "🚀 Updating services..."
+            podman-compose -f podman-compose.yaml up -d
+            
+            # Show status
+            echo "📊 Service status:"
+            podman-compose -f podman-compose.yaml ps
+            
+            # Clean up old images
+            podman image prune -f
+            
+            echo "✅ Despliegue completado"
+          EOF

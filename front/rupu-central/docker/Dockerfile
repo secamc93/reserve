@@ -1,5 +1,5 @@
 # ============================================
-# Dockerfile Multi-Stage para Next.js 15
+# Dockerfile Multi-Stage para Next.js 15 (Podman compatible)
 # Arquitectura: ARM64 (compatible con AWS Graviton)
 # ============================================
 
@@ -38,7 +38,7 @@ COPY . .
 
 # Build args para variables de Next.js
 # NEXT_PUBLIC_* = Cliente (SSE, dominio público)
-# API_BASE_URL = Servidor (Server Actions, red interna Docker)
+# API_BASE_URL = Servidor (Server Actions, red interna Podman)
 ARG NEXT_PUBLIC_API_BASE_URL
 ARG API_BASE_URL
 ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
@@ -82,7 +82,7 @@ ENV PORT=80
 ENV HOSTNAME="0.0.0.0"
 
 # IMPORTANTE: API_BASE_URL debe pasarse en runtime (no en build time)
-# Se configura en docker-compose.yml o docker run -e API_BASE_URL=...
+# Se configura en podman-compose.yaml o podman run -e API_BASE_URL=...
 
 # Cambiar a usuario no-root
 USER nextjs

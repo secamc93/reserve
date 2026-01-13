@@ -1,0 +1,103 @@
+name: Backend CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'back/central-reserve/**'
+      - '.github/workflows/backend-ci-cd.yml'
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'back/central-reserve/**'
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPO: public.ecr.aws/d3a6d4r1/cam/reserve
+  IMAGE_NAME: backend
+
+jobs:
+  build-and-push:
+    name: Build and Push to ECR
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Install Podman
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y podman podman-compose
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR Public
+        run: |
+          aws ecr-public get-login-password --region ${{ env.AWS_REGION }} | \
+            podman login --username AWS --password-stdin public.ecr.aws
+
+      - name: Build image
+        working-directory: ./back/central-reserve
+        run: |
+          # Cambiar al directorio padre para incluir dbpostgres en el contexto
+          cd ../..
+          podman build \
+            --platform linux/arm64 \
+            -f back/central-reserve/docker/Dockerfile \
+            -t ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-latest \
+            -t ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-$(date +%Y%m%d-%H%M%S) \
+            .
+
+      - name: Push image to ECR
+        run: |
+          podman push ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-latest
+          # Push también el tag con timestamp
+          podman push ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-$(date +%Y%m%d-%H%M%S) || true
+
+  deploy:
+    name: Deploy to Server
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
+      - name: Deploy to server
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            set -e
+            cd /path/to/infra/compose-prod || cd ~/reserve/infra/compose-prod || exit 1
+            
+            # Pull latest images
+            podman pull ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-latest
+            
+            # Update and restart services
+            podman-compose -f podman-compose.yaml pull central_reserve
+            podman-compose -f podman-compose.yaml up -d central_reserve
+            
+            # Clean up old images
+            podman image prune -f
+          EOF

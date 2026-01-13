@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-// StreamLogs obtiene un stream de logs en tiempo real usando docker logs -f o leyendo de archivo en local
+// StreamLogs obtiene un stream de logs en tiempo real usando podman logs -f o leyendo de archivo en local
 func (r *Repository) StreamLogs(ctx context.Context, filter domain.LogFilter) (io.ReadCloser, error) {
 	// Obtener nombre del contenedor desde configuración
 	containerName := r.env.Get("CONTAINER_NAME")
@@ -27,23 +27,23 @@ func (r *Repository) StreamLogs(ctx context.Context, filter domain.LogFilter) (i
 	}
 
 	// Verificar que el contenedor existe
-	checkCmd := exec.CommandContext(ctx, "docker", "ps", "--filter", fmt.Sprintf("name=%s", containerName), "--format", "{{.Names}}")
+	checkCmd := exec.CommandContext(ctx, "podman", "ps", "--filter", fmt.Sprintf("name=%s", containerName), "--format", "{{.Names}}")
 	output, err := checkCmd.Output()
 	containerExists := err == nil && strings.TrimSpace(string(output)) == containerName
 
-	// Si el contenedor existe, usar Docker (modo producción)
+	// Si el contenedor existe, usar Podman (modo producción)
 	if containerExists {
-		return r.streamFromDocker(ctx, containerName, filter)
+		return r.streamFromPodman(ctx, containerName, filter)
 	}
 
 	// Si no hay contenedor, intentar leer de archivo (modo local)
 	return r.streamFromFile(ctx, filter)
 }
 
-// streamFromDocker obtiene logs desde Docker (modo producción)
-func (r *Repository) streamFromDocker(ctx context.Context, containerName string, filter domain.LogFilter) (io.ReadCloser, error) {
-	// Ejecutar docker logs -f para obtener logs en tiempo real
-	cmd := exec.CommandContext(ctx, "docker", "logs", "-f", "--tail", "100", containerName)
+// streamFromPodman obtiene logs desde Podman (modo producción)
+func (r *Repository) streamFromPodman(ctx context.Context, containerName string, filter domain.LogFilter) (io.ReadCloser, error) {
+	// Ejecutar podman logs -f para obtener logs en tiempo real
+	cmd := exec.CommandContext(ctx, "podman", "logs", "-f", "--tail", "100", containerName)
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -60,7 +60,7 @@ func (r *Repository) streamFromDocker(ctx context.Context, containerName string,
 	if err := cmd.Start(); err != nil {
 		stdout.Close()
 		stderr.Close()
-		return nil, fmt.Errorf("error iniciando docker logs: %w", err)
+		return nil, fmt.Errorf("error iniciando podman logs: %w", err)
 	}
 
 	// Crear un reader combinado que lea de stdout y stderr
@@ -190,7 +190,7 @@ func (r *Repository) streamFromFile(ctx context.Context, filter domain.LogFilter
 	return pr, nil
 }
 
-// parseLogLine parsea una línea de log de Docker
+// parseLogLine parsea una línea de log de Podman
 func (r *Repository) parseLogLine(line string) domain.LogEntry {
 	entry := domain.LogEntry{
 		Timestamp: time.Now(),
@@ -199,10 +199,10 @@ func (r *Repository) parseLogLine(line string) domain.LogEntry {
 		Message:   line,
 	}
 
-	// Intentar parsear como JSON (formato json-file de Docker)
+	// Intentar parsear como JSON (formato json-file de Podman)
 	var jsonData map[string]interface{}
 	if err := json.Unmarshal([]byte(line), &jsonData); err == nil {
-		// Es JSON, extraer campos del formato Docker json-file
+		// Es JSON, extraer campos del formato Podman json-file
 		// Formato: {"log":"mensaje\n","stream":"stdout","time":"..."}
 		if logMsg, ok := jsonData["log"].(string); ok {
 			entry.Message = strings.TrimSpace(logMsg)
@@ -245,7 +245,7 @@ func (r *Repository) parseLogLine(line string) domain.LogEntry {
 			}
 		}
 
-		// Extraer timestamp del formato Docker
+		// Extraer timestamp del formato Podman
 		if timeStr, ok := jsonData["time"].(string); ok {
 			if t, err := time.Parse(time.RFC3339Nano, timeStr); err == nil {
 				entry.Timestamp = t
@@ -389,14 +389,14 @@ func (r *Repository) matchesFilter(entry domain.LogEntry, filter domain.LogFilte
 func (r *Repository) detectContainerName() string {
 	// Prioridad: buscar primero el contenedor de producción
 	variants := []string{
-		"central_reserve_prod", // Nombre en docker-compose de producción
-		"central_reserve",      // Nombre en docker-compose de desarrollo
+		"central_reserve_prod", // Nombre en podman-compose de producción
+		"central_reserve",      // Nombre en podman-compose de desarrollo
 		"central-reserve-prod",
 		"central-reserve",
 	}
 
 	for _, variant := range variants {
-		checkCmd := exec.Command("docker", "ps", "--filter", fmt.Sprintf("name=^%s$", variant), "--format", "{{.Names}}")
+		checkCmd := exec.Command("podman", "ps", "--filter", fmt.Sprintf("name=^%s$", variant), "--format", "{{.Names}}")
 		output, err := checkCmd.Output()
 		if err == nil && strings.TrimSpace(string(output)) == variant {
 			return variant
@@ -404,7 +404,7 @@ func (r *Repository) detectContainerName() string {
 	}
 
 	// Si no se encuentra con nombre exacto, buscar contenedores que contengan "central_reserve"
-	cmd := exec.Command("docker", "ps", "--filter", "name=central_reserve", "--format", "{{.Names}}")
+	cmd := exec.Command("podman", "ps", "--filter", "name=central_reserve", "--format", "{{.Names}}")
 	output, err := cmd.Output()
 	if err == nil {
 		names := strings.TrimSpace(string(output))
@@ -451,7 +451,7 @@ func (r *Repository) isFromThisProject(entry domain.LogEntry) bool {
 
 // listAvailableContainers lista los contenedores disponibles para debugging
 func (r *Repository) listAvailableContainers() string {
-	cmd := exec.Command("docker", "ps", "--format", "{{.Names}}")
+	cmd := exec.Command("podman", "ps", "--format", "{{.Names}}")
 	output, err := cmd.Output()
 	if err != nil {
 		return "error al listar contenedores"

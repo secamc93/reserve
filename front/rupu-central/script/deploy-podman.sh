@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# ⚠️ DEPRECADO: Este script usa Docker. Usa deploy-podman.sh en su lugar.
-# Script de despliegue para ECR público (Docker - DEPRECADO)
+# Script de despliegue para ECR público con Podman
 # Rupu Central - Frontend Next.js
 
 set -e
@@ -28,22 +27,15 @@ if [ ! -f "package.json" ]; then
     exit 1
 fi
 
-# Verificar que Docker esté corriendo
-if ! docker info > /dev/null 2>&1; then
-    echo -e "${RED}❌ Error: Docker no está corriendo${NC}"
+# Verificar que Podman esté corriendo
+if ! podman info > /dev/null 2>&1; then
+    echo -e "${RED}❌ Error: Podman no está corriendo${NC}"
     exit 1
 fi
 
 # Verificar que AWS CLI esté configurado
 if ! aws sts get-caller-identity > /dev/null 2>&1; then
     echo -e "${RED}❌ Error: AWS CLI no está configurado correctamente${NC}"
-    exit 1
-fi
-
-# Verificar que buildx esté disponible
-if ! docker buildx version > /dev/null 2>&1; then
-    echo -e "${RED}❌ Error: Docker buildx no está disponible${NC}"
-    echo -e "${YELLOW}💡 Instala buildx: https://docs.docker.com/buildx/working-with-buildx/${NC}"
     exit 1
 fi
 
@@ -62,17 +54,9 @@ else
     npm install
 fi
 
-# Crear builder multi-arquitectura si no existe
-echo -e "${YELLOW}🔧 Configurando builder multi-arquitectura...${NC}"
-if ! docker buildx inspect multiarch-builder > /dev/null 2>&1; then
-    docker buildx create --name multiarch-builder --driver docker-container --use
-else
-    docker buildx use multiarch-builder
-fi
-
 # URLs del API
 # NEXT_PUBLIC_API_BASE_URL = Cliente (SSE, dominio público)
-# API_BASE_URL = Servidor (Server Actions, red interna Docker)
+# API_BASE_URL = Servidor (Server Actions, red interna Podman)
 PUBLIC_API_URL=${NEXT_PUBLIC_API_BASE_URL:-"https://xn--rup-joa.com/api/v1"}
 SERVER_API_URL=${API_BASE_URL:-"http://central_reserve:3050/api/v1"}
 
@@ -82,16 +66,15 @@ echo -e "   Servidor (Actions): ${SERVER_API_URL}"
 echo ""
 
 # Construir la imagen para ARM64
-echo -e "${YELLOW}🔨 Construyendo imagen Docker para ARM64...${NC}"
+echo -e "${YELLOW}🔨 Construyendo imagen Podman para ARM64...${NC}"
 echo -e "${BLUE}   Esto puede tomar varios minutos...${NC}"
 
-docker buildx build \
+podman build \
     --platform linux/arm64 \
     --build-arg NEXT_PUBLIC_API_BASE_URL=${PUBLIC_API_URL} \
     --build-arg API_BASE_URL=${SERVER_API_URL} \
     -f ${DOCKERFILE_PATH} \
     -t ${IMAGE_NAME}:${VERSION} \
-    --load \
     .
 
 echo -e "${GREEN}✅ Imagen construida exitosamente${NC}"
@@ -106,22 +89,22 @@ if [ "${VERSION}" = "latest" ]; then
     DESCRIPTIVE_TAG="frontend-latest"
     DATED_TAG="frontend-${TIMESTAMP}"
     
-    docker tag ${IMAGE_NAME}:${VERSION} ${ECR_REPO}:${DESCRIPTIVE_TAG}
-    docker tag ${IMAGE_NAME}:${VERSION} ${ECR_REPO}:${DATED_TAG}
+    podman tag ${IMAGE_NAME}:${VERSION} ${ECR_REPO}:${DESCRIPTIVE_TAG}
+    podman tag ${IMAGE_NAME}:${VERSION} ${ECR_REPO}:${DATED_TAG}
     
     echo -e "${GREEN}📅 Tags creados: ${DESCRIPTIVE_TAG}, ${DATED_TAG}${NC}"
 else
     # Para versiones específicas, crear tag descriptivo
     DESCRIPTIVE_TAG="frontend-${VERSION}"
     
-    docker tag ${IMAGE_NAME}:${VERSION} ${ECR_REPO}:${DESCRIPTIVE_TAG}
+    podman tag ${IMAGE_NAME}:${VERSION} ${ECR_REPO}:${DESCRIPTIVE_TAG}
     
     echo -e "${GREEN}🏷️  Tags creados: ${DESCRIPTIVE_TAG}${NC}"
 fi
 
 # Login a ECR público
 echo -e "${YELLOW}🔐 Haciendo login a ECR público...${NC}"
-aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
+aws ecr-public get-login-password --region us-east-1 | podman login --username AWS --password-stdin public.ecr.aws
 
 # Push de las imágenes
 echo -e "${YELLOW}⬆️  Subiendo imágenes a ECR...${NC}"
@@ -129,12 +112,12 @@ echo -e "${BLUE}   Esto puede tomar varios minutos dependiendo de tu conexión..
 
 if [ "${VERSION}" = "latest" ]; then
     # Subir todos los tags para latest
-    docker push ${ECR_REPO}:${DESCRIPTIVE_TAG}
-    docker push ${ECR_REPO}:${DATED_TAG}
+    podman push ${ECR_REPO}:${DESCRIPTIVE_TAG}
+    podman push ${ECR_REPO}:${DATED_TAG}
     echo -e "${GREEN}✅ Imágenes subidas con tags: ${DESCRIPTIVE_TAG}, ${DATED_TAG}${NC}"
 else
     # Subir tags para versiones específicas
-    docker push ${ECR_REPO}:${DESCRIPTIVE_TAG}
+    podman push ${ECR_REPO}:${DESCRIPTIVE_TAG}
     echo -e "${GREEN}✅ Imagen subida con tag: ${DESCRIPTIVE_TAG}${NC}"
 fi
 
@@ -157,7 +140,7 @@ fi
 
 echo ""
 echo -e "${BLUE}🐳 Para ejecutar en producción (ARM64):${NC}"
-echo -e "   docker run -d \\"
+echo -e "   podman run -d \\"
 echo -e "     --name rupu-central-frontend \\"
 echo -e "     --restart unless-stopped \\"
 echo -e "     --network app-network \\"

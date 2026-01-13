@@ -16,10 +16,10 @@
 ### Opción 1: Script Automatizado (Recomendado)
 ```bash
 # Desarrollo completo con todos los servicios
-./scripts/build-docker.sh dev
+./scripts/build-podman.sh dev
 
 # Solo build para producción
-./scripts/build-docker.sh prod
+./scripts/build-podman.sh prod
 ```
 
 ### Opción 2: Ejecutar directamente desde ECR
@@ -28,17 +28,17 @@
 touch .env
 
 # Ejecutar la aplicación
-docker run --env-file .env -p 3050:3050 public.ecr.aws/d3a6d4r1/cam/reserve:latest
+podman run --env-file .env -p 3050:3050 public.ecr.aws/d3a6d4r1/cam/reserve:backend-latest
 ```
 
-### Opción 3: Usando docker-compose
+### Opción 3: Usando podman-compose
 ```bash
 # Desarrollo
 cd docker
-docker-compose -f docker-compose.dev.yml up -d
+podman-compose -f docker-compose.dev.yml up -d
 
 # Producción
-docker-compose -f docker-compose.prod.yml up -d
+podman-compose -f docker-compose.prod.yml up -d
 
 # Verificar que esté funcionando
 curl http://localhost:3050/health
@@ -50,13 +50,13 @@ curl http://localhost:3050/health
 make help
 
 # Entorno de desarrollo
-make docker-dev
+make podman-dev
 
 # Entorno de producción
-make docker-prod
+make podman-prod
 
 # Ver logs
-make docker-logs
+make podman-logs
 ```
 
 ---
@@ -65,9 +65,9 @@ make docker-logs
 
 | Tag | Descripción | Comando |
 |-----|-------------|---------|
-| `latest` | Última versión estable | `docker pull public.ecr.aws/d3a6d4r1/cam/reserve:latest` |
-| `v1.0.0` | Primera versión de producción | `docker pull public.ecr.aws/d3a6d4r1/cam/reserve:v1.0.0` |
-| `v1.0.1` | Versión mejorada | `docker pull public.ecr.aws/d3a6d4r1/cam/reserve:v1.0.1` |
+| `backend-latest` | Última versión estable | `podman pull public.ecr.aws/d3a6d4r1/cam/reserve:backend-latest` |
+| `v1.0.0` | Primera versión de producción | `podman pull public.ecr.aws/d3a6d4r1/cam/reserve:v1.0.0` |
+| `v1.0.1` | Versión mejorada | `podman pull public.ecr.aws/d3a6d4r1/cam/reserve:v1.0.1` |
 
 ---
 
@@ -138,30 +138,31 @@ SMTP_USE_TLS=false
 ### **Desplegar nueva versión**
 ```bash
 # Versión automática (latest + timestamp)
-./scripts/deploy.sh
+./scripts/deploy-podman.sh
 
 # Versión específica
-./scripts/deploy.sh v1.0.2
+./scripts/deploy-podman.sh v1.0.2
 
 # Versión de desarrollo
-./scripts/deploy.sh dev
+./scripts/deploy-podman.sh dev
 ```
 
 ### **Desarrollo local**
 ```bash
 # Construir imagen local
-docker build -f docker/Dockerfile -t central-reserve .
+podman build -f docker/Dockerfile -t central-reserve .
 
 # Ejecutar en desarrollo
-docker run --env-file .env -p 3050:3050 central-reserve
+podman run --env-file .env -p 3050:3050 central-reserve
 ```
 
 ### **CI/CD Automático**
 El proyecto incluye GitHub Actions que automáticamente:
 - ✅ Ejecuta tests
-- ✅ Construye la imagen
+- ✅ Construye la imagen con Podman
 - ✅ Deploya a ECR en cada push a `main`
-- ✅ Crear tags automáticos para releases
+- ✅ Despliega al servidor usando Podman Compose
+- ✅ Crea tags automáticos para releases
 
 ---
 
@@ -191,7 +192,7 @@ JWT_SECRET=production-super-secret-key
 ### **Staging**
 ```bash
 # Usar tag específico para staging
-docker run --env-file .env.staging -p 3050:3050 public.ecr.aws/d3a6d4r1/cam/reserve:v1.0.1
+podman run --env-file .env.staging -p 3050:3050 public.ecr.aws/d3a6d4r1/cam/reserve:v1.0.1
 ```
 
 ---
@@ -201,37 +202,37 @@ docker run --env-file .env.staging -p 3050:3050 public.ecr.aws/d3a6d4r1/cam/rese
 ### Gestión de Contenedores
 ```bash
 # Ver contenedores activos
-docker ps
+podman ps
 
 # Ver logs en tiempo real
-make docker-logs
+make podman-logs
 
 # Ver logs de todos los servicios
-make docker-logs-all
+make podman-logs-all
 
 # Detener todos los servicios
-make docker-stop
+make podman-stop
 
 # Reiniciar servicios
-docker-compose -f docker/docker-compose.dev.yml restart
+podman-compose -f docker/docker-compose.dev.yml restart
 ```
 
 ### Base de Datos
 ```bash
 # Acceder a PostgreSQL
-docker exec -it postgres_dev psql -U postgres -d central_reserve
+podman exec -it postgres_dev psql -U postgres -d central_reserve
 
 # Resetear base de datos
 make db-reset
 
 # Ver logs de PostgreSQL
-docker logs postgres_dev
+podman logs postgres_dev
 ```
 
 ### Desarrollo
 ```bash
 # Rebuild de la imagen
-make docker-build
+make podman-build
 
 # Ejecutar tests
 make test
@@ -246,13 +247,13 @@ make test-email
 ### Gestión de Imágenes
 ```bash
 # Limpiar imágenes locales
-docker image prune -f
+podman image prune -f
 
 # Ver todas las imágenes del proyecto
-docker images | grep central-reserve
+podman images | grep central-reserve
 
 # Eliminar imagen específica
-docker rmi public.ecr.aws/d3a6d4r1/cam/reserve:old-version
+podman rmi public.ecr.aws/d3a6d4r1/cam/reserve:old-version
 ```
 
 ---
@@ -270,10 +271,10 @@ curl http://localhost:3050/health
 ### **Logs**
 ```bash
 # Ver logs en tiempo real
-docker logs -f central_reserve_prod
+podman logs -f central_reserve_prod
 
-# Logs con docker-compose
-docker-compose -f docker/docker-compose.prod.yml logs -f central_reserve
+# Logs con podman-compose
+podman-compose -f docker/docker-compose.prod.yml logs -f central_reserve
 ```
 
 ### **Métricas**
@@ -316,28 +317,28 @@ sudo kill -9 <PID>
 #### 2. Contenedor no inicia
 ```bash
 # Ver logs detallados
-docker logs central_reserve_dev
+podman logs central_reserve_dev
 
 # Verificar variables de entorno
-docker exec central_reserve_dev env | grep -E "(DB_|SMTP_)"
+podman exec central_reserve_dev env | grep -E "(DB_|SMTP_)"
 ```
 
 #### 3. Base de datos no conecta
 ```bash
 # Verificar que PostgreSQL esté corriendo
-docker ps | grep postgres
+podman ps | grep postgres
 
 # Ver logs de PostgreSQL
-docker logs postgres_dev
+podman logs postgres_dev
 
 # Probar conexión
-docker exec -it postgres_dev pg_isready -U postgres
+podman exec -it postgres_dev pg_isready -U postgres
 ```
 
 #### 4. Permisos de archivos
 ```bash
 # Dar permisos al script
-chmod +x scripts/build-docker.sh
+chmod +x scripts/build-podman.sh
 
 # Si hay problemas con volúmenes
 sudo chown -R $USER:$USER .
@@ -346,13 +347,13 @@ sudo chown -R $USER:$USER .
 ### Troubleshooting Avanzado
 ```bash
 # Ejecutar contenedor en modo interactivo
-docker run -it --env-file .env public.ecr.aws/d3a6d4r1/cam/reserve:latest sh
+podman run -it --env-file .env public.ecr.aws/d3a6d4r1/cam/reserve:backend-latest sh
 
 # Verificar variables de entorno
-docker run --env-file .env public.ecr.aws/d3a6d4r1/cam/reserve:latest env
+podman run --env-file .env public.ecr.aws/d3a6d4r1/cam/reserve:backend-latest env
 
 # Verificar conectividad a base de datos
-docker run --env-file .env --rm public.ecr.aws/d3a6d4r1/cam/reserve:latest ping $DB_HOST
+podman run --env-file .env --rm public.ecr.aws/d3a6d4r1/cam/reserve:backend-latest ping $DB_HOST
 ```
 
 ### Limpieza
@@ -361,10 +362,10 @@ docker run --env-file .env --rm public.ecr.aws/d3a6d4r1/cam/reserve:latest ping 
 make clean-all
 
 # Solo contenedores
-docker-compose -f docker/docker-compose.dev.yml down -v
+podman-compose -f docker/docker-compose.dev.yml down -v
 
 # Solo imágenes
-docker rmi central-reserve:latest
+podman rmi central-reserve:latest
 ```
 
 ---
@@ -383,7 +384,7 @@ docker rmi central-reserve:latest
 openssl rand -base64 32
 
 # Ejecutar con usuario no-root (ya configurado)
-docker run --user 1000:1000 --env-file .env -p 3050:3050 public.ecr.aws/d3a6d4r1/cam/reserve:latest
+podman run --user 1000:1000 --env-file .env -p 3050:3050 public.ecr.aws/d3a6d4r1/cam/reserve:backend-latest
 ```
 
 ### Buenas Prácticas Implementadas
@@ -407,7 +408,7 @@ docker run --user 1000:1000 --env-file .env -p 3050:3050 public.ecr.aws/d3a6d4r1
 
 ### 1. Build de Producción
 ```bash
-./scripts/build-docker.sh prod v1.0.0
+./scripts/build-podman.sh prod v1.0.0
 ```
 
 ### 2. Configurar Variables de Producción
@@ -419,7 +420,7 @@ LOG_LEVEL=info
 
 ### 3. Desplegar
 ```bash
-docker-compose -f docker/docker-compose.prod.yml up -d
+podman-compose -f docker/docker-compose.prod.yml up -d
 ```
 
 ### 4. Verificar
@@ -428,7 +429,7 @@ docker-compose -f docker/docker-compose.prod.yml up -d
 curl http://tu-servidor:3050/health
 
 # Logs
-docker-compose -f docker/docker-compose.prod.yml logs -f
+podman-compose -f docker/docker-compose.prod.yml logs -f
 ```
 
 ---
@@ -466,8 +467,8 @@ docker-compose -f docker/docker-compose.prod.yml logs -f
 
 ## 📚 Recursos Adicionales
 
-- [Docker Documentation](https://docs.docker.com/)
-- [Docker Compose](https://docs.docker.com/compose/)
-- [PostgreSQL Docker](https://hub.docker.com/_/postgres)
-- [Redis Docker](https://hub.docker.com/_/redis)
-- [NATS Docker](https://hub.docker.com/_/nats)
+- [Podman Documentation](https://docs.podman.io/)
+- [Podman Compose](https://github.com/containers/podman-compose)
+- [PostgreSQL Podman](https://hub.docker.com/_/postgres)
+- [Redis Podman](https://hub.docker.com/_/redis)
+- [NATS Podman](https://hub.docker.com/_/nats)

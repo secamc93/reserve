@@ -32,7 +32,7 @@ COPY dbpostgres ./dbpostgres/
 # Copiar el resto del código
 COPY central-reserve .
 
-# Actualizar el replace directive para el contexto de Docker
+# Actualizar el replace directive para el contexto de Podman
 RUN sed -i 's|replace dbpostgres => ../dbpostgres|replace dbpostgres => ./dbpostgres|' go.mod
 
 RUN go mod download
@@ -58,11 +58,11 @@ WORKDIR /app
 # Copiar binario desde build stage
 COPY --from=builder /app/central_reserve .
 
-# Instalar certificados SSL, Docker CLI, wget y configurar zona horaria
+# Instalar certificados SSL, wget y configurar zona horaria
+# Nota: Podman no se instala en el contenedor, se accede al socket del host
 RUN apk update && apk add --no-cache \
     ca-certificates \
     tzdata \
-    docker-cli \
     wget && \
     cp /usr/share/zoneinfo/${TZ} /etc/localtime && \
     echo "${TZ}" > /etc/timezone && \

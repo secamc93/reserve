@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  output: 'standalone', // Para Docker - genera una build optimizada
+  output: 'standalone', // Para Podman/Docker - genera una build optimizada
   
   // Configuraciones de Turbopack para Next.js 16
   turbopack: {

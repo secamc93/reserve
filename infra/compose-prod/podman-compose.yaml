@@ -4,7 +4,7 @@ services:
 
   frontend:
     platform: linux/arm64
-    image: public.ecr.aws/d3a6d4r1/cam/reserve:frontend-latest
+    image: 334689162817.dkr.ecr.us-east-1.amazonaws.com/rupu-frontend:latest
     container_name: frontend_prod
     ports:
       - "8080:80"
@@ -35,7 +35,7 @@ services:
           memory: 128M
 
   central_reserve:
-    image: public.ecr.aws/d3a6d4r1/cam/reserve:backend-latest
+    image: 334689162817.dkr.ecr.us-east-1.amazonaws.com/rupu-backend:latest
     container_name: central_reserve_prod
     ports:
       - "3050:3050"
@@ -66,10 +66,10 @@ services:
       S3_SECRET:           "${S3_SECRET}"
       URL_BASE_DOMAIN_S3:  "${URL_BASE_DOMAIN_S3}"
     volumes:
-      # Permitir acceso al socket de Docker para leer logs de contenedores
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Permitir acceso al socket de Podman para leer logs de contenedores
+      - /run/podman/podman.sock:/run/podman/podman.sock:ro
     group_add:
-      # GID del grupo docker en el host para acceder al socket
+      # GID del grupo podman en el host para acceder al socket
       - "988"
     restart: unless-stopped
   
@@ -103,7 +103,12 @@ services:
       POSTGRES_USER:     "${DB_USER}"
       POSTGRES_PASSWORD: "${DB_PASSWORD}"
     volumes:
+      # IMPORTANTE: Usar bind mount para mantener los datos existentes del EC2
+      # Ajusta la ruta según donde estén tus datos de PostgreSQL en el EC2
+      # Opción 1: Si los datos están en un volumen Docker/Podman existente
       - postgres_data:/var/lib/postgresql/data
+      # Opción 2: Si los datos están en el filesystem del EC2 (descomenta y ajusta)
+      # - /opt/postgresql/data:/var/lib/postgresql/data
     restart: unless-stopped
     networks:
       - app-network
@@ -121,7 +126,7 @@ services:
           memory: 512M
 
   nginx:
-    image: public.ecr.aws/d3a6d4r1/cam/reserve:nginx-latest
+    image: 334689162817.dkr.ecr.us-east-1.amazonaws.com/rupu-nginx:latest
     container_name: nginx_prod
     ports:
       - "80:80"

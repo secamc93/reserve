@@ -1,0 +1,264 @@
+name: Deploy Services (Frontend, Backend, Nginx)
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'front/rupu-central/**'
+      - 'back/central-reserve/**'
+      - 'infra/nginx/**'
+      - 'infra/compose-prod/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  # Detectar qué servicios cambiaron
+  detect-changes:
+    name: Detect Changed Services
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
+      nginx: ${{ steps.filter.outputs.nginx }}
+      compose: ${{ steps.filter.outputs.compose }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      
+      - name: Check for changes
+        id: filter
+        uses: dorny/paths-filter@v2
+        with:
+          filters: |
+            frontend:
+              - 'front/rupu-central/**'
+            backend:
+              - 'back/central-reserve/**'
+            nginx:
+              - 'infra/nginx/**'
+            compose:
+              - 'infra/compose-prod/**'
+              - '.github/workflows/deploy.yml'
+
+  build-frontend:
+    name: Build and Push Frontend
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Podman
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y podman
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Get AWS Account ID
+        id: get_account
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "account_id=$ACCOUNT_ID" >> $GITHUB_OUTPUT
+          echo "ECR_REGISTRY=$ACCOUNT_ID.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com" >> $GITHUB_OUTPUT
+
+      - name: Login to ECR
+        run: |
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
+            podman login --username AWS --password-stdin ${{ steps.get_account.outputs.ECR_REGISTRY }}
+
+      - name: Build and push frontend
+        working-directory: front/rupu-central
+        env:
+          NEXT_PUBLIC_API_BASE_URL: ${{ secrets.NEXT_PUBLIC_API_BASE_URL || 'https://xn--rup-joa.com/api/v1' }}
+          API_BASE_URL: ${{ secrets.API_BASE_URL || 'http://central_reserve:3050/api/v1' }}
+        run: |
+          podman build \
+            --platform linux/arm64 \
+            --build-arg NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL} \
+            --build-arg API_BASE_URL=${API_BASE_URL} \
+            -f docker/Dockerfile \
+            -t ${{ steps.get_account.outputs.ECR_REGISTRY }}/rupu-frontend:latest \
+            -t ${{ steps.get_account.outputs.ECR_REGISTRY }}/rupu-frontend:$(date +%Y%m%d-%H%M%S) \
+            .
+          
+          podman push ${{ steps.get_account.outputs.ECR_REGISTRY }}/rupu-frontend:latest || true
+          podman push ${{ steps.get_account.outputs.ECR_REGISTRY }}/rupu-frontend:$(date +%Y%m%d-%H%M%S) || true
+
+  build-backend:
+    name: Build and Push Backend
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Podman
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y podman
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Get AWS Account ID
+        id: get_account
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "account_id=$ACCOUNT_ID" >> $GITHUB_OUTPUT
+          echo "ECR_REGISTRY=$ACCOUNT_ID.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com" >> $GITHUB_OUTPUT
+
+      - name: Login to ECR
+        run: |
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
+            podman login --username AWS --password-stdin ${{ steps.get_account.outputs.ECR_REGISTRY }}
+
+      - name: Build and push backend
+        working-directory: back/central-reserve
+        run: |
+          cd ../..
+          podman build \
+            --platform linux/arm64 \
+            -f back/central-reserve/docker/Dockerfile \
+            -t ${{ steps.get_account.outputs.ECR_REGISTRY }}/rupu-backend:latest \
+            -t ${{ steps.get_account.outputs.ECR_REGISTRY }}/rupu-backend:$(date +%Y%m%d-%H%M%S) \
+            .
+          
+          podman push ${{ steps.get_account.outputs.ECR_REGISTRY }}/rupu-backend:latest || true
+          podman push ${{ steps.get_account.outputs.ECR_REGISTRY }}/rupu-backend:$(date +%Y%m%d-%H%M%S) || true
+
+  build-nginx:
+    name: Build and Push Nginx
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.nginx == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Podman
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y podman
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Get AWS Account ID
+        id: get_account
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "account_id=$ACCOUNT_ID" >> $GITHUB_OUTPUT
+          echo "ECR_REGISTRY=$ACCOUNT_ID.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com" >> $GITHUB_OUTPUT
+
+      - name: Login to ECR
+        run: |
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
+            podman login --username AWS --password-stdin ${{ steps.get_account.outputs.ECR_REGISTRY }}
+
+      - name: Build and push nginx
+        working-directory: infra/nginx
+        run: |
+          podman build \
+            --platform linux/arm64 \
+            -f Dockerfile \
+            -t ${{ steps.get_account.outputs.ECR_REGISTRY }}/rupu-nginx:latest \
+            -t ${{ steps.get_account.outputs.ECR_REGISTRY }}/rupu-nginx:$(date +%Y%m%d-%H%M%S) \
+            .
+          
+          podman push ${{ steps.get_account.outputs.ECR_REGISTRY }}/rupu-nginx:latest || true
+          podman push ${{ steps.get_account.outputs.ECR_REGISTRY }}/rupu-nginx:$(date +%Y%m%d-%H%M%S) || true
+
+
+  deploy:
+    name: Deploy to EC2
+    needs: [detect-changes, build-frontend, build-backend, build-nginx]
+    runs-on: ubuntu-latest
+    # Solo desplegar en main y si algo cambió
+    if: |
+      always() &&
+      github.ref == 'refs/heads/main' && 
+      (needs.detect-changes.outputs.frontend == 'true' || 
+       needs.detect-changes.outputs.backend == 'true' || 
+       needs.detect-changes.outputs.nginx == 'true' || 
+       needs.detect-changes.outputs.compose == 'true')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
+      - name: Get AWS Account ID for deploy
+        id: get_account_deploy
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "account_id=$ACCOUNT_ID" >> $GITHUB_OUTPUT
+          echo "ECR_REGISTRY=$ACCOUNT_ID.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com" >> $GITHUB_OUTPUT
+
+      - name: Deploy to server
+        run: |
+          # Crear directorio en EC2 si no existe
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'SETUP_EOF'
+            set -e
+            mkdir -p ~/reserve/infra/compose-prod
+          SETUP_EOF
+          
+          # Subir podman-compose.yaml si cambió
+          scp -o StrictHostKeyChecking=no \
+            infra/compose-prod/podman-compose.yaml \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/reserve/infra/compose-prod/
+          
+          # Ejecutar despliegue
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+            set -e
+            
+            # Navegar al directorio de compose
+            cd ~/reserve/infra/compose-prod || exit 1
+            
+            # Login a ECR
+            aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
+              podman login --username AWS --password-stdin ${{ steps.get_account_deploy.outputs.ECR_REGISTRY }}
+            
+            # Pull latest images
+            echo "🔄 Pulling latest images from ECR..."
+            podman-compose -f podman-compose.yaml pull
+            
+            # Update and restart services
+            echo "🚀 Updating services..."
+            podman-compose -f podman-compose.yaml up -d
+            
+            # Show status
+            echo "📊 Service status:"
+            podman-compose -f podman-compose.yaml ps
+            
+            # Clean up old images
+            podman image prune -f
+            
+            echo "✅ Deployment completed"
+          EOF

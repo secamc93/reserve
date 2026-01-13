@@ -42,7 +42,7 @@ func New() ILogger {
 			TimeFormat: "01-02 15:04:05", // Fecha corta (mes-día) y hora
 		}
 
-		// Detectar si estamos en modo local (sin Docker)
+		// Detectar si estamos en modo local (sin Podman)
 		appEnv := os.Getenv("APP_ENV")
 		isLocal := appEnv == "local" || appEnv == "development" || appEnv == ""
 

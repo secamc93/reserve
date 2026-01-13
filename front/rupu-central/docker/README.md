@@ -1,11 +1,10 @@
-# 🐳 Docker - Rupu Central Frontend
+# 🐳 Podman - Rupu Central Frontend
 
-Documentación para construir y desplegar la imagen Docker del frontend de Rupu Central para ARM64.
+Documentación para construir y desplegar la imagen Podman del frontend de Rupu Central para ARM64.
 
 ## 📋 Requisitos Previos
 
-- **Docker** 20.10 o superior con BuildKit habilitado
-- **Docker Buildx** para builds multi-arquitectura
+- **Podman** 4.0 o superior
 - **AWS CLI** configurado con credenciales válidas
 
 ## 🏗️ Arquitectura
@@ -23,7 +22,7 @@ La imagen está optimizada para **ARM64 (AWS Graviton)** y utiliza:
 │                    SERVIDOR PRODUCCIÓN                       │
 │                                                              │
 │  ┌────────────────────────────────────────────────────────┐ │
-│  │         Red Interna Docker: app-network                │ │
+│  │         Red Interna Podman: app-network                │ │
 │  │                                                         │ │
 │  │  ┌──────────────────────┐    ┌──────────────────┐     │ │
 │  │  │   Frontend           │───>│   Backend        │     │ │
@@ -53,7 +52,7 @@ Frontend     ──> API ──> http://central_reserve:3050 (red interna)
 ⚠️ **IMPORTANTE**: Next.js necesita **DOS URLs** diferentes:
 
 1. **Cliente (SSE)**: Dominio público → `https://xn--rup-joa.com/api/v1`
-2. **Servidor (Actions)**: Red interna Docker → `http://central_reserve:3050/api/v1`
+2. **Servidor (Actions)**: Red interna Podman → `http://central_reserve:3050/api/v1`
 
 Las URLs ya están configuradas por defecto en `script/deploy.sh` líneas 75-76:
 
@@ -81,7 +80,7 @@ export API_BASE_URL="http://nombre_contenedor:3050/api/v1"
 ```
 
 Este script:
-1. ✅ Verifica dependencias (Docker, AWS CLI, Buildx)
+1. ✅ Verifica dependencias (Podman, AWS CLI)
 2. 📦 Instala dependencias de Node.js
 3. 🔨 Construye la imagen para ARM64 con la URL del API
 4. 🏷️ Crea tags descriptivos (frontend-latest, frontend-TIMESTAMP)
@@ -96,17 +95,17 @@ Este script:
 ```bash
 # Login a ECR público
 aws ecr-public get-login-password --region us-east-1 | \
-  docker login --username AWS --password-stdin public.ecr.aws
+  podman login --username AWS --password-stdin public.ecr.aws
 
 # Pull de la imagen
-docker pull public.ecr.aws/d3a6d4r1/cam/reserve:frontend-latest
+podman pull public.ecr.aws/d3a6d4r1/cam/reserve:frontend-latest
 ```
 
 ### Ejecutar en Servidor ARM64
 
 ```bash
-# Conectar a la red interna de Docker donde está el backend
-docker run -d \
+# Conectar a la red interna de Podman donde está el backend
+podman run -d \
   --name rupu-central-frontend \
   --restart unless-stopped \
   --network app-network \
@@ -117,7 +116,7 @@ docker run -d \
 **NOTAS:**
 - Puerto interno: `80` (Next.js escucha en puerto 80)
 - Puerto expuesto: `8080` (acceso desde el host)
-- `--network app-network`: Conecta a la red Docker del backend (según tu docker-compose)
+- `--network app-network`: Conecta a la red Podman del backend (según tu podman-compose.yaml)
 - Las URLs ya están embebidas en la imagen durante el build
 - El frontend se comunicará con el backend por la red interna (`http://central_reserve:3050`)
 - Los clientes SSE usarán el dominio público (`https://xn--rup-joa.com`)
@@ -136,26 +135,23 @@ docker run -d \
 Si el build de ARM64 falla en un sistema x86/amd64:
 
 ```bash
-# Verificar que buildx esté instalado
-docker buildx version
+# Verificar que Podman esté instalado
+podman --version
 
-# Crear nuevo builder
-docker buildx create --name multiarch-builder --driver docker-container --use
-
-# Listar plataformas disponibles
-docker buildx inspect --bootstrap
+# Podman soporta builds multi-arquitectura nativamente
+# Usar --platform linux/arm64 en el comando build
 ```
 
 ### Imagen No Inicia
 
 Ver logs del contenedor:
 ```bash
-docker logs -f rupu-central-frontend
+podman logs -f rupu-central-frontend
 ```
 
 Entrar al contenedor:
 ```bash
-docker exec -it rupu-central-frontend sh
+podman exec -it rupu-central-frontend sh
 ```
 
 
@@ -176,12 +172,12 @@ https://gallery.ecr.aws/d3a6d4r1/cam/reserve
 2. **Multi-Stage Build**: Reduce el tamaño final eliminando dependencias de desarrollo
 3. **ARM64 Native**: La imagen está compilada nativamente para ARM64 (AWS Graviton)
 4. **Security**: Ejecuta como usuario non-root (nextjs:nodejs)
-5. **Cache**: Docker usa caché de capas para builds más rápidos
+5. **Cache**: Podman usa caché de capas para builds más rápidos
 
 ## 🔗 Enlaces Útiles
 
 - [Next.js Dockerfile Docs](https://nextjs.org/docs/app/building-your-application/deploying/docker)
-- [Docker Buildx Multi-platform](https://docs.docker.com/build/building/multi-platform/)
+- [Podman Documentation](https://docs.podman.io/)
 - [AWS ECR Public Gallery](https://gallery.ecr.aws/d3a6d4r1/cam/reserve)
 - [AWS Graviton](https://aws.amazon.com/ec2/graviton/)
 
