@@ -106,12 +106,17 @@ services:
       POSTGRES_USER:     "${DB_USER}"
       POSTGRES_PASSWORD: "${DB_PASSWORD}"
     volumes:
-      # IMPORTANTE: Usar bind mount para mantener los datos existentes del EC2
-      # Ajusta la ruta según donde estén tus datos de PostgreSQL en el EC2
-      # Opción 1: Si los datos están en un volumen Docker/Podman existente
+      # IMPORTANTE: Los datos de Docker están en un volumen separado
+      # Para encontrar la ubicación del volumen de Docker, ejecuta en el servidor:
+      #   docker volume inspect postgres_data | grep Mountpoint
+      # Luego reemplaza la línea de abajo con un bind mount a esa ruta
+      # Ejemplo: - /var/lib/docker/volumes/compose-prod_postgres_data/_data:/var/lib/postgresql/data
+      #
+      # OPCIÓN 1: Bind mount a volumen de Docker (DESCOMENTA Y AJUSTA LA RUTA)
+      # - /var/lib/docker/volumes/compose-prod_postgres_data/_data:/var/lib/postgresql/data
+      #
+      # OPCIÓN 2: Volumen de Podman nuevo (solo si migraste los datos)
       - postgres_data:/var/lib/postgresql/data
-      # Opción 2: Si los datos están en el filesystem del EC2 (descomenta y ajusta)
-      # - /opt/postgresql/data:/var/lib/postgresql/data
     restart: unless-stopped
     networks:
       - app-network
