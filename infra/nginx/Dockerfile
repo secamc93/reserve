@@ -1,4 +1,4 @@
-# Build trigger: 2025-01-13
+# Build trigger: 2025-01-13 - Actualizado para trigger build
 FROM nginx:alpine
 
 COPY nginx.conf /etc/nginx/nginx.conf.template
