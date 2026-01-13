@@ -1,7 +1,11 @@
 name: Deploy All Services
 
 on:
-  workflow_dispatch:  # Solo ejecución manual
+  push:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:  # También permite ejecución manual
 
 env:
   AWS_REGION: us-east-1
