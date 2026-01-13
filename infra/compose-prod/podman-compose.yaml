@@ -106,17 +106,8 @@ services:
       POSTGRES_USER:     "${DB_USER}"
       POSTGRES_PASSWORD: "${DB_PASSWORD}"
     volumes:
-      # IMPORTANTE: Los datos de Docker están en un volumen separado
-      # Para encontrar la ubicación del volumen de Docker, ejecuta en el servidor:
-      #   docker volume inspect postgres_data | grep Mountpoint
-      # Luego reemplaza la línea de abajo con un bind mount a esa ruta
-      # Ejemplo: - /var/lib/docker/volumes/compose-prod_postgres_data/_data:/var/lib/postgresql/data
-      #
-      # OPCIÓN 1: Bind mount a volumen de Docker (DESCOMENTA Y AJUSTA LA RUTA)
-      # - /var/lib/docker/volumes/compose-prod_postgres_data/_data:/var/lib/postgresql/data
-      #
-      # OPCIÓN 2: Volumen de Podman nuevo (solo si migraste los datos)
-      - postgres_data:/var/lib/postgresql/data
+      # Usando el volumen de Docker existente con los datos reales
+      - /var/lib/docker/volumes/compose-prod_postgres_data/_data:/var/lib/postgresql/data
     restart: unless-stopped
     networks:
       - app-network
