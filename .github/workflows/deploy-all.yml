@@ -73,10 +73,8 @@ jobs:
             sudo mkdir -p /etc/containers
             if [ ! -f /etc/containers/registries.conf ] || ! grep -q "docker.io" /etc/containers/registries.conf 2>/dev/null; then
               echo "📝 Configurando registries para short-names..."
-              sudo tee /etc/containers/registries.conf > /dev/null << 'REGISTRIES_CONF'
-unqualified-search-registries = ["docker.io", "quay.io"]
-short-name-mode = "permissive"
-REGISTRIES_CONF
+              echo 'unqualified-search-registries = ["docker.io", "quay.io"]' | sudo tee /etc/containers/registries.conf > /dev/null
+              echo 'short-name-mode = "permissive"' | sudo tee -a /etc/containers/registries.conf > /dev/null
               echo "✅ Registries configurados"
             else
               echo "✅ Registries ya configurados"
