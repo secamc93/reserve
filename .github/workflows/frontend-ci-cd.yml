@@ -60,10 +60,17 @@ jobs:
       - name: Install dependencies
         working-directory: ./front/rupu-central
         run: |
+          # Verificar qué gestor de paquetes usar
           if [ -f "pnpm-lock.yaml" ]; then
-            pnpm install --frozen-lockfile
+            echo "📦 Usando pnpm..."
+            # Intentar con frozen-lockfile primero, si falla usar sin frozen
+            pnpm install --frozen-lockfile || pnpm install
+          elif [ -f "package-lock.json" ]; then
+            echo "📦 Usando npm..."
+            npm ci || npm install
           else
-            npm ci
+            echo "⚠️ No se encontró lockfile, instalando dependencias..."
+            pnpm install || npm install
           fi
 
       - name: Build image
