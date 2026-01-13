@@ -314,64 +314,6 @@ jobs:
             infra/compose-prod/podman-compose.yaml \
             ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/reserve/infra/compose-prod/
           
-          # Verificar/crear archivo .env si no existe
-          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'ENV_CHECK'
-            set -e
-            cd ~/reserve/infra/compose-prod || exit 1
-            
-            if [ ! -f .env ]; then
-              echo "⚠️ Archivo .env no encontrado"
-              echo "📝 Creando archivo .env desde template..."
-              
-              # Crear .env básico si no existe
-              cat > .env << 'ENV_TEMPLATE'
-# Archivo de variables de entorno para producción
-# IMPORTANTE: Completa estos valores con tus credenciales reales
-
-# Base de datos PostgreSQL
-DB_NAME=reserve_db
-DB_USER=postgres
-DB_PASSWORD=CHANGE_ME
-DB_LOG_LEVEL=info
-DB_SSLMODE=disable
-
-# Aplicación
-APP_ENV=production
-LOG_LEVEL=info
-JWT_SECRET=CHANGE_ME_GENERATE_SECURE_SECRET
-
-# Swagger
-URL_BASE_SWAGGER=https://tu-dominio.com/api/v1
-
-# SMTP (Email)
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=CHANGE_ME
-SMTP_PASS=CHANGE_ME
-FROM_EMAIL=noreply@tu-dominio.com
-SMTP_USE_STARTTLS=true
-SMTP_USE_TLS=false
-
-# S3 (Almacenamiento)
-S3_BUCKET=CHANGE_ME
-S3_REGION=us-east-1
-S3_KEY=CHANGE_ME
-S3_SECRET=CHANGE_ME
-URL_BASE_DOMAIN_S3=https://CHANGE_ME.s3.amazonaws.com
-
-# Nginx
-DOMAIN=tu-dominio.com
-SSL_CERT_PATH=/etc/letsencrypt/live/tu-dominio.com/fullchain.pem
-SSL_KEY_PATH=/etc/letsencrypt/live/tu-dominio.com/privkey.pem
-ENV_TEMPLATE
-              
-              echo "✅ Archivo .env creado con valores por defecto"
-              echo "⚠️ IMPORTANTE: Edita ~/reserve/infra/compose-prod/.env con tus valores reales antes de desplegar"
-            else
-              echo "✅ Archivo .env ya existe"
-            fi
-          ENV_CHECK
-          
           # Ejecutar despliegue
           ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
             set -e
