@@ -71,29 +71,53 @@ jobs:
             # Instalar podman-compose si no está disponible
             if ! command -v podman-compose &> /dev/null; then
               echo "📦 Instalando podman-compose..."
-              # Instalar usando pip si está disponible, o descargar binario
-              if command -v pip3 &> /dev/null; then
-                pip3 install --user podman-compose || sudo pip3 install podman-compose
+              
+              # Método 1: Intentar con pipx (recomendado para Ubuntu 24.04)
+              if command -v pipx &> /dev/null; then
+                echo "📦 Instalando con pipx..."
+                pipx install podman-compose || {
+                  echo "⚠️ pipx falló, intentando método alternativo..."
+                  # Método 2: Instalar pipx si no está disponible
+                  if ! command -v pipx &> /dev/null; then
+                    sudo apt-get install -y pipx
+                    pipx ensurepath
+                  fi
+                  pipx install podman-compose
+                }
+                # pipx instala en ~/.local/bin, asegurar que esté en PATH
+                export PATH="$HOME/.local/bin:$PATH"
+                sudo ln -sf "$HOME/.local/bin/podman-compose" /usr/local/bin/podman-compose 2>/dev/null || true
               else
-                # Instalar pip3 primero
-                sudo apt-get install -y python3-pip
-                pip3 install --user podman-compose || sudo pip3 install podman-compose
+                # Método 2: Instalar pipx primero
+                echo "📦 Instalando pipx..."
+                sudo apt-get install -y pipx
+                pipx ensurepath
+                export PATH="$HOME/.local/bin:$PATH"
+                pipx install podman-compose
+                sudo ln -sf "$HOME/.local/bin/podman-compose" /usr/local/bin/podman-compose 2>/dev/null || true
               fi
               
-              # Asegurar que esté en el PATH
-              if [ -f "$HOME/.local/bin/podman-compose" ]; then
-                sudo ln -sf "$HOME/.local/bin/podman-compose" /usr/local/bin/podman-compose || true
+              # Método 3: Si pipx falla, usar pip con --break-system-packages (último recurso)
+              if ! command -v podman-compose &> /dev/null; then
+                echo "⚠️ pipx falló, usando pip con --break-system-packages..."
+                pip3 install --user --break-system-packages podman-compose || \
+                sudo pip3 install --break-system-packages podman-compose
+                
+                # Asegurar que esté en el PATH
+                if [ -f "$HOME/.local/bin/podman-compose" ]; then
+                  sudo ln -sf "$HOME/.local/bin/podman-compose" /usr/local/bin/podman-compose || true
+                fi
               fi
               
-              # Verificar instalación
+              # Verificar instalación final
               if command -v podman-compose &> /dev/null; then
-                echo "✅ podman-compose instalado"
+                echo "✅ podman-compose instalado: $(which podman-compose)"
               else
-                echo "⚠️ podman-compose instalado pero no en PATH, creando symlink..."
-                sudo ln -sf $(which podman-compose 2>/dev/null || find $HOME -name podman-compose 2>/dev/null | head -1) /usr/local/bin/podman-compose || true
+                echo "❌ Error: No se pudo instalar podman-compose"
+                exit 1
               fi
             else
-              echo "✅ podman-compose ya está instalado"
+              echo "✅ podman-compose ya está instalado: $(which podman-compose)"
             fi
             
             # Verificar instalaciones finales
