@@ -109,6 +109,8 @@ services:
       # Usando directorio accesible por Podman rootless (ruta absoluta)
       # Los datos se copian desde Docker a este directorio
       - /home/ubuntu/reserve/postgres-data:/var/lib/postgresql/data
+    # Ejecutar como root para evitar problemas de permisos con bind mount
+    user: "0:0"
     restart: unless-stopped
     networks:
       - app-network
