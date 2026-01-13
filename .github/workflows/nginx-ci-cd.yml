@@ -102,6 +102,21 @@ jobs:
             # Actualizar PATH
             export PATH=\$PATH:\$HOME/.local/bin:/usr/local/bin:/usr/bin
             
+            # Configurar Podman rootless para usar puertos privilegiados (80, 443)
+            echo "🔧 Configurando Podman rootless para puertos privilegiados..."
+            if ! grep -q "net.ipv4.ip_unprivileged_port_start=80" /etc/sysctl.conf 2>/dev/null; then
+              echo "📝 Agregando configuración de puertos no privilegiados..."
+              echo "net.ipv4.ip_unprivileged_port_start=80" | sudo tee -a /etc/sysctl.conf > /dev/null
+              sudo sysctl -p /etc/sysctl.conf || {
+                echo "⚠️ No se pudo aplicar sysctl, intentando método alternativo..."
+                sudo sysctl net.ipv4.ip_unprivileged_port_start=80 || true
+              }
+              echo "✅ Configuración aplicada"
+            else
+              echo "✅ Configuración ya existe"
+              sudo sysctl -p /etc/sysctl.conf || sudo sysctl net.ipv4.ip_unprivileged_port_start=80 || true
+            fi
+            
             cd ~/reserve/infra/compose-prod || exit 1
             
             # Verificar que existe .env
