@@ -106,9 +106,9 @@ services:
       POSTGRES_USER:     "${DB_USER}"
       POSTGRES_PASSWORD: "${DB_PASSWORD}"
     volumes:
-      # Usando directorio accesible por Podman rootless
+      # Usando directorio accesible por Podman rootless (ruta absoluta)
       # Los datos se copian desde Docker a este directorio
-      - ~/reserve/postgres-data:/var/lib/postgresql/data
+      - /home/ubuntu/reserve/postgres-data:/var/lib/postgresql/data
     restart: unless-stopped
     networks:
       - app-network
