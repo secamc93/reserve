@@ -24,13 +24,13 @@ RUN adduser -D -g '' appuser
 WORKDIR /app
 
 # Copiar go.mod y go.sum primero para aprovechar cache
-COPY central-reserve/go.mod central-reserve/go.sum ./
+COPY back/central-reserve/go.mod back/central-reserve/go.sum ./
 
 # Copiar el módulo dbpostgres al contexto de build
 COPY dbpostgres ./dbpostgres/
 
 # Copiar el resto del código
-COPY central-reserve .
+COPY back/central-reserve .
 
 # Actualizar el replace directive para el contexto de Podman
 RUN sed -i 's|replace dbpostgres => ../dbpostgres|replace dbpostgres => ./dbpostgres|' go.mod
