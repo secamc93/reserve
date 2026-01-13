@@ -80,7 +80,6 @@ jobs:
           API_BASE_URL: ${{ secrets.API_BASE_URL || 'http://central_reserve:3050/api/v1' }}
         run: |
           podman build \
-            --platform linux/arm64 \
             --build-arg NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL} \
             --build-arg API_BASE_URL=${API_BASE_URL} \
             -f docker/Dockerfile \
