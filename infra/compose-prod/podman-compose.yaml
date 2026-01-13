@@ -105,13 +105,14 @@ services:
       POSTGRES_DB:       "${DB_NAME}"
       POSTGRES_USER:     "${DB_USER}"
       POSTGRES_PASSWORD: "${DB_PASSWORD}"
-      # Deshabilitar scripts de inicialización que requieren permisos
-      POSTGRES_INITDB_ARGS: ""
+      PGDATA: /var/lib/postgresql/data
     volumes:
       # Usando directorio accesible por Podman rootless (ruta absoluta)
       # Los datos se copian desde Docker a este directorio
       # :Z permite que Podman ajuste los permisos SELinux/AppArmor
       - /home/ubuntu/reserve/postgres-data:/var/lib/postgresql/data:Z
+      # Entrypoint personalizado que evita scripts de inicialización si ya hay datos
+      - ./postgres-entrypoint.sh:/docker-entrypoint-initdb.d/00-skip-init.sh:ro
     # Ejecutar como root para evitar problemas de permisos con bind mount
     user: "0:0"
     restart: unless-stopped
