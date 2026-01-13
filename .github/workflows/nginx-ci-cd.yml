@@ -148,7 +148,11 @@ jobs:
             # Verificar que el contenedor está corriendo
             sleep 3
             echo "📊 Estado del servicio nginx:"
-            podman-compose -f podman-compose.yaml ps nginx || podman ps | grep nginx
+            podman ps --filter "name=nginx_prod" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" || {
+              echo "⚠️ No se encontró el contenedor nginx_prod"
+              echo "📋 Todos los contenedores:"
+              podman ps -a
+            }
             
             # Clean up old images
             podman image prune -f || true
