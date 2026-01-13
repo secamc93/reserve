@@ -1,0 +1,142 @@
+name: Nginx CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'infra/nginx/**'
+      - '.github/workflows/nginx-ci-cd.yml'
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'infra/nginx/**'
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  build-and-push:
+    name: Build and Push to ECR
+    runs-on: ubuntu-24.04-arm  # Runner ARM64 nativo - más rápido y barato
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Podman
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y podman
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Get AWS Account ID
+        id: get_account
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "account_id=$ACCOUNT_ID" >> $GITHUB_OUTPUT
+          echo "ECR_REGISTRY=$ACCOUNT_ID.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com" >> $GITHUB_OUTPUT
+
+      - name: Login to ECR
+        run: |
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
+            podman login --username AWS --password-stdin ${{ steps.get_account.outputs.ECR_REGISTRY }}
+
+      - name: Build image
+        working-directory: ./infra/nginx
+        run: |
+          podman build \
+            -f Dockerfile \
+            -t ${{ steps.get_account.outputs.ECR_REGISTRY }}/rupu-nginx:latest \
+            -t ${{ steps.get_account.outputs.ECR_REGISTRY }}/rupu-nginx:$(date +%Y%m%d-%H%M%S) \
+            .
+
+      - name: Push image to ECR
+        run: |
+          podman push ${{ steps.get_account.outputs.ECR_REGISTRY }}/rupu-nginx:latest || true
+          podman push ${{ steps.get_account.outputs.ECR_REGISTRY }}/rupu-nginx:$(date +%Y%m%d-%H%M%S) || true
+
+  deploy:
+    name: Deploy to Server
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Get AWS Account ID
+        id: get_account
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "ECR_REGISTRY=$ACCOUNT_ID.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com" >> $GITHUB_OUTPUT
+
+      - name: Deploy to server
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+            set -e
+            
+            # Actualizar PATH
+            export PATH=\$PATH:\$HOME/.local/bin:/usr/local/bin:/usr/bin
+            
+            cd ~/reserve/infra/compose-prod || exit 1
+            
+            # Verificar que existe .env
+            if [ ! -f .env ]; then
+              echo "❌ Error: Archivo .env no encontrado"
+              exit 1
+            fi
+            
+            # Login a ECR usando el IAM Role
+            echo "🔐 Login a ECR..."
+            aws ecr get-login-password --region ${{ env.AWS_REGION }} 2>&1 | \
+              podman login --username AWS --password-stdin ${{ steps.get_account.outputs.ECR_REGISTRY }} || {
+              echo "⚠️ Error en login a ECR"
+              exit 1
+            }
+            
+            # Pull latest image
+            echo "🔄 Pulling latest nginx image..."
+            podman pull ${{ steps.get_account.outputs.ECR_REGISTRY }}/rupu-nginx:latest || {
+              echo "⚠️ No se pudo hacer pull de la imagen"
+              exit 1
+            }
+            
+            # Update and restart nginx service
+            echo "🚀 Actualizando servicio nginx..."
+            podman-compose -f podman-compose.yaml pull nginx
+            podman-compose -f podman-compose.yaml up -d nginx
+            
+            # Verificar que el contenedor está corriendo
+            sleep 3
+            echo "📊 Estado del servicio nginx:"
+            podman-compose -f podman-compose.yaml ps nginx || podman ps | grep nginx
+            
+            # Clean up old images
+            podman image prune -f || true
+            
+            echo "✅ Nginx desplegado exitosamente"
+          EOF
