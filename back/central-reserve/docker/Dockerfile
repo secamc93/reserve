@@ -27,7 +27,7 @@ WORKDIR /app
 COPY back/central-reserve/go.mod back/central-reserve/go.sum ./
 
 # Copiar el módulo dbpostgres al contexto de build
-COPY dbpostgres ./dbpostgres/
+COPY back/dbpostgres ./dbpostgres/
 
 # Copiar el resto del código
 COPY back/central-reserve .
