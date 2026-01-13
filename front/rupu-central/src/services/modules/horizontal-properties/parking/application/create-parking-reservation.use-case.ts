@@ -3,7 +3,7 @@ import { IParkingRepository, ParkingReservation, CreateParkingReservationDTO } f
 export class CreateParkingReservationUseCase {
   constructor(private repository: IParkingRepository) {}
 
-  async execute(businessId: number, data: CreateParkingReservationDTO): Promise<ParkingReservation> {
-    return await this.repository.createParkingReservation({ businessId, data });
+  async execute(businessId: number, token: string, data: CreateParkingReservationDTO): Promise<ParkingReservation> {
+    return await this.repository.createParkingReservation({ businessId, token, data });
   }
 }
