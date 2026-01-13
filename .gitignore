@@ -80,3 +80,11 @@ infra/nginx/awscliv2.zip
 CLAUDE.md
 claude.md
 .claude/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!terraform.tfvars.example
+# Nota: .terraform.lock.hcl SÍ debe estar en el repo (se mantiene)
