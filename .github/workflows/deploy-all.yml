@@ -93,29 +93,35 @@ jobs:
             
             # Pull latest images (ignorar errores de imágenes que no existen aún)
             echo "🔄 Pulling latest images from ECR..."
-            podman-compose -f podman-compose.yaml pull 2>&1 | grep -v "manifest unknown" || echo "⚠️ Algunas imágenes no se pudieron hacer pull (puede ser normal si aún no existen)"
+            podman-compose -f podman-compose.yaml pull 2>&1 | grep -v "manifest unknown" || true
+            echo "✅ Pull completado (algunas imágenes pueden no existir aún, es normal)"
             
             # Levantar todos los servicios (solo los que tienen imágenes disponibles)
             echo "🚀 Levantando servicios..."
-            podman-compose -f podman-compose.yaml up -d || {
-              echo "⚠️ Algunos servicios no se pudieron levantar (probablemente porque las imágenes no existen aún)"
-              echo "📋 Esto es normal si aún no has construido las imágenes"
-              echo "💡 Construye las imágenes primero haciendo push de código a main"
+            # Intentar levantar todos, pero no fallar si algunos no tienen imágenes
+            podman-compose -f podman-compose.yaml up -d 2>&1 || {
+              echo "⚠️ Algunos servicios no se pudieron levantar"
+              echo "📋 Esto puede ser normal si las imágenes aún no existen"
             }
             
             # Esperar un momento para que los servicios inicien
             sleep 5
             
-            # Show status
+            # Show status (no fallar si hay errores)
             echo "📊 Estado de los servicios:"
-            podman-compose -f podman-compose.yaml ps
+            podman-compose -f podman-compose.yaml ps || echo "⚠️ No se pudo obtener el estado completo"
             
-            # Mostrar logs recientes
-            echo "📋 Logs recientes:"
-            podman-compose -f podman-compose.yaml logs --tail=20
+            # Mostrar logs recientes (solo de servicios que están corriendo)
+            echo "📋 Logs recientes de servicios activos:"
+            podman-compose -f podman-compose.yaml logs --tail=20 2>&1 || echo "⚠️ No se pudieron obtener logs"
+            
+            # Mostrar qué contenedores están corriendo
+            echo "🐳 Contenedores activos:"
+            podman ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" || echo "⚠️ No se pudieron listar contenedores"
             
             # Clean up old images
-            podman image prune -f
+            podman image prune -f || true
             
-            echo "✅ Todos los servicios levantados"
+            echo "✅ Proceso de despliegue completado"
+            echo "💡 Nota: Si faltan servicios, construye las imágenes haciendo push de código a main"
           EOF
