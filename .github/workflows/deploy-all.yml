@@ -1,12 +1,7 @@
 name: Deploy All Services
 
 on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - 'infra/compose-prod/**'
+  workflow_dispatch:  # Solo ejecución manual
 
 env:
   AWS_REGION: us-east-1
@@ -41,96 +36,10 @@ jobs:
 
       - name: Deploy all services
         run: |
-          # Crear directorio en EC2 si no existe e instalar dependencias
-          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'SETUP_EOF'
-            set -e
-            mkdir -p ~/reserve/infra/compose-prod
-            
-            # Instalar AWS CLI si no está instalado
-            if ! command -v aws &> /dev/null; then
-              echo "📦 Instalando AWS CLI..."
-              curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"
-              unzip -q awscliv2.zip
-              sudo ./aws/install
-              rm -rf aws awscliv2.zip
-              echo "✅ AWS CLI instalado"
-            else
-              echo "✅ AWS CLI ya está instalado"
-            fi
-            
-            # Verificar e instalar Podman y podman-compose
-            if ! command -v podman &> /dev/null; then
-              echo "📦 Instalando Podman..."
-              sudo apt-get update
-              sudo apt-get install -y podman
-              echo "✅ Podman instalado"
-            else
-              echo "✅ Podman ya está instalado"
-            fi
-            
-            # Instalar podman-compose si no está disponible
-            if ! command -v podman-compose &> /dev/null; then
-              echo "📦 Instalando podman-compose..."
-              
-              # Método 1: Intentar con pipx (recomendado para Ubuntu 24.04)
-              if command -v pipx &> /dev/null; then
-                echo "📦 Instalando con pipx..."
-                pipx install podman-compose || {
-                  echo "⚠️ pipx falló, intentando método alternativo..."
-                  # Método 2: Instalar pipx si no está disponible
-                  if ! command -v pipx &> /dev/null; then
-                    sudo apt-get install -y pipx
-                    pipx ensurepath
-                  fi
-                  pipx install podman-compose
-                }
-                # pipx instala en ~/.local/bin, asegurar que esté en PATH
-                export PATH="$HOME/.local/bin:$PATH"
-                sudo ln -sf "$HOME/.local/bin/podman-compose" /usr/local/bin/podman-compose 2>/dev/null || true
-              else
-                # Método 2: Instalar pipx primero
-                echo "📦 Instalando pipx..."
-                sudo apt-get install -y pipx
-                pipx ensurepath
-                export PATH="$HOME/.local/bin:$PATH"
-                pipx install podman-compose
-                sudo ln -sf "$HOME/.local/bin/podman-compose" /usr/local/bin/podman-compose 2>/dev/null || true
-              fi
-              
-              # Método 3: Si pipx falla, usar pip con --break-system-packages (último recurso)
-              if ! command -v podman-compose &> /dev/null; then
-                echo "⚠️ pipx falló, usando pip con --break-system-packages..."
-                pip3 install --user --break-system-packages podman-compose || \
-                sudo pip3 install --break-system-packages podman-compose
-                
-                # Asegurar que esté en el PATH
-                if [ -f "$HOME/.local/bin/podman-compose" ]; then
-                  sudo ln -sf "$HOME/.local/bin/podman-compose" /usr/local/bin/podman-compose || true
-                fi
-              fi
-              
-              # Verificar instalación final
-              if command -v podman-compose &> /dev/null; then
-                echo "✅ podman-compose instalado: $(which podman-compose)"
-              else
-                echo "❌ Error: No se pudo instalar podman-compose"
-                exit 1
-              fi
-            else
-              echo "✅ podman-compose ya está instalado: $(which podman-compose)"
-            fi
-            
-            # Verificar instalaciones finales
-            echo "🔍 Verificando instalaciones..."
-            command -v aws && aws --version || echo "❌ AWS CLI no disponible"
-            command -v podman && podman --version || echo "❌ Podman no disponible"
-            command -v podman-compose && podman-compose --version || echo "❌ podman-compose no disponible"
-          SETUP_EOF
-          
-          # Subir podman-compose.yaml
+          # Subir podman-compose.yaml si cambió
           scp -o StrictHostKeyChecking=no \
             infra/compose-prod/podman-compose.yaml \
-            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/reserve/infra/compose-prod/
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/reserve/infra/compose-prod/ || echo "⚠️ No se pudo subir podman-compose.yaml (puede que ya esté actualizado)"
           
           # Ejecutar despliegue
           ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
@@ -141,30 +50,21 @@ jobs:
             
             # Verificar que podman-compose esté disponible
             if ! command -v podman-compose &> /dev/null; then
-              echo "❌ podman-compose no está disponible. Verificando instalación..."
-              # Intentar encontrar podman-compose
-              PODMAN_COMPOSE_PATH=\$(which podman-compose 2>/dev/null || find \$HOME -name podman-compose 2>/dev/null | head -1 || find /usr -name podman-compose 2>/dev/null | head -1)
-              if [ -n "\$PODMAN_COMPOSE_PATH" ]; then
-                echo "📍 Encontrado podman-compose en: \$PODMAN_COMPOSE_PATH"
-                export PATH=\$PATH:\$(dirname \$PODMAN_COMPOSE_PATH)
-              else
-                echo "❌ Error: podman-compose no se encuentra. Reinstalando..."
-                pip3 install --user podman-compose || sudo pip3 install podman-compose
-                export PATH=\$PATH:\$HOME/.local/bin:/usr/local/bin
-              fi
-              
-              # Verificar nuevamente
-              if ! command -v podman-compose &> /dev/null; then
-                echo "❌ Error crítico: podman-compose no está disponible después de intentar instalarlo"
-                exit 1
-              fi
+              echo "❌ podman-compose no está disponible"
+              exit 1
             fi
-            
-            echo "✅ podman-compose disponible: \$(which podman-compose)"
             
             cd ~/reserve/infra/compose-prod || exit 1
             
-            echo "🚀 Desplegando todos los servicios..."
+            # Verificar que existe .env
+            if [ ! -f .env ]; then
+              echo "❌ Error: Archivo .env no encontrado en ~/reserve/infra/compose-prod/.env"
+              echo "📝 Crea el archivo .env manualmente antes de ejecutar este workflow"
+              exit 1
+            fi
+            echo "✅ Archivo .env encontrado"
+            
+            echo "🚀 Levantando todos los servicios..."
             
             # Login a ECR usando el IAM Role
             echo "🔐 Login a ECR..."
@@ -177,18 +77,25 @@ jobs:
             
             # Pull latest images
             echo "🔄 Pulling latest images from ECR..."
-            podman-compose -f podman-compose.yaml pull
+            podman-compose -f podman-compose.yaml pull || echo "⚠️ Algunas imágenes no se pudieron hacer pull (puede ser normal si aún no existen)"
             
-            # Update and restart all services
-            echo "🚀 Updating services..."
+            # Levantar todos los servicios
+            echo "🚀 Levantando servicios..."
             podman-compose -f podman-compose.yaml up -d
             
+            # Esperar un momento para que los servicios inicien
+            sleep 5
+            
             # Show status
-            echo "📊 Service status:"
+            echo "📊 Estado de los servicios:"
             podman-compose -f podman-compose.yaml ps
+            
+            # Mostrar logs recientes
+            echo "📋 Logs recientes:"
+            podman-compose -f podman-compose.yaml logs --tail=20
             
             # Clean up old images
             podman image prune -f
             
-            echo "✅ Despliegue completado"
+            echo "✅ Todos los servicios levantados"
           EOF
