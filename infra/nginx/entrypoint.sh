@@ -28,20 +28,76 @@ else
   echo "❌ Directorio /etc/letsencrypt NO existe - el volumen no está montado"
 fi
 
-# Verificar si los certificados existen, si no, usar configuración sin SSL
-if [ ! -f "$SSL_CERT_PATH" ] || [ ! -f "$SSL_KEY_PATH" ]; then
-  echo "⚠️  Advertencia: Certificados SSL no encontrados en:"
+# Resolver rutas reales de los symlinks
+REAL_CERT_PATH=$(readlink -f "$SSL_CERT_PATH" 2>/dev/null || echo "$SSL_CERT_PATH")
+REAL_KEY_PATH=$(readlink -f "$SSL_KEY_PATH" 2>/dev/null || echo "$SSL_KEY_PATH")
+
+echo "🔗 Resolviendo symlinks:"
+echo "   SSL_CERT_PATH: $SSL_CERT_PATH -> $REAL_CERT_PATH"
+echo "   SSL_KEY_PATH: $SSL_KEY_PATH -> $REAL_KEY_PATH"
+
+# Verificar si los certificados existen (siguiendo symlinks con -L)
+if [ ! -L "$SSL_CERT_PATH" ] && [ ! -f "$SSL_CERT_PATH" ]; then
+  # Si no es un symlink y no existe como archivo, verificar la ruta real
+  if [ ! -f "$REAL_CERT_PATH" ]; then
+    CERT_EXISTS=false
+  else
+    CERT_EXISTS=true
+  fi
+else
+  # Es un symlink o archivo, verificar que se pueda leer
+  if [ -r "$SSL_CERT_PATH" ] || [ -r "$REAL_CERT_PATH" ]; then
+    CERT_EXISTS=true
+  else
+    CERT_EXISTS=false
+  fi
+fi
+
+if [ ! -L "$SSL_KEY_PATH" ] && [ ! -f "$SSL_KEY_PATH" ]; then
+  if [ ! -f "$REAL_KEY_PATH" ]; then
+    KEY_EXISTS=false
+  else
+    KEY_EXISTS=true
+  fi
+else
+  if [ -r "$SSL_KEY_PATH" ] || [ -r "$REAL_KEY_PATH" ]; then
+    KEY_EXISTS=true
+  else
+    KEY_EXISTS=false
+  fi
+fi
+
+if [ "$CERT_EXISTS" = false ] || [ "$KEY_EXISTS" = false ]; then
+  echo "⚠️  Advertencia: Certificados SSL no encontrados o no accesibles:"
   echo "   SSL_CERT_PATH: $SSL_CERT_PATH"
   echo "   SSL_KEY_PATH: $SSL_KEY_PATH"
   echo ""
   echo "🔍 Verificando permisos..."
-  if [ -f "$SSL_CERT_PATH" ]; then
-    echo "   ✅ Certificado existe pero puede tener problemas de permisos"
+  if [ -L "$SSL_CERT_PATH" ] || [ -f "$SSL_CERT_PATH" ]; then
+    echo "   📄 Certificado (symlink/archivo existe):"
     ls -la "$SSL_CERT_PATH" 2>&1 || true
+    if [ -L "$SSL_CERT_PATH" ]; then
+      echo "   🔗 Apunta a: $(readlink -f "$SSL_CERT_PATH" 2>/dev/null || echo 'no se puede resolver')"
+      if [ -f "$REAL_CERT_PATH" ]; then
+        echo "   ✅ Archivo real existe: $REAL_CERT_PATH"
+        ls -la "$REAL_CERT_PATH" 2>&1 || true
+      else
+        echo "   ❌ Archivo real NO existe: $REAL_CERT_PATH"
+      fi
+    fi
   fi
-  if [ -f "$SSL_KEY_PATH" ]; then
-    echo "   ✅ Clave existe pero puede tener problemas de permisos"
+  if [ -L "$SSL_KEY_PATH" ] || [ -f "$SSL_KEY_PATH" ]; then
+    echo "   🔑 Clave (symlink/archivo existe):"
     ls -la "$SSL_KEY_PATH" 2>&1 || true
+    if [ -L "$SSL_KEY_PATH" ]; then
+      echo "   🔗 Apunta a: $(readlink -f "$SSL_KEY_PATH" 2>/dev/null || echo 'no se puede resolver')"
+      if [ -f "$REAL_KEY_PATH" ]; then
+        echo "   ✅ Archivo real existe: $REAL_KEY_PATH"
+        ls -la "$REAL_KEY_PATH" 2>&1 || true
+      else
+        echo "   ❌ Archivo real NO existe: $REAL_KEY_PATH"
+      fi
+    fi
   fi
   echo "   Usando configuración HTTP solamente (sin HTTPS)"
   
@@ -85,7 +141,7 @@ http {
 }
 EOF
 else
-  echo "✅ Certificados SSL encontrados, usando configuración completa"
+  echo "✅ Certificados SSL encontrados y accesibles, usando configuración completa con HTTPS"
   # Usar la configuración normal con SSL
   envsubst '\$DOMAIN \$SSL_CERT_PATH \$SSL_KEY_PATH' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
 fi
