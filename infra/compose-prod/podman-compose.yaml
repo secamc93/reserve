@@ -43,8 +43,8 @@ services:
     ports:
       - "3050:3050"
     environment:
-      DB_HOST:             "postgres"
-      DB_PORT:             "5432"
+      DB_HOST:             "host.containers.internal"
+      DB_PORT:             "5433"
       DB_NAME:             "${DB_NAME}"
       DB_USER:             "${DB_USER}"
       DB_PASS:             "${DB_PASSWORD}"
@@ -78,9 +78,6 @@ services:
   
     networks:
       - app-network
-    depends_on:
-      postgres:
-        condition: service_healthy
     logging:
       driver: "json-file"
       options:
@@ -94,50 +91,6 @@ services:
         reservations:
           cpus: "0.50"
           memory: 256M
-
-  postgres:
-    image: postgres:15-alpine
-    container_name: postgres_prod
-    env_file:
-      - .env
-    ports:
-      - "5433:5432"
-    environment:
-      POSTGRES_DB:       "${DB_NAME}"
-      POSTGRES_USER:     "${DB_USER}"
-      POSTGRES_PASSWORD: "${DB_PASSWORD}"
-      PGDATA: /var/lib/postgresql/data
-    volumes:
-      # Usando directorio accesible por Podman rootless (ruta absoluta)
-      # Los datos se copian desde Docker a este directorio
-      # :Z permite que Podman ajuste los permisos SELinux/AppArmor
-      - /home/ubuntu/reserve/postgres-data:/var/lib/postgresql/data:Z
-    # Ejecutar postgres directamente, saltando el entrypoint que intenta cambiar permisos
-    # Esto funciona porque ya tenemos datos existentes y no necesitamos inicialización
-    command: ["postgres", "-c", "listen_addresses=*"]
-    # Ejecutar como root para evitar problemas de permisos con bind mount
-    user: "0:0"
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-postgres}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    networks:
-      - app-network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"
-        max-file: "3"
-    deploy:
-      resources:
-        limits:
-          cpus: "0.50"
-          memory: 1G
-        reservations:
-          memory: 512M
 
   nginx:
     image: 334689162817.dkr.ecr.us-east-1.amazonaws.com/rupu-nginx:latest
