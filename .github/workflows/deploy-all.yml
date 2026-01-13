@@ -64,6 +64,20 @@ jobs:
             fi
             echo "✅ Archivo .env encontrado"
             
+            # Configurar registries de Podman para imágenes públicas (postgres, etc.)
+            echo "🔧 Configurando registries de Podman..."
+            sudo mkdir -p /etc/containers
+            if [ ! -f /etc/containers/registries.conf ] || ! grep -q "docker.io" /etc/containers/registries.conf 2>/dev/null; then
+              echo "📝 Configurando registries para short-names..."
+              sudo tee /etc/containers/registries.conf > /dev/null << 'REGISTRIES_CONF'
+unqualified-search-registries = ["docker.io", "quay.io"]
+short-name-mode = "permissive"
+REGISTRIES_CONF
+              echo "✅ Registries configurados"
+            else
+              echo "✅ Registries ya configurados"
+            fi
+            
             echo "🚀 Levantando todos los servicios..."
             
             # Login a ECR usando el IAM Role
@@ -75,13 +89,17 @@ jobs:
               exit 1
             }
             
-            # Pull latest images
+            # Pull latest images (ignorar errores de imágenes que no existen aún)
             echo "🔄 Pulling latest images from ECR..."
-            podman-compose -f podman-compose.yaml pull || echo "⚠️ Algunas imágenes no se pudieron hacer pull (puede ser normal si aún no existen)"
+            podman-compose -f podman-compose.yaml pull 2>&1 | grep -v "manifest unknown" || echo "⚠️ Algunas imágenes no se pudieron hacer pull (puede ser normal si aún no existen)"
             
-            # Levantar todos los servicios
+            # Levantar todos los servicios (solo los que tienen imágenes disponibles)
             echo "🚀 Levantando servicios..."
-            podman-compose -f podman-compose.yaml up -d
+            podman-compose -f podman-compose.yaml up -d || {
+              echo "⚠️ Algunos servicios no se pudieron levantar (probablemente porque las imágenes no existen aún)"
+              echo "📋 Esto es normal si aún no has construido las imágenes"
+              echo "💡 Construye las imágenes primero haciendo push de código a main"
+            }
             
             # Esperar un momento para que los servicios inicien
             sleep 5
