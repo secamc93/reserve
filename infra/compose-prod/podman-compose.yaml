@@ -1,5 +1,8 @@
 version: "3.8"
 
+# Configuración de servicios para producción con Podman
+# Actualizado: 2025-01-13
+
 services:
 
   frontend:
