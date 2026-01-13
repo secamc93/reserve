@@ -1,4 +1,5 @@
 # 🚀 Central Reserve - Backend API
+<!-- Build trigger: 2025-01-13 -->
 
 ## 📋 Resumen
 

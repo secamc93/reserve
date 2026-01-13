@@ -1,4 +1,5 @@
 # 🏢 Rupu Central
+<!-- Build trigger: 2025-01-13 -->
 
 Sistema de gestión de propiedades horizontales construido con **Next.js 15**, **TypeScript** y **arquitectura modular DDD**.
 
