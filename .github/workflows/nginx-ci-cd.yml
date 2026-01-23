@@ -55,16 +55,26 @@ jobs:
       - name: Build image
         working-directory: ./infra/nginx
         run: |
+          # Generar timestamp único para este build
+          BUILD_TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          echo "BUILD_TIMESTAMP=$BUILD_TIMESTAMP" >> $GITHUB_ENV
+
           podman build \
             -f Dockerfile \
             -t ${{ steps.get_account.outputs.ECR_REGISTRY }}/rupu-nginx:latest \
-            -t ${{ steps.get_account.outputs.ECR_REGISTRY }}/rupu-nginx:$(date +%Y%m%d-%H%M%S) \
+            -t ${{ steps.get_account.outputs.ECR_REGISTRY }}/rupu-nginx:$BUILD_TIMESTAMP \
             .
 
       - name: Push image to ECR
         run: |
-          podman push ${{ steps.get_account.outputs.ECR_REGISTRY }}/rupu-nginx:latest || true
-          podman push ${{ steps.get_account.outputs.ECR_REGISTRY }}/rupu-nginx:$(date +%Y%m%d-%H%M%S) || true
+          # Push tag con timestamp primero (inmutable)
+          podman push ${{ steps.get_account.outputs.ECR_REGISTRY }}/rupu-nginx:${{ env.BUILD_TIMESTAMP }}
+
+          # Luego push latest (sobrescribe)
+          podman push ${{ steps.get_account.outputs.ECR_REGISTRY }}/rupu-nginx:latest
+
+          echo "✅ Imagen pusheada: ${{ steps.get_account.outputs.ECR_REGISTRY }}/rupu-nginx:${{ env.BUILD_TIMESTAMP }}"
+          echo "✅ Tag latest actualizado"
 
   deploy:
     name: Deploy to Server
@@ -166,33 +176,76 @@ jobs:
               exit 1
             }
             
-            # Pull latest image
-            echo "🔄 Pulling latest nginx image..."
-            podman pull ${{ steps.get_account.outputs.ECR_REGISTRY }}/rupu-nginx:latest || {
-              echo "⚠️ No se pudo hacer pull de la imagen"
+            # Obtener digest de la imagen actual (si existe)
+            echo "📋 Verificando imagen actual..."
+            OLD_DIGEST=$(podman inspect ${{ steps.get_account.outputs.ECR_REGISTRY }}/rupu-nginx:latest 2>/dev/null | jq -r '.[0].Digest // "none"' || echo "none")
+            echo "Digest anterior: $OLD_DIGEST"
+
+            # Pull latest image con --force para asegurar que se descarga
+            echo "🔄 Pulling latest nginx image (forzando descarga)..."
+            podman pull --force ${{ steps.get_account.outputs.ECR_REGISTRY }}/rupu-nginx:latest || {
+              echo "❌ No se pudo hacer pull de la imagen"
               exit 1
             }
-            
-            # Stop y remove el contenedor antiguo (evita conflictos de puerto)
+
+            # Verificar que la imagen cambió
+            NEW_DIGEST=$(podman inspect ${{ steps.get_account.outputs.ECR_REGISTRY }}/rupu-nginx:latest | jq -r '.[0].Digest')
+            echo "Digest nuevo: $NEW_DIGEST"
+
+            if [ "$OLD_DIGEST" = "$NEW_DIGEST" ] && [ "$OLD_DIGEST" != "none" ]; then
+              echo "⚠️ ADVERTENCIA: La imagen no cambió. Puede ser un problema de cache."
+            else
+              echo "✅ Nueva imagen descargada correctamente"
+            fi
+
+            # Stop del contenedor antiguo
             echo "⏹️ Deteniendo contenedor antiguo..."
-            podman-compose -f podman-compose.yaml stop nginx || true
-            podman-compose -f podman-compose.yaml rm -f nginx || true
+            podman stop nginx_prod 2>/dev/null || true
+
+            # Remover contenedor antiguo
+            echo "🗑️ Removiendo contenedor antiguo..."
+            podman rm -f nginx_prod 2>/dev/null || true
 
             # Levantar el nuevo contenedor
             echo "🚀 Levantando nuevo contenedor nginx..."
             podman-compose -f podman-compose.yaml up -d nginx
-            
+
+            # Esperar que el contenedor inicie
+            echo "⏳ Esperando que nginx inicie..."
+            sleep 5
+
+            # Verificar health del servicio (puerto 80 y 443)
+            echo "🏥 Verificando health del servicio..."
+            MAX_RETRIES=10
+            RETRY=0
+            while [ $RETRY -lt $MAX_RETRIES ]; do
+              if curl -sf http://localhost/ > /dev/null 2>&1; then
+                echo "✅ Servicio HTTP healthy!"
+                break
+              fi
+              RETRY=$((RETRY + 1))
+              echo "Intento $RETRY/$MAX_RETRIES - esperando..."
+              sleep 3
+            done
+
+            if [ $RETRY -eq $MAX_RETRIES ]; then
+              echo "❌ ERROR: El servicio no pasó el health check"
+              echo "📋 Logs del contenedor:"
+              podman logs --tail 50 nginx_prod
+              exit 1
+            fi
+
             # Verificar que el contenedor está corriendo
-            sleep 3
             echo "📊 Estado del servicio nginx:"
             podman ps --filter "name=nginx_prod" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" || {
               echo "⚠️ No se encontró el contenedor nginx_prod"
               echo "📋 Todos los contenedores:"
               podman ps -a
             }
-            
+
             # Clean up old images
+            echo "🧹 Limpiando imágenes antiguas..."
             podman image prune -f || true
-            
-            echo "✅ Nginx desplegado exitosamente"
+
+            echo "✅ Nginx desplegado y verificado exitosamente"
           EOF

@@ -57,18 +57,28 @@ jobs:
         run: |
           # Cambiar al directorio padre para incluir dbpostgres en el contexto
           cd ../..
+
+          # Generar timestamp único para este build
+          BUILD_TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          echo "BUILD_TIMESTAMP=$BUILD_TIMESTAMP" >> $GITHUB_ENV
+
           podman build \
             --platform linux/arm64 \
             -f back/central-reserve/docker/Dockerfile \
             -t ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-latest \
-            -t ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-$(date +%Y%m%d-%H%M%S) \
+            -t ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-$BUILD_TIMESTAMP \
             .
 
       - name: Push image to ECR
         run: |
+          # Push tag con timestamp primero (inmutable)
+          podman push ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-${{ env.BUILD_TIMESTAMP }}
+
+          # Luego push latest (sobrescribe)
           podman push ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-latest
-          # Push también el tag con timestamp
-          podman push ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-$(date +%Y%m%d-%H%M%S) || true
+
+          echo "✅ Imagen pusheada: ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-${{ env.BUILD_TIMESTAMP }}"
+          echo "✅ Tag latest actualizado"
 
   deploy:
     name: Deploy to Server
@@ -108,26 +118,69 @@ jobs:
             aws ecr-public get-login-password --region us-east-1 | \
               podman login --username AWS --password-stdin public.ecr.aws
 
-            # Pull latest image
-            echo "🔄 Pulling latest backend image..."
-            podman pull ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-latest
+            # Obtener digest de la imagen actual (si existe)
+            echo "📋 Verificando imagen actual..."
+            OLD_DIGEST=$(podman inspect ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-latest 2>/dev/null | jq -r '.[0].Digest // "none"' || echo "none")
+            echo "Digest anterior: $OLD_DIGEST"
 
-            # Stop y remove el contenedor antiguo (evita conflictos de puerto)
+            # Pull latest image con --force para asegurar que se descarga
+            echo "🔄 Pulling latest backend image (forzando descarga)..."
+            podman pull --force ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-latest
+
+            # Verificar que la imagen cambió
+            NEW_DIGEST=$(podman inspect ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-latest | jq -r '.[0].Digest')
+            echo "Digest nuevo: $NEW_DIGEST"
+
+            if [ "$OLD_DIGEST" = "$NEW_DIGEST" ] && [ "$OLD_DIGEST" != "none" ]; then
+              echo "⚠️ ADVERTENCIA: La imagen no cambió. Puede ser un problema de cache."
+            else
+              echo "✅ Nueva imagen descargada correctamente"
+            fi
+
+            # Stop del contenedor antiguo
             echo "⏹️ Deteniendo contenedor antiguo..."
-            podman-compose -f podman-compose.yaml stop central_reserve || true
-            podman-compose -f podman-compose.yaml rm -f central_reserve || true
+            podman stop central_reserve_prod 2>/dev/null || true
+
+            # Remover contenedor antiguo
+            echo "🗑️ Removiendo contenedor antiguo..."
+            podman rm -f central_reserve_prod 2>/dev/null || true
 
             # Levantar el nuevo contenedor
             echo "🚀 Levantando nuevo contenedor..."
             podman-compose -f podman-compose.yaml up -d central_reserve
 
-            # Esperar y verificar
-            sleep 5
+            # Esperar que el contenedor inicie
+            echo "⏳ Esperando que el contenedor inicie..."
+            sleep 10
+
+            # Verificar health del servicio
+            echo "🏥 Verificando health del servicio..."
+            MAX_RETRIES=12
+            RETRY=0
+            while [ $RETRY -lt $MAX_RETRIES ]; do
+              if curl -sf http://localhost:3050/health > /dev/null 2>&1; then
+                echo "✅ Servicio healthy!"
+                break
+              fi
+              RETRY=$((RETRY + 1))
+              echo "Intento $RETRY/$MAX_RETRIES - esperando..."
+              sleep 5
+            done
+
+            if [ $RETRY -eq $MAX_RETRIES ]; then
+              echo "❌ ERROR: El servicio no pasó el health check"
+              echo "📋 Logs del contenedor:"
+              podman logs --tail 50 central_reserve_prod
+              exit 1
+            fi
+
+            # Mostrar estado
             echo "📊 Estado del servicio:"
             podman ps --filter "name=central_reserve_prod" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 
-            # Clean up old images
+            # Clean up old images (mantener últimas 3)
+            echo "🧹 Limpiando imágenes antiguas..."
             podman image prune -f
 
-            echo "✅ Backend desplegado exitosamente"
+            echo "✅ Backend desplegado y verificado exitosamente"
           EOF
