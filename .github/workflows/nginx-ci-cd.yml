@@ -71,7 +71,12 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
-    
+
+    # Prevenir ejecuciones concurrentes del mismo workflow
+    concurrency:
+      group: deploy-nginx-${{ github.ref }}
+      cancel-in-progress: false
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -168,9 +173,13 @@ jobs:
               exit 1
             }
             
-            # Update and restart nginx service
-            echo "🚀 Actualizando servicio nginx..."
-            podman-compose -f podman-compose.yaml pull nginx
+            # Stop y remove el contenedor antiguo (evita conflictos de puerto)
+            echo "⏹️ Deteniendo contenedor antiguo..."
+            podman-compose -f podman-compose.yaml stop nginx || true
+            podman-compose -f podman-compose.yaml rm -f nginx || true
+
+            # Levantar el nuevo contenedor
+            echo "🚀 Levantando nuevo contenedor nginx..."
             podman-compose -f podman-compose.yaml up -d nginx
             
             # Verificar que el contenedor está corriendo

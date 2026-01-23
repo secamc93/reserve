@@ -98,7 +98,12 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    
+
+    # Prevenir ejecuciones concurrentes del mismo workflow
+    concurrency:
+      group: deploy-frontend-${{ github.ref }}
+      cancel-in-progress: false
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -108,19 +113,44 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
       - name: Deploy to server
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             set -e
-            cd /path/to/infra/compose-prod || cd ~/reserve/infra/compose-prod || exit 1
-            
-            # Pull latest images
+            cd ~/reserve/infra/compose-prod || exit 1
+
+            # Login a ECR
+            echo "🔐 Login a ECR..."
+            aws ecr-public get-login-password --region us-east-1 | \
+              podman login --username AWS --password-stdin public.ecr.aws
+
+            # Pull latest image
+            echo "🔄 Pulling latest frontend image..."
             podman pull ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-latest
-            
-            # Update and restart services
-            podman-compose -f podman-compose.yaml pull frontend
+
+            # Stop y remove el contenedor antiguo (evita conflictos de puerto)
+            echo "⏹️ Deteniendo contenedor antiguo..."
+            podman-compose -f podman-compose.yaml stop frontend || true
+            podman-compose -f podman-compose.yaml rm -f frontend || true
+
+            # Levantar el nuevo contenedor
+            echo "🚀 Levantando nuevo contenedor..."
             podman-compose -f podman-compose.yaml up -d frontend
-            
+
+            # Esperar y verificar
+            sleep 5
+            echo "📊 Estado del servicio:"
+            podman ps --filter "name=frontend_prod" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+
             # Clean up old images
             podman image prune -f
+
+            echo "✅ Frontend desplegado exitosamente"
           EOF

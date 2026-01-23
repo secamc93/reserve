@@ -1,11 +1,12 @@
 name: Deploy All Services
 
 on:
-  push:
-    branches:
-      - main
-      - develop
-  workflow_dispatch:  # También permite ejecución manual
+  # Deshabilitado push automático - usar workflow_dispatch para ejecutar manualmente
+  # push:
+  #   branches:
+  #     - main
+  #     - develop
+  workflow_dispatch:  # Solo ejecución manual para evitar conflictos con otros workflows
 
 env:
   AWS_REGION: us-east-1
@@ -14,7 +15,12 @@ jobs:
   deploy:
     name: Deploy All Services
     runs-on: ubuntu-latest
-    
+
+    # Prevenir ejecuciones concurrentes
+    concurrency:
+      group: deploy-all-${{ github.ref }}
+      cancel-in-progress: false
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
