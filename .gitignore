@@ -88,3 +88,11 @@ claude.md
 *.tfvars
 !terraform.tfvars.example
 # Nota: .terraform.lock.hcl SÍ debe estar en el repo (se mantiene)
+
+# Claves privadas y certificados (NUNCA deben subirse)
+*.pem
+*.key
+*.p12
+*.pfx
+cam.pem
+.cam.pem
