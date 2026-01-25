@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"central_reserve/services/auth/roles/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/auth/roles/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/auth/roles/internal/infra/primary/handlers/response"
 	"net/http"
 
@@ -32,7 +32,7 @@ func (h *handlers) GetSystemRolesHandler(c *gin.Context) {
 		return
 	}
 
-	response := mapper.ToRoleListResponseFromSlice(roles)
+	response := mappers.ToRoleListResponseFromSlice(roles)
 
 	h.logger.Info().Int("count", len(roles)).Msg("Roles del sistema obtenidos exitosamente")
 	c.JSON(http.StatusOK, response)

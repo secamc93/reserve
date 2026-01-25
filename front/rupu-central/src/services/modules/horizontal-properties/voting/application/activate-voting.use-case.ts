@@ -2,7 +2,7 @@
  * Use Case: Activar votación
  */
 
-import { VotingsRepository } from '../infrastructure/repositories';
+import { IVotingsRepository } from '../domain/ports/votings.repository';
 
 export interface ActivateVotingParams {
   token: string;
@@ -18,7 +18,7 @@ export interface ActivateVotingResult {
 export type ActivateVotingInput = ActivateVotingParams;
 
 export class ActivateVotingUseCase {
-  constructor(private repository: VotingsRepository) {}
+  constructor(private repository: IVotingsRepository) {}
 
   async execute(input: ActivateVotingInput): Promise<ActivateVotingResult> {
     // Validar que el ID de la votación sea válido

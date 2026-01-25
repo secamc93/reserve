@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"central_reserve/services/auth/permisions/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/auth/permisions/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/auth/permisions/internal/infra/primary/handlers/request"
 	"central_reserve/services/auth/permisions/internal/infra/primary/handlers/response"
 	"errors"
@@ -56,7 +56,7 @@ func (h *handlers) Updatehandlers(c *gin.Context) {
 		Str("code", req.Code).
 		Msg("Iniciando solicitud para actualizar permiso")
 
-	permissionDTO := mapper.ToUpdatePermissionDTO(req)
+	permissionDTO := mappers.ToUpdatePermissionDTO(req)
 
 	result, err := h.usecase.UpdatePermission(c.Request.Context(), uint(id), permissionDTO)
 	if err != nil {

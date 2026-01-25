@@ -6,6 +6,7 @@ import (
 	"strings"
 	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/packages/internal/domain"
+	"central_reserve/services/horizontalproperty/packages/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/packages/internal/infra/primary/handlers/request"
 	"central_reserve/services/horizontalproperty/packages/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
@@ -86,45 +87,8 @@ func (h *PackageHandler) ReceivePackage(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, response.PackageResponse{
 		Success: true,
-		Data:    mapPackageToResponse(pkg),
+		Data:    mappers.PackageToResponse(pkg),
 	})
-}
-
-// mapPackageToResponse mapea entidad de dominio a respuesta
-func mapPackageToResponse(pkg *domain.Package) response.PackageData {
-	data := response.PackageData{
-		ID:                 pkg.ID,
-		BusinessID:         pkg.BusinessID,
-		PropertyUnitID:     pkg.PropertyUnitID,
-		ResidentID:         pkg.ResidentID,
-		PackageStatusID:    pkg.PackageStatusID,
-		Carrier:            pkg.Carrier,
-		TrackingNumber:     pkg.TrackingNumber,
-		QRCode:             pkg.QRCode,
-		ReceivedByUserID:   pkg.ReceivedByUserID,
-		ReceivedAt:         pkg.ReceivedAt,
-		DeliveredByUserID:  pkg.DeliveredByUserID,
-		DeliveredAt:        pkg.DeliveredAt,
-		Description:        pkg.Description,
-		Notes:              pkg.Notes,
-		NotifyResident:     pkg.NotifyResident,
-		NotificationSentAt: pkg.NotificationSentAt,
-		CreatedAt:          pkg.CreatedAt,
-		UpdatedAt:          pkg.UpdatedAt,
-	}
-
-	if pkg.PropertyUnit.ID != 0 {
-		data.PropertyUnitNumber = pkg.PropertyUnit.Number
-	}
-	if pkg.Resident != nil {
-		data.ResidentName = pkg.Resident.FullName
-	}
-	if pkg.PackageStatus.ID != 0 {
-		data.StatusName = pkg.PackageStatus.Name
-		data.StatusCode = pkg.PackageStatus.Code
-	}
-
-	return data
 }
 
 // formatValidationErrors formatea los errores de validación de Gin en un mensaje más amigable

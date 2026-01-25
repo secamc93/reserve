@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"central_reserve/services/auth/middleware"
-	"central_reserve/services/auth/resources/internal/domain"
+	"central_reserve/services/auth/resources/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/auth/resources/internal/infra/primary/handlers/request"
 	"central_reserve/services/auth/resources/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
@@ -75,12 +75,8 @@ func (h *ResourceHandler) UpdateResourceHandler(c *gin.Context) {
 		Str("name", req.Name).
 		Msg("Datos de actualización de recurso recibidos")
 
-	// Convertir a DTO de dominio
-	updateDTO := domain.UpdateResourceDTO{
-		Name:           req.Name,
-		Description:    req.Description,
-		BusinessTypeID: req.BusinessTypeID,
-	}
+	// Convertir a DTO de dominio usando mapper
+	updateDTO := mappers.UpdateResourceRequestToDTO(req)
 
 	// Llamar al caso de uso
 	result, err := h.usecase.UpdateResource(ctx, uint(resourceID), updateDTO)
@@ -112,16 +108,8 @@ func (h *ResourceHandler) UpdateResourceHandler(c *gin.Context) {
 		return
 	}
 
-	// Convertir a respuesta HTTP
-	resourceResponse := response.ResourceResponse{
-		ID:               result.ID,
-		Name:             result.Name,
-		Description:      result.Description,
-		BusinessTypeID:   result.BusinessTypeID,
-		BusinessTypeName: result.BusinessTypeName,
-		CreatedAt:        result.CreatedAt,
-		UpdatedAt:        result.UpdatedAt,
-	}
+	// Convertir a respuesta HTTP usando mapper
+	resourceResponse := mappers.ResourceDTOToResponse(result)
 
 	h.logger.Info(ctx).
 		Uint64("resource_id", resourceID).

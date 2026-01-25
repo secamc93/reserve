@@ -1,7 +1,7 @@
 package clienthandler
 
 import (
-	"central_reserve/services/restaurants/customer/internal/infra/primary/handlers/clienthandler/mapper"
+	"central_reserve/services/restaurants/customer/internal/infra/primary/handlers/clienthandler/mappers"
 	"central_reserve/services/restaurants/customer/internal/infra/primary/handlers/clienthandler/request"
 	"net/http"
 	"strconv"
@@ -52,11 +52,21 @@ func (h *ClientHandler) UpdateClientHandler(c *gin.Context) {
 	}
 
 	// 3. DTO → Dominio ───────────────────────────────────────
-	client := mapper.UpdateClientToDomain(req)
+	client := mappers.UpdateClientToDomain(req)
 
 	// 4. Caso de uso ─────────────────────────────────────────
-	response, err := h.usecase.UpdateClient(ctx, uint(clientID), client)
+	message, err := h.usecase.UpdateClient(ctx, uint(clientID), client)
 	if err != nil {
+		// Verificar si es error de "no encontrado"
+		if err.Error() == "cliente no encontrado" {
+			c.JSON(http.StatusNotFound, gin.H{
+				"success": false,
+				"error":   "not_found",
+				"message": "Cliente no encontrado",
+			})
+			return
+		}
+
 		h.logger.Error().Err(err).Msg("error interno al actualizar cliente")
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
@@ -66,20 +76,10 @@ func (h *ClientHandler) UpdateClientHandler(c *gin.Context) {
 		return
 	}
 
-	// 5. Verificar si el cliente existía ───────────────────────
-	if response == "" {
-		c.JSON(http.StatusNotFound, gin.H{
-			"success": false,
-			"error":   "not_found",
-			"message": "Cliente no encontrado",
-		})
-		return
-	}
-
-	// 6. Salida ──────────────────────────────────────────────
+	// 5. Salida ──────────────────────────────────────────────
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "Cliente actualizado exitosamente",
-		"data":    response,
+		"data":    message,
 	})
 }

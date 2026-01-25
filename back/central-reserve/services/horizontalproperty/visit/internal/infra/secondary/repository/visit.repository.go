@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"central_reserve/services/horizontalproperty/visit/internal/domain"
+	"central_reserve/services/horizontalproperty/visit/internal/infra/secondary/repository/mappers"
 	"central_reserve/shared/db"
 	"central_reserve/shared/log"
 	"dbpostgres/app/infra/models"
@@ -68,7 +69,7 @@ func (r *VisitRepository) CreateVisit(ctx context.Context, visit *domain.Visit) 
 		return nil, fmt.Errorf("error cargando relaciones de visita: %w", err)
 	}
 
-	return mapVisitToDomain(model), nil
+	return mappers.VisitToDomain(model), nil
 }
 
 // GetVisitByID obtiene una visita por ID
@@ -88,7 +89,7 @@ func (r *VisitRepository) GetVisitByID(ctx context.Context, id uint) (*domain.Vi
 		return nil, fmt.Errorf("error obteniendo visita: %w", err)
 	}
 
-	return mapVisitToDomain(&visit), nil
+	return mappers.VisitToDomain(&visit), nil
 }
 
 // GetVisitByQRCode obtiene una visita por código QR
@@ -109,7 +110,7 @@ func (r *VisitRepository) GetVisitByQRCode(ctx context.Context, qrCode string) (
 		return nil, fmt.Errorf("error obteniendo visita por QR: %w", err)
 	}
 
-	return mapVisitToDomain(&visit), nil
+	return mappers.VisitToDomain(&visit), nil
 }
 
 // GetVisitByAuthorizationCode obtiene una visita por código de autorización
@@ -130,7 +131,7 @@ func (r *VisitRepository) GetVisitByAuthorizationCode(ctx context.Context, authC
 		return nil, fmt.Errorf("error obteniendo visita por código de autorización: %w", err)
 	}
 
-	return mapVisitToDomain(&visit), nil
+	return mappers.VisitToDomain(&visit), nil
 }
 
 // UpdateVisit actualiza una visita
@@ -303,18 +304,20 @@ func (r *VisitRepository) ListVisits(ctx context.Context, filters domain.VisitFi
 	}, nil
 }
 
-// GetVisitStatusByCode obtiene un estado de visita por código
-func (r *VisitRepository) GetVisitStatusByCode(ctx context.Context, code string) (*models.VisitStatus, error) {
+// GetVisitStatusByCode obtiene un estado de visita por código (retorna entidad de dominio)
+func (r *VisitRepository) GetVisitStatusByCode(ctx context.Context, code string) (*domain.VisitStatus, error) {
 	var status models.VisitStatus
 	if err := r.db.Conn(ctx).Where("code = ?", code).First(&status).Error; err != nil {
 		return nil, fmt.Errorf("error obteniendo estado de visita: %w", err)
 	}
-	return &status, nil
-}
-
-// GetDB retorna la conexión de base de datos (helper para casos de uso)
-func (r *VisitRepository) GetDB(ctx context.Context) *gorm.DB {
-	return r.db.Conn(ctx)
+	return &domain.VisitStatus{
+		ID:          status.ID,
+		Code:        status.Code,
+		Name:        status.Name,
+		Description: status.Description,
+		IsFinal:     status.IsFinal,
+		IsActive:    status.IsActive,
+	}, nil
 }
 
 // GetActiveVisits obtiene visitas activas (en progreso)
@@ -339,7 +342,7 @@ func (r *VisitRepository) GetActiveVisits(ctx context.Context, businessID uint) 
 
 	result := make([]*domain.Visit, len(visits))
 	for i, v := range visits {
-		result[i] = mapVisitToDomain(&v)
+		result[i] = mappers.VisitToDomain(&v)
 	}
 
 	return result, nil
@@ -394,52 +397,70 @@ func (r *VisitRepository) GetVisitStatuses(ctx context.Context) ([]*domain.Visit
 	return result, nil
 }
 
-// mapVisitToDomain mapea modelo a entidad de dominio
-func mapVisitToDomain(m *models.Visit) *domain.Visit {
-	return &domain.Visit{
-		ID:                      m.ID,
-		BusinessID:              m.BusinessID,
-		VisitorID:               m.VisitorID,
-		PropertyUnitID:          m.PropertyUnitID,
-		ResidentID:              m.ResidentID,
-		VisitTypeID:             m.VisitTypeID,
-		VisitStatusID:           m.VisitStatusID,
-		VisitorVehicleID:        m.VisitorVehicleID,
-		ScheduledDate:           m.ScheduledDate,
-		ScheduledStartTime:      m.ScheduledStartTime,
-		ScheduledEndTime:        m.ScheduledEndTime,
-		ActualEntryTime:         m.ActualEntryTime,
-		ActualExitTime:          m.ActualExitTime,
-		DurationMinutes:         m.DurationMinutes,
-		AuthorizationCode:       m.AuthorizationCode,
-		QRCode:                  m.QRCode,
-		QRCodeExpiresAt:         m.QRCodeExpiresAt,
-		AuthorizedByResidentID:  m.AuthorizedByResidentID,
-		AuthorizationDate:       m.AuthorizationDate,
-		AuthorizationExpiresAt:  m.AuthorizationExpiresAt,
-		RegisteredByUserID:      m.RegisteredByUserID,
-		EntryRegisteredByUserID: m.EntryRegisteredByUserID,
-		ExitRegisteredByUserID:  m.ExitRegisteredByUserID,
-		EntryGate:               m.EntryGate,
-		ExitGate:                m.ExitGate,
-		EntryMethod:             m.EntryMethod,
-		Purpose:                 m.Purpose,
-		NumberOfVisitors:        m.NumberOfVisitors,
-		HasCompanions:           m.HasCompanions,
-		HasAssets:               m.HasAssets,
-		Notes:                   m.Notes,
-		IsRecurring:             m.IsRecurring,
-		RecurringPatternID:      m.RecurringPatternID,
-		ParentVisitID:           m.ParentVisitID,
-		DurationExceeded:        m.DurationExceeded,
-		DurationExceededAt:      m.DurationExceededAt,
-		AlertSent:               m.AlertSent,
-		NotifyResident:          m.NotifyResident,
-		NotifySecurity:          m.NotifySecurity,
-		NotificationSentAt:      m.NotificationSentAt,
-		CreatedAt:               m.CreatedAt,
-		UpdatedAt:               m.UpdatedAt,
+// GetVisitWithRelations obtiene una visita con sus relaciones completas para state machine
+func (r *VisitRepository) GetVisitWithRelations(ctx context.Context, visitID uint) (*domain.Visit, *domain.VisitType, *domain.VisitStatus, error) {
+	var visit models.Visit
+	if err := r.db.Conn(ctx).
+		Preload("VisitStatus").
+		Preload("VisitType").
+		Preload("Visitor").
+		Preload("PropertyUnit").
+		First(&visit, visitID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil, nil, domain.ErrVisitNotFound
+		}
+		return nil, nil, nil, fmt.Errorf("error obteniendo visita: %w", err)
 	}
+
+	visitDomain := mappers.VisitToDomain(&visit)
+
+	visitType := &domain.VisitType{
+		ID:                          visit.VisitType.ID,
+		Name:                        visit.VisitType.Name,
+		Code:                        visit.VisitType.Code,
+		Description:                 visit.VisitType.Description,
+		RequiresAuthorization:       visit.VisitType.RequiresAuthorization,
+		RequiresVehicleRegistration: visit.VisitType.RequiresVehicleRegistration,
+		RequiresCompanions:          visit.VisitType.RequiresCompanions,
+		RequiresAssetsTracking:      visit.VisitType.RequiresAssetsTracking,
+		MaxDurationHours:            visit.VisitType.MaxDurationHours,
+		DefaultDurationMinutes:      visit.VisitType.DefaultDurationMinutes,
+		IsActive:                    visit.VisitType.IsActive,
+	}
+
+	visitStatus := &domain.VisitStatus{
+		ID:          visit.VisitStatus.ID,
+		Code:        visit.VisitStatus.Code,
+		Name:        visit.VisitStatus.Name,
+		Description: visit.VisitStatus.Description,
+		IsFinal:     visit.VisitStatus.IsFinal,
+		IsActive:    visit.VisitStatus.IsActive,
+	}
+
+	return visitDomain, visitType, visitStatus, nil
+}
+
+// ChangeVisitStatus cambia el estado de una visita validando las transiciones
+func (r *VisitRepository) ChangeVisitStatus(ctx context.Context, visitID uint, newStatusCode string) error {
+	// Obtener el nuevo estado por código
+	var newStatus models.VisitStatus
+	if err := r.db.Conn(ctx).Where("code = ?", newStatusCode).First(&newStatus).Error; err != nil {
+		return fmt.Errorf("estado no encontrado: %s", newStatusCode)
+	}
+
+	// Actualizar el estado de la visita
+	if err := r.db.Conn(ctx).Model(&models.Visit{}).
+		Where("id = ?", visitID).
+		Update("visit_status_id", newStatus.ID).Error; err != nil {
+		return fmt.Errorf("error actualizando estado de visita: %w", err)
+	}
+
+	return nil
+}
+
+// SaveVisit guarda los cambios de una visita (usa UpdateVisit internamente)
+func (r *VisitRepository) SaveVisit(ctx context.Context, visit *domain.Visit) error {
+	return r.UpdateVisit(ctx, visit)
 }
 
 // GetPropertyUnitBusinessID obtiene el business_id de una property_unit

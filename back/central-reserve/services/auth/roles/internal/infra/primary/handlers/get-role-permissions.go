@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"central_reserve/services/auth/roles/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/auth/roles/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/auth/roles/internal/infra/primary/handlers/response"
 	"net/http"
 	"strconv"
@@ -58,13 +58,13 @@ func (h *handlers) GetRolePermissions(c *gin.Context) {
 	}
 
 	// Convertir permisos a DTOs
-	permissionDTOs := make([]mapper.PermissionDTO, len(permissions))
+	permissionDTOs := make([]mappers.PermissionDTO, len(permissions))
 	for i, perm := range permissions {
-		permissionDTOs[i] = mapper.PermissionToDTO(perm)
+		permissionDTOs[i] = mappers.PermissionToDTO(perm)
 	}
 
 	// Construir respuesta exitosa
-	response := mapper.ToGetRolePermissionsResponse(uint(roleID), permissionDTOs)
+	response := mappers.ToGetRolePermissionsResponse(uint(roleID), permissionDTOs)
 
 	h.logger.Info().
 		Uint("role_id", uint(roleID)).

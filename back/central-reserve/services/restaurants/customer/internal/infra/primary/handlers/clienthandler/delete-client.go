@@ -37,7 +37,7 @@ func (h *ClientHandler) DeleteClientHandler(c *gin.Context) {
 	}
 
 	// 2. Caso de uso ─────────────────────────────────────────
-	response, err := h.usecase.DeleteClient(ctx, uint(clientID))
+	message, err := h.usecase.DeleteClient(ctx, uint(clientID))
 	if err != nil {
 		h.logger.Error().Err(err).Msg("error interno al eliminar cliente")
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -49,7 +49,7 @@ func (h *ClientHandler) DeleteClientHandler(c *gin.Context) {
 	}
 
 	// 3. Verificar si el cliente existía ────────────────────
-	if response == "" {
+	if message == "" {
 		c.JSON(http.StatusNotFound, gin.H{
 			"success": false,
 			"error":   "not_found",
@@ -62,6 +62,6 @@ func (h *ClientHandler) DeleteClientHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "Cliente eliminado exitosamente",
-		"data":    response,
+		"data":    message,
 	})
 }

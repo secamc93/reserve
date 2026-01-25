@@ -2,7 +2,7 @@
  * Use Case: Desactivar votación
  */
 
-import { VotingsRepository } from '../infrastructure/repositories';
+import { IVotingsRepository } from '../domain/ports/votings.repository';
 
 export interface DeactivateVotingParams {
   token: string;
@@ -18,7 +18,7 @@ export interface DeactivateVotingResult {
 export type DeactivateVotingInput = DeactivateVotingParams;
 
 export class DeactivateVotingUseCase {
-  constructor(private repository: VotingsRepository) {}
+  constructor(private repository: IVotingsRepository) {}
 
   async execute(input: DeactivateVotingInput): Promise<DeactivateVotingResult> {
     // Validar que el ID de la votación sea válido

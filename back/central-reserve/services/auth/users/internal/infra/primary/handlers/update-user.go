@@ -3,12 +3,13 @@ package handlers
 import (
 	"central_reserve/services/auth/middleware"
 	"central_reserve/services/auth/users/internal/domain"
-	"central_reserve/services/auth/users/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/auth/users/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/auth/users/internal/infra/primary/handlers/request"
 	"central_reserve/services/auth/users/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -122,7 +123,16 @@ func (h *handlers) Updatehandlers(c *gin.Context) {
 	}
 
 	h.logger.Info(ctx).Int("business_ids_count", len(bodyReq.BusinessIDs)).Any("business_ids", bodyReq.BusinessIDs).Msg("Businesses recibidos para actualización de usuario")
-	userDTO := mapper.ToUpdateUserDTO(bodyReq)
+
+	userDTO, err := mappers.ToUpdateUserDTO(bodyReq)
+	if err != nil {
+		h.logger.Error(ctx).Err(err).Msg("Error al procesar archivo de avatar")
+		c.JSON(http.StatusBadRequest, response.UserErrorResponse{
+			Error: fmt.Sprintf("Error al procesar archivo: %s", err.Error()),
+		})
+		return
+	}
+
 	message, err := h.usecase.UpdateUser(ctx, uriReq.ID, userDTO)
 	if err != nil {
 		h.logger.Error(ctx).Err(err).Uint("id", uriReq.ID).Msg("Error al actualizar usuario desde el caso de uso")
@@ -172,7 +182,7 @@ func (h *handlers) Updatehandlers(c *gin.Context) {
 		return
 	}
 
-	userResp := mapper.ToUserResponse(*updatedUser)
+	userResp := mappers.ToUserResponse(*updatedUser)
 	c.JSON(http.StatusOK, response.UserSuccessResponse{
 		Success: true,
 		Data:    userResp,

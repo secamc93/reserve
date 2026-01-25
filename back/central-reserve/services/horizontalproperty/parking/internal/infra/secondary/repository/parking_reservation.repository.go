@@ -6,6 +6,7 @@ import (
 	"math"
 
 	"central_reserve/services/horizontalproperty/parking/internal/domain"
+	"central_reserve/services/horizontalproperty/parking/internal/infra/secondary/repository/mappers"
 	"central_reserve/shared/db"
 	"central_reserve/shared/log"
 	"dbpostgres/app/infra/models"
@@ -68,7 +69,7 @@ func (r *ParkingReservationRepository) CreateParkingReservation(ctx context.Cont
 		return nil, fmt.Errorf("error cargando relaciones de reserva: %w", err)
 	}
 
-	return mapParkingReservationToDomain(model), nil
+	return mappers.ParkingReservationToDomain(model), nil
 }
 
 // GetParkingReservationByID obtiene una reserva por ID
@@ -87,7 +88,7 @@ func (r *ParkingReservationRepository) GetParkingReservationByID(ctx context.Con
 		return nil, fmt.Errorf("error obteniendo reserva: %w", err)
 	}
 
-	return mapParkingReservationToDomain(&reservation), nil
+	return mappers.ParkingReservationToDomain(&reservation), nil
 }
 
 // UpdateParkingReservation actualiza una reserva
@@ -288,7 +289,7 @@ func (r *ParkingReservationRepository) GetOverlappingReservations(ctx context.Co
 
 	result := make([]*domain.ParkingReservation, len(reservations))
 	for i, reservation := range reservations {
-		result[i] = mapParkingReservationToDomain(&reservation)
+		result[i] = mappers.ParkingReservationToDomain(&reservation)
 	}
 
 	return result, nil
@@ -307,7 +308,7 @@ func (r *ParkingReservationRepository) GetReservationsByDateRange(ctx context.Co
 
 	result := make([]*domain.ParkingReservation, len(reservations))
 	for i, reservation := range reservations {
-		result[i] = mapParkingReservationToDomain(&reservation)
+		result[i] = mappers.ParkingReservationToDomain(&reservation)
 	}
 
 	return result, nil
@@ -327,53 +328,8 @@ func (r *ParkingReservationRepository) GetPendingReservations(ctx context.Contex
 
 	result := make([]*domain.ParkingReservation, len(reservations))
 	for i, reservation := range reservations {
-		result[i] = mapParkingReservationToDomain(&reservation)
+		result[i] = mappers.ParkingReservationToDomain(&reservation)
 	}
 
 	return result, nil
-}
-
-// mapParkingReservationToDomain mapea el modelo a la entidad de dominio
-func mapParkingReservationToDomain(model *models.ParkingReservation) *domain.ParkingReservation {
-	return &domain.ParkingReservation{
-		ID:                  model.ID,
-		BusinessID:          model.BusinessID,
-		ParkingSlotID:       model.ParkingSlotID,
-		PropertyUnitID:      model.PropertyUnitID,
-		ResidentID:          model.ResidentID,
-		VisitorID:           model.VisitorID,
-		VisitorVehicleID:    model.VisitorVehicleID,
-		ReservationStatusID: model.ReservationStatusID,
-		ReservationDate:     model.ReservationDate,
-		StartTime:           model.StartTime,
-		EndTime:             model.EndTime,
-		DurationHours:       model.DurationHours,
-		VehiclePlate:        model.VehiclePlate,
-		VehicleBrand:        model.VehicleBrand,
-		VehicleModel:        model.VehicleModel,
-		VehicleColor:        model.VehicleColor,
-		QRCode:              model.QRCode,
-		AccessCode:          model.AccessCode,
-		CheckedInAt:         model.CheckedInAt,
-		CheckedOutAt:        model.CheckedOutAt,
-		CheckedInByUserID:   model.CheckedInByUserID,
-		CheckedOutByUserID:  model.CheckedOutByUserID,
-		RequiresApproval:    model.RequiresApproval,
-		ApprovedByUserID:    model.ApprovedByUserID,
-		ApprovedAt:          model.ApprovedAt,
-		RejectedByUserID:    model.RejectedByUserID,
-		RejectedAt:          model.RejectedAt,
-		RejectionReason:     model.RejectionReason,
-		NotifyResident:      model.NotifyResident,
-		NotifyAdmin:         model.NotifyAdmin,
-		NotificationSentAt:  model.NotificationSentAt,
-		ReminderSentAt:      model.ReminderSentAt,
-		CancelledAt:         model.CancelledAt,
-		CancelledByUserID:   model.CancelledByUserID,
-		CancellationReason:  model.CancellationReason,
-		Notes:               model.Notes,
-		ResidentNotes:       model.ResidentNotes,
-		CreatedAt:           model.CreatedAt,
-		UpdatedAt:           model.UpdatedAt,
-	}
 }

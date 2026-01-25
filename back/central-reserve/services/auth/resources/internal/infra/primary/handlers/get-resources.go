@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"central_reserve/services/auth/middleware"
-	"central_reserve/services/auth/resources/internal/domain"
+	"central_reserve/services/auth/resources/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/auth/resources/internal/infra/primary/handlers/request"
 	"central_reserve/services/auth/resources/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
@@ -46,32 +46,26 @@ func (h *ResourceHandler) GetResourcesHandler(c *gin.Context) {
 		return
 	}
 
-	// Convertir a filtros de dominio
-	filters := domain.ResourceFilters{
-		Page:        req.Page,
-		PageSize:    req.PageSize,
-		Name:        req.Name,
-		Description: req.Description,
-		SortBy:      req.SortBy,
-		SortOrder:   req.SortOrder,
-	}
-
-	// Si no es super admin, obtener business_type_id del token
+	// Determinar business_type_id según permisos
+	var businessTypeID *uint
 	isSuperAdmin := middleware.IsSuperAdmin(c)
 	if !isSuperAdmin {
 		// Obtener business_type_id del token
 		tokenBusinessTypeID, ok := middleware.GetBusinessTypeID(c)
 		if ok && tokenBusinessTypeID > 0 {
-			filters.BusinessTypeID = &tokenBusinessTypeID
+			businessTypeID = &tokenBusinessTypeID
 			h.logger.Info(ctx).Uint("business_type_id", tokenBusinessTypeID).Msg("Usuario normal: filtrando recursos por business_type_id del token")
 		}
 	} else {
 		// Super admin puede filtrar por business_type_id desde query param
 		if req.BusinessTypeID > 0 {
-			filters.BusinessTypeID = &req.BusinessTypeID
+			businessTypeID = &req.BusinessTypeID
 			h.logger.Info(ctx).Uint("business_type_id", req.BusinessTypeID).Msg("Super admin: filtrando recursos por business_type_id del query")
 		}
 	}
+
+	// Convertir a filtros de dominio usando mapper
+	filters := mappers.GetResourcesRequestToFilters(req, businessTypeID)
 
 	// Llamar al caso de uso
 	result, err := h.usecase.GetResources(ctx, filters)
@@ -85,19 +79,8 @@ func (h *ResourceHandler) GetResourcesHandler(c *gin.Context) {
 		return
 	}
 
-	// Convertir a respuesta HTTP
-	var resourceResponses []response.ResourceResponse
-	for _, resource := range result.Resources {
-		resourceResponses = append(resourceResponses, response.ResourceResponse{
-			ID:               resource.ID,
-			Name:             resource.Name,
-			Description:      resource.Description,
-			BusinessTypeID:   resource.BusinessTypeID,
-			BusinessTypeName: resource.BusinessTypeName,
-			CreatedAt:        resource.CreatedAt,
-			UpdatedAt:        resource.UpdatedAt,
-		})
-	}
+	// Convertir a respuesta HTTP usando mapper
+	resourceResponses := mappers.ResourceDTOsToResponse(result.Resources)
 
 	listResponse := response.ResourceListResponse{
 		Resources:  resourceResponses,

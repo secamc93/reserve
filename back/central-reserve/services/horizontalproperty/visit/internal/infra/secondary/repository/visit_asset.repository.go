@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"central_reserve/services/horizontalproperty/visit/internal/domain"
+	"central_reserve/services/horizontalproperty/visit/internal/infra/secondary/repository/mappers"
 	"central_reserve/shared/db"
 	"central_reserve/shared/log"
 	"dbpostgres/app/infra/models"
@@ -44,7 +45,7 @@ func (r *VisitAssetRepository) CreateAsset(ctx context.Context, asset *domain.Vi
 		return nil, fmt.Errorf("error creando activo: %w", err)
 	}
 
-	return mapAssetToDomain(model), nil
+	return mappers.AssetToDomain(model), nil
 }
 
 // GetAssetsByVisitID obtiene todos los activos de una visita
@@ -56,7 +57,7 @@ func (r *VisitAssetRepository) GetAssetsByVisitID(ctx context.Context, visitID u
 
 	result := make([]*domain.VisitAsset, len(assets))
 	for i, a := range assets {
-		result[i] = mapAssetToDomain(&a)
+		result[i] = mappers.AssetToDomain(&a)
 	}
 
 	return result, nil
@@ -109,29 +110,10 @@ func (r *VisitAssetRepository) GetPendingExitAssets(ctx context.Context, visitID
 
 	result := make([]*domain.VisitAsset, len(assets))
 	for i, a := range assets {
-		result[i] = mapAssetToDomain(&a)
+		result[i] = mappers.AssetToDomain(&a)
 	}
 
 	return result, nil
 }
 
 // mapAssetToDomain mapea modelo a entidad de dominio
-func mapAssetToDomain(m *models.VisitAsset) *domain.VisitAsset {
-	return &domain.VisitAsset{
-		ID:                    m.ID,
-		VisitID:               m.VisitID,
-		AssetName:             m.AssetName,
-		AssetDescription:      m.AssetDescription,
-		AssetSerial:           m.AssetSerial,
-		AssetBrand:            m.AssetBrand,
-		EntryRegistered:       m.EntryRegistered,
-		EntryRegisteredAt:     m.EntryRegisteredAt,
-		ExitRegistered:        m.ExitRegistered,
-		ExitRegisteredAt:      m.ExitRegisteredAt,
-		EntryVerifiedByUserID: m.EntryVerifiedByUserID,
-		ExitVerifiedByUserID:  m.ExitVerifiedByUserID,
-		Notes:                 m.Notes,
-		CreatedAt:             m.CreatedAt,
-		UpdatedAt:             m.UpdatedAt,
-	}
-}

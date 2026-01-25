@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"central_reserve/services/auth/roles/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/auth/roles/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/auth/roles/internal/infra/primary/handlers/request"
 	_ "central_reserve/services/auth/roles/internal/infra/primary/handlers/response" // Para documentación Swagger
 	"net/http"
@@ -50,7 +50,7 @@ func (h *handlers) UpdateRole(c *gin.Context) {
 	}
 
 	// Convertir request a DTO
-	roleDTO := mapper.ToUpdateRoleDTO(req)
+	roleDTO := mappers.ToUpdateRoleDTO(req)
 
 	// Actualizar el rol
 	role, err := h.usecase.UpdateRole(c.Request.Context(), uint(id), roleDTO)
@@ -99,7 +99,7 @@ func (h *handlers) UpdateRole(c *gin.Context) {
 	}
 
 	// Convertir a response
-	response := mapper.ToUpdateRoleResponse(role)
+	response := mappers.ToUpdateRoleResponse(role)
 
 	c.JSON(http.StatusOK, response)
 }

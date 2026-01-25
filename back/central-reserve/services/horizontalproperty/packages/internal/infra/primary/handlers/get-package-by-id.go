@@ -3,6 +3,7 @@ package handlers
 import (
 	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/packages/internal/domain"
+	"central_reserve/services/horizontalproperty/packages/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/packages/internal/infra/primary/handlers/request"
 	"central_reserve/services/horizontalproperty/packages/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
@@ -58,7 +59,7 @@ func (h *PackageHandler) GetPackageByID(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response.PackageResponse{
 		Success: true,
-		Data:    mapPackageToResponse(pkg),
+		Data:    mappers.PackageToResponse(pkg),
 	})
 }
 
@@ -107,7 +108,7 @@ func (h *PackageHandler) GetPackageByQRCode(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response.PackageResponse{
 		Success: true,
-		Data:    mapPackageToResponse(pkg),
+		Data:    mappers.PackageToResponse(pkg),
 	})
 }
 
@@ -192,6 +193,6 @@ func (h *PackageHandler) UpdatePackageStatus(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response.PackageResponse{
 		Success: true,
-		Data:    mapPackageToResponse(pkg),
+		Data:    mappers.PackageToResponse(pkg),
 	})
 }

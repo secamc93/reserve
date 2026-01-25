@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"central_reserve/services/horizontalproperty/commonarea/internal/domain"
+	"central_reserve/services/horizontalproperty/commonarea/internal/infra/secondary/repository/mappers"
 	"central_reserve/shared/db"
 	"central_reserve/shared/log"
 	"dbpostgres/app/infra/models"
@@ -68,7 +69,7 @@ func (r *CommonAreaReservationRepository) CreateReservation(ctx context.Context,
 		return nil, fmt.Errorf("error cargando relaciones de reserva: %w", err)
 	}
 
-	return mapReservationToDomain(model), nil
+	return mappers.ReservationToDomain(model), nil
 }
 
 // GetReservationByID obtiene una reserva por ID
@@ -86,7 +87,7 @@ func (r *CommonAreaReservationRepository) GetReservationByID(ctx context.Context
 		return nil, fmt.Errorf("error obteniendo reserva: %w", err)
 	}
 
-	return mapReservationToDomain(&reservation), nil
+	return mappers.ReservationToDomain(&reservation), nil
 }
 
 // UpdateReservation actualiza una reserva
@@ -140,6 +141,78 @@ func (r *CommonAreaReservationRepository) UpdateReservation(ctx context.Context,
 	}
 
 	return nil
+}
+
+// ChangeReservationStatus cambia el estado de una reserva validando las transiciones permitidas
+func (r *CommonAreaReservationRepository) ChangeReservationStatus(ctx context.Context, reservationID uint, newStatusCode string) error {
+	// Obtener reserva con su status actual
+	var reservationModel models.CommonAreaReservation
+	if err := r.db.Conn(ctx).Preload("ReservationStatus").First(&reservationModel, reservationID).Error; err != nil {
+		return fmt.Errorf("error obteniendo reserva: %w", err)
+	}
+
+	// Obtener nuevo status
+	var newStatusModel models.CommonAreaReservationStatus
+	if err := r.db.Conn(ctx).Where("code = ?", newStatusCode).First(&newStatusModel).Error; err != nil {
+		return fmt.Errorf("estado no encontrado: %s", newStatusCode)
+	}
+
+	// Convertir status actual a dominio
+	currentStatus := &domain.CommonAreaReservationStatus{
+		ID:          reservationModel.ReservationStatus.ID,
+		Code:        reservationModel.ReservationStatus.Code,
+		Name:        reservationModel.ReservationStatus.Name,
+		Description: reservationModel.ReservationStatus.Description,
+		IsFinal:     reservationModel.ReservationStatus.IsFinal,
+		IsActive:    reservationModel.ReservationStatus.IsActive,
+	}
+
+	// Convertir nuevo status a dominio
+	newStatus := &domain.CommonAreaReservationStatus{
+		ID:          newStatusModel.ID,
+		Code:        newStatusModel.Code,
+		Name:        newStatusModel.Name,
+		Description: newStatusModel.Description,
+		IsFinal:     newStatusModel.IsFinal,
+		IsActive:    newStatusModel.IsActive,
+	}
+
+	// Crear state machine y validar transición
+	stateMachine := domain.NewReservationStateMachine()
+	if err := stateMachine.ValidateTransition(currentStatus, newStatusCode); err != nil {
+		return err
+	}
+
+	// Convertir reserva a dominio para preparar transición
+	reservation := mappers.ReservationToDomain(&reservationModel)
+
+	// Preparar cambios de la transición
+	transition := stateMachine.PrepareTransition(reservation, newStatus, newStatusCode)
+
+	// Aplicar cambios al modelo
+	reservationModel.ReservationStatusID = transition.NewStatusID
+	if transition.ApprovedAt != nil {
+		reservationModel.ApprovedAt = transition.ApprovedAt
+	}
+	if transition.QRCode != "" {
+		reservationModel.QRCode = transition.QRCode
+		reservationModel.AccessCode = transition.AccessCode
+	}
+	if transition.CheckedInAt != nil {
+		reservationModel.CheckedInAt = transition.CheckedInAt
+	}
+	if transition.CheckedOutAt != nil {
+		reservationModel.CheckedOutAt = transition.CheckedOutAt
+	}
+	if transition.RejectedAt != nil {
+		reservationModel.RejectedAt = transition.RejectedAt
+	}
+	if transition.CancelledAt != nil {
+		reservationModel.CancelledAt = transition.CancelledAt
+	}
+
+	// Persistir cambios
+	return r.db.Conn(ctx).Save(&reservationModel).Error
 }
 
 // ListReservations lista reservas con filtros y paginación
@@ -340,54 +413,8 @@ func (r *CommonAreaReservationRepository) GetDB(ctx context.Context) *gorm.DB {
 	return r.db.Conn(ctx)
 }
 
-// mapReservationToDomain mapea modelo a entidad de dominio
+// mapReservationToDomain está deprecada - usar mappers.ReservationToDomain
+// Se mantiene temporalmente para compatibilidad
 func mapReservationToDomain(m *models.CommonAreaReservation) *domain.CommonAreaReservation {
-	return &domain.CommonAreaReservation{
-		ID:                  m.ID,
-		BusinessID:          m.BusinessID,
-		CommonAreaID:        m.CommonAreaID,
-		PropertyUnitID:      m.PropertyUnitID,
-		ResidentID:          m.ResidentID,
-		ReservationStatusID: m.ReservationStatusID,
-		ReservationDate:     m.ReservationDate,
-		StartTime:           m.StartTime,
-		EndTime:             m.EndTime,
-		DurationHours:       m.DurationHours,
-		RequiresApproval:    m.RequiresApproval,
-		ApprovedByUserID:    m.ApprovedByUserID,
-		ApprovedAt:          m.ApprovedAt,
-		RejectedByUserID:    m.RejectedByUserID,
-		RejectedAt:          m.RejectedAt,
-		RejectionReason:     m.RejectionReason,
-		NumberOfGuests:      m.NumberOfGuests,
-		Purpose:             m.Purpose,
-		SpecialRequests:     m.SpecialRequests,
-		IsRecurring:         m.IsRecurring,
-		RecurringPatternID:  m.RecurringPatternID,
-		ParentReservationID: m.ParentReservationID,
-		TotalAmount:         m.TotalAmount,
-		DepositAmount:       m.DepositAmount,
-		DepositPaid:         m.DepositPaid,
-		DepositPaidAt:       m.DepositPaidAt,
-		FullPaymentPaid:     m.FullPaymentPaid,
-		FullPaymentPaidAt:   m.FullPaymentPaidAt,
-		QRCode:              m.QRCode,
-		AccessCode:          m.AccessCode,
-		CheckedInAt:         m.CheckedInAt,
-		CheckedOutAt:        m.CheckedOutAt,
-		CheckedInByUserID:   m.CheckedInByUserID,
-		CheckedOutByUserID:  m.CheckedOutByUserID,
-		NotifyResident:      m.NotifyResident,
-		NotifyAdmin:         m.NotifyAdmin,
-		NotificationSentAt:  m.NotificationSentAt,
-		ReminderSentAt:      m.ReminderSentAt,
-		CancelledAt:         m.CancelledAt,
-		CancelledByUserID:   m.CancelledByUserID,
-		CancellationReason:  m.CancellationReason,
-		RefundAmount:        m.RefundAmount,
-		Notes:               m.Notes,
-		ResidentNotes:       m.ResidentNotes,
-		CreatedAt:           m.CreatedAt,
-		UpdatedAt:           m.UpdatedAt,
-	}
+	return mappers.ReservationToDomain(m)
 }

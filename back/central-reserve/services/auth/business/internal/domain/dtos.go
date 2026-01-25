@@ -1,8 +1,9 @@
 package domain
 
 import (
-	"mime/multipart"
 	"time"
+
+	"central_reserve/shared/types"
 )
 
 // BusinessTypeRequest representa la solicitud para crear/actualizar un tipo de negocio
@@ -36,12 +37,12 @@ type BusinessRequest struct {
 	Description    string
 
 	// Configuración de marca blanca
-	LogoFile        *multipart.FileHeader // Archivo de imagen para subir a S3
+	LogoFile        *types.FileUpload // Archivo de imagen para subir a S3
 	PrimaryColor    string
 	SecondaryColor  string
 	TertiaryColor   string
 	QuaternaryColor string
-	NavbarImageFile *multipart.FileHeader // Imagen de navbar para subir a S3
+	NavbarImageFile *types.FileUpload // Imagen de navbar para subir a S3
 	CustomDomain    string
 	IsActive        bool
 
@@ -60,12 +61,12 @@ type UpdateBusinessRequest struct {
 	Timezone           *string
 	Address            *string
 	Description        *string
-	LogoFile           *multipart.FileHeader
+	LogoFile           *types.FileUpload
 	PrimaryColor       *string
 	SecondaryColor     *string
 	TertiaryColor      *string
 	QuaternaryColor    *string
-	NavbarImageFile    *multipart.FileHeader
+	NavbarImageFile    *types.FileUpload
 	CustomDomain       *string
 	IsActive           *bool
 	EnableDelivery     *bool

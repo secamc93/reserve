@@ -1,6 +1,7 @@
 package clienthandler
 
 import (
+	"central_reserve/services/restaurants/customer/internal/infra/primary/handlers/clienthandler/mappers"
 	"net/http"
 	"strconv"
 
@@ -58,10 +59,13 @@ func (h *ClientHandler) GetClientByIDHandler(c *gin.Context) {
 		return
 	}
 
-	// 3. Salida ──────────────────────────────────────────────
+	// 3. Mapear a response ───────────────────────────────────
+	clientData := mappers.ClientToResponse(client)
+
+	// 4. Salida ──────────────────────────────────────────────
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "Cliente obtenido exitosamente",
-		"data":    client,
+		"data":    clientData,
 	})
 }

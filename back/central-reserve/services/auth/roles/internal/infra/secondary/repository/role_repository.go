@@ -2,6 +2,7 @@ package repository
 
 import (
 	"central_reserve/services/auth/roles/internal/domain"
+	"central_reserve/services/auth/roles/internal/infra/secondary/repository/mappers"
 	"context"
 	"dbpostgres/app/infra/models"
 	"fmt"
@@ -11,15 +12,8 @@ import (
 
 // CreateRole crea un nuevo rol en la base de datos
 func (r *Repository) CreateRole(ctx context.Context, roleDTO domain.CreateRoleDTO) (*domain.Role, error) {
-	// Crear el modelo de GORM
-	role := models.Role{
-		Name:           roleDTO.Name,
-		Description:    roleDTO.Description,
-		Level:          roleDTO.Level,
-		IsSystem:       roleDTO.IsSystem,
-		ScopeID:        roleDTO.ScopeID,
-		BusinessTypeID: &roleDTO.BusinessTypeID, // Convertir a puntero
-	}
+	// Crear el modelo de GORM usando mapper
+	role := mappers.RoleFromCreateDTO(roleDTO)
 
 	// Insertar en la base de datos
 	err := r.database.Conn(ctx).Create(&role).Error
@@ -31,18 +25,8 @@ func (r *Repository) CreateRole(ctx context.Context, roleDTO domain.CreateRoleDT
 		return nil, err
 	}
 
-	// Convertir a entidad de dominio
-	domainRole := &domain.Role{
-		ID:             role.ID,
-		Name:           role.Name,
-		Description:    role.Description,
-		Level:          role.Level,
-		IsSystem:       role.IsSystem,
-		ScopeID:        role.ScopeID,
-		BusinessTypeID: *role.BusinessTypeID, // Convertir de puntero a valor
-		CreatedAt:      role.CreatedAt,
-		UpdatedAt:      role.UpdatedAt,
-	}
+	// Convertir a entidad de dominio usando mapper
+	domainRole := mappers.RoleToDomainPtr(role)
 
 	r.logger.Info().
 		Uint("role_id", role.ID).
@@ -67,35 +51,8 @@ func (r *Repository) GetRoleByID(ctx context.Context, roleID uint) (*domain.Role
 		return nil, err
 	}
 
-	businessTypeID := uint(0)
-	businessTypeName := ""
-	scopeName := ""
-	scopeCode := ""
-	if role.BusinessTypeID != nil {
-		businessTypeID = *role.BusinessTypeID
-	}
-	if role.BusinessType != nil {
-		businessTypeName = role.BusinessType.Name
-	}
-	if role.ScopeID > 0 && role.Scope.Name != "" {
-		scopeName = role.Scope.Name
-		scopeCode = role.Scope.Code
-	}
-
-	domainRole := &domain.Role{
-		ID:               role.ID,
-		Name:             role.Name,
-		Description:      role.Description,
-		Level:            role.Level,
-		IsSystem:         role.IsSystem,
-		ScopeID:          role.ScopeID,
-		ScopeName:        scopeName,
-		ScopeCode:        scopeCode,
-		BusinessTypeID:   businessTypeID,
-		BusinessTypeName: businessTypeName,
-		CreatedAt:        role.CreatedAt,
-		UpdatedAt:        role.UpdatedAt,
-	}
+	// Convertir a entidad de dominio usando mapper
+	domainRole := mappers.RoleToDomainPtr(role)
 
 	return domainRole, nil
 }
@@ -153,40 +110,8 @@ func (r *Repository) GetRoles(ctx context.Context, filters domain.RoleFilters) (
 		return nil, 0, err
 	}
 
-	domainRoles := make([]domain.Role, len(roles))
-	for i, role := range roles {
-		businessTypeID := uint(0)
-		businessTypeName := ""
-		scopeName := ""
-		scopeCode := ""
-
-		if role.BusinessTypeID != nil {
-			businessTypeID = *role.BusinessTypeID
-			if role.BusinessType != nil {
-				businessTypeName = role.BusinessType.Name
-			}
-		}
-
-		if role.ScopeID > 0 && role.Scope.Name != "" {
-			scopeName = role.Scope.Name
-			scopeCode = role.Scope.Code
-		}
-
-		domainRoles[i] = domain.Role{
-			ID:               role.ID,
-			Name:             role.Name,
-			Description:      role.Description,
-			Level:            role.Level,
-			IsSystem:         role.IsSystem,
-			ScopeID:          role.ScopeID,
-			ScopeName:        scopeName,
-			ScopeCode:        scopeCode,
-			BusinessTypeID:   businessTypeID,
-			BusinessTypeName: businessTypeName,
-			CreatedAt:        role.CreatedAt,
-			UpdatedAt:        role.UpdatedAt,
-		}
-	}
+	// Convertir a entidades de dominio usando mapper
+	domainRoles := mappers.RolesToDomain(roles)
 
 	return domainRoles, total, nil
 }
@@ -206,38 +131,8 @@ func (r *Repository) GetRolesByLevel(ctx context.Context, level int) ([]domain.R
 		return nil, err
 	}
 
-	domainRoles := make([]domain.Role, len(roles))
-	for i, role := range roles {
-		businessTypeID := uint(0)
-		businessTypeName := ""
-		scopeName := ""
-		scopeCode := ""
-		if role.BusinessTypeID != nil {
-			businessTypeID = *role.BusinessTypeID
-		}
-		if role.BusinessType != nil {
-			businessTypeName = role.BusinessType.Name
-		}
-		if role.ScopeID > 0 && role.Scope.Name != "" {
-			scopeName = role.Scope.Name
-			scopeCode = role.Scope.Code
-		}
-
-		domainRoles[i] = domain.Role{
-			ID:               role.ID,
-			Name:             role.Name,
-			Description:      role.Description,
-			Level:            role.Level,
-			IsSystem:         role.IsSystem,
-			ScopeID:          role.ScopeID,
-			ScopeName:        scopeName,
-			ScopeCode:        scopeCode,
-			BusinessTypeID:   businessTypeID,
-			BusinessTypeName: businessTypeName,
-			CreatedAt:        role.CreatedAt,
-			UpdatedAt:        role.UpdatedAt,
-		}
-	}
+	// Convertir a entidades de dominio usando mapper
+	domainRoles := mappers.RolesToDomain(roles)
 
 	return domainRoles, nil
 }
@@ -257,38 +152,8 @@ func (r *Repository) GetRolesByScopeID(ctx context.Context, scopeID uint) ([]dom
 		return nil, err
 	}
 
-	domainRoles := make([]domain.Role, len(roles))
-	for i, role := range roles {
-		businessTypeID := uint(0)
-		businessTypeName := ""
-		scopeName := ""
-		scopeCode := ""
-		if role.BusinessTypeID != nil {
-			businessTypeID = *role.BusinessTypeID
-		}
-		if role.BusinessType != nil {
-			businessTypeName = role.BusinessType.Name
-		}
-		if role.ScopeID > 0 && role.Scope.Name != "" {
-			scopeName = role.Scope.Name
-			scopeCode = role.Scope.Code
-		}
-
-		domainRoles[i] = domain.Role{
-			ID:               role.ID,
-			Name:             role.Name,
-			Description:      role.Description,
-			Level:            role.Level,
-			IsSystem:         role.IsSystem,
-			ScopeID:          role.ScopeID,
-			ScopeName:        scopeName,
-			ScopeCode:        scopeCode,
-			BusinessTypeID:   businessTypeID,
-			BusinessTypeName: businessTypeName,
-			CreatedAt:        role.CreatedAt,
-			UpdatedAt:        role.UpdatedAt,
-		}
-	}
+	// Convertir a entidades de dominio usando mapper
+	domainRoles := mappers.RolesToDomain(roles)
 
 	return domainRoles, nil
 }
@@ -308,38 +173,8 @@ func (r *Repository) GetSystemRoles(ctx context.Context) ([]domain.Role, error) 
 		return nil, err
 	}
 
-	domainRoles := make([]domain.Role, len(roles))
-	for i, role := range roles {
-		businessTypeID := uint(0)
-		businessTypeName := ""
-		scopeName := ""
-		scopeCode := ""
-		if role.BusinessTypeID != nil {
-			businessTypeID = *role.BusinessTypeID
-		}
-		if role.BusinessType != nil {
-			businessTypeName = role.BusinessType.Name
-		}
-		if role.ScopeID > 0 && role.Scope.Name != "" {
-			scopeName = role.Scope.Name
-			scopeCode = role.Scope.Code
-		}
-
-		domainRoles[i] = domain.Role{
-			ID:               role.ID,
-			Name:             role.Name,
-			Description:      role.Description,
-			Level:            role.Level,
-			IsSystem:         role.IsSystem,
-			ScopeID:          role.ScopeID,
-			ScopeName:        scopeName,
-			ScopeCode:        scopeCode,
-			BusinessTypeID:   businessTypeID,
-			BusinessTypeName: businessTypeName,
-			CreatedAt:        role.CreatedAt,
-			UpdatedAt:        role.UpdatedAt,
-		}
-	}
+	// Convertir a entidades de dominio usando mapper
+	domainRoles := mappers.RolesToDomain(roles)
 
 	return domainRoles, nil
 }
@@ -402,27 +237,8 @@ func (r *Repository) UpdateRole(ctx context.Context, id uint, roleDTO domain.Upd
 			Uint("role_id", id).
 			Msg("No hay campos para actualizar")
 
-		// Convertir a entidad de dominio
-		businessTypeID := uint(0)
-		scopeName := ""
-		scopeCode := ""
-		if existingRole.BusinessTypeID != nil {
-			businessTypeID = *existingRole.BusinessTypeID
-		}
-
-		return &domain.Role{
-			ID:             existingRole.ID,
-			Name:           existingRole.Name,
-			Description:    existingRole.Description,
-			Level:          existingRole.Level,
-			IsSystem:       existingRole.IsSystem,
-			ScopeID:        existingRole.ScopeID,
-			ScopeName:      scopeName,
-			ScopeCode:      scopeCode,
-			BusinessTypeID: businessTypeID,
-			CreatedAt:      existingRole.CreatedAt,
-			UpdatedAt:      existingRole.UpdatedAt,
-		}, nil
+		// Convertir a entidad de dominio usando mapper
+		return mappers.RoleToDomainPtr(existingRole), nil
 	}
 
 	// Actualizar en la base de datos
@@ -450,36 +266,8 @@ func (r *Repository) UpdateRole(ctx context.Context, id uint, roleDTO domain.Upd
 		return nil, err
 	}
 
-	// Convertir a entidad de dominio
-	businessTypeID := uint(0)
-	businessTypeName := ""
-	scopeName := ""
-	scopeCode := ""
-	if updatedRole.BusinessTypeID != nil {
-		businessTypeID = *updatedRole.BusinessTypeID
-	}
-	if updatedRole.BusinessType != nil {
-		businessTypeName = updatedRole.BusinessType.Name
-	}
-	if updatedRole.ScopeID > 0 && updatedRole.Scope.Name != "" {
-		scopeName = updatedRole.Scope.Name
-		scopeCode = updatedRole.Scope.Code
-	}
-
-	domainRole := &domain.Role{
-		ID:               updatedRole.ID,
-		Name:             updatedRole.Name,
-		Description:      updatedRole.Description,
-		Level:            updatedRole.Level,
-		IsSystem:         updatedRole.IsSystem,
-		ScopeID:          updatedRole.ScopeID,
-		ScopeName:        scopeName,
-		ScopeCode:        scopeCode,
-		BusinessTypeID:   businessTypeID,
-		BusinessTypeName: businessTypeName,
-		CreatedAt:        updatedRole.CreatedAt,
-		UpdatedAt:        updatedRole.UpdatedAt,
-	}
+	// Convertir a entidad de dominio usando mapper
+	domainRole := mappers.RoleToDomainPtr(updatedRole)
 
 	r.logger.Info().
 		Uint("role_id", updatedRole.ID).
@@ -492,7 +280,6 @@ func (r *Repository) UpdateRole(ctx context.Context, id uint, roleDTO domain.Upd
 // GetRolePermissions obtiene los permisos de un rol
 func (r *Repository) GetRolePermissions(ctx context.Context, roleID uint) ([]domain.Permission, error) {
 	var role models.Role
-	var permissions []domain.Permission
 
 	err := r.database.Conn(ctx).
 		Model(&models.Role{}).
@@ -507,35 +294,8 @@ func (r *Repository) GetRolePermissions(ctx context.Context, roleID uint) ([]dom
 		return nil, err
 	}
 
-	for _, permission := range role.Permissions {
-		businessTypeID := uint(0)
-		businessTypeName := ""
-		if permission.BusinessTypeID != nil {
-			businessTypeID = *permission.BusinessTypeID
-		}
-
-		scopeName := ""
-		scopeCode := ""
-		if permission.ScopeID > 0 && permission.Scope.Name != "" {
-			scopeName = permission.Scope.Name
-			scopeCode = permission.Scope.Code
-		}
-
-		permissions = append(permissions, domain.Permission{
-			ID:               permission.Model.ID,
-			Name:             permission.Name,
-			Description:      permission.Description,
-			Resource:         permission.Resource.Name,
-			Action:           permission.Action.Name,
-			ResourceID:       permission.ResourceID,
-			ActionID:         permission.ActionID,
-			ScopeID:          permission.ScopeID,
-			ScopeName:        scopeName,
-			ScopeCode:        scopeCode,
-			BusinessTypeID:   businessTypeID,
-			BusinessTypeName: businessTypeName,
-		})
-	}
+	// Convertir permisos a entidades de dominio usando mapper
+	permissions := mappers.PermissionsToDomain(role.Permissions)
 
 	return permissions, nil
 }

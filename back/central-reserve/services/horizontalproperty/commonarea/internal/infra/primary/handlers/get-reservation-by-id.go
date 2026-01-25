@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"central_reserve/services/horizontalproperty/commonarea/internal/infra/primary/handlers/mappers"
 	"net/http"
 	"strconv"
 
@@ -46,6 +47,6 @@ func (h *CommonAreaHandler) GetReservationByID(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response.SuccessResponse{
 		Success: true,
-		Data:    mapReservationToResponse(reservation),
+		Data:    mappers.ReservationToResponse(reservation),
 	})
 }

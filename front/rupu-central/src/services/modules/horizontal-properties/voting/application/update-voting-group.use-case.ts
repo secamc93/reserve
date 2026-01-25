@@ -2,7 +2,7 @@
  * Use Case: Actualizar grupo de votación
  */
 
-import { VotingGroupsRepository } from '../infrastructure/repositories/voting-groups.repository';
+import { IVotingGroupsRepository } from '../domain/ports/voting-groups.repository';
 import { VotingGroup, UpdateVotingGroupDTO } from '../domain/entities/voting-group.entity';
 import { validateUpdateVotingGroup } from '../domain/validation/voting-validation';
 
@@ -20,7 +20,7 @@ export interface UpdateVotingGroupResult {
 export type UpdateVotingGroupInput = UpdateVotingGroupParams;
 
 export class UpdateVotingGroupUseCase {
-  constructor(private repository: VotingGroupsRepository) {}
+  constructor(private repository: IVotingGroupsRepository) {}
 
   async execute(input: UpdateVotingGroupInput): Promise<UpdateVotingGroupResult> {
     // Validar datos de entrada

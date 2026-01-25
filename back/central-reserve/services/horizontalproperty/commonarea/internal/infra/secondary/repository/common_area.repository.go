@@ -6,6 +6,7 @@ import (
 	"math"
 
 	"central_reserve/services/horizontalproperty/commonarea/internal/domain"
+	"central_reserve/services/horizontalproperty/commonarea/internal/infra/secondary/repository/mappers"
 	"central_reserve/shared/db"
 	"central_reserve/shared/log"
 	"dbpostgres/app/infra/models"
@@ -51,7 +52,7 @@ func (r *CommonAreaRepository) CreateCommonArea(ctx context.Context, area *domai
 		return nil, fmt.Errorf("error creando zona común: %w", err)
 	}
 
-	return mapCommonAreaToDomain(model), nil
+	return mappers.CommonAreaToDomain(model), nil
 }
 
 // GetCommonAreaByID obtiene una zona común por ID
@@ -66,7 +67,7 @@ func (r *CommonAreaRepository) GetCommonAreaByID(ctx context.Context, id uint) (
 		return nil, fmt.Errorf("error obteniendo zona común: %w", err)
 	}
 
-	return mapCommonAreaToDomain(&area), nil
+	return mappers.CommonAreaToDomain(&area), nil
 }
 
 // UpdateCommonArea actualiza una zona común
@@ -196,7 +197,7 @@ func (r *CommonAreaRepository) GetCommonAreasByBusinessID(ctx context.Context, b
 
 	result := make([]*domain.CommonArea, len(areas))
 	for i, a := range areas {
-		result[i] = mapCommonAreaToDomain(&a)
+		result[i] = mappers.CommonAreaToDomain(&a)
 	}
 
 	return result, nil
@@ -214,48 +215,8 @@ func (r *CommonAreaRepository) GetCommonAreaTypes(ctx context.Context) ([]*domai
 
 	result := make([]*domain.CommonAreaType, len(types))
 	for i, t := range types {
-		result[i] = mapCommonAreaTypeToDomain(&t)
+		result[i] = mappers.CommonAreaTypeToDomain(&t)
 	}
 
 	return result, nil
-}
-
-// mapCommonAreaTypeToDomain mapea modelo de tipo a entidad de dominio
-func mapCommonAreaTypeToDomain(m *models.CommonAreaType) *domain.CommonAreaType {
-	return &domain.CommonAreaType{
-		ID:                 m.ID,
-		Name:               m.Name,
-		Code:               m.Code,
-		Description:        m.Description,
-		Icon:               m.Icon,
-		DefaultMaxCapacity: m.DefaultMaxCapacity,
-		RequiresApproval:   m.RequiresApproval,
-		AllowsRecurring:    m.AllowsRecurring,
-		IsActive:           m.IsActive,
-	}
-}
-
-// mapCommonAreaToDomain mapea modelo a entidad de dominio
-func mapCommonAreaToDomain(m *models.CommonArea) *domain.CommonArea {
-	return &domain.CommonArea{
-		ID:                   m.ID,
-		BusinessID:           m.BusinessID,
-		CommonAreaTypeID:     m.CommonAreaTypeID,
-		Name:                 m.Name,
-		Description:          m.Description,
-		Location:             m.Location,
-		MaxCapacity:          m.MaxCapacity,
-		AreaSqm:              m.AreaSqm,
-		HasEquipment:         m.HasEquipment,
-		EquipmentDescription: m.EquipmentDescription,
-		HourlyRate:           m.HourlyRate,
-		RequiresApproval:     m.RequiresApproval,
-		RequiresDeposit:      m.RequiresDeposit,
-		DepositAmount:        m.DepositAmount,
-		AllowsRecurring:      m.AllowsRecurring,
-		IsActive:             m.IsActive,
-		ImageURLs:            m.ImageURLs,
-		CreatedAt:            m.CreatedAt,
-		UpdatedAt:            m.UpdatedAt,
-	}
 }

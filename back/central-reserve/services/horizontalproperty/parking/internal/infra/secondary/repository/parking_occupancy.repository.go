@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"central_reserve/services/horizontalproperty/parking/internal/domain"
+	"central_reserve/services/horizontalproperty/parking/internal/infra/secondary/repository/mappers"
 	"central_reserve/shared/db"
 	"central_reserve/shared/log"
 	"dbpostgres/app/infra/models"
@@ -45,7 +46,7 @@ func (r *ParkingOccupancyRepository) CreateParkingOccupancy(ctx context.Context,
 		return nil, fmt.Errorf("error creando registro de ocupación: %w", err)
 	}
 
-	return mapParkingOccupancyToDomain(model), nil
+	return mappers.ParkingOccupancyToDomain(model), nil
 }
 
 // GetParkingOccupancyByID obtiene un registro de ocupación por ID
@@ -61,7 +62,7 @@ func (r *ParkingOccupancyRepository) GetParkingOccupancyByID(ctx context.Context
 		return nil, fmt.Errorf("error obteniendo registro de ocupación: %w", err)
 	}
 
-	return mapParkingOccupancyToDomain(&occupancy), nil
+	return mappers.ParkingOccupancyToDomain(&occupancy), nil
 }
 
 // UpdateParkingOccupancy actualiza un registro de ocupación
@@ -96,7 +97,7 @@ func (r *ParkingOccupancyRepository) GetActiveOccupancyBySlotID(ctx context.Cont
 		return nil, fmt.Errorf("error obteniendo ocupación activa: %w", err)
 	}
 
-	return mapParkingOccupancyToDomain(&occupancy), nil
+	return mappers.ParkingOccupancyToDomain(&occupancy), nil
 }
 
 // GetOccupanciesBySlotID obtiene los registros de ocupación de un espacio en un rango de fechas
@@ -112,28 +113,8 @@ func (r *ParkingOccupancyRepository) GetOccupanciesBySlotID(ctx context.Context,
 
 	result := make([]*domain.ParkingOccupancy, len(occupancies))
 	for i, occupancy := range occupancies {
-		result[i] = mapParkingOccupancyToDomain(&occupancy)
+		result[i] = mappers.ParkingOccupancyToDomain(&occupancy)
 	}
 
 	return result, nil
-}
-
-// mapParkingOccupancyToDomain mapea el modelo a la entidad de dominio
-func mapParkingOccupancyToDomain(model *models.ParkingOccupancy) *domain.ParkingOccupancy {
-	return &domain.ParkingOccupancy{
-		ID:                   model.ID,
-		ParkingSlotID:        model.ParkingSlotID,
-		ParkingReservationID: model.ParkingReservationID,
-		VehiclePlate:         model.VehiclePlate,
-		EntryTime:            model.EntryTime,
-		ExitTime:             model.ExitTime,
-		IsActive:             model.IsActive,
-		EntryMethod:          model.EntryMethod,
-		EntryGate:            model.EntryGate,
-		ExitGate:             model.ExitGate,
-		RegisteredByUserID:   model.RegisteredByUserID,
-		Notes:                model.Notes,
-		CreatedAt:            model.CreatedAt,
-		UpdatedAt:            model.UpdatedAt,
-	}
 }

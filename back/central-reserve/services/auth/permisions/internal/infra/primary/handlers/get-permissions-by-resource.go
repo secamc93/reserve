@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"central_reserve/services/auth/permisions/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/auth/permisions/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/auth/permisions/internal/infra/primary/handlers/response"
 	"net/http"
 
@@ -43,7 +43,7 @@ func (h *handlers) GetPermissionsByResourceHandler(c *gin.Context) {
 		return
 	}
 
-	response := mapper.ToPermissionListResponse(permissions)
+	response := mappers.ToPermissionListResponse(permissions)
 
 	h.logger.Info().Str("resource", resource).Int("count", len(permissions)).Msg("Permisos por recurso obtenidos exitosamente")
 	c.JSON(http.StatusOK, response)

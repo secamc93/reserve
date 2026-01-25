@@ -6,6 +6,7 @@ import (
 	"math"
 
 	"central_reserve/services/horizontalproperty/parking/internal/domain"
+	"central_reserve/services/horizontalproperty/parking/internal/infra/secondary/repository/mappers"
 	"central_reserve/shared/db"
 	"central_reserve/shared/log"
 	"dbpostgres/app/infra/models"
@@ -48,7 +49,7 @@ func (r *ParkingAssignmentRepository) CreateParkingAssignment(ctx context.Contex
 		return nil, fmt.Errorf("error creando asignación de parqueadero: %w", err)
 	}
 
-	return mapParkingAssignmentToDomain(model), nil
+	return mappers.ParkingAssignmentToDomain(model), nil
 }
 
 // GetParkingAssignmentByID obtiene una asignación por ID
@@ -65,7 +66,7 @@ func (r *ParkingAssignmentRepository) GetParkingAssignmentByID(ctx context.Conte
 		return nil, fmt.Errorf("error obteniendo asignación: %w", err)
 	}
 
-	return mapParkingAssignmentToDomain(&assignment), nil
+	return mappers.ParkingAssignmentToDomain(&assignment), nil
 }
 
 // UpdateParkingAssignment actualiza una asignación
@@ -196,7 +197,7 @@ func (r *ParkingAssignmentRepository) GetActiveAssignmentBySlotID(ctx context.Co
 		return nil, fmt.Errorf("error obteniendo asignación activa: %w", err)
 	}
 
-	return mapParkingAssignmentToDomain(&assignment), nil
+	return mappers.ParkingAssignmentToDomain(&assignment), nil
 }
 
 // GetAssignmentsByPropertyUnitID obtiene las asignaciones de una unidad
@@ -210,7 +211,7 @@ func (r *ParkingAssignmentRepository) GetAssignmentsByPropertyUnitID(ctx context
 
 	result := make([]*domain.ParkingAssignment, len(assignments))
 	for i, assignment := range assignments {
-		result[i] = mapParkingAssignmentToDomain(&assignment)
+		result[i] = mappers.ParkingAssignmentToDomain(&assignment)
 	}
 
 	return result, nil
@@ -227,30 +228,9 @@ func (r *ParkingAssignmentRepository) GetAssignmentsByResidentID(ctx context.Con
 
 	result := make([]*domain.ParkingAssignment, len(assignments))
 	for i, assignment := range assignments {
-		result[i] = mapParkingAssignmentToDomain(&assignment)
+		result[i] = mappers.ParkingAssignmentToDomain(&assignment)
 	}
 
 	return result, nil
 }
 
-// mapParkingAssignmentToDomain mapea el modelo a la entidad de dominio
-func mapParkingAssignmentToDomain(model *models.ParkingAssignment) *domain.ParkingAssignment {
-	return &domain.ParkingAssignment{
-		ID:               model.ID,
-		BusinessID:       model.BusinessID,
-		ParkingSlotID:    model.ParkingSlotID,
-		PropertyUnitID:   model.PropertyUnitID,
-		ResidentID:       model.ResidentID,
-		VehiclePlate:     model.VehiclePlate,
-		VehicleBrand:     model.VehicleBrand,
-		VehicleModel:     model.VehicleModel,
-		VehicleColor:     model.VehicleColor,
-		StartDate:        model.StartDate,
-		EndDate:          model.EndDate,
-		IsActive:         model.IsActive,
-		Notes:            model.Notes,
-		AssignedByUserID: model.AssignedByUserID,
-		CreatedAt:        model.CreatedAt,
-		UpdatedAt:        model.UpdatedAt,
-	}
-}

@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"central_reserve/services/auth/middleware"
-	"central_reserve/services/auth/business/internal/infra/primary/controllers/businesshandler/mapper"
+	"central_reserve/services/auth/business/internal/infra/primary/controllers/businesshandler/mappers"
 	"central_reserve/shared/log"
 
 	"github.com/gin-gonic/gin"
@@ -36,7 +36,7 @@ func (h *BusinessHandler) GetBusinesses(c *gin.Context) {
 	isSuperAdmin := middleware.IsSuperAdmin(c)
 	if !isSuperAdmin {
 		h.logger.Warn(ctx).Msg("Intento de acceso no autorizado al endpoint de listar businesses")
-		c.JSON(http.StatusForbidden, mapper.BuildErrorResponse("access_denied", "No tienes permisos para acceder a este endpoint"))
+		c.JSON(http.StatusForbidden, mappers.BuildErrorResponse("access_denied", "No tienes permisos para acceder a este endpoint"))
 		return
 	}
 
@@ -79,11 +79,11 @@ func (h *BusinessHandler) GetBusinesses(c *gin.Context) {
 	// Ejecutar caso de uso
 	businesses, total, err := h.usecase.GetBusinesses(c.Request.Context(), page, perPage, name, businessTypeID, isActive)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, mapper.BuildErrorResponse("internal_error", "Error interno del servidor"))
+		c.JSON(http.StatusInternalServerError, mappers.BuildErrorResponse("internal_error", "Error interno del servidor"))
 		return
 	}
 
 	// Construir respuesta exitosa con paginación
-	response := mapper.BuildGetBusinessesResponseWithPagination(businesses, "Negocios obtenidos exitosamente", page, perPage, total)
+	response := mappers.BuildGetBusinessesResponseWithPagination(businesses, "Negocios obtenidos exitosamente", page, perPage, total)
 	c.JSON(http.StatusOK, response)
 }

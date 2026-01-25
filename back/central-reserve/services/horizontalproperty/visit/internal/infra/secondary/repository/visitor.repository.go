@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"central_reserve/services/horizontalproperty/visit/internal/domain"
+	"central_reserve/services/horizontalproperty/visit/internal/infra/secondary/repository/mappers"
 	"central_reserve/shared/db"
 	"central_reserve/shared/log"
 	"dbpostgres/app/infra/models"
@@ -43,7 +44,7 @@ func (r *VisitorRepository) FindByDNI(ctx context.Context, businessID *uint, dni
 		return nil, fmt.Errorf("error buscando visitante por DNI: %w", err)
 	}
 
-	return mapVisitorToDomain(&visitor), nil
+	return mappers.VisitorToDomain(&visitor), nil
 }
 
 // CreateOrGetVisitor busca por DNI, si no existe lo crea
@@ -99,7 +100,7 @@ func (r *VisitorRepository) CreateVisitor(ctx context.Context, visitor *domain.V
 		return nil, fmt.Errorf("error creando visitante: %w", err)
 	}
 
-	return mapVisitorToDomain(model), nil
+	return mappers.VisitorToDomain(model), nil
 }
 
 // GetVisitorByID obtiene un visitante por ID
@@ -112,7 +113,7 @@ func (r *VisitorRepository) GetVisitorByID(ctx context.Context, id uint) (*domai
 		return nil, fmt.Errorf("error obteniendo visitante: %w", err)
 	}
 
-	return mapVisitorToDomain(&visitor), nil
+	return mappers.VisitorToDomain(&visitor), nil
 }
 
 // UpdateVisitor actualiza un visitante
@@ -142,25 +143,5 @@ func (r *VisitorRepository) UpdateVisitor(ctx context.Context, visitor *domain.V
 		return nil, fmt.Errorf("error obteniendo visitante actualizado: %w", err)
 	}
 
-	return mapVisitorToDomain(&updated), nil
-}
-
-// mapVisitorToDomain mapea modelo a entidad de dominio
-func mapVisitorToDomain(m *models.Visitor) *domain.Visitor {
-	return &domain.Visitor{
-		ID:           m.ID,
-		BusinessID:   m.BusinessID,
-		DNI:          m.DNI,
-		FullName:     m.FullName,
-		Phone:        m.Phone,
-		Email:        m.Email,
-		PhotoURL:     m.PhotoURL,
-		HasBlacklist: m.HasBlacklist,
-		IsVerified:   m.IsVerified,
-		LastVisitAt:  m.LastVisitAt,
-		TotalVisits:  m.TotalVisits,
-		Notes:        m.Notes,
-		CreatedAt:    m.CreatedAt,
-		UpdatedAt:    m.UpdatedAt,
-	}
+	return mappers.VisitorToDomain(&updated), nil
 }

@@ -1,8 +1,9 @@
 package domain
 
 import (
-	"mime/multipart"
 	"time"
+
+	"central_reserve/shared/types"
 )
 
 // ═══════════════════════════════════════════════════════════════════
@@ -21,8 +22,8 @@ type CreateHorizontalPropertyDTO struct {
 	Description      string
 
 	// Configuración de marca blanca - Archivos para S3
-	LogoFile        *multipart.FileHeader
-	NavbarImageFile *multipart.FileHeader
+	LogoFile        *types.FileUpload
+	NavbarImageFile *types.FileUpload
 
 	PrimaryColor    string
 	SecondaryColor  string
@@ -63,8 +64,8 @@ type UpdateHorizontalPropertyDTO struct {
 	Description      *string
 
 	// Configuración de marca blanca
-	LogoFile        *multipart.FileHeader
-	NavbarImageFile *multipart.FileHeader
+	LogoFile        *types.FileUpload
+	NavbarImageFile *types.FileUpload
 	PrimaryColor    *string
 	SecondaryColor  *string
 	TertiaryColor   *string

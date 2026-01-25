@@ -2,7 +2,7 @@ package businesshandler
 
 import (
 	"central_reserve/services/auth/business/internal/domain"
-	"central_reserve/services/auth/business/internal/infra/primary/controllers/businesshandler/mapper"
+	"central_reserve/services/auth/business/internal/infra/primary/controllers/businesshandler/mappers"
 	"central_reserve/services/auth/business/internal/infra/primary/controllers/businesshandler/request"
 	"errors"
 	"fmt"
@@ -42,35 +42,39 @@ func (h *BusinessHandler) CreateBusinessHandler(c *gin.Context) {
 
 	// Validar y parsear el request
 	if err := c.ShouldBind(&createRequest); err != nil {
-		c.JSON(http.StatusBadRequest, mapper.BuildErrorResponse("invalid_request", fmt.Sprintf("Datos de entrada inválidos: %s", err.Error())))
+		c.JSON(http.StatusBadRequest, mappers.BuildErrorResponse("invalid_request", fmt.Sprintf("Datos de entrada inválidos: %s", err.Error())))
 		return
 	}
 
 	// Validar campos requeridos
 	if createRequest.Name == "" || createRequest.Code == "" || createRequest.BusinessTypeID == 0 {
-		c.JSON(http.StatusBadRequest, mapper.BuildErrorResponse("missing_fields", "Nombre, código y tipo de negocio son requeridos"))
+		c.JSON(http.StatusBadRequest, mappers.BuildErrorResponse("missing_fields", "Nombre, código y tipo de negocio son requeridos"))
 		return
 	}
 
 	// Ejecutar caso de uso
-	businessRequest := mapper.RequestToDTO(createRequest)
+	businessRequest, err := mappers.RequestToDTO(createRequest)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, mappers.BuildErrorResponse("file_error", fmt.Sprintf("Error al procesar archivos: %s", err.Error())))
+		return
+	}
 	business, err := h.usecase.CreateBusiness(c.Request.Context(), businessRequest)
 	if err != nil {
 		switch {
 		case errors.Is(err, domain.ErrBusinessCodeAlreadyExists):
-			c.JSON(http.StatusConflict, mapper.BuildErrorResponse("code_already_exists", "El código del negocio ya está en uso"))
+			c.JSON(http.StatusConflict, mappers.BuildErrorResponse("code_already_exists", "El código del negocio ya está en uso"))
 			return
 		case errors.Is(err, domain.ErrBusinessDomainAlreadyExists):
-			c.JSON(http.StatusConflict, mapper.BuildErrorResponse("domain_already_exists", "El dominio personalizado ya está en uso"))
+			c.JSON(http.StatusConflict, mappers.BuildErrorResponse("domain_already_exists", "El dominio personalizado ya está en uso"))
 			return
 		default:
 			h.logger.Error().Err(err).Msg("Error al crear negocio")
-			c.JSON(http.StatusInternalServerError, mapper.BuildErrorResponse("internal_error", "Error interno del servidor"))
+			c.JSON(http.StatusInternalServerError, mappers.BuildErrorResponse("internal_error", "Error interno del servidor"))
 			return
 		}
 	}
 
 	// Construir respuesta exitosa usando el DTO retornado
-	response := mapper.BuildCreateBusinessResponseFromDTO(business, "Negocio creado exitosamente")
+	response := mappers.BuildCreateBusinessResponseFromDTO(business, "Negocio creado exitosamente")
 	c.JSON(http.StatusCreated, response)
 }

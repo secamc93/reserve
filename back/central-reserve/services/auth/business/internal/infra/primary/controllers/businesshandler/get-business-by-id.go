@@ -1,7 +1,7 @@
 package businesshandler
 
 import (
-	"central_reserve/services/auth/business/internal/infra/primary/controllers/businesshandler/mapper"
+	"central_reserve/services/auth/business/internal/infra/primary/controllers/businesshandler/mappers"
 	"central_reserve/services/auth/business/internal/infra/primary/controllers/businesshandler/response"
 	"net/http"
 	"strconv"
@@ -30,7 +30,7 @@ func (h *BusinessHandler) GetBusinessByIDHandler(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, mapper.BuildErrorResponse("invalid_id", "ID de negocio inválido"))
+		c.JSON(http.StatusBadRequest, mappers.BuildErrorResponse("invalid_id", "ID de negocio inválido"))
 		return
 	}
 
@@ -38,15 +38,15 @@ func (h *BusinessHandler) GetBusinessByIDHandler(c *gin.Context) {
 	business, err := h.usecase.GetBusinessByID(c.Request.Context(), uint(id))
 	if err != nil {
 		if err.Error() == "negocio no encontrado" {
-			c.JSON(http.StatusNotFound, mapper.BuildErrorResponse("not_found", "Negocio no encontrado"))
+			c.JSON(http.StatusNotFound, mappers.BuildErrorResponse("not_found", "Negocio no encontrado"))
 			return
 		}
 		h.logger.Error().Err(err).Uint("id", uint(id)).Msg("Error al obtener negocio")
-		c.JSON(http.StatusInternalServerError, mapper.BuildErrorResponse("internal_error", "Error interno del servidor"))
+		c.JSON(http.StatusInternalServerError, mappers.BuildErrorResponse("internal_error", "Error interno del servidor"))
 		return
 	}
 
 	// Construir respuesta exitosa
-	response := mapper.BuildGetBusinessByIDResponseFromDTO(business, "Negocio obtenido exitosamente")
+	response := mappers.BuildGetBusinessByIDResponseFromDTO(business, "Negocio obtenido exitosamente")
 	c.JSON(http.StatusOK, response)
 }

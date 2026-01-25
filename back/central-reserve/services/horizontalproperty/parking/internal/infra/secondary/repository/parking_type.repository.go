@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"central_reserve/services/horizontalproperty/parking/internal/domain"
+	"central_reserve/services/horizontalproperty/parking/internal/infra/secondary/repository/mappers"
 	"central_reserve/shared/db"
 	"central_reserve/shared/log"
 	"dbpostgres/app/infra/models"
@@ -34,7 +35,7 @@ func (r *ParkingTypeRepository) GetAllParkingTypes(ctx context.Context) ([]*doma
 
 	result := make([]*domain.ParkingType, len(types))
 	for i, t := range types {
-		result[i] = mapParkingTypeToDomain(&t)
+		result[i] = mappers.ParkingTypeToDomain(&t)
 	}
 
 	return result, nil
@@ -50,7 +51,7 @@ func (r *ParkingTypeRepository) GetActiveParkingTypes(ctx context.Context) ([]*d
 
 	result := make([]*domain.ParkingType, len(types))
 	for i, t := range types {
-		result[i] = mapParkingTypeToDomain(&t)
+		result[i] = mappers.ParkingTypeToDomain(&t)
 	}
 
 	return result, nil
@@ -66,18 +67,5 @@ func (r *ParkingTypeRepository) GetParkingTypeByID(ctx context.Context, id uint)
 		return nil, fmt.Errorf("error obteniendo tipo de parqueadero: %w", err)
 	}
 
-	return mapParkingTypeToDomain(&parkingType), nil
-}
-
-// mapParkingTypeToDomain mapea el modelo a la entidad de dominio
-func mapParkingTypeToDomain(model *models.ParkingType) *domain.ParkingType {
-	return &domain.ParkingType{
-		ID:          model.ID,
-		Name:        model.Name,
-		Code:        model.Code,
-		Description: model.Description,
-		IsActive:    model.IsActive,
-		CreatedAt:   model.CreatedAt,
-		UpdatedAt:   model.UpdatedAt,
-	}
+	return mappers.ParkingTypeToDomain(&parkingType), nil
 }

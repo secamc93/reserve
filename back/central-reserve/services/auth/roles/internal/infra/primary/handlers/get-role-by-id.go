@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"central_reserve/services/auth/roles/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/auth/roles/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/auth/roles/internal/infra/primary/handlers/request"
 	"central_reserve/services/auth/roles/internal/infra/primary/handlers/response"
 	"net/http"
@@ -56,7 +56,7 @@ func (h *handlers) GetRoleByIDHandler(c *gin.Context) {
 		return
 	}
 
-	roleResponse := mapper.ToRoleResponse(*role)
+	roleResponse := mappers.ToRoleResponse(*role)
 
 	h.logger.Info().Uint("id", req.ID).Msg("Rol obtenido exitosamente")
 	c.JSON(http.StatusOK, response.RoleSuccessResponse{

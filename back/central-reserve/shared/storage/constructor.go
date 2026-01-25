@@ -3,10 +3,10 @@ package storage
 import (
 	"context"
 	"io"
-	"mime/multipart"
 
 	"central_reserve/shared/env"
 	"central_reserve/shared/log"
+	"central_reserve/shared/types"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
@@ -42,7 +42,7 @@ type IS3Service interface {
 	DownloadFile(ctx context.Context, filename string) (io.ReadSeeker, error)
 	FileExists(ctx context.Context, filename string) (bool, error)
 	GetFileURL(ctx context.Context, filename string) (string, error)
-	UploadImage(ctx context.Context, file *multipart.FileHeader, folder string) (string, error)
+	UploadImage(ctx context.Context, file *types.FileUpload, folder string) (string, error)
 }
 
 // New crea una nueva instancia de S3Uploader y retorna la interfaz IS3Service

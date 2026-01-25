@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"central_reserve/services/auth/roles/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/auth/roles/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/auth/roles/internal/infra/primary/handlers/request"
 	"central_reserve/services/auth/roles/internal/infra/primary/handlers/response"
 	"net/http"
@@ -37,7 +37,7 @@ func (h *handlers) GetRolesByLevelHandler(c *gin.Context) {
 
 	h.logger.Info().Int("level", req.Level).Msg("Iniciando solicitud para obtener roles por nivel")
 
-	filters := mapper.ToRoleFilters(req)
+	filters := mappers.ToRoleFilters(req)
 	roles, err := h.usecase.GetRolesByLevel(c.Request.Context(), filters)
 	if err != nil {
 		h.logger.Error().Err(err).Int("level", req.Level).Msg("Error al obtener roles por nivel desde el caso de uso")
@@ -47,7 +47,7 @@ func (h *handlers) GetRolesByLevelHandler(c *gin.Context) {
 		return
 	}
 
-	rolesResponse := mapper.ToRoleListResponseFromSlice(roles)
+	rolesResponse := mappers.ToRoleListResponseFromSlice(roles)
 
 	h.logger.Info().Int("level", req.Level).Int("count", len(roles)).Msg("Roles obtenidos exitosamente")
 	c.JSON(http.StatusOK, rolesResponse)

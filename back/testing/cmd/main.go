@@ -7,12 +7,13 @@ import (
 	"os/exec"
 	"reserve/testing/modules/residents"
 	"reserve/testing/modules/unit"
+	"reserve/testing/modules/visit"
 )
 
 func main() {
 	// Parse flags para configuración de tests
 	verbose := flag.Bool("v", false, "Modo verbose")
-	module := flag.String("module", "all", "Módulo a ejecutar (all, unit, residents)")
+	module := flag.String("module", "all", "Módulo a ejecutar (all, unit, residents, visit)")
 	useGoTest := flag.Bool("go-test", false, "Usar go test en lugar de ejecutar directamente")
 	flag.Parse()
 
@@ -32,6 +33,8 @@ func main() {
 		runUnitTests(*verbose)
 	case "residents":
 		runResidentsTests(*verbose)
+	case "visit":
+		runVisitTests(*verbose)
 	default:
 		fmt.Printf("Módulo desconocido: %s\n", *module)
 		os.Exit(1)
@@ -49,6 +52,8 @@ func runWithGoTest(module string, verbose bool) {
 		path = "./modules/unit"
 	case "residents":
 		path = "./modules/residents"
+	case "visit":
+		path = "./modules/visit"
 	default:
 		fmt.Printf("Módulo desconocido: %s\n", module)
 		os.Exit(1)
@@ -72,6 +77,7 @@ func runAllTests(verbose bool) {
 	fmt.Println("\n📦 Ejecutando todos los módulos de testing...")
 	runUnitTests(verbose)
 	runResidentsTests(verbose)
+	runVisitTests(verbose)
 }
 
 func runUnitTests(verbose bool) {
@@ -89,6 +95,18 @@ func runUnitTests(verbose bool) {
 func runResidentsTests(verbose bool) {
 	fmt.Println("\n👥 Módulo: Residents Tests")
 	bundle := residents.NewBundle()
+
+	// Ejecutar el bundle
+	bundle.Execute()
+
+	if verbose {
+		fmt.Printf("  ✓ Bundle: %s completado\n", bundle.GetName())
+	}
+}
+
+func runVisitTests(verbose bool) {
+	fmt.Println("\n🚪 Módulo: Visit Tests")
+	bundle := visit.NewBundle()
 
 	// Ejecutar el bundle
 	bundle.Execute()

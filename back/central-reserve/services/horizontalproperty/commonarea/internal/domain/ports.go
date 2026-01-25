@@ -37,6 +37,7 @@ type CommonAreaReservationRepository interface {
 	CreateReservation(ctx context.Context, reservation *CommonAreaReservation) (*CommonAreaReservation, error)
 	GetReservationByID(ctx context.Context, id uint) (*CommonAreaReservation, error)
 	UpdateReservation(ctx context.Context, reservation *CommonAreaReservation) error
+	ChangeReservationStatus(ctx context.Context, reservationID uint, newStatusCode string) error
 	ListReservations(ctx context.Context, filters ReservationFiltersDTO) (*PaginatedReservationsDTO, error)
 	CheckAvailability(ctx context.Context, dto CheckAvailabilityDTO) (bool, error)
 	GetOverlappingReservations(ctx context.Context, commonAreaID uint, date time.Time, startTime, endTime string, excludeID *uint) ([]*CommonAreaReservation, error)

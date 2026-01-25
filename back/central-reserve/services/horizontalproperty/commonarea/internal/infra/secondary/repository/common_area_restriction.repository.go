@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"central_reserve/services/horizontalproperty/commonarea/internal/domain"
+	"central_reserve/services/horizontalproperty/commonarea/internal/infra/secondary/repository/mappers"
 	"central_reserve/shared/db"
 	"central_reserve/shared/log"
 	"dbpostgres/app/infra/models"
@@ -42,7 +43,7 @@ func (r *CommonAreaRestrictionRepository) CreateRestriction(ctx context.Context,
 		return nil, fmt.Errorf("error creando restricción: %w", err)
 	}
 
-	return mapRestrictionToDomain(model), nil
+	return mappers.RestrictionToDomain(model), nil
 }
 
 // GetActiveRestrictions obtiene restricciones activas que afectan un horario específico
@@ -64,7 +65,7 @@ func (r *CommonAreaRestrictionRepository) GetActiveRestrictions(ctx context.Cont
 
 	result := make([]*domain.CommonAreaRestriction, len(restrictions))
 	for i, res := range restrictions {
-		result[i] = mapRestrictionToDomain(&res)
+		result[i] = mappers.RestrictionToDomain(&res)
 	}
 
 	return result, nil
@@ -76,22 +77,4 @@ func (r *CommonAreaRestrictionRepository) DeleteRestriction(ctx context.Context,
 		return fmt.Errorf("error eliminando restricción: %w", err)
 	}
 	return nil
-}
-
-// mapRestrictionToDomain mapea modelo a entidad de dominio
-func mapRestrictionToDomain(m *models.CommonAreaRestriction) *domain.CommonAreaRestriction {
-	return &domain.CommonAreaRestriction{
-		ID:              m.ID,
-		CommonAreaID:    m.CommonAreaID,
-		RestrictionType: m.RestrictionType,
-		StartDate:       m.StartDate,
-		EndDate:         m.EndDate,
-		StartTime:       m.StartTime,
-		EndTime:         m.EndTime,
-		Reason:          m.Reason,
-		CreatedByUserID: m.CreatedByUserID,
-		IsActive:        m.IsActive,
-		CreatedAt:       m.CreatedAt,
-		UpdatedAt:       m.UpdatedAt,
-	}
 }
