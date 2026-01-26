@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"central_reserve/services/auth/middleware"
+	"central_reserve/services/horizontalproperty/attendance/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/attendance/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
 
@@ -92,9 +93,6 @@ func (h *AttendanceHandler) ListProxies(c *gin.Context) {
 	// Log de éxito
 	h.logger.Info(ctx).Int("total_proxies", len(list)).Msg("Apoderados listados exitosamente")
 
-	out := make([]response.ProxyResponse, len(list))
-	for i, p := range list {
-		out[i] = response.ProxyResponse(p)
-	}
+	out := mappers.MapProxyDTOsToResponse(list)
 	c.JSON(http.StatusOK, response.ProxiesSuccess{Success: true, Message: "Apoderados listados", Data: out})
 }

@@ -3,7 +3,7 @@ package handlers
 import (
 	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/resident/internal/domain"
-	"central_reserve/services/horizontalproperty/resident/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/horizontalproperty/resident/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/resident/internal/infra/primary/handlers/request"
 	"central_reserve/services/horizontalproperty/resident/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
@@ -76,7 +76,7 @@ func (h *ResidentHandler) UpdateResident(c *gin.Context) {
 
 	h.logger.Info(ctx).Uint("resident_id", uint(resID)).Bool("is_super_admin", isSuperAdmin).Msg("Actualizando residente")
 
-	dto := mapper.MapUpdateRequestToDTO(req)
+	dto := mappers.MapUpdateRequestToDTO(req)
 	updated, err := h.useCase.UpdateResident(ctx, uint(resID), dto)
 	if err != nil {
 		status := http.StatusInternalServerError
@@ -105,7 +105,7 @@ func (h *ResidentHandler) UpdateResident(c *gin.Context) {
 	}
 
 	h.logger.Info(ctx).Uint("resident_id", uint(resID)).Str("email", updated.Email).Str("dni", updated.Dni).Msg("Residente actualizado exitosamente")
-	responseData := mapper.MapDetailDTOToResponse(updated)
+	responseData := mappers.MapDetailDTOToResponse(updated)
 	c.JSON(http.StatusOK, response.ResidentSuccess{
 		Success: true,
 		Message: "Residente actualizado exitosamente",

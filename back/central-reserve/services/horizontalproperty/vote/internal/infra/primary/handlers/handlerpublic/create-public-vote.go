@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"central_reserve/services/horizontalproperty/vote/internal/domain"
-	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/response"
 	"central_reserve/shared/jwt"
 
@@ -159,7 +159,7 @@ func (h *PublicHandler) CreatePublicVote(c *gin.Context) {
 		return
 	}
 
-	voteResponse := mapper.MapVoteDTOToResponse(created)
+	voteResponse := mappers.MapVoteDTOToResponse(created)
 
 	fmt.Printf("✅ [VOTACION PUBLICA - VOTO REGISTRADO]\n")
 	fmt.Printf("   Voto ID: %d\n", created.ID)

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"central_reserve/services/auth/actions/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/auth/actions/internal/infra/primary/handlers/request"
 	"central_reserve/services/auth/actions/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
@@ -53,28 +54,11 @@ func (h *ActionHandler) GetActionsHandler(c *gin.Context) {
 	}
 
 	// Convertir a respuesta HTTP
-	var actionResponses []response.ActionResponse
-	for _, action := range result.Actions {
-		actionResponses = append(actionResponses, response.ActionResponse{
-			ID:          action.ID,
-			Name:        action.Name,
-			Description: action.Description,
-			CreatedAt:   action.CreatedAt,
-			UpdatedAt:   action.UpdatedAt,
-		})
-	}
-
-	listResponse := response.ActionListResponse{
-		Actions:    actionResponses,
-		Total:      result.Total,
-		Page:       result.Page,
-		PageSize:   result.PageSize,
-		TotalPages: result.TotalPages,
-	}
+	listResponse := mappers.ToActionListResponse(result)
 
 	h.logger.Info(ctx).
 		Int64("total", result.Total).
-		Int("returned", len(actionResponses)).
+		Int("returned", len(listResponse.Actions)).
 		Int("page", result.Page).
 		Msg("Actions obtenidos exitosamente")
 

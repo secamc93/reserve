@@ -135,9 +135,10 @@ func (r *VisitRepository) GetVisitByAuthorizationCode(ctx context.Context, authC
 }
 
 // UpdateVisit actualiza una visita
+// NOTA: No actualiza visit_status_id - usar ChangeVisitStatus para cambios de estado
 func (r *VisitRepository) UpdateVisit(ctx context.Context, visit *domain.Visit) error {
 	updates := map[string]interface{}{
-		"visit_status_id":             visit.VisitStatusID,
+		// visit_status_id se maneja exclusivamente por ChangeVisitStatus
 		"property_unit_id":            visit.PropertyUnitID,
 		"visit_type_id":               visit.VisitTypeID,
 		"scheduled_date":              visit.ScheduledDate,

@@ -35,6 +35,36 @@ func (uc *VisitUseCases) CreateVisit(ctx context.Context, dto application.Create
 	return uc.visitAPI.CreateVisit(ctx, visit)
 }
 
+// UpdateVisit actualiza una visita existente
+func (uc *VisitUseCases) UpdateVisit(ctx context.Context, visitID uint, dto application.UpdateVisitDTO) (*domain.Visit, error) {
+	if visitID == 0 {
+		return nil, domain.ErrInvalidVisitData
+	}
+
+	visit := domain.Visit{
+		VisitorID:          dto.VisitorID,
+		PropertyUnitID:     dto.PropertyUnitID,
+		VisitTypeID:        dto.VisitTypeID,
+		ScheduledDate:      dto.ScheduledDate,
+		ScheduledStartTime: dto.ScheduledStartTime,
+		Purpose:            dto.Purpose,
+		NumberOfVisitors:   dto.NumberOfVisitors,
+		NotifyResident:     dto.NotifyResident,
+		NotifySecurity:     dto.NotifySecurity,
+	}
+
+	return uc.visitAPI.UpdateVisit(ctx, visitID, visit)
+}
+
+// DeleteVisit elimina una visita
+func (uc *VisitUseCases) DeleteVisit(ctx context.Context, visitID uint) error {
+	if visitID == 0 {
+		return domain.ErrInvalidVisitData
+	}
+
+	return uc.visitAPI.DeleteVisit(ctx, visitID)
+}
+
 // ListVisits lista todas las visitas
 func (uc *VisitUseCases) ListVisits(ctx context.Context) ([]domain.Visit, error) {
 	return uc.visitAPI.ListVisits(ctx)
@@ -108,6 +138,15 @@ func (uc *VisitUseCases) CreateCompanion(ctx context.Context, visitID uint, dto 
 	return uc.visitAPI.CreateCompanion(ctx, visitID, companion)
 }
 
+// DeleteCompanion elimina un acompañante de una visita
+func (uc *VisitUseCases) DeleteCompanion(ctx context.Context, visitID uint, companionID uint) error {
+	if visitID == 0 || companionID == 0 {
+		return domain.ErrInvalidVisitData
+	}
+
+	return uc.visitAPI.DeleteCompanion(ctx, visitID, companionID)
+}
+
 // RegisterAssets registra activos para una visita
 func (uc *VisitUseCases) RegisterAssets(ctx context.Context, visitID uint, dto application.RegisterAssetDTO) (*domain.Asset, error) {
 	if visitID == 0 {
@@ -116,7 +155,8 @@ func (uc *VisitUseCases) RegisterAssets(ctx context.Context, visitID uint, dto a
 
 	asset := domain.Asset{
 		Description: dto.Description,
-		Quantity:    dto.Quantity,
+		Serial:      dto.Serial,
+		Brand:       dto.Brand,
 	}
 
 	return uc.visitAPI.RegisterAssets(ctx, visitID, asset)

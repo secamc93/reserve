@@ -21,6 +21,19 @@ type CreateVisitDTO struct {
 	NotifySecurity     bool
 }
 
+// UpdateVisitDTO representa los datos para actualizar una visita
+type UpdateVisitDTO struct {
+	VisitorID          uint
+	PropertyUnitID     uint
+	VisitTypeID        uint
+	ScheduledDate      string
+	ScheduledStartTime string
+	Purpose            string
+	NumberOfVisitors   int
+	NotifyResident     bool
+	NotifySecurity     bool
+}
+
 // CreateCompanionDTO representa los datos para crear un acompañante
 type CreateCompanionDTO struct {
 	DNI      string
@@ -29,8 +42,9 @@ type CreateCompanionDTO struct {
 
 // RegisterAssetDTO representa los datos para registrar un activo
 type RegisterAssetDTO struct {
-	Description string
-	Quantity    int
+	Description string // Mapeado a asset_name en la API
+	Serial      string // asset_serial (opcional)
+	Brand       string // asset_brand (opcional)
 }
 
 // EntryRequestDTO representa una solicitud de entrada

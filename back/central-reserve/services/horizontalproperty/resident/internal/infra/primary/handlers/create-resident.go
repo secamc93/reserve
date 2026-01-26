@@ -3,7 +3,7 @@ package handlers
 import (
 	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/resident/internal/domain"
-	"central_reserve/services/horizontalproperty/resident/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/horizontalproperty/resident/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/resident/internal/infra/primary/handlers/request"
 	"central_reserve/services/horizontalproperty/resident/internal/infra/primary/handlers/response"
 
@@ -80,7 +80,7 @@ func (h *ResidentHandler) CreateResident(c *gin.Context) {
 
 	h.logger.Info(ctx).Bool("is_super_admin", isSuperAdmin).Str("email", req.Email).Str("dni", req.Dni).Msg("Creando residente")
 
-	dto := mapper.MapCreateRequestToDTO(req, businessID)
+	dto := mappers.MapCreateRequestToDTO(req, businessID)
 	created, err := h.useCase.CreateResident(ctx, dto)
 	if err != nil {
 		status := http.StatusInternalServerError
@@ -115,7 +115,7 @@ func (h *ResidentHandler) CreateResident(c *gin.Context) {
 	}
 
 	h.logger.Info(ctx).Uint("resident_id", created.ID).Str("email", created.Email).Str("dni", created.Dni).Msg("Residente creado exitosamente")
-	responseData := mapper.MapDetailDTOToResponse(created)
+	responseData := mappers.MapDetailDTOToResponse(created)
 	c.JSON(http.StatusCreated, response.ResidentSuccess{
 		Success: true,
 		Message: "Residente creado exitosamente",

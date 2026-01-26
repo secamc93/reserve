@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"central_reserve/services/auth/middleware"
-	"central_reserve/services/horizontalproperty/resident/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/horizontalproperty/resident/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/resident/internal/infra/primary/handlers/request"
 	"central_reserve/services/horizontalproperty/resident/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
@@ -92,7 +92,7 @@ func (h *ResidentHandler) ListResidents(c *gin.Context) {
 
 	h.logger.Info(ctx).Bool("is_super_admin", isSuperAdmin).Interface("filters", req).Msg("Listando residentes")
 
-	filters := mapper.MapFiltersRequestToDTO(req, businessID)
+	filters := mappers.MapFiltersRequestToDTO(req, businessID)
 	result, err := h.useCase.ListResidents(ctx, filters)
 	if err != nil {
 		h.logger.Error(ctx).Err(err).Interface("filters", filters).Msg("Error listando residentes")
@@ -105,7 +105,7 @@ func (h *ResidentHandler) ListResidents(c *gin.Context) {
 	}
 
 	h.logger.Info(ctx).Int64("total_residents", result.Total).Int("page", result.Page).Int("page_size", result.PageSize).Msg("Residentes listados exitosamente")
-	responseData := mapper.MapPaginatedDTOToResponse(result)
+	responseData := mappers.MapPaginatedDTOToResponse(result)
 	c.JSON(http.StatusOK, response.ResidentsSuccess{
 		Success: true,
 		Message: "Residentes obtenidos exitosamente",

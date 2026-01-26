@@ -8,7 +8,7 @@ import (
 
 	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/unit/internal/domain"
-	"central_reserve/services/horizontalproperty/unit/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/horizontalproperty/unit/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/unit/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
 
@@ -100,7 +100,7 @@ func (h *PropertyUnitHandler) GetPropertyUnitByID(c *gin.Context) {
 	// Log de éxito
 	h.logger.Info(ctx).Uint("unit_id", uint(unitID)).Str("number", unit.Number).Msg("Unidad de propiedad obtenida exitosamente")
 
-	responseData := mapper.MapDetailDTOToResponse(unit)
+	responseData := mappers.MapDetailDTOToResponse(unit)
 	c.JSON(http.StatusOK, response.PropertyUnitSuccess{
 		Success: true,
 		Message: "Unidad obtenida exitosamente",

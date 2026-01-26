@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"os"
 
-	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/response"
 	sharedjwt "central_reserve/shared/jwt"
 
@@ -124,7 +124,7 @@ func (h *PublicHandler) GetPublicVotingInfo(c *gin.Context) {
 			fmt.Fprintf(os.Stderr, "[ERROR] handlers/get-public-voting-info.go - Error obteniendo voto del residente: %v\n", err)
 			fmt.Printf("   ❌ Error obteniendo mi voto: %v\n", err)
 		} else if vote != nil {
-			myVoteData := mapper.MapVoteDTOToResponse(vote)
+			myVoteData := mappers.MapVoteDTOToResponse(vote)
 			myVote = &myVoteData
 			fmt.Printf("   ✅ Mi voto obtenido: Opción ID=%d, Texto='%s'\n", vote.VotingOptionID, vote.OptionText)
 		}
@@ -140,14 +140,14 @@ func (h *PublicHandler) GetPublicVotingInfo(c *gin.Context) {
 			for i, result := range votingResults {
 				fmt.Printf("      [%d] Opción '%s': %d votos (%.1f%%)\n", i+1, result.OptionText, result.VoteCount, result.Percentage)
 			}
-			results = mapper.MapVotingResultsToResponses(votingResults)
+			results = mappers.MapVotingResultsToResponses(votingResults)
 		}
 		fmt.Printf("\n")
 	}
 
 	// Mapear a response
-	votingResponse := mapper.MapVotingDTOToResponse(voting)
-	optionsResponse := mapper.MapVotingOptionDTOsToResponses(voting.Options)
+	votingResponse := mappers.MapVotingDTOToResponse(voting)
+	optionsResponse := mappers.MapVotingOptionDTOsToResponses(voting.Options)
 
 	fmt.Printf("✅ [VOTACION PUBLICA - INFO OBTENIDA]\n")
 	fmt.Printf("   Título: %s\n", voting.Title)

@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"central_reserve/services/auth/dashboard/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/auth/dashboard/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/auth/dashboard/internal/infra/primary/handlers/response"
 	"central_reserve/services/auth/middleware"
 	"central_reserve/shared/log"
@@ -76,7 +76,7 @@ func (h *handlers) GetDashboardStatsHandler(c *gin.Context) {
 		return
 	}
 
-	response := mapper.ToDashboardStatsResponse(stats)
+	response := mappers.ToDashboardStatsResponse(stats)
 
 	h.logger.Info(ctx).Bool("is_super_admin", isSuperAdmin).Msg("Estadísticas del dashboard obtenidas exitosamente")
 	c.JSON(http.StatusOK, response)

@@ -10,6 +10,8 @@ type VisitAPIPort interface {
 
 	// Visitas
 	CreateVisit(ctx context.Context, visit Visit) (*Visit, error)
+	UpdateVisit(ctx context.Context, visitID uint, visit Visit) (*Visit, error)
+	DeleteVisit(ctx context.Context, visitID uint) error
 	ListVisits(ctx context.Context) ([]Visit, error)
 	GetVisitByID(ctx context.Context, visitID uint) (*Visit, error)
 	GetVisitByQR(ctx context.Context, qrCode string) (*Visit, error)
@@ -21,6 +23,7 @@ type VisitAPIPort interface {
 	// Acompañantes
 	ListCompanions(ctx context.Context, visitID uint) ([]Companion, error)
 	CreateCompanion(ctx context.Context, visitID uint, companion Companion) (*Companion, error)
+	DeleteCompanion(ctx context.Context, visitID uint, companionID uint) error
 
 	// Activos
 	RegisterAssets(ctx context.Context, visitID uint, asset Asset) (*Asset, error)
@@ -37,12 +40,22 @@ type AuthPort interface {
 	ListBusinesses(ctx context.Context, token string) ([]Business, error)
 }
 
-// DatabasePort define el contrato para consultas directas a BD (opcional)
+// DatabasePort define el contrato para consultas directas a BD
 type DatabasePort interface {
+	// Visitantes
 	ListVisitorsFromDB(ctx context.Context) ([]Visitor, error)
+
+	// Visitas
 	ListVisitsFromDB(ctx context.Context, businessID uint) ([]Visit, error)
+
+	// Property Units
+	ListPropertyUnitsFromDB(ctx context.Context, businessID uint) ([]PropertyUnit, error)
+
+	// Catálogos
+	ListVisitTypesFromDB(ctx context.Context) ([]VisitType, error)
+
+	// Utilidades
 	GetVisitStatistics(ctx context.Context, businessID uint) (*VisitStatistics, error)
-	ExecuteCustomQuery(ctx context.Context, query string) ([]map[string]any, error)
 	CheckConnection(ctx context.Context) (*DBConnectionStats, error)
 }
 

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"os"
 
-	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/response"
 	sharedjwt "central_reserve/shared/jwt"
 
@@ -78,7 +78,7 @@ func (h *PublicHandler) GetPublicVotes(c *gin.Context) {
 		return
 	}
 
-	votesResponse := mapper.MapVoteDTOsToResponses(votes)
+	votesResponse := mappers.MapVoteDTOsToResponses(votes)
 
 	fmt.Printf("✅ [VOTACION PUBLICA - VOTOS LISTADOS]\n")
 	fmt.Printf("   Total de votos: %d\n\n", len(votes))

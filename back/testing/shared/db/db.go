@@ -1,9 +1,9 @@
 package db
 
 import (
-	"central_reserve/shared/env"
-	"central_reserve/shared/log"
 	"context"
+	"reserve/testing/shared/env"
+	"reserve/testing/shared/log"
 
 	"fmt"
 	"time"

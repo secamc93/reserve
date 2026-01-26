@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"central_reserve/services/auth/actions/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/auth/actions/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
 	"net/http"
@@ -65,13 +66,7 @@ func (h *ActionHandler) GetActionByIDHandler(c *gin.Context) {
 	}
 
 	// Convertir a respuesta HTTP
-	actionResponse := response.ActionResponse{
-		ID:          result.ID,
-		Name:        result.Name,
-		Description: result.Description,
-		CreatedAt:   result.CreatedAt,
-		UpdatedAt:   result.UpdatedAt,
-	}
+	actionResponse := mappers.ToActionResponse(result)
 
 	h.logger.Info(ctx).
 		Uint64("action_id", actionID).

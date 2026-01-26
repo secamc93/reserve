@@ -6,7 +6,7 @@ import (
 
 	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/unit/internal/domain"
-	"central_reserve/services/horizontalproperty/unit/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/horizontalproperty/unit/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/unit/internal/infra/primary/handlers/request"
 	"central_reserve/services/horizontalproperty/unit/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
@@ -101,7 +101,7 @@ func (h *PropertyUnitHandler) ListPropertyUnits(c *gin.Context) {
 	// Log de inicio de operación
 	h.logger.Info(ctx).Bool("is_super_admin", isSuperAdmin).Str("number", req.Number).Str("unit_type", req.UnitType).Msg("Iniciando listado de unidades de propiedad")
 
-	filters := mapper.MapFiltersRequestToDTO(req, businessID)
+	filters := mappers.MapFiltersRequestToDTO(req, businessID)
 	result, err := h.useCase.ListPropertyUnits(ctx, filters)
 	if err != nil {
 		status := http.StatusInternalServerError
@@ -138,7 +138,7 @@ func (h *PropertyUnitHandler) ListPropertyUnits(c *gin.Context) {
 	// Log de éxito
 	h.logger.Info(ctx).Int64("total_units", result.Total).Int("page", result.Page).Int("page_size", result.PageSize).Msg("Unidades de propiedad listadas exitosamente")
 
-	responseData := mapper.MapPaginatedDTOToResponse(result)
+	responseData := mappers.MapPaginatedDTOToResponse(result)
 	c.JSON(http.StatusOK, response.PropertyUnitsSuccess{
 		Success: true,
 		Message: "Unidades obtenidas exitosamente",

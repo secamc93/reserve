@@ -9,7 +9,7 @@ import (
 	"central_reserve/services/auth/middleware"
 
 	"central_reserve/services/horizontalproperty/vote/internal/domain"
-	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/request"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
@@ -88,6 +88,6 @@ func (h *VotingGroupsHandler) CreateVotingGroup(c *gin.Context) {
 	}
 
 	// Mapear DTO a response
-	responseData := mapper.MapVotingGroupDTOToResponse(created)
+	responseData := mappers.MapVotingGroupDTOToResponse(created)
 	c.JSON(http.StatusCreated, response.VotingGroupSuccess{Success: true, Message: "Grupo de votación creado", Data: responseData})
 }

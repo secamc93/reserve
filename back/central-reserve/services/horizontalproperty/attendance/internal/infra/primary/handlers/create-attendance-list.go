@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"central_reserve/services/horizontalproperty/attendance/internal/domain"
+	"central_reserve/services/horizontalproperty/attendance/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/attendance/internal/infra/primary/handlers/request"
 	"central_reserve/services/horizontalproperty/attendance/internal/infra/primary/handlers/response"
 
@@ -36,13 +36,7 @@ func (h *AttendanceHandler) CreateAttendanceList(c *gin.Context) {
 	}
 
 	// Convertir request a DTO
-	dto := domain.CreateAttendanceListDTO{
-		VotingGroupID:   req.VotingGroupID,
-		Title:           req.Title,
-		Description:     req.Description,
-		CreatedByUserID: req.CreatedByUserID,
-		Notes:           req.Notes,
-	}
+	dto := mappers.MapCreateAttendanceListRequestToDTO(req)
 
 	// Crear lista de asistencia
 	created, err := h.attendanceUseCase.CreateAttendanceList(c.Request.Context(), dto)
@@ -59,17 +53,7 @@ func (h *AttendanceHandler) CreateAttendanceList(c *gin.Context) {
 	}
 
 	// Mapear a response
-	responseData := response.AttendanceListResponse{
-		ID:              created.ID,
-		VotingGroupID:   created.VotingGroupID,
-		Title:           created.Title,
-		Description:     created.Description,
-		IsActive:        created.IsActive,
-		CreatedByUserID: created.CreatedByUserID,
-		Notes:           created.Notes,
-		CreatedAt:       created.CreatedAt,
-		UpdatedAt:       created.UpdatedAt,
-	}
+	responseData := mappers.MapAttendanceListDTOToResponse(*created)
 
 	h.logger.Info().
 		Uint("attendance_list_id", created.ID).

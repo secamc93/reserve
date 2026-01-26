@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/response"
 	sharedjwt "central_reserve/shared/jwt"
 
@@ -112,7 +112,7 @@ func (h *PublicHandler) PublicSSEVotingResults(c *gin.Context) {
 	existingVotes, err := h.votesUseCase.ListVotesByVoting(c.Request.Context(), votingID)
 	var votesResponse []response.VoteResponse
 	if err == nil && len(existingVotes) > 0 {
-		votesResponse = mapper.MapVoteDTOsToResponses(existingVotes)
+		votesResponse = mappers.MapVoteDTOsToResponses(existingVotes)
 		fmt.Printf("📊 [SSE PUBLICO] Precarga enviada: %d votos existentes\n", len(existingVotes))
 	} else {
 		fmt.Printf("📊 [SSE PUBLICO] Precarga enviada: 0 votos\n")
@@ -122,7 +122,7 @@ func (h *PublicHandler) PublicSSEVotingResults(c *gin.Context) {
 	votingResults, err := h.resultsUseCase.GetVotingResults(c.Request.Context(), votingID)
 	var resultsResponse []response.VotingResultResponse
 	if err == nil && len(votingResults) > 0 {
-		resultsResponse = mapper.MapVotingResultsToResponses(votingResults)
+		resultsResponse = mappers.MapVotingResultsToResponses(votingResults)
 		fmt.Printf("📊 [SSE PUBLICO] Resultados enviados: %d opciones\n", len(votingResults))
 	}
 
@@ -151,13 +151,13 @@ func (h *PublicHandler) PublicSSEVotingResults(c *gin.Context) {
 			}
 
 			// Evento de voto recibido - enviar voto y resultados actualizados
-			voteResponse := mapper.MapVoteDTOToResponse(&voteEvent.Vote)
+			voteResponse := mappers.MapVoteDTOToResponse(&voteEvent.Vote)
 
 			// Obtener resultados actualizados
 			updatedResults, err := h.resultsUseCase.GetVotingResults(c.Request.Context(), votingID)
 			var resultsResponse []response.VotingResultResponse
 			if err == nil && len(updatedResults) > 0 {
-				resultsResponse = mapper.MapVotingResultsToResponses(updatedResults)
+				resultsResponse = mappers.MapVotingResultsToResponses(updatedResults)
 			}
 
 			// Determinar el tipo de evento

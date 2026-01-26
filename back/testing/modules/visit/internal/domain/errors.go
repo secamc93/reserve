@@ -9,6 +9,9 @@ var (
 	// ErrVisitNotFound indica que la visita no fue encontrada
 	ErrVisitNotFound = errors.New("visita no encontrada")
 
+	// ErrCompanionNotFound indica que el acompañante no fue encontrado
+	ErrCompanionNotFound = errors.New("acompañante no encontrado")
+
 	// ErrInvalidDNI indica que el DNI proporcionado es inválido
 	ErrInvalidDNI = errors.New("DNI inválido")
 

@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"central_reserve/services/horizontalproperty/vote/internal/domain"
-	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/request"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/response"
 
@@ -64,6 +64,6 @@ func (h *VotingsHandler) UpdateVoting(c *gin.Context) {
 	}
 
 	// Mapear DTO a response
-	responseData := mapper.MapVotingDTOToResponse(updated)
+	responseData := mappers.MapVotingDTOToResponse(updated)
 	c.JSON(http.StatusOK, response.VotingSuccess{Success: true, Message: "Votación actualizada", Data: responseData})
 }

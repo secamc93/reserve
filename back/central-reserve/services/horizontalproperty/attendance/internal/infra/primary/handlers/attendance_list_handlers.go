@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"central_reserve/services/auth/middleware"
+	"central_reserve/services/horizontalproperty/attendance/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/attendance/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
 
@@ -74,10 +75,7 @@ func (h *AttendanceHandler) ListAttendanceLists(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Success: false, Message: "Error listando listas de asistencia", Error: err.Error()})
 		return
 	}
-	out := make([]response.AttendanceListResponse, len(lists))
-	for i, l := range lists {
-		out[i] = response.AttendanceListResponse(l)
-	}
+	out := mappers.MapAttendanceListDTOsToResponse(lists)
 	c.JSON(http.StatusOK, response.SuccessResponse[[]response.AttendanceListResponse]{Success: true, Message: "Listas obtenidas", Data: out})
 }
 
@@ -200,31 +198,7 @@ func (h *AttendanceHandler) GetAttendanceRecordsByList(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Success: false, Message: "Error obteniendo registros", Error: err.Error()})
 		return
 	}
-	out := make([]response.AttendanceRecordResponse, len(dto.Data))
-	for i, r := range dto.Data {
-		out[i] = response.AttendanceRecordResponse{
-			ID:                r.ID,
-			AttendanceListID:  r.AttendanceListID,
-			PropertyUnitID:    r.PropertyUnitID,
-			ResidentID:        r.ResidentID,
-			ProxyID:           r.ProxyID,
-			AttendedAsOwner:   r.AttendedAsOwner,
-			AttendedAsProxy:   r.AttendedAsProxy,
-			Signature:         r.Signature,
-			SignatureDate:     r.SignatureDate,
-			SignatureMethod:   r.SignatureMethod,
-			VerifiedBy:        r.VerifiedBy,
-			VerificationDate:  r.VerificationDate,
-			VerificationNotes: r.VerificationNotes,
-			Notes:             r.Notes,
-			IsValid:           r.IsValid,
-			CreatedAt:         r.CreatedAt,
-			UpdatedAt:         r.UpdatedAt,
-			ResidentName:      r.ResidentName,
-			ProxyName:         r.ProxyName,
-			UnitNumber:        r.UnitNumber,
-		}
-	}
+	out := mappers.MapAttendanceRecordDTOsToResponse(dto.Data)
 	// Headers de paginación simples
 	c.Header("X-Total-Count", strconv.FormatInt(dto.Total, 10))
 	c.Header("X-Page", strconv.Itoa(dto.Page))

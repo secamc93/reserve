@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"central_reserve/services/horizontalproperty/attendance/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/attendance/internal/infra/primary/handlers/response"
 
 	"github.com/gin-gonic/gin"
@@ -29,5 +30,5 @@ func (h *AttendanceHandler) GetProxyByID(c *gin.Context) {
 		c.JSON(http.StatusNotFound, response.ErrorResponse{Success: false, Message: "No encontrado", Error: "proxy no encontrado"})
 		return
 	}
-	c.JSON(http.StatusOK, response.ProxySuccess{Success: true, Message: "Apoderado obtenido", Data: response.ProxyResponse(*p)})
+	c.JSON(http.StatusOK, response.ProxySuccess{Success: true, Message: "Apoderado obtenido", Data: mappers.MapProxyDTOToResponse(*p)})
 }

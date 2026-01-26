@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"central_reserve/services/auth/actions/internal/domain"
+	"central_reserve/services/auth/actions/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/auth/actions/internal/infra/primary/handlers/request"
 	"central_reserve/services/auth/actions/internal/infra/primary/handlers/response"
 	"central_reserve/services/auth/middleware"
@@ -58,10 +58,7 @@ func (h *ActionHandler) CreateActionHandler(c *gin.Context) {
 	h.logger.Info(ctx).Str("name", req.Name).Msg("Datos de creación de action recibidos")
 
 	// Convertir a DTO de dominio
-	createDTO := domain.CreateActionDTO{
-		Name:        req.Name,
-		Description: req.Description,
-	}
+	createDTO := mappers.ToCreateActionDTO(req)
 
 	// Llamar al caso de uso
 	result, err := h.usecase.CreateAction(ctx, createDTO)
@@ -91,13 +88,7 @@ func (h *ActionHandler) CreateActionHandler(c *gin.Context) {
 	}
 
 	// Convertir a respuesta HTTP
-	actionResponse := response.ActionResponse{
-		ID:          result.ID,
-		Name:        result.Name,
-		Description: result.Description,
-		CreatedAt:   result.CreatedAt,
-		UpdatedAt:   result.UpdatedAt,
-	}
+	actionResponse := mappers.ToActionResponse(result)
 
 	h.logger.Info(ctx).
 		Uint("action_id", result.ID).

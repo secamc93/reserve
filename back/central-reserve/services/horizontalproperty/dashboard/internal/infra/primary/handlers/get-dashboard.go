@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"central_reserve/services/auth/middleware"
+	"central_reserve/services/horizontalproperty/dashboard/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/dashboard/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
 
@@ -89,7 +90,7 @@ func (h *DashboardHandler) GetDashboard(c *gin.Context) {
 	c.JSON(http.StatusOK, response.SuccessResponse[*response.DashboardResponse]{
 		Success: true,
 		Message: "Dashboard obtenido exitosamente",
-		Data:    response.MapDashboardToResponse(dashboard),
+		Data:    mappers.MapDashboardToResponse(dashboard),
 	})
 }
 

@@ -1,8 +1,8 @@
 package errs
 
 import (
-	"central_reserve/shared/log"
 	"fmt"
+	"reserve/testing/shared/log"
 	"runtime"
 )
 

@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"time"
 
-	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/response"
 
 	"github.com/gin-gonic/gin"
@@ -86,7 +86,7 @@ func (h *ResultsHandler) SSEVotingResults(c *gin.Context) {
 	// Enviar precarga (votos existentes y resultados)
 	var votesResponse []response.VoteResponse
 	if len(existingVotes) > 0 {
-		votesResponse = mapper.MapVoteDTOsToResponses(existingVotes)
+		votesResponse = mappers.MapVoteDTOsToResponses(existingVotes)
 		h.logger.Info().Uint("voting_id", uint(votingID)).Int("votes_count", len(existingVotes)).Msg("Enviando precarga de votos")
 	}
 
@@ -94,7 +94,7 @@ func (h *ResultsHandler) SSEVotingResults(c *gin.Context) {
 	votingResults, err := h.resultsUseCase.GetVotingResults(c.Request.Context(), uint(votingID))
 	var resultsResponse []response.VotingResultResponse
 	if err == nil && len(votingResults) > 0 {
-		resultsResponse = mapper.MapVotingResultsToResponses(votingResults)
+		resultsResponse = mappers.MapVotingResultsToResponses(votingResults)
 		h.logger.Info().Uint("voting_id", uint(votingID)).Int("results_count", len(votingResults)).Msg("Enviando resultados de votación")
 	}
 
@@ -157,13 +157,13 @@ func (h *ResultsHandler) SSEVotingResults(c *gin.Context) {
 			}
 
 			// Enviar evento de voto y resultados actualizados
-			responseVote := mapper.MapVoteDTOToResponse(&voteEvent.Vote)
+			responseVote := mappers.MapVoteDTOToResponse(&voteEvent.Vote)
 
 			// Obtener resultados actualizados
 			updatedResults, err := h.resultsUseCase.GetVotingResults(c.Request.Context(), uint(votingID))
 			var resultsResponse []response.VotingResultResponse
 			if err == nil && len(updatedResults) > 0 {
-				resultsResponse = mapper.MapVotingResultsToResponses(updatedResults)
+				resultsResponse = mappers.MapVotingResultsToResponses(updatedResults)
 			}
 
 			voteData := gin.H{

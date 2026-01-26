@@ -1,18 +1,15 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Table, Badge, Alert, ConfirmModal, TableColumn } from '@shared/ui';
-import type { TableFiltersProps } from '@shared/ui/table';
-import type { FilterOption, ActiveFilter } from '@shared/ui/dynamic-filters';
-import { PencilIcon, TrashIcon, PlusIcon, DocumentArrowUpIcon } from '@heroicons/react/24/outline';
-import { Button } from '@shared/ui/button';
+import { Alert, ConfirmModal } from '@shared/ui';
 import { getPropertyUnitsAction, deletePropertyUnitAction } from '../infrastructure/actions';
-import { PropertyUnit, UNIT_TYPE_LABELS } from '../domain';
+import { PropertyUnit } from '../domain';
 import { TokenStorage } from '@shared/config';
 import { generateBusinessTokenAction } from '@/services/auth/login/infrastructure/actions';
 import { CreatePropertyUnitModal } from './create-property-unit-modal';
 import { EditPropertyUnitModal } from './edit-property-unit-modal';
 import { ImportUnitsModal } from './import-units-modal';
+import { PropertyUnitsDataTable, PropertyUnitFilter, FilterOption } from './property-units-data-table';
 
 export function PropertyUnitsTable({ businessId }: { businessId: number }) {
   const [units, setUnits] = useState<PropertyUnit[]>([]);
@@ -137,50 +134,7 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
     setShowEditModal(true);
   };
 
-  // Convertir filtros a ActiveFilter[]
-  const activeFilters: ActiveFilter[] = [];
-  if (filters.number) {
-    activeFilters.push({
-      key: 'number',
-      label: 'Número',
-      value: filters.number,
-      type: 'text',
-    });
-  }
-  if (filters.unitType) {
-    activeFilters.push({
-      key: 'unitType',
-      label: 'Tipo',
-      value: filters.unitType,
-      type: 'select',
-    });
-  }
-  if (filters.floor !== undefined) {
-    activeFilters.push({
-      key: 'floor',
-      label: 'Piso',
-      value: filters.floor.toString(),
-      type: 'text',
-    });
-  }
-  if (filters.block) {
-    activeFilters.push({
-      key: 'block',
-      label: 'Bloque',
-      value: filters.block,
-      type: 'text',
-    });
-  }
-  if (filters.isActive !== undefined) {
-    activeFilters.push({
-      key: 'isActive',
-      label: 'Estado',
-      value: filters.isActive,
-      type: 'boolean',
-    });
-  }
-
-  // Definir filtros disponibles
+  // Definir filtros disponibles (debe ir antes de la conversión de filtros)
   const availableFilters: FilterOption[] = [
     {
       key: 'number',
@@ -221,6 +175,59 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
     },
   ];
 
+  // Convertir filtros al formato del DataTable
+  const dataTableFilters: PropertyUnitFilter[] = [];
+  let filterIndex = 0;
+
+  if (filters.number) {
+    dataTableFilters.push({
+      id: `filter-${filterIndex++}`,
+      key: 'number',
+      label: `Número: ${filters.number}`,
+      value: filters.number,
+      color: 'blue',
+    });
+  }
+  if (filters.unitType) {
+    const typeLabel = availableFilters
+      .find(f => f.key === 'unitType')
+      ?.options?.find(opt => opt.value === filters.unitType)?.label || filters.unitType;
+    dataTableFilters.push({
+      id: `filter-${filterIndex++}`,
+      key: 'unitType',
+      label: `Tipo: ${typeLabel}`,
+      value: filters.unitType,
+      color: 'green',
+    });
+  }
+  if (filters.floor !== undefined) {
+    dataTableFilters.push({
+      id: `filter-${filterIndex++}`,
+      key: 'floor',
+      label: `Piso: ${filters.floor}`,
+      value: filters.floor.toString(),
+      color: 'orange',
+    });
+  }
+  if (filters.block) {
+    dataTableFilters.push({
+      id: `filter-${filterIndex++}`,
+      key: 'block',
+      label: `Bloque: ${filters.block}`,
+      value: filters.block,
+      color: 'blue',
+    });
+  }
+  if (filters.isActive !== undefined) {
+    dataTableFilters.push({
+      id: `filter-${filterIndex++}`,
+      key: 'isActive',
+      label: `Estado: ${filters.isActive ? 'Activa' : 'Inactiva'}`,
+      value: filters.isActive.toString(),
+      color: filters.isActive ? 'green' : 'orange',
+    });
+  }
+
   // Manejar agregar filtro
   const handleAddFilter = (filterKey: string, value: any) => {
     const newFilters = { ...filters };
@@ -245,115 +252,10 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
     setCurrentPage(1);
   };
 
-  const columns: TableColumn<PropertyUnit>[] = [
-    {
-      key: 'number',
-      label: 'Número',
-    },
-    {
-      key: 'unitType',
-      label: 'Tipo',
-      render: (_, unit) => UNIT_TYPE_LABELS[unit.unitType] || unit.unitType,
-    },
-    {
-      key: 'floor',
-      label: 'Piso',
-      render: (_, unit) => unit.floor ?? '-',
-    },
-    {
-      key: 'block',
-      label: 'Bloque',
-      render: (_, unit) => unit.block || '-',
-    },
-    {
-      key: 'area',
-      label: 'Área (m²)',
-      render: (_, unit) => unit.area ? `${unit.area} m²` : '-',
-    },
-    {
-      key: 'bedrooms',
-      label: 'Habitaciones',
-      render: (_, unit) => unit.bedrooms ?? '-',
-    },
-    {
-      key: 'coefficient',
-      label: 'Coeficiente',
-      render: (_, unit) => unit.coefficient ? unit.coefficient.toFixed(6) : '-',
-    },
-    {
-      key: 'isActive',
-      label: 'Estado',
-      render: (_, unit) => (
-        <Badge type={unit.isActive ? 'success' : 'error'}>
-          {unit.isActive ? 'Activa' : 'Inactiva'}
-        </Badge>
-      ),
-    },
-    {
-      key: 'actions',
-      label: 'Acciones',
-      align: 'center',
-      render: (_, unit) => (
-        <div className="flex items-center justify-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleEdit(unit)}
-            className="p-2 hover:bg-blue-50 hover:text-blue-600"
-            title="Editar"
-          >
-            <PencilIcon className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleDeleteClick(unit.id)}
-            className="p-2 hover:bg-red-50 hover:text-red-600"
-            title="Eliminar"
-          >
-            <TrashIcon className="w-4 h-4" />
-          </Button>
-        </div>
-      ),
-    },
-  ];
-
-  const pagination = {
-    currentPage,
-    totalPages,
-    totalItems: totalCount,
-    itemsPerPage: pageSize,
-    onPageChange: handlePageChange,
-    onItemsPerPageChange: handlePageSizeChange,
-    showItemsPerPageSelector: true,
-    itemsPerPageOptions: [5, 10, 25, 50, 100],
-  };
-
-  const tableFilters: TableFiltersProps = {
-    availableFilters,
-    activeFilters,
-    onAddFilter: handleAddFilter,
-    onRemoveFilter: handleRemoveFilter,
-    headerActions: (
-      <div className="flex gap-2">
-        <Button
-          variant="secondary"
-          onClick={() => setShowImportModal(true)}
-          className="btn-secondary"
-        >
-          <DocumentArrowUpIcon className="w-4 h-4 mr-2" />
-          Importar Excel
-        </Button>
-        <Button
-          variant="primary"
-          onClick={() => setShowCreateModal(true)}
-          className="btn-primary"
-        >
-          <PlusIcon className="w-4 h-4 mr-2" />
-          Agregar Unidad
-        </Button>
-      </div>
-    ),
+  // Handler para limpiar todos los filtros
+  const handleClearAllFilters = () => {
+    setFilters({});
+    setCurrentPage(1);
   };
 
   return (
@@ -367,15 +269,24 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
         </div>
       )}
 
-      {/* Tabla con filtros y paginación integrada */}
-      <Table
-        columns={columns}
+      {/* Tabla de unidades con diseño de Pencil */}
+      <PropertyUnitsDataTable
         data={units}
+        filters={dataTableFilters}
+        availableFilters={availableFilters}
+        onAdd={() => setShowCreateModal(true)}
+        onImport={() => setShowImportModal(true)}
+        onEdit={handleEdit}
+        onDelete={(unit) => handleDeleteClick(unit.id)}
+        onFilterRemove={handleRemoveFilter}
+        onClearAllFilters={handleClearAllFilters}
+        onAddFilter={handleAddFilter}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={totalCount}
+        pageSize={pageSize}
+        onPageChange={handlePageChange}
         loading={loading}
-        emptyMessage="No hay unidades disponibles"
-        keyExtractor={(unit) => unit.id.toString()}
-        pagination={pagination}
-        filters={tableFilters}
       />
 
       {showCreateModal && (
