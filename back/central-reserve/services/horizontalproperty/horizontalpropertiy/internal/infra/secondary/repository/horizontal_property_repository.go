@@ -1,16 +1,18 @@
 package repository
 
 import (
-	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/domain"
-	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/secondary/repository/mapper"
-	"central_reserve/shared/db"
-	"central_reserve/shared/log"
 	"context"
-	"dbpostgres/app/infra/models"
 	"fmt"
 	"math"
 	"strings"
 	"time"
+
+	"github.com/secamc93/probability/back/migration/shared/models"
+
+	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/domain"
+	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/secondary/repository/mapper"
+	"central_reserve/shared/db"
+	"central_reserve/shared/log"
 
 	"gorm.io/gorm"
 )

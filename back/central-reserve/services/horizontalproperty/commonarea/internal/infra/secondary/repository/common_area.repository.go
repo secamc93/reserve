@@ -131,48 +131,43 @@ func (r *CommonAreaRepository) ListCommonAreas(ctx context.Context, filters doma
 		return nil, fmt.Errorf("error contando zonas comunes: %w", err)
 	}
 
-	// Consulta paginada
-	type row struct {
-		ID               uint
-		Name             string
-		TypeName         string
-		Location         string
-		MaxCapacity      int
-		IsActive         bool
-		RequiresApproval bool
-	}
-
-	rows := []row{}
-	query := r.db.Conn(ctx).Table("horizontal_property.common_areas ca").
-		Select("ca.id, ca.name, cat.name as type_name, ca.location, ca.max_capacity, ca.is_active, ca.requires_approval").
-		Joins("JOIN horizontal_property.common_area_types cat ON cat.id = ca.common_area_type_id").
-		Where("ca.business_id = ?", filters.BusinessID)
+	// Consulta paginada usando modelos GORM
+	var commonAreasModels []models.CommonArea
+	query := r.db.Conn(ctx).
+		Model(&models.CommonArea{}).
+		Preload("CommonAreaType").
+		Where("business_id = ?", filters.BusinessID)
 
 	if filters.CommonAreaTypeID != nil {
-		query = query.Where("ca.common_area_type_id = ?", *filters.CommonAreaTypeID)
+		query = query.Where("common_area_type_id = ?", *filters.CommonAreaTypeID)
 	}
 	if filters.IsActive != nil {
-		query = query.Where("ca.is_active = ?", *filters.IsActive)
+		query = query.Where("is_active = ?", *filters.IsActive)
 	}
 
 	offset := (filters.Page - 1) * filters.PageSize
-	if err := query.Order("ca.name ASC").
+	if err := query.Order("name ASC").
 		Limit(filters.PageSize).
 		Offset(offset).
-		Scan(&rows).Error; err != nil {
+		Find(&commonAreasModels).Error; err != nil {
 		return nil, fmt.Errorf("error listando zonas comunes: %w", err)
 	}
 
-	commonAreas := make([]domain.CommonAreaListDTO, len(rows))
-	for i, rw := range rows {
+	commonAreas := make([]domain.CommonAreaListDTO, len(commonAreasModels))
+	for i, ca := range commonAreasModels {
+		typeName := ""
+		if ca.CommonAreaType != nil {
+			typeName = ca.CommonAreaType.Name
+		}
+
 		commonAreas[i] = domain.CommonAreaListDTO{
-			ID:               rw.ID,
-			Name:             rw.Name,
-			TypeName:         rw.TypeName,
-			Location:         rw.Location,
-			MaxCapacity:      rw.MaxCapacity,
-			IsActive:         rw.IsActive,
-			RequiresApproval: rw.RequiresApproval,
+			ID:               ca.ID,
+			Name:             ca.Name,
+			TypeName:         typeName,
+			Location:         ca.Location,
+			MaxCapacity:      ca.MaxCapacity,
+			IsActive:         ca.IsActive,
+			RequiresApproval: ca.RequiresApproval,
 		}
 	}
 

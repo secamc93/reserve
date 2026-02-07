@@ -1,4 +1,4 @@
-package app
+package app_test
 
 import (
 	"context"
@@ -6,8 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"central_reserve/services/horizontalproperty/visit/internal/app"
+	"central_reserve/services/horizontalproperty/visit/internal/app/test/mocks"
 	"central_reserve/services/horizontalproperty/visit/internal/domain"
-	"central_reserve/services/horizontalproperty/visit/internal/mocks"
 )
 
 // TestCreateVisit_Success prueba el caso feliz donde se crea una visita exitosamente
@@ -92,12 +93,11 @@ func TestCreateVisit_Success(t *testing.T) {
 	}
 
 	logger := mocks.NewMockLogger()
+	visitorRepo := &mocks.MockVisitorRepository{}
+	companionRepo := &mocks.MockVisitCompanionRepository{}
+	assetRepo := &mocks.MockVisitAssetRepository{}
 
-	uc := &visitUseCase{
-		visitRepo:     visitRepo,
-		blacklistRepo: blacklistRepo,
-		logger:        logger,
-	}
+	uc := app.New(visitorRepo, visitRepo, companionRepo, assetRepo, blacklistRepo, logger)
 
 	// Act
 	result, err := uc.CreateVisit(ctx, dto)
@@ -126,7 +126,13 @@ func TestCreateVisit_MissingVisitorID(t *testing.T) {
 	}
 
 	logger := mocks.NewMockLogger()
-	uc := &visitUseCase{logger: logger}
+	visitorRepo := &mocks.MockVisitorRepository{}
+	visitRepo := &mocks.MockVisitRepository{}
+	companionRepo := &mocks.MockVisitCompanionRepository{}
+	assetRepo := &mocks.MockVisitAssetRepository{}
+	blacklistRepo := &mocks.MockVisitBlacklistRepository{}
+
+	uc := app.New(visitorRepo, visitRepo, companionRepo, assetRepo, blacklistRepo, logger)
 
 	// Act
 	result, err := uc.CreateVisit(ctx, dto)
@@ -155,7 +161,13 @@ func TestCreateVisit_MissingPropertyUnitID(t *testing.T) {
 	}
 
 	logger := mocks.NewMockLogger()
-	uc := &visitUseCase{logger: logger}
+	visitorRepo := &mocks.MockVisitorRepository{}
+	visitRepo := &mocks.MockVisitRepository{}
+	companionRepo := &mocks.MockVisitCompanionRepository{}
+	assetRepo := &mocks.MockVisitAssetRepository{}
+	blacklistRepo := &mocks.MockVisitBlacklistRepository{}
+
+	uc := app.New(visitorRepo, visitRepo, companionRepo, assetRepo, blacklistRepo, logger)
 
 	// Act
 	result, err := uc.CreateVisit(ctx, dto)
@@ -184,7 +196,13 @@ func TestCreateVisit_MissingVisitTypeID(t *testing.T) {
 	}
 
 	logger := mocks.NewMockLogger()
-	uc := &visitUseCase{logger: logger}
+	visitorRepo := &mocks.MockVisitorRepository{}
+	visitRepo := &mocks.MockVisitRepository{}
+	companionRepo := &mocks.MockVisitCompanionRepository{}
+	assetRepo := &mocks.MockVisitAssetRepository{}
+	blacklistRepo := &mocks.MockVisitBlacklistRepository{}
+
+	uc := app.New(visitorRepo, visitRepo, companionRepo, assetRepo, blacklistRepo, logger)
 
 	// Act
 	result, err := uc.CreateVisit(ctx, dto)
@@ -251,12 +269,11 @@ func TestCreateVisit_BusinessIDZero_GetFromPropertyUnit(t *testing.T) {
 	}
 
 	logger := mocks.NewMockLogger()
+	visitorRepo := &mocks.MockVisitorRepository{}
+	companionRepo := &mocks.MockVisitCompanionRepository{}
+	assetRepo := &mocks.MockVisitAssetRepository{}
 
-	uc := &visitUseCase{
-		visitRepo:     visitRepo,
-		blacklistRepo: blacklistRepo,
-		logger:        logger,
-	}
+	uc := app.New(visitorRepo, visitRepo, companionRepo, assetRepo, blacklistRepo, logger)
 
 	// Act
 	result, err := uc.CreateVisit(ctx, dto)
@@ -290,11 +307,12 @@ func TestCreateVisit_ErrorGettingBusinessID(t *testing.T) {
 	}
 
 	logger := mocks.NewMockLogger()
+	visitorRepo := &mocks.MockVisitorRepository{}
+	companionRepo := &mocks.MockVisitCompanionRepository{}
+	assetRepo := &mocks.MockVisitAssetRepository{}
+	blacklistRepo := &mocks.MockVisitBlacklistRepository{}
 
-	uc := &visitUseCase{
-		visitRepo: visitRepo,
-		logger:    logger,
-	}
+	uc := app.New(visitorRepo, visitRepo, companionRepo, assetRepo, blacklistRepo, logger)
 
 	// Act
 	result, err := uc.CreateVisit(ctx, dto)
@@ -331,11 +349,12 @@ func TestCreateVisit_VisitorBlacklisted(t *testing.T) {
 	}
 
 	logger := mocks.NewMockLogger()
+	visitorRepo := &mocks.MockVisitorRepository{}
+	visitRepo := &mocks.MockVisitRepository{}
+	companionRepo := &mocks.MockVisitCompanionRepository{}
+	assetRepo := &mocks.MockVisitAssetRepository{}
 
-	uc := &visitUseCase{
-		blacklistRepo: blacklistRepo,
-		logger:        logger,
-	}
+	uc := app.New(visitorRepo, visitRepo, companionRepo, assetRepo, blacklistRepo, logger)
 
 	// Act
 	result, err := uc.CreateVisit(ctx, dto)
@@ -372,11 +391,12 @@ func TestCreateVisit_BlacklistCheckError(t *testing.T) {
 	}
 
 	logger := mocks.NewMockLogger()
+	visitorRepo := &mocks.MockVisitorRepository{}
+	visitRepo := &mocks.MockVisitRepository{}
+	companionRepo := &mocks.MockVisitCompanionRepository{}
+	assetRepo := &mocks.MockVisitAssetRepository{}
 
-	uc := &visitUseCase{
-		blacklistRepo: blacklistRepo,
-		logger:        logger,
-	}
+	uc := app.New(visitorRepo, visitRepo, companionRepo, assetRepo, blacklistRepo, logger)
 
 	// Act
 	result, err := uc.CreateVisit(ctx, dto)
@@ -419,12 +439,11 @@ func TestCreateVisit_ErrorGettingPendingStatus(t *testing.T) {
 	}
 
 	logger := mocks.NewMockLogger()
+	visitorRepo := &mocks.MockVisitorRepository{}
+	companionRepo := &mocks.MockVisitCompanionRepository{}
+	assetRepo := &mocks.MockVisitAssetRepository{}
 
-	uc := &visitUseCase{
-		visitRepo:     visitRepo,
-		blacklistRepo: blacklistRepo,
-		logger:        logger,
-	}
+	uc := app.New(visitorRepo, visitRepo, companionRepo, assetRepo, blacklistRepo, logger)
 
 	// Act
 	result, err := uc.CreateVisit(ctx, dto)
@@ -478,12 +497,11 @@ func TestCreateVisit_ErrorCreatingVisit(t *testing.T) {
 	}
 
 	logger := mocks.NewMockLogger()
+	visitorRepo := &mocks.MockVisitorRepository{}
+	companionRepo := &mocks.MockVisitCompanionRepository{}
+	assetRepo := &mocks.MockVisitAssetRepository{}
 
-	uc := &visitUseCase{
-		visitRepo:     visitRepo,
-		blacklistRepo: blacklistRepo,
-		logger:        logger,
-	}
+	uc := app.New(visitorRepo, visitRepo, companionRepo, assetRepo, blacklistRepo, logger)
 
 	// Act
 	result, err := uc.CreateVisit(ctx, dto)
@@ -539,12 +557,11 @@ func TestCreateVisit_QRCodeGeneration(t *testing.T) {
 	}
 
 	logger := mocks.NewMockLogger()
+	visitorRepo := &mocks.MockVisitorRepository{}
+	companionRepo := &mocks.MockVisitCompanionRepository{}
+	assetRepo := &mocks.MockVisitAssetRepository{}
 
-	uc := &visitUseCase{
-		visitRepo:     visitRepo,
-		blacklistRepo: blacklistRepo,
-		logger:        logger,
-	}
+	uc := app.New(visitorRepo, visitRepo, companionRepo, assetRepo, blacklistRepo, logger)
 
 	// Act
 	_, err := uc.CreateVisit(ctx, dto)

@@ -19,14 +19,25 @@ func (uc *AttendanceUseCase) GetAttendanceListByVotingGroup(ctx context.Context,
 	return nil, nil
 }
 
-func (uc *AttendanceUseCase) ListAttendanceLists(ctx context.Context, businessID uint, filters map[string]interface{}) ([]domain.AttendanceListDTO, error) {
-	lists, err := uc.attendanceRepo.ListAttendanceLists(ctx, businessID, filters)
+func (uc *AttendanceUseCase) ListAttendanceListsPaged(ctx context.Context, businessID uint, filters map[string]interface{}, page, pageSize int) (*domain.PaginatedAttendanceListsDTO, error) {
+	// Validar parámetros
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 10
+	}
+
+	lists, total, err := uc.attendanceRepo.ListAttendanceListsPaged(ctx, businessID, filters, page, pageSize)
 	if err != nil {
+		uc.logger.Error().Err(err).Uint("business_id", businessID).Msg("Error listando listas de asistencia")
 		return nil, err
 	}
-	res := make([]domain.AttendanceListDTO, len(lists))
+
+	// Mapear a DTOs
+	listDTOs := make([]domain.AttendanceListDTO, len(lists))
 	for i, l := range lists {
-		res[i] = domain.AttendanceListDTO{
+		listDTOs[i] = domain.AttendanceListDTO{
 			ID:              l.ID,
 			VotingGroupID:   l.VotingGroupID,
 			Title:           l.Title,
@@ -38,7 +49,20 @@ func (uc *AttendanceUseCase) ListAttendanceLists(ctx context.Context, businessID
 			UpdatedAt:       l.UpdatedAt,
 		}
 	}
-	return res, nil
+
+	// Calcular total de páginas
+	totalPages := int(total) / pageSize
+	if int(total)%pageSize != 0 {
+		totalPages++
+	}
+
+	return &domain.PaginatedAttendanceListsDTO{
+		Data:       listDTOs,
+		Total:      total,
+		Page:       page,
+		PageSize:   pageSize,
+		TotalPages: totalPages,
+	}, nil
 }
 
 func (uc *AttendanceUseCase) UpdateAttendanceList(ctx context.Context, id uint, dto domain.UpdateAttendanceListDTO) (*domain.AttendanceListDTO, error) {
@@ -134,14 +158,25 @@ func (uc *AttendanceUseCase) GetActiveProxiesByPropertyUnit(ctx context.Context,
 	return res, nil
 }
 
-func (uc *AttendanceUseCase) ListProxies(ctx context.Context, businessID uint, filters map[string]interface{}) ([]domain.ProxyDTO, error) {
-	proxies, err := uc.attendanceRepo.ListProxies(ctx, businessID, filters)
+func (uc *AttendanceUseCase) ListProxiesPaged(ctx context.Context, businessID uint, filters map[string]interface{}, page, pageSize int) (*domain.PaginatedProxiesDTO, error) {
+	// Validar parámetros
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 10
+	}
+
+	proxies, total, err := uc.attendanceRepo.ListProxiesPaged(ctx, businessID, filters, page, pageSize)
 	if err != nil {
+		uc.logger.Error().Err(err).Uint("business_id", businessID).Msg("Error listando apoderados")
 		return nil, err
 	}
-	res := make([]domain.ProxyDTO, len(proxies))
+
+	// Mapear a DTOs
+	proxyDTOs := make([]domain.ProxyDTO, len(proxies))
 	for i, p := range proxies {
-		res[i] = domain.ProxyDTO{
+		proxyDTOs[i] = domain.ProxyDTO{
 			ID:              p.ID,
 			BusinessID:      p.BusinessID,
 			PropertyUnitID:  p.PropertyUnitID,
@@ -160,7 +195,20 @@ func (uc *AttendanceUseCase) ListProxies(ctx context.Context, businessID uint, f
 			UpdatedAt:       p.UpdatedAt,
 		}
 	}
-	return res, nil
+
+	// Calcular total de páginas
+	totalPages := int(total) / pageSize
+	if int(total)%pageSize != 0 {
+		totalPages++
+	}
+
+	return &domain.PaginatedProxiesDTO{
+		Data:       proxyDTOs,
+		Total:      total,
+		Page:       page,
+		PageSize:   pageSize,
+		TotalPages: totalPages,
+	}, nil
 }
 
 func (uc *AttendanceUseCase) UpdateProxy(ctx context.Context, id uint, dto domain.UpdateProxyDTO) (*domain.ProxyDTO, error) {
@@ -278,39 +326,6 @@ func (uc *AttendanceUseCase) GetAttendanceRecordByID(ctx context.Context, id uin
 	return dto, nil
 }
 
-func (uc *AttendanceUseCase) GetAttendanceRecordsByList(ctx context.Context, attendanceListID uint) ([]domain.AttendanceRecordDTO, error) {
-	records, err := uc.attendanceRepo.GetAttendanceRecordsByList(ctx, attendanceListID)
-	if err != nil {
-		return nil, err
-	}
-	res := make([]domain.AttendanceRecordDTO, len(records))
-	for i, r := range records {
-		res[i] = domain.AttendanceRecordDTO{
-			ID:                       r.ID,
-			AttendanceListID:         r.AttendanceListID,
-			PropertyUnitID:           r.PropertyUnitID,
-			ResidentID:               r.ResidentID,
-			ProxyID:                  r.ProxyID,
-			AttendedAsOwner:          r.AttendedAsOwner,
-			AttendedAsProxy:          r.AttendedAsProxy,
-			Signature:                r.Signature,
-			SignatureDate:            r.SignatureDate,
-			SignatureMethod:          r.SignatureMethod,
-			VerifiedBy:               r.VerifiedBy,
-			VerificationDate:         r.VerificationDate,
-			VerificationNotes:        r.VerificationNotes,
-			Notes:                    r.Notes,
-			IsValid:                  r.IsValid,
-			CreatedAt:                r.CreatedAt,
-			UpdatedAt:                r.UpdatedAt,
-			ResidentName:             r.ResidentName,
-			ProxyName:                r.ProxyName,
-			UnitNumber:               r.UnitNumber,
-			ParticipationCoefficient: r.ParticipationCoefficient,
-		}
-	}
-	return res, nil
-}
 
 func (uc *AttendanceUseCase) GetAttendanceRecordsByListPaged(ctx context.Context, attendanceListID uint, unitNumber string, attended *bool, page int, pageSize int) (*domain.PaginatedAttendanceRecordsDTO, error) {
 	records, total, err := uc.attendanceRepo.GetAttendanceRecordsByListPaged(ctx, attendanceListID, unitNumber, attended, page, pageSize)

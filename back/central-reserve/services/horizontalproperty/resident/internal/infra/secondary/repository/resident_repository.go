@@ -97,11 +97,11 @@ func (r *ResidentRepository) GetResidentByID(ctx context.Context, id uint) (*dom
 		MonthlyRent        *float64
 	}
 	var ur unitRow
-	err := r.db.Conn(ctx).Table("horizontal_property.resident_units ru").
-		Select("ru.property_unit_id, pu.number as property_unit_number, ru.is_main_resident, ru.move_in_date, ru.move_out_date, ru.lease_start_date, ru.lease_end_date, ru.monthly_rent").
-		Joins("JOIN horizontal_property.property_units pu ON pu.id = ru.property_unit_id").
-		Where("ru.resident_id = ?", m.ID).
-		Order("ru.is_main_resident DESC, ru.id ASC").
+	err := r.db.Conn(ctx).Model(&models.ResidentUnit{}).
+		Select("resident_units.property_unit_id, property_units.number as property_unit_number, resident_units.is_main_resident, resident_units.move_in_date, resident_units.move_out_date, resident_units.lease_start_date, resident_units.lease_end_date, resident_units.monthly_rent").
+		Joins("JOIN horizontal_property.property_units ON property_units.id = resident_units.property_unit_id").
+		Where("resident_units.resident_id = ?", m.ID).
+		Order("resident_units.is_main_resident DESC, resident_units.id ASC").
 		Limit(1).
 		Scan(&ur).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
@@ -120,29 +120,29 @@ func (r *ResidentRepository) GetResidentByID(ctx context.Context, id uint) (*dom
 func (r *ResidentRepository) ListResidents(ctx context.Context, filters domain.ResidentFiltersDTO) (*domain.PaginatedResidentsDTO, error) {
 	// Conteo total distinto por residente con joins
 	var total int64
-	countQuery := r.db.Conn(ctx).Table("horizontal_property.residents r").
-		Joins("JOIN horizontal_property.resident_units ru ON ru.resident_id = r.id").
-		Joins("JOIN horizontal_property.property_units pu ON pu.id = ru.property_unit_id").
-		Where("r.business_id = ?", filters.BusinessID)
+	countQuery := r.db.Conn(ctx).Model(&models.Resident{}).
+		Joins("JOIN horizontal_property.resident_units ON resident_units.resident_id = residents.id").
+		Joins("JOIN horizontal_property.property_units ON property_units.id = resident_units.property_unit_id").
+		Where("residents.business_id = ?", filters.BusinessID)
 	if filters.PropertyUnitNumber != "" {
-		countQuery = countQuery.Where("pu.number ILIKE ?", "%"+filters.PropertyUnitNumber+"%")
+		countQuery = countQuery.Where("property_units.number ILIKE ?", "%"+filters.PropertyUnitNumber+"%")
 	}
 	if filters.Name != "" {
-		countQuery = countQuery.Where("r.name ILIKE ?", "%"+filters.Name+"%")
+		countQuery = countQuery.Where("residents.name ILIKE ?", "%"+filters.Name+"%")
 	}
 	if filters.PropertyUnitID != nil {
-		countQuery = countQuery.Where("ru.property_unit_id = ?", *filters.PropertyUnitID)
+		countQuery = countQuery.Where("resident_units.property_unit_id = ?", *filters.PropertyUnitID)
 	}
 	if filters.ResidentTypeID != nil {
-		countQuery = countQuery.Where("r.resident_type_id = ?", *filters.ResidentTypeID)
+		countQuery = countQuery.Where("residents.resident_type_id = ?", *filters.ResidentTypeID)
 	}
 	if filters.IsActive != nil {
-		countQuery = countQuery.Where("r.is_active = ?", *filters.IsActive)
+		countQuery = countQuery.Where("residents.is_active = ?", *filters.IsActive)
 	}
 	if filters.IsMainResident != nil {
-		countQuery = countQuery.Where("ru.is_main_resident = ?", *filters.IsMainResident)
+		countQuery = countQuery.Where("resident_units.is_main_resident = ?", *filters.IsMainResident)
 	}
-	if err := countQuery.Distinct("r.id").Count(&total).Error; err != nil {
+	if err := countQuery.Distinct("residents.id").Count(&total).Error; err != nil {
 		return nil, fmt.Errorf("error contando: %w", err)
 	}
 
@@ -158,34 +158,34 @@ func (r *ResidentRepository) ListResidents(ctx context.Context, filters domain.R
 		IsMainResident     bool
 	}
 	rows := []row{}
-	query := r.db.Conn(ctx).Table("horizontal_property.residents r").
-		Select("r.id, r.name, r.email, r.phone, r.is_active, rt.name as resident_type_name, "+
-			"COALESCE(MAX(CASE WHEN ru.is_main_resident THEN pu.number END), MIN(pu.number)) as property_unit_number, "+
-			"COALESCE(BOOL_OR(ru.is_main_resident), FALSE) as is_main_resident").
-		Joins("JOIN horizontal_property.resident_units ru ON ru.resident_id = r.id").
-		Joins("JOIN horizontal_property.property_units pu ON pu.id = ru.property_unit_id").
-		Joins("JOIN horizontal_property.resident_types rt ON rt.id = r.resident_type_id").
-		Where("r.business_id = ?", filters.BusinessID)
+	query := r.db.Conn(ctx).Model(&models.Resident{}).
+		Select("residents.id, residents.name, residents.email, residents.phone, residents.is_active, resident_types.name as resident_type_name, "+
+			"COALESCE(MAX(CASE WHEN resident_units.is_main_resident THEN property_units.number END), MIN(property_units.number)) as property_unit_number, "+
+			"COALESCE(BOOL_OR(resident_units.is_main_resident), FALSE) as is_main_resident").
+		Joins("JOIN horizontal_property.resident_units ON resident_units.resident_id = residents.id").
+		Joins("JOIN horizontal_property.property_units ON property_units.id = resident_units.property_unit_id").
+		Joins("JOIN horizontal_property.resident_types ON resident_types.id = residents.resident_type_id").
+		Where("residents.business_id = ?", filters.BusinessID)
 	if filters.PropertyUnitNumber != "" {
-		query = query.Where("pu.number ILIKE ?", "%"+filters.PropertyUnitNumber+"%")
+		query = query.Where("property_units.number ILIKE ?", "%"+filters.PropertyUnitNumber+"%")
 	}
 	if filters.Name != "" {
-		query = query.Where("r.name ILIKE ?", "%"+filters.Name+"%")
+		query = query.Where("residents.name ILIKE ?", "%"+filters.Name+"%")
 	}
 	if filters.PropertyUnitID != nil {
-		query = query.Where("ru.property_unit_id = ?", *filters.PropertyUnitID)
+		query = query.Where("resident_units.property_unit_id = ?", *filters.PropertyUnitID)
 	}
 	if filters.ResidentTypeID != nil {
-		query = query.Where("r.resident_type_id = ?", *filters.ResidentTypeID)
+		query = query.Where("residents.resident_type_id = ?", *filters.ResidentTypeID)
 	}
 	if filters.IsActive != nil {
-		query = query.Where("r.is_active = ?", *filters.IsActive)
+		query = query.Where("residents.is_active = ?", *filters.IsActive)
 	}
 	if filters.IsMainResident != nil {
-		query = query.Where("ru.is_main_resident = ?", *filters.IsMainResident)
+		query = query.Where("resident_units.is_main_resident = ?", *filters.IsMainResident)
 	}
 	offset := (filters.Page - 1) * filters.PageSize
-	if err := query.Group("r.id, rt.name").Order("r.name ASC").Limit(filters.PageSize).Offset(offset).Scan(&rows).Error; err != nil {
+	if err := query.Group("residents.id, resident_types.name").Order("residents.name ASC").Limit(filters.PageSize).Offset(offset).Scan(&rows).Error; err != nil {
 		return nil, fmt.Errorf("error listando: %w", err)
 	}
 	residents := make([]domain.ResidentListDTO, len(rows))
@@ -398,12 +398,12 @@ func (r *ResidentRepository) GetMainResidentsByUnitIDs(ctx context.Context, busi
 		UpdatedAtUnix  int64
 	}
 	rows := []row{}
-	if err := r.db.Conn(ctx).Table("horizontal_property.resident_units ru").
-		Select("ru.property_unit_id as unit_id, pu.number as unit_number, r.id as resident_id, r.business_id, r.resident_type_id, r.name, r.email, r.phone, r.dni, r.is_active, ru.is_main_resident, EXTRACT(EPOCH FROM r.created_at)::bigint as created_at_unix, EXTRACT(EPOCH FROM r.updated_at)::bigint as updated_at_unix").
-		Joins("JOIN horizontal_property.property_units pu ON pu.id = ru.property_unit_id").
-		Joins("JOIN horizontal_property.residents r ON r.id = ru.resident_id").
-		Where("r.business_id = ? AND ru.property_unit_id IN ? AND r.is_active = ?", businessID, unitIDs, true).
-		Where("ru.is_main_resident = ?", true).
+	if err := r.db.Conn(ctx).Model(&models.ResidentUnit{}).
+		Select("resident_units.property_unit_id as unit_id, property_units.number as unit_number, residents.id as resident_id, residents.business_id, residents.resident_type_id, residents.name, residents.email, residents.phone, residents.dni, residents.is_active, resident_units.is_main_resident, EXTRACT(EPOCH FROM residents.created_at)::bigint as created_at_unix, EXTRACT(EPOCH FROM residents.updated_at)::bigint as updated_at_unix").
+		Joins("JOIN horizontal_property.property_units ON property_units.id = resident_units.property_unit_id").
+		Joins("JOIN horizontal_property.residents ON residents.id = resident_units.resident_id").
+		Where("residents.business_id = ? AND resident_units.property_unit_id IN ? AND residents.is_active = ?", businessID, unitIDs, true).
+		Where("resident_units.is_main_resident = ?", true).
 		Scan(&rows).Error; err != nil {
 		return nil, fmt.Errorf("error obteniendo residentes principales: %w", err)
 	}
@@ -500,7 +500,7 @@ func (r *ResidentRepository) GetResidentIDsByDni(ctx context.Context, businessID
 		ID  uint
 	}
 	var rows []row
-	if err := r.db.Conn(ctx).Table("horizontal_property.residents").
+	if err := r.db.Conn(ctx).Model(&models.Resident{}).
 		Select("dni, id").
 		Where("business_id = ? AND dni IN ?", businessID, dnis).
 		Scan(&rows).Error; err != nil {

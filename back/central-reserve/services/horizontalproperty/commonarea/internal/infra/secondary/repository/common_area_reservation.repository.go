@@ -244,71 +244,76 @@ func (r *CommonAreaReservationRepository) ListReservations(ctx context.Context, 
 		return nil, fmt.Errorf("error contando reservas: %w", err)
 	}
 
-	// Consulta paginada
-	type row struct {
-		ID                 uint
-		CommonAreaName     string
-		PropertyUnitNumber string
-		ResidentName       string
-		StatusName         string
-		ReservationDate    time.Time
-		StartTime          string
-		EndTime            string
-		NumberOfGuests     int
-		CreatedAt          time.Time
-	}
-
-	rows := []row{}
-	query := r.db.Conn(ctx).Table("horizontal_property.common_area_reservations r").
-		Select("r.id, ca.name as common_area_name, pu.number as property_unit_number, "+
-			"COALESCE(res.name, '') as resident_name, rs.name as status_name, "+
-			"r.reservation_date, r.start_time, r.end_time, r.number_of_guests, r.created_at").
-		Joins("JOIN horizontal_property.common_areas ca ON ca.id = r.common_area_id").
-		Joins("JOIN horizontal_property.property_units pu ON pu.id = r.property_unit_id").
-		Joins("LEFT JOIN horizontal_property.residents res ON res.id = r.resident_id").
-		Joins("JOIN horizontal_property.common_area_reservation_statuses rs ON rs.id = r.reservation_status_id").
-		Where("r.business_id = ?", filters.BusinessID)
+	// Consulta paginada usando modelos GORM con Preload
+	var reservationsModels []models.CommonAreaReservation
+	query := r.db.Conn(ctx).
+		Model(&models.CommonAreaReservation{}).
+		Preload("CommonArea").
+		Preload("PropertyUnit").
+		Preload("Resident").
+		Preload("ReservationStatus").
+		Where("business_id = ?", filters.BusinessID)
 
 	if filters.CommonAreaID != nil {
-		query = query.Where("r.common_area_id = ?", *filters.CommonAreaID)
+		query = query.Where("common_area_id = ?", *filters.CommonAreaID)
 	}
 	if filters.PropertyUnitID != nil {
-		query = query.Where("r.property_unit_id = ?", *filters.PropertyUnitID)
+		query = query.Where("property_unit_id = ?", *filters.PropertyUnitID)
 	}
 	if filters.ResidentID != nil {
-		query = query.Where("r.resident_id = ?", *filters.ResidentID)
+		query = query.Where("resident_id = ?", *filters.ResidentID)
 	}
 	if filters.ReservationStatusID != nil {
-		query = query.Where("r.reservation_status_id = ?", *filters.ReservationStatusID)
+		query = query.Where("reservation_status_id = ?", *filters.ReservationStatusID)
 	}
 	if filters.StartDate != nil {
-		query = query.Where("r.reservation_date >= ?", *filters.StartDate)
+		query = query.Where("reservation_date >= ?", *filters.StartDate)
 	}
 	if filters.EndDate != nil {
-		query = query.Where("r.reservation_date <= ?", *filters.EndDate)
+		query = query.Where("reservation_date <= ?", *filters.EndDate)
 	}
 
 	offset := (filters.Page - 1) * filters.PageSize
-	if err := query.Order("r.reservation_date DESC, r.start_time ASC").
+	if err := query.Order("reservation_date DESC, start_time ASC").
 		Limit(filters.PageSize).
 		Offset(offset).
-		Scan(&rows).Error; err != nil {
+		Find(&reservationsModels).Error; err != nil {
 		return nil, fmt.Errorf("error listando reservas: %w", err)
 	}
 
-	reservations := make([]domain.ReservationListDTO, len(rows))
-	for i, rw := range rows {
+	reservations := make([]domain.ReservationListDTO, len(reservationsModels))
+	for i, r := range reservationsModels {
+		commonAreaName := ""
+		if r.CommonArea != nil {
+			commonAreaName = r.CommonArea.Name
+		}
+
+		propertyUnitNumber := ""
+		if r.PropertyUnit != nil {
+			propertyUnitNumber = r.PropertyUnit.Number
+		}
+
+		residentName := ""
+		if r.Resident != nil {
+			residentName = r.Resident.Name
+		}
+
+		statusName := ""
+		if r.ReservationStatus != nil {
+			statusName = r.ReservationStatus.Name
+		}
+
 		reservations[i] = domain.ReservationListDTO{
-			ID:                 rw.ID,
-			CommonAreaName:     rw.CommonAreaName,
-			PropertyUnitNumber: rw.PropertyUnitNumber,
-			ResidentName:       rw.ResidentName,
-			StatusName:         rw.StatusName,
-			ReservationDate:    rw.ReservationDate,
-			StartTime:          rw.StartTime,
-			EndTime:            rw.EndTime,
-			NumberOfGuests:     rw.NumberOfGuests,
-			CreatedAt:          rw.CreatedAt,
+			ID:                 r.ID,
+			CommonAreaName:     commonAreaName,
+			PropertyUnitNumber: propertyUnitNumber,
+			ResidentName:       residentName,
+			StatusName:         statusName,
+			ReservationDate:    r.ReservationDate,
+			StartTime:          r.StartTime,
+			EndTime:            r.EndTime,
+			NumberOfGuests:     r.NumberOfGuests,
+			CreatedAt:          r.CreatedAt,
 		}
 	}
 

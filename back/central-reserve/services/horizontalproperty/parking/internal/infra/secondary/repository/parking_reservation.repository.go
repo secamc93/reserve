@@ -150,35 +150,35 @@ func (r *ParkingReservationRepository) DeleteParkingReservation(ctx context.Cont
 func (r *ParkingReservationRepository) ListParkingReservations(ctx context.Context, filters domain.ParkingReservationFiltersDTO) (*domain.PaginatedParkingReservationsDTO, error) {
 	var total int64
 
-	query := r.db.Conn(ctx).Table("horizontal_property.parking_reservations pr").
-		Select("pr.*, ps.slot_number as parking_slot_number, pu.number as property_unit_number, r.name as resident_name, v.full_name as visitor_name, prs.name as status_name").
-		Joins("LEFT JOIN horizontal_property.parking_slots ps ON ps.id = pr.parking_slot_id").
-		Joins("LEFT JOIN horizontal_property.property_units pu ON pu.id = pr.property_unit_id").
-		Joins("LEFT JOIN horizontal_property.residents r ON r.id = pr.resident_id").
-		Joins("LEFT JOIN horizontal_property.visitors v ON v.id = pr.visitor_id").
-		Joins("LEFT JOIN horizontal_property.parking_reservation_statuses prs ON prs.id = pr.reservation_status_id").
-		Where("pr.business_id = ?", filters.BusinessID)
+	query := r.db.Conn(ctx).Model(&models.ParkingReservation{}).
+		Select("parking_reservations.*, ps.slot_number as parking_slot_number, pu.number as property_unit_number, r.name as resident_name, v.full_name as visitor_name, prs.name as status_name").
+		Joins("LEFT JOIN horizontal_property.parking_slots ps ON ps.id = parking_reservations.parking_slot_id").
+		Joins("LEFT JOIN horizontal_property.property_units pu ON pu.id = parking_reservations.property_unit_id").
+		Joins("LEFT JOIN horizontal_property.residents r ON r.id = parking_reservations.resident_id").
+		Joins("LEFT JOIN horizontal_property.visitors v ON v.id = parking_reservations.visitor_id").
+		Joins("LEFT JOIN horizontal_property.parking_reservation_statuses prs ON prs.id = parking_reservations.reservation_status_id").
+		Where("parking_reservations.business_id = ?", filters.BusinessID)
 
 	if filters.ParkingSlotID != nil {
-		query = query.Where("pr.parking_slot_id = ?", *filters.ParkingSlotID)
+		query = query.Where("parking_reservations.parking_slot_id = ?", *filters.ParkingSlotID)
 	}
 	if filters.PropertyUnitID != nil {
-		query = query.Where("pr.property_unit_id = ?", *filters.PropertyUnitID)
+		query = query.Where("parking_reservations.property_unit_id = ?", *filters.PropertyUnitID)
 	}
 	if filters.ResidentID != nil {
-		query = query.Where("pr.resident_id = ?", *filters.ResidentID)
+		query = query.Where("parking_reservations.resident_id = ?", *filters.ResidentID)
 	}
 	if filters.VisitorID != nil {
-		query = query.Where("pr.visitor_id = ?", *filters.VisitorID)
+		query = query.Where("parking_reservations.visitor_id = ?", *filters.VisitorID)
 	}
 	if filters.ReservationStatusID != nil {
-		query = query.Where("pr.reservation_status_id = ?", *filters.ReservationStatusID)
+		query = query.Where("parking_reservations.reservation_status_id = ?", *filters.ReservationStatusID)
 	}
 	if filters.StartDate != nil {
-		query = query.Where("pr.reservation_date >= ?", *filters.StartDate)
+		query = query.Where("parking_reservations.reservation_date >= ?", *filters.StartDate)
 	}
 	if filters.EndDate != nil {
-		query = query.Where("pr.reservation_date <= ?", *filters.EndDate)
+		query = query.Where("parking_reservations.reservation_date <= ?", *filters.EndDate)
 	}
 
 	// Contar total

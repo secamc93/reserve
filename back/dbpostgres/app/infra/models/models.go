@@ -108,6 +108,13 @@ type Business struct {
 	ParkingZones                 []ParkingZone                 `gorm:"foreignKey:BusinessID"` // Zonas de parqueo
 	ParkingAssignments           []ParkingAssignment           `gorm:"foreignKey:BusinessID"` // Asignaciones de parqueaderos
 	ParkingReservations          []ParkingReservation          `gorm:"foreignKey:BusinessID"` // Reservas de parqueaderos
+
+	// Relaciones para entrenamiento deportivo
+	STPlayers         []STPlayer         `gorm:"foreignKey:BusinessID"` // Jugadores de la academia
+	STGuardians       []STGuardian       `gorm:"foreignKey:BusinessID"` // Tutores/padres
+	Coaches           []Coach            `gorm:"foreignKey:BusinessID"` // Profesores/entrenadores
+	TrainingGroups    []TrainingGroup    `gorm:"foreignKey:BusinessID"` // Grupos de entrenamiento
+	TrainingSessions  []TrainingSession  `gorm:"foreignKey:BusinessID"` // Sesiones de entrenamiento
 }
 
 // ───────────────────────────────────────────

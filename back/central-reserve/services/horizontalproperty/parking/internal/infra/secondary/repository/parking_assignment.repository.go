@@ -106,24 +106,24 @@ func (r *ParkingAssignmentRepository) DeleteParkingAssignment(ctx context.Contex
 func (r *ParkingAssignmentRepository) ListParkingAssignments(ctx context.Context, filters domain.ParkingAssignmentFiltersDTO) (*domain.PaginatedParkingAssignmentsDTO, error) {
 	var total int64
 
-	query := r.db.Conn(ctx).Table("horizontal_property.parking_assignments pa").
-		Select("pa.*, ps.slot_number as parking_slot_number, pu.number as property_unit_number, r.name as resident_name").
-		Joins("LEFT JOIN horizontal_property.parking_slots ps ON ps.id = pa.parking_slot_id").
-		Joins("LEFT JOIN horizontal_property.property_units pu ON pu.id = pa.property_unit_id").
-		Joins("LEFT JOIN horizontal_property.residents r ON r.id = pa.resident_id").
-		Where("pa.business_id = ?", filters.BusinessID)
+	query := r.db.Conn(ctx).Model(&models.ParkingAssignment{}).
+		Select("parking_assignments.*, ps.slot_number as parking_slot_number, pu.number as property_unit_number, r.name as resident_name").
+		Joins("LEFT JOIN horizontal_property.parking_slots ps ON ps.id = parking_assignments.parking_slot_id").
+		Joins("LEFT JOIN horizontal_property.property_units pu ON pu.id = parking_assignments.property_unit_id").
+		Joins("LEFT JOIN horizontal_property.residents r ON r.id = parking_assignments.resident_id").
+		Where("parking_assignments.business_id = ?", filters.BusinessID)
 
 	if filters.ParkingSlotID != nil {
-		query = query.Where("pa.parking_slot_id = ?", *filters.ParkingSlotID)
+		query = query.Where("parking_assignments.parking_slot_id = ?", *filters.ParkingSlotID)
 	}
 	if filters.PropertyUnitID != nil {
-		query = query.Where("pa.property_unit_id = ?", *filters.PropertyUnitID)
+		query = query.Where("parking_assignments.property_unit_id = ?", *filters.PropertyUnitID)
 	}
 	if filters.ResidentID != nil {
-		query = query.Where("pa.resident_id = ?", *filters.ResidentID)
+		query = query.Where("parking_assignments.resident_id = ?", *filters.ResidentID)
 	}
 	if filters.IsActive != nil {
-		query = query.Where("pa.is_active = ?", *filters.IsActive)
+		query = query.Where("parking_assignments.is_active = ?", *filters.IsActive)
 	}
 
 	// Contar total
