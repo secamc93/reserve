@@ -8,9 +8,14 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:syncfusion_localizations/syncfusion_localizations.dart';
 import 'package:app_links/app_links.dart';
 import 'package:rupu/presentation/views/login/login_controller.dart';
+// import 'package:upgrader/upgrader.dart'; // Solo descomentar si se usa clearSavedSettings
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Descomentar para limpiar caché del Upgrader durante depuración:
+  // await Upgrader.clearSavedSettings();
+
   Get.put(AppThemeController());
   runApp(const MainApp());
 }

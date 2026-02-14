@@ -1,4 +1,4 @@
-import '../../datasource/user_management_datasource.dart';
+import '../../datasource/iam/user_management_datasource.dart';
 import '../../entities/create_user_result.dart';
 import '../../entities/user_action_result.dart';
 import '../../entities/user_detail.dart';

@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:rupu/config/dio/authenticated_dio.dart';
 import 'package:rupu/config/helpers/global_vars.dart';
-import 'package:rupu/domain/datasource/roles_datasource.dart';
+import 'package:rupu/domain/datasource/iam/roles_datasource.dart';
 import 'package:rupu/domain/entities/iam_resource.dart';
 import 'package:rupu/domain/entities/role.dart';
 import 'package:rupu/domain/entities/role_action_result.dart';

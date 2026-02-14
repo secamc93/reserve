@@ -8,7 +8,7 @@ import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
 import 'package:rupu/config/dio/authenticated_dio.dart';
 import 'package:rupu/config/helpers/global_vars.dart';
-import 'package:rupu/domain/datasource/user_management_datasource.dart';
+import 'package:rupu/domain/datasource/iam/user_management_datasource.dart';
 import 'package:rupu/domain/infrastructure/models/create_user_response_model.dart';
 import 'package:rupu/domain/infrastructure/models/simple_response_model.dart';
 import 'package:rupu/domain/infrastructure/models/user_detail_response_model.dart';

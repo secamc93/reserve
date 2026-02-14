@@ -13,14 +13,11 @@ class CustomBottomNavigation extends StatelessWidget {
   void _onItemTapped(BuildContext context, int index) {
     debugPrint('🔵 BottomNav tapped: index=$index, current=$currentIndex');
 
-    // Always navigate - even if currentIndex matches
+    // Always navigate using go() for consistent behavior
     switch (index) {
       case 0:
-        debugPrint('🏠 Going back to Home');
-        // Pop until we're at /home/0 (mimics swipe gesture)
-        while (context.canPop()) {
-          context.pop();
-        }
+        debugPrint('🏠 Navigating to /home/0');
+        context.go('/home/0');
         break;
       case 1:
         debugPrint('👤 Navigating to /home/0/perfil');
