@@ -52,20 +52,38 @@ class CustomBottomNavigation extends StatelessWidget {
             CNTabBarItem(label: 'Ajustes', icon: CNSymbol('gearshape.fill')),
           ],
           currentIndex: currentIndex,
-          onTap: (index) => _onItemTapped(context, index),
+          onTap: (index) {
+            // This might not be called due to the overlay, which is intentional.
+            // We handle taps manually in the overlay below.
+          },
         ),
-        if (currentIndex == 0)
-          Positioned(
-            left: 0,
-            bottom: 0,
-            width: MediaQuery.of(context).size.width / 3, // 3 tabs
-            height: 80, // Approximate height of tab bar + safe area
-            child: GestureDetector(
-              behavior: HitTestBehavior.translucent,
-              onTap: () => _onItemTapped(context, 0),
-              child: Container(color: Colors.transparent),
-            ),
+        Positioned.fill(
+          child: Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTap: () => _onItemTapped(context, 0),
+                  child: Container(color: Colors.transparent),
+                ),
+              ),
+              Expanded(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTap: () => _onItemTapped(context, 1),
+                  child: Container(color: Colors.transparent),
+                ),
+              ),
+              Expanded(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTap: () => _onItemTapped(context, 2),
+                  child: Container(color: Colors.transparent),
+                ),
+              ),
+            ],
           ),
+        ),
       ],
     );
   }
