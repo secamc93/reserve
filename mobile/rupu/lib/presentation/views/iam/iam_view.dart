@@ -238,14 +238,26 @@ class IamView extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const _IamTabPage(
-                    child: SafeArea(top: false, child: _IamResourcesTab()),
+                  _IamTabPage(
+                    child: SafeArea(
+                      top: false,
+                      bottom: false,
+                      child: _IamResourcesTab(),
+                    ),
                   ),
-                  const _IamTabPage(
-                    child: SafeArea(top: false, child: _IamBusinessTypesTab()),
+                  _IamTabPage(
+                    child: SafeArea(
+                      top: false,
+                      bottom: false,
+                      child: _IamBusinessTypesTab(),
+                    ),
                   ),
-                  const _IamTabPage(
-                    child: SafeArea(top: false, child: _IamBusinessesTab()),
+                  _IamTabPage(
+                    child: SafeArea(
+                      top: false,
+                      bottom: false,
+                      child: _IamBusinessesTab(),
+                    ),
                   ),
                   // Logs tab - terminal-style SSE logs console
                   const _IamTabPage(
@@ -371,11 +383,9 @@ class _IamTabPageState extends State<_IamTabPage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    // Add bottom padding to prevent content from blocking the bottom navigation bar
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 80),
-      child: widget.child,
-    );
+    // Remove hardcoded padding to allow content to scroll behind the transparent nav bar.
+    // The inner scrollables should handle bottom padding (safe area + nav bar height).
+    return widget.child;
   }
 }
 
@@ -450,7 +460,9 @@ class _IamUsersTab extends GetView<IamUsersController> {
               constraints: const BoxConstraints(maxWidth: 1000),
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: ResponsiveHelper.getAdaptivePadding(context),
+                padding: ResponsiveHelper.getAdaptivePadding(context).copyWith(
+                  bottom: 100, // NavBar height + extra
+                ),
                 children: [
                   // Header estilo sección
                   Row(
@@ -646,7 +658,9 @@ class _IamResourcesTab extends GetView<IamResourcesController> {
             constraints: const BoxConstraints(maxWidth: 1000),
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: ResponsiveHelper.getAdaptivePadding(context),
+              padding: ResponsiveHelper.getAdaptivePadding(
+                context,
+              ).copyWith(bottom: 120),
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -924,7 +938,9 @@ class _IamBusinessTypesTab extends GetView<IamBusinessTypesController> {
             constraints: const BoxConstraints(maxWidth: 1000),
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: ResponsiveHelper.getAdaptivePadding(context),
+              padding: ResponsiveHelper.getAdaptivePadding(
+                context,
+              ).copyWith(bottom: 120),
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1326,7 +1342,9 @@ class _IamBusinessesTab extends GetView<IamBusinessesController> {
             constraints: const BoxConstraints(maxWidth: 1000),
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: ResponsiveHelper.getAdaptivePadding(context),
+              padding: ResponsiveHelper.getAdaptivePadding(
+                context,
+              ).copyWith(bottom: 120),
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

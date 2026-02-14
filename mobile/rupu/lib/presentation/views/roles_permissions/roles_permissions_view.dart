@@ -1668,7 +1668,9 @@ class RolesPermissionsStandaloneTab
         onRefresh: controller.refreshData,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+          padding: ResponsiveHelper.getAdaptivePadding(
+            context,
+          ).copyWith(bottom: 100),
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
