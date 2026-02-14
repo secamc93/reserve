@@ -1,9 +1,9 @@
-// lib/presentation/widgets/custom_bottom_navigation.dart
 import 'dart:io' show Platform;
 import 'dart:ui' show ImageFilter;
 import 'package:cupertino_native/cupertino_native.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rupu/presentation/screens/home/home_screen.dart';
 
 class CustomBottomNavigation extends StatelessWidget {
   const CustomBottomNavigation({super.key, required this.currentIndex});
@@ -17,7 +17,8 @@ class CustomBottomNavigation extends StatelessWidget {
     switch (index) {
       case 0:
         debugPrint('🏠 Navigating to /home/0');
-        context.go('/home/0');
+        // Force navigation to root of home branch
+        context.goNamed(HomeScreen.name, pathParameters: {'page': '0'});
         break;
       case 1:
         debugPrint('👤 Navigating to /home/0/perfil');
@@ -40,15 +41,32 @@ class CustomBottomNavigation extends StatelessWidget {
   }
 
   /// iOS Native Liquid Glass Tab Bar using cupertino_native package
+  /// Wrapped in a Stack to capture taps on the "Inicio" tab when it's already selected.
   Widget _buildCupertinoNativeTabBar(BuildContext context) {
-    return CNTabBar(
-      items: const [
-        CNTabBarItem(label: 'Inicio', icon: CNSymbol('house.fill')),
-        CNTabBarItem(label: 'Perfil', icon: CNSymbol('person.crop.circle')),
-        CNTabBarItem(label: 'Ajustes', icon: CNSymbol('gearshape.fill')),
+    return Stack(
+      children: [
+        CNTabBar(
+          items: const [
+            CNTabBarItem(label: 'Inicio', icon: CNSymbol('house.fill')),
+            CNTabBarItem(label: 'Perfil', icon: CNSymbol('person.crop.circle')),
+            CNTabBarItem(label: 'Ajustes', icon: CNSymbol('gearshape.fill')),
+          ],
+          currentIndex: currentIndex,
+          onTap: (index) => _onItemTapped(context, index),
+        ),
+        if (currentIndex == 0)
+          Positioned(
+            left: 0,
+            bottom: 0,
+            width: MediaQuery.of(context).size.width / 3, // 3 tabs
+            height: 80, // Approximate height of tab bar + safe area
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: () => _onItemTapped(context, 0),
+              child: Container(color: Colors.transparent),
+            ),
+          ),
       ],
-      currentIndex: currentIndex,
-      onTap: (index) => _onItemTapped(context, index),
     );
   }
 

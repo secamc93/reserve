@@ -21,7 +21,7 @@ class SideMenu extends StatelessWidget {
 
     if (index >= 0 && index < totalItems) {
       final item = menuItems[index];
-      context.push(item.link);
+      context.go(item.link);
     } else {
       HomeBinding.register();
       final home = Get.isRegistered<HomeController>()
