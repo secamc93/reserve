@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getAttendanceListSummaryAction } from '../infrastructure/actions/get-attendance-list-summary.action';
 
 interface AttendanceSummaryModalProps {
@@ -22,24 +22,116 @@ interface SummaryData {
   absence_rate_by_coef: number;
 }
 
+// SVG Donut/Pie chart component
+function DonutChart({
+  segments,
+  size = 200,
+  strokeWidth = 32,
+  centerLabel,
+  centerValue,
+}: {
+  segments: { value: number; color: string; label: string }[];
+  size?: number;
+  strokeWidth?: number;
+  centerLabel?: string;
+  centerValue?: string;
+}) {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const total = segments.reduce((sum, s) => sum + s.value, 0);
+
+  let accumulated = 0;
+  const arcs = segments.map((seg) => {
+    const pct = total > 0 ? seg.value / total : 0;
+    const offset = circumference * (1 - accumulated) + circumference * 0.25;
+    accumulated += pct;
+    return {
+      ...seg,
+      pct,
+      dashArray: `${circumference * pct} ${circumference * (1 - pct)}`,
+      dashOffset: offset,
+    };
+  });
+
+  return (
+    <div className="relative inline-flex items-center justify-center">
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        {/* Background circle */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="#f3f4f6"
+          strokeWidth={strokeWidth}
+        />
+        {/* Segments */}
+        {arcs.map((arc, i) => (
+          <circle
+            key={i}
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke={arc.color}
+            strokeWidth={strokeWidth}
+            strokeDasharray={arc.dashArray}
+            strokeDashoffset={arc.dashOffset}
+            strokeLinecap="butt"
+            className="transition-all duration-700 ease-out"
+          />
+        ))}
+      </svg>
+      {/* Center text */}
+      {(centerLabel || centerValue) && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          {centerValue && (
+            <span className="text-2xl font-bold text-gray-900">{centerValue}</span>
+          )}
+          {centerLabel && (
+            <span className="text-xs text-gray-500">{centerLabel}</span>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Legend({ items }: { items: { color: string; label: string; value: string }[] }) {
+  return (
+    <div className="space-y-2">
+      {items.map((item, i) => (
+        <div key={i} className="flex items-center gap-2">
+          <span
+            className="w-3 h-3 rounded-full flex-shrink-0"
+            style={{ backgroundColor: item.color }}
+          />
+          <span className="text-sm text-gray-600 flex-1">{item.label}</span>
+          <span className="text-sm font-semibold text-gray-900">{item.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function AttendanceSummaryModal({ isOpen, onClose, attendanceListId, token }: AttendanceSummaryModalProps) {
   const [summary, setSummary] = useState<SummaryData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  const loadSummary = async () => {
+  const loadSummary = useCallback(async () => {
     if (!token || !attendanceListId) return;
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
-      const result = await getAttendanceListSummaryAction({ 
-        token, 
-        id: attendanceListId 
+      const result = await getAttendanceListSummaryAction({
+        token,
+        id: attendanceListId
       });
-      
+
       if (result.success && result.data) {
         setSummary(result.data as unknown as SummaryData);
         setLastUpdated(new Date());
@@ -52,7 +144,7 @@ export function AttendanceSummaryModal({ isOpen, onClose, attendanceListId, toke
     } finally {
       setLoading(false);
     }
-  };
+  }, [token, attendanceListId]);
 
   // Cargar datos iniciales
   useEffect(() => {
@@ -67,55 +159,54 @@ export function AttendanceSummaryModal({ isOpen, onClose, attendanceListId, toke
 
     const interval = setInterval(() => {
       loadSummary();
-    }, 60000); // 60 segundos
+    }, 60000);
 
     return () => clearInterval(interval);
-  }, [isOpen, attendanceListId, token, loadSummary]);
+  }, [isOpen, loadSummary]);
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg w-[90vw] max-w-[90vw] h-[90vh] max-h-[90vh] flex flex-col">
+      <div className="bg-white rounded-2xl w-[700px] max-w-[95vw] max-h-[90vh] flex flex-col shadow-2xl">
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-2xl font-bold text-gray-900">
-            Resumen de Asistencia
-          </h2>
-          <div className="flex items-center gap-4">
+        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100">
+          <h2 className="text-xl font-bold text-gray-900">Resumen de Asistencia</h2>
+          <div className="flex items-center gap-3">
             {lastUpdated && (
-              <span className="text-sm text-gray-500">
-                Última actualización: {lastUpdated.toLocaleTimeString()}
+              <span className="text-xs text-gray-400">
+                {lastUpdated.toLocaleTimeString()}
               </span>
             )}
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 text-2xl"
+              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
             >
-              ×
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 p-6 overflow-y-auto">
+        <div className="flex-1 px-6 py-5 overflow-y-auto">
           {loading && !summary && (
-            <div className="flex items-center justify-center h-full">
+            <div className="flex items-center justify-center py-16">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                <p className="text-gray-600">Cargando resumen...</p>
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-3"></div>
+                <p className="text-sm text-gray-500">Cargando resumen...</p>
               </div>
             </div>
           )}
 
           {error && (
-            <div className="flex items-center justify-center h-full">
+            <div className="flex items-center justify-center py-16">
               <div className="text-center">
-                <div className="text-red-500 text-6xl mb-4">⚠️</div>
-                <p className="text-red-600 mb-4">{error}</p>
+                <p className="text-red-500 mb-3">{error}</p>
                 <button
                   onClick={loadSummary}
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
                 >
                   Reintentar
                 </button>
@@ -125,135 +216,74 @@ export function AttendanceSummaryModal({ isOpen, onClose, attendanceListId, toke
 
           {summary && (
             <div className="space-y-6">
-              {/* Tarjetas principales */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* Total de Unidades */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                  <div className="flex items-center">
-                    <div className="p-3 bg-blue-100 rounded-full">
-                      <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                      </svg>
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-blue-600">Total de Unidades</p>
-                      <p className="text-2xl font-bold text-blue-900">{summary.total_units}</p>
-                    </div>
+              {/* Row 1: Two pie charts side by side */}
+              <div className="grid grid-cols-2 gap-6">
+                {/* Pie: Asistencia por Cantidad */}
+                <div className="bg-gray-50 rounded-xl p-5 flex flex-col items-center">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-4">Asistencia por Cantidad</h3>
+                  <DonutChart
+                    size={180}
+                    strokeWidth={28}
+                    centerValue={`${summary.attended_units}`}
+                    centerLabel={`de ${summary.total_units}`}
+                    segments={[
+                      { value: summary.attended_as_owner, color: '#22c55e', label: 'Propietario' },
+                      { value: summary.attended_as_proxy, color: '#3b82f6', label: 'Apoderado' },
+                      { value: summary.absent_units, color: '#ef4444', label: 'Ausentes' },
+                    ]}
+                  />
+                  <div className="mt-4 w-full">
+                    <Legend
+                      items={[
+                        { color: '#22c55e', label: 'Propietario', value: `${summary.attended_as_owner}` },
+                        { color: '#3b82f6', label: 'Apoderado', value: `${summary.attended_as_proxy}` },
+                        { color: '#ef4444', label: 'Ausentes', value: `${summary.absent_units}` },
+                      ]}
+                    />
                   </div>
                 </div>
 
-                {/* Unidades Asistidas */}
-                <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-                  <div className="flex items-center">
-                    <div className="p-3 bg-green-100 rounded-full">
-                      <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-green-600">Asistidas</p>
-                      <p className="text-2xl font-bold text-green-900">{summary.attended_units}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Unidades Ausentes */}
-                <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-                  <div className="flex items-center">
-                    <div className="p-3 bg-red-100 rounded-full">
-                      <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-red-600">Ausentes</p>
-                      <p className="text-2xl font-bold text-red-900">{summary.absent_units}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Asistencia por Coeficiente */}
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-6">
-                  <div className="flex items-center">
-                    <div className="p-3 bg-purple-100 rounded-full">
-                      <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                      </svg>
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-purple-600">Asistencia (Coef)</p>
-                      <p className="text-2xl font-bold text-purple-900">{summary.attendance_rate_by_coef.toFixed(1)}%</p>
-                    </div>
+                {/* Pie: Asistencia por Coeficiente */}
+                <div className="bg-gray-50 rounded-xl p-5 flex flex-col items-center">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-4">Asistencia por Coeficiente</h3>
+                  <DonutChart
+                    size={180}
+                    strokeWidth={28}
+                    centerValue={`${summary.attendance_rate_by_coef.toFixed(1)}%`}
+                    centerLabel="asistencia"
+                    segments={[
+                      { value: summary.attendance_rate_by_coef, color: '#22c55e', label: 'Asistencia' },
+                      { value: summary.absence_rate_by_coef, color: '#ef4444', label: 'Ausencia' },
+                    ]}
+                  />
+                  <div className="mt-4 w-full">
+                    <Legend
+                      items={[
+                        { color: '#22c55e', label: 'Asistencia (Coef)', value: `${summary.attendance_rate_by_coef.toFixed(1)}%` },
+                        { color: '#ef4444', label: 'Ausencia (Coef)', value: `${summary.absence_rate_by_coef.toFixed(1)}%` },
+                      ]}
+                    />
                   </div>
                 </div>
               </div>
 
-              {/* Detalles adicionales */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Asistencia por Propietario */}
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Asistencia por Propietario</h3>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Propietarios Asistidos</span>
-                      <span className="font-bold text-gray-900">{summary.attended_as_owner}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Por Apoderado</span>
-                      <span className="font-bold text-gray-900">{summary.attended_as_proxy}</span>
-                    </div>
-                  </div>
+              {/* Row 2: Summary stats */}
+              <div className="grid grid-cols-4 gap-3">
+                <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold text-blue-700">{summary.total_units}</p>
+                  <p className="text-xs text-blue-600 mt-1">Total Unidades</p>
                 </div>
-
-                {/* Porcentajes Detallados */}
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Porcentajes Detallados</h3>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Asistencia (Cantidad)</span>
-                      <span className="font-bold text-green-600">{summary.attendance_rate.toFixed(1)}%</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Ausencia (Cantidad)</span>
-                      <span className="font-bold text-red-600">{summary.absence_rate.toFixed(1)}%</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Ausencia (Coeficiente)</span>
-                      <span className="font-bold text-red-600">{summary.absence_rate_by_coef.toFixed(1)}%</span>
-                    </div>
-                  </div>
+                <div className="bg-green-50 border border-green-100 rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold text-green-700">{summary.attended_units}</p>
+                  <p className="text-xs text-green-600 mt-1">Asistieron</p>
                 </div>
-              </div>
-
-              {/* Barra de progreso visual */}
-              <div className="bg-white border border-gray-200 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Progreso de Asistencia</h3>
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between text-sm text-gray-600 mb-1">
-                      <span>Asistencia por Coeficiente</span>
-                      <span>{summary.attendance_rate_by_coef.toFixed(1)}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
-                      <div 
-                        className="bg-green-500 h-3 rounded-full transition-all duration-500"
-                        style={{ width: `${summary.attendance_rate_by_coef}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <div className="flex justify-between text-sm text-gray-600 mb-1">
-                      <span>Ausencia por Coeficiente</span>
-                      <span>{summary.absence_rate_by_coef.toFixed(1)}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
-                      <div 
-                        className="bg-red-500 h-3 rounded-full transition-all duration-500"
-                        style={{ width: `${summary.absence_rate_by_coef}%` }}
-                      ></div>
-                    </div>
-                  </div>
+                <div className="bg-red-50 border border-red-100 rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold text-red-700">{summary.absent_units}</p>
+                  <p className="text-xs text-red-600 mt-1">Ausentes</p>
+                </div>
+                <div className="bg-purple-50 border border-purple-100 rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold text-purple-700">{summary.attendance_rate.toFixed(1)}%</p>
+                  <p className="text-xs text-purple-600 mt-1">Tasa Asistencia</p>
                 </div>
               </div>
             </div>
@@ -261,17 +291,17 @@ export function AttendanceSummaryModal({ isOpen, onClose, attendanceListId, toke
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 p-6 border-t bg-gray-50">
+        <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-100">
           <button
             onClick={loadSummary}
             disabled={loading}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {loading ? 'Actualizando...' : 'Actualizar Ahora'}
+            {loading ? 'Actualizando...' : 'Actualizar'}
           </button>
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+            className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
           >
             Cerrar
           </button>

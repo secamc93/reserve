@@ -115,6 +115,22 @@ type UnvotedUnitResponse struct {
 	ResidentName string `json:"resident_name" example:"Juan Pérez"`
 }
 
+// VotingWithStatusResponse - Response para votación con estado de voto del usuario (público)
+type VotingWithStatusResponse struct {
+	ID                 uint     `json:"id"`
+	VotingGroupID      uint     `json:"voting_group_id"`
+	Title              string   `json:"title"`
+	Description        string   `json:"description"`
+	VotingType         string   `json:"voting_type"`
+	IsSecret           bool     `json:"is_secret"`
+	AllowAbstention    bool     `json:"allow_abstention"`
+	IsActive           bool     `json:"is_active"`
+	DisplayOrder       int      `json:"display_order"`
+	RequiredPercentage *float64 `json:"required_percentage,omitempty"`
+	OptionsCount       int      `json:"options_count"`
+	HasVoted           bool     `json:"has_voted"`
+}
+
 // Tipos de respuesta con datos
 type VotingGroupSuccess = SuccessResponse[VotingGroupResponse]
 type VotingGroupsSuccess = SuccessResponse[[]VotingGroupResponse]

@@ -25,7 +25,13 @@ export class AttendanceListRepository implements IAttendanceListRepository {
           'Authorization': `Bearer ${params.token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(params.data),
+        body: JSON.stringify({
+          voting_group_id: params.data.votingGroupId,
+          title: params.data.title,
+          description: params.data.description || '',
+          created_by_user_id: params.data.createdByUserId,
+          notes: params.data.notes || '',
+        }),
       });
 
       const data = await response.json();

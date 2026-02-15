@@ -95,10 +95,25 @@ func (h *PublicHandler) ListGroupVotings(c *gin.Context) {
 		return
 	}
 
-	// Contar votaciones activas y votos del usuario
+	// Mapear votaciones a response con JSON tags correctos
+	votingResponses := make([]response.VotingWithStatusResponse, len(votings))
 	activeCount := 0
 	userVotesCount := 0
-	for _, v := range votings {
+	for i, v := range votings {
+		votingResponses[i] = response.VotingWithStatusResponse{
+			ID:                 v.ID,
+			VotingGroupID:      v.VotingGroupID,
+			Title:              v.Title,
+			Description:        v.Description,
+			VotingType:         v.VotingType,
+			IsSecret:           v.IsSecret,
+			AllowAbstention:    v.AllowAbstention,
+			IsActive:           v.IsActive,
+			DisplayOrder:       v.DisplayOrder,
+			RequiredPercentage: v.RequiredPercentage,
+			OptionsCount:       v.OptionsCount,
+			HasVoted:           v.HasVoted,
+		}
 		if v.IsActive {
 			activeCount++
 		}
@@ -137,7 +152,7 @@ func (h *PublicHandler) ListGroupVotings(c *gin.Context) {
 				"requires_quorum":    group.RequiresQuorum,
 				"quorum_percentage":  group.QuorumPercentage,
 			},
-			"votings":          votings,
+			"votings":          votingResponses,
 			"total_votings":    len(votings),
 			"active_votings":   activeCount,
 			"user_votes_count": userVotesCount,

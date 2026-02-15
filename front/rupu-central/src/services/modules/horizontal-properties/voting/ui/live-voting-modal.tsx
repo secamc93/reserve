@@ -36,173 +36,195 @@ interface PieChartOverlayProps {
 }
 
 function PieChartOverlay({ slices, onClose, votingTitle }: PieChartOverlayProps) {
-  const percentFormatter = useMemo(
-    () =>
-      new Intl.NumberFormat('es-CO', {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 1,
-      }),
+  const fmt = useMemo(
+    () => new Intl.NumberFormat('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 1 }),
+    []
+  );
+  const fmtCoef = useMemo(
+    () => new Intl.NumberFormat('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 2 }),
     []
   );
 
-  const coefficientFormatter = useMemo(
-    () =>
-      new Intl.NumberFormat('es-CO', {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 2,
-      }),
-    []
-  );
+  const slicesForChart = slices.filter((s) => s.percentage > 0);
+  const totalForChart = slicesForChart.reduce((sum, s) => sum + s.percentage, 0);
+  const participation = slices.filter((s) => s.id !== -1).reduce((sum, s) => sum + s.percentage, 0);
+  const notVoted = slices.find((s) => s.id === -1);
+  const totalUnits = slices.reduce((sum, s) => sum + s.votes, 0);
+  const votesCast = slices.filter((s) => s.id !== -1).reduce((sum, s) => sum + s.votes, 0);
+  const votedSlices = slices.filter((s) => s.id !== -1).sort((a, b) => b.percentage - a.percentage);
+  const sorted = [...slices].sort((a, b) => b.percentage - a.percentage);
 
-  const slicesForChart = slices.filter((slice) => slice.percentage > 0);
-  const totalForChart = slicesForChart.reduce((sum, slice) => sum + slice.percentage, 0);
-  const participationPercentage = slices
-    .filter((slice) => slice.id !== -1)
-    .reduce((sum, slice) => sum + slice.percentage, 0);
-  const notVotedSlice = slices.find((slice) => slice.id === -1);
-  const totalUnits = slices.reduce((sum, slice) => sum + slice.votes, 0);
-  const totalVotesCast = slices
-    .filter((slice) => slice.id !== -1)
-    .reduce((sum, slice) => sum + slice.votes, 0);
-  const sortedSlices = [...slices].sort((a, b) => b.percentage - a.percentage);
-
-  let cumulativePercent = 0;
+  // Build SVG donut
   const radius = 15.91549430918954;
-
-  const chartSegments =
-    totalForChart > 0
-      ? slicesForChart.map((slice) => {
-        const slicePercent = slice.percentage / totalForChart;
-        const dashArray = `${(slicePercent * 100).toFixed(3)} ${(100 - slicePercent * 100).toFixed(3)}`;
-        const dashOffset = 25 - cumulativePercent * 100;
-        cumulativePercent += slicePercent;
-
+  let cumulative = 0;
+  const segments = totalForChart > 0
+    ? slicesForChart.map((slice) => {
+        const pct = slice.percentage / totalForChart;
+        const dash = `${(pct * 100).toFixed(3)} ${(100 - pct * 100).toFixed(3)}`;
+        const offset = 25 - cumulative * 100;
+        cumulative += pct;
         return (
           <circle
             key={`${slice.id}-${slice.label}`}
-            r={radius}
-            cx="21"
-            cy="21"
-            fill="transparent"
-            stroke={slice.color}
-            strokeWidth="6"
-            strokeDasharray={dashArray}
-            strokeDashoffset={dashOffset}
-            strokeLinecap="butt"
+            r={radius} cx="21" cy="21"
+            fill="transparent" stroke={slice.color}
+            strokeWidth="5.5" strokeDasharray={dash}
+            strokeDashoffset={offset} strokeLinecap="butt"
+            className="transition-all duration-500"
           />
         );
       })
-      : null;
+    : null;
+
+  // Find the winner (highest coefficient, excluding NOT_VOTED)
+  const winner = votedSlices.length > 0 ? votedSlices[0] : null;
 
   return (
-    <div className="fixed inset-0 z-[70] bg-white">
-      <div className="flex flex-col h-full">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
-          <div className="flex items-center gap-3">
-            <button onClick={onClose} className="btn btn-outline btn-sm">
-              ← Ver panel
+    <div className="fixed inset-0 z-[70] bg-gradient-to-br from-slate-100 via-gray-100 to-slate-200 flex items-center justify-center p-6">
+      {/* Card container */}
+      <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-8 py-5 border-b border-gray-100">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={onClose}
+              className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Volver
             </button>
+            <div className="h-8 w-px bg-gray-200" />
             <div>
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Resultados en torta</p>
-              <h2 className="text-xl font-semibold text-gray-900">{votingTitle}</h2>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Resultados en Vivo</p>
+              <h2 className="text-lg font-bold text-gray-900">{votingTitle}</h2>
             </div>
           </div>
-          <div className="text-sm text-gray-500">
-            Coeficiente participado:{' '}
-            <span className="font-semibold text-gray-900">{percentFormatter.format(participationPercentage)}%</span>
+          <div className="flex items-center gap-3 text-sm">
+            <span className="text-gray-500">Participación:</span>
+            <span className="text-xl font-bold text-gray-900">{fmt.format(participation)}%</span>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6">
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto px-8 py-8">
           {totalForChart > 0 ? (
-            <div className="max-w-6xl mx-auto flex flex-col gap-12 lg:flex-row lg:items-start">
-              <div className="flex-1 flex flex-col items-center gap-6">
-                <div className="relative w-full max-w-md">
-                  <svg viewBox="0 0 42 42" className="w-full h-auto">
-                    <circle
-                      r={radius}
-                      cx="21"
-                      cy="21"
-                      fill="transparent"
-                      stroke="#E5E7EB"
-                      strokeWidth="6"
-                    />
-                    {chartSegments}
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
+
+              {/* Left: Donut chart (2 cols) */}
+              <div className="lg:col-span-2 flex flex-col items-center">
+                <div className="relative w-72 h-72">
+                  <svg viewBox="0 0 42 42" className="w-full h-full drop-shadow-lg">
+                    <circle r={radius} cx="21" cy="21" fill="transparent" stroke="#E5E7EB" strokeWidth="5.5" />
+                    {segments}
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <span className="text-xs uppercase tracking-wide text-gray-500">Participación</span>
-                    <span className="text-3xl font-semibold text-gray-900">
-                      {percentFormatter.format(participationPercentage)}%
+                    <span className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold">Participación</span>
+                    <span className="text-4xl font-extrabold text-gray-900 leading-none mt-1">
+                      {fmt.format(participation)}%
                     </span>
-                    {notVotedSlice && (
-                      <span className="mt-1 text-xs text-gray-400">
-                        No votado: {percentFormatter.format(notVotedSlice.percentage)}%
+                    {notVoted && (
+                      <span className="text-xs text-gray-400 mt-1">
+                        Sin votar: {fmt.format(notVoted.percentage)}%
                       </span>
                     )}
                   </div>
                 </div>
-                <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-600">
-                  <div>
-                    <span className="font-semibold text-gray-900">{totalUnits}</span> unidades totales
+
+                {/* Stats pills */}
+                <div className="flex items-center gap-3 mt-6">
+                  <div className="bg-gray-50 border border-gray-200 rounded-full px-4 py-2 text-center">
+                    <span className="text-lg font-bold text-gray-900">{totalUnits}</span>
+                    <span className="text-xs text-gray-500 ml-1">totales</span>
                   </div>
-                  <div>
-                    <span className="font-semibold text-gray-900">{totalVotesCast}</span> unidades con voto registrado
+                  <div className="bg-green-50 border border-green-200 rounded-full px-4 py-2 text-center">
+                    <span className="text-lg font-bold text-green-700">{votesCast}</span>
+                    <span className="text-xs text-green-600 ml-1">votaron</span>
                   </div>
-                  {notVotedSlice && (
-                    <div>
-                      <span className="font-semibold text-gray-900">{notVotedSlice.votes}</span> unidades sin votar
+                  {notVoted && (
+                    <div className="bg-gray-50 border border-gray-200 rounded-full px-4 py-2 text-center">
+                      <span className="text-lg font-bold text-gray-600">{notVoted.votes}</span>
+                      <span className="text-xs text-gray-500 ml-1">pendientes</span>
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="flex-1 space-y-4">
-                {sortedSlices.map((slice) => (
-                  <div
-                    key={`${slice.id}-${slice.label}`}
-                    className="flex items-center gap-4 p-4 bg-white border border-gray-200 rounded-xl shadow-sm"
-                  >
-                    <span
-                      className="flex-shrink-0 w-3 h-3 rounded-full"
-                      style={{ backgroundColor: slice.color }}
-                      aria-hidden="true"
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between gap-4">
-                        <p className="text-sm font-semibold text-gray-900">{slice.label}</p>
-                        <span className="text-sm font-semibold text-gray-900">
-                          {percentFormatter.format(slice.percentage)}%
-                        </span>
-                      </div>
-                      <div className="mt-2 text-xs text-gray-500 flex flex-wrap gap-4">
-                        <span>
-                          Coeficiente:{' '}
-                          <span className="font-medium text-gray-800">
-                            {coefficientFormatter.format(slice.coefficientSum)}%
+              {/* Right: Options breakdown (3 cols) */}
+              <div className="lg:col-span-3 space-y-3">
+                {sorted.map((slice) => {
+                  const isNotVoted = slice.id === -1;
+                  const isWinner = winner && slice.id === winner.id;
+                  const barWidth = totalForChart > 0 ? (slice.percentage / totalForChart) * 100 : 0;
+
+                  return (
+                    <div
+                      key={`${slice.id}-${slice.label}`}
+                      className={`relative overflow-hidden rounded-xl border transition-all ${
+                        isWinner
+                          ? 'border-2 bg-white shadow-md'
+                          : isNotVoted
+                            ? 'border-gray-200 bg-gray-50'
+                            : 'border-gray-200 bg-white shadow-sm'
+                      }`}
+                      style={isWinner ? { borderColor: slice.color } : undefined}
+                    >
+                      {/* Background progress bar */}
+                      <div
+                        className="absolute inset-0 opacity-[0.07] transition-all duration-700"
+                        style={{ width: `${barWidth}%`, backgroundColor: slice.color }}
+                      />
+
+                      <div className="relative px-5 py-4 flex items-center gap-4">
+                        {/* Color dot */}
+                        <div
+                          className={`flex-shrink-0 rounded-full ${isWinner ? 'w-5 h-5' : 'w-4 h-4'}`}
+                          style={{ backgroundColor: slice.color }}
+                        />
+
+                        {/* Label & details */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className={`font-semibold text-gray-900 truncate ${isWinner ? 'text-base' : 'text-sm'}`}>
+                              {slice.label}
+                            </p>
+                            {isWinner && (
+                              <span className="flex-shrink-0 text-xs font-bold px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: slice.color }}>
+                                MAYOR
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-4 mt-1 text-xs text-gray-500">
+                            <span>
+                              Coeficiente: <span className="font-semibold text-gray-700">{fmtCoef.format(slice.coefficientSum)}%</span>
+                            </span>
+                            <span>
+                              Unidades: <span className="font-semibold text-gray-700">{slice.votes}</span>
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Percentage */}
+                        <div className="flex-shrink-0 text-right">
+                          <span className={`font-bold ${isWinner ? 'text-2xl' : 'text-xl'}`} style={{ color: isNotVoted ? '#6b7280' : slice.color }}>
+                            {fmt.format(slice.percentage)}%
                           </span>
-                        </span>
-                        <span>
-                          Unidades:{' '}
-                          <span className="font-medium text-gray-800">{slice.votes}</span>
-                        </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ) : (
-            <div className="h-full flex flex-col items-center justify-center text-center gap-4 text-gray-500">
+            <div className="flex flex-col items-center justify-center text-center gap-4 text-gray-500 py-16">
               <div className="text-6xl">📊</div>
-              <div>
-                <p className="text-lg font-semibold text-gray-700">Aún no hay datos suficientes para graficar</p>
-                <p className="mt-1 text-sm text-gray-500 max-w-md">
-                  Cuando se registren votos con coeficiente de participación, verás aquí la distribución en formato de torta.
-                </p>
-              </div>
-              <button onClick={onClose} className="btn btn-primary">
-                Volver al panel
-              </button>
+              <p className="text-lg font-semibold text-gray-700">Aún no hay datos suficientes para graficar</p>
+              <p className="text-sm text-gray-500 max-w-md">
+                Cuando se registren votos con coeficiente de participación, verás aquí la distribución.
+              </p>
+              <button onClick={onClose} className="btn btn-primary">Volver al panel</button>
             </div>
           )}
         </div>

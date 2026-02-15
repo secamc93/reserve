@@ -7,7 +7,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 // Using CSS classes for buttons instead of Button component
-import { createAttendanceListAction, generateAttendanceListAction, listAttendanceListsAction, removeAttendanceListAction } from '../infrastructure/actions';
+import { generateAttendanceListAction, listAttendanceListsAction, removeAttendanceListAction } from '../infrastructure/actions';
 import { AttendanceList } from '../domain/entities';
 import { CreateAttendanceListModal } from './create-attendance-list-modal';
 import { AttendanceListModal } from './attendance-list-modal';
@@ -55,7 +55,7 @@ export function AttendanceManagement({
     if (token && businessId && votingGroupId) loadLists();
   }, [token, businessId, votingGroupId]);
 
-  const handleCreateAttendanceList = async (data: {
+  const handleCreateAttendanceList = async (_data: {
     title: string;
     description?: string;
     notes?: string;
@@ -64,14 +64,10 @@ export function AttendanceManagement({
     setError(null);
 
     try {
-      const result = await createAttendanceListAction({
+      // Usar generateAttendanceListAction para crear la lista Y poblar todos los registros de unidades/residentes
+      const result = await generateAttendanceListAction({
         token,
-        data: {
-          votingGroupId,
-          title: data.title,
-          description: data.description,
-          notes: data.notes,
-        },
+        votingGroupId,
       });
 
       if (result.success && result.data) {

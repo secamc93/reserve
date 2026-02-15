@@ -20,6 +20,7 @@ interface VotingContextData {
     name: string;
     description: string;
   };
+  is_group_token?: boolean;
 }
 
 interface PublicVotingContextProps {

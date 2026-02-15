@@ -621,6 +621,103 @@ export function VotingsList({
                 {/* Expanded Content (Results) */}
                 {isExpanded && (
                   <div className="border-t border-gray-200 bg-gray-50 p-6">
+                    {/* Options Management Section */}
+                    <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 mb-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="font-semibold text-gray-800 flex items-center gap-2">
+                          <ListBulletIcon className="w-5 h-5" />
+                          Opciones de Votación ({optionList.length})
+                        </h4>
+                        <button
+                          onClick={() => handleAddOption(voting.id)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors"
+                        >
+                          <PlusCircleIcon className="w-4 h-4" />
+                          Agregar opción
+                        </button>
+                      </div>
+
+                      {!optionsLoaded ? (
+                        <div className="flex items-center justify-center py-6">
+                          <Spinner size="sm" />
+                          <span className="ml-2 text-sm text-gray-500">Cargando opciones...</span>
+                        </div>
+                      ) : optionList.length === 0 ? (
+                        <div className="text-center py-6 border border-dashed border-gray-300 rounded-lg">
+                          <p className="text-sm text-gray-500 mb-2">No hay opciones configuradas</p>
+                          <button
+                            onClick={() => handleAddOption(voting.id)}
+                            className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                          >
+                            + Crear primera opción
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {optionList.map((option) => (
+                            <div
+                              key={option.id}
+                              className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
+                                option.isActive
+                                  ? 'bg-white border-gray-200'
+                                  : 'bg-gray-50 border-gray-100 opacity-60'
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                {/* Color indicator */}
+                                <span
+                                  className="w-4 h-4 rounded-full border border-gray-200 flex-shrink-0"
+                                  style={{ backgroundColor: option.color || '#6B7280' }}
+                                />
+                                <div>
+                                  <span className="font-medium text-gray-900">{option.optionText}</span>
+                                  <span className="ml-2 text-xs text-gray-400">({option.optionCode})</span>
+                                </div>
+                                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                                  option.isActive
+                                    ? 'bg-green-100 text-green-700'
+                                    : 'bg-gray-200 text-gray-500'
+                                }`}>
+                                  {option.isActive ? 'Activa' : 'Inactiva'}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-1.5">
+                                {/* Toggle active/inactive */}
+                                <button
+                                  onClick={() => handleToggleOptionStatus(voting, option)}
+                                  disabled={optionStatusLoadingId === option.id}
+                                  className={`p-1.5 rounded-md text-xs font-medium transition-colors ${
+                                    option.isActive
+                                      ? 'bg-orange-50 text-orange-600 hover:bg-orange-100'
+                                      : 'bg-green-50 text-green-600 hover:bg-green-100'
+                                  } disabled:opacity-50`}
+                                  title={option.isActive ? 'Desactivar opción' : 'Activar opción'}
+                                >
+                                  {optionStatusLoadingId === option.id ? (
+                                    <Spinner size="sm" />
+                                  ) : option.isActive ? (
+                                    <PauseIcon className="w-4 h-4" />
+                                  ) : (
+                                    <PlayIcon className="w-4 h-4" />
+                                  )}
+                                </button>
+
+                                {/* Delete */}
+                                <button
+                                  onClick={() => handleDeleteOptionRequest(voting, option)}
+                                  className="p-1.5 rounded-md bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                                  title="Eliminar opción"
+                                >
+                                  <TrashIcon className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       {/* Left: Chart */}
                       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
