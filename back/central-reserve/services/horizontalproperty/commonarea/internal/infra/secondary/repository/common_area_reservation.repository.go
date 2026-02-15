@@ -284,12 +284,12 @@ func (r *CommonAreaReservationRepository) ListReservations(ctx context.Context, 
 	reservations := make([]domain.ReservationListDTO, len(reservationsModels))
 	for i, r := range reservationsModels {
 		commonAreaName := ""
-		if r.CommonArea != nil {
+		if r.CommonArea.ID != 0 {
 			commonAreaName = r.CommonArea.Name
 		}
 
 		propertyUnitNumber := ""
-		if r.PropertyUnit != nil {
+		if r.PropertyUnit.ID != 0 {
 			propertyUnitNumber = r.PropertyUnit.Number
 		}
 
@@ -299,7 +299,7 @@ func (r *CommonAreaReservationRepository) ListReservations(ctx context.Context, 
 		}
 
 		statusName := ""
-		if r.ReservationStatus != nil {
+		if r.ReservationStatus.ID != 0 {
 			statusName = r.ReservationStatus.Name
 		}
 

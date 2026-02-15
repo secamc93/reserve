@@ -78,8 +78,6 @@ infra/nginx/awscliv2.zip
 *.zip
 
 # Claude Code
-CLAUDE.md
-claude.md
 .claude/
 
 # Terraform

@@ -37,7 +37,6 @@ func TestCreateCommonArea_Success(t *testing.T) {
 		Location:         "Piso 1",
 		MaxCapacity:      maxCap,
 		RequiresApproval: true,
-		IsActive:         true,
 	}
 
 	// Act
