@@ -15,14 +15,15 @@ func (r *Repository) GetResidentByUnitAndDni(ctx context.Context, hpID, property
 	var resident models.Resident
 
 	// Buscar residente por DNI y verificar que esté asociado a la unidad
+	// Usar modelos GORM en lugar de Table() con alias
 	err := r.db.Conn(ctx).
-		Table("horizontal_property.residents r").
-		Select("r.id, r.name").
-		Joins("JOIN horizontal_property.resident_units ru ON ru.resident_id = r.id").
-		Where("r.business_id = ?", hpID).
-		Where("r.dni = ?", dni).
-		Where("ru.property_unit_id = ?", propertyUnitID).
-		Where("r.is_active = ?", true).
+		Model(&models.Resident{}).
+		Select("residents.id, residents.name").
+		Joins("JOIN horizontal_property.resident_units ON resident_units.resident_id = residents.id").
+		Where("residents.business_id = ?", hpID).
+		Where("residents.dni = ?", dni).
+		Where("resident_units.property_unit_id = ?", propertyUnitID).
+		Where("residents.is_active = ?", true).
 		First(&resident).Error
 
 	if err != nil {
