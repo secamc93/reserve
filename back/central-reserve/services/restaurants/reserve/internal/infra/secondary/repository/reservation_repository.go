@@ -81,54 +81,8 @@ func (r *Repository) GetReserves(ctx context.Context, statusID *uint, clientID *
 		return []domain.ReserveDetailDTO{}, nil
 	}
 
-	// Mapear a DTOs
-	var results []domain.ReserveDetailDTO
-	for _, reservation := range gormReservations {
-		dto := domain.ReserveDetailDTO{
-			ReservaID:          reservation.Model.ID,
-			StartAt:            reservation.StartAt,
-			EndAt:              reservation.EndAt,
-			NumberOfGuests:     reservation.NumberOfGuests,
-			ReservaCreada:      reservation.Model.CreatedAt,
-			ReservaActualizada: reservation.Model.UpdatedAt,
-			EstadoID:           reservation.StatusID,
-		}
-
-		// Manejar relaciones de forma segura
-		if reservation.Status.Model.ID != 0 {
-			dto.EstadoCodigo = reservation.Status.Code
-			dto.EstadoNombre = reservation.Status.Name
-		}
-
-		if reservation.Client.Model.ID != 0 {
-			dto.ClienteID = reservation.Client.Model.ID
-			dto.ClienteNombre = reservation.Client.Name
-			dto.ClienteEmail = reservation.Client.Email
-			dto.ClienteTelefono = reservation.Client.Phone
-			dto.ClienteDni = reservation.Client.Dni
-		}
-
-		if reservation.Table.Model.ID != 0 {
-			dto.MesaID = &reservation.Table.Model.ID
-			dto.MesaNumero = &reservation.Table.Number
-			dto.MesaCapacidad = &reservation.Table.Capacity
-		}
-
-		if reservation.Business.Model.ID != 0 {
-			dto.NegocioID = reservation.Business.Model.ID
-			dto.NegocioNombre = reservation.Business.Name
-			dto.NegocioCodigo = reservation.Business.Code
-			dto.NegocioDireccion = reservation.Business.Address
-		}
-
-		if reservation.CreatedBy.Model.ID != 0 {
-			dto.UsuarioID = &reservation.CreatedBy.Model.ID
-			dto.UsuarioNombre = &reservation.CreatedBy.Name
-			dto.UsuarioEmail = &reservation.CreatedBy.Email
-		}
-
-		results = append(results, dto)
-	}
+	// Mapear a DTOs usando mapper centralizado
+	results := mappers.ReservationSliceToDetailDTOSlice(gormReservations)
 
 	r.logger.Info().Int("total_results", len(results)).Msg("Reservas mapeadas exitosamente")
 	return results, nil
@@ -160,33 +114,8 @@ func (r *Repository) GetReserveByID(ctx context.Context, id uint) (*domain.Reser
 		return nil, err
 	}
 
-	// Mapear a DTO
-	result := domain.ReserveDetailDTO{
-		ReservaID:          gormReservation.Model.ID,
-		StartAt:            gormReservation.StartAt,
-		EndAt:              gormReservation.EndAt,
-		NumberOfGuests:     gormReservation.NumberOfGuests,
-		ReservaCreada:      gormReservation.Model.CreatedAt,
-		ReservaActualizada: gormReservation.Model.UpdatedAt,
-		EstadoID:           gormReservation.StatusID,
-		EstadoCodigo:       gormReservation.Status.Code,
-		EstadoNombre:       gormReservation.Status.Name,
-		ClienteID:          gormReservation.Client.Model.ID,
-		ClienteNombre:      gormReservation.Client.Name,
-		ClienteEmail:       gormReservation.Client.Email,
-		ClienteTelefono:    gormReservation.Client.Phone,
-		ClienteDni:         gormReservation.Client.Dni,
-		MesaID:             &gormReservation.Table.Model.ID,
-		MesaNumero:         &gormReservation.Table.Number,
-		MesaCapacidad:      &gormReservation.Table.Capacity,
-		NegocioID:          gormReservation.Business.Model.ID,
-		NegocioNombre:      gormReservation.Business.Name,
-		NegocioCodigo:      gormReservation.Business.Code,
-		NegocioDireccion:   gormReservation.Business.Address,
-		UsuarioID:          &gormReservation.CreatedBy.Model.ID,
-		UsuarioNombre:      &gormReservation.CreatedBy.Name,
-		UsuarioEmail:       &gormReservation.CreatedBy.Email,
-	}
+	// Mapear a DTO usando mapper centralizado
+	result := mappers.ReservationToDetailDTO(gormReservation)
 
 	return &result, nil
 }

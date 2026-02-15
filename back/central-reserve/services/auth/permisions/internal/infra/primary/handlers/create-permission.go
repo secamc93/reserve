@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"central_reserve/services/auth/permisions/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/auth/permisions/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/auth/permisions/internal/infra/primary/handlers/request"
 	"central_reserve/services/auth/permisions/internal/infra/primary/handlers/response"
 	"net/http"
@@ -42,7 +42,7 @@ func (h *handlers) Createhandlers(c *gin.Context) {
 		Uint("action_id", req.ActionID).
 		Msg("Iniciando solicitud para crear nuevo permiso")
 
-	permissionDTO := mapper.ToCreatePermissionDTO(req)
+	permissionDTO := mappers.ToCreatePermissionDTO(req)
 
 	result, err := h.usecase.CreatePermission(c.Request.Context(), permissionDTO)
 	if err != nil {

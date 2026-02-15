@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"central_reserve/services/auth/middleware"
-	"central_reserve/services/auth/users/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/auth/users/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/auth/users/internal/infra/primary/handlers/request"
 	"central_reserve/services/auth/users/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
@@ -75,7 +75,7 @@ func (h *handlers) GetUserByIDHandler(c *gin.Context) {
 		return
 	}
 
-	userResponse := mapper.ToUserResponse(*user)
+	userResponse := mappers.ToUserResponse(*user)
 
 	h.logger.Info(ctx).Uint("id", req.ID).Msg("Usuario obtenido exitosamente")
 	c.JSON(http.StatusOK, response.UserSuccessResponse{

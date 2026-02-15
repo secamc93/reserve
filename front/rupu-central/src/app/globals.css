@@ -11,10 +11,16 @@
   
   /* COLORES DINÁMICOS DEL NEGOCIO (se inyectan via JavaScript) */
   /* Estos valores son defaults, se sobrescriben cuando hay negocio activo */
-  --color-primary: #0f172a;       /* primary_color del negocio */
-  --color-secondary: #be185d;     /* secondary_color del negocio */
-  --color-tertiary: #06b6d4;      /* tertiary_color del negocio */
-  --color-quaternary: #f59e0b;    /* quaternary_color del negocio */
+  --color-primary: #0369a1;       /* Azul celeste oscuro */
+  --color-secondary: #0891b2;     /* Cyan oscuro */
+  --color-tertiary: #0284c7;      /* Azul celeste medio */
+  --color-quaternary: #06b6d4;    /* Azul celeste medio-claro */
+
+  /* Tonalidades suaves de los colores del negocio */
+  --color-primary-light: rgba(3, 105, 161, 0.12);     /* Tonalidad suave del primary */
+  --color-primary-soft: rgba(3, 105, 161, 0.18);      /* Tonalidad media del primary */
+  --color-secondary-light: rgba(8, 145, 178, 0.12);   /* Tonalidad suave cyan */
+  --color-tertiary-light: rgba(2, 132, 199, 0.12);    /* Tonalidad suave azul medio */
   
   /* Colores de estado */
   --success: #10b981;
@@ -285,21 +291,22 @@ body {
 
 .table th {
   @apply px-6 py-4 text-sm font-semibold text-left;
-  background: var(--color-primary);
+  background: var(--color-tertiary);
   color: white;
 }
 
 .table td {
-  @apply px-6 py-4 text-sm border-t border-gray-200;
+  @apply px-6 py-4 text-sm;
   color: var(--gray-800);
+  background: white;
 }
 
 .table tbody tr:hover {
-  @apply bg-gray-50;
+  background: rgba(56, 189, 248, 0.05);
 }
 
 .table tbody tr:nth-child(even) {
-  @apply bg-gray-50;
+  background: rgba(2, 132, 199, 0.03);
 }
 
 /* Paginación */

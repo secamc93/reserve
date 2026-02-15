@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"central_reserve/services/auth/middleware"
-	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
 
@@ -91,7 +91,7 @@ func (h *ResultsHandler) GetVotingDetailsAdmin(c *gin.Context) {
 	}
 
 	// Mapear a response
-	detailsResponse := mapper.MapVotingDetailsByUnitToResponses(details)
+	detailsResponse := mappers.MapVotingDetailsByUnitToResponses(details)
 
 	// Calcular estadísticas
 	totalUnits := len(details)

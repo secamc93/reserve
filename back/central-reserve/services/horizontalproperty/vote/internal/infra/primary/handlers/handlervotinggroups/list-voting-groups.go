@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"central_reserve/services/auth/middleware"
-	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
 
@@ -62,6 +62,6 @@ func (h *VotingGroupsHandler) ListVotingGroups(c *gin.Context) {
 	}
 
 	// Mapear DTOs a responses
-	responseData := mapper.MapVotingGroupDTOsToResponses(groups)
+	responseData := mappers.MapVotingGroupDTOsToResponses(groups)
 	c.JSON(http.StatusOK, response.VotingGroupsSuccess{Success: true, Message: "Grupos obtenidos", Data: responseData})
 }

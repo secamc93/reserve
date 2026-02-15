@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"central_reserve/services/horizontalproperty/packages/internal/domain"
+	"central_reserve/services/horizontalproperty/packages/internal/infra/secondary/repository/mappers"
 	"central_reserve/shared/db"
 	"central_reserve/shared/log"
 	"dbpostgres/app/infra/models"
@@ -62,7 +63,7 @@ func (r *PackageRepository) CreatePackage(ctx context.Context, pkg *domain.Packa
 		return nil, fmt.Errorf("error cargando relaciones de paquete: %w", err)
 	}
 
-	return mapPackageToDomain(model), nil
+	return mappers.PackageToDomain(model), nil
 }
 
 // GetPackageByID obtiene un paquete por ID
@@ -81,7 +82,7 @@ func (r *PackageRepository) GetPackageByID(ctx context.Context, id uint) (*domai
 		return nil, fmt.Errorf("error obteniendo paquete: %w", err)
 	}
 
-	return mapPackageToDomain(&pkg), nil
+	return mappers.PackageToDomain(&pkg), nil
 }
 
 // GetPackageByQRCode obtiene un paquete por código QR
@@ -101,7 +102,7 @@ func (r *PackageRepository) GetPackageByQRCode(ctx context.Context, qrCode strin
 		return nil, fmt.Errorf("error obteniendo paquete por QR: %w", err)
 	}
 
-	return mapPackageToDomain(&pkg), nil
+	return mappers.PackageToDomain(&pkg), nil
 }
 
 // UpdatePackage actualiza un paquete
@@ -173,27 +174,27 @@ func (r *PackageRepository) ListPackages(ctx context.Context, filters domain.Pac
 	}
 
 	rows := []row{}
-	query := r.db.Conn(ctx).Table("horizontal_property.packages p").
-		Select("p.id, p.tracking_number, p.carrier, pu.number as property_unit_number, "+
-			"COALESCE(r.name, '') as resident_name, ps.name as status_name, ps.code as status_code, "+
-			"p.received_at, p.delivered_at, p.created_at").
-		Joins("JOIN horizontal_property.property_units pu ON pu.id = p.property_unit_id").
-		Joins("LEFT JOIN horizontal_property.residents r ON r.id = p.resident_id").
-		Joins("JOIN horizontal_property.package_statuses ps ON ps.id = p.package_status_id")
+	query := r.db.Conn(ctx).Model(&models.Package{}).
+		Select("packages.id, packages.tracking_number, packages.carrier, property_units.number as property_unit_number, "+
+			"COALESCE(residents.name, '') as resident_name, package_statuses.name as status_name, package_statuses.code as status_code, "+
+			"packages.received_at, packages.delivered_at, packages.created_at").
+		Joins("JOIN horizontal_property.property_units ON property_units.id = packages.property_unit_id").
+		Joins("LEFT JOIN horizontal_property.residents ON residents.id = packages.resident_id").
+		Joins("JOIN horizontal_property.package_statuses ON package_statuses.id = packages.package_status_id")
 
 	// Aplicar filtro de business_id solo si no es 0 (super admin)
 	if filters.BusinessID != 0 {
-		query = query.Where("p.business_id = ?", filters.BusinessID)
+		query = query.Where("packages.business_id = ?", filters.BusinessID)
 	}
 
 	if filters.PropertyUnitID != nil {
-		query = query.Where("p.property_unit_id = ?", *filters.PropertyUnitID)
+		query = query.Where("packages.property_unit_id = ?", *filters.PropertyUnitID)
 	}
 	if filters.ResidentID != nil {
-		query = query.Where("p.resident_id = ?", *filters.ResidentID)
+		query = query.Where("packages.resident_id = ?", *filters.ResidentID)
 	}
 	if filters.PackageStatusID != nil {
-		query = query.Where("p.package_status_id = ?", *filters.PackageStatusID)
+		query = query.Where("packages.package_status_id = ?", *filters.PackageStatusID)
 	}
 	if filters.StartDate != nil {
 		query = query.Where("p.created_at >= ?", *filters.StartDate)
@@ -272,78 +273,6 @@ func (r *PackageRepository) GetPackageStatuses(ctx context.Context) ([]*domain.P
 	}
 
 	return result, nil
-}
-
-// mapPackageToDomain mapea modelo a entidad de dominio
-func mapPackageToDomain(m *models.Package) *domain.Package {
-	pkg := &domain.Package{
-		ID:                 m.ID,
-		BusinessID:         m.BusinessID,
-		PropertyUnitID:     m.PropertyUnitID,
-		ResidentID:         m.ResidentID,
-		PackageStatusID:    m.PackageStatusID,
-		Carrier:            m.Carrier,
-		TrackingNumber:     m.TrackingNumber,
-		QRCode:             m.QRCode,
-		ReceivedByUserID:   m.ReceivedByUserID,
-		ReceivedAt:         m.ReceivedAt,
-		DeliveredByUserID:  m.DeliveredByUserID,
-		DeliveredAt:        m.DeliveredAt,
-		Description:        m.Description,
-		Notes:              m.Notes,
-		NotifyResident:     m.NotifyResident,
-		NotificationSentAt: m.NotificationSentAt,
-		CreatedAt:          m.CreatedAt,
-		UpdatedAt:          m.UpdatedAt,
-	}
-
-	// Mapear relaciones si están cargadas
-	if m.PropertyUnit.ID != 0 {
-		pkg.PropertyUnit = domain.PropertyUnit{
-			ID:     m.PropertyUnit.ID,
-			Number: m.PropertyUnit.Number,
-			Floor:  m.PropertyUnit.Floor,
-			Block:  m.PropertyUnit.Block,
-		}
-	}
-
-	if m.Resident != nil && m.Resident.ID != 0 {
-		pkg.Resident = &domain.Resident{
-			ID:       m.Resident.ID,
-			FullName: m.Resident.Name,
-			Email:    m.Resident.Email,
-			Phone:    m.Resident.Phone,
-		}
-	}
-
-	if m.PackageStatus.ID != 0 {
-		pkg.PackageStatus = domain.PackageStatus{
-			ID:          m.PackageStatus.ID,
-			Code:        m.PackageStatus.Code,
-			Name:        m.PackageStatus.Name,
-			Description: m.PackageStatus.Description,
-			IsFinal:     m.PackageStatus.IsFinal,
-			IsActive:    m.PackageStatus.IsActive,
-		}
-	}
-
-	if m.ReceivedByUser != nil && m.ReceivedByUser.ID != 0 {
-		pkg.ReceivedByUser = &domain.User{
-			ID:    m.ReceivedByUser.ID,
-			Name:  m.ReceivedByUser.Name,
-			Email: m.ReceivedByUser.Email,
-		}
-	}
-
-	if m.DeliveredByUser != nil && m.DeliveredByUser.ID != 0 {
-		pkg.DeliveredByUser = &domain.User{
-			ID:    m.DeliveredByUser.ID,
-			Name:  m.DeliveredByUser.Name,
-			Email: m.DeliveredByUser.Email,
-		}
-	}
-
-	return pkg
 }
 
 // GetPropertyUnitBusinessID obtiene el business_id de una property_unit

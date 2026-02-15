@@ -3,10 +3,6 @@ package domain
 import (
 	"fmt"
 	"time"
-
-	"dbpostgres/app/infra/models"
-
-	"gorm.io/gorm"
 )
 
 // AllowedReservationTransitions define las transiciones permitidas para reservas
@@ -18,20 +14,38 @@ var AllowedReservationTransitions = map[string][]string{
 	"checked_out": {"completed"},
 }
 
-// ChangeReservationStatus cambia el estado de una reserva validando las transiciones permitidas
-func ChangeReservationStatus(reservationModel *models.CommonAreaReservation, newStatusCode string, db *gorm.DB) error {
-	// Obtener el código del estado actual
-	var currentStatus models.CommonAreaReservationStatus
-	if err := db.First(&currentStatus, reservationModel.ReservationStatusID).Error; err != nil {
-		return fmt.Errorf("error obteniendo estado actual: %w", err)
-	}
+// ReservationStateTransition contiene los cambios a aplicar tras una transición de estado
+type ReservationStateTransition struct {
+	NewStatusID      uint
+	ApprovedAt       *time.Time
+	QRCode           string
+	AccessCode       string
+	CheckedInAt      *time.Time
+	CheckedOutAt     *time.Time
+	RejectedAt       *time.Time
+	CancelledAt      *time.Time
+}
 
+// ReservationStateMachine maneja la lógica de transiciones de estado de reservas
+type ReservationStateMachine struct {
+	AllowedTransitions map[string][]string
+}
+
+// NewReservationStateMachine crea una nueva máquina de estados
+func NewReservationStateMachine() *ReservationStateMachine {
+	return &ReservationStateMachine{
+		AllowedTransitions: AllowedReservationTransitions,
+	}
+}
+
+// ValidateTransition valida si una transición de estado es permitida
+func (sm *ReservationStateMachine) ValidateTransition(currentStatus *CommonAreaReservationStatus, newStatusCode string) error {
 	// Validar si la transición está permitida
 	if currentStatus.IsFinal {
 		return fmt.Errorf("no se puede cambiar el estado de una reserva en estado final: %s", currentStatus.Code)
 	}
 
-	allowed, exists := AllowedReservationTransitions[currentStatus.Code]
+	allowed, exists := sm.AllowedTransitions[currentStatus.Code]
 	if !exists {
 		return fmt.Errorf("estado actual desconocido: %s", currentStatus.Code)
 	}
@@ -48,31 +62,43 @@ func ChangeReservationStatus(reservationModel *models.CommonAreaReservation, new
 		return fmt.Errorf("transición no permitida: %s → %s", currentStatus.Code, newStatusCode)
 	}
 
-	// Buscar el nuevo estado
-	var newStatus models.CommonAreaReservationStatus
-	if err := db.Where("code = ?", newStatusCode).First(&newStatus).Error; err != nil {
-		return fmt.Errorf("estado no encontrado: %s", newStatusCode)
+	return nil
+}
+
+// PrepareTransition prepara los cambios necesarios para una transición de estado
+func (sm *ReservationStateMachine) PrepareTransition(
+	reservation *CommonAreaReservation,
+	newStatus *CommonAreaReservationStatus,
+	newStatusCode string,
+) *ReservationStateTransition {
+	now := time.Now()
+	transition := &ReservationStateTransition{
+		NewStatusID: newStatus.ID,
 	}
 
 	// Aplicar triggers automáticos según el nuevo estado
-	now := time.Now()
-	if newStatusCode == "approved" && reservationModel.ApprovedAt == nil {
-		reservationModel.ApprovedAt = &now
+	if newStatusCode == "approved" && reservation.ApprovedAt == nil {
+		transition.ApprovedAt = &now
 	}
-	if newStatusCode == "confirmed" && reservationModel.QRCode == "" {
+	if newStatusCode == "confirmed" && reservation.QRCode == "" {
 		// Generar QR code y access code
-		reservationModel.QRCode = generateQRCode(reservationModel.ID)
-		reservationModel.AccessCode = generateAccessCode()
+		transition.QRCode = generateQRCode(reservation.ID)
+		transition.AccessCode = generateAccessCode()
 	}
-	if newStatusCode == "checked_in" && reservationModel.CheckedInAt == nil {
-		reservationModel.CheckedInAt = &now
+	if newStatusCode == "checked_in" && reservation.CheckedInAt == nil {
+		transition.CheckedInAt = &now
 	}
-	if newStatusCode == "checked_out" && reservationModel.CheckedOutAt == nil {
-		reservationModel.CheckedOutAt = &now
+	if newStatusCode == "checked_out" && reservation.CheckedOutAt == nil {
+		transition.CheckedOutAt = &now
+	}
+	if newStatusCode == "rejected" && reservation.RejectedAt == nil {
+		transition.RejectedAt = &now
+	}
+	if newStatusCode == "cancelled" && reservation.CancelledAt == nil {
+		transition.CancelledAt = &now
 	}
 
-	reservationModel.ReservationStatusID = newStatus.ID
-	return db.Save(reservationModel).Error
+	return transition
 }
 
 // generateQRCode genera un código QR único para la reserva

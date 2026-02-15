@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"central_reserve/services/auth/permisions/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/auth/permisions/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/auth/permisions/internal/infra/primary/handlers/response"
 	"net/http"
 	"strconv"
@@ -45,7 +45,7 @@ func (h *handlers) GetPermissionsByScopeHandler(c *gin.Context) {
 		return
 	}
 
-	response := mapper.ToPermissionListResponse(permissions)
+	response := mappers.ToPermissionListResponse(permissions)
 
 	h.logger.Info().Uint64("scope_id", scopeID).Int("count", len(permissions)).Msg("Permisos por scope obtenidos exitosamente")
 	c.JSON(http.StatusOK, response)

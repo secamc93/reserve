@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"central_reserve/services/auth/permisions/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/auth/permisions/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/auth/permisions/internal/infra/primary/handlers/response"
 	"errors"
 	"net/http"
@@ -61,7 +61,7 @@ func (h *handlers) GetPermissionByIDHandler(c *gin.Context) {
 		return
 	}
 
-	permissionResponse := mapper.ToPermissionResponse(*permission)
+	permissionResponse := mappers.ToPermissionResponse(*permission)
 
 	h.logger.Info().Uint64("id", id).Msg("Permiso obtenido exitosamente")
 	c.JSON(http.StatusOK, response.PermissionSuccessResponse{

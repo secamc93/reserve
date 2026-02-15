@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"central_reserve/services/horizontalproperty/attendance/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/attendance/internal/infra/primary/handlers/response"
 
 	"github.com/gin-gonic/gin"
@@ -28,9 +29,6 @@ func (h *AttendanceHandler) GetProxiesByPropertyUnit(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Success: false, Message: "Error listando apoderados por unidad", Error: err.Error()})
 		return
 	}
-	out := make([]response.ProxyResponse, len(list))
-	for i, p := range list {
-		out[i] = response.ProxyResponse(p)
-	}
+	out := mappers.MapProxyDTOsToResponse(list)
 	c.JSON(http.StatusOK, response.ProxiesSuccess{Success: true, Message: "Apoderados por unidad", Data: out})
 }

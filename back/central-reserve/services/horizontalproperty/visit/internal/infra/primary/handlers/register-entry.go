@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"central_reserve/services/auth/middleware"
+	"central_reserve/services/horizontalproperty/visit/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/visit/internal/infra/primary/handlers/request"
 	"central_reserve/services/horizontalproperty/visit/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
@@ -71,15 +72,6 @@ func (h *VisitHandler) RegisterEntry(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response.VisitResponse{
 		Success: true,
-		Data: response.VisitData{
-			ID:                visit.ID,
-			BusinessID:        visit.BusinessID,
-			VisitorID:         visit.VisitorID,
-			PropertyUnitID:    visit.PropertyUnitID,
-			VisitStatusID:     visit.VisitStatusID,
-			ActualEntryTime:   visit.ActualEntryTime,
-			AuthorizationCode: visit.AuthorizationCode,
-			QRCode:            visit.QRCode,
-		},
+		Data:    mappers.VisitToResponse(visit),
 	})
 }

@@ -6,11 +6,12 @@ import (
 	"strings"
 	"time"
 
+	"dbpostgres/app/infra/models"
+
 	"central_reserve/services/horizontalproperty/dashboard/internal/domain"
 	"central_reserve/shared/db"
 	"central_reserve/shared/env"
 	"central_reserve/shared/log"
-	"dbpostgres/app/infra/models"
 
 	"gorm.io/gorm"
 )

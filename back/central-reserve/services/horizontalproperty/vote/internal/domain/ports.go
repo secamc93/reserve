@@ -41,6 +41,7 @@ type VotingRepository interface {
 	GetUnvotedUnitsByVoting(ctx context.Context, votingID uint, unitNumberFilter string) ([]UnvotedUnit, error)
 	GetResidentMainUnitID(ctx context.Context, residentID uint) (uint, error)
 	CheckUnitAttendanceForVoting(ctx context.Context, votingID, propertyUnitID uint) (bool, error)
+	MarkUnitAttendanceForVoting(ctx context.Context, votingID, propertyUnitID uint, markAttendance bool) error // ✅ NUEVO
 	GetHorizontalPropertyBasicInfo(ctx context.Context, hpID uint) (*HorizontalPropertyDTO, error)
 	ListPropertyUnits(ctx context.Context, filters PropertyUnitFiltersDTO) (*PaginatedPropertyUnitsDTO, error)
 

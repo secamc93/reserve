@@ -13,6 +13,7 @@ export * from './update-voting-option-status.action';
 export * from './delete-voting-option.action';
 export * from './get-votes.action';
 export * from './create-vote.action';
+export * from './mark-unit-attendance.action'; // ✅ NUEVO
 export * from './activate-voting.action';
 export * from './deactivate-voting.action';
 export * from './delete-voting.action';

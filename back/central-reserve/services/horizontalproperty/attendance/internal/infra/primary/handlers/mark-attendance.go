@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"central_reserve/services/horizontalproperty/attendance/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/attendance/internal/infra/primary/handlers/response"
 
 	"github.com/gin-gonic/gin"
@@ -56,28 +57,7 @@ func (h *AttendanceHandler) MarkAttendance(c *gin.Context) {
 	}
 
 	// Mapear a response
-	responseData := response.AttendanceRecordResponse{
-		ID:                updated.ID,
-		AttendanceListID:  updated.AttendanceListID,
-		PropertyUnitID:    updated.PropertyUnitID,
-		ResidentID:        updated.ResidentID,
-		ProxyID:           updated.ProxyID,
-		AttendedAsOwner:   updated.AttendedAsOwner,
-		AttendedAsProxy:   updated.AttendedAsProxy,
-		Signature:         updated.Signature,
-		SignatureDate:     updated.SignatureDate,
-		SignatureMethod:   updated.SignatureMethod,
-		VerifiedBy:        updated.VerifiedBy,
-		VerificationDate:  updated.VerificationDate,
-		VerificationNotes: updated.VerificationNotes,
-		Notes:             updated.Notes,
-		IsValid:           updated.IsValid,
-		CreatedAt:         updated.CreatedAt,
-		UpdatedAt:         updated.UpdatedAt,
-		ResidentName:      updated.ResidentName,
-		ProxyName:         updated.ProxyName,
-		UnitNumber:        updated.UnitNumber,
-	}
+	responseData := mappers.MapAttendanceRecordDTOToResponse(*updated)
 
 	h.logger.Info().Uint("record_id", recordID).Msg("Asistencia marcada exitosamente")
 
@@ -135,28 +115,7 @@ func (h *AttendanceHandler) UnmarkAttendance(c *gin.Context) {
 	}
 
 	// Mapear a response
-	responseData := response.AttendanceRecordResponse{
-		ID:                updated.ID,
-		AttendanceListID:  updated.AttendanceListID,
-		PropertyUnitID:    updated.PropertyUnitID,
-		ResidentID:        updated.ResidentID,
-		ProxyID:           updated.ProxyID,
-		AttendedAsOwner:   updated.AttendedAsOwner,
-		AttendedAsProxy:   updated.AttendedAsProxy,
-		Signature:         updated.Signature,
-		SignatureDate:     updated.SignatureDate,
-		SignatureMethod:   updated.SignatureMethod,
-		VerifiedBy:        updated.VerifiedBy,
-		VerificationDate:  updated.VerificationDate,
-		VerificationNotes: updated.VerificationNotes,
-		Notes:             updated.Notes,
-		IsValid:           updated.IsValid,
-		CreatedAt:         updated.CreatedAt,
-		UpdatedAt:         updated.UpdatedAt,
-		ResidentName:      updated.ResidentName,
-		ProxyName:         updated.ProxyName,
-		UnitNumber:        updated.UnitNumber,
-	}
+	responseData := mappers.MapAttendanceRecordDTOToResponse(*updated)
 
 	h.logger.Info().Uint("record_id", recordID).Msg("Asistencia desmarcada exitosamente")
 

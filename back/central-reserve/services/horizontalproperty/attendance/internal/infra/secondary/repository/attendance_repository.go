@@ -2,9 +2,10 @@ package repository
 
 import (
 	"context"
-	"dbpostgres/app/infra/models"
 	"fmt"
 	"time"
+
+	"dbpostgres/app/infra/models"
 
 	"central_reserve/services/horizontalproperty/attendance/internal/domain"
 	"central_reserve/services/horizontalproperty/attendance/internal/infra/secondary/repository/mapper"
@@ -70,10 +71,20 @@ func (r *AttendanceRepository) GetAttendanceListByVotingGroup(ctx context.Contex
 	return mapper.MapAttendanceListToDomain(&m), nil
 }
 
-func (r *AttendanceRepository) ListAttendanceLists(ctx context.Context, businessID uint, filters map[string]interface{}) ([]domain.AttendanceList, error) {
+func (r *AttendanceRepository) ListAttendanceListsPaged(ctx context.Context, businessID uint, filters map[string]interface{}, page, pageSize int) ([]domain.AttendanceList, int64, error) {
 	var m []models.AttendanceList
+	var total int64
 
-	query := r.db.Conn(ctx).Joins("JOIN horizontal_property.voting_groups vg ON vg.id = attendance_lists.voting_group_id").
+	// Validar parámetros de paginación
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 10
+	}
+
+	query := r.db.Conn(ctx).Model(&models.AttendanceList{}).
+		Joins("JOIN horizontal_property.voting_groups vg ON vg.id = attendance_lists.voting_group_id").
 		Where("vg.business_id = ?", businessID)
 
 	// Aplicar filtros
@@ -87,16 +98,24 @@ func (r *AttendanceRepository) ListAttendanceLists(ctx context.Context, business
 		query = query.Where("attendance_lists.voting_group_id = ?", vgID)
 	}
 
-	if err := query.Find(&m).Error; err != nil {
+	// Contar total de registros
+	if err := query.Count(&total).Error; err != nil {
+		r.logger.Error().Err(err).Uint("business_id", businessID).Msg("Error contando listas de asistencia")
+		return nil, 0, fmt.Errorf("error contando listas de asistencia: %w", err)
+	}
+
+	// Obtener página de registros
+	offset := (page - 1) * pageSize
+	if err := query.Offset(offset).Limit(pageSize).Find(&m).Error; err != nil {
 		r.logger.Error().Err(err).Uint("business_id", businessID).Msg("Error listando listas de asistencia")
-		return nil, fmt.Errorf("error listando listas de asistencia: %w", err)
+		return nil, 0, fmt.Errorf("error listando listas de asistencia: %w", err)
 	}
 
 	var result []domain.AttendanceList
 	for _, item := range m {
 		result = append(result, *mapper.MapAttendanceListToDomain(&item))
 	}
-	return result, nil
+	return result, total, nil
 }
 
 func (r *AttendanceRepository) UpdateAttendanceList(ctx context.Context, id uint, attendanceList domain.AttendanceList) (*domain.AttendanceList, error) {
@@ -206,20 +225,23 @@ func (r *AttendanceRepository) GetActiveProxiesByPropertyUnit(ctx context.Contex
 	return result, nil
 }
 
-func (r *AttendanceRepository) ListProxies(ctx context.Context, businessID uint, filters map[string]interface{}) ([]domain.Proxy, error) {
+func (r *AttendanceRepository) ListProxiesPaged(ctx context.Context, businessID uint, filters map[string]interface{}, page, pageSize int) ([]domain.Proxy, int64, error) {
 	var m []models.Proxy
+	var total int64
 
-	query := r.db.Conn(ctx)
-
-	// Filtrar por business_id solo si existe en filters o si businessID es válido
-	if businessID, ok := filters["business_id"].(uint); ok && businessID != 0 {
-		query = query.Where("business_id = ?", businessID)
-	} else if businessID != 0 {
-		query = query.Where("business_id = ?", businessID)
+	// Validar parámetros de paginación
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 10
 	}
 
+	query := r.db.Conn(ctx).Model(&models.Proxy{}).
+		Where("business_id = ?", businessID)
+
 	// Aplicar filtros
-	if propertyUnitID, ok := filters["property_unit_id"].(uint); ok {
+	if propertyUnitID, ok := filters["property_unit_id"].(uint); ok && propertyUnitID != 0 {
 		query = query.Where("property_unit_id = ?", propertyUnitID)
 	}
 	if proxyType, ok := filters["proxy_type"].(string); ok && proxyType != "" {
@@ -229,16 +251,24 @@ func (r *AttendanceRepository) ListProxies(ctx context.Context, businessID uint,
 		query = query.Where("is_active = ?", isActive)
 	}
 
-	if err := query.Find(&m).Error; err != nil {
+	// Contar total de registros
+	if err := query.Count(&total).Error; err != nil {
+		r.logger.Error().Err(err).Uint("business_id", businessID).Msg("Error contando apoderados")
+		return nil, 0, fmt.Errorf("error contando apoderados: %w", err)
+	}
+
+	// Obtener página de registros
+	offset := (page - 1) * pageSize
+	if err := query.Offset(offset).Limit(pageSize).Find(&m).Error; err != nil {
 		r.logger.Error().Err(err).Uint("business_id", businessID).Msg("Error listando apoderados")
-		return nil, fmt.Errorf("error listando apoderados: %w", err)
+		return nil, 0, fmt.Errorf("error listando apoderados: %w", err)
 	}
 
 	var result []domain.Proxy
 	for _, item := range m {
 		result = append(result, *mapper.MapProxyToDomain(&item))
 	}
-	return result, nil
+	return result, total, nil
 }
 
 func (r *AttendanceRepository) UpdateProxy(ctx context.Context, id uint, proxy domain.Proxy) (*domain.Proxy, error) {
@@ -320,66 +350,6 @@ func (r *AttendanceRepository) GetAttendanceRecordByID(ctx context.Context, id u
 	return mapper.MapAttendanceRecordToDomain(&m), nil
 }
 
-func (r *AttendanceRepository) GetAttendanceRecordsByList(ctx context.Context, attendanceListID uint) ([]domain.AttendanceRecord, error) {
-	type row struct {
-		models.AttendanceRecord
-		ResidentName             string
-		ProxyName                string
-		UnitNumber               string
-		ParticipationCoefficient string
-	}
-	var rows []row
-	if err := r.db.Conn(ctx).
-		Table("horizontal_property.attendance_records ar").
-		Select(`ar.id, ar.created_at, ar.updated_at, ar.deleted_at, 
-			ar.attendance_list_id, ar.property_unit_id, ar.resident_id, ar.proxy_id,
-			ar.attended_as_owner, ar.attended_as_proxy, ar.signature, ar.signature_date, 
-			ar.signature_method, ar.verified_by, ar.verification_date, ar.verification_notes, 
-			ar.notes, ar.is_valid,
-			COALESCE(r.name, r2.name, '') as resident_name, 
-			COALESCE(p.proxy_name,'') as proxy_name, 
-			pu.number as unit_number,
-			COALESCE(CAST(pu.participation_coefficient AS TEXT), '0.000000') as participation_coefficient`).
-		Joins("LEFT JOIN horizontal_property.residents r ON r.id = ar.resident_id").
-		Joins("LEFT JOIN horizontal_property.resident_units ru ON ru.property_unit_id = ar.property_unit_id AND ru.is_main_resident = TRUE").
-		Joins("LEFT JOIN horizontal_property.residents r2 ON r2.id = ru.resident_id").
-		Joins("JOIN horizontal_property.property_units pu ON pu.id = ar.property_unit_id").
-		Joins("LEFT JOIN horizontal_property.proxies p ON p.id = ar.proxy_id").
-		Where("ar.attendance_list_id = ?", attendanceListID).
-		Order("ar.id ASC").
-		Scan(&rows).Error; err != nil {
-		r.logger.Error().Err(err).Uint("attendance_list_id", attendanceListID).Msg("Error obteniendo registros de asistencia por lista")
-		return nil, fmt.Errorf("error obteniendo registros de asistencia: %w", err)
-	}
-
-	var result []domain.AttendanceRecord
-	for _, item := range rows {
-		result = append(result, domain.AttendanceRecord{
-			ID:                       item.ID,
-			AttendanceListID:         item.AttendanceListID,
-			PropertyUnitID:           item.PropertyUnitID,
-			ResidentID:               item.ResidentID,
-			ProxyID:                  item.ProxyID,
-			AttendedAsOwner:          item.AttendedAsOwner,
-			AttendedAsProxy:          item.AttendedAsProxy,
-			Signature:                item.Signature,
-			SignatureDate:            item.SignatureDate,
-			SignatureMethod:          item.SignatureMethod,
-			VerifiedBy:               item.VerifiedBy,
-			VerificationDate:         item.VerificationDate,
-			VerificationNotes:        item.VerificationNotes,
-			Notes:                    item.Notes,
-			IsValid:                  item.IsValid,
-			CreatedAt:                item.CreatedAt,
-			UpdatedAt:                item.UpdatedAt,
-			ResidentName:             item.ResidentName,
-			ProxyName:                item.ProxyName,
-			UnitNumber:               item.UnitNumber,
-			ParticipationCoefficient: item.ParticipationCoefficient,
-		})
-	}
-	return result, nil
-}
 
 // GetAttendanceRecordsByListPaged - lista registros con filtros y paginación
 func (r *AttendanceRepository) GetAttendanceRecordsByListPaged(ctx context.Context, attendanceListID uint, unitNumber string, attended *bool, page int, pageSize int) ([]domain.AttendanceRecord, int64, error) {
@@ -526,13 +496,13 @@ func (r *AttendanceRepository) UpdateAttendanceRecordSimple(ctx context.Context,
 		Bool("attended_as_proxy", attendedAsProxy).
 		Msg("Iniciando UpdateAttendanceRecordSimple")
 
-	// Verificar primero si el registro existe en la tabla correcta
+	// Verificar primero si el registro existe usando modelo GORM
 	var existingRecord models.AttendanceRecord
-	if err := r.db.Conn(ctx).Table("horizontal_property.attendance_records").First(&existingRecord, id).Error; err != nil {
+	if err := r.db.Conn(ctx).First(&existingRecord, id).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			r.logger.Error().
 				Uint("id", id).
-				Msg("Registro no encontrado en horizontal_property.attendance_records")
+				Msg("Registro de asistencia no encontrado")
 			return nil, fmt.Errorf("registro de asistencia no encontrado")
 		}
 		r.logger.Error().Err(err).Uint("id", id).Msg("Error verificando existencia del registro")
@@ -545,14 +515,16 @@ func (r *AttendanceRepository) UpdateAttendanceRecordSimple(ctx context.Context,
 		Uint("property_unit_id", existingRecord.PropertyUnitID).
 		Msg("Registro encontrado, procediendo a actualizar")
 
-	// Actualizar directamente en la tabla correcta
-	result := r.db.Conn(ctx).Table("horizontal_property.attendance_records").
+	// Actualizar usando modelo GORM
+	updates := map[string]interface{}{
+		"attended_as_owner": attendedAsOwner,
+		"attended_as_proxy": attendedAsProxy,
+		"updated_at":        time.Now(),
+	}
+
+	result := r.db.Conn(ctx).Model(&models.AttendanceRecord{}).
 		Where("id = ?", id).
-		Updates(map[string]interface{}{
-			"attended_as_owner": attendedAsOwner,
-			"attended_as_proxy": attendedAsProxy,
-			"updated_at":        time.Now(),
-		})
+		Updates(updates)
 
 	if result.Error != nil {
 		r.logger.Error().Err(result.Error).Uint("id", id).Msg("Error ejecutando UPDATE en base de datos")
@@ -571,9 +543,9 @@ func (r *AttendanceRepository) UpdateAttendanceRecordSimple(ctx context.Context,
 		return nil, fmt.Errorf("registro de asistencia no encontrado")
 	}
 
-	// Obtener el registro actualizado para devolverlo
+	// Obtener el registro actualizado usando modelo GORM
 	var m models.AttendanceRecord
-	if err := r.db.Conn(ctx).Table("horizontal_property.attendance_records").First(&m, id).Error; err != nil {
+	if err := r.db.Conn(ctx).First(&m, id).Error; err != nil {
 		r.logger.Error().Err(err).Uint("id", id).Msg("Error obteniendo registro actualizado después del UPDATE")
 		return nil, fmt.Errorf("error obteniendo registro actualizado: %w", err)
 	}

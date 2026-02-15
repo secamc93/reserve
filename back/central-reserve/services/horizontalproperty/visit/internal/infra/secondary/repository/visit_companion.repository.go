@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"central_reserve/services/horizontalproperty/visit/internal/domain"
+	"central_reserve/services/horizontalproperty/visit/internal/infra/secondary/repository/mappers"
 	"central_reserve/shared/db"
 	"central_reserve/shared/log"
 	"dbpostgres/app/infra/models"
@@ -40,7 +41,7 @@ func (r *VisitCompanionRepository) CreateCompanion(ctx context.Context, companio
 		return nil, fmt.Errorf("error creando acompañante: %w", err)
 	}
 
-	return mapCompanionToDomain(model), nil
+	return mappers.CompanionToDomain(model), nil
 }
 
 // GetCompanionsByVisitID obtiene todos los acompañantes de una visita
@@ -52,7 +53,7 @@ func (r *VisitCompanionRepository) GetCompanionsByVisitID(ctx context.Context, v
 
 	result := make([]*domain.VisitCompanion, len(companions))
 	for i, c := range companions {
-		result[i] = mapCompanionToDomain(&c)
+		result[i] = mappers.CompanionToDomain(&c)
 	}
 
 	return result, nil
@@ -88,19 +89,3 @@ func (r *VisitCompanionRepository) DeleteCompanion(ctx context.Context, id uint)
 	return nil
 }
 
-// mapCompanionToDomain mapea modelo a entidad de dominio
-func mapCompanionToDomain(m *models.VisitCompanion) *domain.VisitCompanion {
-	return &domain.VisitCompanion{
-		ID:             m.ID,
-		VisitID:        m.VisitID,
-		VisitorID:      m.VisitorID,
-		CompanionName:  m.CompanionName,
-		CompanionDNI:   m.CompanionDNI,
-		CompanionPhone: m.CompanionPhone,
-		IsMinor:        m.IsMinor,
-		Relationship:   m.Relationship,
-		Notes:          m.Notes,
-		CreatedAt:      m.CreatedAt,
-		UpdatedAt:      m.UpdatedAt,
-	}
-}

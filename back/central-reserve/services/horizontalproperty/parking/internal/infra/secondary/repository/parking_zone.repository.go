@@ -6,6 +6,7 @@ import (
 	"math"
 
 	"central_reserve/services/horizontalproperty/parking/internal/domain"
+	"central_reserve/services/horizontalproperty/parking/internal/infra/secondary/repository/mappers"
 	"central_reserve/shared/db"
 	"central_reserve/shared/log"
 	"dbpostgres/app/infra/models"
@@ -42,7 +43,7 @@ func (r *ParkingZoneRepository) CreateParkingZone(ctx context.Context, zone *dom
 		return nil, fmt.Errorf("error creando zona de parqueo: %w", err)
 	}
 
-	return mapParkingZoneToDomain(model), nil
+	return mappers.ParkingZoneToDomain(model), nil
 }
 
 // GetParkingZoneByID obtiene una zona de parqueo por ID
@@ -55,7 +56,7 @@ func (r *ParkingZoneRepository) GetParkingZoneByID(ctx context.Context, id uint)
 		return nil, fmt.Errorf("error obteniendo zona de parqueo: %w", err)
 	}
 
-	return mapParkingZoneToDomain(&zone), nil
+	return mappers.ParkingZoneToDomain(&zone), nil
 }
 
 // UpdateParkingZone actualiza una zona de parqueo
@@ -155,24 +156,8 @@ func (r *ParkingZoneRepository) GetParkingZonesByBusinessID(ctx context.Context,
 
 	result := make([]*domain.ParkingZone, len(zones))
 	for i, zone := range zones {
-		result[i] = mapParkingZoneToDomain(&zone)
+		result[i] = mappers.ParkingZoneToDomain(&zone)
 	}
 
 	return result, nil
-}
-
-// mapParkingZoneToDomain mapea el modelo a la entidad de dominio
-func mapParkingZoneToDomain(model *models.ParkingZone) *domain.ParkingZone {
-	return &domain.ParkingZone{
-		ID:          model.ID,
-		BusinessID:  model.BusinessID,
-		Name:        model.Name,
-		Code:        model.Code,
-		Description: model.Description,
-		Location:    model.Location,
-		TotalSlots:  model.TotalSlots,
-		IsActive:    model.IsActive,
-		CreatedAt:   model.CreatedAt,
-		UpdatedAt:   model.UpdatedAt,
-	}
 }

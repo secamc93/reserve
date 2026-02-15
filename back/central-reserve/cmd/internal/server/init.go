@@ -5,6 +5,7 @@ import (
 	"central_reserve/services/auth"
 	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty"
+	"central_reserve/services/sporttraining"
 	"central_reserve/shared/db"
 	"central_reserve/shared/env"
 	"central_reserve/shared/jwt"
@@ -32,6 +33,7 @@ func Init(ctx context.Context) error {
 
 	auth.New(database, environment, logger, s3, v1Group, jwtService)
 	horizontalproperty.New(database, logger, s3, environment, v1Group)
+	sporttraining.New(database, logger, v1Group)
 
 	LogStartupInfo(ctx, logger, environment)
 

@@ -1,8 +1,9 @@
 package businesshandler
 
 import (
-	"central_reserve/services/auth/business/internal/infra/primary/controllers/businesshandler/mapper"
+	"central_reserve/services/auth/business/internal/infra/primary/controllers/businesshandler/mappers"
 	"central_reserve/services/auth/business/internal/infra/primary/controllers/businesshandler/request"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -42,7 +43,7 @@ func (h *BusinessHandler) UpdateBusinessHandler(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, mapper.BuildErrorResponse("invalid_id", "ID de negocio inválido"))
+		c.JSON(http.StatusBadRequest, mappers.BuildErrorResponse("invalid_id", "ID de negocio inválido"))
 		return
 	}
 
@@ -56,24 +57,28 @@ func (h *BusinessHandler) UpdateBusinessHandler(c *gin.Context) {
 		body, _ := c.GetRawData()
 		h.logger.Error().Str("body", string(body)).Msg("Contenido del request")
 
-		c.JSON(http.StatusBadRequest, mapper.BuildErrorResponse("invalid_request", "Datos de entrada inválidos"))
+		c.JSON(http.StatusBadRequest, mappers.BuildErrorResponse("invalid_request", "Datos de entrada inválidos"))
 		return
 	}
 
 	// Ejecutar caso de uso
-	businessRequest := mapper.UpdateRequestToUpdateDTO(updateRequest)
+	businessRequest, err := mappers.UpdateRequestToUpdateDTO(updateRequest)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, mappers.BuildErrorResponse("file_error", fmt.Sprintf("Error al procesar archivos: %s", err.Error())))
+		return
+	}
 	business, err := h.usecase.UpdateBusiness(c.Request.Context(), uint(id), businessRequest)
 	if err != nil {
 		if err.Error() == "negocio no encontrado" {
-			c.JSON(http.StatusNotFound, mapper.BuildErrorResponse("not_found", "Negocio no encontrado"))
+			c.JSON(http.StatusNotFound, mappers.BuildErrorResponse("not_found", "Negocio no encontrado"))
 			return
 		}
 		h.logger.Error().Err(err).Uint("id", uint(id)).Msg("Error al actualizar negocio")
-		c.JSON(http.StatusInternalServerError, mapper.BuildErrorResponse("internal_error", "Error interno del servidor"))
+		c.JSON(http.StatusInternalServerError, mappers.BuildErrorResponse("internal_error", "Error interno del servidor"))
 		return
 	}
 
 	// Construir respuesta exitosa
-	response := mapper.BuildUpdateBusinessResponseFromDTO(business, "Negocio actualizado exitosamente")
+	response := mappers.BuildUpdateBusinessResponseFromDTO(business, "Negocio actualizado exitosamente")
 	c.JSON(http.StatusOK, response)
 }

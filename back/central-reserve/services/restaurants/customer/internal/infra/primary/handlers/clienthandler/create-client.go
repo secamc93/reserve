@@ -1,7 +1,7 @@
 package clienthandler
 
 import (
-	"central_reserve/services/restaurants/customer/internal/infra/primary/handlers/clienthandler/mapper"
+	"central_reserve/services/restaurants/customer/internal/infra/primary/handlers/clienthandler/mappers"
 	"central_reserve/services/restaurants/customer/internal/infra/primary/handlers/clienthandler/request"
 	"net/http"
 
@@ -36,10 +36,10 @@ func (h *ClientHandler) CreateClientHandler(c *gin.Context) {
 	}
 
 	// 2. DTO → Dominio ───────────────────────────────────────
-	client := mapper.ClientToDomain(req)
+	client := mappers.ClientToDomain(req)
 
 	// 3. Caso de uso ─────────────────────────────────────────
-	response, err := h.usecase.CreateClient(ctx, client)
+	message, err := h.usecase.CreateClient(ctx, client)
 	if err != nil {
 		h.logger.Error().Err(err).Msg("error interno al crear cliente")
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -54,6 +54,6 @@ func (h *ClientHandler) CreateClientHandler(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{
 		"success": true,
 		"message": "Cliente creado exitosamente",
-		"data":    response,
+		"data":    message,
 	})
 }

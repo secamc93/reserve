@@ -2,11 +2,11 @@ package repository
 
 import (
 	"central_reserve/services/auth/resources/internal/domain"
+	"central_reserve/services/auth/resources/internal/infra/secondary/repository/mappers"
 	"context"
 	"dbpostgres/app/infra/models"
 	"fmt"
 	"strings"
-	"time"
 
 	"gorm.io/gorm"
 )
@@ -81,34 +81,8 @@ func (r *Repository) GetResources(ctx context.Context, filters domain.ResourceFi
 		return nil, 0, err
 	}
 
-	// Convertir a entidades de dominio
-	var domainResources []domain.Resource
-	for _, resource := range resources {
-		var deletedAt *time.Time
-		if resource.DeletedAt.Valid {
-			deletedAt = &resource.DeletedAt.Time
-		}
-
-		businessTypeID := uint(0)
-		businessTypeName := ""
-		if resource.BusinessTypeID != nil {
-			businessTypeID = *resource.BusinessTypeID
-			if resource.BusinessType != nil {
-				businessTypeName = resource.BusinessType.Name
-			}
-		}
-
-		domainResources = append(domainResources, domain.Resource{
-			ID:               resource.ID,
-			Name:             resource.Name,
-			Description:      resource.Description,
-			BusinessTypeID:   businessTypeID,
-			BusinessTypeName: businessTypeName,
-			CreatedAt:        resource.CreatedAt,
-			UpdatedAt:        resource.UpdatedAt,
-			DeletedAt:        deletedAt,
-		})
-	}
+	// Convertir a entidades de dominio usando mapper
+	domainResources := mappers.ResourcesToDomain(resources)
 
 	r.logger.Info().
 		Int64("total", total).
@@ -125,38 +99,16 @@ func (r *Repository) GetResourceByID(ctx context.Context, id uint) (*domain.Reso
 	r.logger.Info().Uint("resource_id", id).Msg("Obteniendo recurso por ID")
 
 	var resource models.Resource
-	if err := r.database.Conn(ctx).Where("id = ?", id).First(&resource).Error; err != nil {
+	if err := r.database.Conn(ctx).Preload("BusinessType").Where("id = ?", id).First(&resource).Error; err != nil {
 		r.logger.Error().Err(err).Uint("resource_id", id).Msg("Error al obtener recurso por ID")
 		return nil, err
 	}
 
-	var deletedAt *time.Time
-	if resource.DeletedAt.Valid {
-		deletedAt = &resource.DeletedAt.Time
-	}
-
-	businessTypeID := uint(0)
-	businessTypeName := ""
-	if resource.BusinessTypeID != nil {
-		businessTypeID = *resource.BusinessTypeID
-		if resource.BusinessType != nil {
-			businessTypeName = resource.BusinessType.Name
-		}
-	}
-
-	domainResource := &domain.Resource{
-		ID:               resource.ID,
-		Name:             resource.Name,
-		Description:      resource.Description,
-		BusinessTypeID:   businessTypeID,
-		BusinessTypeName: businessTypeName,
-		CreatedAt:        resource.CreatedAt,
-		UpdatedAt:        resource.UpdatedAt,
-		DeletedAt:        deletedAt,
-	}
+	// Convertir a entidad de dominio usando mapper
+	domainResource := mappers.ResourceToDomain(&resource)
 
 	r.logger.Info().Uint("resource_id", id).Str("name", resource.Name).Msg("Recurso obtenido exitosamente")
-	return domainResource, nil
+	return &domainResource, nil
 }
 
 // GetResourceByName obtiene un recurso por su nombre
@@ -164,38 +116,16 @@ func (r *Repository) GetResourceByName(ctx context.Context, name string) (*domai
 	r.logger.Info().Str("name", name).Msg("Obteniendo recurso por nombre")
 
 	var resource models.Resource
-	if err := r.database.Conn(ctx).Where("name = ?", name).First(&resource).Error; err != nil {
+	if err := r.database.Conn(ctx).Preload("BusinessType").Where("name = ?", name).First(&resource).Error; err != nil {
 		r.logger.Error().Err(err).Str("name", name).Msg("Error al obtener recurso por nombre")
 		return nil, err
 	}
 
-	var deletedAt *time.Time
-	if resource.DeletedAt.Valid {
-		deletedAt = &resource.DeletedAt.Time
-	}
-
-	businessTypeID := uint(0)
-	businessTypeName := ""
-	if resource.BusinessTypeID != nil {
-		businessTypeID = *resource.BusinessTypeID
-		if resource.BusinessType != nil {
-			businessTypeName = resource.BusinessType.Name
-		}
-	}
-
-	domainResource := &domain.Resource{
-		ID:               resource.ID,
-		Name:             resource.Name,
-		Description:      resource.Description,
-		BusinessTypeID:   businessTypeID,
-		BusinessTypeName: businessTypeName,
-		CreatedAt:        resource.CreatedAt,
-		UpdatedAt:        resource.UpdatedAt,
-		DeletedAt:        deletedAt,
-	}
+	// Convertir a entidad de dominio usando mapper
+	domainResource := mappers.ResourceToDomain(&resource)
 
 	r.logger.Info().Uint("resource_id", resource.ID).Str("name", name).Msg("Recurso obtenido exitosamente por nombre")
-	return domainResource, nil
+	return &domainResource, nil
 }
 
 // CreateResource crea un nuevo recurso

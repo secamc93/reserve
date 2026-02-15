@@ -1,101 +1,128 @@
-# Reserve Testing Suite
+# Testing Suite - Central Reserve
 
-Proyecto de testing modular para el sistema Reserve.
+Suite de testing interactivo para los servicios de Central Reserve con soporte de API y consultas directas a base de datos.
 
-## Estructura
+## 📦 Módulos Disponibles
+
+### 1. Module: Unit
+Módulo de pruebas unitarias básicas.
+
+```bash
+./bin/testing -module unit
+```
+
+### 2. Module: Residents
+Módulo de testing para el servicio de residentes.
+
+```bash
+./bin/testing -module residents
+```
+
+### 3. Module: Visit ⭐ **NUEVO CON BD**
+Módulo completo de testing para el servicio de visitas con:
+- Testing de APIs (15 endpoints)
+- Consultas directas a base de datos (5 funcionalidades)
+- Autenticación en dos pasos
+- Logging estructurado
+- Estadísticas y reportes
+
+```bash
+./bin/testing -module visit
+```
+
+Ver documentación completa: [modules/visit/README.md](modules/visit/README.md)
+
+## 🚀 Instalación y Uso
+
+### Prerrequisitos
+
+- Go 1.23.0 o superior
+- PostgreSQL (para funcionalidades de BD)
+- Acceso a la API de Central Reserve
+
+### Configuración
+
+1. **Configurar variables de entorno**:
+
+```bash
+# Editar .env con tus credenciales
+```
+
+2. **Variables clave en .env**:
+
+```bash
+# API
+API_BASE_URL=http://localhost:8081/api/v1
+
+# Database (para módulo visit)
+DB_HOST=localhost
+DB_USER=postgres
+DB_PASS=postgres
+DB_NAME=central_reserve
+DB_PORT=5432
+PGSSLMODE=disable
+DB_LOG_LEVEL=info
+
+# Logging
+LOG_LEVEL=info
+
+# Test Users (3 usuarios configurables)
+TEST_USER1_EMAIL=admin@horizontalproperty.com
+TEST_USER1_PASSWORD=admin123
+TEST_USER1_NAME=Admin Principal
+```
+
+### Compilación
+
+```bash
+# Actualizar dependencias
+go mod tidy
+
+# Compilar
+go build -o bin/testing cmd/main.go
+```
+
+### Ejecución
+
+```bash
+# Cargar variables de entorno
+export $(cat .env | xargs)
+
+# Ejecutar módulo específico
+./bin/testing -module visit
+
+# Modo verbose
+./bin/testing -module visit -v
+```
+
+## 🏗️ Arquitectura del Proyecto
 
 ```
 testing/
-├── cmd/                    # Punto de entrada principal
-│   └── main.go
-├── modules/                # Módulos de testing (cada uno es un paquete)
-│   ├── unit/              # Tests unitarios
-│   │   ├── internal/      # Código interno del módulo
-│   │   ├── bundle.go      # Bundle del módulo
-│   │   └── unit_test.go   # Tests del módulo
-│   └── residents/         # Tests de residents
-│       ├── internal/      # Código interno del módulo
-│       ├── bundle.go      # Bundle del módulo
-│       └── residents_test.go
-├── go.mod
-└── README.md
+├── cmd/
+│   └── main.go              # Punto de entrada
+├── shared/                  # Utilidades compartidas
+│   ├── auth.go              # Autenticación
+│   ├── config.go            # Configuración
+│   ├── http_client.go       # Cliente HTTP
+│   ├── testing_db.go        # Cliente de BD (GORM)
+│   └── testing_logger.go    # Logger (zerolog)
+├── modules/
+│   └── visit/               # Módulo de visitas
+│       ├── bundle.go
+│       ├── state_manager.go
+│       ├── menu.go
+│       ├── handlers.go
+│       └── README.md
+├── .env                    # Variables de entorno
+└── bin/testing             # Binario compilado
 ```
 
-## Uso
+## 📚 Documentación
 
-### Ejecutar todos los tests
-```bash
-go run cmd/main.go
-```
+- [Módulo Visit - Completo](modules/visit/README.md)
+- [Changelog - BD](CHANGELOG_VISIT.md)
 
-### Ejecutar un módulo específico
-```bash
-# Solo tests unitarios
-go run cmd/main.go -module unit
+---
 
-# Solo tests de residents
-go run cmd/main.go -module residents
-```
-
-### Modo verbose
-```bash
-go run cmd/main.go -v
-```
-
-### Ejecutar tests con go test
-```bash
-# Todos los tests
-go test ./...
-
-# Tests de un módulo específico
-go test ./modules/unit
-go test ./modules/residents
-```
-
-## Agregar nuevos módulos
-
-Para agregar un nuevo módulo de testing:
-
-1. Crear directorio en `modules/`:
-```bash
-mkdir -p modules/nuevo_modulo/internal
-```
-
-2. Crear `bundle.go`:
-```go
-package nuevo_modulo
-
-import "testing"
-
-type Bundle struct {
-    testSuite string
-}
-
-func NewBundle() *Bundle {
-    return &Bundle{testSuite: "nuevo_modulo"}
-}
-
-func (b *Bundle) Run(t *testing.T) {
-    t.Run("Nuevo Modulo Tests", func(t *testing.T) {
-        // Tests aquí
-    })
-}
-
-func (b *Bundle) GetName() string {
-    return b.testSuite
-}
-```
-
-3. Crear tests `nuevo_modulo_test.go`
-
-4. Agregar al `cmd/main.go` si deseas ejecutarlo desde el CLI
-
-## Desarrollo
-
-```bash
-# Compilar
-go build -o testing cmd/main.go
-
-# Ejecutar compilado
-./testing -module all -v
-```
+**Versión**: 1.0.0 | **Fecha**: 2026-01-24

@@ -6,6 +6,7 @@ import (
 	"math"
 
 	"central_reserve/services/horizontalproperty/parking/internal/domain"
+	"central_reserve/services/horizontalproperty/parking/internal/infra/secondary/repository/mappers"
 	"central_reserve/shared/db"
 	"central_reserve/shared/log"
 	"dbpostgres/app/infra/models"
@@ -44,7 +45,7 @@ func (r *ParkingSlotRepository) CreateParkingSlot(ctx context.Context, slot *dom
 		return nil, fmt.Errorf("error creando espacio de parqueo: %w", err)
 	}
 
-	return mapParkingSlotToDomain(model), nil
+	return mappers.ParkingSlotToDomain(model), nil
 }
 
 // GetParkingSlotByID obtiene un espacio de parqueo por ID
@@ -60,7 +61,7 @@ func (r *ParkingSlotRepository) GetParkingSlotByID(ctx context.Context, id uint)
 		return nil, fmt.Errorf("error obteniendo espacio de parqueo: %w", err)
 	}
 
-	return mapParkingSlotToDomain(&slot), nil
+	return mappers.ParkingSlotToDomain(&slot), nil
 }
 
 // UpdateParkingSlot actualiza un espacio de parqueo
@@ -208,7 +209,7 @@ func (r *ParkingSlotRepository) GetParkingSlotsByZoneID(ctx context.Context, zon
 
 	result := make([]*domain.ParkingSlot, len(slots))
 	for i, slot := range slots {
-		result[i] = mapParkingSlotToDomain(&slot)
+		result[i] = mappers.ParkingSlotToDomain(&slot)
 	}
 
 	return result, nil
@@ -226,7 +227,7 @@ func (r *ParkingSlotRepository) GetParkingSlotsByBusinessID(ctx context.Context,
 
 	result := make([]*domain.ParkingSlot, len(slots))
 	for i, slot := range slots {
-		result[i] = mapParkingSlotToDomain(&slot)
+		result[i] = mappers.ParkingSlotToDomain(&slot)
 	}
 
 	return result, nil
@@ -261,20 +262,3 @@ func (r *ParkingSlotRepository) IsSlotAvailable(ctx context.Context, slotID uint
 	return count == 0, nil
 }
 
-// mapParkingSlotToDomain mapea el modelo a la entidad de dominio
-func mapParkingSlotToDomain(model *models.ParkingSlot) *domain.ParkingSlot {
-	return &domain.ParkingSlot{
-		ID:            model.ID,
-		ParkingZoneID: model.ParkingZoneID,
-		ParkingTypeID: model.ParkingTypeID,
-		SlotNumber:    model.SlotNumber,
-		IsCovered:     model.IsCovered,
-		Width:         model.Width,
-		Length:        model.Length,
-		Height:        model.Height,
-		HasCharger:    model.HasCharger,
-		IsActive:      model.IsActive,
-		CreatedAt:     model.CreatedAt,
-		UpdatedAt:     model.UpdatedAt,
-	}
-}

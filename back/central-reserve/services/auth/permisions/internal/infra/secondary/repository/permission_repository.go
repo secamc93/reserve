@@ -2,6 +2,7 @@ package repository
 
 import (
 	"central_reserve/services/auth/permisions/internal/domain"
+	"central_reserve/services/auth/permisions/internal/infra/secondary/repository/mappers"
 	"context"
 	"dbpostgres/app/infra/models"
 	"fmt"
@@ -39,43 +40,8 @@ func (r *Repository) GetPermissions(ctx context.Context, businessTypeID *uint, n
 		return nil, err
 	}
 
-	// Convertir a entidades de dominio
-	domainPermissions := make([]domain.Permission, len(permissions))
-	for i, permission := range permissions {
-		businessTypeID := uint(0)
-		businessTypeName := ""
-		if permission.BusinessTypeID != nil {
-			businessTypeID = *permission.BusinessTypeID
-			if permission.BusinessType != nil {
-				businessTypeName = permission.BusinessType.Name
-			}
-		}
-
-		scopeName := ""
-		scopeCode := ""
-		if permission.Scope.ID > 0 {
-			scopeName = permission.Scope.Name
-			scopeCode = permission.Scope.Code
-		}
-
-		domainPermissions[i] = domain.Permission{
-			ID:               permission.Model.ID,
-			Name:             permission.Name,
-			Code:             "", // Code no existe en el modelo, debe generarse o venir de otra fuente
-			Description:      permission.Description,
-			Resource:         permission.Resource.Name,
-			Action:           permission.Action.Name,
-			ResourceID:       permission.ResourceID,
-			ActionID:         permission.ActionID,
-			ScopeID:          permission.ScopeID,
-			ScopeName:        scopeName,
-			ScopeCode:        scopeCode,
-			BusinessTypeID:   businessTypeID,
-			BusinessTypeName: businessTypeName,
-		}
-	}
-
-	return domainPermissions, nil
+	// Convertir a entidades de dominio usando mapper centralizado
+	return mappers.PermissionsToDomain(permissions), nil
 }
 
 // GetPermissionByID obtiene un permiso por su ID
@@ -93,39 +59,8 @@ func (r *Repository) GetPermissionByID(ctx context.Context, id uint) (*domain.Pe
 		return nil, err
 	}
 
-	businessTypeID := uint(0)
-	businessTypeName := ""
-	if permission.BusinessTypeID != nil {
-		businessTypeID = *permission.BusinessTypeID
-		if permission.BusinessType != nil {
-			businessTypeName = permission.BusinessType.Name
-		}
-	}
-
-	scopeName := ""
-	scopeCode := ""
-	if permission.Scope.ID > 0 {
-		scopeName = permission.Scope.Name
-		scopeCode = permission.Scope.Code
-	}
-
-	entity := domain.Permission{
-		ID:               permission.Model.ID,
-		Name:             permission.Name,
-		Code:             "", // Code no existe en el modelo, debe generarse o venir de otra fuente
-		Description:      permission.Description,
-		Resource:         permission.Resource.Name,
-		Action:           permission.Action.Name,
-		ResourceID:       permission.ResourceID,
-		ActionID:         permission.ActionID,
-		ScopeID:          permission.ScopeID,
-		ScopeName:        scopeName,
-		ScopeCode:        scopeCode,
-		BusinessTypeID:   businessTypeID,
-		BusinessTypeName: businessTypeName,
-	}
-
-	return &entity, nil
+	// Convertir a entidad de dominio usando mapper centralizado
+	return mappers.PermissionToDomainPtr(permission), nil
 }
 
 // GetPermissionsByScopeID obtiene permisos por scope ID
@@ -143,43 +78,8 @@ func (r *Repository) GetPermissionsByScopeID(ctx context.Context, scopeID uint) 
 		return nil, err
 	}
 
-	// Convertir a entidades de dominio
-	domainPermissions := make([]domain.Permission, len(permissions))
-	for i, permission := range permissions {
-		businessTypeID := uint(0)
-		businessTypeName := ""
-		if permission.BusinessTypeID != nil {
-			businessTypeID = *permission.BusinessTypeID
-			if permission.BusinessType != nil {
-				businessTypeName = permission.BusinessType.Name
-			}
-		}
-
-		scopeName := ""
-		scopeCode := ""
-		if permission.Scope.ID > 0 {
-			scopeName = permission.Scope.Name
-			scopeCode = permission.Scope.Code
-		}
-
-		domainPermissions[i] = domain.Permission{
-			ID:               permission.Model.ID,
-			Name:             permission.Name,
-			Code:             "", // Code no existe en el modelo
-			Description:      permission.Description,
-			Resource:         permission.Resource.Name,
-			Action:           permission.Action.Name,
-			ResourceID:       permission.ResourceID,
-			ActionID:         permission.ActionID,
-			ScopeID:          permission.ScopeID,
-			ScopeName:        scopeName,
-			ScopeCode:        scopeCode,
-			BusinessTypeID:   businessTypeID,
-			BusinessTypeName: businessTypeName,
-		}
-	}
-
-	return domainPermissions, nil
+	// Convertir a entidades de dominio usando mapper centralizado
+	return mappers.PermissionsToDomain(permissions), nil
 }
 
 // GetPermissionsByResource obtiene permisos por recurso
@@ -198,43 +98,8 @@ func (r *Repository) GetPermissionsByResource(ctx context.Context, resource stri
 		return nil, err
 	}
 
-	// Convertir a entidades de dominio
-	domainPermissions := make([]domain.Permission, len(permissions))
-	for i, permission := range permissions {
-		businessTypeID := uint(0)
-		businessTypeName := ""
-		if permission.BusinessTypeID != nil {
-			businessTypeID = *permission.BusinessTypeID
-			if permission.BusinessType != nil {
-				businessTypeName = permission.BusinessType.Name
-			}
-		}
-
-		scopeName := ""
-		scopeCode := ""
-		if permission.Scope.ID > 0 {
-			scopeName = permission.Scope.Name
-			scopeCode = permission.Scope.Code
-		}
-
-		domainPermissions[i] = domain.Permission{
-			ID:               permission.Model.ID,
-			Name:             permission.Name,
-			Code:             "", // Code no existe en el modelo
-			Description:      permission.Description,
-			Resource:         permission.Resource.Name,
-			Action:           permission.Action.Name,
-			ResourceID:       permission.ResourceID,
-			ActionID:         permission.ActionID,
-			ScopeID:          permission.ScopeID,
-			ScopeName:        scopeName,
-			ScopeCode:        scopeCode,
-			BusinessTypeID:   businessTypeID,
-			BusinessTypeName: businessTypeName,
-		}
-	}
-
-	return domainPermissions, nil
+	// Convertir a entidades de dominio usando mapper centralizado
+	return mappers.PermissionsToDomain(permissions), nil
 }
 
 // PermissionExistsByName verifica si existe un permiso con el nombre especificado

@@ -7,14 +7,13 @@ import (
 	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/domain"
 	"central_reserve/shared/env"
 	"central_reserve/shared/log"
-	"central_reserve/shared/storage"
 )
 
 // HorizontalPropertyUseCase implementa los casos de uso de propiedades horizontales
 type HorizontalPropertyUseCase struct {
 	repo   domain.HorizontalPropertyRepository
 	logger log.ILogger
-	s3     storage.IS3Service
+	s3     domain.FileStoragePort
 	env    env.IConfig
 }
 
@@ -22,7 +21,7 @@ type HorizontalPropertyUseCase struct {
 func NewHorizontalPropertyUseCase(
 	repo domain.HorizontalPropertyRepository,
 	logger log.ILogger,
-	s3 storage.IS3Service,
+	s3 domain.FileStoragePort,
 	envConfig env.IConfig,
 ) domain.HorizontalPropertyUseCase {
 	contextualLogger := logger.WithModule("propiedad horizontal")

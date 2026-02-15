@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"central_reserve/services/auth/resources/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/auth/resources/internal/infra/primary/handlers/response"
 	"net/http"
 	"strconv"
@@ -61,16 +62,8 @@ func (h *ResourceHandler) GetResourceByIDHandler(c *gin.Context) {
 		return
 	}
 
-	// Convertir a respuesta HTTP
-	resourceResponse := response.ResourceResponse{
-		ID:               result.ID,
-		Name:             result.Name,
-		Description:      result.Description,
-		BusinessTypeID:   result.BusinessTypeID,
-		BusinessTypeName: result.BusinessTypeName,
-		CreatedAt:        result.CreatedAt,
-		UpdatedAt:        result.UpdatedAt,
-	}
+	// Convertir a respuesta HTTP usando mapper
+	resourceResponse := mappers.ResourceDTOToResponse(result)
 
 	h.logger.Info().
 		Uint64("resource_id", resourceID).

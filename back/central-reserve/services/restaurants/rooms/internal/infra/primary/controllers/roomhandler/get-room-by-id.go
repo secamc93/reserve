@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"central_reserve/services/restaurants/rooms/internal/infra/primary/controllers/roomhandler/mapper"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -61,6 +63,6 @@ func (h *RoomHandler) GetRoomByIDHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "Sala obtenida exitosamente",
-		"data":    room,
+		"data":    mapper.RoomPtrToResponse(room),
 	})
 }

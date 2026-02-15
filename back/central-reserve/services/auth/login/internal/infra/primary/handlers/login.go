@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"central_reserve/services/auth/login/internal/domain"
-	"central_reserve/services/auth/login/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/auth/login/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/auth/login/internal/infra/primary/handlers/request"
 	"central_reserve/services/auth/login/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
@@ -75,7 +75,7 @@ func (h *handlers) LoginHandler(c *gin.Context) {
 	}
 
 	// Convertir respuesta de dominio a response
-	loginResponse := *mapper.ToLoginResponse(domainResponse)
+	loginResponse := *mappers.ToLoginResponse(domainResponse)
 
 	h.logger.Info(ctx).
 		Str("email", loginRequest.Email).

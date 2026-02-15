@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"central_reserve/services/auth/middleware"
-	"central_reserve/services/horizontalproperty/attendance/internal/domain"
+	"central_reserve/services/horizontalproperty/attendance/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/attendance/internal/infra/primary/handlers/request"
 	"central_reserve/services/horizontalproperty/attendance/internal/infra/primary/handlers/response"
 
@@ -50,20 +50,7 @@ func (h *AttendanceHandler) CreateProxy(c *gin.Context) {
 		businessID = req.BusinessID
 	}
 
-	dto := domain.CreateProxyDTO{
-		BusinessID:      businessID, // Usar business_id del token
-		PropertyUnitID:  req.PropertyUnitID,
-		ProxyName:       req.ProxyName,
-		ProxyDni:        req.ProxyDni,
-		ProxyEmail:      req.ProxyEmail,
-		ProxyPhone:      req.ProxyPhone,
-		ProxyAddress:    req.ProxyAddress,
-		ProxyType:       req.ProxyType,
-		StartDate:       req.StartDate,
-		EndDate:         req.EndDate,
-		PowerOfAttorney: req.PowerOfAttorney,
-		Notes:           req.Notes,
-	}
+	dto := mappers.MapCreateProxyRequestToDTO(req, businessID)
 	created, err := h.attendanceUseCase.CreateProxy(c.Request.Context(), dto)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Success: false, Message: "Error creando apoderado", Error: err.Error()})
@@ -74,6 +61,6 @@ func (h *AttendanceHandler) CreateProxy(c *gin.Context) {
 		"message":    "Apoderado creado exitosamente",
 		"proxy_name": created.ProxyName,
 		"proxy_id":   created.ID,
-		"data":       response.ProxyResponse(*created),
+		"data":       mappers.MapProxyDTOToResponse(*created),
 	})
 }

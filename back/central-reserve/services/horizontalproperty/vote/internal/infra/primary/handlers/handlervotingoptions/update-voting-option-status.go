@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/request"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/response"
 
@@ -61,6 +61,6 @@ func (h *VotingOptionsHandler) UpdateVotingOptionStatus(c *gin.Context) {
 		return
 	}
 
-	responseData := mapper.MapVotingOptionDTOToResponse(opcion)
+	responseData := mappers.MapVotingOptionDTOToResponse(opcion)
 	c.JSON(http.StatusOK, response.VotingOptionSuccess{Success: true, Message: "Estado actualizado", Data: responseData})
 }

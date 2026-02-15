@@ -1,17 +1,50 @@
 package mapper
 
 import (
-	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/domain"
-	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/primary/handlers/request"
-	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/primary/handlers/response"
+	"mime/multipart"
 	"regexp"
 	"strings"
 	"unicode"
+
+	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/domain"
+	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/primary/handlers/request"
+	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/primary/handlers/response"
+	"central_reserve/shared/types"
 
 	"golang.org/x/text/runes"
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
 )
+
+// ═══════════════════════════════════════════════════════════════════
+// HELPER: Conversión de multipart.FileHeader a types.FileUpload
+// ═══════════════════════════════════════════════════════════════════
+
+// convertMultipartToFileUpload convierte un *multipart.FileHeader a *types.FileUpload
+// Esta conversión solo debe ocurrir en la capa de infraestructura (handlers)
+func convertMultipartToFileUpload(header *multipart.FileHeader) (*types.FileUpload, error) {
+	if header == nil {
+		return nil, nil
+	}
+
+	// Abrir el archivo desde el header
+	file, err := header.Open()
+	if err != nil {
+		return nil, err
+	}
+	// NOTA: El caller debe cerrar el file después de usar FileUpload
+
+	return &types.FileUpload{
+		Filename:    header.Filename,
+		Size:        header.Size,
+		ContentType: header.Header.Get("Content-Type"),
+		Content:     file, // io.Reader
+	}, nil
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MAPPERS
+// ═══════════════════════════════════════════════════════════════════
 
 // slugify convierte un string a formato slug (URL-friendly)
 // Ejemplo: "Conjunto Los Pinos" → "conjunto-los-pinos"
@@ -72,6 +105,26 @@ func MapCreateRequestToDTO(req *request.CreateHorizontalPropertyRequest) domain.
 		customDomain = slugify(req.Name)
 	}
 
+	// Convertir archivos de multipart.FileHeader a types.FileUpload
+	var logoFile *types.FileUpload
+	var navbarImageFile *types.FileUpload
+	var err error
+
+	if req.LogoFile != nil {
+		logoFile, err = convertMultipartToFileUpload(req.LogoFile)
+		if err != nil {
+			// En caso de error, logoFile será nil
+			// TODO: Considerar retornar error en versión mejorada del mapper
+		}
+	}
+
+	if req.NavbarImageFile != nil {
+		navbarImageFile, err = convertMultipartToFileUpload(req.NavbarImageFile)
+		if err != nil {
+			// En caso de error, navbarImageFile será nil
+		}
+	}
+
 	return domain.CreateHorizontalPropertyDTO{
 		Name:             req.Name,
 		Code:             code,
@@ -79,8 +132,8 @@ func MapCreateRequestToDTO(req *request.CreateHorizontalPropertyRequest) domain.
 		Timezone:         timezone,
 		Address:          req.Address,
 		Description:      req.Description,
-		LogoFile:         req.LogoFile,
-		NavbarImageFile:  req.NavbarImageFile,
+		LogoFile:         logoFile,
+		NavbarImageFile:  navbarImageFile,
 		PrimaryColor:     req.PrimaryColor,
 		SecondaryColor:   req.SecondaryColor,
 		TertiaryColor:    req.TertiaryColor,
@@ -126,6 +179,25 @@ func MapUpdateRequestToDTO(req *request.UpdateHorizontalPropertyRequest) domain.
 		customDomain = nil
 	}
 
+	// Convertir archivos de multipart.FileHeader a types.FileUpload
+	var logoFile *types.FileUpload
+	var navbarImageFile *types.FileUpload
+	var err error
+
+	if req.LogoFile != nil {
+		logoFile, err = convertMultipartToFileUpload(req.LogoFile)
+		if err != nil {
+			// En caso de error, logoFile será nil
+		}
+	}
+
+	if req.NavbarImageFile != nil {
+		navbarImageFile, err = convertMultipartToFileUpload(req.NavbarImageFile)
+		if err != nil {
+			// En caso de error, navbarImageFile será nil
+		}
+	}
+
 	return domain.UpdateHorizontalPropertyDTO{
 		Name:             req.Name,
 		Code:             req.Code,
@@ -133,8 +205,8 @@ func MapUpdateRequestToDTO(req *request.UpdateHorizontalPropertyRequest) domain.
 		Timezone:         req.Timezone,
 		Address:          req.Address,
 		Description:      req.Description,
-		LogoFile:         req.LogoFile,
-		NavbarImageFile:  req.NavbarImageFile,
+		LogoFile:         logoFile,
+		NavbarImageFile:  navbarImageFile,
 		PrimaryColor:     primaryColor,
 		SecondaryColor:   secondaryColor,
 		TertiaryColor:    tertiaryColor,

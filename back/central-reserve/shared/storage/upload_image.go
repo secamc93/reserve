@@ -3,20 +3,20 @@ package storage
 import (
 	"context"
 	"fmt"
-	"mime/multipart"
 	"strings"
 	"time"
 
 	"central_reserve/shared/errs"
+	"central_reserve/shared/types"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 )
 
 // UploadImage sube una imagen con validaciones y optimizaciones específicas
 // Retorna el path relativo del archivo (ej: "avatars/1234567890_imagen.jpg")
-func (s *S3Uploader) UploadImage(ctx context.Context, file *multipart.FileHeader, folder string) (string, error) {
+func (s *S3Uploader) UploadImage(ctx context.Context, file *types.FileUpload, folder string) (string, error) {
 	// Validar archivo
 	if file == nil {
 		return "", errs.New("archivo es nulo")
@@ -28,18 +28,9 @@ func (s *S3Uploader) UploadImage(ctx context.Context, file *multipart.FileHeader
 	}
 
 	// Validar tipo de archivo
-	contentType := file.Header.Get("Content-Type")
-	if !allowedImageTypes[contentType] {
+	if !allowedImageTypes[file.ContentType] {
 		return "", errs.New("tipo de archivo no permitido, solo imágenes (jpeg, jpg, png, gif, webp)")
 	}
-
-	// Abrir archivo
-	src, err := file.Open()
-	if err != nil {
-		s.log.Error(ctx).Err(err).Msg("error abriendo archivo")
-		return "", err
-	}
-	defer src.Close()
 
 	// Generar nombre único para el archivo
 	timestamp := time.Now().Unix()
@@ -50,14 +41,14 @@ func (s *S3Uploader) UploadImage(ctx context.Context, file *multipart.FileHeader
 	filename = strings.ToLower(filename)
 
 	// Subir a S3
-	_, err = s.client.PutObject(ctx, &s3.PutObjectInput{
+	_, err := s.client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket:               aws.String(s.bucket),
 		Key:                  aws.String(filename),
-		Body:                 src,
-		ContentType:          aws.String(contentType),
+		Body:                 file.Content,
+		ContentType:          aws.String(file.ContentType),
 		ContentDisposition:   aws.String("inline"),
-		ServerSideEncryption: types.ServerSideEncryptionAes256,
-		StorageClass:         types.StorageClassStandard,             // Mejor para acceso frecuente
+		ServerSideEncryption: s3types.ServerSideEncryptionAes256,
+		StorageClass:         s3types.StorageClassStandard,           // Mejor para acceso frecuente
 		CacheControl:         aws.String("public, max-age=31536000"), // Cache por 1 año
 	})
 	if err != nil {

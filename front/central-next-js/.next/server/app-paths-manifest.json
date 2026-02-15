@@ -1,6 +1,0 @@
-{
-  "/(app)/calendar/page": "app/(app)/calendar/page.js",
-  "/(public)/auth/login/page": "app/(public)/auth/login/page.js",
-  "/(public)/login/page": "app/(public)/login/page.js",
-  "/_not-found/page": "app/_not-found/page.js"
-}

@@ -1,12 +1,25 @@
 package domain
 
-import "context"
+import (
+	"context"
+
+	"central_reserve/shared/types"
+)
 
 // ═══════════════════════════════════════════════════════════════════
 //
 //	HORIZONTAL PROPERTY PORTS (Interfaces)
 //
 // ═══════════════════════════════════════════════════════════════════
+
+// FileStoragePort - Puerto para operaciones de almacenamiento de archivos
+// Esta interfaz es definida por el dominio según sus necesidades
+type FileStoragePort interface {
+	UploadImage(ctx context.Context, file *types.FileUpload, folder string) (string, error)
+	DeleteImage(ctx context.Context, filename string) error
+	GetImageURL(filename string) string
+	ImageExists(ctx context.Context, filename string) (bool, error)
+}
 
 // HorizontalPropertyRepository - Puerto para el repositorio consolidado de propiedades horizontales
 type HorizontalPropertyRepository interface {

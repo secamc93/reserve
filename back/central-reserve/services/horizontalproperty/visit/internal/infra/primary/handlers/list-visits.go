@@ -3,6 +3,7 @@ package handlers
 import (
 	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/visit/internal/domain"
+	"central_reserve/services/horizontalproperty/visit/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/visit/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
 	"net/http"
@@ -87,22 +88,8 @@ func (h *VisitHandler) ListVisits(c *gin.Context) {
 		return
 	}
 
-	// Mapear resultado a respuesta
-	visitData := make([]response.VisitListData, len(result.Visits))
-	for i, v := range result.Visits {
-		visitData[i] = response.VisitListData{
-			ID:                 v.ID,
-			VisitorName:        v.VisitorName,
-			VisitorDNI:         v.VisitorDNI,
-			PropertyUnitNumber: v.PropertyUnitNumber,
-			VisitTypeName:      v.VisitTypeName,
-			VisitStatusName:    v.VisitStatusName,
-			ScheduledDate:      v.ScheduledDate,
-			ActualEntryTime:    v.ActualEntryTime,
-			ActualExitTime:     v.ActualExitTime,
-			CreatedAt:          v.CreatedAt,
-		}
-	}
+	// Mapear resultado a respuesta usando mapper
+	visitData := mappers.VisitListDTOsToResponse(result.Visits)
 
 	c.JSON(http.StatusOK, response.PaginatedVisitsResponse{
 		Success:    true,

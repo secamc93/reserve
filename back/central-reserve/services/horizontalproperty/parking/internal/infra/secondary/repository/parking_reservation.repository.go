@@ -6,6 +6,7 @@ import (
 	"math"
 
 	"central_reserve/services/horizontalproperty/parking/internal/domain"
+	"central_reserve/services/horizontalproperty/parking/internal/infra/secondary/repository/mappers"
 	"central_reserve/shared/db"
 	"central_reserve/shared/log"
 	"dbpostgres/app/infra/models"
@@ -68,7 +69,7 @@ func (r *ParkingReservationRepository) CreateParkingReservation(ctx context.Cont
 		return nil, fmt.Errorf("error cargando relaciones de reserva: %w", err)
 	}
 
-	return mapParkingReservationToDomain(model), nil
+	return mappers.ParkingReservationToDomain(model), nil
 }
 
 // GetParkingReservationByID obtiene una reserva por ID
@@ -87,7 +88,7 @@ func (r *ParkingReservationRepository) GetParkingReservationByID(ctx context.Con
 		return nil, fmt.Errorf("error obteniendo reserva: %w", err)
 	}
 
-	return mapParkingReservationToDomain(&reservation), nil
+	return mappers.ParkingReservationToDomain(&reservation), nil
 }
 
 // UpdateParkingReservation actualiza una reserva
@@ -149,35 +150,35 @@ func (r *ParkingReservationRepository) DeleteParkingReservation(ctx context.Cont
 func (r *ParkingReservationRepository) ListParkingReservations(ctx context.Context, filters domain.ParkingReservationFiltersDTO) (*domain.PaginatedParkingReservationsDTO, error) {
 	var total int64
 
-	query := r.db.Conn(ctx).Table("horizontal_property.parking_reservations pr").
-		Select("pr.*, ps.slot_number as parking_slot_number, pu.number as property_unit_number, r.name as resident_name, v.full_name as visitor_name, prs.name as status_name").
-		Joins("LEFT JOIN horizontal_property.parking_slots ps ON ps.id = pr.parking_slot_id").
-		Joins("LEFT JOIN horizontal_property.property_units pu ON pu.id = pr.property_unit_id").
-		Joins("LEFT JOIN horizontal_property.residents r ON r.id = pr.resident_id").
-		Joins("LEFT JOIN horizontal_property.visitors v ON v.id = pr.visitor_id").
-		Joins("LEFT JOIN horizontal_property.parking_reservation_statuses prs ON prs.id = pr.reservation_status_id").
-		Where("pr.business_id = ?", filters.BusinessID)
+	query := r.db.Conn(ctx).Model(&models.ParkingReservation{}).
+		Select("parking_reservations.*, ps.slot_number as parking_slot_number, pu.number as property_unit_number, r.name as resident_name, v.full_name as visitor_name, prs.name as status_name").
+		Joins("LEFT JOIN horizontal_property.parking_slots ps ON ps.id = parking_reservations.parking_slot_id").
+		Joins("LEFT JOIN horizontal_property.property_units pu ON pu.id = parking_reservations.property_unit_id").
+		Joins("LEFT JOIN horizontal_property.residents r ON r.id = parking_reservations.resident_id").
+		Joins("LEFT JOIN horizontal_property.visitors v ON v.id = parking_reservations.visitor_id").
+		Joins("LEFT JOIN horizontal_property.parking_reservation_statuses prs ON prs.id = parking_reservations.reservation_status_id").
+		Where("parking_reservations.business_id = ?", filters.BusinessID)
 
 	if filters.ParkingSlotID != nil {
-		query = query.Where("pr.parking_slot_id = ?", *filters.ParkingSlotID)
+		query = query.Where("parking_reservations.parking_slot_id = ?", *filters.ParkingSlotID)
 	}
 	if filters.PropertyUnitID != nil {
-		query = query.Where("pr.property_unit_id = ?", *filters.PropertyUnitID)
+		query = query.Where("parking_reservations.property_unit_id = ?", *filters.PropertyUnitID)
 	}
 	if filters.ResidentID != nil {
-		query = query.Where("pr.resident_id = ?", *filters.ResidentID)
+		query = query.Where("parking_reservations.resident_id = ?", *filters.ResidentID)
 	}
 	if filters.VisitorID != nil {
-		query = query.Where("pr.visitor_id = ?", *filters.VisitorID)
+		query = query.Where("parking_reservations.visitor_id = ?", *filters.VisitorID)
 	}
 	if filters.ReservationStatusID != nil {
-		query = query.Where("pr.reservation_status_id = ?", *filters.ReservationStatusID)
+		query = query.Where("parking_reservations.reservation_status_id = ?", *filters.ReservationStatusID)
 	}
 	if filters.StartDate != nil {
-		query = query.Where("pr.reservation_date >= ?", *filters.StartDate)
+		query = query.Where("parking_reservations.reservation_date >= ?", *filters.StartDate)
 	}
 	if filters.EndDate != nil {
-		query = query.Where("pr.reservation_date <= ?", *filters.EndDate)
+		query = query.Where("parking_reservations.reservation_date <= ?", *filters.EndDate)
 	}
 
 	// Contar total
@@ -288,7 +289,7 @@ func (r *ParkingReservationRepository) GetOverlappingReservations(ctx context.Co
 
 	result := make([]*domain.ParkingReservation, len(reservations))
 	for i, reservation := range reservations {
-		result[i] = mapParkingReservationToDomain(&reservation)
+		result[i] = mappers.ParkingReservationToDomain(&reservation)
 	}
 
 	return result, nil
@@ -307,7 +308,7 @@ func (r *ParkingReservationRepository) GetReservationsByDateRange(ctx context.Co
 
 	result := make([]*domain.ParkingReservation, len(reservations))
 	for i, reservation := range reservations {
-		result[i] = mapParkingReservationToDomain(&reservation)
+		result[i] = mappers.ParkingReservationToDomain(&reservation)
 	}
 
 	return result, nil
@@ -327,53 +328,8 @@ func (r *ParkingReservationRepository) GetPendingReservations(ctx context.Contex
 
 	result := make([]*domain.ParkingReservation, len(reservations))
 	for i, reservation := range reservations {
-		result[i] = mapParkingReservationToDomain(&reservation)
+		result[i] = mappers.ParkingReservationToDomain(&reservation)
 	}
 
 	return result, nil
-}
-
-// mapParkingReservationToDomain mapea el modelo a la entidad de dominio
-func mapParkingReservationToDomain(model *models.ParkingReservation) *domain.ParkingReservation {
-	return &domain.ParkingReservation{
-		ID:                  model.ID,
-		BusinessID:          model.BusinessID,
-		ParkingSlotID:       model.ParkingSlotID,
-		PropertyUnitID:      model.PropertyUnitID,
-		ResidentID:          model.ResidentID,
-		VisitorID:           model.VisitorID,
-		VisitorVehicleID:    model.VisitorVehicleID,
-		ReservationStatusID: model.ReservationStatusID,
-		ReservationDate:     model.ReservationDate,
-		StartTime:           model.StartTime,
-		EndTime:             model.EndTime,
-		DurationHours:       model.DurationHours,
-		VehiclePlate:        model.VehiclePlate,
-		VehicleBrand:        model.VehicleBrand,
-		VehicleModel:        model.VehicleModel,
-		VehicleColor:        model.VehicleColor,
-		QRCode:              model.QRCode,
-		AccessCode:          model.AccessCode,
-		CheckedInAt:         model.CheckedInAt,
-		CheckedOutAt:        model.CheckedOutAt,
-		CheckedInByUserID:   model.CheckedInByUserID,
-		CheckedOutByUserID:  model.CheckedOutByUserID,
-		RequiresApproval:    model.RequiresApproval,
-		ApprovedByUserID:    model.ApprovedByUserID,
-		ApprovedAt:          model.ApprovedAt,
-		RejectedByUserID:    model.RejectedByUserID,
-		RejectedAt:          model.RejectedAt,
-		RejectionReason:     model.RejectionReason,
-		NotifyResident:      model.NotifyResident,
-		NotifyAdmin:         model.NotifyAdmin,
-		NotificationSentAt:  model.NotificationSentAt,
-		ReminderSentAt:      model.ReminderSentAt,
-		CancelledAt:         model.CancelledAt,
-		CancelledByUserID:   model.CancelledByUserID,
-		CancellationReason:  model.CancellationReason,
-		Notes:               model.Notes,
-		ResidentNotes:       model.ResidentNotes,
-		CreatedAt:           model.CreatedAt,
-		UpdatedAt:           model.UpdatedAt,
-	}
 }

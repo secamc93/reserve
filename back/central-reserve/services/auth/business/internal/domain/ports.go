@@ -2,7 +2,8 @@ package domain
 
 import (
 	"context"
-	"mime/multipart"
+
+	"central_reserve/shared/types"
 )
 
 type IBusinessRepository interface {
@@ -36,8 +37,8 @@ type IBusinessRepository interface {
 
 // IS3Service define las operaciones de almacenamiento en S3
 type IS3Service interface {
-	UploadImage(ctx context.Context, file *multipart.FileHeader, folder string) (string, error) // Retorna path relativo
-	GetImageURL(filename string) string                                                         // Genera URL completa
+	UploadImage(ctx context.Context, file *types.FileUpload, folder string) (string, error) // Retorna path relativo
+	GetImageURL(filename string) string                                                      // Genera URL completa
 	DeleteImage(ctx context.Context, filename string) error
 	ImageExists(ctx context.Context, filename string) (bool, error)
 }

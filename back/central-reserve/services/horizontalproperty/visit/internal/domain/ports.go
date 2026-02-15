@@ -23,6 +23,12 @@ type VisitRepository interface {
 	// Tipos y estados
 	GetVisitTypes(ctx context.Context, businessID uint) ([]*VisitType, error)
 	GetVisitStatuses(ctx context.Context) ([]*VisitStatus, error)
+	// Métodos para state machine
+	GetVisitWithRelations(ctx context.Context, visitID uint) (*Visit, *VisitType, *VisitStatus, error)
+	GetVisitStatusByCode(ctx context.Context, code string) (*VisitStatus, error)
+	ChangeVisitStatus(ctx context.Context, visitID uint, newStatusCode string) error
+	SaveVisit(ctx context.Context, visit *Visit) error
+	GetPropertyUnitBusinessID(ctx context.Context, propertyUnitID uint) (uint, error)
 }
 
 // VisitCompanionRepository - Puerto para repositorio de acompañantes

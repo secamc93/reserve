@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"central_reserve/services/auth/roles/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/auth/roles/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/auth/roles/internal/infra/primary/handlers/request"
 	_ "central_reserve/services/auth/roles/internal/infra/primary/handlers/response" // Para documentación Swagger
 	"net/http"
@@ -35,7 +35,7 @@ func (h *handlers) CreateRole(c *gin.Context) {
 	}
 
 	// Convertir request a DTO
-	roleDTO := mapper.ToCreateRoleDTO(req)
+	roleDTO := mappers.ToCreateRoleDTO(req)
 
 	// Crear el rol
 	role, err := h.usecase.CreateRole(c.Request.Context(), roleDTO)
@@ -49,7 +49,7 @@ func (h *handlers) CreateRole(c *gin.Context) {
 	}
 
 	// Convertir a response
-	response := mapper.ToCreateRoleResponse(role)
+	response := mappers.ToCreateRoleResponse(role)
 
 	c.JSON(http.StatusCreated, response)
 }

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"central_reserve/services/horizontalproperty/visit/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/visit/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
 	"net/http"
@@ -54,23 +55,6 @@ func (h *VisitHandler) GetVisitByID(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response.VisitResponse{
 		Success: true,
-		Data: response.VisitData{
-			ID:                 visit.ID,
-			BusinessID:         visit.BusinessID,
-			VisitorID:          visit.VisitorID,
-			PropertyUnitID:     visit.PropertyUnitID,
-			ResidentID:         visit.ResidentID,
-			VisitTypeID:        visit.VisitTypeID,
-			VisitStatusID:      visit.VisitStatusID,
-			ScheduledDate:      visit.ScheduledDate,
-			ScheduledStartTime: visit.ScheduledStartTime,
-			ScheduledEndTime:   visit.ScheduledEndTime,
-			ActualEntryTime:    visit.ActualEntryTime,
-			ActualExitTime:     visit.ActualExitTime,
-			AuthorizationCode:  visit.AuthorizationCode,
-			QRCode:             visit.QRCode,
-			Purpose:            visit.Purpose,
-			Notes:              visit.Notes,
-		},
+		Data:    mappers.VisitToResponse(visit),
 	})
 }

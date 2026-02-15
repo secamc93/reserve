@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"central_reserve/services/auth/middleware"
-	"central_reserve/services/auth/users/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/auth/users/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/auth/users/internal/infra/primary/handlers/request"
 	"central_reserve/services/auth/users/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
@@ -66,7 +66,7 @@ func (h *handlers) GetUsersHandler(c *gin.Context) {
 	}
 
 	// Convertir request a filtros del dominio
-	filters := mapper.ToUserFilters(req)
+	filters := mappers.ToUserFilters(req)
 
 	// Las validaciones ya están manejadas por el binding automático
 	// Los valores por defecto y las validaciones están en las etiquetas del struct
@@ -89,7 +89,7 @@ func (h *handlers) GetUsersHandler(c *gin.Context) {
 		return
 	}
 
-	response := mapper.ToUserListResponse(userListDTO)
+	response := mappers.ToUserListResponse(userListDTO)
 
 	h.logger.Info(ctx).
 		Int("count", len(userListDTO.Users)).

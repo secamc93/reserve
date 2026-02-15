@@ -7,7 +7,7 @@ import (
 
 	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/unit/internal/domain"
-	"central_reserve/services/horizontalproperty/unit/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/horizontalproperty/unit/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/unit/internal/infra/primary/handlers/request"
 	"central_reserve/services/horizontalproperty/unit/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
@@ -86,7 +86,7 @@ func (h *PropertyUnitHandler) CreatePropertyUnit(c *gin.Context) {
 	// Log de inicio de operación
 	h.logger.Info(ctx).Str("number", req.Number).Str("unit_type", req.UnitType).Msg("Iniciando creación de unidad de propiedad")
 
-	dto := mapper.MapCreateRequestToDTO(req, businessID)
+	dto := mappers.MapCreateRequestToDTO(req, businessID)
 	created, err := h.useCase.CreatePropertyUnit(ctx, dto)
 	if err != nil {
 		status := http.StatusInternalServerError
@@ -124,7 +124,7 @@ func (h *PropertyUnitHandler) CreatePropertyUnit(c *gin.Context) {
 	// Log de éxito
 	h.logger.Info(ctx).Uint("created_unit_id", created.ID).Str("number", req.Number).Msg("Unidad de propiedad creada exitosamente")
 
-	responseData := mapper.MapDetailDTOToResponse(created)
+	responseData := mappers.MapDetailDTOToResponse(created)
 	c.JSON(http.StatusCreated, response.PropertyUnitSuccess{
 		Success: true,
 		Message: "Unidad creada exitosamente",

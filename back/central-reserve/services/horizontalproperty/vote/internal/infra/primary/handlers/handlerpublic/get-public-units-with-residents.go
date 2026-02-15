@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"os"
 
-	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/response"
 	sharedjwt "central_reserve/shared/jwt"
 
@@ -79,7 +79,7 @@ func (h *PublicHandler) GetPublicUnitsWithResidents(c *gin.Context) {
 	}
 
 	// Mapear a response con snake_case
-	unitsResponse := mapper.MapUnitsWithResidentsToResponses(units)
+	unitsResponse := mappers.MapUnitsWithResidentsToResponses(units)
 
 	fmt.Printf("✅ [VOTACION PUBLICA - UNIDADES CON RESIDENTES LISTADAS]\n")
 	fmt.Printf("   Total: %d unidades\n\n", len(units))

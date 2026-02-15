@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"os"
 
-	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/response"
 	sharedjwt "central_reserve/shared/jwt"
 
@@ -106,8 +106,8 @@ func (h *PublicHandler) GetPublicVotingStats(c *gin.Context) {
 		totalVotes += result.VoteCount
 	}
 
-	resultsResponse := mapper.MapVotingResultsToResponses(results)
-	unitsResponse := mapper.MapVotingDetailsByUnitToResponses(unitDetails)
+	resultsResponse := mappers.MapVotingResultsToResponses(results)
+	unitsResponse := mappers.MapVotingDetailsByUnitToResponses(unitDetails)
 
 	fmt.Printf("✅ [VOTACION PUBLICA - DETALLE OBTENIDO]\n")
 	fmt.Printf("   Total de unidades: %d\n", totalUnits)

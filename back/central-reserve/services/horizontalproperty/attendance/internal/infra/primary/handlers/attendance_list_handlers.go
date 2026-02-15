@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"central_reserve/services/auth/middleware"
+	"central_reserve/services/horizontalproperty/attendance/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/attendance/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
 
@@ -14,7 +15,7 @@ import (
 // ListAttendanceLists godoc
 //
 //	@Summary		Listar listas de asistencia
-//	@Description	Lista todas las listas de asistencia por business con filtros opcionales
+//	@Description	Lista todas las listas de asistencia por business con filtros opcionales y paginación
 //	@Tags			Asistencia
 //	@Security		BearerAuth
 //	@Accept			json
@@ -23,6 +24,8 @@ import (
 //	@Param			title		query	string	false	"Filtro por título"
 //	@Param			is_active	query	bool	false	"Filtro por activo"
 //	@Param			voting_group_id	query	uint	false	"Filtro por ID del grupo de votación"
+//	@Param			page		query	int		false	"Página (default 1)"
+//	@Param			page_size	query	int		false	"Tamaño de página (default 10, max 100)"
 //	@Success		200			{object}	object
 //	@Failure		400			{object}	object
 //	@Failure		500			{object}	object
@@ -56,6 +59,20 @@ func (h *AttendanceHandler) ListAttendanceLists(c *gin.Context) {
 	ctx := c.Request.Context()
 	ctx = log.WithBusinessIDCtx(ctx, businessID)
 
+	// Parse pagination
+	page := 1
+	pageSize := 10
+	if v := c.Query("page"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			page = n
+		}
+	}
+	if v := c.Query("page_size"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			pageSize = n
+		}
+	}
+
 	// Log de información con contexto estructurado
 	h.logger.Info(ctx).Uint("business_id", businessID).Bool("is_super_admin", isSuperAdmin).Msg("Listando listas de asistencia")
 
@@ -69,16 +86,31 @@ func (h *AttendanceHandler) ListAttendanceLists(c *gin.Context) {
 	if v := c.Query("voting_group_id"); v != "" {
 		filters["voting_group_id"] = parseUint(v)
 	}
-	lists, err := h.attendanceUseCase.ListAttendanceLists(ctx, businessID, filters)
+
+	result, err := h.attendanceUseCase.ListAttendanceListsPaged(ctx, businessID, filters, page, pageSize)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Success: false, Message: "Error listando listas de asistencia", Error: err.Error()})
 		return
 	}
-	out := make([]response.AttendanceListResponse, len(lists))
-	for i, l := range lists {
-		out[i] = response.AttendanceListResponse(l)
-	}
-	c.JSON(http.StatusOK, response.SuccessResponse[[]response.AttendanceListResponse]{Success: true, Message: "Listas obtenidas", Data: out})
+
+	out := mappers.MapAttendanceListDTOsToResponse(result.Data)
+
+	// Headers de paginación
+	c.Header("X-Total-Count", strconv.FormatInt(result.Total, 10))
+	c.Header("X-Page", strconv.Itoa(result.Page))
+	c.Header("X-Page-Size", strconv.Itoa(result.PageSize))
+	c.Header("X-Total-Pages", strconv.Itoa(result.TotalPages))
+
+	// Respuesta con metadatos de paginación
+	c.JSON(http.StatusOK, gin.H{
+		"success":     true,
+		"message":     "Listas obtenidas",
+		"data":        out,
+		"total":       result.Total,
+		"page":        result.Page,
+		"page_size":   result.PageSize,
+		"total_pages": result.TotalPages,
+	})
 }
 
 func (h *AttendanceHandler) GetAttendanceListByID(c *gin.Context) {
@@ -200,31 +232,7 @@ func (h *AttendanceHandler) GetAttendanceRecordsByList(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Success: false, Message: "Error obteniendo registros", Error: err.Error()})
 		return
 	}
-	out := make([]response.AttendanceRecordResponse, len(dto.Data))
-	for i, r := range dto.Data {
-		out[i] = response.AttendanceRecordResponse{
-			ID:                r.ID,
-			AttendanceListID:  r.AttendanceListID,
-			PropertyUnitID:    r.PropertyUnitID,
-			ResidentID:        r.ResidentID,
-			ProxyID:           r.ProxyID,
-			AttendedAsOwner:   r.AttendedAsOwner,
-			AttendedAsProxy:   r.AttendedAsProxy,
-			Signature:         r.Signature,
-			SignatureDate:     r.SignatureDate,
-			SignatureMethod:   r.SignatureMethod,
-			VerifiedBy:        r.VerifiedBy,
-			VerificationDate:  r.VerificationDate,
-			VerificationNotes: r.VerificationNotes,
-			Notes:             r.Notes,
-			IsValid:           r.IsValid,
-			CreatedAt:         r.CreatedAt,
-			UpdatedAt:         r.UpdatedAt,
-			ResidentName:      r.ResidentName,
-			ProxyName:         r.ProxyName,
-			UnitNumber:        r.UnitNumber,
-		}
-	}
+	out := mappers.MapAttendanceRecordDTOsToResponse(dto.Data)
 	// Headers de paginación simples
 	c.Header("X-Total-Count", strconv.FormatInt(dto.Total, 10))
 	c.Header("X-Page", strconv.Itoa(dto.Page))
@@ -258,12 +266,15 @@ func (h *AttendanceHandler) GetAttendanceRecordsByList(c *gin.Context) {
 //	@Router			/attendance/lists/{id}/export-excel [get]
 func (h *AttendanceHandler) ExportAttendanceExcel(c *gin.Context) {
 	id := parseUint(c.Param("id"))
-	// obtener registros y título
-	records, err := h.attendanceUseCase.GetAttendanceRecordsByList(c.Request.Context(), id)
+
+	// Obtener TODOS los registros usando paginación con tamaño grande
+	// Para exportar, necesitamos todos los datos, así que usamos pageSize alto
+	dto, err := h.attendanceUseCase.GetAttendanceRecordsByListPaged(c.Request.Context(), id, "", nil, 1, 10000)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Success: false, Message: "Error obteniendo registros", Error: err.Error()})
 		return
 	}
+	records := dto.Data
 	title, _ := h.attendanceUseCase.GetVotingGroupTitleByListID(c.Request.Context(), id)
 
 	// generar CSV simple (compatible Excel) por rapidez

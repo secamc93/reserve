@@ -3,7 +3,7 @@ package handlers
 import (
 	"central_reserve/services/auth/middleware"
 	"central_reserve/services/auth/roles/internal/domain"
-	"central_reserve/services/auth/roles/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/auth/roles/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/auth/roles/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
 	"net/http"
@@ -116,7 +116,7 @@ func (h *handlers) GetRolesHandler(c *gin.Context) {
 		return
 	}
 
-	response := mapper.ToRoleListResponse(roleListDTO)
+	response := mappers.ToRoleListResponse(roleListDTO)
 
 	h.logger.Info(ctx).
 		Int("count", len(roleListDTO.Roles)).

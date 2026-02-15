@@ -2,11 +2,12 @@ package handlers
 
 import (
 	"central_reserve/services/auth/users/internal/domain"
-	"central_reserve/services/auth/users/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/auth/users/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/auth/users/internal/infra/primary/handlers/request"
 	"central_reserve/services/auth/users/internal/infra/primary/handlers/response"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -80,7 +81,15 @@ func (h *handlers) Createhandlers(c *gin.Context) {
 		h.logger.Info().Str("email", req.Email).Str("filename", req.AvatarFile.Filename).Int64("size", req.AvatarFile.Size).Msg("Archivo de avatar recibido en creación")
 	}
 
-	userDTO := mapper.ToCreateUserDTO(req)
+	userDTO, err := mappers.ToCreateUserDTO(req)
+	if err != nil {
+		h.logger.Error().Err(err).Msg("Error al procesar archivo de avatar")
+		c.JSON(http.StatusBadRequest, response.UserErrorResponse{
+			Error: fmt.Sprintf("Error al procesar archivo: %s", err.Error()),
+		})
+		return
+	}
+
 	email, password, message, err := h.usecase.CreateUser(c.Request.Context(), userDTO)
 	if err != nil {
 		h.logger.Error().Err(err).Msg("Error al crear usuario desde el caso de uso")

@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"central_reserve/services/horizontalproperty/attendance/internal/domain"
+	"central_reserve/services/horizontalproperty/attendance/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/attendance/internal/infra/primary/handlers/request"
 	"central_reserve/services/horizontalproperty/attendance/internal/infra/primary/handlers/response"
 
@@ -32,23 +32,11 @@ func (h *AttendanceHandler) UpdateProxy(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "Datos inválidos", Error: err.Error()})
 		return
 	}
-	dto := domain.UpdateProxyDTO{
-		ProxyName:       req.ProxyName,
-		ProxyDni:        req.ProxyDni,
-		ProxyEmail:      req.ProxyEmail,
-		ProxyPhone:      req.ProxyPhone,
-		ProxyAddress:    req.ProxyAddress,
-		ProxyType:       req.ProxyType,
-		IsActive:        req.IsActive,
-		StartDate:       req.StartDate,
-		EndDate:         req.EndDate,
-		PowerOfAttorney: req.PowerOfAttorney,
-		Notes:           req.Notes,
-	}
+	dto := mappers.MapUpdateProxyRequestToDTO(req)
 	updated, err := h.attendanceUseCase.UpdateProxy(c.Request.Context(), id, dto)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Success: false, Message: "Error actualizando apoderado", Error: err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, response.ProxySuccess{Success: true, Message: "Apoderado actualizado", Data: response.ProxyResponse(*updated)})
+	c.JSON(http.StatusOK, response.ProxySuccess{Success: true, Message: "Apoderado actualizado", Data: mappers.MapProxyDTOToResponse(*updated)})
 }

@@ -3,7 +3,7 @@ package handlers
 import (
 	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/resident/internal/domain"
-	"central_reserve/services/horizontalproperty/resident/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/horizontalproperty/resident/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/resident/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
 	"net/http"
@@ -83,7 +83,7 @@ func (h *ResidentHandler) GetResidentByID(c *gin.Context) {
 	}
 
 	h.logger.Info(ctx).Uint("resident_id", uint(resID)).Str("email", resident.Email).Str("dni", resident.Dni).Msg("Residente obtenido exitosamente")
-	responseData := mapper.MapDetailDTOToResponse(resident)
+	responseData := mappers.MapDetailDTOToResponse(resident)
 	c.JSON(http.StatusOK, response.ResidentSuccess{
 		Success: true,
 		Message: "Residente obtenido exitosamente",

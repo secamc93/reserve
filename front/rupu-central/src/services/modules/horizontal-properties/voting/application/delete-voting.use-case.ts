@@ -2,7 +2,7 @@
  * Use Case: Eliminar/Desactivar votación
  */
 
-import { VotingsRepository } from '../infrastructure/repositories';
+import { IVotingsRepository } from '../domain/ports/votings.repository';
 
 export interface DeleteVotingParams {
   token: string;
@@ -18,7 +18,7 @@ export interface DeleteVotingResult {
 export type DeleteVotingInput = DeleteVotingParams;
 
 export class DeleteVotingUseCase {
-  constructor(private repository: VotingsRepository) {}
+  constructor(private repository: IVotingsRepository) {}
 
   async execute(input: DeleteVotingInput): Promise<DeleteVotingResult> {
     // Validar que el ID de la votación sea válido

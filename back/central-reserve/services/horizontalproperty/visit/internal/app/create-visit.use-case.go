@@ -6,9 +6,7 @@ import (
 	"time"
 
 	"central_reserve/services/horizontalproperty/visit/internal/domain"
-	"central_reserve/services/horizontalproperty/visit/internal/infra/secondary/repository"
 	"central_reserve/shared/log"
-	"dbpostgres/app/infra/models"
 )
 
 // CreateVisit crea una nueva visita
@@ -29,12 +27,8 @@ func (uc *visitUseCase) CreateVisit(ctx context.Context, dto domain.CreateVisitD
 	// Si business_id es 0 (super admin), obtener el business_id desde la property_unit
 	businessID := dto.BusinessID
 	if businessID == 0 {
-		visitRepo, ok := uc.visitRepo.(*repository.VisitRepository)
-		if !ok {
-			return nil, fmt.Errorf("repositorio de visitas no es del tipo esperado")
-		}
 		var err error
-		businessID, err = visitRepo.GetPropertyUnitBusinessID(ctx, dto.PropertyUnitID)
+		businessID, err = uc.visitRepo.GetPropertyUnitBusinessID(ctx, dto.PropertyUnitID)
 		if err != nil {
 			return nil, fmt.Errorf("error obteniendo business_id desde unidad de propiedad: %w", err)
 		}
@@ -106,10 +100,6 @@ func generateAuthorizationCode() string {
 }
 
 // getVisitStatusByCode obtiene un estado de visita por código usando el repositorio
-func (uc *visitUseCase) getVisitStatusByCode(ctx context.Context, code string) (*models.VisitStatus, error) {
-	visitRepo, ok := uc.visitRepo.(*repository.VisitRepository)
-	if !ok {
-		return nil, fmt.Errorf("repositorio de visitas no es del tipo esperado")
-	}
-	return visitRepo.GetVisitStatusByCode(ctx, code)
+func (uc *visitUseCase) getVisitStatusByCode(ctx context.Context, code string) (*domain.VisitStatus, error) {
+	return uc.visitRepo.GetVisitStatusByCode(ctx, code)
 }

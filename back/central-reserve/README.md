@@ -259,6 +259,86 @@ podman rmi public.ecr.aws/d3a6d4r1/cam/reserve:old-version
 
 ---
 
+## 🧪 Testing & Coverage
+
+### Comandos Rápidos
+
+```bash
+# Ejecutar todos los tests
+make test
+
+# Tests con coverage y reporte HTML
+make test-coverage
+
+# Ver resumen de coverage en terminal
+make test-coverage-summary
+
+# Reporte detallado de todos los módulos
+make coverage-report
+```
+
+### Tests por Módulo
+
+```bash
+# Todos los módulos de Horizontal Property
+make test-horizontalproperty
+
+# Módulos individuales
+make test-hp-visit       # Módulo de visitas
+make test-hp-parking     # Módulo de parqueaderos
+make test-hp-vote        # Módulo de votaciones
+make test-auth           # Módulo de autenticación
+
+# Ver lista completa
+make help | grep test-hp
+```
+
+### Tests Avanzados
+
+```bash
+make test-short          # Solo tests unitarios (rápidos)
+make test-race           # Detectar race conditions
+make test-bench          # Benchmarks de performance
+```
+
+### Reportes de Coverage
+
+Después de ejecutar `make coverage-report`, se generan reportes HTML en `coverage-reports/`:
+
+```
+coverage-reports/
+├── coverage-all.html         # ⭐ Reporte consolidado del proyecto
+├── coverage-visit.html       # Reporte por módulo
+├── coverage-vote.html
+└── ...
+```
+
+**Abre los archivos `.html` en tu navegador** para ver:
+- Código fuente con líneas cubiertas (verde) y no cubiertas (rojo)
+- Porcentaje por archivo
+- Navegación por paquetes
+
+### Objetivos de Coverage
+
+| Capa | Target |
+|------|--------|
+| **Domain** | > 90% |
+| **Application (Use Cases)** | > 80% |
+| **Handlers** | > 70% |
+| **Repository** | > 60% |
+
+### Limpieza
+
+```bash
+make test-clean          # Eliminar archivos de coverage
+```
+
+### 📚 Documentación Completa
+
+Ver **[TESTING.md](TESTING.md)** para documentación detallada de todos los comandos, mejores prácticas, y troubleshooting.
+
+---
+
 ## 📊 Monitoreo y Salud
 
 ### **Healthcheck**

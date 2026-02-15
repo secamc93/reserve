@@ -8,7 +8,7 @@ import (
 
 	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/unit/internal/domain"
-	"central_reserve/services/horizontalproperty/unit/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/horizontalproperty/unit/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/unit/internal/infra/primary/handlers/request"
 	"central_reserve/services/horizontalproperty/unit/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
@@ -82,7 +82,7 @@ func (h *PropertyUnitHandler) UpdatePropertyUnit(c *gin.Context) {
 	// Log de inicio de operación
 	h.logger.Info(ctx).Uint("unit_id", uint(unitID)).Str("number", *req.Number).Msg("Iniciando actualización de unidad de propiedad")
 
-	dto := mapper.MapUpdateRequestToDTO(req)
+	dto := mappers.MapUpdateRequestToDTO(req)
 	updated, err := h.useCase.UpdatePropertyUnit(ctx, uint(unitID), dto)
 	if err != nil {
 		status := http.StatusInternalServerError
@@ -120,7 +120,7 @@ func (h *PropertyUnitHandler) UpdatePropertyUnit(c *gin.Context) {
 	// Log de éxito
 	h.logger.Info(ctx).Uint("unit_id", uint(unitID)).Str("number", updated.Number).Msg("Unidad de propiedad actualizada exitosamente")
 
-	responseData := mapper.MapDetailDTOToResponse(updated)
+	responseData := mappers.MapDetailDTOToResponse(updated)
 	c.JSON(http.StatusOK, response.PropertyUnitSuccess{
 		Success: true,
 		Message: "Unidad actualizada exitosamente",

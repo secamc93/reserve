@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"central_reserve/services/auth/login/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/auth/login/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/auth/login/internal/infra/primary/handlers/response"
 	"central_reserve/services/auth/middleware"
 	"central_reserve/shared/log"
@@ -81,7 +81,7 @@ func (h *handlers) GetUserRolesPermissionsHandler(c *gin.Context) {
 	}
 
 	// Convertir respuesta de dominio a response
-	rolesPermissionsResponse := mapper.ToUserRolesPermissionsResponse(rolesPermissions)
+	rolesPermissionsResponse := mappers.ToUserRolesPermissionsResponse(rolesPermissions)
 
 	h.logger.Info(ctx).
 		Uint("user_id", uint(userID)).

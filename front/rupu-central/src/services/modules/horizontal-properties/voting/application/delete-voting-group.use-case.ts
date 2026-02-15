@@ -2,7 +2,7 @@
  * Use Case: Eliminar/Desactivar grupo de votación
  */
 
-import { VotingGroupsRepository } from '../infrastructure/repositories/voting-groups.repository';
+import { IVotingGroupsRepository } from '../domain/ports/voting-groups.repository';
 
 export interface DeleteVotingGroupParams {
   token: string;
@@ -17,7 +17,7 @@ export interface DeleteVotingGroupResult {
 export type DeleteVotingGroupInput = DeleteVotingGroupParams;
 
 export class DeleteVotingGroupUseCase {
-  constructor(private repository: VotingGroupsRepository) {}
+  constructor(private repository: IVotingGroupsRepository) {}
 
   async execute(input: DeleteVotingGroupInput): Promise<DeleteVotingGroupResult> {
     // Validar que el ID del grupo sea válido

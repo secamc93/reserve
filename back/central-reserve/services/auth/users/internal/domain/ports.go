@@ -3,7 +3,8 @@ package domain
 import (
 	"context"
 	"io"
-	"mime/multipart"
+
+	"central_reserve/shared/types"
 )
 
 // IUserRepository define las operaciones del repositorio de usuarios
@@ -38,5 +39,5 @@ type IS3Service interface {
 	DownloadFile(ctx context.Context, filename string) (io.ReadSeeker, error)
 	FileExists(ctx context.Context, filename string) (bool, error)
 	GetFileURL(ctx context.Context, filename string) (string, error)
-	UploadImage(ctx context.Context, file *multipart.FileHeader, folder string) (string, error)
+	UploadImage(ctx context.Context, file *types.FileUpload, folder string) (string, error)
 }

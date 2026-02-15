@@ -160,3 +160,21 @@ type PaginatedAttendanceRecordsDTO struct {
 	PageSize   int
 	TotalPages int
 }
+
+// PaginatedAttendanceListsDTO - respuesta paginada de listas de asistencia
+type PaginatedAttendanceListsDTO struct {
+	Data       []AttendanceListDTO
+	Total      int64
+	Page       int
+	PageSize   int
+	TotalPages int
+}
+
+// PaginatedProxiesDTO - respuesta paginada de apoderados
+type PaginatedProxiesDTO struct {
+	Data       []ProxyDTO
+	Total      int64
+	Page       int
+	PageSize   int
+	TotalPages int
+}

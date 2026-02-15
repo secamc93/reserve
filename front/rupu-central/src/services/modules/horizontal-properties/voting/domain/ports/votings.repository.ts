@@ -138,8 +138,19 @@ export interface CreateVoteParams {
   data: CreateVoteDTO;
 }
 
+// ✅ NUEVO: Parámetros para marcar asistencia
+export interface MarkUnitAttendanceParams {
+  token: string;
+  businessId: number;
+  groupId: number;
+  votingId: number;
+  unitId: number;
+  markAttendance: boolean;
+}
+
 export interface IVotesRepository {
   getVotes(params: GetVotesParams): Promise<VotesList>;
   createVote(params: CreateVoteParams): Promise<Vote>;
+  markUnitAttendance(params: MarkUnitAttendanceParams): Promise<void>; // ✅ NUEVO
 }
 

@@ -1,8 +1,9 @@
 package domain
 
 import (
-	"mime/multipart"
 	"time"
+
+	"central_reserve/shared/types"
 )
 
 // UserAuthInfo representa la información de autenticación de un usuario
@@ -58,8 +59,8 @@ type CreateUserDTO struct {
 	Email       string
 	Password    string
 	Phone       string
-	AvatarURL   string                // URL completa (para compatibilidad)
-	AvatarFile  *multipart.FileHeader // Archivo de imagen para subir a S3
+	AvatarURL   string             // URL completa (para compatibilidad)
+	AvatarFile  *types.FileUpload  // Archivo de imagen para subir a S3
 	IsActive    bool
 	BusinessIDs []uint // Businesses a relacionar con el usuario
 }
@@ -69,8 +70,8 @@ type UpdateUserDTO struct {
 	Name         string
 	Email        string
 	Phone        string
-	AvatarURL    string                // URL completa (para compatibilidad)
-	AvatarFile   *multipart.FileHeader // Archivo de imagen para subir a S3
+	AvatarURL    string             // URL completa (para compatibilidad)
+	AvatarFile   *types.FileUpload  // Archivo de imagen para subir a S3
 	RemoveAvatar bool
 	IsActive     bool
 	BusinessIDs  []uint // Businesses a mantener (sobrescribe relaciones)

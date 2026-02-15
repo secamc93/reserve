@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"central_reserve/services/restaurants/rooms/internal/infra/primary/controllers/roomhandler/mapper"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -36,7 +38,7 @@ func (h *RoomHandler) GetRoomsHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "Salas obtenidas exitosamente",
-		"data":    rooms,
+		"data":    mapper.RoomsToResponse(rooms),
 	})
 }
 
@@ -84,6 +86,6 @@ func (h *RoomHandler) GetRoomsByBusinessHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "Salas del negocio obtenidas exitosamente",
-		"data":    rooms,
+		"data":    mapper.RoomsToResponse(rooms),
 	})
 }

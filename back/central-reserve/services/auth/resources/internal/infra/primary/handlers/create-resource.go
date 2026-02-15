@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"central_reserve/services/auth/middleware"
-	"central_reserve/services/auth/resources/internal/domain"
+	"central_reserve/services/auth/resources/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/auth/resources/internal/infra/primary/handlers/request"
 	"central_reserve/services/auth/resources/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
@@ -56,12 +56,8 @@ func (h *ResourceHandler) CreateResourceHandler(c *gin.Context) {
 
 	h.logger.Info().Str("name", req.Name).Msg("Datos de creación de recurso recibidos")
 
-	// Convertir a DTO de dominio
-	createDTO := domain.CreateResourceDTO{
-		Name:           req.Name,
-		Description:    req.Description,
-		BusinessTypeID: req.BusinessTypeID,
-	}
+	// Convertir a DTO de dominio usando mapper
+	createDTO := mappers.CreateResourceRequestToDTO(req)
 
 	// Llamar al caso de uso
 	result, err := h.usecase.CreateResource(ctx, createDTO)
@@ -90,16 +86,8 @@ func (h *ResourceHandler) CreateResourceHandler(c *gin.Context) {
 		return
 	}
 
-	// Convertir a respuesta HTTP
-	resourceResponse := response.ResourceResponse{
-		ID:               result.ID,
-		Name:             result.Name,
-		Description:      result.Description,
-		BusinessTypeID:   result.BusinessTypeID,
-		BusinessTypeName: result.BusinessTypeName,
-		CreatedAt:        result.CreatedAt,
-		UpdatedAt:        result.UpdatedAt,
-	}
+	// Convertir a respuesta HTTP usando mapper
+	resourceResponse := mappers.ResourceDTOToResponse(result)
 
 	h.logger.Info(ctx).
 		Uint("resource_id", result.ID).

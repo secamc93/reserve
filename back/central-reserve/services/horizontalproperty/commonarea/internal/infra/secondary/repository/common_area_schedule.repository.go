@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"central_reserve/services/horizontalproperty/commonarea/internal/domain"
+	"central_reserve/services/horizontalproperty/commonarea/internal/infra/secondary/repository/mappers"
 	"central_reserve/shared/db"
 	"central_reserve/shared/log"
 	"dbpostgres/app/infra/models"
@@ -39,7 +40,7 @@ func (r *CommonAreaScheduleRepository) CreateSchedule(ctx context.Context, sched
 		return nil, fmt.Errorf("error creando horario: %w", err)
 	}
 
-	return mapScheduleToDomain(model), nil
+	return mappers.ScheduleToDomain(model), nil
 }
 
 // GetSchedulesByCommonAreaID obtiene todos los horarios de una zona común
@@ -54,7 +55,7 @@ func (r *CommonAreaScheduleRepository) GetSchedulesByCommonAreaID(ctx context.Co
 
 	result := make([]*domain.CommonAreaSchedule, len(schedules))
 	for i, s := range schedules {
-		result[i] = mapScheduleToDomain(&s)
+		result[i] = mappers.ScheduleToDomain(&s)
 	}
 
 	return result, nil
@@ -72,7 +73,7 @@ func (r *CommonAreaScheduleRepository) GetScheduleForDay(ctx context.Context, co
 		return nil, fmt.Errorf("error obteniendo horario: %w", err)
 	}
 
-	return mapScheduleToDomain(&schedule), nil
+	return mappers.ScheduleToDomain(&schedule), nil
 }
 
 // UpdateSchedule actualiza un horario
@@ -96,18 +97,4 @@ func (r *CommonAreaScheduleRepository) DeleteSchedule(ctx context.Context, id ui
 		return fmt.Errorf("error eliminando horario: %w", err)
 	}
 	return nil
-}
-
-// mapScheduleToDomain mapea modelo a entidad de dominio
-func mapScheduleToDomain(m *models.CommonAreaSchedule) *domain.CommonAreaSchedule {
-	return &domain.CommonAreaSchedule{
-		ID:           m.ID,
-		CommonAreaID: m.CommonAreaID,
-		DayOfWeek:    m.DayOfWeek,
-		StartTime:    m.StartTime,
-		EndTime:      m.EndTime,
-		IsActive:     m.IsActive,
-		CreatedAt:    m.CreatedAt,
-		UpdatedAt:    m.UpdatedAt,
-	}
 }

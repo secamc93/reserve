@@ -11,6 +11,7 @@ import (
 	"dbpostgres/app/infra/models"
 
 	"gorm.io/gorm"
+	"central_reserve/services/horizontalproperty/visit/internal/infra/secondary/repository/mappers"
 )
 
 type VisitBlacklistRepository struct {
@@ -49,7 +50,7 @@ func (r *VisitBlacklistRepository) CreateBlacklistEntry(ctx context.Context, ent
 		r.logger.Warn().Err(err).Uint("visitor_id", entry.VisitorID).Msg("Error actualizando flag has_blacklist")
 	}
 
-	return mapBlacklistToDomain(model), nil
+	return mappers.BlacklistToDomain(model), nil
 }
 
 // GetBlacklistEntry obtiene una entrada de lista negra
@@ -64,7 +65,7 @@ func (r *VisitBlacklistRepository) GetBlacklistEntry(ctx context.Context, busine
 		return nil, fmt.Errorf("error obteniendo entrada de lista negra: %w", err)
 	}
 
-	return mapBlacklistToDomain(&entry), nil
+	return mappers.BlacklistToDomain(&entry), nil
 }
 
 // IsVisitorBlacklisted verifica si un visitante está en lista negra
@@ -127,27 +128,10 @@ func (r *VisitBlacklistRepository) ListBlacklist(ctx context.Context, businessID
 
 	result := make([]*domain.VisitBlacklist, len(entries))
 	for i, e := range entries {
-		result[i] = mapBlacklistToDomain(&e)
+		result[i] = mappers.BlacklistToDomain(&e)
 	}
 
 	return result, nil
 }
 
 // mapBlacklistToDomain mapea modelo a entidad de dominio
-func mapBlacklistToDomain(m *models.VisitBlacklist) *domain.VisitBlacklist {
-	return &domain.VisitBlacklist{
-		ID:                m.ID,
-		BusinessID:        m.BusinessID,
-		VisitorID:         m.VisitorID,
-		Reason:            m.Reason,
-		BlockedByUserID:   m.BlockedByUserID,
-		BlockedAt:         m.BlockedAt,
-		UnblockedAt:       m.UnblockedAt,
-		UnblockedByUserID: m.UnblockedByUserID,
-		UnblockReason:     m.UnblockReason,
-		IsActive:          m.IsActive,
-		Notes:             m.Notes,
-		CreatedAt:         m.CreatedAt,
-		UpdatedAt:         m.UpdatedAt,
-	}
-}

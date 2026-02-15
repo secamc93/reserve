@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"central_reserve/services/auth/roles/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/auth/roles/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/auth/roles/internal/infra/primary/handlers/response"
 	"net/http"
 	"strconv"
@@ -45,7 +45,7 @@ func (h *handlers) GetRolesByScopeHandler(c *gin.Context) {
 		return
 	}
 
-	response := mapper.ToRoleListResponseFromSlice(roles)
+	response := mappers.ToRoleListResponseFromSlice(roles)
 
 	h.logger.Info().Uint64("scope_id", scopeID).Int("count", len(roles)).Msg("Roles por scope obtenidos exitosamente")
 	c.JSON(http.StatusOK, response)

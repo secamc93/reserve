@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"central_reserve/services/horizontalproperty/attendance/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/attendance/internal/infra/primary/handlers/response"
 
 	"github.com/gin-gonic/gin"
@@ -58,17 +59,7 @@ func (h *AttendanceHandler) GenerateAttendanceList(c *gin.Context) {
 	}
 
 	// Mapear a response
-	responseData := response.AttendanceListResponse{
-		ID:              created.ID,
-		VotingGroupID:   created.VotingGroupID,
-		Title:           created.Title,
-		Description:     created.Description,
-		IsActive:        created.IsActive,
-		CreatedByUserID: created.CreatedByUserID,
-		Notes:           created.Notes,
-		CreatedAt:       created.CreatedAt,
-		UpdatedAt:       created.UpdatedAt,
-	}
+	responseData := mappers.MapAttendanceListDTOToResponse(*created)
 
 	h.logger.Info().
 		Uint("attendance_list_id", created.ID).

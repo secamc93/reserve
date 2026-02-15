@@ -12,6 +12,7 @@ interface VotingDetailsResult {
       resident_name: string | null;
       resident_id: number | null;
       has_voted: boolean;
+      has_attendance: boolean; // ✅ NUEVO: Indica si tiene asistencia marcada
       option_text: string | null;
       option_code: string | null;
       option_color: string | null; // Color del voto decidido

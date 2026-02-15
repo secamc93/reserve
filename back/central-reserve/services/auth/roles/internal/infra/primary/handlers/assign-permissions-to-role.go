@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"central_reserve/services/auth/roles/internal/infra/primary/handlers/mapper"
+	"central_reserve/services/auth/roles/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/auth/roles/internal/infra/primary/handlers/request"
 	"central_reserve/services/auth/roles/internal/infra/primary/handlers/response"
 	"net/http"
@@ -70,7 +70,7 @@ func (h *handlers) AssignPermissionsToRole(c *gin.Context) {
 	}
 
 	// Construir respuesta exitosa
-	response := mapper.ToAssignPermissionsToRoleResponse(uint(roleID), req.PermissionIDs)
+	response := mappers.ToAssignPermissionsToRoleResponse(uint(roleID), req.PermissionIDs)
 
 	h.logger.Info().
 		Uint("role_id", uint(roleID)).
