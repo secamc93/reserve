@@ -49,11 +49,22 @@ export function PublicVotingContext({
         console.log('📥 [CONTEXT] Resultado de contexto:', result);
 
         if (result.success && result.data) {
-          console.log('✅ [CONTEXT] Contexto cargado:', {
+          const logData: any = {
             property: result.data.property.name,
-            voting: result.data.voting.title,
-            group: result.data.voting_group.name
-          });
+            is_group_token: result.data.is_group_token
+          };
+
+          // Solo agregar voting si existe (tokens individuales)
+          if (result.data.voting) {
+            logData.voting = result.data.voting.title;
+          }
+
+          // Solo agregar grupo si existe
+          if (result.data.voting_group) {
+            logData.group = result.data.voting_group.name;
+          }
+
+          console.log('✅ [CONTEXT] Contexto cargado:', logData);
 
           onContextLoaded(result.data);
         } else {
