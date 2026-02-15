@@ -54,12 +54,13 @@ export function PublicVotingsList({
       console.log('📥 [VOTINGS LIST] Resultado:', result);
 
       if (result.success && result.data) {
-        setVotings(result.data.votings);
+        // Asegurar que votings sea siempre un array (nunca null)
+        setVotings(result.data.votings || []);
         setGroupInfo(result.data.voting_group);
         setStats({
-          totalVotings: result.data.total_votings,
-          activeVotings: result.data.active_votings,
-          userVotesCount: result.data.user_votes_count
+          totalVotings: result.data.total_votings || 0,
+          activeVotings: result.data.active_votings || 0,
+          userVotesCount: result.data.user_votes_count || 0
         });
         console.log('✅ [VOTINGS LIST] Votaciones cargadas:', result.data.total_votings);
       } else {
@@ -150,7 +151,7 @@ export function PublicVotingsList({
 
         {/* Lista de votaciones */}
         <div className="space-y-4">
-          {votings.length === 0 ? (
+          {!votings || votings.length === 0 ? (
             <div className="bg-white rounded-lg shadow-md p-8 text-center">
               <p className="text-gray-500">No hay votaciones disponibles</p>
             </div>
