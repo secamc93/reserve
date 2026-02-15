@@ -18,8 +18,8 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPO: public.ecr.aws/d3a6d4r1/cam/reserve
-  IMAGE_NAME: backend
+  ECR_REGISTRY: 334689162817.dkr.ecr.us-east-1.amazonaws.com
+  IMAGE_NAME: rupu-backend
 
 jobs:
   build-and-push:
@@ -42,10 +42,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Login to ECR Public
+      - name: Login to ECR
         run: |
-          aws ecr-public get-login-password --region ${{ env.AWS_REGION }} | \
-            docker login --username AWS --password-stdin public.ecr.aws
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
+            docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -63,20 +63,20 @@ jobs:
           docker buildx build \
             --platform linux/arm64 \
             -f back/central-reserve/docker/Dockerfile \
-            -t ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-latest \
-            -t ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-$BUILD_TIMESTAMP \
+            -t ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
+            -t ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:$BUILD_TIMESTAMP \
             --load \
             .
 
       - name: Push image to ECR
         run: |
           # Push tag con timestamp primero (inmutable)
-          docker push ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-${{ env.BUILD_TIMESTAMP }}
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:$BUILD_TIMESTAMP
 
           # Luego push latest (sobrescribe)
-          docker push ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-latest
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
-          echo "✅ Imagen pusheada: ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-${{ env.BUILD_TIMESTAMP }}"
+          echo "✅ Imagen pusheada: ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:$BUILD_TIMESTAMP"
           echo "✅ Tag latest actualizado"
 
   deploy:
@@ -114,20 +114,20 @@ jobs:
 
             # Login a ECR
             echo "🔐 Login a ECR..."
-            aws ecr-public get-login-password --region us-east-1 | \
-              docker login --username AWS --password-stdin public.ecr.aws
+            aws ecr get-login-password --region us-east-1 | \
+              docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
 
             # Obtener digest de la imagen actual (si existe)
             echo "📋 Verificando imagen actual..."
-            OLD_DIGEST=$(docker inspect ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-latest 2>/dev/null | jq -r '.[0].Digest // "none"' || echo "none")
+            OLD_DIGEST=$(docker inspect ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest 2>/dev/null | jq -r '.[0].Digest // "none"' || echo "none")
             echo "Digest anterior: $OLD_DIGEST"
 
             # Pull latest image
             echo "🔄 Pulling latest backend image..."
-            docker pull ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-latest
+            docker pull ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
             # Verificar que la imagen cambió
-            NEW_DIGEST=$(docker inspect ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-latest | jq -r '.[0].Digest')
+            NEW_DIGEST=$(docker inspect ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest | jq -r '.[0].Digest')
             echo "Digest nuevo: $NEW_DIGEST"
 
             if [ "$OLD_DIGEST" = "$NEW_DIGEST" ] && [ "$OLD_DIGEST" != "none" ]; then
