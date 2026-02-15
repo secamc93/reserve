@@ -4,6 +4,7 @@
 
 'use server';
 
+import { headers } from 'next/headers';
 import { env } from '@shared/config';
 
 export interface GenerateGroupPublicUrlInput {
@@ -33,6 +34,12 @@ export async function generateGroupPublicUrlAction(
   input: GenerateGroupPublicUrlInput
 ): Promise<GenerateGroupPublicUrlResult> {
   try {
+    // Obtener host dinámicamente desde headers
+    const headersList = await headers();
+    const host = headersList.get('host') || 'localhost:3000';
+    const protocol = host.includes('localhost') ? 'http' : 'https';
+    const baseUrl = `${protocol}://${host}`;
+
     const response = await fetch(
       `${env.API_BASE_URL}/horizontal-properties/voting-groups/${input.groupId}/generate-public-url`,
       {
@@ -44,7 +51,7 @@ export async function generateGroupPublicUrlAction(
         body: JSON.stringify({
           business_id: input.businessId,
           duration_hours: input.durationHours || 24,
-          frontend_url: input.frontendUrl || `${process.env.NEXT_PUBLIC_APP_URL}/public/vote`
+          frontend_url: input.frontendUrl || `${baseUrl}/public/vote`
         })
       }
     );
