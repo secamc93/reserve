@@ -149,7 +149,8 @@ func (j *JWTService) ValidatePublicVotingToken(tokenString string) (*PublicVotin
 	}
 
 	if claims, ok := token.Claims.(*PublicVotingClaims); ok && token.Valid {
-		if claims.Scope != "public_voting" {
+		// Aceptar ambos scopes: "public_voting" (individual) y "public_voting_group" (grupo)
+		if claims.Scope != "public_voting" && claims.Scope != "public_voting_group" {
 			return nil, fmt.Errorf("scope inválido para token de votación pública")
 		}
 		return claims, nil
