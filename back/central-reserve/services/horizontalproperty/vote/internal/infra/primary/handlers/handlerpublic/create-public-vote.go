@@ -15,9 +15,10 @@ import (
 
 // CreatePublicVoteRequest - Request para crear voto público
 type CreatePublicVoteRequest struct {
-	PropertyUnitID uint   `json:"property_unit_id"` // Opcional - viene del token
-	Dni            string `json:"dni"`              // Opcional - viene del token
-	VotingOptionID uint   `json:"voting_option_id" binding:"required" example:"1"`
+	VotingID       uint   `json:"voting_id" binding:"required" example:"1"`        // REQUERIDO: ID de la votación (para tokens de grupo)
+	VotingOptionID uint   `json:"voting_option_id" binding:"required" example:"1"` // REQUERIDO: Opción seleccionada
+	PropertyUnitID uint   `json:"property_unit_id"`                                // Opcional - viene del token
+	Dni            string `json:"dni"`                                             // Opcional - viene del token
 }
 
 // CreatePublicVote godoc
@@ -72,11 +73,12 @@ func (h *PublicHandler) CreatePublicVote(c *gin.Context) {
 	}
 
 	// Extraer información del token
-	votingID := authClaims.VotingID
+	tokenVotingID := authClaims.VotingID // Puede ser nil para tokens de grupo
 	hpID := authClaims.HPID
 	groupID := authClaims.VotingGroupID
 	residentID := authClaims.ResidentID
 	propertyUnitID := authClaims.PropertyUnitID
+	isGroupToken := tokenVotingID == nil
 
 	// Validar request
 	var req CreatePublicVoteRequest
@@ -91,10 +93,69 @@ func (h *PublicHandler) CreatePublicVote(c *gin.Context) {
 		return
 	}
 
+	// Determinar voting_id final
+	var votingID uint
+	if isGroupToken {
+		// Token de grupo: usar voting_id del body
+		votingID = req.VotingID
+	} else {
+		// Token de votación individual: validar que coincida con el del body
+		if req.VotingID != *tokenVotingID {
+			fmt.Fprintf(os.Stderr, "[ERROR] handlers/create-public-vote.go - voting_id del body no coincide con el del token\n")
+			h.logger.Error().
+				Uint("token_voting_id", *tokenVotingID).
+				Uint("body_voting_id", req.VotingID).
+				Msg("voting_id del body no coincide con el del token")
+			c.JSON(http.StatusBadRequest, response.ErrorResponse{
+				Success: false,
+				Message: "voting_id inválido",
+				Error:   "El voting_id debe coincidir con el del token de autenticación",
+			})
+			return
+		}
+		votingID = *tokenVotingID
+	}
+
+	// Si es token de grupo, validar que voting_id pertenece al grupo
+	if isGroupToken {
+		voting, err := h.votingsUseCase.GetVotingByID(c.Request.Context(), hpID, groupID, votingID)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "[ERROR] handlers/create-public-vote.go - Votación no encontrada o no pertenece al grupo: %v\n", err)
+			h.logger.Error().
+				Err(err).
+				Uint("voting_id", votingID).
+				Uint("group_id", groupID).
+				Msg("Votación no encontrada o no pertenece al grupo")
+			c.JSON(http.StatusForbidden, response.ErrorResponse{
+				Success: false,
+				Message: "Votación no válida",
+				Error:   "La votación no pertenece al grupo de votación del token",
+			})
+			return
+		}
+
+		// Validar que la votación está activa
+		if !voting.IsActive {
+			fmt.Fprintf(os.Stderr, "[ERROR] handlers/create-public-vote.go - Votación inactiva: voting_id=%d\n", votingID)
+			h.logger.Warn().Uint("voting_id", votingID).Msg("Intento de votar en votación inactiva")
+			c.JSON(http.StatusForbidden, response.ErrorResponse{
+				Success: false,
+				Message: "Votación inactiva",
+				Error:   "No se puede votar en una votación inactiva",
+			})
+			return
+		}
+	}
+
 	fmt.Printf("\n🗳️ [VOTACION PUBLICA - EMITIENDO VOTO]\n")
 	fmt.Printf("   HP ID: %d\n", hpID)
 	fmt.Printf("   Grupo de Votación ID: %d\n", groupID)
 	fmt.Printf("   Votación ID: %d\n", votingID)
+	if isGroupToken {
+		fmt.Printf("   Tipo de token: GRUPO (voting_id del body)\n")
+	} else {
+		fmt.Printf("   Tipo de token: INDIVIDUAL (voting_id del token)\n")
+	}
 	fmt.Printf("   Residente ID (del token): %d\n", residentID)
 	fmt.Printf("   Unidad ID (del token): %d\n", propertyUnitID)
 	fmt.Printf("   Opción seleccionada ID: %d\n", req.VotingOptionID)

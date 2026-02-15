@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 
+	"central_reserve/services/horizontalproperty/vote/internal/domain"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/response"
 	sharedjwt "central_reserve/shared/jwt"
 
@@ -59,13 +60,19 @@ func (h *PublicHandler) GetPublicVotingContext(c *gin.Context) {
 
 	// Extraer información del token
 	hpID := publicClaims.HPID
-	votingID := publicClaims.VotingID
+	votingID := publicClaims.VotingID // Puede ser nil para tokens de grupo
 	groupID := publicClaims.VotingGroupID
+	isGroupToken := votingID == nil
 
 	fmt.Printf("\n🏢 [VOTACION PUBLICA - OBTENIENDO CONTEXTO]\n")
 	fmt.Printf("   HP ID: %d\n", hpID)
 	fmt.Printf("   Voting Group ID: %d\n", groupID)
-	fmt.Printf("   Voting ID: %d\n\n", votingID)
+	if isGroupToken {
+		fmt.Printf("   Tipo: Token de GRUPO (múltiples votaciones)\n\n")
+	} else {
+		fmt.Printf("   Voting ID: %d\n", *votingID)
+		fmt.Printf("   Tipo: Token de votación individual\n\n")
+	}
 
 	// Obtener información de la propiedad horizontal
 	hp, err := h.sharedUseCase.GetHorizontalPropertyBasicInfo(c.Request.Context(), hpID)
@@ -80,17 +87,20 @@ func (h *PublicHandler) GetPublicVotingContext(c *gin.Context) {
 		return
 	}
 
-	// Obtener información de la votación
-	voting, err := h.votingsUseCase.GetVotingByID(c.Request.Context(), hpID, groupID, votingID)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] handlers/get-public-voting-context.go - Error obteniendo votación: voting_id=%d, error=%v\n", votingID, err)
-		h.logger.Error().Err(err).Uint("voting_id", votingID).Msg("Error obteniendo votación")
-		c.JSON(http.StatusNotFound, response.ErrorResponse{
-			Success: false,
-			Message: "Votación no encontrada",
-			Error:   err.Error(),
-		})
-		return
+	// Obtener información de la votación (solo para tokens individuales)
+	var voting *domain.VotingDTO
+	if !isGroupToken {
+		voting, err = h.votingsUseCase.GetVotingByID(c.Request.Context(), hpID, groupID, *votingID)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "[ERROR] handlers/get-public-voting-context.go - Error obteniendo votación: voting_id=%d, error=%v\n", *votingID, err)
+			h.logger.Error().Err(err).Uint("voting_id", *votingID).Msg("Error obteniendo votación")
+			c.JSON(http.StatusNotFound, response.ErrorResponse{
+				Success: false,
+				Message: "Votación no encontrada",
+				Error:   err.Error(),
+			})
+			return
+		}
 	}
 
 	// Obtener información del grupo de votación
@@ -103,18 +113,31 @@ func (h *PublicHandler) GetPublicVotingContext(c *gin.Context) {
 
 	fmt.Printf("✅ [VOTACION PUBLICA - CONTEXTO OBTENIDO]\n")
 	fmt.Printf("   Propiedad: %s\n", hp.Name)
-	fmt.Printf("   Votación: %s\n", voting.Title)
-	if group != nil {
-		fmt.Printf("   Grupo: %s\n", group.Name)
+	if isGroupToken {
+		if group != nil {
+			fmt.Printf("   Grupo: %s (%s)\n", group.Name, group.Description)
+		}
+	} else {
+		fmt.Printf("   Votación: %s\n", voting.Title)
+		if group != nil {
+			fmt.Printf("   Grupo: %s\n", group.Name)
+		}
 	}
 	fmt.Printf("\n")
 
-	h.logger.Info().
+	logEvent := h.logger.Info().
 		Uint("hp_id", hpID).
-		Uint("voting_id", votingID).
 		Str("hp_name", hp.Name).
-		Str("voting_title", voting.Title).
-		Msg("✅ [VOTACION PUBLICA] Contexto obtenido exitosamente")
+		Bool("is_group_token", isGroupToken)
+
+	if !isGroupToken {
+		logEvent.Uint("voting_id", *votingID).Str("voting_title", voting.Title)
+	}
+	if group != nil {
+		logEvent.Str("group_name", group.Name)
+	}
+
+	logEvent.Msg("✅ [VOTACION PUBLICA] Contexto obtenido exitosamente")
 
 	responseData := gin.H{
 		"property": gin.H{
@@ -122,13 +145,19 @@ func (h *PublicHandler) GetPublicVotingContext(c *gin.Context) {
 			"name":    hp.Name,
 			"address": hp.Address,
 		},
-		"voting": gin.H{
+		"is_group_token": isGroupToken,
+	}
+
+	// Solo agregar info de votación si es token individual
+	if !isGroupToken {
+		responseData["voting"] = gin.H{
 			"id":          voting.ID,
 			"title":       voting.Title,
 			"description": voting.Description,
-		},
+		}
 	}
 
+	// Agregar info de grupo si está disponible
 	if group != nil {
 		responseData["voting_group"] = gin.H{
 			"id":          group.ID,

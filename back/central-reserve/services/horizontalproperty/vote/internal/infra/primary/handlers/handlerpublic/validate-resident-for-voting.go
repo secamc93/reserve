@@ -67,14 +67,20 @@ func (h *PublicHandler) ValidateResidentForVoting(c *gin.Context) {
 
 	// Extraer toda la información del token
 	hpID := publicClaims.HPID
-	votingID := publicClaims.VotingID
+	votingID := publicClaims.VotingID // Puede ser nil para tokens de grupo
 	groupID := publicClaims.VotingGroupID
+	isGroupToken := votingID == nil
 
 	fmt.Printf("\n🔐 [VOTACION PUBLICA - VALIDACION TOKEN]\n")
 	fmt.Printf("   Token decodificado exitosamente\n")
 	fmt.Printf("   HP ID: %d\n", hpID)
 	fmt.Printf("   Grupo de Votación ID: %d\n", groupID)
-	fmt.Printf("   Votación ID: %d\n", votingID)
+	if isGroupToken {
+		fmt.Printf("   Tipo: Token de GRUPO (sin votación específica)\n")
+	} else {
+		fmt.Printf("   Votación ID: %d\n", *votingID)
+		fmt.Printf("   Tipo: Token de votación individual\n")
+	}
 	fmt.Printf("   Scope: %s\n\n", publicClaims.Scope)
 
 	// Validar request
@@ -127,7 +133,15 @@ func (h *PublicHandler) ValidateResidentForVoting(c *gin.Context) {
 	fmt.Printf("   Unidad: %s\n\n", resident.PropertyUnitNumber)
 
 	// Generar token temporal de autenticación de votación
-	votingAuthToken, err := jwtService.GenerateVotingAuthToken(resident.ID, resident.PropertyUnitID, votingID, groupID, hpID)
+	var votingAuthToken string
+	if isGroupToken {
+		// Token de grupo: no tiene votación específica
+		votingAuthToken, err = jwtService.GenerateGroupVotingAuthToken(resident.ID, resident.PropertyUnitID, groupID, hpID)
+	} else {
+		// Token de votación individual
+		votingAuthToken, err = jwtService.GenerateVotingAuthToken(resident.ID, resident.PropertyUnitID, *votingID, groupID, hpID)
+	}
+
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[ERROR] handlers/validate-resident-for-voting.go - Error generando token de auth: %v\n", err)
 		h.logger.Error().Err(err).Uint("resident_id", resident.ID).Msg("Error generando token de autenticación de votación")
@@ -146,34 +160,50 @@ func (h *PublicHandler) ValidateResidentForVoting(c *gin.Context) {
 
 	fmt.Printf("🎫 [VOTACION PUBLICA - TOKEN DE AUTENTICACION GENERADO]\n")
 	fmt.Printf("   Residente ID: %d\n", resident.ID)
-	fmt.Printf("   Votación ID: %d\n", votingID)
+	if isGroupToken {
+		fmt.Printf("   Tipo: Token de GRUPO\n")
+	} else {
+		fmt.Printf("   Votación ID: %d\n", *votingID)
+	}
 	fmt.Printf("   Grupo ID: %d\n", groupID)
 	fmt.Printf("   HP ID: %d\n", hpID)
 	fmt.Printf("   Token (preview): %s\n", tokenAuthPreview)
 	fmt.Printf("   Scope: voting_auth\n")
 	fmt.Printf("   Validez: 2 horas\n\n")
 
-	h.logger.Info().
+	logEvent := h.logger.Info().
 		Uint("resident_id", resident.ID).
-		Uint("voting_id", votingID).
 		Uint("voting_group_id", groupID).
 		Uint("hp_id", hpID).
 		Str("resident_name", resident.Name).
 		Str("property_unit", resident.PropertyUnitNumber).
-		Msg("✅ [VOTACION PUBLICA] Residente validado exitosamente")
+		Bool("is_group_token", isGroupToken)
+
+	if !isGroupToken {
+		logEvent.Uint("voting_id", *votingID)
+	}
+
+	logEvent.Msg("✅ [VOTACION PUBLICA] Residente validado exitosamente")
+
+	responseData := gin.H{
+		"resident_id":          resident.ID,
+		"resident_name":        resident.Name,
+		"property_unit_id":     resident.PropertyUnitID,
+		"property_unit_number": resident.PropertyUnitNumber,
+		"voting_auth_token":    votingAuthToken,
+		"voting_group_id":      groupID,
+		"hp_id":                hpID,
+		"is_group_token":       isGroupToken,
+	}
+
+	// Solo agregar voting_id si no es token de grupo
+	if !isGroupToken {
+		responseData["voting_id"] = *votingID
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "Residente validado exitosamente",
-		"data": gin.H{
-			"resident_id":          resident.ID,
-			"resident_name":        resident.Name,
-			"property_unit_id":     resident.PropertyUnitID,
-			"property_unit_number": resident.PropertyUnitNumber,
-			"voting_auth_token":    votingAuthToken,
-			"voting_id":            votingID,
-			"voting_group_id":      groupID,
-			"hp_id":                hpID,
-		},
+		"data":    responseData,
 	})
 }

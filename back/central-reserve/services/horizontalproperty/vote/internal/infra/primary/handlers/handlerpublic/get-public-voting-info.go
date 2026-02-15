@@ -15,11 +15,12 @@ import (
 // GetPublicVotingInfo godoc
 //
 //	@Summary		Obtener información de votación (pública)
-//	@Description	Obtiene toda la información de la votación usando solo el VOTING_AUTH_TOKEN. Incluye título, descripción, opciones, etc.
+//	@Description	Obtiene toda la información de la votación usando el VOTING_AUTH_TOKEN. Para tokens de grupo, debe proporcionar voting_id como query param.
 //	@Tags			Votaciones Públicas
 //	@Accept			json
 //	@Produce		json
 //	@Param			Authorization	header	string	true	"Token de autenticación de votación (Bearer token)"
+//	@Param			voting_id		query	int		false	"ID de votación (requerido solo para tokens de grupo)"
 //	@Success		200				{object}	object
 //	@Failure		401				{object}	object
 //	@Failure		404				{object}	object
@@ -58,11 +59,59 @@ func (h *PublicHandler) GetPublicVotingInfo(c *gin.Context) {
 		return
 	}
 
-	// Extraer toda la información del token
-	votingID := authClaims.VotingID
+	// Extraer información del token
+	tokenVotingID := authClaims.VotingID // Puede ser nil para tokens de grupo
 	groupID := authClaims.VotingGroupID
 	hpID := authClaims.HPID
 	residentID := authClaims.ResidentID
+
+	// Determinar voting_id a usar
+	var votingID uint
+
+	if tokenVotingID != nil {
+		// Token individual - usar voting_id del token
+		votingID = *tokenVotingID
+		fmt.Printf("📊 [VOTING INFO] Token individual - voting_id del token: %d\n", votingID)
+	} else {
+		// Token de grupo - obtener voting_id del query param
+		votingIDParam := c.Query("voting_id")
+		if votingIDParam == "" {
+			fmt.Fprintf(os.Stderr, "[ERROR] handlers/get-public-voting-info.go - Token de grupo requiere voting_id en query param\n")
+			c.JSON(http.StatusBadRequest, response.ErrorResponse{
+				Success: false,
+				Message: "Voting ID requerido",
+				Error:   "Para tokens de grupo, debe proporcionar voting_id como query parameter",
+			})
+			return
+		}
+
+		// Convertir a uint
+		var parsedID uint64
+		if _, err := fmt.Sscanf(votingIDParam, "%d", &parsedID); err != nil {
+			fmt.Fprintf(os.Stderr, "[ERROR] handlers/get-public-voting-info.go - voting_id inválido: %v\n", err)
+			c.JSON(http.StatusBadRequest, response.ErrorResponse{
+				Success: false,
+				Message: "Voting ID inválido",
+				Error:   "El voting_id debe ser un número válido",
+			})
+			return
+		}
+
+		votingID = uint(parsedID)
+		fmt.Printf("📊 [VOTING INFO] Token de grupo - voting_id del query param: %d\n", votingID)
+
+		// Validar que la votación pertenece al grupo del token
+		voting, err := h.votingsUseCase.GetVotingByID(c.Request.Context(), hpID, groupID, votingID)
+		if err != nil || voting == nil {
+			fmt.Fprintf(os.Stderr, "[ERROR] handlers/get-public-voting-info.go - Votación no encontrada o no pertenece al grupo: %v\n", err)
+			c.JSON(http.StatusNotFound, response.ErrorResponse{
+				Success: false,
+				Message: "Votación no encontrada",
+				Error:   "La votación no existe o no pertenece al grupo de votaciones de este token",
+			})
+			return
+		}
+	}
 
 	fmt.Printf("\n📊 [VOTACION PUBLICA - OBTENIENDO INFO]\n")
 	fmt.Printf("   Token de autenticación válido\n")

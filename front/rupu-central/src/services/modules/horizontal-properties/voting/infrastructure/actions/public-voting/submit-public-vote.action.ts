@@ -8,6 +8,7 @@ import { env } from '@shared/config';
 
 export interface SubmitPublicVoteInput {
   votingAuthToken: string;
+  votingId: number; // NUEVO: Requerido para tokens de grupo
   votingOptionId: number;
 }
 
@@ -33,6 +34,7 @@ export async function submitPublicVoteAction(
     const url = `${env.API_BASE_URL}/public/vote`;
     console.log('🗳️ [ACTION] submitPublicVote - Request:', {
       url,
+      votingId: input.votingId,
       votingOptionId: input.votingOptionId
     });
 
@@ -43,6 +45,7 @@ export async function submitPublicVoteAction(
         'Authorization': `Bearer ${input.votingAuthToken}`
       },
       body: JSON.stringify({
+        voting_id: input.votingId, // NUEVO: Requerido por el backend
         voting_option_id: input.votingOptionId
       })
     });

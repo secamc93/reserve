@@ -9,10 +9,10 @@ import (
 
 // PublicVotingClaims - Claims para tokens de votación pública
 type PublicVotingClaims struct {
-	VotingID      uint   `json:"voting_id"`
+	VotingID      *uint  `json:"voting_id,omitempty"`      // Opcional: nil para tokens de grupo
 	VotingGroupID uint   `json:"voting_group_id"`
 	HPID          uint   `json:"hp_id"`
-	Scope         string `json:"scope"` // "public_voting"
+	Scope         string `json:"scope"` // "public_voting" o "public_voting_group"
 	jwt.RegisteredClaims
 }
 
@@ -20,7 +20,7 @@ type PublicVotingClaims struct {
 type VotingAuthClaims struct {
 	ResidentID     uint   `json:"resident_id"`
 	PropertyUnitID uint   `json:"property_unit_id"`
-	VotingID       uint   `json:"voting_id"`
+	VotingID       *uint  `json:"voting_id,omitempty"`      // Opcional: nil para tokens de grupo
 	VotingGroupID  uint   `json:"voting_group_id"`
 	HPID           uint   `json:"hp_id"`
 	Scope          string `json:"scope"` // "voting_auth"
@@ -34,7 +34,7 @@ func (j *JWTService) GeneratePublicVotingToken(votingID, votingGroupID, hpID uin
 	}
 
 	claims := PublicVotingClaims{
-		VotingID:      votingID,
+		VotingID:      &votingID,
 		VotingGroupID: votingGroupID,
 		HPID:          hpID,
 		Scope:         "public_voting",
@@ -55,12 +55,40 @@ func (j *JWTService) GeneratePublicVotingToken(votingID, votingGroupID, hpID uin
 	return tokenString, nil
 }
 
+// GeneratePublicGroupVotingToken genera un token para acceder a todas las votaciones de un grupo
+func (j *JWTService) GeneratePublicGroupVotingToken(groupID, hpID uint, durationHours int) (string, error) {
+	if durationHours <= 0 {
+		durationHours = 24 // Default 24 horas
+	}
+
+	claims := PublicVotingClaims{
+		VotingID:      nil, // Sin votación específica (token de grupo)
+		VotingGroupID: groupID,
+		HPID:          hpID,
+		Scope:         "public_voting_group",
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * time.Duration(durationHours))),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			NotBefore: jwt.NewNumericDate(time.Now()),
+			Subject:   fmt.Sprintf("public_voting_group_%d", groupID),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString([]byte(j.secretKey))
+	if err != nil {
+		return "", fmt.Errorf("error generando token de grupo de votación: %w", err)
+	}
+
+	return tokenString, nil
+}
+
 // GenerateVotingAuthToken genera un token temporal después de validar al residente
 func (j *JWTService) GenerateVotingAuthToken(residentID, propertyUnitID, votingID, votingGroupID, hpID uint) (string, error) {
 	claims := VotingAuthClaims{
 		ResidentID:     residentID,
 		PropertyUnitID: propertyUnitID,
-		VotingID:       votingID,
+		VotingID:       &votingID,
 		VotingGroupID:  votingGroupID,
 		HPID:           hpID,
 		Scope:          "voting_auth",
@@ -76,6 +104,32 @@ func (j *JWTService) GenerateVotingAuthToken(residentID, propertyUnitID, votingI
 	tokenString, err := token.SignedString([]byte(j.secretKey))
 	if err != nil {
 		return "", fmt.Errorf("error generando token de autenticación de votación: %w", err)
+	}
+
+	return tokenString, nil
+}
+
+// GenerateGroupVotingAuthToken genera un token temporal después de validar al residente para grupo
+func (j *JWTService) GenerateGroupVotingAuthToken(residentID, propertyUnitID, votingGroupID, hpID uint) (string, error) {
+	claims := VotingAuthClaims{
+		ResidentID:     residentID,
+		PropertyUnitID: propertyUnitID,
+		VotingID:       nil, // Sin votación específica
+		VotingGroupID:  votingGroupID,
+		HPID:           hpID,
+		Scope:          "voting_auth",
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 2)), // 2 horas para votar
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			NotBefore: jwt.NewNumericDate(time.Now()),
+			Subject:   fmt.Sprintf("voting_auth_group_%d_%d", residentID, votingGroupID),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString([]byte(j.secretKey))
+	if err != nil {
+		return "", fmt.Errorf("error generando token de autenticación de grupo de votación: %w", err)
 	}
 
 	return tokenString, nil

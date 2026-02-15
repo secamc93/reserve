@@ -62,16 +62,28 @@ func (h *PublicHandler) GetPublicVotingStats(c *gin.Context) {
 	residentID := authClaims.ResidentID
 	hpID := authClaims.HPID
 
+	// Este endpoint requiere votación específica
+	if votingID == nil {
+		fmt.Fprintf(os.Stderr, "[ERROR] handlers/get-public-voting-stats.go - Token de grupo no válido para este endpoint\n")
+		h.logger.Error().Msg("Token de grupo no válido para obtener estadísticas de votación")
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{
+			Success: false,
+			Message: "Token inválido",
+			Error:   "Este endpoint requiere un token de votación específica, no un token de grupo",
+		})
+		return
+	}
+
 	fmt.Printf("\n📊 [VOTACION PUBLICA - OBTENIENDO DETALLE POR UNIDAD]\n")
-	fmt.Printf("   Votación ID: %d\n", votingID)
+	fmt.Printf("   Votación ID: %d\n", *votingID)
 	fmt.Printf("   Residente ID: %d\n", residentID)
 	fmt.Printf("   HP ID: %d\n\n", hpID)
 
 	// Obtener detalle por unidad (TODAS las unidades con su estado de votación)
-	unitDetails, err := h.resultsUseCase.GetVotingDetailsByUnit(c.Request.Context(), votingID, hpID)
+	unitDetails, err := h.resultsUseCase.GetVotingDetailsByUnit(c.Request.Context(), *votingID, hpID)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] handlers/get-public-voting-stats.go - Error obteniendo detalles: voting_id=%d, hp_id=%d, error=%v\n", votingID, hpID, err)
-		h.logger.Error().Err(err).Uint("voting_id", votingID).Uint("hp_id", hpID).Msg("Error obteniendo detalles por unidad")
+		fmt.Fprintf(os.Stderr, "[ERROR] handlers/get-public-voting-stats.go - Error obteniendo detalles: voting_id=%d, hp_id=%d, error=%v\n", *votingID, hpID, err)
+		h.logger.Error().Err(err).Uint("voting_id", *votingID).Uint("hp_id", hpID).Msg("Error obteniendo detalles por unidad")
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{
 			Success: false,
 			Message: "Error obteniendo detalles de votación",
@@ -81,10 +93,10 @@ func (h *PublicHandler) GetPublicVotingStats(c *gin.Context) {
 	}
 
 	// Obtener resumen de resultados (para el dashboard)
-	results, err := h.resultsUseCase.GetVotingResults(c.Request.Context(), votingID)
+	results, err := h.resultsUseCase.GetVotingResults(c.Request.Context(), *votingID)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] handlers/get-public-voting-stats.go - Error obteniendo resultados: voting_id=%d, error=%v\n", votingID, err)
-		h.logger.Error().Err(err).Uint("voting_id", votingID).Msg("Error obteniendo estadísticas de votación")
+		fmt.Fprintf(os.Stderr, "[ERROR] handlers/get-public-voting-stats.go - Error obteniendo resultados: voting_id=%d, error=%v\n", *votingID, err)
+		h.logger.Error().Err(err).Uint("voting_id", *votingID).Msg("Error obteniendo estadísticas de votación")
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{
 			Success: false,
 			Message: "Error obteniendo estadísticas",
@@ -121,7 +133,7 @@ func (h *PublicHandler) GetPublicVotingStats(c *gin.Context) {
 	fmt.Printf("\n")
 
 	h.logger.Info().
-		Uint("voting_id", votingID).
+		Uint("voting_id", *votingID).
 		Uint("resident_id", residentID).
 		Uint("hp_id", hpID).
 		Int("total_units", totalUnits).

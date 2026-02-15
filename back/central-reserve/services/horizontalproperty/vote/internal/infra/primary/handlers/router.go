@@ -50,6 +50,10 @@ func (h *VotingHandler) RegisterRoutes(router *gin.RouterGroup) {
 		// handler-voting-groups: /horizontal-properties/voting-groups
 		h.votingGroupsHandler.Router(groups)
 
+		// ✅ NUEVO: Ruta para generar QR de grupo (privada, requiere JWT)
+		// /horizontal-properties/voting-groups/:group_id/generate-public-url
+		groups.POST("/:group_id/generate-public-url", middleware.JWT(), h.publicHandler.GeneratePublicGroupURL)
+
 		// handler-votings: /horizontal-properties/voting-groups/:group_id/votings
 		votings := groups.Group("/:group_id/votings")
 		h.votingsHandler.Router(votings)

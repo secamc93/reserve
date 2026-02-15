@@ -8,6 +8,7 @@ import { env } from '@shared/config';
 
 export interface GetVotingInfoInput {
   votingAuthToken: string;
+  votingId?: number; // Opcional - requerido solo para tokens de grupo
 }
 
 export interface VotingOption {
@@ -61,8 +62,16 @@ export async function getVotingInfoAction(
   input: GetVotingInfoInput
 ): Promise<GetVotingInfoResult> {
   try {
-    const url = `${env.API_BASE_URL}/public/voting-info`;
-    console.log('📊 [ACTION] getVotingInfo - Request:', { url });
+    // Construir URL con query param si voting_id está presente (tokens de grupo)
+    let url = `${env.API_BASE_URL}/public/voting-info`;
+    if (input.votingId) {
+      url += `?voting_id=${input.votingId}`;
+    }
+
+    console.log('📊 [ACTION] getVotingInfo - Request:', {
+      url,
+      votingId: input.votingId
+    });
 
     const response = await fetch(url, {
       headers: {

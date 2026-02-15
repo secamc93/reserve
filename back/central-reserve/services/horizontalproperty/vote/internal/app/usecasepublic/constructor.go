@@ -10,6 +10,7 @@ import (
 // IPublicUseCase define la interfaz para casos de uso de votaciones públicas
 type IPublicUseCase interface {
 	ValidateResidentForVoting(ctx context.Context, hpID, propertyUnitID uint, dni string) (*domain.ResidentBasicDTO, error)
+	ListVotingsByGroupWithVoteStatus(ctx context.Context, groupID uint, propertyUnitID uint) ([]domain.VotingWithStatusDTO, error)
 }
 
 // PublicUseCase maneja la lógica de negocio de votaciones públicas

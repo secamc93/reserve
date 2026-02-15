@@ -47,6 +47,9 @@ type VotingRepository interface {
 
 	// Resident methods (todo en el mismo repository)
 	GetResidentByUnitAndDni(ctx context.Context, hpID, propertyUnitID uint, dni string) (*ResidentBasicDTO, error)
+
+	// Group voting methods (para QR por grupo)
+	ListVotingsByGroupWithVoteStatus(ctx context.Context, groupID uint, propertyUnitID uint) ([]VotingWithStatusDTO, error)
 }
 
 // VotingCacheService - Puerto para servicio de cache de votaciones

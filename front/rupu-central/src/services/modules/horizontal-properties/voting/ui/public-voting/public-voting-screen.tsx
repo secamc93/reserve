@@ -37,6 +37,7 @@ interface PublicVotingScreenProps {
     name: string;
     unitNumber: string;
   };
+  selectedVotingId?: number | null; // Opcional - presente cuando viene de lista de votaciones
   onSuccess: () => void;
   onError: (error: string) => void;
 }
@@ -44,10 +45,11 @@ interface PublicVotingScreenProps {
 export function PublicVotingScreen({
   votingAuthToken,
   residentData,
+  selectedVotingId,
   onSuccess,
   onError
 }: PublicVotingScreenProps) {
-  const [votingData, setVotingData] = useState<{ title: string; description: string; voting_type?: string } | null>(null);
+  const [votingData, setVotingData] = useState<{ id: number; title: string; description: string; voting_type?: string } | null>(null);
   const [options, setOptions] = useState<VotingOption[]>([]);
   const [hasVoted, setHasVoted] = useState<boolean>(false);
   const [myVote, setMyVote] = useState<MyVote | null>(null);
@@ -66,13 +68,17 @@ export function PublicVotingScreen({
 
   const loadVotingData = async () => {
     try {
-      console.log('📊 [VOTING SCREEN] Cargando información de votación...');
+      console.log('📊 [VOTING SCREEN] Cargando información de votación...', {
+        hasSelectedVotingId: !!selectedVotingId,
+        selectedVotingId
+      });
       setLoading(true);
 
-      // El backend extrae voting_id, hp_id, group_id y resident_id del token
-      // Endpoint único que retorna toda la información de la votación
+      // Para tokens individuales, el backend extrae voting_id del token
+      // Para tokens de grupo, pasamos selectedVotingId como query param
       const result = await getVotingInfoAction({
-        votingAuthToken
+        votingAuthToken,
+        votingId: selectedVotingId || undefined
       });
 
       console.log('📥 [VOTING SCREEN] Resultado de voting-info:', result);
@@ -137,9 +143,19 @@ export function PublicVotingScreen({
     setError(null);
 
     try {
-      // El backend extrae resident_id, voting_id, hp_id y group_id del token
+      // Para tokens de grupo, necesitamos pasar voting_id explícitamente
+      // Para tokens individuales, también lo pasamos (el backend lo validará contra el token)
+      const votingIdToSubmit = selectedVotingId || votingData?.id;
+
+      if (!votingIdToSubmit) {
+        console.error('❌ [VOTE] No se pudo determinar voting_id');
+        setError('Error: No se pudo determinar la votación');
+        return;
+      }
+
       const result = await submitPublicVoteAction({
         votingAuthToken,
+        votingId: votingIdToSubmit,
         votingOptionId: selectedOptionId,
       });
 

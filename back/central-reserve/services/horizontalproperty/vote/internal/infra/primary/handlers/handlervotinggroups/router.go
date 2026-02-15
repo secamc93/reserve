@@ -12,4 +12,7 @@ func (h *VotingGroupsHandler) Router(group *gin.RouterGroup) {
 	group.GET("", middleware.JWT(), h.ListVotingGroups)
 	group.PUT("/:group_id", middleware.JWT(), h.UpdateVotingGroup)
 	group.DELETE("/:group_id", middleware.JWT(), h.DeleteVotingGroup)
+
+	// Nota: La ruta para generar QR de grupo está en el router principal
+	// porque necesita acceso al handler público
 }

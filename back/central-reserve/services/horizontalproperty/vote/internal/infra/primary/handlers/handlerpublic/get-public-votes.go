@@ -61,15 +61,27 @@ func (h *PublicHandler) GetPublicVotes(c *gin.Context) {
 	votingID := authClaims.VotingID
 	residentID := authClaims.ResidentID
 
+	// Este endpoint requiere votación específica
+	if votingID == nil {
+		fmt.Fprintf(os.Stderr, "[ERROR] handlers/get-public-votes.go - Token de grupo no válido para este endpoint\n")
+		h.logger.Error().Msg("Token de grupo no válido para listar votos")
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{
+			Success: false,
+			Message: "Token inválido",
+			Error:   "Este endpoint requiere un token de votación específica, no un token de grupo",
+		})
+		return
+	}
+
 	fmt.Printf("\n🗳️  [VOTACION PUBLICA - LISTANDO VOTOS]\n")
-	fmt.Printf("   Votación ID: %d\n", votingID)
+	fmt.Printf("   Votación ID: %d\n", *votingID)
 	fmt.Printf("   Residente ID: %d\n\n", residentID)
 
 	// Obtener todos los votos de la votación
-	votes, err := h.votesUseCase.ListVotesByVoting(c.Request.Context(), votingID)
+	votes, err := h.votesUseCase.ListVotesByVoting(c.Request.Context(), *votingID)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] handlers/get-public-votes.go - Error listando votos: voting_id=%d, error=%v\n", votingID, err)
-		h.logger.Error().Err(err).Uint("voting_id", votingID).Msg("Error listando votos")
+		fmt.Fprintf(os.Stderr, "[ERROR] handlers/get-public-votes.go - Error listando votos: voting_id=%d, error=%v\n", *votingID, err)
+		h.logger.Error().Err(err).Uint("voting_id", *votingID).Msg("Error listando votos")
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{
 			Success: false,
 			Message: "Error obteniendo votos",
@@ -84,7 +96,7 @@ func (h *PublicHandler) GetPublicVotes(c *gin.Context) {
 	fmt.Printf("   Total de votos: %d\n\n", len(votes))
 
 	h.logger.Info().
-		Uint("voting_id", votingID).
+		Uint("voting_id", *votingID).
 		Uint("resident_id", residentID).
 		Int("votes_count", len(votes)).
 		Msg("✅ [VOTACION PUBLICA] Votos listados exitosamente")

@@ -19,7 +19,9 @@ type IJWTService interface {
 
 	// Tokens para votación pública
 	GeneratePublicVotingToken(votingID, votingGroupID, hpID uint, durationHours int) (string, error)
+	GeneratePublicGroupVotingToken(groupID, hpID uint, durationHours int) (string, error)
 	GenerateVotingAuthToken(residentID, propertyUnitID, votingID, votingGroupID, hpID uint) (string, error)
+	GenerateGroupVotingAuthToken(residentID, propertyUnitID, votingGroupID, hpID uint) (string, error)
 	ValidatePublicVotingToken(tokenString string) (*PublicVotingClaims, error)
 	ValidateVotingAuthToken(tokenString string) (*VotingAuthClaims, error)
 }

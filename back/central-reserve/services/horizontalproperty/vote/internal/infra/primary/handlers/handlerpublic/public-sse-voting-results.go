@@ -69,8 +69,20 @@ func (h *PublicHandler) PublicSSEVotingResults(c *gin.Context) {
 	residentID := authClaims.ResidentID
 	hpID := authClaims.HPID
 
+	// Este endpoint requiere votación específica
+	if votingID == nil {
+		fmt.Fprintf(os.Stderr, "[ERROR] handlers/public-sse-voting-results.go - Token de grupo no válido para este endpoint\n")
+		h.logger.Error().Msg("Token de grupo no válido para SSE de resultados")
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{
+			Success: false,
+			Message: "Token inválido",
+			Error:   "Este endpoint requiere un token de votación específica, no un token de grupo",
+		})
+		return
+	}
+
 	fmt.Printf("\n📡 [SSE PUBLICO] Nueva conexión SSE\n")
-	fmt.Printf("   Votación ID: %d\n", votingID)
+	fmt.Printf("   Votación ID: %d\n", *votingID)
 	fmt.Printf("   Residente ID: %d\n", residentID)
 	fmt.Printf("   HP ID: %d\n\n", hpID)
 
@@ -81,13 +93,13 @@ func (h *PublicHandler) PublicSSEVotingResults(c *gin.Context) {
 	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 	c.Writer.Header().Set("X-Accel-Buffering", "no")
 
-	h.logger.Info().Uint("voting_id", uint(votingID)).Uint("resident_id", residentID).Msg("Cliente SSE público conectado")
+	h.logger.Info().Uint("voting_id", *votingID).Uint("resident_id", residentID).Msg("Cliente SSE público conectado")
 
 	// Suscribirse al cache de votación
-	voteChan, err := h.votingCache.Subscribe(c.Request.Context(), votingID)
+	voteChan, err := h.votingCache.Subscribe(c.Request.Context(), *votingID)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[ERROR] handlers/public-sse-voting-results.go - Error suscribiéndose al cache: %v\n", err)
-		h.logger.Error().Err(err).Uint("voting_id", votingID).Msg("Error suscribiéndose al cache")
+		h.logger.Error().Err(err).Uint("voting_id", *votingID).Msg("Error suscribiéndose al cache")
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{
 			Success: false,
 			Message: "Error suscribiéndose a la votación",
@@ -97,7 +109,7 @@ func (h *PublicHandler) PublicSSEVotingResults(c *gin.Context) {
 	}
 
 	defer func() {
-		fmt.Printf("📡 [SSE PUBLICO] Conexión cerrada para votación %d, residente %d\n", votingID, residentID)
+		fmt.Printf("📡 [SSE PUBLICO] Conexión cerrada para votación %d, residente %d\n", *votingID, residentID)
 	}()
 
 	// Enviar evento de conexión establecida
@@ -109,7 +121,7 @@ func (h *PublicHandler) PublicSSEVotingResults(c *gin.Context) {
 	c.Writer.Flush()
 
 	// Enviar datos iniciales (preload) - votos existentes y resultados
-	existingVotes, err := h.votesUseCase.ListVotesByVoting(c.Request.Context(), votingID)
+	existingVotes, err := h.votesUseCase.ListVotesByVoting(c.Request.Context(), *votingID)
 	var votesResponse []response.VoteResponse
 	if err == nil && len(existingVotes) > 0 {
 		votesResponse = mappers.MapVoteDTOsToResponses(existingVotes)
@@ -119,7 +131,7 @@ func (h *PublicHandler) PublicSSEVotingResults(c *gin.Context) {
 	}
 
 	// Obtener resultados de votación con colores
-	votingResults, err := h.resultsUseCase.GetVotingResults(c.Request.Context(), votingID)
+	votingResults, err := h.resultsUseCase.GetVotingResults(c.Request.Context(), *votingID)
 	var resultsResponse []response.VotingResultResponse
 	if err == nil && len(votingResults) > 0 {
 		resultsResponse = mappers.MapVotingResultsToResponses(votingResults)
@@ -154,7 +166,7 @@ func (h *PublicHandler) PublicSSEVotingResults(c *gin.Context) {
 			voteResponse := mappers.MapVoteDTOToResponse(&voteEvent.Vote)
 
 			// Obtener resultados actualizados
-			updatedResults, err := h.resultsUseCase.GetVotingResults(c.Request.Context(), votingID)
+			updatedResults, err := h.resultsUseCase.GetVotingResults(c.Request.Context(), *votingID)
 			var resultsResponse []response.VotingResultResponse
 			if err == nil && len(updatedResults) > 0 {
 				resultsResponse = mappers.MapVotingResultsToResponses(updatedResults)

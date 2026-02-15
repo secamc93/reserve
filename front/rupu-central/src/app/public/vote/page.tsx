@@ -9,13 +9,15 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { PublicVotingContext } from '@/services/modules/horizontal-properties/voting/ui/public-voting/public-voting-context';
 import { PublicVotingValidation } from '@/services/modules/horizontal-properties/voting/ui/public-voting/public-voting-validation';
+import { PublicVotingsList } from '@/services/modules/horizontal-properties/voting/ui/public-voting/public-votings-list';
 import { PublicVotingScreen } from '@/services/modules/horizontal-properties/voting/ui/public-voting/public-voting-screen';
 import { PublicVotingProgress } from '@/services/modules/horizontal-properties/voting/ui/public-voting/public-voting-progress';
 import { Spinner } from '@shared/ui';
+import type { GroupVoting } from '@/services/modules/horizontal-properties/voting/infrastructure/actions/public-voting';
 
 interface VotingParams {
   token: string;
-  voting_id: string;
+  voting_id: string | null;
   hp_id: string;
   group_id?: string;
 }
@@ -49,11 +51,14 @@ interface ResidentData {
 
 function PublicVotePageContent() {
   const searchParams = useSearchParams();
-  const [step, setStep] = useState<'context' | 'validation' | 'voting' | 'progress' | 'success' | 'error'>('context');
+  const [step, setStep] = useState<'context' | 'validation' | 'voting-list' | 'voting' | 'progress' | 'success' | 'error'>('context');
   const [votingParams, setVotingParams] = useState<VotingParams | null>(null);
   const [votingContext, setVotingContext] = useState<VotingContextData | null>(null);
   const [votingAuthToken, setVotingAuthToken] = useState<string | null>(null);
   const [residentData, setResidentData] = useState<ResidentData | null>(null);
+  const [selectedVotingId, setSelectedVotingId] = useState<number | null>(null);
+  const [selectedVoting, setSelectedVoting] = useState<GroupVoting | null>(null);
+  const [isGroupToken, setIsGroupToken] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -94,10 +99,15 @@ function PublicVotePageContent() {
           votingId = votingId || payload.voting_id?.toString();
           businessId = businessId || payload.hp_id?.toString();
 
+          // Detectar si es token de grupo (voting_id ausente o null)
+          const isGroup = !payload.voting_id;
+          setIsGroupToken(isGroup);
+
           console.log('✅ [PUBLIC VOTE] Datos extraídos del token:', {
             votingId,
             businessId,
-            groupId: payload.voting_group_id
+            groupId: payload.voting_group_id,
+            isGroupToken: isGroup
           });
         }
       } catch (err) {
@@ -105,8 +115,10 @@ function PublicVotePageContent() {
       }
     }
 
-    if (!votingId || !businessId) {
-      console.error('❌ [PUBLIC VOTE] Faltan parámetros requeridos:', { votingId, businessId });
+    // Para tokens de grupo, solo businessId es requerido
+    // Para tokens individuales, ambos son requeridos
+    if (!businessId || (!votingId && !isGroupToken)) {
+      console.error('❌ [PUBLIC VOTE] Faltan parámetros requeridos:', { votingId, businessId, isGroupToken });
       setError('Parámetros de votación inválidos. Por favor, escanee el código QR nuevamente.');
       setStep('error');
       setLoading(false);
@@ -125,8 +137,23 @@ function PublicVotePageContent() {
   }, [searchParams]);
 
   const handleValidationSuccess = (authToken: string, resident: ResidentData) => {
+    console.log('✅ [PUBLIC VOTE] Validación exitosa, token de grupo:', isGroupToken);
     setVotingAuthToken(authToken);
     setResidentData(resident);
+
+    // Si es token de grupo, ir a lista de votaciones
+    // Si es token individual, ir directamente a votar
+    if (isGroupToken) {
+      setStep('voting-list');
+    } else {
+      setStep('voting');
+    }
+  };
+
+  const handleSelectVoting = (votingId: number, voting: GroupVoting) => {
+    console.log('📋 [PUBLIC VOTE] Votación seleccionada:', votingId, voting.title);
+    setSelectedVotingId(votingId);
+    setSelectedVoting(voting);
     setStep('voting');
   };
 
@@ -218,10 +245,24 @@ function PublicVotePageContent() {
         />
       )}
 
+      {step === 'voting-list' && votingAuthToken && residentData && (
+        <PublicVotingsList
+          votingAuthToken={votingAuthToken}
+          residentData={{
+            id: residentData.id,
+            name: residentData.name,
+            unitNumber: residentData.unitNumber
+          }}
+          onSelectVoting={handleSelectVoting}
+          onError={handleError}
+        />
+      )}
+
       {step === 'voting' && votingAuthToken && residentData && (
         <PublicVotingScreen
           votingAuthToken={votingAuthToken}
           residentData={residentData}
+          selectedVotingId={selectedVotingId}
           onSuccess={handleVoteSuccess}
           onError={handleError}
         />

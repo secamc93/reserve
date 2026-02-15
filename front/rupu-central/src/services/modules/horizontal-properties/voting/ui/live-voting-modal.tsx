@@ -7,12 +7,10 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Badge, Spinner, Modal } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
-import { generatePublicUrlAction } from '@/services/modules/horizontal-properties/voting/infrastructure/actions/public-voting';
 import { getVotingDetailsAction } from '@/services/modules/horizontal-properties/voting/infrastructure/actions';
 import { VoteModal } from './vote-modal';
 import { VotesByUnitSection, type ResidentialUnit } from './components/votes-by-unit-section';
 import { VotingSummaryBlock } from './voting-summary-block';
-// import { QRCodeSVG } from 'qrcode.react'; // Ya no se usa, se genera dinámicamente
 import { useVotingSSE } from './hooks';
 import { Vote } from '../domain/entities'; // ✅ Usar la interfaz oficial
 
@@ -271,13 +269,9 @@ export function LiveVotingModal({
   const [showDeleteVoteModal, setShowDeleteVoteModal] = useState(false);
   const [selectedUnitForDelete, setSelectedUnitForDelete] = useState<ResidentialUnit | null>(null);
   const [deletingVote, setDeletingVote] = useState(false);
-  const [showQRModal, setShowQRModal] = useState(false);
   const [showPieChart, setShowPieChart] = useState(false);
   const [isLive, setIsLive] = useState(true);
   const [useRealTime, setUseRealTime] = useState(true);
-  const [qrData, setQrData] = useState<string>('');
-  const [publicUrl, setPublicUrl] = useState<string>('');
-  const [generatingQR, setGeneratingQR] = useState(false);
 
   // Estados para datos reales del endpoint
   const [votingDetails, setVotingDetails] = useState<{
@@ -723,53 +717,6 @@ export function LiveVotingModal({
 
   if (!isOpen || !voting) return null;
 
-  // Función para generar QR de votación pública
-  const generatePublicVotingQR = async () => {
-    setGeneratingQR(true);
-    try {
-      const token = TokenStorage.getBusinessToken();
-      if (!token) {
-        throw new Error('No se encontró el token de autenticación');
-      }
-
-      // Generar URL pública usando Server Action
-      const result = await generatePublicUrlAction({
-        token,
-        businessId: businessId,
-        groupId: voting.votingGroupId,
-        votingId: voting.id,
-        durationHours: 24,
-        frontendUrl: `${window.location.origin}/public/vote`
-      });
-
-      if (result.success && result.data) {
-        const { public_url } = result.data;
-        setPublicUrl(public_url);
-
-        // Generar QR con la URL
-        const QRCode = await import('qrcode');
-        const qrDataURL = await QRCode.default.toDataURL(public_url, {
-          width: 400,
-          margin: 2,
-          color: {
-            dark: '#000000',
-            light: '#FFFFFF'
-          }
-        });
-
-        setQrData(qrDataURL);
-        setShowQRModal(true);
-      } else {
-        throw new Error(result.error || result.message || 'Error al generar URL pública');
-      }
-    } catch (err) {
-      console.error('Error generando QR:', err);
-      alert('Error al generar el código QR. Por favor, intente nuevamente.');
-    } finally {
-      setGeneratingQR(false);
-    }
-  };
-
   // Generar votos de ejemplo para 200 unidades con distribución variada (solo si no hay votos reales)
   const generateMockVotes = (): Vote[] => {
     // Si ya hay votos reales, usar esos
@@ -1111,20 +1058,6 @@ export function LiveVotingModal({
                 {isLive ? 'Pausar' : 'Reanudar'}
               </button>
               <button
-                onClick={generatePublicVotingQR}
-                disabled={generatingQR}
-                className="btn btn-outline"
-              >
-                {generatingQR ? (
-                  <>
-                    <Spinner size="sm" />
-                    <span className="ml-2">Generando...</span>
-                  </>
-                ) : (
-                  '📱 QR'
-                )}
-              </button>
-              <button
                 onClick={handleVote}
                 className="btn btn-primary"
                 disabled={!voting.isActive}
@@ -1235,126 +1168,6 @@ export function LiveVotingModal({
             residentName: selectedUnitForVote.resident
           } : undefined}
         />
-      )}
-
-      {/* Modal QR */}
-      {showQRModal && (
-        <div className="fixed inset-0 z-[60] bg-black bg-opacity-75 flex items-center justify-center p-6">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
-            {/* Header */}
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">
-                📱 Código QR de Votación
-              </h2>
-              <button
-                onClick={() => setShowQRModal(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Contenido */}
-            <div className="flex flex-col items-center space-y-6">
-              {/* Información de la votación */}
-              <div className="w-full bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h3 className="text-lg font-semibold text-blue-900 mb-2">
-                  {voting.title}
-                </h3>
-                <p className="text-sm text-blue-700">
-                  {voting.description}
-                </p>
-              </div>
-
-              {/* QR Code */}
-              <div className="bg-white p-6 rounded-xl border-4 border-gray-200 shadow-lg">
-                {qrData ? (
-                  <img src={qrData} alt="QR Code de votación" className="w-80 h-80" />
-                ) : (
-                  <div className="w-80 h-80 flex items-center justify-center bg-gray-100 rounded-lg">
-                    <Spinner size="lg" />
-                  </div>
-                )}
-              </div>
-
-              {/* URL y descripción */}
-              <div className="w-full space-y-3">
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                  <p className="text-xs text-gray-500 mb-1 font-semibold">URL de votación:</p>
-                  <p className="text-sm text-gray-900 font-mono break-all">
-                    {publicUrl || `https://votacion.rupu.com/p/${voting.votingGroupId}/v/${voting.id}`}
-                  </p>
-                </div>
-
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <div className="flex gap-2">
-                    <span className="text-yellow-600">💡</span>
-                    <div>
-                      <p className="text-sm text-yellow-800 font-semibold mb-1">
-                        Votación Pública
-                      </p>
-                      <p className="text-xs text-yellow-700">
-                        Los residentes pueden escanear este código QR con su teléfono para acceder a la votación desde cualquier lugar.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                  <div className="flex gap-2">
-                    <span className="text-gray-600">ℹ️</span>
-                    <div>
-                      <p className="text-xs text-gray-600">
-                        <strong>Nota:</strong> La URL y autenticación por token se configurarán próximamente. Por ahora, esta es una URL de ejemplo.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Botones de acción */}
-              <div className="w-full space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={() => {
-                      if (publicUrl) {
-                        navigator.clipboard.writeText(publicUrl);
-                        alert('URL copiada al portapapeles');
-                      }
-                    }}
-                    disabled={!publicUrl}
-                    className="btn btn-outline text-sm"
-                  >
-                    📋 Copiar URL
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (qrData) {
-                        const link = document.createElement('a');
-                        link.download = `qr-votacion-${voting.id}.png`;
-                        link.href = qrData;
-                        link.click();
-                      }
-                    }}
-                    disabled={!qrData}
-                    className="btn btn-outline text-sm"
-                  >
-                    💾 Descargar QR
-                  </button>
-                </div>
-
-                <button
-                  onClick={() => setShowQRModal(false)}
-                  className="btn btn-primary w-full"
-                >
-                  Cerrar
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
       )}
 
       {/* Modal de Confirmación de Eliminar Voto */}

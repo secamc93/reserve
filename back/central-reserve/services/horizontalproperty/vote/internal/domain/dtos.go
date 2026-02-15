@@ -257,3 +257,20 @@ type ImportPropertyUnitsResult struct {
 	Skipped int
 	Errors  []string
 }
+
+// VotingWithStatusDTO - DTO para votación con estado de voto del usuario
+// Usado para listar votaciones de un grupo con información de si la unidad ya votó
+type VotingWithStatusDTO struct {
+	ID                 uint
+	VotingGroupID      uint
+	Title              string
+	Description        string
+	VotingType         string
+	IsSecret           bool
+	AllowAbstention    bool
+	IsActive           bool
+	DisplayOrder       int
+	RequiredPercentage *float64
+	OptionsCount       int
+	HasVoted           bool
+}

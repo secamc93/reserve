@@ -24,6 +24,8 @@ type IPublicHandler interface {
 	GetPublicUnitsWithResidents(c *gin.Context)
 	ValidateResidentForVoting(c *gin.Context)
 	GeneratePublicVotingURL(c *gin.Context)
+	GeneratePublicGroupURL(c *gin.Context)
+	ListGroupVotings(c *gin.Context)
 	PublicSSEVotingResults(c *gin.Context)
 	Router(group *gin.RouterGroup)
 }

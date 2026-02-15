@@ -13,6 +13,7 @@ import { VotingsList } from './votings-list';
 import { AttendanceManagement } from '../../attendance/ui/attendance-management';
 import { TokenStorage } from '@shared/config';
 import { getVotingGroupsAction } from '../infrastructure/actions';
+import { generateGroupPublicUrlAction } from '../infrastructure/actions/public-voting';
 
 interface VotingGroup {
   id: number;
@@ -44,6 +45,13 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
   const [expandedGroupId, setExpandedGroupId] = useState<number | null>(null);
   const [attendanceGroupId, setAttendanceGroupId] = useState<number | null>(null);
   const [userToken, setUserToken] = useState<string>('');
+  const [showGroupQRModal, setShowGroupQRModal] = useState(false);
+  const [groupQRData, setGroupQRData] = useState<{
+    qrDataUrl: string;
+    publicUrl: string;
+    groupName: string;
+    votingsCount: number;
+  } | null>(null);
 
   useEffect(() => {
     loadVotingGroups();
@@ -126,6 +134,52 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
     setExpandedGroupId(expandedGroupId === groupId ? null : groupId);
   };
 
+  const handleGenerateGroupQR = async (group: VotingGroup) => {
+    try {
+      const token = TokenStorage.getBusinessToken();
+      if (!token) {
+        alert('Error: No hay token de autenticación');
+        return;
+      }
+
+      console.log('📱 [GROUP QR] Generando QR para grupo:', group.name);
+
+      const result = await generateGroupPublicUrlAction({
+        token,
+        businessId: group.businessId,
+        groupId: group.id,
+        durationHours: 24
+      });
+
+      if (result.success && result.data) {
+        console.log('✅ [GROUP QR] URL generada:', result.data.public_url);
+
+        // Generar imagen QR con librería qrcode
+        const QRCode = await import('qrcode');
+        const qrDataURL = await QRCode.default.toDataURL(result.data.public_url, {
+          width: 400,
+          margin: 2,
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+          }
+        });
+
+        setGroupQRData({
+          qrDataUrl: qrDataURL,
+          publicUrl: result.data.public_url,
+          groupName: result.data.group_name,
+          votingsCount: result.data.votings_count
+        });
+        setShowGroupQRModal(true);
+      } else {
+        throw new Error(result.error || 'Error al generar URL pública');
+      }
+    } catch (err) {
+      console.error('❌ [GROUP QR] Error generando QR de grupo:', err);
+      alert('Error al generar el código QR del grupo');
+    }
+  };
 
   if (loading) {
     return (
@@ -289,6 +343,20 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
                           </svg>
                         </button>
 
+                        {/* Botón QR del grupo */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleGenerateGroupQR(group);
+                          }}
+                          className="p-2 bg-purple-500 text-white hover:bg-purple-600 rounded-lg transition-colors"
+                          title="Generar QR del grupo"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                          </svg>
+                        </button>
+
                         <button
                           onClick={() => handleToggleGroup(group.id)}
                           className="p-2 bg-gray-600 text-white hover:bg-gray-700 rounded-lg transition-all"
@@ -379,6 +447,87 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
           businessId={businessId}
           group={selectedGroup}
         />
+      )}
+
+      {/* Modal QR del grupo */}
+      {showGroupQRModal && groupQRData && (
+        <div className="fixed inset-0 z-[60] bg-black bg-opacity-75 flex items-center justify-center p-6">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">
+                📱 QR del Grupo de Votación
+              </h2>
+              <button
+                onClick={() => setShowGroupQRModal(false)}
+                className="text-gray-500 hover:text-gray-700 text-3xl leading-none"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="flex flex-col items-center space-y-6">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 w-full">
+                <h3 className="text-lg font-semibold text-blue-900 text-center">
+                  {groupQRData.groupName}
+                </h3>
+                <p className="text-sm text-blue-700 text-center mt-2">
+                  Acceso a {groupQRData.votingsCount} {groupQRData.votingsCount === 1 ? 'votación' : 'votaciones'} del grupo
+                </p>
+              </div>
+
+              <div className="bg-white p-6 rounded-xl border-4 border-gray-200">
+                <img
+                  src={groupQRData.qrDataUrl}
+                  alt="QR Code del Grupo"
+                  className="w-80 h-80"
+                />
+              </div>
+
+              <div className="w-full bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <p className="text-xs text-gray-500 mb-1 font-semibold">URL Pública:</p>
+                <p className="text-sm text-gray-900 font-mono break-all">
+                  {groupQRData.publicUrl}
+                </p>
+              </div>
+
+              <div className="w-full grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(groupQRData.publicUrl);
+                    alert('✅ URL copiada al portapapeles');
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  Copiar URL
+                </button>
+                <button
+                  onClick={() => {
+                    const link = document.createElement('a');
+                    link.download = `qr-grupo-${groupQRData.groupName.replace(/\s+/g, '-').toLowerCase()}.png`;
+                    link.href = groupQRData.qrDataUrl;
+                    link.click();
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Descargar QR
+                </button>
+              </div>
+
+              <button
+                onClick={() => setShowGroupQRModal(false)}
+                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Modal de gestión de asistencia - Removed, now using routes */}
