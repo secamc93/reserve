@@ -246,15 +246,31 @@ export function PublicVotingValidation({
             </h3>
 
             <div className="border-t border-blue-200 pt-3">
-              <h4 className="text-md font-semibold text-blue-800 mb-1">
-                {votingContext.voting.title}
-              </h4>
-              <p className="text-xs text-blue-600 mb-2">
-                {votingContext.voting.description}
-              </p>
-              <p className="text-xs text-blue-500">
-                📋 {votingContext.voting_group.name}
-              </p>
+              {/* Mostrar votación específica (token individual) */}
+              {votingContext.voting && (
+                <>
+                  <h4 className="text-md font-semibold text-blue-800 mb-1">
+                    {votingContext.voting.title}
+                  </h4>
+                  <p className="text-xs text-blue-600 mb-2">
+                    {votingContext.voting.description}
+                  </p>
+                </>
+              )}
+
+              {/* Mostrar grupo de votación */}
+              {votingContext.voting_group && (
+                <p className="text-xs text-blue-500">
+                  📋 {votingContext.voting_group.name}
+                </p>
+              )}
+
+              {/* Mensaje para tokens de grupo */}
+              {!votingContext.voting && votingContext.is_group_token && (
+                <p className="text-sm text-blue-700">
+                  🗳️ Acceso a todas las votaciones del grupo
+                </p>
+              )}
             </div>
           </div>
         </div>
