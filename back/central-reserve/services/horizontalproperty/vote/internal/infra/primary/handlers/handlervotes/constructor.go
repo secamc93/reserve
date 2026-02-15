@@ -12,6 +12,7 @@ type IVotesHandler interface {
 	CreateVote(c *gin.Context)
 	ListVotes(c *gin.Context)
 	DeleteVoteAdmin(c *gin.Context)
+	MarkUnitAttendance(c *gin.Context) // ✅ NUEVO
 	Router(group *gin.RouterGroup)
 }
 

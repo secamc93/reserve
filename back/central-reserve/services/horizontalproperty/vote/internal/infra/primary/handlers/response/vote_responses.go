@@ -99,6 +99,7 @@ type VotingDetailByUnitResponse struct {
 	ResidentID               *uint    `json:"resident_id" example:"5"`
 	ResidentName             *string  `json:"resident_name" example:"Juan Pérez"`
 	HasVoted                 bool     `json:"has_voted" example:"true"`
+	HasAttendance            bool     `json:"has_attendance" example:"true"` // ✅ NUEVO: Indica si tiene asistencia marcada
 	VotingOptionID           *uint    `json:"voting_option_id" example:"3"`
 	OptionText               *string  `json:"option_text" example:"Sí"`
 	OptionCode               *string  `json:"option_code" example:"yes"`

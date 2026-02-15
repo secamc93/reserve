@@ -157,6 +157,7 @@ func MapVotingDetailByUnitToResponse(dto *domain.VotingDetailByUnitDTO) response
 		ResidentID:               dto.ResidentID,
 		ResidentName:             dto.ResidentName,
 		HasVoted:                 dto.HasVoted,
+		HasAttendance:            dto.HasAttendance, // ✅ NUEVO: Mapear campo de asistencia
 		VotingOptionID:           dto.VotingOptionID,
 		OptionText:               dto.OptionText,
 		OptionCode:               dto.OptionCode,

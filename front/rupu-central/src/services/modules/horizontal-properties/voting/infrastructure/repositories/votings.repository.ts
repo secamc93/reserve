@@ -19,7 +19,8 @@ import {
   UpdateVotingOptionStatusParams,
   DeleteVotingOptionParams,
   GetVotesParams,
-  CreateVoteParams
+  CreateVoteParams,
+  MarkUnitAttendanceParams, // ✅ NUEVO
 } from '../../domain/ports';
 import { Voting, VotingsList, VotingOption, VotingOptionsList, Vote, VotesList } from '../../domain';
 import { env, logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
@@ -953,5 +954,47 @@ export class VotesRepository implements IVotesRepository {
       ipAddress: data.data.ip_address,
       userAgent: data.data.user_agent,
     };
+  }
+
+  // ✅ NUEVO: Marcar o desmarcar asistencia de una unidad
+  async markUnitAttendance(params: MarkUnitAttendanceParams): Promise<void> {
+    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings/${params.votingId}/units/${params.unitId}/attendance`;
+    const startTime = Date.now();
+
+    const body = {
+      mark_attendance: params.markAttendance,
+    };
+
+    logHttpRequest({ method: 'PUT', url, body });
+
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${params.token}`,
+      },
+      body: JSON.stringify(body),
+    });
+
+    const duration = Date.now() - startTime;
+    const data = await response.json();
+
+    if (!response.ok) {
+      logHttpError({
+        status: response.status,
+        statusText: response.statusText,
+        duration,
+        data,
+      });
+      throw new Error(data.error || data.message || `Error ${response.status}`);
+    }
+
+    logHttpSuccess({
+      status: response.status,
+      statusText: response.statusText,
+      duration,
+      summary: `Asistencia ${params.markAttendance ? 'marcada' : 'desmarcada'}`,
+      data,
+    });
   }
 }

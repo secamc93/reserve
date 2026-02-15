@@ -130,6 +130,7 @@ type VotingDetailByUnitDTO struct {
 	ResidentID               *uint
 	ResidentName             *string
 	HasVoted                 bool
+	HasAttendance            bool     // ✅ NUEVO: Indica si la unidad tiene asistencia marcada
 	VotingOptionID           *uint
 	OptionText               *string
 	OptionCode               *string
