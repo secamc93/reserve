@@ -43,36 +43,25 @@ func (h *ResidentHandler) CreateResident(c *gin.Context) {
 		return
 	}
 
-	// Determinar business_id según token y rol (super admin)
+	// Obtener business_id del token (no del request)
 	isSuperAdmin := middleware.IsSuperAdmin(c)
-	tokenBusinessID, exists := middleware.GetBusinessID(c)
-
 	var businessID uint
-	if isSuperAdmin {
-		// Super admin: puede usar el business_id del token o debe especificarlo en el body
-		if exists && tokenBusinessID != 0 {
-			businessID = tokenBusinessID
-		} else {
-			h.logger.Error(ctx).Msg("business_id requerido para super admin")
-			c.JSON(http.StatusBadRequest, response.ErrorResponse{
-				Success: false,
-				Message: "business_id requerido",
-				Error:   "Debe tener business_id en el token para crear residentes",
-			})
-			return
-		}
-	} else {
-		// Usuario normal: business_id siempre del token
-		if !exists {
-			h.logger.Error(ctx).Msg("business_id no disponible en el token")
-			c.JSON(http.StatusUnauthorized, response.ErrorResponse{
-				Success: false,
-				Message: "Token inválido",
-				Error:   "business_id no disponible en el token",
-			})
-			return
-		}
-		businessID = tokenBusinessID
+	var exists bool
+	businessID, exists = middleware.GetBusinessID(c)
+
+	if !exists && !isSuperAdmin {
+		h.logger.Error(ctx).Msg("business_id no disponible en el token")
+		c.JSON(http.StatusUnauthorized, response.ErrorResponse{
+			Success: false,
+			Message: "Token inválido",
+			Error:   "business_id no disponible en el token",
+		})
+		return
+	}
+
+	// Si es super admin y no hay business_id en el token, usar el del request
+	if isSuperAdmin && businessID == 0 {
+		businessID = req.BusinessID
 	}
 
 	// Agregar business_id al contexto para logging
