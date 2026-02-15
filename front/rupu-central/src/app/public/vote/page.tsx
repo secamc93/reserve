@@ -87,6 +87,7 @@ function PublicVotePageContent() {
     }
 
     // Si voting_id o hp_id no vienen en la URL, intentar extraerlos del token JWT
+    let isGroup = false; // Variable local para detectar token de grupo
     if (!votingId || !businessId) {
       console.log('🔓 [PUBLIC VOTE] voting_id o hp_id no en URL, extrayendo del token...');
       try {
@@ -100,7 +101,7 @@ function PublicVotePageContent() {
           businessId = businessId || payload.hp_id?.toString();
 
           // Detectar si es token de grupo (voting_id ausente o null)
-          const isGroup = !payload.voting_id;
+          isGroup = !payload.voting_id;
           setIsGroupToken(isGroup);
 
           console.log('✅ [PUBLIC VOTE] Datos extraídos del token:', {
@@ -117,8 +118,8 @@ function PublicVotePageContent() {
 
     // Para tokens de grupo, solo businessId es requerido
     // Para tokens individuales, ambos son requeridos
-    if (!businessId || (!votingId && !isGroupToken)) {
-      console.error('❌ [PUBLIC VOTE] Faltan parámetros requeridos:', { votingId, businessId, isGroupToken });
+    if (!businessId || (!votingId && !isGroup)) {
+      console.error('❌ [PUBLIC VOTE] Faltan parámetros requeridos:', { votingId, businessId, isGroupToken: isGroup });
       setError('Parámetros de votación inválidos. Por favor, escanee el código QR nuevamente.');
       setStep('error');
       setLoading(false);
