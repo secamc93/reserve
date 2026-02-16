@@ -174,3 +174,45 @@ func MapVotingDetailsByUnitToResponses(dtos []domain.VotingDetailByUnitDTO) []re
 	}
 	return responses
 }
+
+// MapResetVotingResultDTOToResponse mapea resultado de reseteo a response
+func MapResetVotingResultDTOToResponse(dto *domain.ResetVotingResultDTO) response.ResetVotingResultResponse {
+	return response.ResetVotingResultResponse{
+		VotingID:     dto.VotingID,
+		DeletedCount: dto.DeletedCount,
+	}
+}
+
+// MapPreviousVotingVotedUnitsDTOToResponse mapea DTO de unidades de votación anterior a response
+func MapPreviousVotingVotedUnitsDTOToResponse(dto *domain.PreviousVotingVotedUnitsDTO) response.PreviousVotingVotedUnitsResponse {
+	return response.PreviousVotingVotedUnitsResponse{
+		PreviousVotingID:    dto.PreviousVotingID,
+		PreviousVotingTitle: dto.PreviousVotingTitle,
+		VotedUnitIDs:        dto.VotedUnitIDs,
+		TotalVoted:          dto.TotalVoted,
+	}
+}
+
+// MapBulkVoteResultDTOToResponse mapea resultado de votación masiva a response
+func MapBulkVoteResultDTOToResponse(dto *domain.BulkVoteResultDTO) response.BulkVoteResultResponse {
+	results := make([]response.BulkVoteItemResultResponse, len(dto.Results))
+	for i, item := range dto.Results {
+		var voteResp *response.VoteResponse
+		if item.Vote != nil {
+			mapped := MapVoteDTOToResponse(item.Vote)
+			voteResp = &mapped
+		}
+		results[i] = response.BulkVoteItemResultResponse{
+			PropertyUnitID: item.PropertyUnitID,
+			Success:        item.Success,
+			Vote:           voteResp,
+			Error:          item.Error,
+		}
+	}
+	return response.BulkVoteResultResponse{
+		TotalProcessed: dto.TotalProcessed,
+		Succeeded:      dto.Succeeded,
+		Failed:         dto.Failed,
+		Results:        results,
+	}
+}

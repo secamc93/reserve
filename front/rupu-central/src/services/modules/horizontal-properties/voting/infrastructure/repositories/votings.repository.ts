@@ -20,9 +20,10 @@ import {
   DeleteVotingOptionParams,
   GetVotesParams,
   CreateVoteParams,
-  MarkUnitAttendanceParams, // ✅ NUEVO
+  CreateBulkVotesParams,
+  MarkUnitAttendanceParams,
 } from '../../domain/ports';
-import { Voting, VotingsList, VotingOption, VotingOptionsList, Vote, VotesList } from '../../domain';
+import { Voting, VotingsList, VotingOption, VotingOptionsList, Vote, VotesList, BulkVoteResult } from '../../domain';
 import { env, logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
 import {
   BackendGetVotingsResponse,
@@ -37,7 +38,8 @@ import {
   BackendVotingOptionResponse,
   BackendDeleteVotingOptionResponse,
   BackendGetVotesResponse,
-  BackendCreateVoteResponse
+  BackendCreateVoteResponse,
+  BackendCreateBulkVotesResponse,
 } from './response/votings.response';
 
 // ============================================
@@ -956,7 +958,72 @@ export class VotesRepository implements IVotesRepository {
     };
   }
 
-  // ✅ NUEVO: Marcar o desmarcar asistencia de una unidad
+  async createBulkVotes(params: CreateBulkVotesParams): Promise<BulkVoteResult> {
+    const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings/${params.votingId}/votes/bulk`;
+    const startTime = Date.now();
+
+    const body = {
+      property_unit_ids: params.data.propertyUnitIds,
+      voting_option_id: params.data.votingOptionId,
+      auto_mark_attendance: params.data.autoMarkAttendance,
+      ip_address: params.data.ipAddress,
+      user_agent: params.data.userAgent,
+      notes: params.data.notes,
+    };
+
+    logHttpRequest({ method: 'POST', url, body });
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${params.token}`,
+      },
+      body: JSON.stringify(body),
+    });
+
+    const duration = Date.now() - startTime;
+    const data: BackendCreateBulkVotesResponse = await response.json();
+
+    if (!response.ok) {
+      logHttpError({
+        status: response.status,
+        statusText: response.statusText,
+        duration,
+        data,
+      });
+      throw new Error(data.error || data.message || `Error ${response.status}`);
+    }
+
+    logHttpSuccess({
+      status: response.status,
+      statusText: response.statusText,
+      duration,
+      summary: `Votación masiva: ${data.data.succeeded} exitosos, ${data.data.failed} fallidos`,
+      data,
+    });
+
+    return {
+      totalProcessed: data.data.total_processed,
+      succeeded: data.data.succeeded,
+      failed: data.data.failed,
+      results: data.data.results.map(item => ({
+        propertyUnitId: item.property_unit_id,
+        success: item.success,
+        vote: item.vote ? {
+          id: item.vote.id,
+          votingId: item.vote.voting_id,
+          votingOptionId: item.vote.voting_option_id,
+          propertyUnitId: item.vote.property_unit_id,
+          votedAt: item.vote.voted_at,
+          ipAddress: item.vote.ip_address,
+          userAgent: item.vote.user_agent,
+        } : undefined,
+        error: item.error,
+      })),
+    };
+  }
+
   async markUnitAttendance(params: MarkUnitAttendanceParams): Promise<void> {
     const url = `${env.API_BASE_URL}/horizontal-properties/voting-groups/${params.groupId}/votings/${params.votingId}/units/${params.unitId}/attendance`;
     const startTime = Date.now();

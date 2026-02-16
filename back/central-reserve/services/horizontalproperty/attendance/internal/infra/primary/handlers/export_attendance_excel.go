@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"central_reserve/services/horizontalproperty/attendance/internal/domain"
 	"central_reserve/services/horizontalproperty/attendance/internal/infra/primary/handlers/response"
 
 	"github.com/gin-gonic/gin"
@@ -30,13 +31,23 @@ func (h *AttendanceHandler) ExportAttendanceExcelDetailed(c *gin.Context) {
 		return
 	}
 
-	// Obtener registros de asistencia (todos los registros sin paginación)
-	paginatedRecords, err := h.attendanceUseCase.GetAttendanceRecordsByListPaged(c.Request.Context(), id, "", nil, 1, 10000)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Success: false, Message: "Error obteniendo registros", Error: err.Error()})
-		return
+	// Obtener TODOS los registros de asistencia iterando por páginas
+	// (el repositorio limita pageSize a 200, así que paginamos para obtener todo)
+	var records []domain.AttendanceRecordDTO
+	exportPage := 1
+	exportPageSize := 200
+	for {
+		paginatedRecords, err := h.attendanceUseCase.GetAttendanceRecordsByListPaged(c.Request.Context(), id, "", nil, exportPage, exportPageSize)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, response.ErrorResponse{Success: false, Message: "Error obteniendo registros", Error: err.Error()})
+			return
+		}
+		records = append(records, paginatedRecords.Data...)
+		if len(records) >= int(paginatedRecords.Total) || len(paginatedRecords.Data) == 0 {
+			break
+		}
+		exportPage++
 	}
-	records := paginatedRecords.Data
 
 	// Obtener título del grupo de votación
 	title, err := h.attendanceUseCase.GetVotingGroupTitleByListID(c.Request.Context(), id)

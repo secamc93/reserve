@@ -45,6 +45,13 @@ type VotingRepository interface {
 	GetHorizontalPropertyBasicInfo(ctx context.Context, hpID uint) (*HorizontalPropertyDTO, error)
 	ListPropertyUnits(ctx context.Context, filters PropertyUnitFiltersDTO) (*PaginatedPropertyUnitsDTO, error)
 
+	// Reset voting
+	DeleteAllVotesByVoting(ctx context.Context, votingID uint) (int64, error)
+
+	// Previous voting
+	GetPreviousVoting(ctx context.Context, votingID uint, groupID uint) (*Voting, error)
+	GetVotedUnitIDsByVoting(ctx context.Context, votingID uint) ([]uint, error)
+
 	// Resident methods (todo en el mismo repository)
 	GetResidentByUnitAndDni(ctx context.Context, hpID, propertyUnitID uint, dni string) (*ResidentBasicDTO, error)
 

@@ -44,3 +44,53 @@ export interface CreateVoteDTO {
   userAgent?: string;
 }
 
+/**
+ * DTO para votación masiva
+ */
+export interface CreateBulkVotesDTO {
+  propertyUnitIds: number[];
+  votingOptionId: number;
+  autoMarkAttendance: boolean;
+  ipAddress?: string;
+  userAgent?: string;
+  notes?: string;
+}
+
+/**
+ * Resultado de votación masiva
+ */
+export interface BulkVoteResult {
+  totalProcessed: number;
+  succeeded: number;
+  failed: number;
+  results: BulkVoteItemResult[];
+}
+
+/**
+ * Resultado individual de votación masiva
+ */
+export interface BulkVoteItemResult {
+  propertyUnitId: number;
+  success: boolean;
+  vote?: Vote;
+  error?: string;
+}
+
+/**
+ * Resultado de reseteo de votación
+ */
+export interface ResetVotingResult {
+  votingId: number;
+  deletedCount: number;
+}
+
+/**
+ * Unidades que votaron en la votación anterior
+ */
+export interface PreviousVotingVotedUnits {
+  previousVotingId: number;
+  previousVotingTitle: string;
+  votedUnitIds: number[];
+  totalVoted: number;
+}
+

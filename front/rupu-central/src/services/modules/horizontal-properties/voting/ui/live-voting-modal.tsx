@@ -7,8 +7,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Badge, Spinner, Modal } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
-import { getVotingDetailsAction } from '@/services/modules/horizontal-properties/voting/infrastructure/actions';
+import { getVotingDetailsAction, resetVotingAction } from '@/services/modules/horizontal-properties/voting/infrastructure/actions';
 import { VoteModal } from './vote-modal';
+import { BulkVoteModal } from './bulk-vote-modal';
 import { VotesByUnitSection, type ResidentialUnit } from './components/votes-by-unit-section';
 import { VotingSummaryBlock } from './voting-summary-block';
 import { useVotingSSE } from './hooks';
@@ -287,6 +288,7 @@ export function LiveVotingModal({
   onVoteSuccess
 }: LiveVotingModalProps) {
   const [showVoteModal, setShowVoteModal] = useState(false);
+  const [showBulkVoteModal, setShowBulkVoteModal] = useState(false);
   const [selectedUnitForVote, setSelectedUnitForVote] = useState<ResidentialUnit | null>(null);
   const [showDeleteVoteModal, setShowDeleteVoteModal] = useState(false);
   const [selectedUnitForDelete, setSelectedUnitForDelete] = useState<ResidentialUnit | null>(null);
@@ -294,6 +296,8 @@ export function LiveVotingModal({
   const [showPieChart, setShowPieChart] = useState(false);
   const [isLive, setIsLive] = useState(true);
   const [useRealTime, setUseRealTime] = useState(true);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [resettingVoting, setResettingVoting] = useState(false);
 
   // Estados para datos reales del endpoint
   const [votingDetails, setVotingDetails] = useState<{
@@ -1028,6 +1032,42 @@ export function LiveVotingModal({
     }
   };
 
+  // Handler para resetear votación
+  const handleResetVoting = async () => {
+    if (!voting) return;
+
+    setResettingVoting(true);
+    try {
+      const token = TokenStorage.getBusinessToken();
+      if (!token) {
+        alert('No se encontró el token de autenticación');
+        return;
+      }
+
+      const result = await resetVotingAction({
+        token,
+        businessId,
+        groupId: voting.votingGroupId,
+        votingId: voting.id,
+      });
+
+      if (result.success) {
+        console.log(`✅ Votación reseteada: ${result.data?.deletedCount} votos eliminados`);
+
+        // Recargar toda la página para limpiar SSE y estado completamente
+        window.location.reload();
+        return;
+      } else {
+        alert(result.error || 'Error al resetear la votación');
+      }
+    } catch (error) {
+      console.error('Error reseteando votación:', error);
+      alert('Error al resetear la votación');
+    } finally {
+      setResettingVoting(false);
+    }
+  };
+
   const handleVoteSuccess = () => {
     console.log('✅ Voto registrado exitosamente. Cerrando modal.');
     // Cerrar el modal después de votar
@@ -1068,10 +1108,18 @@ export function LiveVotingModal({
             </div>
             <div className="flex gap-3">
               <button
+                onClick={() => setShowResetConfirm(true)}
+                className="btn btn-outline border-red-300 text-red-600 hover:bg-red-50"
+                disabled={!voting.isActive}
+                title="Eliminar todos los votos de esta votación"
+              >
+                Resetear
+              </button>
+              <button
                 onClick={() => setShowPieChart(true)}
                 className="btn btn-outline"
               >
-                🍰 Ver torta
+                Ver torta
               </button>
               <button
                 onClick={() => setIsLive(!isLive)}
@@ -1080,11 +1128,18 @@ export function LiveVotingModal({
                 {isLive ? 'Pausar' : 'Reanudar'}
               </button>
               <button
+                onClick={() => setShowBulkVoteModal(true)}
+                className="btn btn-outline"
+                disabled={!voting.isActive}
+              >
+                Votación Masiva
+              </button>
+              <button
                 onClick={handleVote}
                 className="btn btn-primary"
                 disabled={!voting.isActive}
               >
-                🗳️ Votar
+                Votar
               </button>
             </div>
           </div>
@@ -1191,6 +1246,94 @@ export function LiveVotingModal({
           } : undefined}
         />
       )}
+
+      {/* Modal de Votación Masiva */}
+      {voting && (
+        <BulkVoteModal
+          isOpen={showBulkVoteModal}
+          onClose={() => setShowBulkVoteModal(false)}
+          businessId={businessId}
+          groupId={voting.votingGroupId}
+          votingId={voting.id}
+          options={options}
+          currentVotes={sseVotes.map(vote => ({
+            property_unit_id: vote.property_unit_id,
+          }))}
+          unitsWithAttendance={new Set(
+            votingDetails?.units
+              .filter(u => u.has_attendance)
+              .map(u => u.property_unit_id) || []
+          )}
+          sseTotalVotes={sseTotalVotes}
+        />
+      )}
+
+      {/* Modal de Confirmación de Resetear Votación */}
+      <Modal
+        isOpen={showResetConfirm}
+        onClose={() => {
+          if (!resettingVoting) setShowResetConfirm(false);
+        }}
+        title="Resetear Votación"
+        size="md"
+      >
+        <div className="space-y-6">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-center space-x-3">
+              <div className="flex-shrink-0">
+                <svg className="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-medium text-red-800">
+                  ¿Resetear todos los votos?
+                </h3>
+                <p className="text-sm text-red-600 mt-1">
+                  Se eliminarán TODOS los votos de esta votación. Los registros de asistencia se mantienen.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gray-50 rounded-lg p-4">
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600 font-medium">Votación:</span>
+                <span className="text-gray-900 font-semibold">{voting?.title}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 font-medium">Votos actuales:</span>
+                <span className="text-gray-900 font-semibold">{votingDetails?.units_voted || 0}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowResetConfirm(false)}
+              disabled={resettingVoting}
+              className="flex-1 btn btn-outline"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleResetVoting}
+              disabled={resettingVoting}
+              className="flex-1 btn btn-error"
+            >
+              {resettingVoting ? (
+                <>
+                  <Spinner size="sm" />
+                  <span className="ml-2">Reseteando...</span>
+                </>
+              ) : (
+                'Confirmar Reseteo'
+              )}
+            </button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Modal de Confirmación de Eliminar Voto */}
       {selectedUnitForDelete && (

@@ -41,7 +41,17 @@ type CreateVoteRequest struct {
 	UserAgent      string `json:"user_agent"`
 }
 
-// MarkAttendanceRequest - ✅ NUEVO: Request para marcar/desmarcar asistencia de una unidad
+// MarkAttendanceRequest - Request para marcar/desmarcar asistencia de una unidad
 type MarkAttendanceRequest struct {
 	MarkAttendance bool `json:"mark_attendance" binding:"required"`
+}
+
+// CreateBulkVotesRequest - Request para votación masiva
+type CreateBulkVotesRequest struct {
+	PropertyUnitIDs    []uint `json:"property_unit_ids" binding:"required,min=1"`
+	VotingOptionID     uint   `json:"voting_option_id" binding:"required"`
+	AutoMarkAttendance bool   `json:"auto_mark_attendance"`
+	IPAddress          string `json:"ip_address"`
+	UserAgent          string `json:"user_agent"`
+	Notes              string `json:"notes"`
 }

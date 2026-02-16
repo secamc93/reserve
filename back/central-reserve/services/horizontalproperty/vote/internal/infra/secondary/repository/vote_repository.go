@@ -1029,6 +1029,57 @@ func (r *Repository) CheckUnitAttendanceForVoting(ctx context.Context, votingID,
 	return true, nil
 }
 
+// DeleteAllVotesByVoting - Elimina todos los votos de una votación (hard delete)
+func (r *Repository) DeleteAllVotesByVoting(ctx context.Context, votingID uint) (int64, error) {
+	result := r.db.Conn(ctx).Unscoped().Where("voting_id = ?", votingID).Delete(&models.Vote{})
+	if result.Error != nil {
+		r.logger.Error().Err(result.Error).Uint("voting_id", votingID).Msg("Error eliminando todos los votos de la votación")
+		return 0, fmt.Errorf("error eliminando votos: %w", result.Error)
+	}
+	r.logger.Info().Uint("voting_id", votingID).Int64("deleted", result.RowsAffected).Msg("Todos los votos eliminados de la votación")
+	return result.RowsAffected, nil
+}
+
+// GetPreviousVoting - Obtiene la votación creada justo antes de la dada en el mismo grupo
+func (r *Repository) GetPreviousVoting(ctx context.Context, votingID uint, groupID uint) (*domain.Voting, error) {
+	// Obtener el created_at de la votación actual
+	var current models.Voting
+	if err := r.db.Conn(ctx).Select("created_at").First(&current, votingID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("votación actual no encontrada")
+		}
+		return nil, fmt.Errorf("error obteniendo votación actual: %w", err)
+	}
+
+	// Buscar la votación anterior (la más reciente que fue creada antes de la actual)
+	var prev models.Voting
+	if err := r.db.Conn(ctx).
+		Where("voting_group_id = ? AND created_at < ? AND id != ?", groupID, current.CreatedAt, votingID).
+		Order("created_at DESC").
+		First(&prev).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil // No hay votación anterior
+		}
+		return nil, fmt.Errorf("error buscando votación anterior: %w", err)
+	}
+
+	return r.mapVotingToDomain(&prev), nil
+}
+
+// GetVotedUnitIDsByVoting - Obtiene los IDs de unidades que votaron en una votación
+func (r *Repository) GetVotedUnitIDsByVoting(ctx context.Context, votingID uint) ([]uint, error) {
+	var unitIDs []uint
+	if err := r.db.Conn(ctx).
+		Model(&models.Vote{}).
+		Where("voting_id = ?", votingID).
+		Distinct("property_unit_id").
+		Pluck("property_unit_id", &unitIDs).Error; err != nil {
+		r.logger.Error().Err(err).Uint("voting_id", votingID).Msg("Error obteniendo unidades que votaron")
+		return nil, fmt.Errorf("error obteniendo unidades que votaron: %w", err)
+	}
+	return unitIDs, nil
+}
+
 // MarkUnitAttendanceForVoting - Marca o desmarca la asistencia de una unidad para una votación
 // ✅ NUEVO: Permite marcar asistencia desde el live voting
 func (r *Repository) MarkUnitAttendanceForVoting(ctx context.Context, votingID, propertyUnitID uint, markAttendance bool) error {

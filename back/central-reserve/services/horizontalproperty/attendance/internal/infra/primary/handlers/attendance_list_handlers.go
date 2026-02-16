@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"central_reserve/services/auth/middleware"
+	"central_reserve/services/horizontalproperty/attendance/internal/domain"
 	"central_reserve/services/horizontalproperty/attendance/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/attendance/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
@@ -267,14 +268,23 @@ func (h *AttendanceHandler) GetAttendanceRecordsByList(c *gin.Context) {
 func (h *AttendanceHandler) ExportAttendanceExcel(c *gin.Context) {
 	id := parseUint(c.Param("id"))
 
-	// Obtener TODOS los registros usando paginación con tamaño grande
-	// Para exportar, necesitamos todos los datos, así que usamos pageSize alto
-	dto, err := h.attendanceUseCase.GetAttendanceRecordsByListPaged(c.Request.Context(), id, "", nil, 1, 10000)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Success: false, Message: "Error obteniendo registros", Error: err.Error()})
-		return
+	// Obtener TODOS los registros iterando por páginas
+	// (el repositorio limita pageSize a 200, así que paginamos para obtener todo)
+	var records []domain.AttendanceRecordDTO
+	exportPage := 1
+	exportPageSize := 200
+	for {
+		dto, err := h.attendanceUseCase.GetAttendanceRecordsByListPaged(c.Request.Context(), id, "", nil, exportPage, exportPageSize)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, response.ErrorResponse{Success: false, Message: "Error obteniendo registros", Error: err.Error()})
+			return
+		}
+		records = append(records, dto.Data...)
+		if len(records) >= int(dto.Total) || len(dto.Data) == 0 {
+			break
+		}
+		exportPage++
 	}
-	records := dto.Data
 	title, _ := h.attendanceUseCase.GetVotingGroupTitleByListID(c.Request.Context(), id)
 
 	// generar CSV simple (compatible Excel) por rapidez

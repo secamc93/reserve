@@ -10,9 +10,12 @@ import (
 // IVotesHandler define la interfaz para handlers de votos
 type IVotesHandler interface {
 	CreateVote(c *gin.Context)
+	CreateBulkVotes(c *gin.Context)
 	ListVotes(c *gin.Context)
 	DeleteVoteAdmin(c *gin.Context)
-	MarkUnitAttendance(c *gin.Context) // ✅ NUEVO
+	MarkUnitAttendance(c *gin.Context)
+	ResetVoting(c *gin.Context)
+	GetPreviousVotingVotedUnits(c *gin.Context)
 	Router(group *gin.RouterGroup)
 }
 

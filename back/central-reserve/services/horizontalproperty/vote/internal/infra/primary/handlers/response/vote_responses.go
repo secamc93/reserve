@@ -131,6 +131,45 @@ type VotingWithStatusResponse struct {
 	HasVoted           bool     `json:"has_voted"`
 }
 
+// BulkVoteResultResponse - Response para resultado de votación masiva
+type BulkVoteResultResponse struct {
+	TotalProcessed int                        `json:"total_processed"`
+	Succeeded      int                        `json:"succeeded"`
+	Failed         int                        `json:"failed"`
+	Results        []BulkVoteItemResultResponse `json:"results"`
+}
+
+// BulkVoteItemResultResponse - Response para resultado individual de votación masiva
+type BulkVoteItemResultResponse struct {
+	PropertyUnitID uint          `json:"property_unit_id"`
+	Success        bool          `json:"success"`
+	Vote           *VoteResponse `json:"vote,omitempty"`
+	Error          string        `json:"error,omitempty"`
+}
+
+// BulkVoteSuccess - Tipo de respuesta para votación masiva exitosa
+type BulkVoteSuccess = SuccessResponse[BulkVoteResultResponse]
+
+// ResetVotingResultResponse - Response para resultado de reseteo de votación
+type ResetVotingResultResponse struct {
+	VotingID     uint `json:"voting_id" example:"1"`
+	DeletedCount int  `json:"deleted_count" example:"45"`
+}
+
+// ResetVotingSuccess - Tipo de respuesta para reseteo exitoso
+type ResetVotingSuccess = SuccessResponse[ResetVotingResultResponse]
+
+// PreviousVotingVotedUnitsResponse - Response para unidades que votaron en la votación anterior
+type PreviousVotingVotedUnitsResponse struct {
+	PreviousVotingID    uint   `json:"previous_voting_id" example:"1"`
+	PreviousVotingTitle string `json:"previous_voting_title" example:"Aprobación de presupuesto"`
+	VotedUnitIDs        []uint `json:"voted_unit_ids" example:"1,2,3"`
+	TotalVoted          int    `json:"total_voted" example:"45"`
+}
+
+// PreviousVotingVotedUnitsSuccess - Tipo de respuesta para unidades de votación anterior
+type PreviousVotingVotedUnitsSuccess = SuccessResponse[PreviousVotingVotedUnitsResponse]
+
 // Tipos de respuesta con datos
 type VotingGroupSuccess = SuccessResponse[VotingGroupResponse]
 type VotingGroupsSuccess = SuccessResponse[[]VotingGroupResponse]

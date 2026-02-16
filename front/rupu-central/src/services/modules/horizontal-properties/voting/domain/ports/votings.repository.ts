@@ -2,7 +2,7 @@
  * Puerto: Repositorio de Votaciones
  */
 
-import { Voting, VotingsList, CreateVotingDTO, UpdateVotingDTO, VotingOption, VotingOptionsList, CreateVotingOptionDTO, Vote, VotesList, CreateVoteDTO } from '../entities';
+import { Voting, VotingsList, CreateVotingDTO, UpdateVotingDTO, VotingOption, VotingOptionsList, CreateVotingOptionDTO, Vote, VotesList, CreateVoteDTO, CreateBulkVotesDTO, BulkVoteResult } from '../entities';
 
 // ============================================
 // VOTINGS (Votaciones)
@@ -138,7 +138,16 @@ export interface CreateVoteParams {
   data: CreateVoteDTO;
 }
 
-// ✅ NUEVO: Parámetros para marcar asistencia
+// Parámetros para votación masiva
+export interface CreateBulkVotesParams {
+  token: string;
+  businessId: number;
+  groupId: number;
+  votingId: number;
+  data: CreateBulkVotesDTO;
+}
+
+// Parámetros para marcar asistencia
 export interface MarkUnitAttendanceParams {
   token: string;
   businessId: number;
@@ -151,6 +160,7 @@ export interface MarkUnitAttendanceParams {
 export interface IVotesRepository {
   getVotes(params: GetVotesParams): Promise<VotesList>;
   createVote(params: CreateVoteParams): Promise<Vote>;
-  markUnitAttendance(params: MarkUnitAttendanceParams): Promise<void>; // ✅ NUEVO
+  createBulkVotes(params: CreateBulkVotesParams): Promise<BulkVoteResult>;
+  markUnitAttendance(params: MarkUnitAttendanceParams): Promise<void>;
 }
 

@@ -258,6 +258,47 @@ type ImportPropertyUnitsResult struct {
 	Errors  []string
 }
 
+// CreateBulkVotesDTO - DTO para emitir votos masivos
+type CreateBulkVotesDTO struct {
+	VotingID            uint
+	PropertyUnitIDs     []uint
+	VotingOptionID      uint
+	AutoMarkAttendance  bool
+	IPAddress           string
+	UserAgent           string
+	Notes               string
+}
+
+// BulkVoteResultDTO - DTO para resultado de votación masiva
+type BulkVoteResultDTO struct {
+	TotalProcessed int
+	Succeeded      int
+	Failed         int
+	Results        []BulkVoteItemResultDTO
+}
+
+// BulkVoteItemResultDTO - DTO para resultado individual de votación masiva
+type BulkVoteItemResultDTO struct {
+	PropertyUnitID uint
+	Success        bool
+	Vote           *VoteDTO
+	Error          string
+}
+
+// ResetVotingResultDTO - DTO para resultado de reseteo de votación
+type ResetVotingResultDTO struct {
+	VotingID     uint
+	DeletedCount int
+}
+
+// PreviousVotingVotedUnitsDTO - DTO para unidades que votaron en la votación anterior
+type PreviousVotingVotedUnitsDTO struct {
+	PreviousVotingID    uint
+	PreviousVotingTitle string
+	VotedUnitIDs        []uint
+	TotalVoted          int
+}
+
 // VotingWithStatusDTO - DTO para votación con estado de voto del usuario
 // Usado para listar votaciones de un grupo con información de si la unidad ya votó
 type VotingWithStatusDTO struct {

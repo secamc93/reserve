@@ -128,6 +128,31 @@ export interface BackendCreateVoteResponse {
   success: boolean;
   message: string;
   data: BackendVote;
-  error?: string; // Mensaje de error cuando success es false
+  error?: string;
+}
+
+// ============================================
+// BULK VOTES (Votación Masiva)
+// ============================================
+
+export interface BackendBulkVoteItemResult {
+  property_unit_id: number;
+  success: boolean;
+  vote?: BackendVote;
+  error?: string;
+}
+
+export interface BackendBulkVoteResult {
+  total_processed: number;
+  succeeded: number;
+  failed: number;
+  results: BackendBulkVoteItemResult[];
+}
+
+export interface BackendCreateBulkVotesResponse {
+  success: boolean;
+  message: string;
+  data: BackendBulkVoteResult;
+  error?: string;
 }
 
