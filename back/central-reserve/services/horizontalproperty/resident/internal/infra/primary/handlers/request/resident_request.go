@@ -3,6 +3,7 @@ package request
 import "time"
 
 type CreateResidentRequest struct {
+	BusinessID       uint       `json:"business_id" binding:"required" example:"1"`
 	PropertyUnitID   uint       `json:"property_unit_id" binding:"required" example:"1"`
 	ResidentTypeID   uint       `json:"resident_type_id" binding:"required" example:"1"`
 	Name             string     `json:"name" binding:"required" example:"Juan Pérez"`
