@@ -2,6 +2,7 @@
 import "../styles/global.css";
 import Navbar from "../components/Navbar.astro";
 import ShoppingCart from "../components/ShoppingCart.astro";
+import Footer from "../components/Footer.astro";
 
 export interface Props {
   title: string;
@@ -26,11 +27,12 @@ const { title } = Astro.props;
     <link rel="icon" href="/images/logo.png" type="image/png" />
     <link rel="apple-touch-icon" href="/images/logo.png" />
   </head>
-  <body class="bg-[#0A0A0A] text-white">
+  <body class="bg-[#0A0A0A] text-white flex flex-col min-h-screen">
     <Navbar />
     <ShoppingCart />
-    <main>
+    <main class="flex-grow">
       <slot />
     </main>
+    <Footer />
   </body>
 </html>
