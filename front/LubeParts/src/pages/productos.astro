@@ -1,6 +1,5 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import ProductCard from "../components/ProductCard.astro";
 
 // Datos de productos de lubricantes
 const products = [
@@ -9,174 +8,419 @@ const products = [
         name: "MobilSuper 10w-30",
         price: 25.99,
         image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg",
-        description:
-            "Aceite de motor de alto rendimiento para motores de gasolina y diésel. Protección superior contra el desgaste.",
+        description: "Aceite de motor de alto rendimiento para motores de gasolina y diésel.",
         viscosity: "10W-30",
+        category: "motos",
+        brand: "Mobil"
     },
     {
         id: "ecstar-10w40",
         name: "Ecstar 10w-40",
         price: 28.5,
         image: "https://images-cam93.s3.us-east-1.amazonaws.com/crro.jpg",
-        description:
-            "Aceite sintético premium para motores de alto rendimiento. Excelente estabilidad térmica y protección.",
+        description: "Aceite sintético premium para motores de alto rendimiento.",
         viscosity: "10W-40",
+        category: "livianos",
+        brand: "Ecstar"
     },
     {
         id: "yamalube-10w40",
         name: "Yamalube 10w-40",
         price: 32.75,
         image: "https://images-cam93.s3.us-east-1.amazonaws.com/mula.jpg",
-        description:
-            "Aceite específicamente formulado para motocicletas Yamaha. Máxima protección para tu motor.",
+        description: "Aceite específicamente formulado para motocicletas Yamaha.",
         viscosity: "10W-40",
+        category: "motos",
+        brand: "Yamalube"
     },
     {
         id: "pro-honda-10w30",
         name: "Pro-Honda 10w-30",
         price: 29.99,
         image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg",
-        description:
-            "Aceite de motor recomendado por Honda. Garantiza el rendimiento óptimo de tu vehículo.",
+        description: "Aceite de motor recomendado por Honda.",
         viscosity: "10W-30",
+        category: "motos",
+        brand: "Honda"
     },
     {
         id: "motul-15w50",
         name: "Motul 15w-50",
         price: 45.0,
         image: "https://images-cam93.s3.us-east-1.amazonaws.com/crro.jpg",
-        description:
-            "Aceite de motor de alta viscosidad para condiciones extremas. Ideal para motores de alto rendimiento.",
+        description: "Aceite de motor de alta viscosidad para condiciones extremas.",
         viscosity: "15W-50",
+        category: "pesados",
+        brand: "Motul"
+    },
+    {
+        id: "shell-helix-10w40",
+        name: "Shell Helix 10w-40",
+        price: 27.99,
+        image: "https://images-cam93.s3.us-east-1.amazonaws.com/crro.jpg",
+        description: "Aceite premium para máxima protección del motor.",
+        viscosity: "10W-40",
+        category: "livianos",
+        brand: "Shell"
+    },
+    {
+        id: "castrol-edge-10w30",
+        name: "Castrol EDGE 10w-30",
+        price: 35.50,
+        image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg",
+        description: "Aceite de alto rendimiento con tecnología Titanium FST.",
+        viscosity: "10W-30",
+        category: "motos",
+        brand: "Castrol"
+    },
+    {
+        id: "liqui-moly-10w40",
+        name: "Liqui Moly 10w-40",
+        price: 38.00,
+        image: "https://images-cam93.s3.us-east-1.amazonaws.com/crro.jpg",
+        description: "Aceite sintético de primera calidad.",
+        viscosity: "10W-40",
+        category: "motos",
+        brand: "Liqui Moly"
+    },
+    {
+        id: "repsol-elite-10w30",
+        name: "Repsol ELITE 10w-30",
+        price: 26.50,
+        image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg",
+        description: "Aceite de motor con tecnología de fricción baja.",
+        viscosity: "10W-30",
+        category: "motos",
+        brand: "Repsol"
     },
 ];
 ---
 
 <BaseLayout title="Productos - Lubricantes">
-    <!-- Header -->
-    <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center">
-                <h1 class="text-4xl font-bold mb-4">Nuestros Productos</h1>
-                <p class="text-xl opacity-90">
-                    Descubre nuestra selección de lubricantes de alta calidad
-                    para tu motor
-                </p>
+    <!-- Hero Section -->
+    <section class="w-full bg-gradient-to-b from-[#FFF8F3] to-[#FFF0E5] py-16">
+        <div class="max-w-7xl mx-auto px-6">
+            <!-- Tag -->
+            <div class="flex items-center justify-center gap-2 mb-8">
+                <div class="w-2 h-2 rounded-full bg-[#FF6B00]"></div>
+                <p class="text-sm font-bold text-[#FF6B00] tracking-widest uppercase">Catálogo 2026</p>
             </div>
-        </div>
-    </div>
 
-    <!-- Grid de productos -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {
-                products.map((product) => (
-                    <ProductCard
-                        id={product.id}
-                        name={product.name}
-                        price={product.price}
-                        image={product.image}
-                        description={product.description}
-                        viscosity={product.viscosity}
+            <!-- Hero Title -->
+            <h1 class="text-5xl md:text-6xl font-bold text-center text-gray-900 mb-4 leading-tight">
+                Encuentra los lubricantes<br/>para tu vehículo
+            </h1>
+
+            <!-- Hero Subtitle -->
+            <p class="text-center text-gray-600 text-lg mb-12 max-w-2xl mx-auto">
+                Selecciona la categoría de tu vehículo y explora nuestro catálogo completo
+            </p>
+
+            <!-- Vehicle Selector Panel -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <!-- Moto Card -->
+                <div class="relative rounded-2xl overflow-hidden h-96 cursor-pointer group hover:shadow-xl transition-all duration-300 vehicle-selector" data-category="motos">
+                    <img
+                        src="https://images.unsplash.com/photo-1769138317350-ab1c10e538f1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080"
+                        alt="Motos"
+                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
-                ))
+                </div>
+
+                <!-- Vehículos livianos Card -->
+                <div class="relative rounded-2xl overflow-hidden h-96 cursor-pointer group hover:shadow-xl transition-all duration-300 vehicle-selector" data-category="livianos">
+                    <img
+                        src="https://images-cam93.s3.us-east-1.amazonaws.com/crro.jpg"
+                        alt="Vehículos livianos"
+                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                </div>
+
+                <!-- Vehículos pesados Card -->
+                <div class="relative rounded-2xl overflow-hidden h-96 cursor-pointer group hover:shadow-xl transition-all duration-300 vehicle-selector" data-category="pesados">
+                    <img
+                        src="https://images.unsplash.com/photo-1766561993769-b834c1c6e456?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080"
+                        alt="Vehículos pesados"
+                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                </div>
+            </div>
+
+            <!-- Gradient divider -->
+            <div class="h-1 bg-gradient-to-r from-[#FF6B00] via-[#FFBA80] to-[#FF6B00] rounded-full"></div>
+        </div>
+    </section>
+
+    <!-- Brand Filter Panel -->
+    <section class="w-full bg-[#FF6B00] px-6 py-8">
+        <div class="max-w-7xl mx-auto">
+            <h3 class="text-sm font-bold text-white mb-6">Marcas disponibles</h3>
+            <div id="brand-filter-panel" class="grid grid-cols-9 gap-6">
+                <!-- Brands will be inserted here by JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Category Tabs & Search -->
+    <section class="w-full bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-6 py-6">
+            <div class="flex flex-wrap items-center gap-4 justify-between">
+                <!-- Tabs -->
+                <div class="flex gap-3 flex-wrap">
+                    <button class="category-tab bg-[#FF6B00] text-white px-6 py-2 rounded-full font-bold text-sm hover:bg-[#E55A00] transition-colors flex items-center gap-2 active" data-category="motos">
+                        <span>🏍️</span>
+                        Motos
+                    </button>
+                    <button class="category-tab bg-[#FFF0E6] text-[#FF6B00] px-6 py-2 rounded-full font-bold text-sm border-2 border-[#FFD4A8] hover:bg-[#FFE8D5] transition-colors flex items-center gap-2" data-category="livianos">
+                        <span>🚗</span>
+                        Vehículos livianos
+                    </button>
+                    <button class="category-tab bg-[#FFF0E6] text-[#FF6B00] px-6 py-2 rounded-full font-bold text-sm border-2 border-[#FFD4A8] hover:bg-[#FFE8D5] transition-colors flex items-center gap-2" data-category="pesados">
+                        <span>🚚</span>
+                        Vehículos pesados
+                    </button>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="relative">
+                    <input
+                        type="text"
+                        placeholder="Buscar producto..."
+                        class="bg-gray-100 text-gray-900 placeholder-gray-500 px-4 py-2 rounded-full text-sm w-64 focus:outline-none focus:ring-2 focus:ring-[#FF6B00]"
+                    />
+                    <span class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400">🔍</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Catalog Area -->
+    <section class="w-full bg-[#FFF8F3] py-12">
+        <div class="max-w-7xl mx-auto px-6">
+            <div>
+                <!-- Main Content -->
+                <main class="flex-1">
+                    <!-- Brand Indicator -->
+                    <div id="brand-indicator" class="mb-6"></div>
+
+                    <!-- Results Bar -->
+                    <div class="flex items-center justify-between mb-8">
+                        <p class="text-gray-600 text-sm">
+                            Mostrando <span class="font-bold text-gray-900">{products.length}</span> productos
+                        </p>
+                        <select class="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#FF6B00]">
+                            <option>Ordenar por</option>
+                            <option>Más reciente</option>
+                            <option>Precio: Menor a Mayor</option>
+                            <option>Precio: Mayor a Menor</option>
+                        </select>
+                    </div>
+
+                    <!-- Products Grid -->
+                    <div id="products-container" class="grid grid-cols-3 gap-6 mb-8 transition-opacity duration-200">
+                        {
+                            products.map((product) => (
+                                <div class="bg-white rounded-xl overflow-hidden hover:shadow-lg transition-shadow duration-300 group product-item" data-category={product.category} data-brand={product.brand}>
+                                    <div class="relative overflow-hidden h-48 bg-gray-200">
+                                        <img
+                                            src={product.image}
+                                            alt={product.name}
+                                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                        />
+                                    </div>
+                                    <div class="p-4">
+                                        <h3 class="font-bold text-gray-900 text-sm mb-2 line-clamp-2">
+                                            {product.name}
+                                        </h3>
+                                        <p class="text-xs text-gray-600 line-clamp-2">
+                                            {product.description}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))
+                        }
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="flex items-center justify-center gap-2">
+                        <button class="text-gray-400 font-bold text-sm">←</button>
+                        <button class="bg-[#FF6B00] text-white w-8 h-8 rounded font-bold">1</button>
+                        <button class="text-gray-600 hover:bg-gray-100 w-8 h-8 rounded font-bold">2</button>
+                        <button class="text-gray-400 font-bold text-sm">→</button>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </section>
+<script>
+const brands = {
+    motos: [
+        { name: 'Mobil', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Mobil-logo.svg/3840px-Mobil-logo.svg.png' },
+        { name: 'Castrol', logo: 'https://etimg.etb2bimg.com/photo/98300892.cms' },
+        { name: 'Motul', logo: 'https://1000logos.net/wp-content/uploads/2020/04/Logo-Motul.png' },
+        { name: 'Bajaj', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/Bajaj_Auto_Ltd_logo.svg/1280px-Bajaj_Auto_Ltd_logo.svg.png' },
+        { name: 'Yamalube', logo: 'https://images.seeklogo.com/logo-png/17/1/yamalube-logo-png_seeklogo-173930.png' },
+        { name: 'Honda', logo: 'https://upload.wikimedia.org/wikipedia/commons/3/38/Honda.svg' },
+        { name: 'Liqui Moly', logo: 'https://liqui-moly.com.co/wp-content/uploads/2022/03/LOGO-ACTUAL-2025.png' },
+        { name: 'Hero', logo: 'https://images.seeklogo.com/logo-png/17/2/hero-logo-png_seeklogo-170801.png' },
+        { name: 'Motorex', logo: 'https://images.seeklogo.com/logo-png/9/1/motorex-oil-of-switzerland-logo-png_seeklogo-95154.png' },
+        { name: 'Ipone', logo: 'https://cdn.freebiesupply.com/logos/large/2x/ipone-logo-png-transparent.png' },
+        { name: 'ENI', logo: 'https://download.logo.wine/logo/Eni/Eni-Logo.wine.png' },
+        { name: 'Shell', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/e/e8/Shell_logo.svg/1280px-Shell_logo.svg.png' },
+        { name: 'Repsol', logo: 'https://upload.wikimedia.org/wikipedia/commons/d/df/Logo_de_Repsol.jpg' },
+        { name: 'Ecstar', logo: 'https://i.pinimg.com/736x/78/de/dc/78dedcade1a0457230dc64448a5c570d.jpg' },
+        { name: 'Terpel', logo: 'https://brandemia.org/contenido/subidas/2014/03/nuevo_logo_terpel.jpg' },
+        { name: 'Delta Oil', logo: 'https://deltaoil.co/wp-content/uploads/2023/03/logo-Delta-express-rojo.png' },
+        { name: 'ELF', logo: 'https://images.seeklogo.com/logo-png/48/1/elf-logo-png_seeklogo-484537.png' },
+        { name: 'Pysta', logo: 'https://pysta.co/cdn/shop/files/Encabezado.png?height=628&pad_color=ffffff&v=1735855211&width=1200' }
+    ],
+    livianos: [
+        { name: 'Mobil', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Mobil-logo.svg/3840px-Mobil-logo.svg.png' },
+        { name: 'Castrol', logo: 'https://etimg.etb2bimg.com/photo/98300892.cms' },
+        { name: 'Liqui Moly', logo: 'https://liqui-moly.com.co/wp-content/uploads/2022/03/LOGO-ACTUAL-2025.png' }
+    ],
+    pesados: [
+        { name: 'Mobil', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Mobil-logo.svg/3840px-Mobil-logo.svg.png' },
+        { name: 'Castrol', logo: 'https://etimg.etb2bimg.com/photo/98300892.cms' }
+    ]
+};
+
+let currentCategory = 'motos';
+let currentBrand = null;
+
+function renderBrands(category) {
+    const filterPanel = document.querySelector('#brand-filter-panel');
+
+    // Clear previous brands but keep the grid class
+    const brandButtons = filterPanel.querySelectorAll('.brand-selector');
+    brandButtons.forEach(btn => btn.remove());
+
+    const categoryBrands = brands[category] || [];
+
+    categoryBrands.forEach(brand => {
+        const brandButton = document.createElement('button');
+        brandButton.className = 'brand-selector flex items-center justify-center p-4 rounded-xl bg-white/20 hover:bg-white/40 transition-all duration-300 group';
+        brandButton.setAttribute('data-brand', brand.name);
+        brandButton.setAttribute('title', brand.name);
+        brandButton.innerHTML = `
+            <img src="${brand.logo}" alt="${brand.name}" class="h-24 w-24 object-contain" />
+        `;
+
+        brandButton.addEventListener('click', function() {
+            filterByBrand(brand.name, brand.logo);
+            document.querySelectorAll('.brand-selector').forEach(b => b.classList.remove('ring-4', 'ring-white'));
+            this.classList.add('ring-4', 'ring-white');
+        });
+
+        filterPanel.appendChild(brandButton);
+    });
+}
+
+function filterByBrand(brand, logo) {
+    currentBrand = brand;
+    const productItems = document.querySelectorAll('.product-item');
+    const productsContainer = document.getElementById('products-container');
+
+    // Update brand indicator
+    const brandIndicator = document.getElementById('brand-indicator');
+    if (brandIndicator && logo) {
+        brandIndicator.innerHTML = `
+            <div class="flex items-center gap-3">
+                <span class="text-sm text-gray-600">Filtrando por:</span>
+                <img src="${logo}" alt="${brand}" class="h-10 w-10 object-contain" />
+            </div>
+        `;
+    }
+
+    productsContainer.style.opacity = '0.5';
+
+    setTimeout(() => {
+        productItems.forEach(item => {
+            const itemCategory = item.getAttribute('data-category');
+            const itemBrand = item.getAttribute('data-brand');
+
+            if (itemCategory === currentCategory && itemBrand === brand) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
             }
-        </div>
-    </div>
+        });
 
-    <!-- Información adicional -->
-    <div class="bg-gray-50 py-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl font-bold text-gray-900 mb-4">
-                    ¿Por qué elegir nuestros lubricantes?
-                </h2>
-                <p class="text-xl text-gray-600">
-                    Calidad garantizada para el cuidado de tu motor
-                </p>
-            </div>
+        productsContainer.style.opacity = '1';
+    }, 200);
+}
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="text-center">
-                    <div
-                        class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4"
-                    >
-                        <svg
-                            class="w-8 h-8 text-blue-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                            ></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">
-                        Calidad Premium
-                    </h3>
-                    <p class="text-gray-600">
-                        Todos nuestros lubricantes cumplen con los más altos
-                        estándares de calidad.
-                    </p>
-                </div>
+document.addEventListener('DOMContentLoaded', function() {
+    // Vehicle selectors
+    const vehicleSelectors = document.querySelectorAll('.vehicle-selector');
+    const productItems = document.querySelectorAll('.product-item');
+    const productsContainer = document.getElementById('products-container');
 
-                <div class="text-center">
-                    <div
-                        class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"
-                    >
-                        <svg
-                            class="w-8 h-8 text-green-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">
-                        Protección Superior
-                    </h3>
-                    <p class="text-gray-600">
-                        Protección avanzada contra el desgaste y la corrosión
-                        del motor.
-                    </p>
-                </div>
+    vehicleSelectors.forEach(selector => {
+        selector.addEventListener('click', function() {
+            currentCategory = this.getAttribute('data-category');
+            currentBrand = null;
 
-                <div class="text-center">
-                    <div
-                        class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4"
-                    >
-                        <svg
-                            class="w-8 h-8 text-purple-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
-                            ></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">
-                        Precios Competitivos
-                    </h3>
-                    <p class="text-gray-600">
-                        Ofrecemos los mejores precios sin comprometer la calidad
-                        del producto.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
+            productsContainer.style.opacity = '0.5';
+
+            setTimeout(() => {
+                // No mostrar productos hasta que se seleccione una marca
+                productItems.forEach(item => {
+                    item.style.display = 'none';
+                });
+
+                // Limpiar indicador de marca
+                const brandIndicator = document.getElementById('brand-indicator');
+                if (brandIndicator) {
+                    brandIndicator.innerHTML = '';
+                }
+
+                productsContainer.style.opacity = '1';
+            }, 200);
+
+            // Render brands for this category
+            renderBrands(currentCategory);
+        });
+    });
+
+    // Category tabs
+    const categoryTabs = document.querySelectorAll('.category-tab');
+    categoryTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            categoryTabs.forEach(t => {
+                t.classList.remove('bg-[#FF6B00]', 'text-white');
+                t.classList.add('bg-[#FFF0E6]', 'text-[#FF6B00]', 'border-2', 'border-[#FFD4A8]');
+            });
+
+            this.classList.remove('bg-[#FFF0E6]', 'text-[#FF6B00]', 'border-2', 'border-[#FFD4A8]');
+            this.classList.add('bg-[#FF6B00]', 'text-white');
+
+            currentCategory = this.getAttribute('data-category');
+            currentBrand = null;
+
+            productsContainer.style.opacity = '0.5';
+
+            setTimeout(() => {
+                // No mostrar productos hasta que se seleccione una marca
+                productItems.forEach(item => {
+                    item.style.display = 'none';
+                });
+
+                // Limpiar indicador de marca
+                const brandIndicator = document.getElementById('brand-indicator');
+                if (brandIndicator) {
+                    brandIndicator.innerHTML = '';
+                }
+
+                productsContainer.style.opacity = '1';
+            }, 200);
+
+            renderBrands(currentCategory);
+        });
+    });
+
+    // Initial render
+    renderBrands('motos');
+});
+</script>
 </BaseLayout>
