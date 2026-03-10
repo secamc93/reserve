@@ -17,7 +17,7 @@ func (h *GuardianHandler) RegisterRoutes(router *gin.RouterGroup) {
 
 	players := router.Group("/sport-training/players")
 	{
-		players.POST("/:player_id/guardians", middleware.JWT(), h.AssignGuardianToPlayer)
-		players.GET("/:player_id/guardians", middleware.JWT(), h.GetPlayerGuardians)
+		players.POST("/:id/guardians", middleware.JWT(), h.AssignGuardianToPlayer)
+		players.GET("/:id/guardians", middleware.JWT(), h.GetPlayerGuardians)
 	}
 }

@@ -40,3 +40,8 @@ type CreateVoteRequest struct {
 	IPAddress      string `json:"ip_address"`
 	UserAgent      string `json:"user_agent"`
 }
+
+// MarkAttendanceRequest - ✅ NUEVO: Request para marcar/desmarcar asistencia de una unidad
+type MarkAttendanceRequest struct {
+	MarkAttendance bool `json:"mark_attendance" binding:"required"`
+}

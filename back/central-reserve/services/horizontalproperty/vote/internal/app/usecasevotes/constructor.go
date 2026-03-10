@@ -15,6 +15,7 @@ type IVotesUseCase interface {
 	ListVotesByVoting(ctx context.Context, votingID uint) ([]domain.VoteDTO, error)
 	HasUnitVoted(ctx context.Context, votingID, propertyUnitID uint) (bool, error)
 	GetUnitVote(ctx context.Context, votingID, propertyUnitID uint) (*domain.VoteDTO, error)
+	MarkUnitAttendance(ctx context.Context, votingID, propertyUnitID uint, markAttendance bool) error // ✅ NUEVO
 }
 
 // VotesUseCase maneja la lógica de negocio de votos

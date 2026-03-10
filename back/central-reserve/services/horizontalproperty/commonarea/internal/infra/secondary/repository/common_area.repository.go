@@ -156,7 +156,7 @@ func (r *CommonAreaRepository) ListCommonAreas(ctx context.Context, filters doma
 	commonAreas := make([]domain.CommonAreaListDTO, len(commonAreasModels))
 	for i, ca := range commonAreasModels {
 		typeName := ""
-		if ca.CommonAreaType != nil {
+		if ca.CommonAreaType.ID != 0 {
 			typeName = ca.CommonAreaType.Name
 		}
 

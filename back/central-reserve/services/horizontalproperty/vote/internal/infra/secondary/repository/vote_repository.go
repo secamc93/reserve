@@ -560,6 +560,39 @@ func (r *Repository) GetVotingDetailsByUnit(ctx context.Context, votingID, hpID 
 		voteByUnit[votes[i].PropertyUnitID] = &votes[i]
 	}
 
+	// PASO 3.5: Obtener registros de asistencia para esta votación
+	// Primero obtener el voting_group_id de la votación
+	var voting models.Voting
+	attendanceByUnit := make(map[uint]bool) // Mapa de unidad -> tiene asistencia
+
+	if err := r.db.Conn(ctx).
+		Select("voting_group_id").
+		Where("id = ?", votingID).
+		First(&voting).Error; err == nil {
+
+		// Buscar la lista de asistencia activa para este grupo
+		var attendanceList models.AttendanceList
+		if err := r.db.Conn(ctx).
+			Where("voting_group_id = ? AND is_active = ?", voting.VotingGroupID, true).
+			First(&attendanceList).Error; err == nil {
+
+			// Obtener todos los registros de asistencia para estas unidades
+			var attendanceRecords []models.AttendanceRecord
+			if len(unitIDs) > 0 {
+				if err := r.db.Conn(ctx).
+					Where("attendance_list_id = ? AND property_unit_id IN ? AND (attended_as_owner = ? OR attended_as_proxy = ?)",
+						attendanceList.ID, unitIDs, true, true).
+					Find(&attendanceRecords).Error; err == nil {
+
+					// Crear mapa de unidades con asistencia
+					for _, record := range attendanceRecords {
+						attendanceByUnit[record.PropertyUnitID] = true
+					}
+				}
+			}
+		}
+	}
+
 	// PASO 4: Combinar todo en DTOs
 	dtos := make([]domain.VotingDetailByUnitDTO, len(units))
 	for i, unit := range units {
@@ -568,6 +601,7 @@ func (r *Repository) GetVotingDetailsByUnit(ctx context.Context, votingID, hpID 
 			PropertyUnitNumber:       unit.Number,
 			ParticipationCoefficient: unit.ParticipationCoefficient,
 			HasVoted:                 false,
+			HasAttendance:            attendanceByUnit[unit.ID], // ✅ NUEVO: Verificar si tiene asistencia
 		}
 
 		// Verificar si la unidad ha votado
@@ -993,4 +1027,97 @@ func (r *Repository) CheckUnitAttendanceForVoting(ctx context.Context, votingID,
 
 	// Tiene asistencia marcada
 	return true, nil
+}
+
+// MarkUnitAttendanceForVoting - Marca o desmarca la asistencia de una unidad para una votación
+// ✅ NUEVO: Permite marcar asistencia desde el live voting
+func (r *Repository) MarkUnitAttendanceForVoting(ctx context.Context, votingID, propertyUnitID uint, markAttendance bool) error {
+	// PASO 1: Obtener el voting_group_id de la votación
+	var voting models.Voting
+	if err := r.db.Conn(ctx).
+		Select("voting_group_id").
+		Where("id = ?", votingID).
+		First(&voting).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return fmt.Errorf("votación no encontrada")
+		}
+		r.logger.Error().Err(err).Uint("voting_id", votingID).Msg("Error obteniendo votación")
+		return fmt.Errorf("error obteniendo votación: %w", err)
+	}
+
+	// PASO 2: Buscar o crear la lista de asistencia activa para este grupo
+	var attendanceList models.AttendanceList
+	err := r.db.Conn(ctx).
+		Where("voting_group_id = ? AND is_active = ?", voting.VotingGroupID, true).
+		First(&attendanceList).Error
+
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			// Si no existe, crear la lista de asistencia
+			attendanceList = models.AttendanceList{
+				VotingGroupID: voting.VotingGroupID,
+				IsActive:      true,
+			}
+			if err := r.db.Conn(ctx).Create(&attendanceList).Error; err != nil {
+				r.logger.Error().Err(err).Uint("voting_group_id", voting.VotingGroupID).Msg("Error creando lista de asistencia")
+				return fmt.Errorf("error creando lista de asistencia: %w", err)
+			}
+			r.logger.Info().Uint("voting_group_id", voting.VotingGroupID).Uint("attendance_list_id", attendanceList.ID).Msg("Lista de asistencia creada")
+		} else {
+			r.logger.Error().Err(err).Uint("voting_group_id", voting.VotingGroupID).Msg("Error obteniendo lista de asistencia")
+			return fmt.Errorf("error obteniendo lista de asistencia: %w", err)
+		}
+	}
+
+	// PASO 3: Buscar el registro de asistencia de la unidad
+	var attendanceRecord models.AttendanceRecord
+	err = r.db.Conn(ctx).
+		Where("attendance_list_id = ? AND property_unit_id = ?", attendanceList.ID, propertyUnitID).
+		First(&attendanceRecord).Error
+
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			// Si no existe, crear el registro de asistencia
+			attendanceRecord = models.AttendanceRecord{
+				AttendanceListID: attendanceList.ID,
+				PropertyUnitID:   propertyUnitID,
+				AttendedAsOwner:  markAttendance,
+				AttendedAsProxy:  false,
+			}
+			if err := r.db.Conn(ctx).Create(&attendanceRecord).Error; err != nil {
+				r.logger.Error().Err(err).
+					Uint("attendance_list_id", attendanceList.ID).
+					Uint("property_unit_id", propertyUnitID).
+					Msg("Error creando registro de asistencia")
+				return fmt.Errorf("error creando registro de asistencia: %w", err)
+			}
+			r.logger.Info().
+				Uint("attendance_list_id", attendanceList.ID).
+				Uint("property_unit_id", propertyUnitID).
+				Bool("attended", markAttendance).
+				Msg("Registro de asistencia creado")
+		} else {
+			r.logger.Error().Err(err).
+				Uint("attendance_list_id", attendanceList.ID).
+				Uint("property_unit_id", propertyUnitID).
+				Msg("Error obteniendo registro de asistencia")
+			return fmt.Errorf("error obteniendo registro de asistencia: %w", err)
+		}
+	} else {
+		// Si existe, actualizar el campo attended_as_owner
+		attendanceRecord.AttendedAsOwner = markAttendance
+		if err := r.db.Conn(ctx).Save(&attendanceRecord).Error; err != nil {
+			r.logger.Error().Err(err).
+				Uint("attendance_record_id", attendanceRecord.ID).
+				Bool("attended", markAttendance).
+				Msg("Error actualizando registro de asistencia")
+			return fmt.Errorf("error actualizando registro de asistencia: %w", err)
+		}
+		r.logger.Info().
+			Uint("attendance_record_id", attendanceRecord.ID).
+			Bool("attended", markAttendance).
+			Msg("Registro de asistencia actualizado")
+	}
+
+	return nil
 }

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/secamc93/probability/back/migration/shared/models"
+	"dbpostgres/app/infra/models"
 
 	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/domain"
 	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/secondary/repository/mapper"

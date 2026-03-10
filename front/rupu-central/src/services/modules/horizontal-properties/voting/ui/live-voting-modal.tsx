@@ -288,6 +288,7 @@ export function LiveVotingModal({
       resident_name: string | null;
       resident_id: number | null; // ✅ NUEVO: ID del residente para mapeo correcto
       has_voted: boolean;
+      has_attendance: boolean; // ✅ NUEVO: Indica si tiene asistencia marcada
       option_text: string | null;
       option_code: string | null;
       option_color: string | null; // ✅ NUEVO: Color del voto del backend
@@ -640,6 +641,7 @@ export function LiveVotingModal({
         propertyUnitId: unit.property_unit_id,
         residentId: unit.resident_id,
         hasVoted: unit.has_voted,
+        hasAttendance: unit.has_attendance, // ✅ NUEVO: Mapear campo de asistencia
         votedOption: votedOption,
         votedOptionId: votedOptionId,
         votedOptionColor: votedOptionColor,
@@ -933,7 +935,19 @@ export function LiveVotingModal({
   });
 
   // Obtener unidades residenciales desde el endpoint
-  const residentialUnits = convertToResidentialUnits();
+  const residentialUnitsRaw = convertToResidentialUnits();
+
+  // Ordenar: primero las que NO han votado, luego las que SÍ han votado
+  // Dentro de cada grupo, ordenar por número de unidad
+  const residentialUnits = residentialUnitsRaw.sort((a, b) => {
+    // Primero ordenar por estado de voto (false antes que true)
+    if (a.hasVoted !== b.hasVoted) {
+      return a.hasVoted ? 1 : -1; // false primero (sin votar), true después (con voto)
+    }
+
+    // Dentro del mismo grupo (ambos votados o ambos sin votar), ordenar por número de unidad
+    return a.number.localeCompare(b.number, undefined, { numeric: true, sensitivity: 'base' });
+  });
 
   const handleVote = () => {
     setShowVoteModal(true);
@@ -1178,6 +1192,7 @@ export function LiveVotingModal({
                   onVoteClick={handleVoteFromCard}
                   onDeleteVoteClick={handleDeleteVoteFromCard}
                   showVoteButton={true}
+                  votingActive={voting?.isActive || false}
                 />
               )}
             </div>

@@ -7,7 +7,7 @@
 import { useState, useEffect } from 'react';
 import { Modal, Spinner, Alert } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
-import { createVoteAction } from '../infrastructure/actions';
+import { createVoteAction, markUnitAttendanceAction } from '../infrastructure/actions';
 import { getUnvotedUnitsAction } from '../infrastructure/actions';
 
 interface VoteModalProps {
@@ -58,6 +58,16 @@ export function VoteModal({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [selectedOptionId, setSelectedOptionId] = useState<number | null>(null);
   const [selectedResidentId, setSelectedResidentId] = useState<number | null>(null);
+
+  // ✅ NUEVO: Estados para manejar asistencia
+  const [showAttendanceDialog, setShowAttendanceDialog] = useState(false);
+  const [markingAttendance, setMarkingAttendance] = useState(false);
+  const [pendingVoteData, setPendingVoteData] = useState<{
+    residentId: number;
+    optionId: number;
+    residentName: string;
+    optionText: string;
+  } | null>(null);
 
   // useEffect para precargar datos de unidad seleccionada desde la tarjeta
   useEffect(() => {
@@ -380,6 +390,25 @@ export function VoteModal({
         errorMessage = err;
       }
 
+      // ✅ NUEVO: Detectar error de asistencia
+      if (errorMessage.includes('asistencia') || errorMessage.toLowerCase().includes('attendance')) {
+        // Guardar los datos del voto pendiente
+        const resident = residents.find(r => r.id === selectedResidentId);
+        const option = options.find(o => o.id === selectedOptionId);
+
+        setPendingVoteData({
+          residentId: selectedResidentId!,
+          optionId: selectedOptionId!,
+          residentName: resident?.name || 'Residente',
+          optionText: option?.optionText || 'Opción',
+        });
+
+        // Mostrar diálogo de asistencia
+        setShowAttendanceDialog(true);
+        setLoading(false);
+        return; // No mostrar error genérico
+      }
+
       // Personalizar mensajes comunes
       if (errorMessage.includes('ya votó')) {
         errorMessage = '⚠️ Este residente ya emitió su voto en esta votación';
@@ -394,6 +423,76 @@ export function VoteModal({
       setError(errorMessage);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ✅ NUEVO: Manejar marcado de asistencia y retry del voto
+  const handleMarkAttendanceAndVote = async () => {
+    if (!pendingVoteData) return;
+
+    setMarkingAttendance(true);
+    setError(null);
+
+    try {
+      const token = TokenStorage.getBusinessToken();
+      if (!token) {
+        setError('No se encontró el token de autenticación');
+        return;
+      }
+
+      // Llamar al Server Action para marcar asistencia
+      const attendanceResult = await markUnitAttendanceAction({
+        token,
+        businessId,
+        groupId,
+        votingId,
+        unitId: pendingVoteData.residentId,
+        markAttendance: true,
+      });
+
+      if (!attendanceResult.success) {
+        setError(attendanceResult.error || 'Error al marcar asistencia');
+        return;
+      }
+
+      setSuccessMessage('✅ Asistencia marcada. Registrando voto...');
+
+      // Cerrar el diálogo de asistencia
+      setShowAttendanceDialog(false);
+
+      // Intentar registrar el voto nuevamente
+      const ipAddress = 'client-ip';
+      const userAgent = navigator.userAgent;
+
+      const result = await createVoteAction({
+        token,
+        businessId: businessId,
+        groupId,
+        votingId,
+        data: {
+          votingId,
+          votingOptionId: pendingVoteData.optionId,
+          propertyUnitId: pendingVoteData.residentId,
+          ipAddress,
+          userAgent,
+        },
+      });
+
+      if (result.success) {
+        setSuccessMessage(`✅ Voto registrado exitosamente: ${pendingVoteData.residentName} votó por "${pendingVoteData.optionText}"`);
+        resetForm();
+        await loadResidents();
+        setTimeout(() => setSuccessMessage(null), 3000);
+        onSuccess();
+      } else {
+        setError(result.error || 'Error al registrar el voto');
+      }
+    } catch (err) {
+      console.error('Error marcando asistencia:', err);
+      setError(err instanceof Error ? err.message : 'Error al marcar asistencia');
+    } finally {
+      setMarkingAttendance(false);
+      setPendingVoteData(null);
     }
   };
 
@@ -686,6 +785,69 @@ export function VoteModal({
             </button>
           </div>
         </form>
+      )}
+
+      {/* ✅ NUEVO: Diálogo de confirmación de asistencia */}
+      {showAttendanceDialog && pendingVoteData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex items-start mb-4">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                  <span className="text-2xl">⚠️</span>
+                </div>
+              </div>
+              <div className="ml-4 flex-1">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Asistencia No Registrada
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  La unidad <strong>{pendingVoteData.residentName}</strong> no tiene asistencia marcada para esta votación.
+                </p>
+                <p className="text-sm text-gray-600 mb-4">
+                  Para poder votar, primero debes marcar la asistencia de esta unidad.
+                </p>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                  <p className="text-sm text-blue-800">
+                    <strong>Voto pendiente:</strong> {pendingVoteData.optionText}
+                  </p>
+                </div>
+                <p className="text-sm text-gray-700 font-medium">
+                  ¿Deseas marcar la asistencia ahora y continuar con el voto?
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAttendanceDialog(false);
+                  setPendingVoteData(null);
+                }}
+                disabled={markingAttendance}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleMarkAttendanceAndVote}
+                disabled={markingAttendance}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {markingAttendance ? (
+                  <>
+                    <Spinner size="sm" />
+                    <span>Marcando...</span>
+                  </>
+                ) : (
+                  'Marcar Asistencia y Votar'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </Modal>
   );

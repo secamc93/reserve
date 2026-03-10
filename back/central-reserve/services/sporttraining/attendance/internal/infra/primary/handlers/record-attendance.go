@@ -35,7 +35,7 @@ func (h *AttendanceHandler) RecordAttendance(c *gin.Context) {
 		return
 	}
 
-	sessionIDStr := c.Param("session_id")
+	sessionIDStr := c.Param("id")
 	sessionID, err := strconv.ParseUint(sessionIDStr, 10, 32)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{

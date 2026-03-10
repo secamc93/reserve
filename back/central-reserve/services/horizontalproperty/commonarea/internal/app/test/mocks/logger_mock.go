@@ -3,6 +3,8 @@ package mocks
 import (
 	"context"
 
+	"central_reserve/shared/log"
+
 	"github.com/rs/zerolog"
 )
 
@@ -18,7 +20,7 @@ type MockLogger struct {
 }
 
 // NewMockLogger crea un nuevo mock del logger
-func NewMockLogger() *MockLogger {
+func NewMockLogger() log.ILogger {
 	noop := zerolog.Nop()
 	return &MockLogger{
 		InfoFunc:  func(ctx ...context.Context) *zerolog.Event { return noop.Info() },
@@ -86,14 +88,14 @@ func (m *MockLogger) With() zerolog.Context {
 	return zerolog.Nop().With()
 }
 
-func (m *MockLogger) WithService(service string) *MockLogger {
+func (m *MockLogger) WithService(service string) log.ILogger {
 	return NewMockLogger()
 }
 
-func (m *MockLogger) WithModule(module string) *MockLogger {
+func (m *MockLogger) WithModule(module string) log.ILogger {
 	return NewMockLogger()
 }
 
-func (m *MockLogger) WithBusinessID(businessID uint) *MockLogger {
+func (m *MockLogger) WithBusinessID(businessID uint) log.ILogger {
 	return NewMockLogger()
 }

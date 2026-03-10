@@ -1,0 +1,128 @@
+version: "3.8"
+
+# Configuración de servicios para producción con Docker
+# Actualizado: 2026-02-15
+
+services:
+
+  frontend:
+    platform: linux/arm64
+    image: 334689162817.dkr.ecr.us-east-1.amazonaws.com/rupu-frontend:latest
+    container_name: frontend_prod
+    ports:
+      - "8080:3000"
+    env_file:
+    - .env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - app-network
+    depends_on:
+      - central_reserve
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 128M
+        reservations:
+          cpus: "0.25"
+          memory: 64M
+
+  central_reserve:
+    image: 334689162817.dkr.ecr.us-east-1.amazonaws.com/rupu-backend:latest
+    container_name: central_reserve_prod
+    ports:
+      - "3050:3050"
+    environment:
+      DB_HOST:             "postgres_prod"
+      DB_PORT:             "5432"
+      DB_NAME:             "${DB_NAME}"
+      DB_USER:             "${DB_USER}"
+      DB_PASS:             "${DB_PASSWORD}"
+      DB_LOG_LEVEL:        "${DB_LOG_LEVEL}"
+      PGSSLMODE:           "${DB_SSLMODE}"
+      APP_ENV:             "${APP_ENV}"
+      HTTP_PORT:           "3050"
+      LOG_LEVEL:           "${LOG_LEVEL}"
+      JWT_SECRET:          "${JWT_SECRET}"
+      URL_BASE_SWAGGER:    "${URL_BASE_SWAGGER}"
+      SMTP_HOST:           "${SMTP_HOST}"
+      SMTP_PORT:           "${SMTP_PORT}"
+      SMTP_USER:           "${SMTP_USER}"
+      SMTP_PASS:           "${SMTP_PASS}"
+      FROM_EMAIL:          "${FROM_EMAIL:-}"
+      SMTP_USE_STARTTLS:   "${SMTP_USE_STARTTLS}"
+      SMTP_USE_TLS:        "${SMTP_USE_TLS}"
+      # S3 y media
+      S3_BUCKET:           "${S3_BUCKET}"
+      S3_REGION:           "${S3_REGION}"
+      S3_KEY:              "${S3_KEY}"
+      S3_SECRET:           "${S3_SECRET}"
+      URL_BASE_DOMAIN_S3:  "${URL_BASE_DOMAIN_S3}"
+    volumes:
+      # Permitir acceso al socket de Docker para leer logs de contenedores
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    group_add:
+      # GID del grupo docker en el host para acceder al socket
+      - "999"
+    restart: unless-stopped
+  
+    networks:
+      - app-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 256M
+        reservations:
+          cpus: "0.50"
+          memory: 128M
+
+  nginx:
+    image: 334689162817.dkr.ecr.us-east-1.amazonaws.com/rupu-nginx:latest
+    container_name: nginx_prod
+    ports:
+      - "80:80"
+      - "443:443"
+    env_file:
+      - .env
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    # Ejecutar como root para poder leer certificados SSL
+    user: "0:0"
+    depends_on:
+      - frontend
+    networks:
+      - app-network
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 64M
+        reservations:
+          memory: 32M
+
+networks:
+  app-network:
+    driver: bridge

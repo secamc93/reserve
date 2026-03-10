@@ -24,7 +24,7 @@ func (h *AttendanceHandler) ListByPlayer(c *gin.Context) {
 		return
 	}
 
-	playerIDStr := c.Param("player_id")
+	playerIDStr := c.Param("id")
 	playerID, err := strconv.ParseUint(playerIDStr, 10, 32)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{

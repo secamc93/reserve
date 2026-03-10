@@ -45,6 +45,7 @@ type MockVotingRepository struct {
 	GetUnvotedUnitsByVotingFn         func(ctx context.Context, votingID uint, unitNumberFilter string) ([]domain.UnvotedUnit, error)
 	GetResidentMainUnitIDFn           func(ctx context.Context, residentID uint) (uint, error)
 	CheckUnitAttendanceForVotingFn    func(ctx context.Context, votingID, propertyUnitID uint) (bool, error)
+	MarkUnitAttendanceForVotingFn     func(ctx context.Context, votingID, propertyUnitID uint, markAttendance bool) error
 	GetHorizontalPropertyBasicInfoFn  func(ctx context.Context, hpID uint) (*domain.HorizontalPropertyDTO, error)
 	ListPropertyUnitsFn               func(ctx context.Context, filters domain.PropertyUnitFiltersDTO) (*domain.PaginatedPropertyUnitsDTO, error)
 	GetResidentByUnitAndDniFn         func(ctx context.Context, hpID, propertyUnitID uint, dni string) (*domain.ResidentBasicDTO, error)
@@ -267,6 +268,13 @@ func (m *MockVotingRepository) CheckUnitAttendanceForVoting(ctx context.Context,
 		return m.CheckUnitAttendanceForVotingFn(ctx, votingID, propertyUnitID)
 	}
 	return false, nil
+}
+
+func (m *MockVotingRepository) MarkUnitAttendanceForVoting(ctx context.Context, votingID, propertyUnitID uint, markAttendance bool) error {
+	if m.MarkUnitAttendanceForVotingFn != nil {
+		return m.MarkUnitAttendanceForVotingFn(ctx, votingID, propertyUnitID, markAttendance)
+	}
+	return nil
 }
 
 func (m *MockVotingRepository) GetHorizontalPropertyBasicInfo(ctx context.Context, hpID uint) (*domain.HorizontalPropertyDTO, error) {

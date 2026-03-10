@@ -3,7 +3,7 @@ package mapper
 import (
 	"strings"
 
-	"github.com/secamc93/probability/back/migration/shared/models"
+	"dbpostgres/app/infra/models"
 
 	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/domain"
 )

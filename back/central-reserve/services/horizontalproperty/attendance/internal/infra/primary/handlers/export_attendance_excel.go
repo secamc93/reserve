@@ -30,12 +30,13 @@ func (h *AttendanceHandler) ExportAttendanceExcelDetailed(c *gin.Context) {
 		return
 	}
 
-	// Obtener registros de asistencia
-	records, err := h.attendanceUseCase.GetAttendanceRecordsByList(c.Request.Context(), id)
+	// Obtener registros de asistencia (todos los registros sin paginación)
+	paginatedRecords, err := h.attendanceUseCase.GetAttendanceRecordsByListPaged(c.Request.Context(), id, "", nil, 1, 10000)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Success: false, Message: "Error obteniendo registros", Error: err.Error()})
 		return
 	}
+	records := paginatedRecords.Data
 
 	// Obtener título del grupo de votación
 	title, err := h.attendanceUseCase.GetVotingGroupTitleByListID(c.Request.Context(), id)

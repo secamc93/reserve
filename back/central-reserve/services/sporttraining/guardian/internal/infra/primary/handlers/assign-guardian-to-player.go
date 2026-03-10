@@ -25,7 +25,7 @@ func (h *GuardianHandler) AssignGuardianToPlayer(c *gin.Context) {
 		return
 	}
 
-	playerID, err := strconv.ParseUint(c.Param("player_id"), 10, 32)
+	playerID, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{
 			Success: false,

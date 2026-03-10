@@ -34,10 +34,36 @@ rupü/
 ## 🚀 Inicio Rápido
 
 ### Prerrequisitos
-- **Docker** y **Docker Compose**
+- **Docker** y **Docker Compose** (o Podman)
 - **Node.js** (para desarrollo frontend)
+- **pnpm** (gestor de paquetes para frontend)
 - **Go** (para desarrollo backend)
 - **Flutter** (para desarrollo móvil)
+
+### ⚡ Makefile Centralizado (Recomendado)
+
+El proyecto incluye un **Makefile centralizado** en la raíz que simplifica la ejecución de todos los servicios:
+
+```bash
+# Ver todos los comandos disponibles
+make help
+
+# Ejecutar backend (Go API en :3050)
+make run-centralback
+
+# Ejecutar frontend (Next.js en :3000)
+make run-centralfront
+
+# Ejecutar migraciones de base de datos
+make run-migrations
+
+# Ver información del sistema
+make info
+```
+
+📚 **Documentación completa:**
+- [QUICK_START.md](QUICK_START.md) - Guía de inicio rápido
+- [MAKEFILE_GUIDE.md](MAKEFILE_GUIDE.md) - Documentación detallada del Makefile
 
 ### 1. **Clonar el repositorio**
 ```bash

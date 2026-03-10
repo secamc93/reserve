@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/handlerpublic"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/handlerresults"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/handlervotes"
@@ -63,6 +64,10 @@ func (h *VotingHandler) RegisterRoutes(router *gin.RouterGroup) {
 		// handler-votes: /horizontal-properties/voting-groups/:group_id/votings/:voting_id/votes
 		votes := votings.Group("/:voting_id/votes")
 		h.votesHandler.Router(votes)
+
+		// ✅ NUEVO: Ruta para marcar asistencia
+		// /horizontal-properties/voting-groups/:group_id/votings/:voting_id/units/:unit_id/attendance
+		votings.PUT("/:voting_id/units/:unit_id/attendance", middleware.JWT(), h.votesHandler.MarkUnitAttendance)
 	}
 
 	// Rutas públicas (sin autenticación admin, usan token de votación pública)

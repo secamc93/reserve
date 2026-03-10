@@ -40,11 +40,6 @@ jobs:
         with:
           version: 9  # Compatible con lockfileVersion 9.0
 
-      - name: Install Podman
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y podman podman-compose
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -55,7 +50,10 @@ jobs:
       - name: Login to ECR Public
         run: |
           aws ecr-public get-login-password --region ${{ env.AWS_REGION }} | \
-            podman login --username AWS --password-stdin public.ecr.aws
+            docker login --username AWS --password-stdin public.ecr.aws
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Install dependencies
         working-directory: ./front/rupu-central
@@ -83,21 +81,23 @@ jobs:
           BUILD_TIMESTAMP=$(date +%Y%m%d-%H%M%S)
           echo "BUILD_TIMESTAMP=$BUILD_TIMESTAMP" >> $GITHUB_ENV
 
-          podman build \
+          docker buildx build \
+            --platform linux/arm64 \
             --build-arg NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL} \
             --build-arg API_BASE_URL=${API_BASE_URL} \
             -f docker/Dockerfile \
             -t ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-latest \
             -t ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-$BUILD_TIMESTAMP \
+            --load \
             .
 
       - name: Push image to ECR
         run: |
           # Push tag con timestamp primero (inmutable)
-          podman push ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-${{ env.BUILD_TIMESTAMP }}
+          docker push ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-${{ env.BUILD_TIMESTAMP }}
 
           # Luego push latest (sobrescribe)
-          podman push ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-latest
+          docker push ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-latest
 
           echo "✅ Imagen pusheada: ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-${{ env.BUILD_TIMESTAMP }}"
           echo "✅ Tag latest actualizado"
@@ -138,19 +138,19 @@ jobs:
             # Login a ECR
             echo "🔐 Login a ECR..."
             aws ecr-public get-login-password --region us-east-1 | \
-              podman login --username AWS --password-stdin public.ecr.aws
+              docker login --username AWS --password-stdin public.ecr.aws
 
             # Obtener digest de la imagen actual (si existe)
             echo "📋 Verificando imagen actual..."
-            OLD_DIGEST=$(podman inspect ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-latest 2>/dev/null | jq -r '.[0].Digest // "none"' || echo "none")
+            OLD_DIGEST=$(docker inspect ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-latest 2>/dev/null | jq -r '.[0].Digest // "none"' || echo "none")
             echo "Digest anterior: $OLD_DIGEST"
 
-            # Pull latest image con --force para asegurar que se descarga
-            echo "🔄 Pulling latest frontend image (forzando descarga)..."
-            podman pull --force ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-latest
+            # Pull latest image
+            echo "🔄 Pulling latest frontend image..."
+            docker pull ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-latest
 
             # Verificar que la imagen cambió
-            NEW_DIGEST=$(podman inspect ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-latest | jq -r '.[0].Digest')
+            NEW_DIGEST=$(docker inspect ${{ env.ECR_REPO }}:${{ env.IMAGE_NAME }}-latest | jq -r '.[0].Digest')
             echo "Digest nuevo: $NEW_DIGEST"
 
             if [ "$OLD_DIGEST" = "$NEW_DIGEST" ] && [ "$OLD_DIGEST" != "none" ]; then
@@ -161,15 +161,15 @@ jobs:
 
             # Stop del contenedor antiguo
             echo "⏹️ Deteniendo contenedor antiguo..."
-            podman stop frontend_prod 2>/dev/null || true
+            docker stop frontend_prod 2>/dev/null || true
 
             # Remover contenedor antiguo
             echo "🗑️ Removiendo contenedor antiguo..."
-            podman rm -f frontend_prod 2>/dev/null || true
+            docker rm -f frontend_prod 2>/dev/null || true
 
             # Levantar el nuevo contenedor
             echo "🚀 Levantando nuevo contenedor..."
-            podman-compose -f podman-compose.yaml up -d frontend
+            docker compose -f docker-compose.yaml up -d frontend
 
             # Esperar que el contenedor inicie (más tiempo para Next.js)
             echo "⏳ Esperando que el contenedor inicie..."
@@ -192,23 +192,23 @@ jobs:
             if [ $RETRY -eq $MAX_RETRIES ]; then
               echo "❌ ERROR: El servicio no pasó el health check"
               echo "📋 Logs del contenedor:"
-              podman logs --tail 50 frontend_prod
+              docker logs --tail 50 frontend_prod
               exit 1
             fi
 
             # Verificar que el healthcheck interno también está OK
             echo "⏳ Esperando healthcheck interno (40s start period + 30s intervalo)..."
             sleep 45
-            HEALTH_STATUS=$(podman inspect frontend_prod --format '{{.State.Health.Status}}' || echo "unknown")
+            HEALTH_STATUS=$(docker inspect frontend_prod --format '{{.State.Health.Status}}' || echo "unknown")
             echo "Estado healthcheck: $HEALTH_STATUS"
 
             # Mostrar estado
             echo "📊 Estado del servicio:"
-            podman ps --filter "name=frontend_prod" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+            docker ps --filter "name=frontend_prod" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 
             # Clean up old images
             echo "🧹 Limpiando imágenes antiguas..."
-            podman image prune -f
+            docker image prune -f
 
             echo "✅ Frontend desplegado y verificado exitosamente"
           EOF
