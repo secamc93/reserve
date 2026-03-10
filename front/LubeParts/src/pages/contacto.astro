@@ -4,31 +4,20 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
 <BaseLayout title="Contacto - Lubricantes Premium">
     <!-- Hero Section -->
-    <section
-        class="relative py-20 bg-gradient-to-r from-[#E67E22] to-[#D35400] overflow-hidden"
-    >
-        <div class="absolute inset-0 bg-black/20"></div>
+    <section class="relative py-20 bg-gradient-to-b from-[#FFF8F3] to-[#FFF0E5]">
         <div class="container mx-auto px-6 relative z-10">
-            <div class="text-center text-white">
-                <h1 class="text-5xl md:text-7xl font-bold mb-6 drop-shadow-2xl">
-                    CONTACTANOS
+            <div class="text-center">
+                <div class="flex items-center justify-center gap-2 mb-6">
+                    <div class="w-2 h-2 rounded-full bg-[#FF6B00]"></div>
+                    <p class="text-sm font-bold text-[#FF6B00] tracking-widest uppercase">Estamos aquí para ayudarte</p>
+                </div>
+                <h1 class="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+                    Contactanos
                 </h1>
-                <p
-                    class="text-xl md:text-2xl text-white/80 max-w-4xl mx-auto leading-relaxed"
-                >
-                    Nuestro equipo está listo para asesorarte
+                <p class="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
+                    Nuestro equipo está listo para asesorarte en cualquier momento
                 </p>
             </div>
-        </div>
-
-        <!-- Elementos decorativos -->
-        <div
-            class="absolute top-10 left-10 w-20 h-20 bg-white/10 rounded-full blur-xl"
-        >
-        </div>
-        <div
-            class="absolute bottom-10 right-10 w-32 h-32 bg-white/5 rounded-full blur-2xl"
-        >
         </div>
     </section>
 
@@ -38,168 +27,97 @@ import BaseLayout from "../layouts/BaseLayout.astro";
             <div class="grid md:grid-cols-2 gap-12 items-start">
                 <!-- Información de contacto -->
                 <div>
-                    <h2
-                        class="text-4xl md:text-5xl font-bold text-gray-900 mb-8"
-                    >
+                    <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
                         Información de Contacto
                     </h2>
                     <p class="text-lg text-gray-600 mb-8 leading-relaxed">
-                        Nuestro equipo está disponible para atenderte en
-                        múltiples canales. No dudes en contactarnos para
-                        cualquier consulta sobre nuestros productos.
+                        Nuestro equipo está disponible para atenderte en múltiples canales. No dudes en contactarnos para cualquier consulta sobre nuestros productos.
                     </p>
 
                     <div class="space-y-6">
                         <!-- WhatsApp -->
-                        <div
-                            class="flex items-center p-6 bg-[#1A1A1A] rounded-2xl hover:bg-[#1A1A1A]/80 transition-all duration-300 group border border-[#2A2A2A]"
-                        >
-                            <div
-                                class="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center mr-6 group-hover:scale-110 transition-transform duration-300"
-                            >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 24 24"
-                                    fill="currentColor"
-                                    class="w-8 h-8 text-white"
-                                >
-                                    <path
-                                        d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.62-6.001C.122 5.281 5.403 0 12.057 0c3.187 0 6.167 1.24 8.413 3.488a11.82 11.82 0 013.491 8.414c-.003 6.654-5.284 11.935-11.938 11.935a11.9 11.9 0 01-6.003-1.617L.057 24zm6.597-3.807c1.735 1.033 3.27 1.666 5.392 1.666 5.448 0 9.886-4.434 9.889-9.877.003-5.462-4.415-9.89-9.881-9.893-5.452 0-9.886 4.434-9.889 9.885a9.86 9.86 0 001.67 5.396l-.999 3.648 3.818-.825zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.03-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.149-.173.198-.297.297-.495.099-.198.05-.372-.025-.521-.074-.149-.669-1.611-.916-2.206-.242-.579-.487-.5-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.262.489 1.694.626.712.227 1.36.195 1.873.118.571-.085 1.758-.718 2.006-1.41.248-.695.248-1.29.173-1.41z"
-                                    ></path>
+                        <div class="flex items-center p-6 bg-[#FFF8F3] rounded-2xl hover:shadow-lg transition-all duration-300 group border-2 border-[#FFE8D5]">
+                            <div class="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center mr-6 group-hover:scale-110 transition-transform duration-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8 text-white">
+                                    <path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.62-6.001C.122 5.281 5.403 0 12.057 0c3.187 0 6.167 1.24 8.413 3.488a11.82 11.82 0 013.491 8.414c-.003 6.654-5.284 11.935-11.938 11.935a11.9 11.9 0 01-6.003-1.617L.057 24zm6.597-3.807c1.735 1.033 3.27 1.666 5.392 1.666 5.448 0 9.886-4.434 9.889-9.877.003-5.462-4.415-9.89-9.881-9.893-5.452 0-9.886 4.434-9.889 9.885a9.86 9.86 0 001.67 5.396l-.999 3.648 3.818-.825zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.03-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.149-.173.198-.297.297-.495.099-.198.05-.372-.025-.521-.074-.149-.669-1.611-.916-2.206-.242-.579-.487-.5-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.262.489 1.694.626.712.227 1.36.195 1.873.118.571-.085 1.758-.718 2.006-1.41.248-.695.248-1.29.173-1.41z"></path>
                                 </svg>
                             </div>
                             <div>
-                                <h3
-                                    class="text-xl font-bold text-white mb-1"
-                                >
-                                    WhatsApp
-                                </h3>
-                                <a href="https://wa.me/573165356255" target="_blank" rel="noopener" class="text-gray-400 text-lg hover:text-green-400">+57 316 5356255</a>
-                                <p class="text-gray-500 text-sm">
-                                    Respuesta inmediata
-                                </p>
+                                <h3 class="text-xl font-bold text-gray-900 mb-1">WhatsApp</h3>
+                                <a href="https://wa.me/573165356255" target="_blank" rel="noopener" class="text-[#FF6B00] text-lg font-semibold hover:text-[#E55A00]">+57 316 5356255</a>
+                                <p class="text-gray-600 text-sm">Respuesta inmediata</p>
                             </div>
                         </div>
 
                         <!-- Email -->
-                        <div
-                            class="flex items-center p-6 bg-[#1A1A1A] rounded-2xl hover:bg-[#1A1A1A]/80 transition-all duration-300 group border border-[#2A2A2A]"
-                        >
-                            <div
-                                class="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center mr-6 group-hover:scale-110 transition-transform duration-300"
-                            >
-                                <svg
-                                    class="w-8 h-8 text-white"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                                    ></path>
+                        <div class="flex items-center p-6 bg-[#FFF8F3] rounded-2xl hover:shadow-lg transition-all duration-300 group border-2 border-[#FFE8D5]">
+                            <div class="w-16 h-16 bg-[#FF6B00] rounded-2xl flex items-center justify-center mr-6 group-hover:scale-110 transition-transform duration-300">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                                 </svg>
                             </div>
                             <div>
-                                <h3
-                                    class="text-xl font-bold text-white mb-1"
-                                >
-                                    Email
-                                </h3>
-                                <p class="text-gray-400 text-lg">
-                                    lubeparts@gmail.com
-                                </p>
-                                <p class="text-gray-500 text-sm">
-                                    Respuesta en 24 horas
-                                </p>
+                                <h3 class="text-xl font-bold text-gray-900 mb-1">Email</h3>
+                                <p class="text-gray-700 text-lg font-semibold">lubeparts@gmail.com</p>
+                                <p class="text-gray-600 text-sm">Respuesta en 24 horas</p>
                             </div>
                         </div>
-
                     </div>
                 </div>
 
                 <!-- Formulario de contacto -->
-                <div
-                    class="bg-[#1A1A1A] rounded-2xl shadow-2xl p-8 border border-[#2A2A2A]"
-                >
-                    <h3 class="text-3xl font-bold text-white mb-6">
-                        Envíanos un mensaje
-                    </h3>
-                    <p class="text-gray-400 mb-8">
-                        Completa el formulario y nos pondremos en contacto
-                        contigo lo antes posible.
-                    </p>
+                <div class="bg-white rounded-2xl shadow-xl p-8 border-2 border-[#FFE8D5]">
+                    <h3 class="text-3xl font-bold text-gray-900 mb-6">Envíanos un mensaje</h3>
+                    <p class="text-gray-600 mb-8">Completa el formulario y nos pondremos en contacto contigo lo antes posible.</p>
 
                     <form id="contact-form" class="space-y-6">
                         <div class="grid md:grid-cols-2 gap-4">
                             <div>
-                                <label
-                                    class="block text-sm font-semibold text-gray-300 mb-2"
-                                >
-                                    Nombre *
-                                </label>
+                                <label class="block text-sm font-semibold text-gray-900 mb-2">Nombre *</label>
                                 <input
                                     id="contact-name"
                                     name="name"
                                     type="text"
                                     required
-                                    class="w-full px-4 py-3 border border-[#2A2A2A] rounded-lg bg-[#0A0A0A] text-white placeholder-gray-500 focus:ring-2 focus:ring-[#E67E22] focus:border-transparent transition-all duration-300"
+                                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-[#FF6B00] focus:border-transparent transition-all duration-300"
                                     placeholder="Tu nombre completo"
                                 />
                             </div>
                             <div>
-                                <label
-                                    class="block text-sm font-semibold text-gray-300 mb-2"
-                                >
-                                    Email *
-                                </label>
+                                <label class="block text-sm font-semibold text-gray-900 mb-2">Email *</label>
                                 <input
                                     id="contact-email"
                                     name="email"
                                     type="email"
                                     required
-                                    class="w-full px-4 py-3 border border-[#2A2A2A] rounded-lg bg-[#0A0A0A] text-white placeholder-gray-500 focus:ring-2 focus:ring-[#E67E22] focus:border-transparent transition-all duration-300"
+                                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-[#FF6B00] focus:border-transparent transition-all duration-300"
                                     placeholder="tu@email.com"
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <label
-                                class="block text-sm font-semibold text-gray-300 mb-2"
-                            >
-                                Teléfono
-                            </label>
+                            <label class="block text-sm font-semibold text-gray-900 mb-2">Teléfono</label>
                             <input
                                 id="contact-phone"
                                 name="phone"
                                 type="tel"
-                                class="w-full px-4 py-3 border border-[#2A2A2A] rounded-lg bg-[#0A0A0A] text-white placeholder-gray-500 focus:ring-2 focus:ring-[#E67E22] focus:border-transparent transition-all duration-300"
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-[#FF6B00] focus:border-transparent transition-all duration-300"
                                 placeholder="3165356255"
                             />
                         </div>
 
                         <div>
-                            <label
-                                class="block text-sm font-semibold text-gray-300 mb-2"
-                            >
-                                Asunto *
-                            </label>
+                            <label class="block text-sm font-semibold text-gray-900 mb-2">Asunto *</label>
                             <select
                                 id="contact-subject"
                                 name="subject"
                                 required
-                                class="w-full px-4 py-3 border border-[#2A2A2A] rounded-lg bg-[#0A0A0A] text-white focus:ring-2 focus:ring-[#E67E22] focus:border-transparent transition-all duration-300"
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-[#FF6B00] focus:border-transparent transition-all duration-300"
                             >
                                 <option value="">Selecciona un asunto</option>
-                                <option value="consulta-producto"
-                                    >Consulta sobre productos</option
-                                >
-                                <option value="asesoramiento"
-                                    >Asesoramiento técnico</option
-                                >
+                                <option value="consulta-producto">Consulta sobre productos</option>
+                                <option value="asesoramiento">Asesoramiento técnico</option>
                                 <option value="cotizacion">Cotización</option>
                                 <option value="soporte">Soporte técnico</option>
                                 <option value="otro">Otro</option>
@@ -207,43 +125,33 @@ import BaseLayout from "../layouts/BaseLayout.astro";
                         </div>
 
                         <div>
-                            <label
-                                class="block text-sm font-semibold text-gray-300 mb-2"
-                            >
-                                Mensaje *
-                            </label>
+                            <label class="block text-sm font-semibold text-gray-900 mb-2">Mensaje *</label>
                             <textarea
                                 id="contact-message"
                                 name="message"
                                 required
                                 rows="5"
-                                class="w-full px-4 py-3 border border-[#2A2A2A] rounded-lg bg-[#0A0A0A] text-white placeholder-gray-500 focus:ring-2 focus:ring-[#E67E22] focus:border-transparent transition-all duration-300 resize-none"
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-[#FF6B00] focus:border-transparent transition-all duration-300 resize-none"
                                 placeholder="Describe tu consulta o solicitud..."
                             ></textarea>
                         </div>
 
                         <button
                             type="submit"
-                            class="w-full bg-gradient-to-r from-[#E67E22] to-[#D35400] hover:from-[#D35400] hover:to-[#B8470F] text-white py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl"
+                            class="w-full bg-gradient-to-r from-[#FF6B00] to-[#E55A00] hover:from-[#E55A00] hover:to-[#D35400] text-white py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl"
                         >
                             Enviar Mensaje
                         </button>
                     </form>
+
                     <!-- Panel WhatsApp -->
                     <div
                         id="wa-panel"
                         class="fixed inset-0 bg-black/50 backdrop-blur-sm items-center justify-center hidden z-50"
                     >
-                        <div
-                            class="bg-[#1A1A1A] rounded-2xl p-6 w-full max-w-md shadow-2xl border border-[#2A2A2A]"
-                        >
-                            <h4 class="text-xl font-bold text-white mb-2">
-                                Enviar por WhatsApp
-                            </h4>
-                            <p class="text-gray-400 mb-4">
-                                Abriremos WhatsApp con tu mensaje prellenado.
-                                Revisa y presiona enviar.
-                            </p>
+                        <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border-2 border-[#FFE8D5]">
+                            <h4 class="text-xl font-bold text-gray-900 mb-2">Enviar por WhatsApp</h4>
+                            <p class="text-gray-600 mb-4">Abriremos WhatsApp con tu mensaje prellenado. Revisa y presiona enviar.</p>
                             <div class="flex gap-3">
                                 <a
                                     id="wa-link"
@@ -252,22 +160,13 @@ import BaseLayout from "../layouts/BaseLayout.astro";
                                     href="#"
                                     class="flex-1 inline-flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-xl font-semibold transition-colors"
                                 >
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        viewBox="0 0 24 24"
-                                        fill="currentColor"
-                                        class="w-5 h-5"
-                                        ><path
-                                            d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.62-6.001C.122 5.281 5.403 0 12.057 0c3.187 0 6.167 1.24 8.413 3.488a11.82 11.82 0 013.491 8.414c-.003 6.654-5.284 11.935-11.938 11.935a11.9 11.9 0 01-6.003-1.617L.057 24zm6.597-3.807c1.735 1.033 3.27 1.666 5.392 1.666 5.448 0 9.886-4.434 9.889-9.877.003-5.462-4.415-9.89-9.881-9.893-5.452 0-9.886 4.434-9.889 9.885a9.86 9.86 0 001.67 5.396l-.999 3.648 3.818-.825zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.03-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.149-.173.198-.297.297-.495.099-.198.05-.372-.025-.521-.074-.149-.669-1.611-.916-2.206-.242-.579-.487-.5-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.262.489 1.694.626.712.227 1.36.195 1.873.118.571-.085 1.758-.718 2.006-1.41.248-.695.248-1.29.173-1.41z"
-                                        ></path></svg
-                                    >
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.62-6.001C.122 5.281 5.403 0 12.057 0c3.187 0 6.167 1.24 8.413 3.488a11.82 11.82 0 013.491 8.414c-.003 6.654-5.284 11.935-11.938 11.935a11.9 11.9 0 01-6.003-1.617L.057 24zm6.597-3.807c1.735 1.033 3.27 1.666 5.392 1.666 5.448 0 9.886-4.434 9.889-9.877.003-5.462-4.415-9.89-9.881-9.893-5.452 0-9.886 4.434-9.889 9.885a9.86 9.86 0 001.67 5.396l-.999 3.648 3.818-.825zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.03-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.149-.173.198-.297.297-.495.099-.198.05-.372-.025-.521-.074-.149-.669-1.611-.916-2.206-.242-.579-.487-.5-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.262.489 1.694.626.712.227 1.36.195 1.873.118.571-.085 1.758-.718 2.006-1.41.248-.695.248-1.29.173-1.41z"></path></svg>
                                     Abrir WhatsApp
                                 </a>
                                 <button
                                     id="wa-close"
-                                    class="px-4 py-3 rounded-xl border border-[#2A2A2A] text-gray-400 bg-[#0A0A0A] hover:bg-[#1A1A1A]"
-                                    >Cancelar</button
-                                >
+                                    class="px-4 py-3 rounded-xl border-2 border-gray-300 text-gray-600 bg-gray-100 hover:bg-gray-200"
+                                >Cancelar</button>
                             </div>
                         </div>
                     </div>
@@ -276,20 +175,69 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         </div>
     </section>
 
+    <!-- FAQ -->
+    <section class="py-20 bg-[#FFF8F3]">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Preguntas Frecuentes</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">Resolvemos las dudas más comunes sobre nuestros productos y servicios</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <div class="bg-white rounded-2xl p-6 hover:shadow-lg transition-all duration-300 border-2 border-[#FFE8D5]">
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">¿Qué tipo de lubricantes ofrecen?</h3>
+                    <p class="text-gray-600">Ofrecemos una amplia gama de lubricantes para motores de gasolina, diesel, motocicletas y vehículos pesados, todos de la más alta calidad.</p>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 hover:shadow-lg transition-all duration-300 border-2 border-[#FFE8D5]">
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">¿Hacen envíos a domicilio?</h3>
+                    <p class="text-gray-600">Sí, ofrecemos servicio de entrega a domicilio en toda la ciudad con un tiempo de entrega de 24-48 horas.</p>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 hover:shadow-lg transition-all duration-300 border-2 border-[#FFE8D5]">
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">¿Tienen garantía en sus productos?</h3>
+                    <p class="text-gray-600">Todos nuestros productos cuentan con garantía de calidad y satisfacción del cliente. Si no estás satisfecho, te reembolsamos.</p>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 hover:shadow-lg transition-all duration-300 border-2 border-[#FFE8D5]">
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">¿Ofrecen asesoramiento técnico?</h3>
+                    <p class="text-gray-600">Sí, nuestro equipo de técnicos especializados está disponible para brindarte el mejor asesoramiento sobre qué lubricante usar.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="py-20 bg-gradient-to-r from-[#FF6B00] to-[#E55A00]">
+        <div class="container mx-auto px-6 text-center">
+            <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">¿Necesitas ayuda inmediata?</h2>
+            <p class="text-xl text-white/90 mb-8 max-w-3xl mx-auto">Nuestro equipo está disponible para atenderte. No dudes en contactarnos para cualquier consulta o emergencia.</p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a
+                    href="https://wa.me/573165356255"
+                    target="_blank"
+                    rel="noopener"
+                    class="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl inline-flex items-center gap-2 justify-center"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.62-6.001C.122 5.281 5.403 0 12.057 0c3.187 0 6.167 1.24 8.413 3.488a11.82 11.82 0 013.491 8.414c-.003 6.654-5.284 11.935-11.938 11.935a11.9 11.9 0 01-6.003-1.617L.057 24zm6.597-3.807c1.735 1.033 3.27 1.666 5.392 1.666 5.448 0 9.886-4.434 9.889-9.877.003-5.462-4.415-9.89-9.881-9.893-5.452 0-9.886 4.434-9.889 9.885a9.86 9.86 0 001.67 5.396l-.999 3.648 3.818-.825zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.03-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.149-.173.198-.297.297-.495.099-.198.05-.372-.025-.521-.074-.149-.669-1.611-.916-2.206-.242-.579-.487-.5-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.262.489 1.694.626.712.227 1.36.195 1.873.118.571-.085 1.758-.718 2.006-1.41.248-.695.248-1.29.173-1.41z"></path></svg>
+                    Enviar WhatsApp
+                </a>
+                <a
+                    href="mailto:lubeparts@gmail.com"
+                    class="bg-white text-[#FF6B00] hover:bg-gray-100 px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl inline-flex items-center gap-2 justify-center"
+                >
+                    ✉️ Enviar Email
+                </a>
+            </div>
+        </div>
+    </section>
+
     <script>
-        const whatsappPhone = "573165356255"; // Cambiar si aplica otro número con código de país
-        const form = document.getElementById(
-            "contact-form",
-        ) as HTMLFormElement | null;
-        const panel = document.getElementById(
-            "wa-panel",
-        ) as HTMLDivElement | null;
-        const waLink = document.getElementById(
-            "wa-link",
-        ) as HTMLAnchorElement | null;
-        const waClose = document.getElementById(
-            "wa-close",
-        ) as HTMLButtonElement | null;
+        const whatsappPhone = "573165356255";
+        const form = document.getElementById("contact-form") as HTMLFormElement | null;
+        const panel = document.getElementById("wa-panel") as HTMLDivElement | null;
+        const waLink = document.getElementById("wa-link") as HTMLAnchorElement | null;
+        const waClose = document.getElementById("wa-close") as HTMLButtonElement | null;
 
         function openPanel() {
             if (!panel) return;
@@ -312,21 +260,11 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         if (form) {
             form.addEventListener("submit", (e) => {
                 e.preventDefault();
-                const nameEl = document.getElementById(
-                    "contact-name",
-                ) as HTMLInputElement | null;
-                const emailEl = document.getElementById(
-                    "contact-email",
-                ) as HTMLInputElement | null;
-                const phoneEl = document.getElementById(
-                    "contact-phone",
-                ) as HTMLInputElement | null;
-                const subjectEl = document.getElementById(
-                    "contact-subject",
-                ) as HTMLSelectElement | null;
-                const messageEl = document.getElementById(
-                    "contact-message",
-                ) as HTMLTextAreaElement | null;
+                const nameEl = document.getElementById("contact-name") as HTMLInputElement | null;
+                const emailEl = document.getElementById("contact-email") as HTMLInputElement | null;
+                const phoneEl = document.getElementById("contact-phone") as HTMLInputElement | null;
+                const subjectEl = document.getElementById("contact-subject") as HTMLSelectElement | null;
+                const messageEl = document.getElementById("contact-message") as HTMLTextAreaElement | null;
 
                 const name = nameEl && 'value' in nameEl ? String(nameEl.value).trim() : "";
                 const email = emailEl && 'value' in emailEl ? String(emailEl.value).trim() : "";
@@ -350,102 +288,4 @@ import BaseLayout from "../layouts/BaseLayout.astro";
             });
         }
     </script>
-
-    <!-- FAQ -->
-    <section class="py-20 bg-[#0A0A0A]">
-        <div class="container mx-auto px-6">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl md:text-5xl font-bold text-white mb-4">
-                    Preguntas Frecuentes
-                </h2>
-                <p class="text-xl text-gray-400 max-w-3xl mx-auto">
-                    Resolvemos las dudas más comunes sobre nuestros productos y
-                    servicios
-                </p>
-            </div>
-
-            <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                <div
-                    class="bg-[#1A1A1A] rounded-2xl p-6 hover:bg-[#1A1A1A]/80 transition-all duration-300 border border-[#2A2A2A]"
-                >
-                    <h3 class="text-xl font-bold text-white mb-3">
-                        ¿Qué tipo de lubricantes ofrecen?
-                    </h3>
-                    <p class="text-gray-400">
-                        Ofrecemos una amplia gama de lubricantes para motores de
-                        gasolina, diesel, motocicletas y vehículos pesados,
-                        todos de la más alta calidad.
-                    </p>
-                </div>
-
-                <div
-                    class="bg-[#1A1A1A] rounded-2xl p-6 hover:bg-[#1A1A1A]/80 transition-all duration-300 border border-[#2A2A2A]"
-                >
-                    <h3 class="text-xl font-bold text-white mb-3">
-                        ¿Hacen envíos a domicilio?
-                    </h3>
-                    <p class="text-gray-400">
-                        Sí, ofrecemos servicio de entrega a domicilio en toda la
-                        ciudad con un tiempo de entrega de 24-48 horas.
-                    </p>
-                </div>
-
-                <div
-                    class="bg-[#1A1A1A] rounded-2xl p-6 hover:bg-[#1A1A1A]/80 transition-all duration-300 border border-[#2A2A2A]"
-                >
-                    <h3 class="text-xl font-bold text-white mb-3">
-                        ¿Tienen garantía en sus productos?
-                    </h3>
-                    <p class="text-gray-400">
-                        Todos nuestros productos cuentan con garantía de calidad
-                        y satisfacción del cliente. Si no estás satisfecho, te
-                        reembolsamos.
-                    </p>
-                </div>
-
-                <div
-                    class="bg-[#1A1A1A] rounded-2xl p-6 hover:bg-[#1A1A1A]/80 transition-all duration-300 border border-[#2A2A2A]"
-                >
-                    <h3 class="text-xl font-bold text-white mb-3">
-                        ¿Ofrecen asesoramiento técnico?
-                    </h3>
-                    <p class="text-gray-400">
-                        Sí, nuestro equipo de técnicos especializados está
-                        disponible para brindarte el mejor asesoramiento sobre
-                        qué lubricante usar.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- CTA -->
-    <section class="py-20 bg-gradient-to-r from-[#E67E22] to-[#D35400]">
-        <div class="container mx-auto px-6 text-center">
-            <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">
-                ¿Necesitas ayuda inmediata?
-            </h2>
-            <p class="text-xl text-white/80 mb-8 max-w-3xl mx-auto">
-                Nuestro equipo está disponible para atenderte. No dudes en
-                contactarnos para cualquier consulta o emergencia.
-            </p>
-            <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <a
-                    href="https://wa.me/573165356255"
-                    target="_blank"
-                    rel="noopener"
-                    class="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl inline-flex items-center gap-2 justify-center"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.62-6.001C.122 5.281 5.403 0 12.057 0c3.187 0 6.167 1.24 8.413 3.488a11.82 11.82 0 013.491 8.414c-.003 6.654-5.284 11.935-11.938 11.935a11.9 11.9 0 01-6.003-1.617L.057 24zm6.597-3.807c1.735 1.033 3.27 1.666 5.392 1.666 5.448 0 9.886-4.434 9.889-9.877.003-5.462-4.415-9.89-9.881-9.893-5.452 0-9.886 4.434-9.889 9.885a9.86 9.86 0 001.67 5.396l-.999 3.648 3.818-.825zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.03-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.149-.173.198-.297.297-.495.099-.198.05-.372-.025-.521-.074-.149-.669-1.611-.916-2.206-.242-.579-.487-.5-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.262.489 1.694.626.712.227 1.36.195 1.873.118.571-.085 1.758-.718 2.006-1.41.248-.695.248-1.29.173-1.41z"></path></svg>
-                    Enviar WhatsApp
-                </a>
-                <a
-                    href="mailto:lubeparts@gmail.com"
-                    class="bg-transparent border-2 border-white text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 hover:bg-white hover:text-blue-600"
-                >
-                    ✉️ Enviar Email
-                </a>
-            </div>
-        </div>
-    </section>
 </BaseLayout>
