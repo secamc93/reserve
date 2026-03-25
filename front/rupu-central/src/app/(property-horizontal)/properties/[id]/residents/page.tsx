@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { ResidentsTable } from '@/services/modules/horizontal-properties/residents/ui/residents-table';
-import { PropertyNavigation } from '@/services/modules/horizontal-properties/properties/ui/property-navigation';
 
 export default function ResidentsPage() {
   const params = useParams();
@@ -20,7 +19,6 @@ export default function ResidentsPage() {
   return (
     <div>
       {/* Navegación */}
-      <PropertyNavigation businessId={businessId} />
 
       <div className="p-6">
         <ResidentsTable businessId={businessId} />

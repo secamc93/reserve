@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
-import { PropertyNavigation } from '@/services/modules/horizontal-properties/properties/ui/property-navigation';
 import { 
   ParkingZonesTable, 
   ParkingSlotsTable, 
@@ -33,7 +32,6 @@ export default function ParkingPage() {
   return (
     <div>
       {/* Navegación */}
-      <PropertyNavigation businessId={businessId} />
 
       <div className="p-6">
         <h1 className="text-2xl font-bold mb-4">Gestión de Parqueaderos</h1>

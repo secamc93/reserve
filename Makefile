@@ -1,7 +1,7 @@
 # Makefile Centralizado - Proyecto Reserve
 # Uso: make [comando]
 
-.PHONY: help run-centralback run-centralfront run-website run-migrations run-all stop-all
+.PHONY: help run-centralback run-centralfront run-website run-migrations run-all stop-all run-backend run-frontend
 
 # ============================================
 # VARIABLES
@@ -241,3 +241,7 @@ dev-front: run-centralfront ## Alias corto: ejecutar solo frontend
 
 dev-full: ## Alias corto: instrucciones para ejecutar todo
 	@make run-all
+
+run-backend: run-centralback ## Alias: make run-backend = make run-centralback
+
+run-frontend: run-centralfront ## Alias: make run-frontend = make run-centralfront

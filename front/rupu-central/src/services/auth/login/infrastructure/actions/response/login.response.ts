@@ -12,6 +12,10 @@ export interface BusinessData {
   secondary_color?: string;
   tertiary_color?: string;
   quaternary_color?: string;
+  business_type_id?: number;
+  business_type_code?: string;
+  business_type_name?: string;
+  business_type_icon?: string;
 }
 
 export interface LoginActionResult {

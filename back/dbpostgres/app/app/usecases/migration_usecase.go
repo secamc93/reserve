@@ -289,6 +289,38 @@ func (uc *MigrationUseCase) seedSportTrainingData() error {
 	return nil
 }
 
+// MigrateSportTrainingOnly migra SOLO las tablas de sport_training (rapido)
+func (uc *MigrationUseCase) MigrateSportTrainingOnly() error {
+	uc.logger.Info().Msg("Migrando SOLO tablas de sport_training...")
+	if err := uc.createSportTrainingSchema(); err != nil {
+		return err
+	}
+	if err := uc.db.AutoMigrate(
+		&models.PlayerSkillLevel{},
+		&models.CoachSpecialty{},
+		&models.TrainingSessionType{},
+		&models.STBookingStatus{},
+		&models.STAttendanceStatus{},
+		&models.STPlayer{},
+		&models.STGuardian{},
+		&models.PlayerGuardian{},
+		&models.Coach{},
+		&models.CoachSpecialtyAssignment{},
+		&models.TrainingGroup{},
+		&models.GroupPlayer{},
+		&models.TrainingSession{},
+		&models.SessionBooking{},
+		&models.STAttendanceRecord{},
+	); err != nil {
+		return err
+	}
+	if err := uc.seedSportTrainingData(); err != nil {
+		return err
+	}
+	uc.logger.Info().Msg("✅ Migración de sport_training completada")
+	return nil
+}
+
 // createHorizontalPropertySchema crea el esquema horizontal_property si no existe
 func (uc *MigrationUseCase) createHorizontalPropertySchema() error {
 	uc.logger.Info().Msg("Creando esquema horizontal_property...")

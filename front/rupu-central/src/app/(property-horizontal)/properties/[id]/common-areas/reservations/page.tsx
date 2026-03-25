@@ -2,7 +2,6 @@
 
 import { useParams } from 'next/navigation';
 import { ReservationsTable } from '@/services/modules/horizontal-properties/common-areas/ui/reservations-table';
-import { PropertyNavigation } from '@/services/modules/horizontal-properties/properties/ui/property-navigation';
 
 export default function ReservationsPage() {
   const params = useParams();
@@ -19,7 +18,6 @@ export default function ReservationsPage() {
   return (
     <div>
       {/* Navegación */}
-      <PropertyNavigation businessId={businessId} />
 
       <div className="p-6">
         <ReservationsTable businessId={businessId} />

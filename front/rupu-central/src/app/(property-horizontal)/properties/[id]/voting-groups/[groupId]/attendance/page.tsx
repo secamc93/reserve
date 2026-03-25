@@ -6,7 +6,6 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { PropertyNavigation } from '@/services/modules/horizontal-properties/properties/ui/property-navigation';
 import { AttendanceManagement } from '@/services/modules/horizontal-properties/attendance/ui';
 import { TokenStorage } from '@shared/config';
 
@@ -38,9 +37,7 @@ export default function AttendanceManagementPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Navigation */}
-      <PropertyNavigation
-        businessId={businessId}
-      />
+      
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

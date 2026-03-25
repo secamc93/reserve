@@ -1,7 +1,8 @@
 /**
- * Página: Gestión de Propiedades Horizontales
+ * Pagina: Propiedades Horizontales
+ * Si hay negocio seleccionado -> redirige al detalle de esa propiedad
+ * Si no hay negocio seleccionado (super admin) -> muestra vista consolidada
  */
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -12,70 +13,60 @@ import { Spinner, Button } from '@shared/ui';
 
 export default function PropertiesPage() {
   const router = useRouter();
+  const [shouldShowDashboard, setShouldShowDashboard] = useState(false);
 
   useEffect(() => {
-    // Verificar si el usuario es super admin
     const user = TokenStorage.getUser();
     const activeBusiness = TokenStorage.getActiveBusiness();
 
-    // Si no es super admin, redirigir a su propiedad
-    if (user && !user.is_super_admin && activeBusiness && activeBusiness !== 0) {
+    if (!user) {
+      router.replace('/login');
+      return;
+    }
+
+    // Si hay un negocio seleccionado (no 0), ir directo al detalle
+    if (activeBusiness !== null && activeBusiness !== 0) {
       router.replace(`/properties/${activeBusiness}`);
       return;
     }
 
-    // Si no es super admin y no tiene business activo, redirigir a login
-    if (user && !user.is_super_admin && (!activeBusiness || activeBusiness === 0)) {
+    // Si no es super admin y no tiene negocio, redirigir a login
+    if (!user.is_super_admin && (activeBusiness === null || activeBusiness === 0)) {
       router.replace('/login');
       return;
     }
+
+    // Super admin sin negocio seleccionado: mostrar dashboard consolidado
+    setShouldShowDashboard(true);
   }, [router]);
 
-  // Hook para obtener dashboard consolidado (businessId undefined = todas las propiedades)
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const { stats, loading, error, refresh, setPage, setPageSize: handleSetPageSize } = useDashboardStats({
-    businessId: undefined, // Sin businessId para obtener resumen de todas
+    businessId: undefined,
     page: currentPage,
     pageSize: pageSize,
-    autoLoad: true,
+    autoLoad: shouldShowDashboard,
   });
 
-  // Verificar si el usuario es super admin antes de mostrar la lista
-  const user = TokenStorage.getUser();
-  const activeBusiness = TokenStorage.getActiveBusiness();
-
-  // Si no es super admin, mostrar loading mientras redirige
-  if (user && !user.is_super_admin) {
-    if (activeBusiness && activeBusiness !== 0) {
-      return (
-        <div className="min-h-screen flex items-center justify-center">
-          <Spinner size="xl" text="Redirigiendo..." />
-        </div>
-      );
-    }
+  if (!shouldShowDashboard) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Spinner size="xl" text="Cargando..." />
+        <Spinner size="xl" text="Redirigiendo..." />
       </div>
     );
   }
 
-  // Solo mostrar la lista si es super admin
   return (
     <div className="p-8">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Gestión de Propiedades Horizontales
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900">Propiedad Horizontal</h1>
           <p className="text-gray-600 mt-2">
-            Vista consolidada de todas las propiedades horizontales
+            Selecciona un negocio en el dropdown superior para ver su detalle
           </p>
         </div>
 
-        {/* Dashboard Consolidado */}
         <div className="mb-8">
           {loading && !stats ? (
             <div className="flex items-center justify-center py-12">
@@ -85,13 +76,11 @@ export default function PropertiesPage() {
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-8">
               <p className="font-medium">Error al cargar dashboard</p>
               <p className="text-sm mt-1">{error}</p>
-              <Button onClick={refresh} className="mt-3" variant="outline">
-                Reintentar
-              </Button>
+              <Button onClick={refresh} className="mt-3" variant="outline">Reintentar</Button>
             </div>
           ) : stats ? (
-            <ConsolidatedDashboard 
-              data={stats} 
+            <ConsolidatedDashboard
+              data={stats}
               loading={loading}
               currentPage={currentPage}
               pageSize={pageSize}
@@ -104,4 +93,3 @@ export default function PropertiesPage() {
     </div>
   );
 }
-

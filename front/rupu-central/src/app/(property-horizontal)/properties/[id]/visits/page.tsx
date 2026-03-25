@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { VisitsTable } from '@/services/modules/horizontal-properties/visits/ui/visits-table';
-import { PropertyNavigation } from '@/services/modules/horizontal-properties/properties/ui/property-navigation';
 
 export default function VisitsPage() {
   const params = useParams();
@@ -20,7 +19,6 @@ export default function VisitsPage() {
   return (
     <div>
       {/* Navegación */}
-      <PropertyNavigation businessId={businessId} />
 
       <div className="p-6">
         <VisitsTable businessId={businessId} />

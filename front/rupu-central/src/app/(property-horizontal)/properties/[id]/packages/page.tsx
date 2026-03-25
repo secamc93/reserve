@@ -2,7 +2,6 @@
 
 import { useParams } from 'next/navigation';
 import { PackagesTable } from '@/services/modules/horizontal-properties/packages/ui';
-import { PropertyNavigation } from '@/services/modules/horizontal-properties/properties/ui/property-navigation';
 
 export default function PackagesPage() {
   const params = useParams();
@@ -19,7 +18,6 @@ export default function PackagesPage() {
   return (
     <div>
       {/* Navegación */}
-      <PropertyNavigation businessId={businessId} />
 
       <div className="p-6">
         <PackagesTable businessId={businessId} />
