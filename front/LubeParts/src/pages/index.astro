@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import CarouselHero from "../components/sections/CarouselHero.astro";
+import CarouselHero from "../components/ui/CarouselHero.astro";
+import "../styles/sections.css";
 ---
 
 <BaseLayout title="Lubricantes Premium - Calidad y Confianza">
@@ -11,7 +12,7 @@ import CarouselHero from "../components/sections/CarouselHero.astro";
   <section class="py-20 bg-white">
     <div class="container mx-auto px-6">
       <div class="text-center mb-16">
-        <p class="text-sm font-bold text-[#E67E22] tracking-widest mb-4 uppercase">¿Por qué elegirnos?</p>
+        <p class="text-sm font-bold text-[var(--color-primary-orange)] tracking-widest mb-4 uppercase">¿Por qué elegirnos?</p>
         <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
           La diferencia está en la calidad
         </h2>
@@ -26,20 +27,9 @@ import CarouselHero from "../components/sections/CarouselHero.astro";
           class="bg-gray-50 rounded-2xl p-8 hover:shadow-2xl transition-all duration-500 border border-gray-200 hover:border-[#E67E22]/30"
         >
           <div
-            class="w-16 h-16 bg-[#E67E22]/15 rounded-2xl flex items-center justify-center mb-6 mx-auto"
+            class="w-20 h-20 rounded-2xl flex items-center justify-center mb-6 mx-auto text-4xl bg-[#E67E22]"
           >
-            <svg
-              class="w-8 h-8 text-[#E67E22]"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
+            📦
           </div>
           <h3 class="text-2xl font-bold text-gray-900 mb-4 text-center">
             Catálogo
@@ -51,23 +41,12 @@ import CarouselHero from "../components/sections/CarouselHero.astro";
 
         <!-- Característica 2 -->
         <div
-          class="bg-gray-50 rounded-2xl p-8 hover:shadow-2xl transition-all duration-500 border border-gray-200"
+          class="bg-gray-50 rounded-2xl p-8 hover:shadow-2xl transition-all duration-500 border border-gray-200 hover:border-[#0ea5e9]/30"
         >
           <div
-            class="w-16 h-16 bg-[#E67E22]/20 rounded-2xl flex items-center justify-center mb-6 mx-auto"
+            class="w-20 h-20 rounded-2xl flex items-center justify-center mb-6 mx-auto text-4xl bg-[#0ea5e9]"
           >
-            <svg
-              class="w-8 h-8 text-[#E67E22]"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-            </svg>
+            ⚡
           </div>
           <h3 class="text-2xl font-bold text-gray-900 mb-4 text-center">
             Servicio Especializado
@@ -82,21 +61,9 @@ import CarouselHero from "../components/sections/CarouselHero.astro";
           class="bg-gray-50 rounded-2xl p-8 hover:shadow-2xl transition-all duration-500 border border-gray-200 hover:border-[#E67E22]/30"
         >
           <div
-            class="w-16 h-16 bg-blue-500/15 rounded-2xl flex items-center justify-center mb-6 mx-auto"
+            class="w-20 h-20 rounded-2xl flex items-center justify-center mb-6 mx-auto text-4xl bg-[#E67E22]"
           >
-            <svg
-              class="w-8 h-8 text-blue-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 009.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-              ></path>
-            </svg>
+            🏆
           </div>
           <h3 class="text-2xl font-bold text-gray-900 mb-4 text-center">
             Calidad de origen
@@ -110,7 +77,7 @@ import CarouselHero from "../components/sections/CarouselHero.astro";
   </section>
 
   <!-- Sección de Marcas Destacadas -->
-  <section class="py-20 bg-[#E67E22]">
+  <section class="py-20" style="background-color: var(--color-primary-orange);">
     <div class="container mx-auto px-6">
       <div class="text-center mb-16">
         <h2 class="text-4xl md:text-5xl font-bold text-white mb-4">
@@ -332,7 +299,10 @@ import CarouselHero from "../components/sections/CarouselHero.astro";
     <div class="container mx-auto px-6">
       <div class="grid md:grid-cols-2 gap-12 items-center">
         <div class="text-gray-900">
-          <p class="text-sm font-bold text-[#E67E22] tracking-widest mb-4 uppercase">Información de Contacto</p>
+          <div class="flex items-center gap-2 mb-4">
+            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+            <p class="text-sm font-bold tracking-widest uppercase" style="color: var(--color-primary-orange);">Información de Contacto</p>
+          </div>
           <h2 class="text-4xl md:text-5xl font-bold mb-6 text-gray-900">
             CONTACTANOS
           </h2>
@@ -398,7 +368,7 @@ import CarouselHero from "../components/sections/CarouselHero.astro";
                 id="mini-name"
                 type="text"
                 placeholder="Tu nombre"
-                class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-[#E67E22] focus:border-transparent"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-[var(--color-primary-orange)] focus:border-transparent"
               />
             </div>
             <div>
@@ -406,7 +376,7 @@ import CarouselHero from "../components/sections/CarouselHero.astro";
                 id="mini-email"
                 type="email"
                 placeholder="Tu email"
-                class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-[#E67E22] focus:border-transparent"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-[var(--color-primary-orange)] focus:border-transparent"
               />
             </div>
             <div>
@@ -414,12 +384,12 @@ import CarouselHero from "../components/sections/CarouselHero.astro";
                 id="mini-message"
                 placeholder="Tu mensaje"
                 rows="4"
-                class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-[#E67E22] focus:border-transparent"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-[var(--color-primary-orange)] focus:border-transparent"
               ></textarea>
             </div>
             <button
               type="submit"
-              class="w-full bg-gradient-to-r from-[#E67E22] to-[#D35400] hover:from-[#D35400] hover:to-[#B8470F] text-white py-3 rounded-lg font-bold transition-all duration-300 transform hover:scale-105"
+              class="w-full bg-gradient-to-r from-[var(--color-primary-orange)] to-[var(--color-primary-orange-dark)] hover:from-[var(--color-primary-orange-dark)] hover:to-[var(--color-primary-orange-darker)] text-white py-3 rounded-lg font-bold transition-all duration-300 transform hover:scale-105"
             >
               Enviar Mensaje
             </button>
@@ -470,103 +440,6 @@ import CarouselHero from "../components/sections/CarouselHero.astro";
   </section>
 </BaseLayout>
 
-<style>
-  @keyframes count {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .animate-count {
-    animation: count 1s ease-out;
-  }
-
-  /* Brand Carousel Styles */
-  .brands-carousel {
-    overflow: hidden;
-    width: 100%;
-  }
-
-  .brands-track {
-    display: flex;
-    width: fit-content;
-    gap: 2rem;
-  }
-
-  .brand-item {
-    flex-shrink: 0;
-    width: 220px;
-    text-align: center;
-  }
-
-  .brand-logo-container {
-    width: 100%;
-    height: 180px;
-    background-color: white;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 0.75rem;
-    padding: 1.5rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
-
-  .brand-logo {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-  }
-
-  .brand-name {
-    color: white;
-    font-size: 0.875rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  @keyframes brand-scroll {
-    0% {
-      transform: translateX(0);
-    }
-    100% {
-      transform: translateX(calc(-220px * 13 - 2rem * 13));
-    }
-  }
-
-  .animate-brand-scroll {
-    animation: brand-scroll 60s linear infinite;
-  }
-
-  @media (max-width: 768px) {
-    .brand-item {
-      width: 160px;
-    }
-
-    .brand-logo-container {
-      height: 140px;
-    }
-
-    @keyframes brand-scroll {
-      0% {
-        transform: translateX(0);
-      }
-      100% {
-        transform: translateX(calc(-160px * 13 - 2rem * 13));
-      }
-    }
-
-    .animate-brand-scroll {
-      animation: brand-scroll 60s linear infinite;
-    }
-  }
-</style>
 
 <script>
   const whatsappPhone = "573165356255";

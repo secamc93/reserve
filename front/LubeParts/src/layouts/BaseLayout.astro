@@ -1,7 +1,6 @@
 ---
-import "../styles/global.css";
+import "../styles/index.css";
 import Navbar from "../components/Navbar.astro";
-import ShoppingCart from "../components/ShoppingCart.astro";
 import Footer from "../components/Footer.astro";
 
 export interface Props {
@@ -29,7 +28,6 @@ const { title } = Astro.props;
   </head>
   <body class="bg-white text-gray-900 flex flex-col min-h-screen">
     <Navbar />
-    <ShoppingCart />
     <main class="flex-grow">
       <slot />
     </main>

@@ -1,0 +1,703 @@
+---
+interface Props {
+  vehicleType?: string; // "moto" | "liviano" | "pesado"
+}
+
+const { vehicleType = "moto" } = Astro.props;
+---
+
+<div id="product-catalog" class="product-catalog" data-vehicle={vehicleType}>
+  <!-- Header con título y búsqueda -->
+  <div class="catalog-header">
+    <h2 class="catalog-header-title">Catálogo 2026</h2>
+
+    <!-- Barra de búsqueda -->
+    <div class="catalog-search">
+      <input
+        type="text"
+        placeholder="Buscar producto..."
+        class="search-input"
+      />
+      <span class="search-icon">🔍</span>
+    </div>
+  </div>
+
+  <!-- Contenido del catálogo -->
+  <div class="catalog-content">
+    <!-- Panel lateral de filtros -->
+    <div class="catalog-sidebar">
+      <h3 class="sidebar-title">Filtros</h3>
+      <div class="sidebar-divider"></div>
+
+      <!-- Filtro de tipo -->
+      <div class="filter-group">
+        <label class="filter-label">
+          <input type="checkbox" name="tipo" value="mineral" />
+          <span>Mineral</span>
+        </label>
+        <label class="filter-label">
+          <input type="checkbox" name="tipo" value="sintetico" />
+          <span>Sintético</span>
+        </label>
+        <label class="filter-label">
+          <input type="checkbox" name="tipo" value="semi-sintetico" />
+          <span>Semi-sintético</span>
+        </label>
+      </div>
+
+      <!-- Marcas disponibles - Sección expandida -->
+      <div class="available-brands-section-full">
+        <h3 class="available-brands-title-full">Marcas disponibles</h3>
+        <div class="brands-grid-full">
+          <div class="brand-box-full">
+            <img src="https://cdn.freebiesupply.com/logos/large/2x/mobil-1-logo-png-transparent.png" alt="Mobil" />
+            <span>Mobil</span>
+          </div>
+          <div class="brand-box-full">
+            <img src="https://crystalpng.com/wp-content/uploads/2025/03/castrol-logo.png" alt="Castrol" />
+            <span>Castrol</span>
+          </div>
+          <div class="brand-box-full">
+            <img src="https://1000logos.net/wp-content/uploads/2020/04/Logo-Motul.png" alt="Motul" />
+            <span>Motul</span>
+          </div>
+          <div class="brand-box-full">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/Bajaj_Auto_Ltd_logo.svg/1280px-Bajaj_Auto_Ltd_logo.svg.png" alt="Bajaj" />
+            <span>Bajaj</span>
+          </div>
+          <div class="brand-box-full">
+            <img src="https://images.seeklogo.com/logo-png/17/2/yamalube-logo-png_seeklogo-173930.png" alt="Yamalube" />
+            <span>Yamalube</span>
+          </div>
+          <div class="brand-box-full">
+            <img src="https://upload.wikimedia.org/wikipedia/en/thumb/e/e8/Shell_logo.svg/1280px-Shell_logo.svg.png" alt="Shell" />
+            <span>Shell</span>
+          </div>
+          <div class="brand-box-full">
+            <img src="https://liqui-moly.com.co/wp-content/uploads/2022/03/LOGO-ACTUAL-2025.png" alt="Liqui Moly" />
+            <span>Liqui Moly</span>
+          </div>
+          <div class="brand-box-full">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Mobil_logo.svg/1280px-Mobil_logo.svg.png" alt="Mobil 2" />
+            <span>Mobil 2</span>
+          </div>
+          <div class="brand-box-full">
+            <img src="https://1000logos.net/wp-content/uploads/2017/08/Repsol_logo.png" alt="Repsol" />
+            <span>Repsol</span>
+          </div>
+          <div class="brand-box-full">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Shell_logo.svg/1280px-Shell_logo.svg.png" alt="Elf" />
+            <span>Elf</span>
+          </div>
+          <div class="brand-box-full">
+            <img src="https://lezebre.lu/images/detailed/15/18971-motorex-oil-logo.png" alt="Motorex" />
+            <span>Motorex</span>
+          </div>
+          <div class="brand-box-full">
+            <img src="https://cdn.shopify.com/s/files/1/0733/5752/5215/files/ecstar-suzuki.svg?v=1736021458" alt="Ecstar" />
+            <span>Ecstar</span>
+          </div>
+          <div class="brand-box-full">
+            <img src="https://download.logo.wine/logo/Eni/Eni-Logo.wine.png" alt="Eni" />
+            <span>Eni</span>
+          </div>
+          <div class="brand-box-full">
+            <img src="https://cdn.freebiesupply.com/logos/large/2x/ipone-logo-png-transparent.png" alt="Ipone" />
+            <span>Ipone</span>
+          </div>
+          <div class="brand-box-full">
+            <img src="https://images.seeklogo.com/logo-png/17/2/yamalube-logo-png_seeklogo-173930.png" alt="Yamalube" />
+            <span>Yamalube</span>
+          </div>
+          <div class="brand-box-full">
+            <img src="https://1000logos.net/wp-content/uploads/2017/08/Repsol_logo.png" alt="Repsol" />
+            <span>Repsol</span>
+          </div>
+          <div class="brand-box-full">
+            <img src="https://lezebre.lu/images/detailed/15/18971-motorex-oil-logo.png" alt="Motorex" />
+            <span>Motorex</span>
+          </div>
+        </div>
+      </div>
+
+      <button class="apply-btn">Aplicar filtros</button>
+    </div>
+
+    <!-- Área principal con productos -->
+    <div class="catalog-main">
+      <!-- Barra de resultados -->
+      <div class="results-bar">
+        <span class="results-count">Mostrando 12 productos</span>
+        <select class="sort-select">
+          <option>Ordenar por: Relevancia</option>
+          <option>Precio: Menor a Mayor</option>
+          <option>Precio: Mayor a Menor</option>
+          <option>Más vendidos</option>
+        </select>
+      </div>
+
+      <!-- Grid de productos -->
+      <div class="products-grid">
+        <!-- Producto 1 -->
+        <div class="product-card">
+          <div class="product-image">
+            <img
+              src="https://via.placeholder.com/200x200?text=Mobil+10W40"
+              alt="Mobil 10W40"
+            />
+          </div>
+          <h4 class="product-name">Mobil Super 10W40</h4>
+          <p class="product-brand">Mobil</p>
+          <p class="product-description">Aceite mineral de alto rendimiento</p>
+          <div class="product-footer">
+            <span class="product-price">$45.000</span>
+            <button class="product-btn">+</button>
+          </div>
+        </div>
+
+        <!-- Producto 2 -->
+        <div class="product-card">
+          <div class="product-image">
+            <img
+              src="https://via.placeholder.com/200x200?text=Shell+5W40"
+              alt="Shell 5W40"
+            />
+          </div>
+          <h4 class="product-name">Shell Helix 5W40</h4>
+          <p class="product-brand">Shell</p>
+          <p class="product-description">Aceite sintético premium</p>
+          <div class="product-footer">
+            <span class="product-price">$65.000</span>
+            <button class="product-btn">+</button>
+          </div>
+        </div>
+
+        <!-- Producto 3 -->
+        <div class="product-card">
+          <div class="product-image">
+            <img
+              src="https://via.placeholder.com/200x200?text=Castrol+10W60"
+              alt="Castrol 10W60"
+            />
+          </div>
+          <h4 class="product-name">Castrol GTX 10W60</h4>
+          <p class="product-brand">Castrol</p>
+          <p class="product-description">Protección total del motor</p>
+          <div class="product-footer">
+            <span class="product-price">$72.000</span>
+            <button class="product-btn">+</button>
+          </div>
+        </div>
+
+        <!-- Producto 4 -->
+        <div class="product-card">
+          <div class="product-image">
+            <img
+              src="https://via.placeholder.com/200x200?text=Motul+10W50"
+              alt="Motul 10W50"
+            />
+          </div>
+          <h4 class="product-name">Motul 7100 10W50</h4>
+          <p class="product-brand">Motul</p>
+          <p class="product-description">Sintético de alto rendimiento</p>
+          <div class="product-footer">
+            <span class="product-price">$85.000</span>
+            <button class="product-btn">+</button>
+          </div>
+        </div>
+
+        <!-- Producto 5 -->
+        <div class="product-card">
+          <div class="product-image">
+            <img
+              src="https://via.placeholder.com/200x200?text=Ipone+10W40"
+              alt="Ipone 10W40"
+            />
+          </div>
+          <h4 class="product-name">Ipone R4000 10W40</h4>
+          <p class="product-brand">Ipone</p>
+          <p class="product-description">Especial para motos</p>
+          <div class="product-footer">
+            <span class="product-price">$55.000</span>
+            <button class="product-btn">+</button>
+          </div>
+        </div>
+
+        <!-- Producto 6 -->
+        <div class="product-card">
+          <div class="product-image">
+            <img
+              src="https://via.placeholder.com/200x200?text=Liqui+Moly+10W40"
+              alt="Liqui Moly 10W40"
+            />
+          </div>
+          <h4 class="product-name">Liqui Moly Top Tec 10W40</h4>
+          <p class="product-brand">Liqui Moly</p>
+          <p class="product-description">Aceite sintético premium alemán</p>
+          <div class="product-footer">
+            <span class="product-price">$95.000</span>
+            <button class="product-btn">+</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paginación -->
+      <div class="pagination">
+        <button class="pagination-btn">←</button>
+        <button class="pagination-btn active">1</button>
+        <button class="pagination-btn">2</button>
+        <button class="pagination-btn">3</button>
+        <button class="pagination-btn">→</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botón de cerrar -->
+  <button id="catalog-close-btn" class="catalog-close" title="Cerrar catálogo">
+    ✕
+  </button>
+</div>
+
+<style>
+  .product-catalog {
+    position: fixed;
+    right: -1000px;
+    top: 0;
+    width: 1000px;
+    height: 100vh;
+    background: white;
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    transition: right 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+  }
+
+  .product-catalog.active {
+    right: 0;
+  }
+
+  .catalog-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: #FF6B00;
+    color: white;
+    border-radius: 50%;
+    font-size: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    transition: all 0.3s ease;
+  }
+
+  .catalog-close:hover {
+    background: #E55A00;
+    transform: scale(1.1);
+  }
+
+  .catalog-header {
+    padding: 24px;
+    background: white;
+    border-bottom: 1px solid #E5E5E5;
+  }
+
+  .catalog-header-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #FF6B00;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .catalog-header-title::before {
+    content: "●";
+    font-size: 8px;
+  }
+
+  .catalog-search {
+    position: relative;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 10px 12px 10px 36px;
+    border: none;
+    border-radius: 100px;
+    background: #F5F5F5;
+    font-size: 12px;
+    transition: all 0.3s ease;
+  }
+
+  .search-input:focus {
+    outline: none;
+    background: white;
+    box-shadow: 0 0 0 2px #FF6B00;
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+  }
+
+  .catalog-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+    overflow: hidden;
+  }
+
+  .catalog-sidebar {
+    width: 100%;
+    background: white;
+    border-radius: 0;
+    padding: 0;
+    overflow-y: auto;
+  }
+
+  .sidebar-title {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #1A1A1A;
+  }
+
+  .sidebar-divider {
+    height: 1px;
+    background: #F0F0F0;
+    margin-bottom: 12px;
+  }
+
+  .available-brands-section {
+    margin-top: 16px;
+    background-color: #FFFFFF !important;
+    background: #FFFFFF !important;
+  }
+
+  .available-brands-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+    background-color: #FF6B00 !important;
+    background: #FF6B00 !important;
+    padding: 12px;
+    margin: 0;
+    text-align: center;
+    border-radius: 0;
+  }
+
+  .brands-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    background-color: #FFFFFF !important;
+    background: #FFFFFF !important;
+    padding: 8px;
+  }
+
+  .brand-box {
+    width: 100%;
+    aspect-ratio: 1;
+    background-color: #FFFFFF !important;
+    background: #FFFFFF !important;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid #F0F0F0;
+  }
+
+  .brand-box:hover {
+    background-color: #FFFFFF !important;
+    box-shadow: 0 4px 12px rgba(255, 107, 0, 0.2);
+    transform: scale(1.05);
+  }
+
+  .brand-box img {
+    max-width: 90%;
+    max-height: 70%;
+    object-fit: contain;
+    filter: brightness(1);
+  }
+
+  .brand-box span {
+    font-size: 10px;
+    font-weight: 600;
+    color: #FF6B00;
+  }
+
+  .apply-btn {
+    width: 100%;
+    padding: 10px;
+    margin-top: 8px;
+    background: #FF6B00;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .apply-btn:hover {
+    background: #E55A00;
+  }
+
+  .catalog-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+  }
+
+  .results-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: #666;
+  }
+
+  .sort-select {
+    padding: 6px 8px;
+    border: 1px solid #E5E5E5;
+    border-radius: 6px;
+    font-size: 11px;
+    cursor: pointer;
+  }
+
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .product-card {
+    background: white;
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+    border: 1px solid #E5E5E5;
+    transition: all 0.3s ease;
+  }
+
+  .product-card:hover {
+    border-color: #FF6B00;
+    box-shadow: 0 4px 12px rgba(255, 107, 0, 0.15);
+  }
+
+  .product-image {
+    width: 100%;
+    height: 120px;
+    background: #F5F5F5;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+
+  .product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .product-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1A1A1A;
+    margin-bottom: 2px;
+  }
+
+  .product-brand {
+    font-size: 10px;
+    color: #FF6B00;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .product-description {
+    font-size: 9px;
+    color: #999;
+    margin-bottom: 8px;
+    line-height: 1.2;
+  }
+
+  .product-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .product-price {
+    font-size: 13px;
+    font-weight: 700;
+    color: #FF6B00;
+  }
+
+  .product-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: #FF6B00;
+    color: white;
+    border: none;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .product-btn:hover {
+    background: #E55A00;
+    transform: scale(1.1);
+  }
+
+  .pagination {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    padding-top: 8px;
+    border-top: 1px solid #E5E5E5;
+  }
+
+  .pagination-btn {
+    width: 28px;
+    height: 28px;
+    border: 1px solid #E5E5E5;
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.3s ease;
+  }
+
+  .pagination-btn:hover {
+    border-color: #FF6B00;
+    color: #FF6B00;
+  }
+
+  .pagination-btn.active {
+    background: #FF6B00;
+    color: white;
+    border-color: #FF6B00;
+  }
+
+  .available-brands-section-full {
+    margin-top: 16px;
+    background-color: #FF6B00 !important;
+    background: #FF6B00 !important;
+    padding: 0;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .available-brands-title-full {
+    font-size: 16px;
+    font-weight: 700;
+    color: white;
+    background-color: #FF6B00 !important;
+    background: #FF6B00 !important;
+    padding: 16px;
+    margin: 0;
+    text-align: center;
+    border-radius: 0;
+  }
+
+  .brands-grid-full {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 10px;
+    background-color: #FFFFFF !important;
+    background: #FFFFFF !important;
+    padding: 16px;
+  }
+
+  .brand-box-full {
+    width: 100%;
+    aspect-ratio: 1;
+    background-color: #F9F9F9 !important;
+    background: #F9F9F9 !important;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    border: 1px solid #F0F0F0;
+  }
+
+  .brand-box-full:hover {
+    background-color: #FFFFFF !important;
+    box-shadow: 0 4px 12px rgba(255, 107, 0, 0.15);
+    transform: scale(1.05);
+  }
+
+  .brand-box-full img {
+    max-width: 85%;
+    max-height: 70%;
+    object-fit: contain;
+    filter: brightness(1);
+  }
+
+  .brand-box-full span {
+    font-size: 9px;
+    font-weight: 600;
+    color: #666;
+    line-height: 1;
+  }
+
+  @media (max-width: 1200px) {
+    .product-catalog {
+      width: 100%;
+      right: -100%;
+    }
+
+    .catalog-main {
+      display: none;
+    }
+
+    .products-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .brands-grid-full {
+      grid-template-columns: repeat(6, 1fr);
+    }
+
+    .catalog-sidebar {
+      padding: 16px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .brands-grid-full {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+</style>

@@ -1,0 +1,47 @@
+---
+interface Props {
+  href?: string;
+  type?: 'button' | 'submit' | 'reset' | 'link';
+  variant?: 'primary' | 'secondary' | 'outline';
+  size?: 'sm' | 'md' | 'lg';
+  class?: string;
+}
+
+const {
+  href = '#',
+  type = 'button',
+  variant = 'primary',
+  size = 'md',
+  class: className = ''
+} = Astro.props;
+
+const sizeClasses = {
+  sm: 'px-4 py-2 text-sm',
+  md: 'px-8 py-3 text-base',
+  lg: 'px-12 py-4 text-lg'
+};
+
+const variantClasses = {
+  primary: 'bg-gradient-to-r from-[var(--color-primary-orange)] to-[var(--color-primary-orange-dark)] hover:from-[var(--color-primary-orange-dark)] hover:to-[var(--color-primary-orange-darker)] text-white',
+  secondary: 'bg-gradient-to-r from-[var(--color-primary-blue)] to-[var(--color-primary-blue-dark)] hover:from-[var(--color-primary-blue-dark)] hover:to-[var(--color-primary-blue)] text-white',
+  outline: 'border-2 border-[var(--color-primary-orange)] text-[var(--color-primary-orange)] hover:bg-[var(--color-primary-orange)] hover:text-white'
+};
+
+const commonClasses = 'rounded-xl font-bold transition-all duration-300 transform hover:scale-105 inline-flex items-center justify-center gap-3 shadow-lg';
+---
+
+{type === 'link' ? (
+  <a
+    href={href}
+    class={`${commonClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
+  >
+    <slot />
+  </a>
+) : (
+  <button
+    type={type}
+    class={`${commonClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
+  >
+    <slot />
+  </button>
+)}

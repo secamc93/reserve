@@ -1,0 +1,22 @@
+/* 🎨 Estilos Centralizados de LubeParts */
+
+/* 1. Global */
+@import "./global.css";
+
+/* 2. Utils */
+@import "./utils/animations.css";
+@import "./utils/utilities.css";
+@import "./utils/responsive.css";
+
+/* 3. Components */
+@import "./components/buttons.css";
+@import "./components/cards.css";
+@import "./components/carousel-hero.css";
+
+/* 4. Sections */
+@import "./sections/hero.css";
+@import "./sections.css";
+
+/* 5. Layouts (optional - si los creas) */
+/* @import "./layouts/navbar.css"; */
+/* @import "./layouts/footer.css"; */

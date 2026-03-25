@@ -1,0 +1,97 @@
+/* Estilos para Secciones */
+
+@keyframes count {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-count {
+  animation: count 1s ease-out;
+}
+
+/* Brand Carousel Styles */
+.brands-carousel {
+  overflow: hidden;
+  width: 100%;
+}
+
+.brands-track {
+  display: flex;
+  width: fit-content;
+  gap: 2rem;
+}
+
+.brand-item {
+  flex-shrink: 0;
+  width: 220px;
+  text-align: center;
+}
+
+.brand-logo-container {
+  width: 100%;
+  height: 180px;
+  background-color: white;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.brand-logo {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.brand-name {
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+@keyframes brand-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(calc(-220px * 13 - 2rem * 13));
+  }
+}
+
+.animate-brand-scroll {
+  animation: brand-scroll 60s linear infinite;
+}
+
+@media (max-width: 768px) {
+  .brand-item {
+    width: 160px;
+  }
+
+  .brand-logo-container {
+    height: 140px;
+  }
+
+  @keyframes brand-scroll {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(calc(-160px * 13 - 2rem * 13));
+    }
+  }
+
+  .animate-brand-scroll {
+    animation: brand-scroll 60s linear infinite;
+  }
+}

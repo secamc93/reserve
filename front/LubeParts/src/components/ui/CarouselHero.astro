@@ -1,0 +1,109 @@
+---
+import "../../styles/components/carousel-hero.css";
+import ProductCatalog from "./ProductCatalog.astro";
+import { initCarouselHero } from "../../scripts/carousel-hero";
+
+interface Props {
+  title?: string;
+  titleHighlight?: string;
+  subtitle?: string;
+  ctaText?: string;
+  ctaLink?: string;
+}
+
+const {
+  title = "LUBRICANTES DE",
+  titleHighlight = "ALTA CALIDAD",
+  subtitle = "Todas las marcas líderes en un solo lugar, El respaldo que tu negocio y/o empresa necesita.",
+  ctaText = "Ver Catálogo",
+  ctaLink = "/productos/",
+} = Astro.props;
+---
+
+<section class="carousel-hero">
+  <div class="carousel-hero-container">
+    <div class="carousel-hero-inner">
+      <!-- Slides Container -->
+      <div id="carousel-track" class="carousel-track">
+        <button class="carousel-slide-clickable">
+          <img
+            src="/images/moto-carousel.jpg"
+            alt="Moto"
+            class="carousel-slide carousel-slide-moto"
+          />
+        </button>
+        <button class="carousel-slide-clickable">
+          <img
+            src="https://images-cam93.s3.us-east-1.amazonaws.com/crro.jpg"
+            alt="Carro"
+            class="carousel-slide"
+          />
+        </button>
+        <button class="carousel-slide-clickable">
+          <img
+            src="https://www.wradio.com.co/resizer/v2/UG5IGH23ORCWDGNIB6YBZZI6TA.jpg?auth=90078340bd7be0dcff0cbcd64427e3c12f6526387513173633054cc0fc64945f"
+            alt="Vehículo pesado"
+            class="carousel-slide"
+          />
+        </button>
+      </div>
+
+      <!-- Overlay y contenido -->
+      <div class="carousel-overlay">
+        <div class="carousel-content">
+          <div class="carousel-content-inner">
+            <div class="animate-fadeInUp">
+              <h1 class="carousel-title">
+                {title}
+                <span class="carousel-title-highlight">
+                  {titleHighlight}
+                </span>
+              </h1>
+              <!-- Subtitle guardado para futuro uso
+              <p class="carousel-subtitle">
+                {subtitle}
+              </p>
+              -->
+              <div class="carousel-cta">
+                <a href={ctaLink} class="carousel-cta-btn">
+                  <svg
+                    class="carousel-cta-icon"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M16 11V7a4 4 0 00-8 0v4M5 9h14a2 2 0 012 2v7a2 2 0 01-2 2H5a2 2 0 01-2-2v-7a2 2 0 012-2z"
+                    ></path>
+                  </svg>
+                  {ctaText}
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Indicadores de carrusel -->
+      <div class="carousel-indicators">
+        <div id="carousel-indicator-0" class="carousel-indicator active"></div>
+        <div id="carousel-indicator-1" class="carousel-indicator"></div>
+        <div id="carousel-indicator-2" class="carousel-indicator"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Catálogo de productos -->
+  <ProductCatalog vehicleType="moto" />
+</section>
+
+<script>
+  import { initCarouselHero } from "../../scripts/carousel-hero";
+  import { initCatalogInteraction } from "../../scripts/catalog-interaction";
+
+  initCarouselHero();
+  initCatalogInteraction();
+</script>

@@ -1,0 +1,168 @@
+/* Breakpoints y Media Queries */
+
+/*
+  Breakpoints:
+  - Mobile: < 640px
+  - Tablet: 640px - 1024px
+  - Desktop: > 1024px
+*/
+
+/* Clases responsivas reutilizables */
+
+/* Grid Responsivo */
+.grid-responsive {
+  display: grid;
+  gap: var(--space-md);
+}
+
+@media (max-width: 640px) {
+  .grid-responsive {
+    grid-template-columns: 1fr;
+    gap: var(--space-sm);
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .grid-responsive {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+  }
+}
+
+@media (min-width: 1025px) {
+  .grid-responsive {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-lg);
+  }
+}
+
+/* Flex Responsivo */
+.flex-responsive {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+@media (min-width: 768px) {
+  .flex-responsive {
+    flex-direction: row;
+    gap: var(--space-lg);
+  }
+}
+
+/* Typography Responsivo */
+.text-responsive-lg {
+  font-size: 1.5rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 640px) {
+  .text-responsive-lg {
+    font-size: 1.25rem;
+  }
+}
+
+@media (min-width: 1025px) {
+  .text-responsive-lg {
+    font-size: 2rem;
+  }
+}
+
+.text-responsive-md {
+  font-size: 1.125rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .text-responsive-md {
+    font-size: 1rem;
+  }
+}
+
+@media (min-width: 1025px) {
+  .text-responsive-md {
+    font-size: 1.25rem;
+  }
+}
+
+/* Padding Responsivo */
+.px-responsive {
+  padding-left: var(--space-md);
+  padding-right: var(--space-md);
+}
+
+@media (max-width: 640px) {
+  .px-responsive {
+    padding-left: var(--space-sm);
+    padding-right: var(--space-sm);
+  }
+}
+
+@media (min-width: 1025px) {
+  .px-responsive {
+    padding-left: var(--space-xl);
+    padding-right: var(--space-xl);
+  }
+}
+
+.py-responsive {
+  padding-top: var(--space-lg);
+  padding-bottom: var(--space-lg);
+}
+
+@media (max-width: 640px) {
+  .py-responsive {
+    padding-top: var(--space-md);
+    padding-bottom: var(--space-md);
+  }
+}
+
+@media (min-width: 1025px) {
+  .py-responsive {
+    padding-top: var(--space-xl);
+    padding-bottom: var(--space-xl);
+  }
+}
+
+/* Display Responsivo */
+@media (max-width: 768px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .hide-desktop {
+    display: none !important;
+  }
+}
+
+/* Margin Responsivo */
+.mx-responsive {
+  margin-left: var(--space-md);
+  margin-right: var(--space-md);
+}
+
+@media (max-width: 640px) {
+  .mx-responsive {
+    margin-left: var(--space-sm);
+    margin-right: var(--space-sm);
+  }
+}
+
+/* Hero Responsivo */
+.hero-responsive {
+  min-height: 85vh;
+}
+
+@media (max-width: 640px) {
+  .hero-responsive {
+    min-height: 60vh;
+  }
+}
+
+@media (min-width: 1025px) {
+  .hero-responsive {
+    min-height: 90vh;
+  }
+}
