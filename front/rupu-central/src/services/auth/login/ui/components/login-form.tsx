@@ -13,7 +13,7 @@ import { Input } from '@shared/ui/input';
 import { RupuLoader } from '@shared/ui/rupu-loader';
 import { TokenStorage } from '@shared/config';
 import { loginAction, generateBusinessTokenAction } from '../../infrastructure/actions';
-import { BusinessSelector } from '../../../businesses/ui';
+import { BUSINESS_TYPE_CONFIG } from '@/shared/config/business-type-config';
 
 interface LoginFormProps {
   onLogin?: (result: any) => void;
@@ -26,8 +26,6 @@ export function LoginForm({ onLogin }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showBusinessSelector, setShowBusinessSelector] = useState(false);
-  const [businesses, setBusinesses] = useState<any[]>([]);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -63,60 +61,68 @@ export function LoginForm({ onLogin }: LoginFormProps) {
           TokenStorage.setBusinessesData(result.data.businesses);
         }
 
-        // Obtener business token automáticamente después del login
-        if (isSuperAdmin) {
-          // Super admin: obtener business token con business_id = 0
-          try {
-            const businessTokenResult = await generateBusinessTokenAction({
-              business_id: 0,
-              session_token: sessionToken,
-            });
-
-            if (businessTokenResult.success && businessTokenResult.data) {
-              TokenStorage.setBusinessToken(businessTokenResult.data.token);
-              TokenStorage.setActiveBusiness(0);
-              console.log('✅ Business token obtenido para super admin');
-            }
-          } catch (err) {
-            console.error('Error obteniendo business token para super admin:', err);
-            // Continuar aunque falle, el layout puede intentar generarlo después
-          }
-        } else if (result.data.businesses && result.data.businesses.length > 0) {
-          // Usuario normal con negocios
-          if (result.data.businesses.length === 1) {
-            // Solo un negocio: obtener business token automáticamente
-            const business = result.data.businesses[0];
-            try {
-              const businessTokenResult = await generateBusinessTokenAction({
-                business_id: business.id,
-                session_token: sessionToken,
-              });
-
-              if (businessTokenResult.success && businessTokenResult.data) {
-                TokenStorage.setBusinessToken(businessTokenResult.data.token);
-                TokenStorage.setActiveBusiness(business.id);
-                console.log('✅ Business token obtenido para business:', business.id);
-              }
-            } catch (err) {
-              console.error('Error obteniendo business token:', err);
-              // Continuar aunque falle
-            }
-          } else {
-            // Múltiples negocios: mostrar selector
-            setBusinesses(result.data.businesses);
-            setShowBusinessSelector(true);
-            setLoading(false);
-            return;
-          }
-        }
-
         // Llamar callback si existe
         if (onLogin) {
           onLogin(result);
         }
 
-        // Redirigir al home
-        router.push('/home');
+        const businesses = result.data.businesses || [];
+
+        if (isSuperAdmin) {
+          // Super admin: generar token con business_id=0 y enviar al selector de tipo
+          try {
+            const businessTokenResult = await generateBusinessTokenAction({
+              business_id: 0,
+              session_token: sessionToken,
+            });
+            if (businessTokenResult.success && businessTokenResult.data) {
+              TokenStorage.setBusinessToken(businessTokenResult.data.token);
+              TokenStorage.setActiveBusiness(0);
+            }
+          } catch (err) {
+            console.error('Error obteniendo business token para super admin:', err);
+          }
+          router.push('/select-type');
+        } else if (businesses.length === 1) {
+          // Un solo negocio: auto-seleccionar tipo y negocio, ir directo
+          const business = businesses[0];
+          try {
+            const businessTokenResult = await generateBusinessTokenAction({
+              business_id: business.id,
+              session_token: sessionToken,
+            });
+            if (businessTokenResult.success && businessTokenResult.data) {
+              TokenStorage.setBusinessToken(businessTokenResult.data.token);
+              TokenStorage.setActiveBusiness(business.id);
+            }
+          } catch (err) {
+            console.error('Error obteniendo business token:', err);
+          }
+          const typeCode = business.business_type_code || 'horizontal_property';
+          const typeName = business.business_type_name || 'Negocio';
+          TokenStorage.setActiveBusinessType(typeCode);
+          TokenStorage.setActiveBusinessTypeName(typeName);
+          const config = BUSINESS_TYPE_CONFIG[typeCode];
+          router.push(config?.homeRoute || '/home');
+        } else if (businesses.length > 1) {
+          // Multiples negocios: verificar si todos son del mismo tipo
+          const uniqueTypes = new Set(businesses.map(b => b.business_type_code).filter(Boolean));
+          if (uniqueTypes.size === 1) {
+            // Todos del mismo tipo: auto-seleccionar tipo, ir al home
+            const typeCode = businesses[0].business_type_code || 'horizontal_property';
+            const typeName = businesses[0].business_type_name || 'Negocio';
+            TokenStorage.setActiveBusinessType(typeCode);
+            TokenStorage.setActiveBusinessTypeName(typeName);
+            const config = BUSINESS_TYPE_CONFIG[typeCode];
+            router.push(config?.homeRoute || '/home');
+          } else {
+            // Diferentes tipos: ir al selector de tipo
+            router.push('/select-type');
+          }
+        } else {
+          // Sin negocios
+          router.push('/home');
+        }
       } else {
         setError(result.error || 'Error al iniciar sesión');
       }
@@ -127,74 +133,6 @@ export function LoginForm({ onLogin }: LoginFormProps) {
       setLoading(false);
     }
   };
-
-  const handleBusinessSelected = async (businessId?: number) => {
-    setShowBusinessSelector(false);
-    
-    // Si se proporciona un business_id, obtener su business token
-    if (businessId !== undefined) {
-      const sessionToken = TokenStorage.getSessionToken();
-      if (sessionToken) {
-        try {
-          const businessTokenResult = await generateBusinessTokenAction({
-            business_id: businessId,
-            session_token: sessionToken,
-          });
-
-          if (businessTokenResult.success && businessTokenResult.data) {
-            TokenStorage.setBusinessToken(businessTokenResult.data.token);
-            TokenStorage.setActiveBusiness(businessId);
-            console.log('✅ Business token obtenido para business:', businessId);
-          }
-        } catch (err) {
-          console.error('Error obteniendo business token:', err);
-        }
-      }
-    }
-    
-    router.push('/home');
-  };
-
-  // Si debe mostrar el selector de negocios
-  if (showBusinessSelector && businesses.length > 0) {
-    const mappedBusinesses = businesses.map(b => ({
-      id: b.id,
-      name: b.name,
-      code: b.code,
-      business_type_id: 11, // Default
-      business_type: {
-        id: 11,
-        name: 'Propiedad Horizontal',
-        code: 'horizontal_property',
-        description: '',
-        icon: '🏢',
-      },
-      timezone: 'America/Bogota',
-      address: '',
-      description: '',
-      logo_url: b.logo_url || '',
-      primary_color: b.primary_color || '#1f2937',
-      secondary_color: b.secondary_color || '#3b82f6',
-      tertiary_color: b.tertiary_color || '#10b981',
-      quaternary_color: b.quaternary_color || '#fbbf24',
-      navbar_image_url: '',
-      custom_domain: '',
-      is_active: b.is_active || true,
-      enable_delivery: false,
-      enable_pickup: false,
-      enable_reservations: false,
-    }));
-
-    return (
-      <BusinessSelector
-        businesses={mappedBusinesses}
-        isOpen={true}
-        onClose={() => handleBusinessSelected()}
-        showSuperAdminButton={false}
-        skipRedirect={true}
-      />
-    );
-  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">

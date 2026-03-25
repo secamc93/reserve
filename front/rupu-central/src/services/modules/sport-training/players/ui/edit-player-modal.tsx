@@ -60,7 +60,7 @@ export function EditPlayerModal({ isOpen, onClose, player }: EditPlayerModalProp
     const token = TokenStorage.getBusinessToken();
     const businessId = TokenStorage.getActiveBusiness();
 
-    if (!token || !businessId) {
+    if (!token || businessId === null) {
       alert('No se encontró token o business activo');
       setIsLoading(false);
       return;

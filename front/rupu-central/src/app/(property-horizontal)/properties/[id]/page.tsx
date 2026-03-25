@@ -9,7 +9,6 @@ import { useRouter } from 'next/navigation';
 import { VotingGroupsSection } from '@/services/modules/horizontal-properties/voting/ui';
 import { PropertyUnitsTable } from '@/services/modules/horizontal-properties/units/ui';
 import { ResidentsTable } from '@/services/modules/horizontal-properties/residents/ui';
-import { PropertyNavigation } from '@/services/modules/horizontal-properties/properties/ui';
 import { getHorizontalPropertyByIdAction } from '@/services/modules/horizontal-properties/properties/infrastructure/actions';
 import { generateBusinessTokenAction } from '@/services/auth/login/infrastructure/actions';
 import { DashboardStats, useDashboardStats } from '@/services/modules/horizontal-properties/dashboard/ui';
@@ -140,7 +139,6 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
   return (
     <div>
       {/* Navegación */}
-      <PropertyNavigation businessId={businessId} propertyName={property.name} />
 
       {/* Contenido del Dashboard */}
       <div className="p-8">

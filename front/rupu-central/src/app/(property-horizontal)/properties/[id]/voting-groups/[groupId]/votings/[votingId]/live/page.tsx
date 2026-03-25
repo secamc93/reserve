@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { PropertyNavigation } from '@/services/modules/horizontal-properties/properties/ui/property-navigation';
 import { LiveVotingModal } from '@/services/modules/horizontal-properties/voting/ui/live-voting-modal';
 import { getVotingByIdAction, getVotingOptionsAction, getVotesAction } from '@/services/modules/horizontal-properties/voting/infrastructure/actions';
 import { TokenStorage } from '@shared/config';
@@ -90,7 +89,6 @@ export default function LiveVotingPage() {
   if (isNaN(businessId) || isNaN(groupId) || isNaN(votingId)) {
     return (
       <div>
-        <PropertyNavigation businessId={businessId} />
         <div className="p-6">
           <Alert type="error">ID de votación inválido</Alert>
         </div>
@@ -101,7 +99,6 @@ export default function LiveVotingPage() {
   if (loading) {
     return (
       <div>
-        <PropertyNavigation businessId={businessId} />
         <div className="p-6">
           <div className="flex items-center justify-center h-64">
             <Spinner size="xl" text="Cargando votación..." />
@@ -114,7 +111,6 @@ export default function LiveVotingPage() {
   if (error) {
     return (
       <div>
-        <PropertyNavigation businessId={businessId} />
         <div className="p-6">
           <Alert type="error">{error}</Alert>
         </div>
@@ -125,7 +121,6 @@ export default function LiveVotingPage() {
   if (!voting) {
     return (
       <div>
-        <PropertyNavigation businessId={businessId} />
         <div className="p-6">
           <Alert type="error">Votación no encontrada</Alert>
         </div>
@@ -135,7 +130,6 @@ export default function LiveVotingPage() {
 
   return (
     <div>
-      <PropertyNavigation businessId={businessId} />
       <div className="p-6">
         {/* Header */}
         <div className="mb-6">
