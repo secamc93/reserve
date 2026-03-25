@@ -246,31 +246,6 @@
             </div>
         </div>
     </div>
-    <!-- Botón flotante del carrito -->
-    <button
-        @click="toggleCart()"
-        class="fixed bottom-8 right-8 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg w-16 h-16 flex items-center justify-center text-3xl transition-all duration-300 hover:scale-110"
-        aria-label="Abrir carrito"
-    >
-        <svg
-            class="w-8 h-8"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-        >
-            <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 9m13-9l2 9m-5-9V6a2 2 0 10-4 0v7"
-            ></path>
-        </svg>
-        <span
-            x-text="cartItems.length"
-            class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-bold border-2 border-white animate-pulse"
-            x-show="cartItems.length > 0"></span>
-    </button>
-
     <!-- Panel lateral del carrito -->
     <div
         x-show="isOpen"

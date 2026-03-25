@@ -1,182 +1,461 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import ProductCard from "../components/ProductCard.astro";
 
-// Datos de productos de lubricantes
+// Datos de productos de lubricantes para motocicletas
 const products = [
-    {
-        id: "mobil-super-10w30",
-        name: "MobilSuper 10w-30",
-        price: 25.99,
-        image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg",
-        description:
-            "Aceite de motor de alto rendimiento para motores de gasolina y diésel. Protección superior contra el desgaste.",
-        viscosity: "10W-30",
-    },
-    {
-        id: "ecstar-10w40",
-        name: "Ecstar 10w-40",
-        price: 28.5,
-        image: "https://images-cam93.s3.us-east-1.amazonaws.com/crro.jpg",
-        description:
-            "Aceite sintético premium para motores de alto rendimiento. Excelente estabilidad térmica y protección.",
-        viscosity: "10W-40",
-    },
-    {
-        id: "yamalube-10w40",
-        name: "Yamalube 10w-40",
-        price: 32.75,
-        image: "https://images-cam93.s3.us-east-1.amazonaws.com/mula.jpg",
-        description:
-            "Aceite específicamente formulado para motocicletas Yamaha. Máxima protección para tu motor.",
-        viscosity: "10W-40",
-    },
-    {
-        id: "pro-honda-10w30",
-        name: "Pro-Honda 10w-30",
-        price: 29.99,
-        image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg",
-        description:
-            "Aceite de motor recomendado por Honda. Garantiza el rendimiento óptimo de tu vehículo.",
-        viscosity: "10W-30",
-    },
-    {
-        id: "motul-15w50",
-        name: "Motul 15w-50",
-        price: 45.0,
-        image: "https://images-cam93.s3.us-east-1.amazonaws.com/crro.jpg",
-        description:
-            "Aceite de motor de alta viscosidad para condiciones extremas. Ideal para motores de alto rendimiento.",
-        viscosity: "15W-50",
-    },
+    // MOBIL
+    { id: "mobil-1-racing-4t-10w40", name: "Mobil 1 Racing 4T 10W-40", price: 32.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite sintético de carreras para motos 4 tiempos", viscosity: "10W-40", category: "motos", brand: "Mobil" },
+    { id: "mobil-1-racing-4t-10w50", name: "Mobil 1 Racing 4T 10W-50", price: 34.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite sintético premium para motos de alto rendimiento", viscosity: "10W-50", category: "motos", brand: "Mobil" },
+    { id: "mobil-super-moto-4t-20w50", name: "Mobil Super Moto 4T 20W-50", price: 28.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite de alto rendimiento para motos 4 tiempos", viscosity: "20W-50", category: "motos", brand: "Mobil" },
+    { id: "mobil-mx2t", name: "Mobil MX2T (2 tiempos)", price: 24.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite para motos de 2 tiempos", viscosity: "2T", category: "motos", brand: "Mobil" },
+
+    // CASTROL POWER 1
+    { id: "castrol-power1-racing-4t-10w40", name: "Power 1 Racing 4T 10W-40", price: 35.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite de carreras para motos 4 tiempos", viscosity: "10W-40", category: "motos", brand: "Castrol" },
+    { id: "castrol-power1-racing-4t-10w50", name: "Power 1 Racing 4T 10W-50", price: 37.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite premium de carreras para motos", viscosity: "10W-50", category: "motos", brand: "Castrol" },
+    { id: "castrol-power1-4t-20w50", name: "Power 1 4T 20W-50", price: 31.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite de alto rendimiento para motos 4 tiempos", viscosity: "20W-50", category: "motos", brand: "Castrol" },
+    { id: "castrol-power1-tt-4t-10w60", name: "Power 1 TT 4T 10W-60", price: 39.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite TT para motos de competencia", viscosity: "10W-60", category: "motos", brand: "Castrol" },
+
+    // CASTROL ACTEVO
+    { id: "castrol-actevo-4t-10w40", name: "Actevo 4T 10W-40", price: 29.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite para motos 4 tiempos de uso general", viscosity: "10W-40", category: "motos", brand: "Castrol" },
+    { id: "castrol-actevo-4t-20w50", name: "Actevo 4T 20W-50", price: 31.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite para motos 4 tiempos", viscosity: "20W-50", category: "motos", brand: "Castrol" },
+    { id: "castrol-actevo-xtra-4t-10w40", name: "Actevo X-tra 4T 10W-40", price: 33.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite extra para motos 4 tiempos", viscosity: "10W-40", category: "motos", brand: "Castrol" },
+
+    // MOTUL
+    { id: "motul-300v-factory-5w40", name: "300V 4T Factory Line 5W-40", price: 52.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite sintético de competencia para motos", viscosity: "5W-40", category: "motos", brand: "Motul" },
+    { id: "motul-7100-4t-10w40", name: "7100 4T 10W-40", price: 45.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite sintético premium para motos", viscosity: "10W-40", category: "motos", brand: "Motul" },
+    { id: "motul-7100-4t-20w50", name: "7100 4T 20W-50", price: 47.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite sintético para motos de alto rendimiento", viscosity: "20W-50", category: "motos", brand: "Motul" },
+    { id: "motul-5100-4t-10w40", name: "5100 4T 10W-40", price: 38.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite semisintético para motos", viscosity: "10W-40", category: "motos", brand: "Motul" },
+    { id: "motul-3000-4t-20w50", name: "3000 4T 20W-50", price: 32.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite mineral para motos", viscosity: "20W-50", category: "motos", brand: "Motul" },
+    { id: "motul-710-2t", name: "710 2T (dos tiempos)", price: 28.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite para motos de 2 tiempos", viscosity: "2T", category: "motos", brand: "Motul" },
+    { id: "motul-800-2t-offroad", name: "800 2T Off Road", price: 35.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite para motos off-road de 2 tiempos", viscosity: "2T", category: "motos", brand: "Motul" },
+
+    // BAJAJ
+    { id: "bajaj-4t-premium-20w50", name: "Bajaj 4T Premium 20W-50", price: 24.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite premium para motos Bajaj 4 tiempos", viscosity: "20W-50", category: "motos", brand: "Bajaj" },
+    { id: "bajaj-4t-10w30", name: "Bajaj 4T 10W-30", price: 22.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite para motos Bajaj 4 tiempos", viscosity: "10W-30", category: "motos", brand: "Bajaj" },
+
+    // YAMALUBE
+    { id: "yamalube-4-10w40", name: "Yamalube 4 (4T 10W-40)", price: 29.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite original Yamaha para motos 4 tiempos", viscosity: "10W-40", category: "motos", brand: "Yamalube" },
+    { id: "yamalube-4fs-10w40", name: "Yamalube 4FS (4T 10W-40 semisintético)", price: 33.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite semisintético Yamaha para motos", viscosity: "10W-40", category: "motos", brand: "Yamalube" },
+    { id: "yamalube-ss-20w40", name: "Yamalube SS (4T 20W-40)", price: 31.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite Yamaha para motos 4 tiempos", viscosity: "20W-40", category: "motos", brand: "Yamalube" },
+    { id: "yamalube-2s", name: "Yamalube 2S (2 tiempos)", price: 26.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite Yamaha para motos de 2 tiempos", viscosity: "2T", category: "motos", brand: "Yamalube" },
+
+    // HONDA
+    { id: "honda-gn4-10w40", name: "GN4 4T 10W-40", price: 30.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite original Honda GN4 para motos", viscosity: "10W-40", category: "motos", brand: "Honda" },
+    { id: "honda-hp4-10w30", name: "HP4 4T 10W-30", price: 28.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite Honda HP4 para motos 4 tiempos", viscosity: "10W-30", category: "motos", brand: "Honda" },
+    { id: "honda-pro-gn4-20w50", name: "Pro Honda GN4 4T 20W-50", price: 32.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite Pro Honda GN4 para motos", viscosity: "20W-50", category: "motos", brand: "Honda" },
+
+    // LIQUI MOLY
+    { id: "liqui-moly-street-10w40", name: "Motorbike 4T Street 10W-40", price: 36.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite Liqui Moly para motos de calle", viscosity: "10W-40", category: "motos", brand: "Liqui Moly" },
+    { id: "liqui-moly-race-10w50", name: "Motorbike 4T Race 10W-50", price: 41.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite de carreras Liqui Moly para motos", viscosity: "10W-50", category: "motos", brand: "Liqui Moly" },
+    { id: "liqui-moly-offroad-10w40", name: "Motorbike 4T Offroad 10W-40", price: 38.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite Liqui Moly para motos off-road", viscosity: "10W-40", category: "motos", brand: "Liqui Moly" },
+    { id: "liqui-moly-2t", name: "Motorbike 2T", price: 29.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite Liqui Moly para motos de 2 tiempos", viscosity: "2T", category: "motos", brand: "Liqui Moly" },
+
+    // HERO
+    { id: "hero-genuine-20w40", name: "Hero Genuine Oil 4T 20W-40", price: 21.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite original Hero para motos", viscosity: "20W-40", category: "motos", brand: "Hero" },
+    { id: "hero-genuine-10w30", name: "Hero Genuine Oil 4T 10W-30", price: 20.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite original Hero para motos 4 tiempos", viscosity: "10W-30", category: "motos", brand: "Hero" },
+
+    // MOTOREX
+    { id: "motorex-top-speed-10w40", name: "Top Speed 4T 10W-40", price: 34.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite Motorex para motos de alto rendimiento", viscosity: "10W-40", category: "motos", brand: "Motorex" },
+    { id: "motorex-power-synt-5w40", name: "Power Synt 4T 5W-40", price: 42.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite sintético Motorex para motos", viscosity: "5W-40", category: "motos", brand: "Motorex" },
+    { id: "motorex-cross-power-10w50", name: "Cross Power 4T 10W-50", price: 38.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite Motorex para motos off-road", viscosity: "10W-50", category: "motos", brand: "Motorex" },
+    { id: "motorex-scooter-5w40", name: "Scooter 4T 5W-40", price: 32.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite Motorex para scooters", viscosity: "5W-40", category: "motos", brand: "Motorex" },
+
+    // IPONE
+    { id: "ipone-full-power-katana-10w40", name: "Full Power Katana 4T 10W-40", price: 39.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite Ipone para motos de alto rendimiento", viscosity: "10W-40", category: "motos", brand: "Ipone" },
+    { id: "ipone-r4000-rs-10w40", name: "R4000 RS 4T 10W-40", price: 41.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite semisintético Ipone para motos", viscosity: "10W-40", category: "motos", brand: "Ipone" },
+    { id: "ipone-samourai-racing-2t", name: "Samourai Racing 2T", price: 35.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite de carreras Ipone para motos de 2 tiempos", viscosity: "2T", category: "motos", brand: "Ipone" },
+    { id: "ipone-katana-offroad-15w50", name: "Katana Off Road 4T 15W-50", price: 43.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite Ipone para motos off-road", viscosity: "15W-50", category: "motos", brand: "Ipone" },
+
+    // ENI
+    { id: "eni-i-ride-mxs-2t", name: "i-Ride MXS 2T", price: 31.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite ENI para motos de 2 tiempos", viscosity: "2T", category: "motos", brand: "ENI" },
+    { id: "eni-i-ride-4t-10w40", name: "i-Ride 4T 10W-40", price: 29.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite ENI para motos 4 tiempos", viscosity: "10W-40", category: "motos", brand: "ENI" },
+    { id: "eni-i-ride-pg-15w50", name: "i-Ride PG 4T 15W-50", price: 33.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite ENI para motos de gran cilindrada", viscosity: "15W-50", category: "motos", brand: "ENI" },
+
+    // SHELL
+    { id: "shell-advance-ultra-10w40", name: "Advance Ultra 4T 10W-40", price: 32.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite Shell Advance Ultra para motos", viscosity: "10W-40", category: "motos", brand: "Shell" },
+    { id: "shell-advance-ax7-10w40", name: "Advance AX7 4T 10W-40", price: 35.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite Shell Advance AX7 para motos", viscosity: "10W-40", category: "motos", brand: "Shell" },
+    { id: "shell-advance-ax5-15w50", name: "Advance AX5 4T 15W-50", price: 37.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite Shell Advance AX5 para motos", viscosity: "15W-50", category: "motos", brand: "Shell" },
+    { id: "shell-advance-2t", name: "Advance 2T", price: 27.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite Shell para motos de 2 tiempos", viscosity: "2T", category: "motos", brand: "Shell" },
+
+    // REPSOL
+    { id: "repsol-moto-racing-10w40", name: "Moto Racing 4T 10W-40", price: 33.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite de carreras Repsol para motos", viscosity: "10W-40", category: "motos", brand: "Repsol" },
+    { id: "repsol-moto-sport-10w40", name: "Moto Sport 4T 10W-40", price: 31.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite deportivo Repsol para motos", viscosity: "10W-40", category: "motos", brand: "Repsol" },
+    { id: "repsol-moto-rider-20w50", name: "Moto Rider 4T 20W-50", price: 29.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite Repsol para motos", viscosity: "20W-50", category: "motos", brand: "Repsol" },
+    { id: "repsol-moto-2t", name: "Moto 2T", price: 26.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite Repsol para motos de 2 tiempos", viscosity: "2T", category: "motos", brand: "Repsol" },
+
+    // ECSTAR (Suzuki)
+    { id: "ecstar-r9000-10w40", name: "R9000 4T 10W-40", price: 38.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite Ecstar R9000 para motos Suzuki", viscosity: "10W-40", category: "motos", brand: "Ecstar" },
+    { id: "ecstar-r7000-10w40", name: "R7000 4T 10W-40", price: 35.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite Ecstar R7000 para motos", viscosity: "10W-40", category: "motos", brand: "Ecstar" },
+    { id: "ecstar-r5000-20w40", name: "R5000 4T 20W-40", price: 32.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite Ecstar R5000 para motos", viscosity: "20W-40", category: "motos", brand: "Ecstar" },
+
+    // TERPEL
+    { id: "terpel-moto-20w50", name: "Moto 4T 20W-50", price: 23.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite Terpel para motos 4 tiempos", viscosity: "20W-50", category: "motos", brand: "Terpel" },
+    { id: "terpel-moto-10w40", name: "Moto 4T 10W-40", price: 25.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite Terpel para motos", viscosity: "10W-40", category: "motos", brand: "Terpel" },
+    { id: "terpel-moto-15w50", name: "Moto 4T 15W-50", price: 26.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite Terpel para motos de gran cilindrada", viscosity: "15W-50", category: "motos", brand: "Terpel" },
+
+    // DELTA OIL
+    { id: "delta-oil-moto-20w50", name: "Moto 4T 20W-50", price: 24.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite Delta Oil para motos", viscosity: "20W-50", category: "motos", brand: "Delta Oil" },
+    { id: "delta-oil-racing-10w40", name: "Racing 4T 10W-40", price: 27.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite de carreras Delta Oil para motos", viscosity: "10W-40", category: "motos", brand: "Delta Oil" },
+
+    // ELF
+    { id: "elf-moto-4-tech-10w40", name: "Moto 4 Tech 10W-40", price: 31.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite Elf para motos 4 tiempos", viscosity: "10W-40", category: "motos", brand: "ELF" },
+    { id: "elf-moto-4-road-10w40", name: "Moto 4 Road 10W-40", price: 30.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite Elf para motos de carretera", viscosity: "10W-40", category: "motos", brand: "ELF" },
+    { id: "elf-moto-4-maxi-tech-15w50", name: "Moto 4 Maxi Tech 15W-50", price: 35.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite Elf para motos de gran cilindrada", viscosity: "15W-50", category: "motos", brand: "ELF" },
+    { id: "elf-moto-2-tech-2t", name: "Moto 2 Tech 2T", price: 28.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite Elf para motos de 2 tiempos", viscosity: "2T", category: "motos", brand: "ELF" },
+
+    // PYSTA
+    { id: "pysta-4t-20w50", name: "4T 20W-50", price: 22.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite Pysta para motos 4 tiempos", viscosity: "20W-50", category: "motos", brand: "Pysta" },
+    { id: "pysta-4t-10w40", name: "4T 10W-40", price: 24.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motos-fondo.jpg", description: "Aceite Pysta para motos", viscosity: "10W-40", category: "motos", brand: "Pysta" },
+
+    // VEHÍCULOS LIVIANOS - MOBIL
+    { id: "mobil-1-5w30-livianos", name: "Mobil 1 5W-30 Full Synthetic", price: 42.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/crro.jpg", description: "Aceite sintético premium Mobil 1 para carros", viscosity: "5W-30", category: "livianos", brand: "Mobil" },
+    { id: "mobil-1-5w40-livianos", name: "Mobil 1 5W-40 Full Synthetic", price: 44.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/crro.jpg", description: "Aceite sintético Mobil 1 para carros", viscosity: "5W-40", category: "livianos", brand: "Mobil" },
+    { id: "mobil-super-3000-x1-5w40", name: "Mobil Super 3000 X1 5W-40", price: 38.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/crro.jpg", description: "Aceite sintético Mobil Super 3000 X1 para carros", viscosity: "5W-40", category: "livianos", brand: "Mobil" },
+    { id: "mobil-super-2000-10w40", name: "Mobil Super 2000 10W-40", price: 32.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/crro.jpg", description: "Aceite Mobil Super 2000 para carros", viscosity: "10W-40", category: "livianos", brand: "Mobil" },
+    { id: "mobil-super-1000-20w50", name: "Mobil Super 1000 20W-50", price: 28.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/crro.jpg", description: "Aceite mineral Mobil Super 1000 para carros", viscosity: "20W-50", category: "livianos", brand: "Mobil" },
+
+    // VEHÍCULOS LIVIANOS - CASTROL
+    { id: "castrol-edge-5w30-livianos", name: "Castrol Edge 5W-30", price: 45.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/crro.jpg", description: "Aceite Castrol Edge para carros", viscosity: "5W-30", category: "livianos", brand: "Castrol" },
+    { id: "castrol-edge-5w40-livianos", name: "Castrol Edge 5W-40", price: 47.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/crro.jpg", description: "Aceite Castrol Edge premium para carros", viscosity: "5W-40", category: "livianos", brand: "Castrol" },
+    { id: "castrol-magnatec-10w40", name: "Castrol Magnatec 10W-40", price: 39.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/crro.jpg", description: "Aceite Castrol Magnatec para protección del motor", viscosity: "10W-40", category: "livianos", brand: "Castrol" },
+    { id: "castrol-gtx-20w50", name: "Castrol GTX 20W-50", price: 34.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/crro.jpg", description: "Aceite Castrol GTX para carros", viscosity: "20W-50", category: "livianos", brand: "Castrol" },
+    { id: "castrol-gtx-ultraclean-10w40", name: "Castrol GTX Ultraclean 10W-40", price: 37.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/crro.jpg", description: "Aceite Castrol GTX Ultraclean para carros", viscosity: "10W-40", category: "livianos", brand: "Castrol" },
+
+    // VEHÍCULOS LIVIANOS - ELF
+    { id: "elf-evolution-900-sxr-5w40", name: "Evolution 900 SXR 5W-40", price: 41.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/crro.jpg", description: "Aceite Elf Evolution 900 SXR para carros", viscosity: "5W-40", category: "livianos", brand: "ELF" },
+    { id: "elf-evolution-700-sti-10w40", name: "Evolution 700 STI 10W-40", price: 36.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/crro.jpg", description: "Aceite Elf Evolution 700 STI para carros", viscosity: "10W-40", category: "livianos", brand: "ELF" },
+    { id: "elf-solaris-ec-5w30", name: "Solaris EC 5W-30", price: 39.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/crro.jpg", description: "Aceite Elf Solaris EC para carros económicos", viscosity: "5W-30", category: "livianos", brand: "ELF" },
+    { id: "elf-competition-sti-10w60", name: "Competition STI 10W-60", price: 49.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/crro.jpg", description: "Aceite Elf Competition para carros de competencia", viscosity: "10W-60", category: "livianos", brand: "ELF" },
+
+    // VEHÍCULOS PESADOS - MOBIL
+    { id: "mobil-delvac-1-5w40", name: "Mobil Delvac 1 5W-40", price: 58.99, image: "https://images.unsplash.com/photo-1766561993769-b834c1c6e456?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080", description: "Aceite Mobil Delvac para camiones", viscosity: "5W-40", category: "pesados", brand: "Mobil" },
+    { id: "mobil-delvac-mx-extra-10w40", name: "Mobil Delvac MX Extra 10W-40", price: 54.99, image: "https://images.unsplash.com/photo-1766561993769-b834c1c6e456?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080", description: "Aceite Mobil Delvac MX Extra para vehículos pesados", viscosity: "10W-40", category: "pesados", brand: "Mobil" },
+    { id: "mobil-delvac-mx-15w40", name: "Mobil Delvac MX 15W-40", price: 52.99, image: "https://images.unsplash.com/photo-1766561993769-b834c1c6e456?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080", description: "Aceite Mobil Delvac MX para camiones", viscosity: "15W-40", category: "pesados", brand: "Mobil" },
+    { id: "mobil-delvac-1300-super-15w40", name: "Mobil Delvac 1300 Super 15W-40", price: 56.99, image: "https://images.unsplash.com/photo-1766561993769-b834c1c6e456?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080", description: "Aceite Mobil Delvac 1300 Super para vehículos pesados", viscosity: "15W-40", category: "pesados", brand: "Mobil" },
+
+    // VEHÍCULOS PESADOS - CASTROL
+    { id: "castrol-rx-super-15w40", name: "Castrol RX Super 15W-40", price: 55.99, image: "https://images.unsplash.com/photo-1766561993769-b834c1c6e456?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080", description: "Aceite Castrol RX Super para camiones", viscosity: "15W-40", category: "pesados", brand: "Castrol" },
+    { id: "castrol-vecton-15w40", name: "Castrol Vecton 15W-40", price: 57.99, image: "https://images.unsplash.com/photo-1766561993769-b834c1c6e456?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080", description: "Aceite Castrol Vecton para vehículos pesados", viscosity: "15W-40", category: "pesados", brand: "Castrol" },
+    { id: "castrol-crb-multi-20w50", name: "Castrol CRB Multi 20W-50", price: 53.99, image: "https://images.unsplash.com/photo-1766561993769-b834c1c6e456?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080", description: "Aceite Castrol CRB Multi para camiones", viscosity: "20W-50", category: "pesados", brand: "Castrol" },
+    { id: "castrol-vecton-long-drain-10w40", name: "Castrol Vecton Long Drain 10W-40", price: 59.99, image: "https://images.unsplash.com/photo-1766561993769-b834c1c6e456?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080", description: "Aceite Castrol Vecton Long Drain para vehículos pesados", viscosity: "10W-40", category: "pesados", brand: "Castrol" },
 ];
 ---
 
 <BaseLayout title="Productos - Lubricantes">
-    <!-- Header -->
-    <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center">
-                <h1 class="text-4xl font-bold mb-4">Nuestros Productos</h1>
-                <p class="text-xl opacity-90">
-                    Descubre nuestra selección de lubricantes de alta calidad
-                    para tu motor
-                </p>
+    <!-- Hero Section -->
+    <section class="w-full bg-gradient-to-b from-[#FFF8F3] to-[#FFF0E5] py-16">
+        <div class="max-w-7xl mx-auto px-6">
+            <!-- Tag -->
+            <div class="flex items-center justify-center gap-2 mb-8">
+                <div class="w-2 h-2 rounded-full bg-[#FF6B00]"></div>
+                <p class="text-sm font-bold text-[#FF6B00] tracking-widest uppercase">Catálogo 2026</p>
             </div>
-        </div>
-    </div>
 
-    <!-- Grid de productos -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {
-                products.map((product) => (
-                    <ProductCard
-                        id={product.id}
-                        name={product.name}
-                        price={product.price}
-                        image={product.image}
-                        description={product.description}
-                        viscosity={product.viscosity}
+            <!-- Hero Title -->
+            <h1 class="text-5xl md:text-6xl font-bold text-center text-gray-900 mb-4 leading-tight">
+                Encuentra los lubricantes<br/>para tu vehículo
+            </h1>
+
+            <!-- Hero Subtitle -->
+            <p class="text-center text-gray-600 text-lg mb-12 max-w-2xl mx-auto">
+                Selecciona la categoría de tu vehículo y explora nuestro catálogo completo
+            </p>
+
+            <!-- Vehicle Selector Panel -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <!-- Moto Card -->
+                <div class="relative rounded-2xl overflow-hidden h-96 cursor-pointer group hover:shadow-xl transition-all duration-300 vehicle-selector" data-category="motos">
+                    <img
+                        src="https://images.unsplash.com/photo-1769138317350-ab1c10e538f1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080"
+                        alt="Motos"
+                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
-                ))
+                </div>
+
+                <!-- Vehículos livianos Card -->
+                <div class="relative rounded-2xl overflow-hidden h-96 cursor-pointer group hover:shadow-xl transition-all duration-300 vehicle-selector" data-category="livianos">
+                    <img
+                        src="https://images-cam93.s3.us-east-1.amazonaws.com/crro.jpg"
+                        alt="Vehículos livianos"
+                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                </div>
+
+                <!-- Vehículos pesados Card -->
+                <div class="relative rounded-2xl overflow-hidden h-96 cursor-pointer group hover:shadow-xl transition-all duration-300 vehicle-selector" data-category="pesados">
+                    <img
+                        src="https://images.unsplash.com/photo-1766561993769-b834c1c6e456?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080"
+                        alt="Vehículos pesados"
+                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                </div>
+            </div>
+
+            <!-- Gradient divider -->
+            <div class="h-1 bg-gradient-to-r from-[#FF6B00] via-[#FFBA80] to-[#FF6B00] rounded-full"></div>
+        </div>
+    </section>
+
+    <!-- Brand Filter Panel -->
+    <section class="w-full bg-[#FF6B00] px-6 py-8">
+        <div class="max-w-7xl mx-auto">
+            <h3 class="text-2xl font-bold text-white mb-6 text-center">Marcas disponibles</h3>
+            <div id="brand-filter-panel" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-9 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
+                <!-- Brands will be inserted here by JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Category Tabs & Search -->
+    <section class="w-full bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-6 py-4 sm:py-6">
+            <div class="flex flex-col sm:flex-row flex-wrap items-center gap-3 sm:gap-4 justify-between">
+                <!-- Tabs -->
+                <div class="flex gap-2 sm:gap-3 flex-wrap w-full sm:w-auto">
+                    <button class="category-tab cursor-pointer bg-[#FF6B00] text-white px-3 sm:px-6 py-2 rounded-full font-bold text-xs sm:text-sm hover:bg-[#E55A00] transition-colors flex items-center gap-1 sm:gap-2 active" data-category="motos">
+                        <span>🏍️</span>
+                        <span class="hidden sm:inline">Motos</span>
+                        <span class="sm:hidden">Motos</span>
+                    </button>
+                    <button class="category-tab cursor-pointer bg-[#FFF0E6] text-[#FF6B00] px-3 sm:px-6 py-2 rounded-full font-bold text-xs sm:text-sm border-2 border-[#FFD4A8] hover:bg-[#FFE8D5] transition-colors flex items-center gap-1 sm:gap-2" data-category="livianos">
+                        <span>🚗</span>
+                        <span class="hidden lg:inline">Vehículos livianos</span>
+                        <span class="lg:hidden">Livianos</span>
+                    </button>
+                    <button class="category-tab cursor-pointer bg-[#FFF0E6] text-[#FF6B00] px-3 sm:px-6 py-2 rounded-full font-bold text-xs sm:text-sm border-2 border-[#FFD4A8] hover:bg-[#FFE8D5] transition-colors flex items-center gap-1 sm:gap-2" data-category="pesados">
+                        <span>🚚</span>
+                        <span class="hidden lg:inline">Vehículos pesados</span>
+                        <span class="lg:hidden">Pesados</span>
+                    </button>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="relative w-full sm:w-64">
+                    <input
+                        type="text"
+                        placeholder="Buscar..."
+                        class="bg-gray-100 text-gray-900 placeholder-gray-500 px-4 py-2 rounded-full text-sm w-full focus:outline-none focus:ring-2 focus:ring-[#FF6B00]"
+                    />
+                    <span class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400">🔍</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Catalog Area -->
+    <section class="w-full bg-[#FFF8F3] py-12">
+        <div class="max-w-7xl mx-auto px-6">
+            <div>
+                <!-- Main Content -->
+                <main class="flex-1">
+                    <!-- Brand Indicator -->
+                    <div id="brand-indicator" class="mb-6"></div>
+
+                    <!-- Products Grid -->
+                    <div id="products-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 transition-opacity duration-200">
+                        {
+                            products.map((product) => (
+                                <div class="bg-white rounded-xl overflow-hidden hover:shadow-lg transition-shadow duration-300 group product-item" data-category={product.category} data-brand={product.brand}>
+                                    <div class="relative overflow-hidden h-40 sm:h-48 bg-gray-200">
+                                        <img
+                                            src={product.image}
+                                            alt={product.name}
+                                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                        />
+                                    </div>
+                                    <div class="p-4">
+                                        <h3 class="font-bold text-gray-900 text-sm mb-2 line-clamp-2">
+                                            {product.name}
+                                        </h3>
+                                        <p class="text-xs text-gray-600 line-clamp-2">
+                                            {product.description}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))
+                        }
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="flex items-center justify-center gap-2">
+                        <button class="text-gray-400 font-bold text-sm">←</button>
+                        <button class="bg-[#FF6B00] text-white w-8 h-8 rounded font-bold">1</button>
+                        <button class="text-gray-600 hover:bg-gray-100 w-8 h-8 rounded font-bold">2</button>
+                        <button class="text-gray-400 font-bold text-sm">→</button>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </section>
+<script>
+const brands = {
+    motos: [
+        { name: 'Mobil', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Mobil_logo.svg/1280px-Mobil_logo.svg.png' },
+        { name: 'Castrol', logo: 'https://crystalpng.com/wp-content/uploads/2025/03/castrol-logo.png' },
+        { name: 'Motul', logo: 'https://1000logos.net/wp-content/uploads/2020/04/Logo-Motul.png' },
+        { name: 'Bajaj', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/Bajaj_Auto_Ltd_logo.svg/1280px-Bajaj_Auto_Ltd_logo.svg.png' },
+        { name: 'Yamalube', logo: 'https://images.seeklogo.com/logo-png/17/2/yamalube-logo-png_seeklogo-173930.png' },
+        { name: 'Honda', logo: 'https://upload.wikimedia.org/wikipedia/commons/3/38/Honda.svg' },
+        { name: 'Liqui Moly', logo: 'https://liqui-moly.com.co/wp-content/uploads/2022/03/LOGO-ACTUAL-2025.png' },
+        { name: 'Hero', logo: 'https://images.seeklogo.com/logo-png/17/2/hero-logo-png_seeklogo-170801.png' },
+        { name: 'Motorex', logo: 'https://lezebre.lu/images/detailed/15/18971-motorex-oil-logo.png' },
+        { name: 'Ipone', logo: 'https://cdn.freebiesupply.com/logos/large/2x/ipone-logo-png-transparent.png' },
+        { name: 'ENI', logo: 'https://download.logo.wine/logo/Eni/Eni-Logo.wine.png' },
+        { name: 'Shell', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/e/e8/Shell_logo.svg/1280px-Shell_logo.svg.png' },
+        { name: 'Repsol', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Repsol_logo.svg/1280px-Repsol_logo.svg.png' },
+        { name: 'Ecstar', logo: 'https://cdn.shopify.com/s/files/1/0733/5752/5215/files/ecstar-suzuki.svg?v=1736021458' },
+        { name: 'Terpel', logo: 'https://portalcolombia.terpel.com/static/images/terpel_logo_og.png' },
+        { name: 'Delta Oil', logo: 'https://deltaoil.co/wp-content/uploads/2023/03/logo-Delta-express-rojo.png' },
+        { name: 'ELF', logo: 'https://elf.co/themes/custom/butterfly_theme/elf-logo.svg?v=1.1' },
+        { name: 'Pysta', logo: 'https://pysta.co/cdn/shop/files/Encabezado.png?height=628&pad_color=ffffff&v=1735855211&width=1200' }
+    ],
+    livianos: [
+        { name: 'Mobil', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Mobil_logo.svg/1280px-Mobil_logo.svg.png' },
+        { name: 'Castrol', logo: 'https://crystalpng.com/wp-content/uploads/2025/03/castrol-logo.png' },
+        { name: 'ELF', logo: 'https://elf.co/themes/custom/butterfly_theme/elf-logo.svg?v=1.1' }
+    ],
+    pesados: [
+        { name: 'Mobil', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Mobil_logo.svg/1280px-Mobil_logo.svg.png' },
+        { name: 'Castrol', logo: 'https://crystalpng.com/wp-content/uploads/2025/03/castrol-logo.png' }
+    ]
+};
+
+let currentCategory = 'motos';
+let currentBrand = null;
+
+function renderBrands(category) {
+    const filterPanel = document.querySelector('#brand-filter-panel');
+
+    // Clear previous brands but keep the grid class
+    const brandButtons = filterPanel.querySelectorAll('.brand-selector');
+    brandButtons.forEach(btn => btn.remove());
+
+    const categoryBrands = brands[category] || [];
+
+    categoryBrands.forEach(brand => {
+        const brandButton = document.createElement('button');
+        brandButton.className = 'brand-selector cursor-pointer flex items-center justify-center p-4 rounded-xl bg-white/20 hover:bg-white/40 transition-all duration-300 group';
+        brandButton.setAttribute('data-brand', brand.name);
+        brandButton.setAttribute('title', brand.name);
+        brandButton.innerHTML = `
+            <img src="${brand.logo}" alt="${brand.name}" class="h-16 w-16 object-contain" />
+        `;
+
+        brandButton.addEventListener('click', function() {
+            filterByBrand(brand.name, brand.logo);
+            document.querySelectorAll('.brand-selector').forEach(b => b.classList.remove('ring-4', 'ring-white'));
+            this.classList.add('ring-4', 'ring-white');
+        });
+
+        filterPanel.appendChild(brandButton);
+    });
+}
+
+function filterByBrand(brand, logo) {
+    currentBrand = brand;
+    const productItems = document.querySelectorAll('.product-item');
+    const productsContainer = document.getElementById('products-container');
+
+    // Update brand indicator
+    const brandIndicator = document.getElementById('brand-indicator');
+    if (brandIndicator && logo) {
+        brandIndicator.innerHTML = `
+            <div class="flex items-center gap-3">
+                <span class="text-sm text-gray-600">Filtrando por:</span>
+                <img src="${logo}" alt="${brand}" class="h-10 w-10 object-contain" />
+            </div>
+        `;
+    }
+
+    productsContainer.style.opacity = '0.5';
+
+    setTimeout(() => {
+        productItems.forEach(item => {
+            const itemCategory = item.getAttribute('data-category');
+            const itemBrand = item.getAttribute('data-brand');
+
+            if (itemCategory === currentCategory && itemBrand === brand) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
             }
-        </div>
-    </div>
+        });
 
-    <!-- Información adicional -->
-    <div class="bg-gray-50 py-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl font-bold text-gray-900 mb-4">
-                    ¿Por qué elegir nuestros lubricantes?
-                </h2>
-                <p class="text-xl text-gray-600">
-                    Calidad garantizada para el cuidado de tu motor
-                </p>
-            </div>
+        productsContainer.style.opacity = '1';
+    }, 200);
+}
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="text-center">
-                    <div
-                        class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4"
-                    >
-                        <svg
-                            class="w-8 h-8 text-blue-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                            ></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">
-                        Calidad Premium
-                    </h3>
-                    <p class="text-gray-600">
-                        Todos nuestros lubricantes cumplen con los más altos
-                        estándares de calidad.
-                    </p>
-                </div>
+document.addEventListener('DOMContentLoaded', function() {
+    // Vehicle selectors
+    const vehicleSelectors = document.querySelectorAll('.vehicle-selector');
+    const productItems = document.querySelectorAll('.product-item');
+    const productsContainer = document.getElementById('products-container');
 
-                <div class="text-center">
-                    <div
-                        class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"
-                    >
-                        <svg
-                            class="w-8 h-8 text-green-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">
-                        Protección Superior
-                    </h3>
-                    <p class="text-gray-600">
-                        Protección avanzada contra el desgaste y la corrosión
-                        del motor.
-                    </p>
-                </div>
+    vehicleSelectors.forEach(selector => {
+        selector.addEventListener('click', function() {
+            currentCategory = this.getAttribute('data-category');
+            currentBrand = null;
 
-                <div class="text-center">
-                    <div
-                        class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4"
-                    >
-                        <svg
-                            class="w-8 h-8 text-purple-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
-                            ></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">
-                        Precios Competitivos
-                    </h3>
-                    <p class="text-gray-600">
-                        Ofrecemos los mejores precios sin comprometer la calidad
-                        del producto.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
+            productsContainer.style.opacity = '0.5';
+
+            setTimeout(() => {
+                // No mostrar productos hasta que se seleccione una marca
+                productItems.forEach(item => {
+                    item.style.display = 'none';
+                });
+
+                // Limpiar indicador de marca
+                const brandIndicator = document.getElementById('brand-indicator');
+                if (brandIndicator) {
+                    brandIndicator.innerHTML = '';
+                }
+
+                productsContainer.style.opacity = '1';
+            }, 200);
+
+            // Render brands for this category
+            renderBrands(currentCategory);
+        });
+    });
+
+    // Category tabs
+    const categoryTabs = document.querySelectorAll('.category-tab');
+    categoryTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            categoryTabs.forEach(t => {
+                t.classList.remove('bg-[#FF6B00]', 'text-white');
+                t.classList.add('bg-[#FFF0E6]', 'text-[#FF6B00]', 'border-2', 'border-[#FFD4A8]');
+            });
+
+            this.classList.remove('bg-[#FFF0E6]', 'text-[#FF6B00]', 'border-2', 'border-[#FFD4A8]');
+            this.classList.add('bg-[#FF6B00]', 'text-white');
+
+            currentCategory = this.getAttribute('data-category');
+            currentBrand = null;
+
+            productsContainer.style.opacity = '0.5';
+
+            setTimeout(() => {
+                // No mostrar productos hasta que se seleccione una marca
+                productItems.forEach(item => {
+                    item.style.display = 'none';
+                });
+
+                // Limpiar indicador de marca
+                const brandIndicator = document.getElementById('brand-indicator');
+                if (brandIndicator) {
+                    brandIndicator.innerHTML = '';
+                }
+
+                productsContainer.style.opacity = '1';
+            }, 200);
+
+            renderBrands(currentCategory);
+        });
+    });
+
+    // Initial render
+    renderBrands('motos');
+});
+</script>
 </BaseLayout>
