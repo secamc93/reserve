@@ -1,7 +1,9 @@
 ---
 import "../../styles/components/carousel-hero.css";
+import { Image } from "astro:assets";
 import ProductCatalog from "./ProductCatalog.astro";
 import { initCarouselHero } from "../../scripts/carousel-hero";
+import motoImage from "../../assets/images/moto-carousel.jpg";
 
 interface Props {
   title?: string;
@@ -26,10 +28,12 @@ const {
       <!-- Slides Container -->
       <div id="carousel-track" class="carousel-track">
         <button class="carousel-slide-clickable">
-          <img
-            src="/images/moto-carousel.jpg"
+          <Image
+            src={motoImage}
             alt="Moto"
             class="carousel-slide carousel-slide-moto"
+            width={1920}
+            height={1080}
           />
         </button>
         <button class="carousel-slide-clickable">
@@ -37,6 +41,9 @@ const {
             src="https://images-cam93.s3.us-east-1.amazonaws.com/crro.jpg"
             alt="Carro"
             class="carousel-slide"
+            loading="lazy"
+            width="1920"
+            height="1080"
           />
         </button>
         <button class="carousel-slide-clickable">
@@ -44,6 +51,9 @@ const {
             src="https://www.wradio.com.co/resizer/v2/UG5IGH23ORCWDGNIB6YBZZI6TA.jpg?auth=90078340bd7be0dcff0cbcd64427e3c12f6526387513173633054cc0fc64945f"
             alt="Vehículo pesado"
             class="carousel-slide"
+            loading="lazy"
+            width="1920"
+            height="1080"
           />
         </button>
       </div>
