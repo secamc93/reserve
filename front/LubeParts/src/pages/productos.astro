@@ -14,99 +14,60 @@ const products = [
 
     // MOTUL
     { id: "motul-300v-factory-5w40", name: "300V 4T Factory Line 5W-40", price: 52.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motoMotul_6.jpg", description: "Aceite sintético de competencia para motos", viscosity: "5W-40", category: "motos", brand: "Motul" },
-    { id: "motul-7100-4t-10w40", name: "7100 4T 10W-40", price: 45.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motoMotul_4.jpg", description: "Aceite sintético premium para motos", viscosity: "10W-40", category: "motos", brand: "Motul" },
-    { id: "motul-7100-4t-20w50", name: "7100 4T 20W-50", price: 47.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motoMotul_3.jpg", description: "Aceite sintético para motos de alto rendimiento", viscosity: "20W-50", category: "motos", brand: "Motul" },
-    { id: "motul-5100-4t-10w40", name: "5100 4T 10W-40", price: 38.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motoMotul_2.jpg", description: "Aceite semisintético para motos", viscosity: "10W-40", category: "motos", brand: "Motul" },
-    { id: "motul-3000-4t-20w50", name: "3000 4T 20W-50", price: 32.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motoMotul_1.jpg", description: "Aceite mineral para motos", viscosity: "20W-50", category: "motos", brand: "Motul" },
+    { id: "motul-coleccion", name: "Colección Motul Completa", price: 0, image: "https://images-cam93.s3.us-east-1.amazonaws.com/MotulImagen.jpeg", description: "Catálogo completo de productos Motul", viscosity: "Varios", category: "motos", brand: "Motul" },
 
     // BAJAJ
-    { id: "bajaj-4t-premium-20w50", name: "Bajaj 4T Premium 20W-50", price: 24.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motobajaj_4.jpg", description: "Aceite premium para motos Bajaj 4 tiempos", viscosity: "20W-50", category: "motos", brand: "Bajaj" },
-    { id: "bajaj-4t-10w30", name: "Bajaj 4T 10W-30", price: 22.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motobajaj_3.jpg", description: "Aceite para motos Bajaj 4 tiempos", viscosity: "10W-30", category: "motos", brand: "Bajaj" },
-    { id: "bajaj-4t-extra-20w50", name: "Bajaj 4T Extra 20W-50", price: 25.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motobajaj_2.jpg", description: "Aceite extra para motos Bajaj 4 tiempos", viscosity: "20W-50", category: "motos", brand: "Bajaj" },
-    { id: "bajaj-4t-turbo-10w40", name: "Bajaj 4T Turbo 10W-40", price: 26.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motobajaj_1.jpg", description: "Aceite turbo para motos Bajaj 4 tiempos", viscosity: "10W-40", category: "motos", brand: "Bajaj" },
+    { id: "bajaj-coleccion", name: "Colección Bajaj Completa", price: 0, image: "https://images-cam93.s3.us-east-1.amazonaws.com/ImagenBajaj.jpeg", description: "Catálogo completo de productos Bajaj", viscosity: "Varios", category: "motos", brand: "Bajaj" },
+    { id: "bajaj-coleccion-2", name: "Colección Bajaj 2", price: 0, image: "https://images-cam93.s3.us-east-1.amazonaws.com/ImagenBajaj2.jpeg", description: "Catálogo adicional de productos Bajaj", viscosity: "Varios", category: "motos", brand: "Bajaj" },
 
     // YAMALUBE
-    { id: "yamalube-4-10w40", name: "Yamalube 4 (4T 10W-40)", price: 29.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/yamalube_5.jpg", description: "Aceite original Yamaha para motos 4 tiempos", viscosity: "10W-40", category: "motos", brand: "Yamalube" },
-    { id: "yamalube-4fs-10w40", name: "Yamalube 4FS (4T 10W-40 semisintético)", price: 33.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/yamalube_4.jpg", description: "Aceite semisintético Yamaha para motos", viscosity: "10W-40", category: "motos", brand: "Yamalube" },
-    { id: "yamalube-ss-20w40", name: "Yamalube SS (4T 20W-40)", price: 31.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/yamalube_3.jpg", description: "Aceite Yamaha para motos 4 tiempos", viscosity: "20W-40", category: "motos", brand: "Yamalube" },
-    { id: "yamalube-2s", name: "Yamalube 2S (2 tiempos)", price: 26.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/yamalube_2.jpg", description: "Aceite Yamaha para motos de 2 tiempos", viscosity: "2T", category: "motos", brand: "Yamalube" },
-    { id: "yamalube-premium-20w50", name: "Yamalube Premium 20W-50", price: 28.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/yamalube_1.jpg", description: "Aceite premium Yamaha para motos 4 tiempos", viscosity: "20W-50", category: "motos", brand: "Yamalube" },
+    { id: "yamalube-coleccion", name: "Colección Yamalube Completa", price: 0, image: "https://images-cam93.s3.us-east-1.amazonaws.com/YamalubeImagenes.jpeg", description: "Catálogo completo de productos Yamalube", viscosity: "Varios", category: "motos", brand: "Yamalube" },
+    { id: "yamalube-coleccion-2", name: "Colección Yamalube 2", price: 0, image: "https://images-cam93.s3.us-east-1.amazonaws.com/YamalubeImagenes2.jpeg", description: "Catálogo adicional de productos Yamalube", viscosity: "Varios", category: "motos", brand: "Yamalube" },
 
     // HERO
-    { id: "hero-gn4-10w40", name: "Hero GN4 4T 10W-40", price: 30.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/Heromoto_3.jpg", description: "Aceite original Hero GN4 para motos", viscosity: "10W-40", category: "motos", brand: "Hero" },
-    { id: "hero-hp4-10w30", name: "Hero HP4 4T 10W-30", price: 28.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/Heromoto_2.jpg", description: "Aceite Hero HP4 para motos 4 tiempos", viscosity: "10W-30", category: "motos", brand: "Hero" },
-    { id: "hero-pro-gn4-20w50", name: "Hero Pro GN4 4T 20W-50", price: 32.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/Heromoto_1.jpg", description: "Aceite Pro Hero GN4 para motos", viscosity: "20W-50", category: "motos", brand: "Hero" },
+    { id: "hero-coleccion", name: "Colección Hero Completa", price: 0, image: "https://images-cam93.s3.us-east-1.amazonaws.com/HeromotoImagen.jpeg", description: "Catálogo completo de productos Hero", viscosity: "Varios", category: "motos", brand: "Hero" },
 
     // HONDA
-    { id: "honda-gn4-10w40", name: "Honda GN4 4T 10W-40", price: 30.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/HonaMotos_2.jpg", description: "Aceite original Honda GN4 para motos", viscosity: "10W-40", category: "motos", brand: "Honda" },
-    { id: "honda-hp4-10w30", name: "Honda HP4 4T 10W-30", price: 28.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/HonaMotos_1.jpg", description: "Aceite Honda HP4 para motos 4 tiempos", viscosity: "10W-30", category: "motos", brand: "Honda" },
+    { id: "honda-coleccion", name: "Colección Honda Completa", price: 0, image: "https://images-cam93.s3.us-east-1.amazonaws.com/ImagenHonda.jpeg", description: "Catálogo completo de productos Honda", viscosity: "Varios", category: "motos", brand: "Honda" },
 
     // MOTOREX
-    { id: "motorex-top-speed-10w40", name: "Motorex Top Speed 4T 10W-40", price: 34.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motorex_3.jpg", description: "Aceite Motorex para motos de alto rendimiento", viscosity: "10W-40", category: "motos", brand: "Motorex" },
-    { id: "motorex-power-synt-5w40", name: "Motorex Power Synt 4T 5W-40", price: 42.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motorex_2.jpg", description: "Aceite sintético Motorex para motos", viscosity: "5W-40", category: "motos", brand: "Motorex" },
-    { id: "motorex-cross-power-10w50", name: "Motorex Cross Power 4T 10W-50", price: 38.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motorex_1.jpg", description: "Aceite Motorex para motos off-road", viscosity: "10W-50", category: "motos", brand: "Motorex" },
+    { id: "motorex-coleccion", name: "Colección Motorex Completa", price: 0, image: "https://images-cam93.s3.us-east-1.amazonaws.com/motorexImagen.jpeg", description: "Catálogo completo de productos Motorex", viscosity: "Varios", category: "motos", brand: "Motorex" },
 
     // IPONE
-    { id: "ipone-r2000-10w40", name: "Ipone R2000 RS 4T 10W-40", price: 45.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/ipone_5.jpg", description: "Aceite Ipone para motos de alto rendimiento", viscosity: "10W-40", category: "motos", brand: "Ipone" },
-    { id: "ipone-r4000-10w50", name: "Ipone R4000 RS 4T 10W-50", price: 49.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/ipone_4.jpg", description: "Aceite Ipone para motos deportivas", viscosity: "10W-50", category: "motos", brand: "Ipone" },
-    { id: "ipone-super-2000-5w40", name: "Ipone Super 2000 4T 5W-40", price: 47.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/ipone_3.jpg", description: "Aceite sintético Ipone para motos", viscosity: "5W-40", category: "motos", brand: "Ipone" },
-    { id: "ipone-street-10w40", name: "Ipone Street 4T 10W-40", price: 43.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/ipone_2.jpg", description: "Aceite Ipone para motos de calle", viscosity: "10W-40", category: "motos", brand: "Ipone" },
-    { id: "ipone-offroad-10w50", name: "Ipone Off Road 4T 10W-50", price: 44.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/ipone_1.jpg", description: "Aceite Ipone para motos off-road", viscosity: "10W-50", category: "motos", brand: "Ipone" },
+    { id: "ipone-coleccion", name: "Colección Ipone Completa", price: 0, image: "https://images-cam93.s3.us-east-1.amazonaws.com/iponeImagenes.jpeg", description: "Catálogo completo de productos Ipone", viscosity: "Varios", category: "motos", brand: "Ipone" },
 
     // ENI
-    { id: "eni-i-ride-10w40", name: "ENI i-Ride 10W-40", price: 32.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/enimotos_1.jpg", description: "Aceite ENI para motos de calle", viscosity: "10W-40", category: "motos", brand: "ENI" },
-    { id: "eni-i-ride-10w50", name: "ENI i-Ride 10W-50", price: 34.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/enimotos_2.jpg", description: "Aceite ENI para motos deportivas", viscosity: "10W-50", category: "motos", brand: "ENI" },
-    { id: "eni-i-ride-15w50", name: "ENI i-Ride 15W-50", price: 36.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/enimotos_3.jpg", description: "Aceite ENI para motos de alto rendimiento", viscosity: "15W-50", category: "motos", brand: "ENI" },
-    { id: "eni-i-ride-5w40", name: "ENI i-Ride 5W-40", price: 38.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/enimotos_4.jpg", description: "Aceite sintético ENI para motos", viscosity: "5W-40", category: "motos", brand: "ENI" },
+    { id: "eni-coleccion", name: "Colección ENI Completa", price: 0, image: "https://images-cam93.s3.us-east-1.amazonaws.com/EniImagenes.jpeg", description: "Catálogo completo de productos ENI", viscosity: "Varios", category: "motos", brand: "ENI" },
+    { id: "eni-coleccion-2", name: "Colección ENI 2", price: 0, image: "https://images-cam93.s3.us-east-1.amazonaws.com/EniImagenes2.jpeg", description: "Catálogo adicional de productos ENI", viscosity: "Varios", category: "motos", brand: "ENI" },
 
     // SHELL
-    { id: "shell-advance-10w40", name: "Shell Advance 10W-40", price: 33.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/shell_1.jpg", description: "Aceite Shell Advance para motos de calle", viscosity: "10W-40", category: "motos", brand: "Shell" },
-    { id: "shell-advance-10w50", name: "Shell Advance 10W-50", price: 35.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/shell_2.jpg", description: "Aceite Shell Advance para motos deportivas", viscosity: "10W-50", category: "motos", brand: "Shell" },
-    { id: "shell-advance-5w40", name: "Shell Advance 5W-40", price: 37.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/shell_3.jpg", description: "Aceite sintético Shell Advance para motos", viscosity: "5W-40", category: "motos", brand: "Shell" },
+    { id: "shell-coleccion", name: "Colección Shell Completa", price: 0, image: "https://images-cam93.s3.us-east-1.amazonaws.com/shellImagenes.jpeg", description: "Catálogo completo de productos Shell", viscosity: "Varios", category: "motos", brand: "Shell" },
 
     // REPSOL
-    { id: "repsol-moto-street-10w40", name: "Repsol Moto Street 10W-40", price: 31.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/repsolmotos_1.jpg", description: "Aceite Repsol para motos de calle", viscosity: "10W-40", category: "motos", brand: "Repsol" },
-    { id: "repsol-moto-sport-10w50", name: "Repsol Moto Sport 10W-50", price: 34.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/repsolmotos_2.jpg", description: "Aceite Repsol para motos deportivas", viscosity: "10W-50", category: "motos", brand: "Repsol" },
-    { id: "repsol-moto-rider-10w40", name: "Repsol Moto Rider 10W-40", price: 33.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/repsolmotos_3.jpg", description: "Aceite Repsol Moto Rider para motos", viscosity: "10W-40", category: "motos", brand: "Repsol" },
-    { id: "repsol-moto-sintetico-5w40", name: "Repsol Moto Sintético 5W-40", price: 39.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/repsolmotos_4.jpg", description: "Aceite sintético Repsol para motos", viscosity: "5W-40", category: "motos", brand: "Repsol" },
+    { id: "repsol-coleccion", name: "Colección Repsol Completa", price: 0, image: "https://images-cam93.s3.us-east-1.amazonaws.com/repsolmotosImagenes.jpeg", description: "Catálogo completo de productos Repsol", viscosity: "Varios", category: "motos", brand: "Repsol" },
+    { id: "repsol-coleccion-2", name: "Colección Repsol 2", price: 0, image: "https://images-cam93.s3.us-east-1.amazonaws.com/repsolmotosImagenes2.jpeg", description: "Catálogo adicional de productos Repsol", viscosity: "Varios", category: "motos", brand: "Repsol" },
 
     // LIQUI MOLY
-    { id: "liqui-moly-street-10w40", name: "Motorbike 4T Street 10W-40", price: 36.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/LiquiMoly_5.jpg", description: "Aceite Liqui Moly para motos de calle", viscosity: "10W-40", category: "motos", brand: "Liqui Moly" },
-    { id: "liqui-moly-race-10w50", name: "Motorbike 4T Race 10W-50", price: 41.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/LiquiMoly_4.jpg", description: "Aceite de carreras Liqui Moly para motos", viscosity: "10W-50", category: "motos", brand: "Liqui Moly" },
-    { id: "liqui-moly-offroad-10w40", name: "Motorbike 4T Offroad 10W-40", price: 38.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/LiquiMoly_3.jpg", description: "Aceite Liqui Moly para motos off-road", viscosity: "10W-40", category: "motos", brand: "Liqui Moly" },
-    { id: "liqui-moly-2t", name: "Motorbike 2T", price: 29.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/LiquiMoly_2.jpg", description: "Aceite Liqui Moly para motos de 2 tiempos", viscosity: "2T", category: "motos", brand: "Liqui Moly" },
-    { id: "liqui-moly-premium-10w40", name: "Motorbike Premium 4T 10W-40", price: 39.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/LiquiMoly_1.jpg", description: "Aceite premium Liqui Moly para motos 4 tiempos", viscosity: "10W-40", category: "motos", brand: "Liqui Moly" },
+    { id: "liqui-moly-coleccion", name: "Colección Liqui Moly Completa", price: 0, image: "https://images-cam93.s3.us-east-1.amazonaws.com/LiquiMolyImagenes.jpeg", description: "Catálogo completo de productos Liqui Moly", viscosity: "Varios", category: "motos", brand: "Liqui Moly" },
+    { id: "liqui-moly-coleccion-2", name: "Colección Liqui Moly 2", price: 0, image: "https://images-cam93.s3.us-east-1.amazonaws.com/LiquiMolyImagenes2.jpeg", description: "Catálogo adicional de productos Liqui Moly", viscosity: "Varios", category: "motos", brand: "Liqui Moly" },
 
     // ECSTAR
-    { id: "ecstar-moto-10w40", name: "Ecstar Moto 4T 10W-40", price: 35.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/ecstar_1.jpg", description: "Aceite Ecstar para motos de calle", viscosity: "10W-40", category: "motos", brand: "Ecstar" },
-    { id: "ecstar-moto-10w50", name: "Ecstar Moto 4T 10W-50", price: 37.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/ecstar_2.jpg", description: "Aceite Ecstar para motos deportivas", viscosity: "10W-50", category: "motos", brand: "Ecstar" },
-    { id: "ecstar-moto-5w40", name: "Ecstar Moto 4T 5W-40", price: 39.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/ecstar_3.jpg", description: "Aceite sintético Ecstar para motos", viscosity: "5W-40", category: "motos", brand: "Ecstar" },
+    { id: "ecstar-coleccion", name: "Colección Ecstar Completa", price: 0, image: "https://images-cam93.s3.us-east-1.amazonaws.com/ecstarImagen.jpeg", description: "Catálogo completo de productos Ecstar", viscosity: "Varios", category: "motos", brand: "Ecstar" },
 
     // TERPEL
-    { id: "terpel-moto-10w40", name: "Terpel Moto 4T 10W-40", price: 29.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/terpel_1.jpg", description: "Aceite Terpel para motos de calle", viscosity: "10W-40", category: "motos", brand: "Terpel" },
-    { id: "terpel-moto-10w50", name: "Terpel Moto 4T 10W-50", price: 31.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/terpel_2.jpg", description: "Aceite Terpel para motos deportivas", viscosity: "10W-50", category: "motos", brand: "Terpel" },
-    { id: "terpel-moto-15w40", name: "Terpel Moto 4T 15W-40", price: 30.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/terpel_3.jpg", description: "Aceite Terpel para motos", viscosity: "15W-40", category: "motos", brand: "Terpel" },
-    { id: "terpel-moto-5w40", name: "Terpel Moto 4T 5W-40", price: 33.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/terpel_4.jpg", description: "Aceite sintético Terpel para motos", viscosity: "5W-40", category: "motos", brand: "Terpel" },
+    { id: "terpel-coleccion", name: "Colección Terpel Completa", price: 0, image: "https://images-cam93.s3.us-east-1.amazonaws.com/terpelImagen.jpeg", description: "Catálogo completo de productos Terpel", viscosity: "Varios", category: "motos", brand: "Terpel" },
+    { id: "terpel-coleccion-2", name: "Colección Terpel 2", price: 0, image: "https://images-cam93.s3.us-east-1.amazonaws.com/terpelImagen2.jpeg", description: "Catálogo adicional de productos Terpel", viscosity: "Varios", category: "motos", brand: "Terpel" },
 
     // DELTAOIL
-    { id: "deltaoil-4t-10w40", name: "Deltaoil 4T 10W-40", price: 28.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/deltaoil_1.jpg", description: "Aceite Deltaoil para motos de calle", viscosity: "10W-40", category: "motos", brand: "Delta Oil" },
-    { id: "deltaoil-4t-10w50", name: "Deltaoil 4T 10W-50", price: 30.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/deltaoil_2.jpg", description: "Aceite Deltaoil para motos deportivas", viscosity: "10W-50", category: "motos", brand: "Delta Oil" },
-    { id: "deltaoil-4t-15w40", name: "Deltaoil 4T 15W-40", price: 29.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/deltaoil_3.jpg", description: "Aceite Deltaoil para motos", viscosity: "15W-40", category: "motos", brand: "Delta Oil" },
-    { id: "deltaoil-4t-20w50", name: "Deltaoil 4T 20W-50", price: 31.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/deltaoil_4.jpg", description: "Aceite Deltaoil para motos de alto rendimiento", viscosity: "20W-50", category: "motos", brand: "Delta Oil" },
-    { id: "deltaoil-4t-5w40", name: "Deltaoil 4T 5W-40", price: 32.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/deltaoil_5.jpg", description: "Aceite sintético Deltaoil para motos", viscosity: "5W-40", category: "motos", brand: "Delta Oil" },
-    { id: "deltaoil-4t-5w30", name: "Deltaoil 4T 5W-30", price: 33.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/deltaoil_6.jpg", description: "Aceite sintético Deltaoil para motos modernas", viscosity: "5W-30", category: "motos", brand: "Delta Oil" },
-    { id: "deltaoil-4t-0w40", name: "Deltaoil 4T 0W-40", price: 36.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/deltaoil_7.jpg", description: "Aceite sintético Deltaoil de flujo libre para motos", viscosity: "0W-40", category: "motos", brand: "Delta Oil" },
+    { id: "deltaoil-coleccion", name: "Colección Delta Oil Completa", price: 0, image: "https://images-cam93.s3.us-east-1.amazonaws.com/deltaoilImagenes3.jpeg", description: "Catálogo completo de productos Delta Oil", viscosity: "Varios", category: "motos", brand: "Delta Oil" },
+    { id: "deltaoil-coleccion-2", name: "Colección Delta Oil 2", price: 0, image: "https://images-cam93.s3.us-east-1.amazonaws.com/deltaoilImagenes.jpeg", description: "Catálogo adicional de productos Delta Oil", viscosity: "Varios", category: "motos", brand: "Delta Oil" },
+    { id: "deltaoil-coleccion-3", name: "Colección Delta Oil 3", price: 0, image: "https://images-cam93.s3.us-east-1.amazonaws.com/deltaoilImagenes2.jpeg", description: "Catálogo extra de productos Delta Oil", viscosity: "Varios", category: "motos", brand: "Delta Oil" },
 
     // ELF
-    { id: "elf-moto-4t-10w40", name: "ELF Moto 4T 10W-40", price: 34.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/elf_1.jpg", description: "Aceite ELF para motos de calle", viscosity: "10W-40", category: "motos", brand: "ELF" },
-    { id: "elf-moto-4t-10w50", name: "ELF Moto 4T 10W-50", price: 36.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/elf_2.jpg", description: "Aceite ELF para motos deportivas", viscosity: "10W-50", category: "motos", brand: "ELF" },
+    { id: "elf-coleccion", name: "Colección ELF Completa", price: 0, image: "https://images-cam93.s3.us-east-1.amazonaws.com/ElfImagen.jpeg", description: "Catálogo completo de productos ELF", viscosity: "Varios", category: "motos", brand: "ELF" },
 
     // PYSTA
-    { id: "pysta-moto-10w40", name: "Pysta Moto 10W-40", price: 27.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/PYSTA_1.jpg", description: "Aceite Pysta para motos de calle", viscosity: "10W-40", category: "motos", brand: "Pysta" },
-    { id: "pysta-moto-10w50", name: "Pysta Moto 10W-50", price: 29.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/PYSTA_2.jpg", description: "Aceite Pysta para motos deportivas", viscosity: "10W-50", category: "motos", brand: "Pysta" },
-    { id: "pysta-moto-15w40", name: "Pysta Moto 15W-40", price: 28.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/PYSTA_3.jpg", description: "Aceite Pysta para motos", viscosity: "15W-40", category: "motos", brand: "Pysta" },
-    { id: "pysta-moto-5w40", name: "Pysta Moto 5W-40", price: 31.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/PYSTA_4.jpg", description: "Aceite sintético Pysta para motos", viscosity: "5W-40", category: "motos", brand: "Pysta" },
-    { id: "pysta-moto-20w50", name: "Pysta Moto 20W-50", price: 30.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/PYSTA_5.jpg", description: "Aceite Pysta para motos de alto rendimiento", viscosity: "20W-50", category: "motos", brand: "Pysta" },
+    { id: "pysta-coleccion", name: "Colección Pysta Completa", price: 0, image: "https://images-cam93.s3.us-east-1.amazonaws.com/PYSTAImagen.jpeg", description: "Catálogo completo de productos Pysta", viscosity: "Varios", category: "motos", brand: "Pysta" },
 
     // VEHÍCULOS LIVIANOS - MOBIL
     { id: "mobil-collection-livianos", name: "Mobil Collection Premium", price: 39.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/mobilLivianosTodos.jpg", description: "Colección de aceites Mobil premium para carros", viscosity: "5W-40", category: "livianos", brand: "Mobil" },
@@ -116,8 +77,8 @@ const products = [
     { id: "castrol-premium-synthetic", name: "Castrol Premium Synthetic 5W-40", price: 41.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/Castrol4.jpg", description: "Aceite premium sintético Castrol para máxima protección", viscosity: "5W-40", category: "livianos", brand: "Castrol" },
 
     // VEHÍCULOS LIVIANOS - ELF
-    { id: "elf-evolution-900-sxr-5w40", name: "Evolution 900 SXR 5W-40", price: 41.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/ELFLIVIANOS_1.jpg", description: "Aceite Elf Evolution 900 SXR para carros", viscosity: "5W-40", category: "livianos", brand: "ELF" },
-    { id: "elf-evolution-700-sti-10w40", name: "Evolution 700 STI 10W-40", price: 36.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/ELFLIVIANOS_2.jpg", description: "Aceite Elf Evolution 700 STI para carros", viscosity: "10W-40", category: "livianos", brand: "ELF" },
+    { id: "elf-livianos-1", name: "ELF Evolution 900 SXR", price: 0, image: "https://images-cam93.s3.us-east-1.amazonaws.com/ELFLIVIANOS_1.jpg", description: "Aceite ELF para vehículos livianos", viscosity: "5W-40", category: "livianos", brand: "ELF" },
+    { id: "elf-livianos-2", name: "ELF Evolution 700 STI", price: 0, image: "https://images-cam93.s3.us-east-1.amazonaws.com/ELFLIVIANOS_2.jpg", description: "Aceite ELF para vehículos livianos", viscosity: "10W-40", category: "livianos", brand: "ELF" },
 
     // VEHÍCULOS PESADOS - MOBIL
     { id: "mobil-delvac-super-1400-15w40", name: "Mobil Delvac Super 1400 15W-40", price: 55.99, image: "https://images-cam93.s3.us-east-1.amazonaws.com/mobilPesado.jpg", description: "Aceite Mobil Delvac Super para camiones", viscosity: "15W-40", category: "pesados", brand: "Mobil" },
@@ -170,7 +131,7 @@ const products = [
                 <!-- Vehículos pesados Card -->
                 <div class="relative rounded-2xl overflow-hidden h-96 cursor-pointer group hover:shadow-xl transition-all duration-300 vehicle-selector" data-category="pesados">
                     <img
-                        src="https://www.wradio.com.co/resizer/v2/UG5IGH23ORCWDGNIB6YBZZI6TA.jpg?auth=90078340bd7be0dcff0cbcd64427e3c12f6526387513173633054cc0fc64945f"
+                        src="https://images-cam93.s3.us-east-1.amazonaws.com/troca.jpg"
                         alt="Vehículos pesados"
                         class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
                     />
@@ -285,7 +246,7 @@ const brands = {
         { name: 'Honda', logo: 'https://upload.wikimedia.org/wikipedia/commons/3/38/Honda.svg' },
         { name: 'Liqui Moly', logo: 'https://liqui-moly.com.co/wp-content/uploads/2022/03/LOGO-ACTUAL-2025.png' },
         { name: 'Hero', logo: 'https://images.seeklogo.com/logo-png/17/2/hero-logo-png_seeklogo-170801.png' },
-        { name: 'Motorex', logo: 'https://lezebre.lu/images/detailed/15/18971-motorex-oil-logo.png' },
+        { name: 'Motorex', logo: 'https://cdn.worldvectorlogo.com/logos/motorex-4.svg' },
         { name: 'Ipone', logo: 'https://cdn.freebiesupply.com/logos/large/2x/ipone-logo-png-transparent.png' },
         { name: 'ENI', logo: 'https://download.logo.wine/logo/Eni/Eni-Logo.wine.png' },
         { name: 'Shell', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/e/e8/Shell_logo.svg/1280px-Shell_logo.svg.png' },

@@ -112,3 +112,43 @@
 .animate-glow {
   animation: glow 2s ease-in-out infinite;
 }
+
+/* Button Click Animation */
+@keyframes buttonClick {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+button,
+[role="button"],
+.btn {
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+button:active,
+[role="button"]:active,
+.btn:active {
+  animation: buttonClick 0.3s ease-out;
+}
+
+/* Mobile-specific button animation */
+@media (max-width: 768px) {
+  button,
+  [role="button"],
+  .btn {
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  button:active,
+  [role="button"]:active,
+  .btn:active {
+    animation: buttonClick 0.4s ease-out;
+  }
+}
