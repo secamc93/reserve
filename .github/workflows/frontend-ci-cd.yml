@@ -16,16 +16,22 @@ on:
       - 'front/rupu-central/**'
   workflow_dispatch:
 
+permissions:
+  id-token: write
+  contents: read
+
 env:
   AWS_REGION: us-east-1
+  AWS_ROLE_ARN: arn:aws:iam::334689162817:role/github-actions-rupu
   ECR_REGISTRY: 334689162817.dkr.ecr.us-east-1.amazonaws.com
   IMAGE_NAME: rupu-frontend
+  INSTANCE_ID: i-08c946b3dd12fc8c9
 
 jobs:
   build-and-push:
     name: Build and Push to ECR
-    runs-on: ubuntu-24.04-arm  # Runner ARM64 nativo - más rápido y barato
-    
+    runs-on: ubuntu-24.04-arm  # Runner ARM64 nativo de GitHub (gratis, on-demand)
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -38,13 +44,12 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 9  # Compatible con lockfileVersion 9.0
+          version: 9
 
-      - name: Configure AWS credentials
+      - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to ECR
@@ -58,26 +63,20 @@ jobs:
       - name: Install dependencies
         working-directory: ./front/rupu-central
         run: |
-          # Verificar qué gestor de paquetes usar
           if [ -f "pnpm-lock.yaml" ]; then
-            echo "📦 Usando pnpm..."
-            # Intentar con frozen-lockfile primero, si falla usar sin frozen
             pnpm install --frozen-lockfile || pnpm install
           elif [ -f "package-lock.json" ]; then
-            echo "📦 Usando npm..."
             npm ci || npm install
           else
-            echo "⚠️ No se encontró lockfile, instalando dependencias..."
             pnpm install || npm install
           fi
 
       - name: Build image
         working-directory: ./front/rupu-central
         env:
-          NEXT_PUBLIC_API_BASE_URL: ${{ secrets.NEXT_PUBLIC_API_BASE_URL || 'https://xn--rup-joa.com/api/v1' }}
-          API_BASE_URL: ${{ secrets.API_BASE_URL || 'http://central_reserve:3050/api/v1' }}
+          NEXT_PUBLIC_API_BASE_URL: 'https://xn--rup-joa.com/api/v1'
+          API_BASE_URL: 'http://central_reserve:3050/api/v1'
         run: |
-          # Generar timestamp único para este build
           BUILD_TIMESTAMP=$(date +%Y%m%d-%H%M%S)
           echo "BUILD_TIMESTAMP=$BUILD_TIMESTAMP" >> $GITHUB_ENV
 
@@ -93,122 +92,47 @@ jobs:
 
       - name: Push image to ECR
         run: |
-          # Push tag con timestamp primero (inmutable)
           docker push ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:$BUILD_TIMESTAMP
-
-          # Luego push latest (sobrescribe)
           docker push ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-
-          echo "✅ Imagen pusheada: ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:$BUILD_TIMESTAMP"
-          echo "✅ Tag latest actualizado"
+          echo "✅ Imagen pusheada: $BUILD_TIMESTAMP (+ latest)"
 
   deploy:
-    name: Deploy to Server
+    name: Deploy via SSM
     needs: build-and-push
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-
-    # Prevenir ejecuciones concurrentes del mismo workflow
+    permissions:
+      id-token: write
+      contents: read
     concurrency:
       group: deploy-frontend-${{ github.ref }}
       cancel-in-progress: false
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
-
-      - name: Configure AWS credentials
+      - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Deploy to server
+      - name: Deploy frontend on EC2 (SSM RunShellScript)
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            set -e
-            cd ~/reserve/infra/compose-prod || exit 1
+          set -e
+          CMD_ID=$(aws ssm send-command \
+            --instance-ids "${{ env.INSTANCE_ID }}" \
+            --document-name "AWS-RunShellScript" \
+            --comment "Deploy frontend GHA ${{ github.sha }}" \
+            --parameters commands='["bash /home/ubuntu/reserve/infra/compose-prod/deploy.sh frontend"]' \
+            --query "Command.CommandId" --output text)
+          echo "SSM CommandId: $CMD_ID"
 
-            # Login a ECR
-            echo "🔐 Login a ECR..."
-            aws ecr get-login-password --region us-east-1 | \
-              docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
+          sleep 5
+          aws ssm wait command-executed --command-id "$CMD_ID" --instance-id "${{ env.INSTANCE_ID }}" || true
 
-            # Obtener digest de la imagen actual (si existe)
-            echo "📋 Verificando imagen actual..."
-            OLD_DIGEST=$(docker inspect ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest 2>/dev/null | jq -r '.[0].Digest // "none"' || echo "none")
-            echo "Digest anterior: $OLD_DIGEST"
-
-            # Pull latest image
-            echo "🔄 Pulling latest frontend image..."
-            docker pull ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-
-            # Verificar que la imagen cambió
-            NEW_DIGEST=$(docker inspect ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest | jq -r '.[0].Digest')
-            echo "Digest nuevo: $NEW_DIGEST"
-
-            if [ "$OLD_DIGEST" = "$NEW_DIGEST" ] && [ "$OLD_DIGEST" != "none" ]; then
-              echo "⚠️ ADVERTENCIA: La imagen no cambió. Puede ser un problema de cache."
-            else
-              echo "✅ Nueva imagen descargada correctamente"
-            fi
-
-            # Stop del contenedor antiguo
-            echo "⏹️ Deteniendo contenedor antiguo..."
-            docker stop frontend_prod 2>/dev/null || true
-
-            # Remover contenedor antiguo
-            echo "🗑️ Removiendo contenedor antiguo..."
-            docker rm -f frontend_prod 2>/dev/null || true
-
-            # Levantar el nuevo contenedor
-            echo "🚀 Levantando nuevo contenedor..."
-            docker compose -f docker-compose.yaml up -d frontend
-
-            # Esperar que el contenedor inicie (más tiempo para Next.js)
-            echo "⏳ Esperando que el contenedor inicie..."
-            sleep 15
-
-            # Verificar health del servicio
-            echo "🏥 Verificando health del servicio..."
-            MAX_RETRIES=15
-            RETRY=0
-            while [ $RETRY -lt $MAX_RETRIES ]; do
-              if curl -sf http://localhost:8080/ > /dev/null 2>&1; then
-                echo "✅ Servicio healthy!"
-                break
-              fi
-              RETRY=$((RETRY + 1))
-              echo "Intento $RETRY/$MAX_RETRIES - esperando..."
-              sleep 5
-            done
-
-            if [ $RETRY -eq $MAX_RETRIES ]; then
-              echo "❌ ERROR: El servicio no pasó el health check"
-              echo "📋 Logs del contenedor:"
-              docker logs --tail 50 frontend_prod
-              exit 1
-            fi
-
-            # Verificar que el healthcheck interno también está OK
-            echo "⏳ Esperando healthcheck interno (40s start period + 30s intervalo)..."
-            sleep 45
-            HEALTH_STATUS=$(docker inspect frontend_prod --format '{{.State.Health.Status}}' || echo "unknown")
-            echo "Estado healthcheck: $HEALTH_STATUS"
-
-            # Mostrar estado
-            echo "📊 Estado del servicio:"
-            docker ps --filter "name=frontend_prod" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
-
-            # Clean up old images
-            echo "🧹 Limpiando imágenes antiguas..."
-            docker image prune -f
-
-            echo "✅ Frontend desplegado y verificado exitosamente"
-          EOF
+          STATUS=$(aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "${{ env.INSTANCE_ID }}" --query Status --output text)
+          echo "===== STDOUT ====="
+          aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "${{ env.INSTANCE_ID }}" --query StandardOutputContent --output text
+          echo "===== STDERR ====="
+          aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "${{ env.INSTANCE_ID }}" --query StandardErrorContent --output text
+          echo "Status final: $STATUS"
+          [ "$STATUS" = "Success" ] || exit 1
