@@ -3,8 +3,15 @@ package repository
 import (
 	"central_reserve/services/auth/business/internal/domain"
 	"context"
+	"errors"
 	"fmt"
+
+	"gorm.io/gorm"
 )
+
+// errBusinessTypeNotFound es el error que la capa de aplicación espera cuando
+// un tipo de negocio no existe (no es un fallo fatal, indica "código disponible").
+var errBusinessTypeNotFound = errors.New("tipo de negocio no encontrado")
 
 // BusinessTypeRepository implementa ports.IBusinessTypeRepository
 
@@ -32,6 +39,10 @@ func (r *Repository) GetBusinessTypeByID(ctx context.Context, id uint) (*domain.
 func (r *Repository) GetBusinessTypeByCode(ctx context.Context, code string) (*domain.BusinessType, error) {
 	var businessType domain.BusinessType
 	if err := r.database.Conn(ctx).Table("business_type").Where("code = ?", code).First(&businessType).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// No es un error fatal: el código no existe (disponible para crear).
+			return nil, errBusinessTypeNotFound
+		}
 		r.logger.Error().Str("code", code).Err(err).Msg("Error al obtener tipo de negocio por código")
 		return nil, err
 	}
