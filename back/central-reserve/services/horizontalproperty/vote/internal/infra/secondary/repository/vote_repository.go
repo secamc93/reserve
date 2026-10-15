@@ -13,6 +13,7 @@ import (
 	"central_reserve/shared/log"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Repository struct {
@@ -1104,16 +1105,29 @@ func (r *Repository) MarkUnitAttendanceForVoting(ctx context.Context, votingID, 
 
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			// Si no existe, crear la lista de asistencia
+			// Si no existe, crearla. El voto masivo llama esto en paralelo: otra goroutine puede
+			// crearla al mismo tiempo (índice único idx_voting_group_attendance), así que ante el
+			// conflicto no se falla: se lee la lista que quedó creada.
 			attendanceList = models.AttendanceList{
 				VotingGroupID: voting.VotingGroupID,
 				IsActive:      true,
 			}
-			if err := r.db.Conn(ctx).Create(&attendanceList).Error; err != nil {
+			if err := r.db.Conn(ctx).
+				Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "voting_group_id"}}, DoNothing: true}).
+				Create(&attendanceList).Error; err != nil {
 				r.logger.Error().Err(err).Uint("voting_group_id", voting.VotingGroupID).Msg("Error creando lista de asistencia")
 				return fmt.Errorf("error creando lista de asistencia: %w", err)
 			}
-			r.logger.Info().Uint("voting_group_id", voting.VotingGroupID).Uint("attendance_list_id", attendanceList.ID).Msg("Lista de asistencia creada")
+			if attendanceList.ID == 0 {
+				if err := r.db.Conn(ctx).
+					Where("voting_group_id = ? AND is_active = ?", voting.VotingGroupID, true).
+					First(&attendanceList).Error; err != nil {
+					r.logger.Error().Err(err).Uint("voting_group_id", voting.VotingGroupID).Msg("Error leyendo lista de asistencia creada por otra petición")
+					return fmt.Errorf("error obteniendo lista de asistencia: %w", err)
+				}
+			} else {
+				r.logger.Info().Uint("voting_group_id", voting.VotingGroupID).Uint("attendance_list_id", attendanceList.ID).Msg("Lista de asistencia creada")
+			}
 		} else {
 			r.logger.Error().Err(err).Uint("voting_group_id", voting.VotingGroupID).Msg("Error obteniendo lista de asistencia")
 			return fmt.Errorf("error obteniendo lista de asistencia: %w", err)
