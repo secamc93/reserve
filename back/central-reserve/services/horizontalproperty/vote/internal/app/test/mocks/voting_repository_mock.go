@@ -37,6 +37,7 @@ type MockVotingRepository struct {
 	GetVoteByIDFn                      func(ctx context.Context, voteID uint) (*domain.Vote, error)
 	DeleteVoteFn                       func(ctx context.Context, voteID uint) error
 	DeleteAllVotesByVotingFn           func(ctx context.Context, votingID uint) (int64, error)
+	ValidateVoteTargetFn               func(ctx context.Context, votingID, propertyUnitID, votingOptionID uint) error
 	GetPreviousVotingFn                func(ctx context.Context, votingID uint, groupID uint) (*domain.Voting, error)
 	GetVotedUnitIDsByVotingFn          func(ctx context.Context, votingID uint) ([]uint, error)
 	HasUnitVotedFn                     func(ctx context.Context, votingID uint, propertyUnitID uint) (bool, error)
@@ -328,4 +329,11 @@ func (m *MockVotingRepository) GetVotedUnitIDsByVoting(ctx context.Context, voti
 		return m.GetVotedUnitIDsByVotingFn(ctx, votingID)
 	}
 	return nil, nil
+}
+
+func (m *MockVotingRepository) ValidateVoteTarget(ctx context.Context, votingID, propertyUnitID, votingOptionID uint) error {
+	if m.ValidateVoteTargetFn != nil {
+		return m.ValidateVoteTargetFn(ctx, votingID, propertyUnitID, votingOptionID)
+	}
+	return nil
 }

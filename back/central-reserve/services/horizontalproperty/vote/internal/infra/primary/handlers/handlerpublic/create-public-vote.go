@@ -218,6 +218,10 @@ func (h *PublicHandler) CreatePublicVote(c *gin.Context) {
 			c.JSON(http.StatusForbidden, response.ErrorResponse{Success: false, Message: "Tu unidad no tiene asistencia registrada para esta votación", Error: err.Error()})
 			return
 		}
+		if errors.Is(err, domain.ErrOptionNotInVoting) || errors.Is(err, domain.ErrUnitNotInVotingBusiness) {
+			c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "La opción o la unidad no corresponden a esta votación", Error: err.Error()})
+			return
+		}
 		if errors.Is(err, domain.ErrUnitAlreadyVoted) {
 			c.JSON(http.StatusConflict, response.ErrorResponse{Success: false, Message: "Tu unidad ya votó en esta votación", Error: err.Error()})
 			return

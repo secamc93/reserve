@@ -20,6 +20,12 @@ func (u *VotesUseCase) CreateVote(ctx context.Context, dto domain.CreateVoteDTO)
 		return nil, fmt.Errorf("errores de validación: %w", err)
 	}
 
+	// Aislamiento: la opción debe ser de esta votación y la unidad de la misma propiedad.
+	if err := u.repo.ValidateVoteTarget(ctx, dto.VotingID, dto.PropertyUnitID, dto.VotingOptionID); err != nil {
+		u.logger.Warn(ctx).Err(err).Uint("voting_id", dto.VotingID).Uint("property_unit_id", dto.PropertyUnitID).Uint("voting_option_id", dto.VotingOptionID).Msg("Voto rechazado: unidad u opción ajena a la votación")
+		return nil, err
+	}
+
 	// Verificar que la unidad tenga asistencia marcada para esta votación
 	hasAttendance, err := u.repo.CheckUnitAttendanceForVoting(ctx, dto.VotingID, dto.PropertyUnitID)
 	if err != nil {
