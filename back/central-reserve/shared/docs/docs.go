@@ -51,7 +51,7 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "maximum": 100,
+                        "maximum": 200,
                         "minimum": 1,
                         "type": "integer",
                         "default": 10,
@@ -455,8 +455,10 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "maximum": 200,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "Tamaño de página (default 10, max 100)",
+                        "description": "Tamaño de página (default 10, max 200)",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -761,8 +763,10 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "maximum": 200,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "Tamaño de página (default 50)",
+                        "description": "Tamaño de página (default 10, max 200)",
                         "name": "page_size",
                         "in": "query"
                     },
@@ -900,8 +904,10 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "maximum": 200,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "Tamaño de página (default 10, max 100)",
+                        "description": "Tamaño de página (default 10, max 200)",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -1909,8 +1915,18 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "maximum": 200,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "Elementos por página (por defecto 10)",
+                        "description": "Elementos por página (por defecto 10, máximo 200)",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 200,
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "Alias de page_size (compatibilidad)",
                         "name": "per_page",
                         "in": "query"
                     },
@@ -2124,11 +2140,19 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "maximum": 100,
+                        "maximum": 200,
                         "minimum": 1,
                         "type": "integer",
                         "default": 10,
-                        "description": "Elementos por página",
+                        "description": "Elementos por página (máximo 200)",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 200,
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "Alias de page_size (compatibilidad)",
                         "name": "per_page",
                         "in": "query"
                     },
@@ -2707,8 +2731,10 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "maximum": 200,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "Tamaño de página para business summaries (solo super admin, default: 10, max: 100)",
+                        "description": "Tamaño de página para business summaries (solo super admin, default: 10, max: 200)",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -2833,6 +2859,7 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "minimum": 1,
                         "type": "integer",
                         "default": 1,
                         "description": "Número de página (mínimo 1)",
@@ -2840,9 +2867,11 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "maximum": 200,
+                        "minimum": 1,
                         "type": "integer",
                         "default": 10,
-                        "description": "Tamaño de página (1-100)",
+                        "description": "Tamaño de página (1-200)",
                         "name": "page_size",
                         "in": "query"
                     },
@@ -3141,9 +3170,11 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "maximum": 200,
+                        "minimum": 1,
                         "type": "integer",
                         "default": 10,
-                        "description": "Tamaño de página",
+                        "description": "Tamaño de página (1-200)",
                         "name": "page_size",
                         "in": "query"
                     },
@@ -3618,9 +3649,11 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "maximum": 200,
+                        "minimum": 1,
                         "type": "integer",
                         "default": 10,
-                        "description": "Tamaño de página",
+                        "description": "Tamaño de página (1-200)",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -3990,9 +4023,11 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "maximum": 200,
+                        "minimum": 1,
                         "type": "integer",
                         "default": 10,
-                        "description": "Tamaño de página",
+                        "description": "Tamaño de página (1-200)",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -4375,9 +4410,11 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "maximum": 200,
+                        "minimum": 1,
                         "type": "integer",
                         "default": 10,
-                        "description": "Tamaño de página",
+                        "description": "Tamaño de página (1-200)",
                         "name": "page_size",
                         "in": "query"
                     },
@@ -8219,7 +8256,7 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "maximum": 100,
+                        "maximum": 200,
                         "minimum": 1,
                         "type": "integer",
                         "default": 10,
@@ -8606,7 +8643,7 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "maximum": 100,
+                        "maximum": 200,
                         "minimum": 1,
                         "type": "integer",
                         "default": 10,
@@ -9230,7 +9267,7 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "maximum": 100,
+                        "maximum": 200,
                         "minimum": 1,
                         "type": "integer",
                         "default": 10,

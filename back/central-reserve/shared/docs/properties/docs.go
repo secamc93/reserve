@@ -75,8 +75,10 @@ const docTemplate = `{
             "in": "query"
           },
           {
+            "maximum": 200,
+            "minimum": 1,
             "type": "integer",
-            "description": "Tamaño de página (default 10, max 100)",
+            "description": "Tamaño de página (default 10, max 200)",
             "name": "page_size",
             "in": "query"
           }
@@ -381,8 +383,10 @@ const docTemplate = `{
             "in": "query"
           },
           {
+            "maximum": 200,
+            "minimum": 1,
             "type": "integer",
-            "description": "Tamaño de página (default 50)",
+            "description": "Tamaño de página (default 10, max 200)",
             "name": "page_size",
             "in": "query"
           },
@@ -520,8 +524,10 @@ const docTemplate = `{
             "in": "query"
           },
           {
+            "maximum": 200,
+            "minimum": 1,
             "type": "integer",
-            "description": "Tamaño de página (default 10, max 100)",
+            "description": "Tamaño de página (default 10, max 200)",
             "name": "page_size",
             "in": "query"
           }
@@ -958,6 +964,7 @@ const docTemplate = `{
             "in": "query"
           },
           {
+            "minimum": 1,
             "type": "integer",
             "default": 1,
             "description": "Número de página (mínimo 1)",
@@ -965,9 +972,11 @@ const docTemplate = `{
             "in": "query"
           },
           {
+            "maximum": 200,
+            "minimum": 1,
             "type": "integer",
             "default": 10,
-            "description": "Tamaño de página (1-100)",
+            "description": "Tamaño de página (1-200)",
             "name": "page_size",
             "in": "query"
           },
@@ -1266,9 +1275,11 @@ const docTemplate = `{
             "in": "query"
           },
           {
+            "maximum": 200,
+            "minimum": 1,
             "type": "integer",
             "default": 10,
-            "description": "Tamaño de página",
+            "description": "Tamaño de página (1-200)",
             "name": "page_size",
             "in": "query"
           },
@@ -1743,9 +1754,11 @@ const docTemplate = `{
             "in": "query"
           },
           {
+            "maximum": 200,
+            "minimum": 1,
             "type": "integer",
             "default": 10,
-            "description": "Tamaño de página",
+            "description": "Tamaño de página (1-200)",
             "name": "page_size",
             "in": "query"
           }
@@ -2115,9 +2128,11 @@ const docTemplate = `{
             "in": "query"
           },
           {
+            "maximum": 200,
+            "minimum": 1,
             "type": "integer",
             "default": 10,
-            "description": "Tamaño de página",
+            "description": "Tamaño de página (1-200)",
             "name": "page_size",
             "in": "query"
           }
@@ -2500,9 +2515,11 @@ const docTemplate = `{
             "in": "query"
           },
           {
+            "maximum": 200,
+            "minimum": 1,
             "type": "integer",
             "default": 10,
-            "description": "Tamaño de página",
+            "description": "Tamaño de página (1-200)",
             "name": "page_size",
             "in": "query"
           },

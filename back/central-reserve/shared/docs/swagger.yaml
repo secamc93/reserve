@@ -2389,7 +2389,7 @@ paths:
       - default: 10
         description: Tamaño de página
         in: query
-        maximum: 100
+        maximum: 200
         minimum: 1
         name: page_size
         type: integer
@@ -2661,8 +2661,10 @@ paths:
         in: query
         name: page
         type: integer
-      - description: Tamaño de página (default 10, max 100)
+      - description: Tamaño de página (default 10, max 200)
         in: query
+        maximum: 200
+        minimum: 1
         name: page_size
         type: integer
       produces:
@@ -2826,8 +2828,10 @@ paths:
         in: query
         name: page
         type: integer
-      - description: Tamaño de página (default 50)
+      - description: Tamaño de página (default 10, max 200)
         in: query
+        maximum: 200
+        minimum: 1
         name: page_size
         type: integer
       - description: Filtro por número de unidad (CASA)
@@ -2948,8 +2952,10 @@ paths:
         in: query
         name: page
         type: integer
-      - description: Tamaño de página (default 10, max 100)
+      - description: Tamaño de página (default 10, max 200)
         in: query
+        maximum: 200
+        minimum: 1
         name: page_size
         type: integer
       produces:
@@ -3607,8 +3613,16 @@ paths:
         in: query
         name: page
         type: integer
-      - description: Elementos por página (por defecto 10)
+      - description: Elementos por página (por defecto 10, máximo 200)
         in: query
+        maximum: 200
+        minimum: 1
+        name: page_size
+        type: integer
+      - description: Alias de page_size (compatibilidad)
+        in: query
+        maximum: 200
+        minimum: 1
         name: per_page
         type: integer
       - description: Filtrar por nombre de negocio
@@ -3973,9 +3987,15 @@ paths:
         name: page
         type: integer
       - default: 10
-        description: Elementos por página
+        description: Elementos por página (máximo 200)
         in: query
-        maximum: 100
+        maximum: 200
+        minimum: 1
+        name: page_size
+        type: integer
+      - description: Alias de page_size (compatibilidad)
+        in: query
+        maximum: 200
         minimum: 1
         name: per_page
         type: integer
@@ -4147,8 +4167,10 @@ paths:
         name: page
         type: integer
       - description: 'Tamaño de página para business summaries (solo super admin,
-          default: 10, max: 100)'
+          default: 10, max: 200)'
         in: query
+        maximum: 200
+        minimum: 1
         name: page_size
         type: integer
       produces:
@@ -4232,11 +4254,14 @@ paths:
       - default: 1
         description: Número de página (mínimo 1)
         in: query
+        minimum: 1
         name: page
         type: integer
       - default: 10
-        description: Tamaño de página (1-100)
+        description: Tamaño de página (1-200)
         in: query
+        maximum: 200
+        minimum: 1
         name: page_size
         type: integer
       - default: created_at
@@ -4628,8 +4653,10 @@ paths:
         name: page
         type: integer
       - default: 10
-        description: Tamaño de página
+        description: Tamaño de página (1-200)
         in: query
+        maximum: 200
+        minimum: 1
         name: page_size
         type: integer
       - description: ID de la unidad
@@ -4934,8 +4961,10 @@ paths:
         name: page
         type: integer
       - default: 10
-        description: Tamaño de página
+        description: Tamaño de página (1-200)
         in: query
+        maximum: 200
+        minimum: 1
         name: page_size
         type: integer
       produces:
@@ -5175,8 +5204,10 @@ paths:
         name: page
         type: integer
       - default: 10
-        description: Tamaño de página
+        description: Tamaño de página (1-200)
         in: query
+        maximum: 200
+        minimum: 1
         name: page_size
         type: integer
       produces:
@@ -5425,8 +5456,10 @@ paths:
         name: page
         type: integer
       - default: 10
-        description: Tamaño de página
+        description: Tamaño de página (1-200)
         in: query
+        maximum: 200
+        minimum: 1
         name: page_size
         type: integer
       - description: ID del visitante
@@ -7764,7 +7797,7 @@ paths:
       - default: 10
         description: Tamaño de página
         in: query
-        maximum: 100
+        maximum: 200
         minimum: 1
         name: page_size
         type: integer
@@ -8028,7 +8061,7 @@ paths:
       - default: 10
         description: Tamaño de página
         in: query
-        maximum: 100
+        maximum: 200
         minimum: 1
         name: page_size
         type: integer
@@ -8438,7 +8471,7 @@ paths:
       - default: 10
         description: Tamaño de página
         in: query
-        maximum: 100
+        maximum: 200
         minimum: 1
         name: page_size
         type: integer
