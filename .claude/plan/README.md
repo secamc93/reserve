@@ -6,3 +6,4 @@ al avanzar y se borra (o se mueve a la bitácora) al terminar.
 | Plan | Estado |
 |------|--------|
 | `rediseno-votaciones.md` | implementado en rama, pendiente revisión y merge |
+| `propiedad-unica-sin-tipo-de-negocio.md` | planeado, sin ejecutar: esperar instrucciones del usuario |
