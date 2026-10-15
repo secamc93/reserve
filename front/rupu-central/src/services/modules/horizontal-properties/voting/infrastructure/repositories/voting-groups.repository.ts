@@ -68,6 +68,7 @@ export class VotingGroupsRepository implements IVotingGroupsRepository {
         isActive: vg.is_active,
         requiresQuorum: vg.requires_quorum,
         quorumPercentage: vg.quorum_percentage,
+        requireDocumentValidation: vg.require_document_validation === true,
         createdByUserId: vg.created_by_user_id,
         notes: vg.notes,
         createdAt: vg.created_at,
@@ -103,6 +104,7 @@ export class VotingGroupsRepository implements IVotingGroupsRepository {
     if (data.description !== undefined) requestBody.description = data.description;
     if (data.requiresQuorum !== undefined) requestBody.requires_quorum = data.requiresQuorum;
     if (data.quorumPercentage !== undefined) requestBody.quorum_percentage = data.quorumPercentage;
+    if (data.requireDocumentValidation !== undefined) requestBody.require_document_validation = data.requireDocumentValidation;
     if (data.createdByUserId !== undefined) requestBody.created_by_user_id = data.createdByUserId;
     if (data.notes !== undefined) requestBody.notes = data.notes;
 
@@ -154,6 +156,7 @@ export class VotingGroupsRepository implements IVotingGroupsRepository {
         isActive: backendResponse.data.is_active,
         requiresQuorum: backendResponse.data.requires_quorum,
         quorumPercentage: backendResponse.data.quorum_percentage,
+        requireDocumentValidation: backendResponse.data.require_document_validation === true,
         createdByUserId: backendResponse.data.created_by_user_id,
         notes: backendResponse.data.notes,
         createdAt: backendResponse.data.created_at,
@@ -186,6 +189,7 @@ export class VotingGroupsRepository implements IVotingGroupsRepository {
     if (data.votingEndDate !== undefined) requestBody.voting_end_date = data.votingEndDate;
     if (data.requiresQuorum !== undefined) requestBody.requires_quorum = data.requiresQuorum;
     if (data.quorumPercentage !== undefined) requestBody.quorum_percentage = data.quorumPercentage;
+    if (data.requireDocumentValidation !== undefined) requestBody.require_document_validation = data.requireDocumentValidation;
     if (data.createdByUserId !== undefined) requestBody.created_by_user_id = data.createdByUserId;
     if (data.notes !== undefined) requestBody.notes = data.notes;
 
@@ -238,6 +242,7 @@ export class VotingGroupsRepository implements IVotingGroupsRepository {
         isActive: backendResponse.data.is_active,
         requiresQuorum: backendResponse.data.requires_quorum,
         quorumPercentage: backendResponse.data.quorum_percentage,
+        requireDocumentValidation: backendResponse.data.require_document_validation === true,
         createdByUserId: backendResponse.data.created_by_user_id,
         notes: backendResponse.data.notes,
         createdAt: backendResponse.data.created_at,

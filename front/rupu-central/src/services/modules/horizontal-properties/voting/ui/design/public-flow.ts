@@ -119,3 +119,84 @@ export const initialsOf = (name: string) =>
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
     .join('');
+
+// ===================== R1 · Identificación =====================
+
+/** Contexto público (voting-context) con la bandera del grupo, donde sea que venga. */
+export interface DocumentRequirementSource {
+  require_document_validation?: boolean | null;
+  voting_group?: { require_document_validation?: boolean | null } | null;
+}
+
+/**
+ * ¿El grupo exige el documento (cédula) para votar? Es una configuración del grupo
+ * (`require_document_validation`). Si el back no la manda (versión anterior), es false.
+ */
+export function requiresDocument(context: DocumentRequirementSource | null | undefined): boolean {
+  return context?.require_document_validation === true || context?.voting_group?.require_document_validation === true;
+}
+
+/** Validación local de R1 antes de llamar al back; null si se puede continuar. */
+export function identificationError(input: { hasUnit: boolean; dni: string; requireDocument: boolean }): string | null {
+  if (!input.hasUnit) return 'Elige tu unidad de la lista';
+  if (input.requireDocument && !input.dni.trim()) return 'Escribe tu documento de identidad';
+  return null;
+}
+
+/** Cuerpo de `POST /public/validate-resident`: el documento solo viaja si el grupo lo exige. */
+export function validateResidentPayload(input: { propertyUnitId: number; dni: string; requireDocument: boolean }): {
+  propertyUnitId: number;
+  dni?: string;
+} {
+  const dni = input.dni.trim();
+  return input.requireDocument && dni ? { propertyUnitId: input.propertyUnitId, dni } : { propertyUnitId: input.propertyUnitId };
+}
+
+/**
+ * Qué mostrar cuando `validate-resident` falla:
+ *  - 400 "Documento requerido" sin documento enviado: el grupo lo exige (o se activó después
+ *    de abrir R1) -> se muestra el campo de documento; 400 "Unidad inactiva";
+ *  - 404 "Residente no encontrado": la unidad y el documento no coinciden;
+ *    404 "Unidad no encontrada": la unidad no es de la propiedad;
+ *  - 403: residente inactivo; 401: el enlace venció.
+ */
+export function validateResidentFailure(
+  status: number | undefined,
+  backendMessage: string | null | undefined,
+  sentDocument: boolean
+): { message: string; requireDocument: boolean } {
+  const message = (backendMessage || '').toLowerCase();
+  if (status === 400 && !sentDocument && message.includes('documento')) {
+    return { message: 'Este grupo exige tu documento de identidad. Escríbelo para continuar.', requireDocument: true };
+  }
+  switch (status) {
+    case 400:
+      if (message.includes('inactiva')) {
+        return { message: 'Tu unidad está inactiva. Acércate a la mesa de registro.', requireDocument: sentDocument };
+      }
+      break;
+    case 404:
+      if (message.includes('unidad')) {
+        return { message: 'No encontramos esa unidad en la propiedad. Elígela de la lista.', requireDocument: sentDocument };
+      }
+      return {
+        message: sentDocument
+          ? 'No encontramos un residente con ese documento en la unidad. Revisa que la unidad y el documento coincidan con los registrados.'
+          : 'No encontramos residentes registrados en esa unidad. Acércate a la mesa de registro.',
+        requireDocument: sentDocument,
+      };
+    case 403:
+      return { message: 'El residente de esa unidad está inactivo. Acércate a la mesa de registro.', requireDocument: sentDocument };
+    case 401:
+      return { message: 'El enlace de votación venció o no es válido. Escanea el código QR de nuevo.', requireDocument: sentDocument };
+  }
+  switch (status) {
+    default:
+      return {
+        message: `${backendMessage || 'No pudimos validar tus datos'}. ${
+          sentDocument ? 'Revisa que la unidad y el documento coincidan con los registrados.' : 'Revisa la unidad elegida.'
+        }`,
+        requireDocument: sentDocument,
+      };
+  }
+}

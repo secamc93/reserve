@@ -4,7 +4,9 @@
 
 'use server';
 
+import { headers } from 'next/headers';
 import { env } from '@shared/config';
+import { resolvePublicBaseUrl } from '../../http/public-base-url';
 
 export interface GeneratePublicUrlInput {
   token: string;
@@ -12,7 +14,8 @@ export interface GeneratePublicUrlInput {
   groupId: number;
   votingId: number;
   durationHours: number;
-  frontendUrl: string;
+  /** Por defecto `<origen de la petición>/public/vote`. */
+  frontendUrl?: string;
 }
 
 export interface GeneratePublicUrlResult {
@@ -32,6 +35,7 @@ export async function generatePublicUrlAction(
   input: GeneratePublicUrlInput
 ): Promise<GeneratePublicUrlResult> {
   try {
+    const frontendUrl = input.frontendUrl || `${resolvePublicBaseUrl(await headers())}/public/vote`;
     const response = await fetch(
       `${env.API_BASE_URL}/horizontal-properties/voting-groups/${input.groupId}/votings/${input.votingId}/generate-public-url`,
       {
@@ -43,7 +47,7 @@ export async function generatePublicUrlAction(
         body: JSON.stringify({
           business_id: input.businessId,
           duration_hours: input.durationHours,
-          frontend_url: input.frontendUrl
+          frontend_url: frontendUrl
         })
       }
     );

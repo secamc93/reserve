@@ -1,8 +1,10 @@
 /**
  * R3 · Votar (opción 1f): botones grandes con el color de la opción y "Confirmar voto" fijo abajo.
  * R4 · Progreso en vivo (opción 1g): confirmación + barra por coeficiente. Usa
- * `percentage_by_coefficient` del back (voting-info, consulta periódica: sirve con token de
- * grupo e individual). Cuando el administrador cierra el punto, vuelve a la lista (token de grupo).
+ * `percentage_by_coefficient` del back (voting-info). Se actualiza por SSE (route handler del
+ * mismo origen `/public/vote/stream`): cada voto nuevo o anulado recarga voting-info. Si el SSE
+ * falla 3 veces seguidas, vuelve a consultar cada 4 s. El cierre del punto no llega por el
+ * stream (el back no lo emite): se revisa cada 8 s y, con token de grupo, vuelve a la lista.
  */
 
 'use client';
@@ -33,11 +35,17 @@ import {
   vtMono,
 } from '../design';
 import { VOTING_TIME_ZONE } from '../design/status';
+import { useEventStream } from '../hooks/use-event-stream';
+import { publicVotingStreamPath } from './hooks/use-public-voting-sse';
 
 type VotingInfo = NonNullable<GetVotingInfoResult['data']>;
 
-/** Cada cuánto se refresca el progreso (ms). */
+/** Respaldo sin SSE: cada cuánto se consulta el progreso (ms). */
 const REFRESH_MS = 4000;
+/** Con SSE: cada cuánto se revisa si el administrador cerró el punto (ms). */
+const CLOSE_CHECK_MS = 8000;
+/** Fallos seguidos del SSE antes de pasar a consultar periódicamente. */
+const SSE_MAX_FAILURES = 3;
 
 interface PublicVotingScreenProps {
   votingAuthToken: string;
@@ -116,22 +124,39 @@ export function PublicVotingScreen({
   const isOpen = info?.voting.is_active !== false;
 
   // R4: resultados en vivo mientras el punto siga abierto; al cerrarse vuelve a la lista
+  const refreshing = useRef(false);
+  const refresh = useCallback(async () => {
+    if (refreshing.current) return;
+    refreshing.current = true;
+    try {
+      const data = await fetchInfo();
+      setInfo(data);
+      if (data.voting.is_active === false && isGroupToken && onBackRef.current) {
+        setClosedNotice(true);
+        setTimeout(() => onBackRef.current?.(), 2500);
+      }
+    } catch {
+      /* se reintenta con el siguiente evento o ciclo */
+    } finally {
+      refreshing.current = false;
+    }
+  }, [fetchInfo, isGroupToken]);
+
+  const streamVotingId = selectedVotingId || info?.voting.id || null;
+  const streamUrl = hasVoted && isOpen && streamVotingId ? publicVotingStreamPath(votingAuthToken, streamVotingId) : null;
+  const { status: liveStatus } = useEventStream(
+    streamUrl,
+    { initial_data: refresh, new_vote: refresh, vote_deleted: refresh, votes_reset: refresh, voting_closed: refresh },
+    { maxFailures: SSE_MAX_FAILURES }
+  );
+  const sseFailed = liveStatus === 'failed';
+
   useEffect(() => {
     if (!hasVoted || !isOpen) return;
-    const timer = setInterval(async () => {
-      try {
-        const data = await fetchInfo();
-        setInfo(data);
-        if (data.voting.is_active === false && isGroupToken && onBackRef.current) {
-          setClosedNotice(true);
-          setTimeout(() => onBackRef.current?.(), 2500);
-        }
-      } catch {
-        /* se reintenta en el siguiente ciclo */
-      }
-    }, REFRESH_MS);
+    // Sin SSE (falló 3 veces): consulta cada 4 s. Con SSE: solo revisa el cierre cada 8 s.
+    const timer = setInterval(refresh, sseFailed ? REFRESH_MS : CLOSE_CHECK_MS);
     return () => clearInterval(timer);
-  }, [hasVoted, isOpen, fetchInfo, isGroupToken]);
+  }, [hasVoted, isOpen, refresh, sseFailed]);
 
   const handleVote = async () => {
     if (!selectedOptionId || !info) return;
@@ -198,8 +223,13 @@ export function PublicVotingScreen({
         <div className="max-w-[480px] mx-auto min-h-screen flex flex-col p-[22px]">
           <div className={`${vtMono} flex justify-between items-center text-[11px] font-medium tracking-[.06em]`} style={{ color: VT.muted }}>
             {backButton(`VOTACIÓN ${order}`)}
-            {isOpen ? (
-              <span className="inline-flex items-center gap-1.5" style={{ color: VT.live }}>
+            {isOpen && liveStatus === 'reconnecting' ? (
+              <span role="status" className="inline-flex items-center gap-1.5" style={{ color: VT.muted }}>
+                <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: VT.muted }} />
+                RECONECTANDO
+              </span>
+            ) : isOpen ? (
+              <span role="status" className="inline-flex items-center gap-1.5" style={{ color: VT.live }} title={sseFailed ? 'Actualizando cada pocos segundos' : undefined}>
                 <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: VT.live }} />
                 EN VIVO
               </span>
@@ -231,9 +261,9 @@ export function PublicVotingScreen({
             <span style={{ color: VT.accent }}>quórum {quorum}%</span>
           </div>
 
-          <div className="mt-5 flex flex-col">
+          <div className="mt-5 flex flex-col" role="list" aria-label="Resultados por opción">
             {rows.map((r) => (
-              <div key={r.key} className="grid grid-cols-[12px_1fr_auto] gap-3 items-center py-3" style={{ borderBottom: `1px solid ${VT.border}` }}>
+              <div key={r.key} role="listitem" aria-label={r.label} className="grid grid-cols-[12px_1fr_auto] gap-3 items-center py-3" style={{ borderBottom: `1px solid ${VT.border}` }}>
                 <span className="w-3 h-3 rounded-[3px]" style={{ background: r.color, border: `1px solid ${r.pending ? VT.pendingBorder : r.color}` }} />
                 <span className="text-[15px]" style={{ fontWeight: !r.pending && winner?.key === r.key ? 600 : r.pending ? 400 : 500 }}>
                   {r.label}

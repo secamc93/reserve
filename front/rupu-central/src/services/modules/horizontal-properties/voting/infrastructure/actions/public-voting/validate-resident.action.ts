@@ -9,7 +9,8 @@ import { env } from '@shared/config';
 export interface ValidateResidentInput {
   publicToken: string;
   propertyUnitId: number;
-  dni: string;
+  /** Solo si el grupo exige documento (`require_document_validation`). */
+  dni?: string;
 }
 
 export interface ValidateResidentResult {
@@ -20,12 +21,19 @@ export interface ValidateResidentResult {
     property_unit_id: number;
     property_unit_number: string;
     voting_auth_token: string;
-    voting_id: number;
+    /** Solo con token de una votación individual. */
+    voting_id?: number;
     hp_id: number;
-    group_id: number;
+    voting_group_id?: number;
+    /** Nombre anterior de `voting_group_id`. */
+    group_id?: number;
+    is_group_token?: boolean;
+    require_document_validation?: boolean;
   };
   error?: string;
   message?: string;
+  /** Código HTTP (400 documento requerido, 404 no coincide, 403 inactivo, 401 enlace vencido). */
+  status?: number;
 }
 
 export async function validateResidentAction(
@@ -33,10 +41,11 @@ export async function validateResidentAction(
 ): Promise<ValidateResidentResult> {
   try {
     const url = `${env.API_BASE_URL}/public/validate-resident`;
+    const dni = input.dni?.trim();
     console.log('🔐 [ACTION] validateResident - Request:', {
       url,
       propertyUnitId: input.propertyUnitId,
-      dni: input.dni
+      withDocument: !!dni
     });
 
     const response = await fetch(url, {
@@ -45,10 +54,7 @@ export async function validateResidentAction(
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${input.publicToken}`
       },
-      body: JSON.stringify({
-        property_unit_id: input.propertyUnitId,
-        dni: input.dni
-      })
+      body: JSON.stringify(dni ? { property_unit_id: input.propertyUnitId, dni } : { property_unit_id: input.propertyUnitId })
     });
 
     const result = await response.json();
@@ -64,12 +70,13 @@ export async function validateResidentAction(
       return {
         success: false,
         error: result.error || result.message || 'Error al validar residente',
-        message: result.message
+        message: result.message,
+        status: response.status
       };
     }
 
     console.log('✅ [ACTION] validateResident - Residente validado exitosamente');
-    return result;
+    return { ...result, status: response.status };
   } catch (error) {
     console.error('❌ [ACTION] validateResident - Exception:', error);
     return {

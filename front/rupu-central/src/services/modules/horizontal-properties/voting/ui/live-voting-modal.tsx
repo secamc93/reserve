@@ -13,6 +13,7 @@ import { activateVotingAction } from '../infrastructure/actions/activate-voting.
 import { deactivateVotingAction } from '../infrastructure/actions/deactivate-voting.action';
 import { ResultsView } from './results-view';
 import { GroupQRModal } from './components/group-qr-modal';
+import { ManualCopyField, useCopyLink } from './components/copy-link';
 import { useGroupQr, GROUP_QR_VALID_HOURS } from './hooks';
 import { VoteModal } from './vote-modal';
 import { BulkVoteModal } from './bulk-vote-modal';
@@ -115,6 +116,7 @@ export function LiveVotingModal({
   const [showQrStrip, setShowQrStrip] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
   const qr = useGroupQr(businessId, voting?.votingGroupId || 0);
+  const copyLink = useCopyLink();
   const [showVoteModal, setShowVoteModal] = useState(false);
   const [showBulkVoteModal, setShowBulkVoteModal] = useState(false);
   const [selectedUnitForVote, setSelectedUnitForVote] = useState<ResidentialUnit | null>(null);
@@ -161,8 +163,13 @@ export function LiveVotingModal({
     businessId,
     voting?.votingGroupId || 0,
     voting?.id || 0,
-    isOpen && useRealTime && isActive
+    isOpen && useRealTime && isActive,
+    // Tras un corte se recarga el detalle: los votos anulados mientras tanto no llegan por el stream.
+    { onReconnect: () => reloadDetailsRef.current?.(), onReset: () => reloadDetailsRef.current?.() }
   );
+  const reloadDetailsRef = useRef<(() => void) | null>(null);
+  // "Reconectando" solo después de un corte (la primera conexión se muestra como en vivo).
+  const sseReconnecting = connectionStatus === 'reconnecting' || connectionStatus === 'error';
 
   const loadVotingDetails = useCallback(async () => {
     if (!voting || !businessId) return;
@@ -294,6 +301,8 @@ export function LiveVotingModal({
       };
     });
   }, [sseVotes, votingDetails, options, processedVoteIds]);
+
+  reloadDetailsRef.current = loadVotingDetails;
 
   // Cargar detalles de votación cuando se abre el modal
   useEffect(() => {
@@ -803,13 +812,8 @@ export function LiveVotingModal({
     if (next && !qr.data && !qr.loading) await qr.generate();
   };
 
-  const copyQrLink = async () => {
-    if (!qr.data) return;
-    try {
-      await navigator.clipboard.writeText(qr.data.publicUrl);
-    } catch {
-      /* el enlace sigue visible para copiarlo a mano */
-    }
+  const copyQrLink = () => {
+    if (qr.data) copyLink.copy(qr.data.publicUrl);
   };
 
   const orderLabel = votingsCount
@@ -931,8 +935,18 @@ export function LiveVotingModal({
                 {voting.title}
               </h1>
               {isActive ? (
-                isLive ? (
-                  <span className={`${vtMono} inline-flex items-center gap-1.5 text-[11px] font-medium tracking-[.06em]`} style={{ color: VT.live }}>
+                isLive && sseReconnecting ? (
+                  <span
+                    role="status"
+                    className={`${vtMono} inline-flex items-center gap-1.5 text-[11px] font-medium tracking-[.06em]`}
+                    style={{ color: VT.muted }}
+                    title="Se perdió la conexión en vivo; reintentando…"
+                  >
+                    <span className="w-[7px] h-[7px] rounded-full animate-pulse" style={{ background: VT.muted }} />
+                    RECONECTANDO
+                  </span>
+                ) : isLive ? (
+                  <span role="status" className={`${vtMono} inline-flex items-center gap-1.5 text-[11px] font-medium tracking-[.06em]`} style={{ color: VT.live }}>
                     <span className="w-[7px] h-[7px] rounded-full animate-pulse" style={{ background: VT.live }} />
                     EN VIVO
                   </span>
@@ -1032,10 +1046,11 @@ export function LiveVotingModal({
                       <button type="button" className={vtBtn.primary} onClick={() => setShowQrModal(true)}>
                         Proyectar
                       </button>
-                      <button type="button" className={vtBtn.ghost} onClick={copyQrLink}>
-                        Copiar enlace
+                      <button type="button" className={vtBtn.ghost} onClick={copyQrLink} aria-live="polite">
+                        {copyLink.state === 'copied' ? 'Enlace copiado' : 'Copiar enlace'}
                       </button>
                     </div>
+                    {copyLink.state === 'manual' && <ManualCopyField value={qr.data.publicUrl} />}
                   </div>
                 </>
               )}

@@ -9,6 +9,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { VT, formatDayTime, votingFontRoot, vtMono } from '../design';
+import { ManualCopyField, useCopyLink } from './copy-link';
 
 export interface GroupQRData {
   qrDataUrl: string;
@@ -46,7 +47,8 @@ const shortUrl = (url: string) => {
 };
 
 export function GroupQRModal({ data, validHours = 24, onClose }: GroupQRModalProps) {
-  const [copied, setCopied] = useState(false);
+  const { state: copyState, copy } = useCopyLink();
+  const copied = copyState === 'copied';
   const [showFullUrl, setShowFullUrl] = useState(false);
   const validUntil = data.expiresAt ? formatDayTime(new Date(data.expiresAt)).toUpperCase() : null;
   const [projecting, setProjecting] = useState(false);
@@ -88,15 +90,8 @@ export function GroupQRModal({ data, validHours = 24, onClose }: GroupQRModalPro
     });
   };
 
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(data.publicUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      alert('No se pudo copiar el enlace');
-    }
-  };
+  // Por HTTP en la red local no hay navigator.clipboard: copyText usa el respaldo.
+  const handleCopy = () => copy(data.publicUrl);
 
   const handleDownload = () => {
     const link = document.createElement('a');
@@ -199,6 +194,7 @@ export function GroupQRModal({ data, validHours = 24, onClose }: GroupQRModalPro
                   Descargar PNG
                 </button>
               </div>
+              {copyState === 'manual' && <ManualCopyField value={data.publicUrl} />}
               <p className="m-0 text-[11px] leading-snug" style={{ color: VT.muted }}>
                 Un solo QR para toda la asamblea. El residente se identifica una vez y vota en cada punto cuando lo abras.
               </p>

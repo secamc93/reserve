@@ -1,5 +1,15 @@
-import { useEffect, useState, useCallback } from 'react';
-import { envPublic } from '@shared/config';
+/**
+ * Votos en tiempo real para el residente (vista de detalle por unidad).
+ *
+ * Usa el route handler del mismo origen `/public/vote/stream` (no el back directo), reintenta
+ * con backoff y cierra el EventSource al desmontar (antes quedaba abierto: con R3 -> progreso
+ * quedaban dos conexiones).
+ */
+
+'use client';
+
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEventStream } from '../../hooks/use-event-stream';
 
 interface PublicVote {
   id: number;
@@ -21,8 +31,6 @@ interface SSEVote {
   option_code: string;
   color: string;
   voted_at: string;
-  ip_address?: string;
-  user_agent?: string;
 }
 
 interface SSEResult {
@@ -34,174 +42,82 @@ interface SSEResult {
   percentage: number;
 }
 
-export const usePublicVotingSSE = (
-  publicToken: string,
-  enabled: boolean = true
-) => {
+/** Ruta relativa (mismo origen) del stream público. `votingId` es obligatorio con token de grupo. */
+export function publicVotingStreamPath(votingAuthToken: string, votingId?: number | null): string {
+  const query = new URLSearchParams({ token: votingAuthToken });
+  if (votingId) query.set('voting_id', String(votingId));
+  return `/public/vote/stream?${query.toString()}`;
+}
+
+const toPublicVote = (v: SSEVote): PublicVote => ({
+  id: v.id,
+  voting_id: v.voting_id,
+  property_unit_id: v.property_unit_id,
+  voting_option_id: v.voting_option_id,
+  voted_at: v.voted_at,
+  option_text: v.option_text,
+  option_code: v.option_code,
+  option_color: v.color,
+});
+
+export const usePublicVotingSSE = (publicToken: string, enabled: boolean = true, votingId?: number | null) => {
   const [votes, setVotes] = useState<PublicVote[]>([]);
-  const [totalVotes, setTotalVotes] = useState(0);
   const [results, setResults] = useState<SSEResult[]>([]);
-  const [isConnected, setIsConnected] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected');
 
-  const connect = useCallback(async () => {
-    if (!publicToken || !enabled) {
-      console.log('🔌 [PUBLIC SSE] Token no disponible o SSE deshabilitado');
-      return;
-    }
-
-    setConnectionStatus('connecting');
-    setError(null);
-
-    try {
-      // URL del SSE para votación pública - Token por query string según documentación
-      const url = `${envPublic.API_BASE_URL}/public/voting-stream?token=${publicToken}`;
-      
-      console.log('🔌 [PUBLIC SSE] Conectando a:', url);
-
-      const response = await fetch(url, {
-        headers: {
-          'Accept': 'text/event-stream',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
-
-      if (!response.body) {
-        throw new Error('No se pudo obtener el stream de datos');
-      }
-
-      setConnectionStatus('connected');
-      setIsConnected(true);
-      console.log('✅ [PUBLIC SSE] Conectado al stream de votación pública');
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let eventType = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        
-        if (done) {
-          console.log('🔌 [PUBLIC SSE] Conexión cerrada por el servidor');
-          setConnectionStatus('disconnected');
-          setIsConnected(false);
-          break;
-        }
-
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\n');
-
-        for (const line of lines) {
-          if (line.startsWith('event:')) {
-            eventType = line.substring(6).trim();
-            continue;
-          }
-
-          if (line.startsWith('data:')) {
-            try {
-              const data = JSON.parse(line.substring(5));
-              
-              switch (eventType) {
-                case 'connected':
-                  console.log('✅ [PUBLIC SSE] Conectado a votación pública', data);
-                  setIsConnected(true);
-                  setConnectionStatus('connected');
-                  break;
-
-                case 'initial_data':
-                  console.log('📦 [PUBLIC SSE] Precarga de votos existentes:', data.votes?.length || 0, 'votos');
-                  console.log('📦 [PUBLIC SSE] Resultados disponibles:', data.results?.length || 0, 'opciones');
-                  
-                  // Guardar resultados para usar en conversiones
-                  if (data.results && Array.isArray(data.results)) {
-                    setResults(data.results);
-                  }
-                  
-                  if (data.votes && Array.isArray(data.votes)) {
-                    console.log('📦 [PUBLIC SSE] Primer voto de ejemplo:', data.votes[0]);
-                    const preloadedVotes = data.votes.map((vote: SSEVote) => convertSSEVoteToPublicVote(vote));
-                    console.log('📦 [PUBLIC SSE] Voto convertido:', preloadedVotes[0]);
-                    setVotes(preloadedVotes);
-                    setTotalVotes(preloadedVotes.length);
-                  }
-                  break;
-
-                case 'new_vote':
-                  console.log('🗳️ [PUBLIC SSE] Nuevo voto en tiempo real:', data);
-                  const newVote = convertSSEVoteToPublicVote(data.vote);
-                  console.log('🗳️ [PUBLIC SSE] Nuevo voto convertido:', newVote);
-                  setVotes(prev => {
-                    const exists = prev.some(v => v.id === newVote.id);
-                    if (exists) return prev;
-                    return [...prev, newVote];
-                  });
-                  setTotalVotes(prev => prev + 1);
-                  break;
-
-                case 'heartbeat':
-                  console.log('💓 [PUBLIC SSE] Heartbeat:', data.timestamp);
-                  break;
-              }
-            } catch (parseError) {
-              console.error('❌ [PUBLIC SSE] Error al parsear mensaje:', parseError);
-              setError('Error al procesar actualización de voto.');
-            }
-          }
-        }
-      }
-    } catch (err) {
-      console.error('❌ [PUBLIC SSE] Error de conexión:', err);
-      setError('Error de conexión con el servidor de votación.');
-      setConnectionStatus('disconnected');
-      setIsConnected(false);
-    }
-  }, [publicToken, enabled]);
-
-  const disconnect = useCallback(() => {
-    console.log('🔌 [PUBLIC SSE] Desconectando...');
-    setIsConnected(false);
-    setConnectionStatus('disconnected');
-  }, []);
-
-  // Convertir voto SSE a formato público (ahora los datos vienen directamente en el voto)
-  const convertSSEVoteToPublicVote = (sseVote: SSEVote): PublicVote => {
-    console.log('🔍 [SSE CONVERT] Voto:', sseVote.voting_option_id, '| Color directo:', sseVote.color);
-    
-    return {
-      id: sseVote.id,
-      voting_id: sseVote.voting_id,
-      property_unit_id: sseVote.property_unit_id,
-      voting_option_id: sseVote.voting_option_id,
-      voted_at: sseVote.voted_at,
-      option_text: sseVote.option_text,
-      option_code: sseVote.option_code,
-      option_color: sseVote.color
-    };
-  };
+  const url = useMemo(
+    () => (enabled && publicToken ? publicVotingStreamPath(publicToken, votingId) : null),
+    [enabled, publicToken, votingId]
+  );
 
   useEffect(() => {
-    if (enabled && publicToken) {
-      connect();
-    } else {
-      disconnect();
-    }
+    setVotes([]);
+    setResults([]);
+  }, [url]);
 
-    return () => {
-      disconnect();
-    };
-  }, [connect, disconnect, enabled, publicToken]);
+  const onInitial = useCallback((raw: unknown) => {
+    const data = raw as { votes?: SSEVote[] | null; results?: SSEResult[] | null };
+    if (Array.isArray(data?.results)) setResults(data.results);
+    setVotes(Array.isArray(data?.votes) ? data.votes.map(toPublicVote) : []);
+  }, []);
 
-  return { 
-    votes, 
-    totalVotes, 
+  const onNewVote = useCallback((raw: unknown) => {
+    const data = raw as { vote?: SSEVote; results?: SSEResult[] | null };
+    if (Array.isArray(data?.results)) setResults(data.results);
+    if (!data?.vote) return;
+    const vote = toPublicVote(data.vote);
+    setVotes((prev) => (prev.some((v) => v.id === vote.id) ? prev : [...prev, vote]));
+  }, []);
+
+  const onVoteDeleted = useCallback((raw: unknown) => {
+    const data = raw as { vote?: SSEVote; results?: SSEResult[] | null };
+    if (Array.isArray(data?.results)) setResults(data.results);
+    const deleted = data?.vote;
+    if (deleted) setVotes((prev) => prev.filter((v) => v.id !== deleted.id));
+  }, []);
+
+  const onVotesReset = useCallback((raw: unknown) => {
+    const data = raw as { results?: SSEResult[] | null };
+    setVotes([]);
+    setResults(Array.isArray(data?.results) ? data.results : []);
+  }, []);
+
+  // El back actual no expone votos individuales en el stream público (solo `results`).
+  const { status } = useEventStream(url, {
+    initial_data: onInitial,
+    new_vote: onNewVote,
+    vote_deleted: onVoteDeleted,
+    votes_reset: onVotesReset,
+  });
+
+  const connectionStatus: 'disconnected' | 'connecting' | 'connected' | 'reconnecting' =
+    status === 'live' ? 'connected' : status === 'connecting' ? 'connecting' : status === 'idle' ? 'disconnected' : 'reconnecting';
+
+  return {
+    votes,
+    totalVotes: votes.length,
     results,
-    isConnected, 
-    error, 
+    isConnected: status === 'live',
+    error: status === 'failed' ? 'Error de conexión con el servidor de votación.' : null,
     connectionStatus,
-    reconnect: connect
   };
 };

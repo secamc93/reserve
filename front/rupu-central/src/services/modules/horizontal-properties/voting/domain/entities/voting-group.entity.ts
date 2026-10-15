@@ -12,6 +12,8 @@ export interface VotingGroup {
   isActive: boolean;
   requiresQuorum: boolean;
   quorumPercentage: number;
+  /** Exige el documento (cédula) del residente para votar por el QR. Por defecto false. */
+  requireDocumentValidation: boolean;
   createdByUserId: number;
   notes?: string;
   createdAt: string;
@@ -39,6 +41,7 @@ export interface CreateVotingGroupDTO {
   votingEndDate: string;   // ISO 8601 format
   requiresQuorum?: boolean;
   quorumPercentage?: number;
+  requireDocumentValidation?: boolean;
   createdByUserId?: number;
   notes?: string;
 }
@@ -54,6 +57,7 @@ export interface UpdateVotingGroupDTO {
   votingEndDate?: string;
   requiresQuorum?: boolean;
   quorumPercentage?: number;
+  requireDocumentValidation?: boolean;
   createdByUserId?: number;
   notes?: string;
 }

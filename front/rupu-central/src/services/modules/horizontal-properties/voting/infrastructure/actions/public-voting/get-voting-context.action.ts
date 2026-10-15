@@ -21,8 +21,11 @@ export interface VotingContextData {
     id: number;
     name: string;
     description: string;
+    require_document_validation?: boolean;
   };
   is_group_token?: boolean;
+  /** El grupo exige el documento (cédula) en R1. Si no viene (back anterior), false. */
+  require_document_validation?: boolean;
 }
 
 export interface GetVotingContextResult {
