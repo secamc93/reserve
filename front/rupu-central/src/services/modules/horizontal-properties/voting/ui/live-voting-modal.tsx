@@ -6,7 +6,6 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import { Spinner, Modal } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
 import { getVotingDetailsAction, resetVotingAction } from '@/services/modules/horizontal-properties/voting/infrastructure/actions';
@@ -105,7 +104,6 @@ export function LiveVotingModal({
   votingsCount,
   nextVoting,
 }: LiveVotingModalProps) {
-  const router = useRouter();
   // Estado abierto/cerrado local: "Cerrar votación" y "Reabrir" lo cambian sin recargar.
   const [isActive, setIsActive] = useState<boolean>(!!voting?.isActive);
   const [closedAt, setClosedAt] = useState<string | null>(voting && !voting.isActive ? voting.updatedAt : null);
@@ -1103,7 +1101,7 @@ export function LiveVotingModal({
                     type="button"
                     className={`${vtBtn.primary} h-10`}
                     onClick={() =>
-                      router.push(`/properties/${businessId}/voting-groups/${voting.votingGroupId}/votings/${nextVoting.id}/live`)
+                      window.location.assign(`/properties/${businessId}/voting-groups/${voting.votingGroupId}/votings/${nextVoting.id}/live`)
                     }
                   >
                     Siguiente votación · {formatOrder(nextVoting.displayOrder)}

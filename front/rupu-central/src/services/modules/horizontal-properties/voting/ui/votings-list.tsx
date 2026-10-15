@@ -8,7 +8,6 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { TokenStorage } from '@shared/config';
 import { getVotingDetailsAction, getVotingOptionsAction } from '../infrastructure/actions';
 import { activateVotingAction } from '../infrastructure/actions/activate-voting.action';
@@ -54,7 +53,6 @@ export const liveVotingPath = (businessId: number, groupId: number, votingId: nu
   `/properties/${businessId}/voting-groups/${groupId}/votings/${votingId}/live`;
 
 export function VotingsList({ businessId, groupId, groupName, votings, onReload }: VotingsListProps) {
-  const router = useRouter();
   const [rows, setRows] = useState<Record<number, RowData>>({});
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Voting | null>(null);
@@ -124,7 +122,9 @@ export function VotingsList({ businessId, groupId, groupName, votings, onReload 
       const ok = await setActive(voting, true);
       if (!ok) return;
     }
-    router.push(liveVotingPath(businessId, groupId, voting.id));
+    // Navegación completa (como antes): con server actions en vuelo, router.push en `next dev`
+    // a veces cambia la URL y deja renderizada la página anterior.
+    window.location.assign(liveVotingPath(businessId, groupId, voting.id));
   };
 
   const nextOrder = votings.reduce((max, v) => Math.max(max, v.displayOrder), 0) + 1;

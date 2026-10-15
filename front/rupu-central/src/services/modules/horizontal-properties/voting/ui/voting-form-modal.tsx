@@ -17,6 +17,7 @@ import {
   updateVotingAction,
   updateVotingOptionStatusAction,
 } from '../infrastructure/actions';
+import { deactivateVotingAction } from '../infrastructure/actions/deactivate-voting.action';
 import type { Voting, VotingOption } from '../domain/entities';
 import {
   VOTING_TYPE_OPTIONS,
@@ -153,6 +154,11 @@ export function VotingFormModal({ isOpen, onClose, onSuccess, businessId, groupI
         if (!res.success || !res.data) throw new Error(res.error || 'No se pudo crear la votación');
         target = res.data;
         setEditing(res.data);
+        // El back crea la votación abierta; en el flujo queda "Lista" hasta que el admin la inicie.
+        if (res.data.isActive) {
+          const closed = await deactivateVotingAction({ token, businessId, groupId, votingId: res.data.id });
+          if (closed.success) target = { ...res.data, isActive: false };
+        }
       }
 
       const plan = planOptionChanges(existingOptions, draft.options);

@@ -48,9 +48,8 @@ test("super admin entra a Votaciones de Tayazal de Suba sin error de carga", asy
   // En `next dev` la primera visita compila la ruta: margen amplio.
   await expect(page).toHaveURL(new RegExp(`/properties/${businessId}/voting-groups$`), { timeout: 30_000 });
 
-  await expect(page.getByRole("button", { name: /Crear (Grupo de Votación|Primer Grupo)/ }).first()).toBeVisible({
-    timeout: 30_000,
-  });
+  await expect(page.getByRole("heading", { name: "Grupos de votación" })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("button", { name: "+ Nuevo grupo" }).first()).toBeVisible();
   await expect(page.getByText(LOAD_ERROR)).toHaveCount(0);
   await expect(page.getByText("ID de propiedad inválido")).toHaveCount(0);
 });
