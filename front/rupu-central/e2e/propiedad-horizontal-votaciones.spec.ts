@@ -22,7 +22,10 @@ test("super admin entra a Votaciones de Tayazal de Suba sin error de carga", asy
   const businessSelect = page
     .getByRole("combobox")
     .filter({ has: page.getByRole("option", { name: PROPERTY_NAME, exact: true }) });
-  await expect(businessSelect).toBeEnabled({ timeout: 20_000 });
+  // El selector de negocio carga su lista una sola vez al montar y a veces queda vacío bajo carga
+  // (.claude/alerts/selector-de-negocio-no-reintenta.md): si no aparece, recargar una vez.
+  if (!(await businessSelect.isEnabled({ timeout: 20_000 }).catch(() => false))) await page.reload();
+  await expect(businessSelect).toBeEnabled({ timeout: 30_000 });
   await businessSelect.selectOption({ label: PROPERTY_NAME });
 
   // El cambio de negocio navega a /properties/<id> (Resumen) con recarga completa.
@@ -48,9 +51,8 @@ test("super admin entra a Votaciones de Tayazal de Suba sin error de carga", asy
   // En `next dev` la primera visita compila la ruta: margen amplio.
   await expect(page).toHaveURL(new RegExp(`/properties/${businessId}/voting-groups$`), { timeout: 30_000 });
 
-  await expect(page.getByRole("button", { name: /Crear (Grupo de Votación|Primer Grupo)/ }).first()).toBeVisible({
-    timeout: 30_000,
-  });
+  await expect(page.getByRole("heading", { name: "Grupos de votación" })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("button", { name: "+ Nuevo grupo" }).first()).toBeVisible();
   await expect(page.getByText(LOAD_ERROR)).toHaveCount(0);
   await expect(page.getByText("ID de propiedad inválido")).toHaveCount(0);
 });

@@ -1,19 +1,40 @@
 /**
  * Componente: Modal de Votación en Vivo
+ * Rediseño: panel en vivo (opción 1a) y resultados ampliados con dona (opción 1e).
  */
 
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Badge, Spinner, Modal } from '@shared/ui';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Spinner, Modal } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
 import { getVotingDetailsAction, resetVotingAction } from '@/services/modules/horizontal-properties/voting/infrastructure/actions';
+import { activateVotingAction } from '../infrastructure/actions/activate-voting.action';
+import { deactivateVotingAction } from '../infrastructure/actions/deactivate-voting.action';
+import { ResultsView } from './results-view';
+import { GroupQRModal } from './components/group-qr-modal';
+import { useGroupQr, GROUP_QR_VALID_HOURS } from './hooks';
 import { VoteModal } from './vote-modal';
 import { BulkVoteModal } from './bulk-vote-modal';
 import { VotesByUnitSection, type ResidentialUnit } from './components/votes-by-unit-section';
 import { VotingSummaryBlock } from './voting-summary-block';
-import { useVotingSSE } from './hooks';
+
 import { Vote } from '../domain/entities'; // ✅ Usar la interfaz oficial
+import { useVotingSSE } from './hooks';
+import {
+  VT,
+  VtDialog,
+  VtIcon,
+  VtNotice,
+  votingFontRoot,
+  vtBtn,
+  vtMono,
+  buildOptionPalette,
+  computeCoefficientResults,
+  formatOrder,
+  resolveQuorum,
+  type CoefficientResults,
+} from './design';
 
 interface Voting {
   id: number;
@@ -30,210 +51,6 @@ interface Voting {
   updatedAt: string;
 }
 
-interface PieChartOverlayProps {
-  slices: PieChartSlice[];
-  onClose: () => void;
-  votingTitle: string;
-}
-
-function PieChartOverlay({ slices, onClose, votingTitle }: PieChartOverlayProps) {
-  const fmt = useMemo(
-    () => new Intl.NumberFormat('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 1 }),
-    []
-  );
-  const fmtCoef = useMemo(
-    () => new Intl.NumberFormat('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 2 }),
-    []
-  );
-
-  const slicesForChart = slices.filter((s) => s.percentage > 0);
-  const totalForChart = slicesForChart.reduce((sum, s) => sum + s.percentage, 0);
-  const participation = slices.filter((s) => s.id !== -1).reduce((sum, s) => sum + s.percentage, 0);
-  const notVoted = slices.find((s) => s.id === -1);
-  const totalUnits = slices.reduce((sum, s) => sum + s.votes, 0);
-  const votesCast = slices.filter((s) => s.id !== -1).reduce((sum, s) => sum + s.votes, 0);
-  const votedSlices = slices.filter((s) => s.id !== -1).sort((a, b) => b.percentage - a.percentage);
-  const sorted = [...slices].sort((a, b) => b.percentage - a.percentage);
-
-  // Build SVG donut
-  const radius = 15.91549430918954;
-  let cumulative = 0;
-  const segments = totalForChart > 0
-    ? slicesForChart.map((slice) => {
-        const pct = slice.percentage / totalForChart;
-        const dash = `${(pct * 100).toFixed(3)} ${(100 - pct * 100).toFixed(3)}`;
-        const offset = 25 - cumulative * 100;
-        cumulative += pct;
-        return (
-          <circle
-            key={`${slice.id}-${slice.label}`}
-            r={radius} cx="21" cy="21"
-            fill="transparent" stroke={slice.color}
-            strokeWidth="5.5" strokeDasharray={dash}
-            strokeDashoffset={offset} strokeLinecap="butt"
-            className="transition-all duration-500"
-          />
-        );
-      })
-    : null;
-
-  // Find the winner (highest coefficient, excluding NOT_VOTED)
-  const winner = votedSlices.length > 0 ? votedSlices[0] : null;
-
-  return (
-    <div className="fixed inset-0 z-[70] bg-gradient-to-br from-slate-100 via-gray-100 to-slate-200 flex items-center justify-center p-6">
-      {/* Card container */}
-      <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between px-8 py-5 border-b border-gray-100">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={onClose}
-              className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Volver
-            </button>
-            <div className="h-8 w-px bg-gray-200" />
-            <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Resultados en Vivo</p>
-              <h2 className="text-lg font-bold text-gray-900">{votingTitle}</h2>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 text-sm">
-            <span className="text-gray-500">Participación:</span>
-            <span className="text-xl font-bold text-gray-900">{fmt.format(participation)}%</span>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto px-8 py-8">
-          {totalForChart > 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
-
-              {/* Left: Donut chart (2 cols) */}
-              <div className="lg:col-span-2 flex flex-col items-center">
-                <div className="relative w-72 h-72">
-                  <svg viewBox="0 0 42 42" className="w-full h-full drop-shadow-lg">
-                    <circle r={radius} cx="21" cy="21" fill="transparent" stroke="#E5E7EB" strokeWidth="5.5" />
-                    {segments}
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <span className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold">Participación</span>
-                    <span className="text-4xl font-extrabold text-gray-900 leading-none mt-1">
-                      {fmt.format(participation)}%
-                    </span>
-                    {notVoted && (
-                      <span className="text-xs text-gray-400 mt-1">
-                        Sin votar: {fmt.format(notVoted.percentage)}%
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Stats pills */}
-                <div className="flex items-center gap-3 mt-6">
-                  <div className="bg-gray-50 border border-gray-200 rounded-full px-4 py-2 text-center">
-                    <span className="text-lg font-bold text-gray-900">{totalUnits}</span>
-                    <span className="text-xs text-gray-500 ml-1">totales</span>
-                  </div>
-                  <div className="bg-green-50 border border-green-200 rounded-full px-4 py-2 text-center">
-                    <span className="text-lg font-bold text-green-700">{votesCast}</span>
-                    <span className="text-xs text-green-600 ml-1">votaron</span>
-                  </div>
-                  {notVoted && (
-                    <div className="bg-gray-50 border border-gray-200 rounded-full px-4 py-2 text-center">
-                      <span className="text-lg font-bold text-gray-600">{notVoted.votes}</span>
-                      <span className="text-xs text-gray-500 ml-1">pendientes</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Right: Options breakdown (3 cols) */}
-              <div className="lg:col-span-3 space-y-3">
-                {sorted.map((slice) => {
-                  const isNotVoted = slice.id === -1;
-                  const isWinner = winner && slice.id === winner.id;
-                  const barWidth = totalForChart > 0 ? (slice.percentage / totalForChart) * 100 : 0;
-
-                  return (
-                    <div
-                      key={`${slice.id}-${slice.label}`}
-                      className={`relative overflow-hidden rounded-xl border transition-all ${
-                        isWinner
-                          ? 'border-2 bg-white shadow-md'
-                          : isNotVoted
-                            ? 'border-gray-200 bg-gray-50'
-                            : 'border-gray-200 bg-white shadow-sm'
-                      }`}
-                      style={isWinner ? { borderColor: slice.color } : undefined}
-                    >
-                      {/* Background progress bar */}
-                      <div
-                        className="absolute inset-0 opacity-[0.07] transition-all duration-700"
-                        style={{ width: `${barWidth}%`, backgroundColor: slice.color }}
-                      />
-
-                      <div className="relative px-5 py-4 flex items-center gap-4">
-                        {/* Color dot */}
-                        <div
-                          className={`flex-shrink-0 rounded-full ${isWinner ? 'w-5 h-5' : 'w-4 h-4'}`}
-                          style={{ backgroundColor: slice.color }}
-                        />
-
-                        {/* Label & details */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className={`font-semibold text-gray-900 truncate ${isWinner ? 'text-base' : 'text-sm'}`}>
-                              {slice.label}
-                            </p>
-                            {isWinner && (
-                              <span className="flex-shrink-0 text-xs font-bold px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: slice.color }}>
-                                MAYOR
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-4 mt-1 text-xs text-gray-500">
-                            <span>
-                              Coeficiente: <span className="font-semibold text-gray-700">{fmtCoef.format(slice.coefficientSum)}%</span>
-                            </span>
-                            <span>
-                              Unidades: <span className="font-semibold text-gray-700">{slice.votes}</span>
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Percentage */}
-                        <div className="flex-shrink-0 text-right">
-                          <span className={`font-bold ${isWinner ? 'text-2xl' : 'text-xl'}`} style={{ color: isNotVoted ? '#6b7280' : slice.color }}>
-                            {fmt.format(slice.percentage)}%
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center text-center gap-4 text-gray-500 py-16">
-              <div className="text-6xl">📊</div>
-              <p className="text-lg font-semibold text-gray-700">Aún no hay datos suficientes para graficar</p>
-              <p className="text-sm text-gray-500 max-w-md">
-                Cuando se registren votos con coeficiente de participación, verás aquí la distribución.
-              </p>
-              <button onClick={onClose} className="btn btn-primary">Volver al panel</button>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 interface VotingOption {
   id: number;
   votingId: number;
@@ -242,15 +59,6 @@ interface VotingOption {
   displayOrder: number;
   isActive: boolean;
   color?: string; // Color personalizado para la opción (hex)
-}
-
-interface PieChartSlice {
-  id: number;
-  label: string;
-  percentage: number;
-  votes: number;
-  coefficientSum: number;
-  color: string;
 }
 
 // Interfaz para votos del SSE (formato del backend)
@@ -276,6 +84,12 @@ interface LiveVotingModalProps {
   options: VotingOption[];
   votes: Vote[];
   onVoteSuccess: () => void;
+  /** Nombre del grupo (enlace de vuelta en la cabecera). */
+  groupName?: string;
+  /** Total de votaciones del grupo (para "01 / 04"). */
+  votingsCount?: number | null;
+  /** Siguiente votación del grupo (botón "Siguiente votación" del resultado final). */
+  nextVoting?: { id: number; displayOrder: number; title: string } | null;
 }
 
 export function LiveVotingModal({
@@ -285,15 +99,29 @@ export function LiveVotingModal({
   voting,
   options,
   votes: initialVotes,
-  onVoteSuccess
+  onVoteSuccess,
+  groupName,
+  votingsCount,
+  nextVoting,
 }: LiveVotingModalProps) {
+  // Estado abierto/cerrado local: "Cerrar votación" y "Reabrir" lo cambian sin recargar.
+  const [isActive, setIsActive] = useState<boolean>(!!voting?.isActive);
+  const [closedAt, setClosedAt] = useState<string | null>(voting && !voting.isActive ? voting.updatedAt : null);
+  const [view, setView] = useState<'panel' | 'result'>('panel');
+  const autoResultChecked = useRef(false);
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+  const [statusBusy, setStatusBusy] = useState(false);
+  const [statusError, setStatusError] = useState<string | null>(null);
+  const [showQrStrip, setShowQrStrip] = useState(false);
+  const [showQrModal, setShowQrModal] = useState(false);
+  const qr = useGroupQr(businessId, voting?.votingGroupId || 0);
   const [showVoteModal, setShowVoteModal] = useState(false);
   const [showBulkVoteModal, setShowBulkVoteModal] = useState(false);
   const [selectedUnitForVote, setSelectedUnitForVote] = useState<ResidentialUnit | null>(null);
   const [showDeleteVoteModal, setShowDeleteVoteModal] = useState(false);
   const [selectedUnitForDelete, setSelectedUnitForDelete] = useState<ResidentialUnit | null>(null);
   const [deletingVote, setDeletingVote] = useState(false);
-  const [showPieChart, setShowPieChart] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [isLive, setIsLive] = useState(true);
   const [useRealTime, setUseRealTime] = useState(true);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -333,7 +161,7 @@ export function LiveVotingModal({
     businessId,
     voting?.votingGroupId || 0,
     voting?.id || 0,
-    isOpen && useRealTime && voting?.isActive
+    isOpen && useRealTime && isActive
   );
 
   const loadVotingDetails = useCallback(async () => {
@@ -741,185 +569,53 @@ export function LiveVotingModal({
   const currentVotes = useRealTime && sseConnected ? convertSSEVotesToFrontend(sseVotes) : safeInitialVotes;
   const currentTotalVotes = useRealTime && sseConnected ? sseTotalVotes : safeInitialVotes.length;
 
+  // A8: si la votación ya está cerrada y tiene votos, se abre directo en el resultado final.
+  useEffect(() => {
+    if (autoResultChecked.current || !votingDetails) return;
+    autoResultChecked.current = true;
+    if (!isActive && votingDetails.units_voted > 0) setView('result');
+  }, [votingDetails, isActive]);
+
   if (!isOpen || !voting) return null;
 
-  // Generar votos de ejemplo para 200 unidades con distribución variada (solo si no hay votos reales)
-  const generateMockVotes = (): Vote[] => {
-    // Si ya hay votos reales, usar esos
-    if (currentVotes.length > 0) {
-      return currentVotes;
-    }
+  // Nota: antes se generaban votos de ejemplo (mock) que no se usaban en el render;
+  // el rediseño calcula todo a partir de votingDetails (endpoint + SSE).
 
-    const votes: Vote[] = [];
-    const totalUnits = 200;
-    const participationRate = 0.75; // 75% de participación
-    const totalVoters = Math.floor(totalUnits * participationRate); // 150 votantes
+  // Quórum: campo existente de la votación (requiredPercentage); 51% por defecto si no viene.
+  const quorum = resolveQuorum(voting.requiredPercentage);
 
-    // Distribución de votos: 60% a favor, 30% en contra, 10% abstenciones
-    const votesDistribution = {
-      positive: Math.floor(totalVoters * 0.6), // 90 votos
-      negative: Math.floor(totalVoters * 0.3), // 45 votos  
-      abstention: totalVoters - Math.floor(totalVoters * 0.6) - Math.floor(totalVoters * 0.3) // 15 votos
-    };
+  // Paleta coherente para resumen, fichas y dona (Sí/No/Abstención + respaldo)
+  const paletteOptions = options.map(option => ({
+    id: option.id,
+    text: option.optionText,
+    code: option.optionCode,
+    color: optionColors[option.id] || option.color,
+  }));
+  const palette = buildOptionPalette(paletteOptions);
 
-    let voteId = 1;
-    const residentIds = Array.from({ length: totalUnits }, (_, i) => i + 1);
-
-    // Mezclar aleatoriamente los residentes que votarán
-    const shuffledResidents = residentIds.sort(() => Math.random() - 0.5);
-    const votingResidents = shuffledResidents.slice(0, totalVoters);
-
-    // Generar votos positivos (Opción 1)
-    for (let i = 0; i < votesDistribution.positive; i++) {
-      votes.push({
-        id: voteId++,
-        votingId: voting.id,
-        propertyUnitId: votingResidents[i],
-        votingOptionId: 1,
-        votedAt: new Date(Date.now() - Math.random() * 3600000).toISOString(),
-        ipAddress: '127.0.0.1',
-        userAgent: 'Mozilla/5.0 (Mock Browser)',
-        optionText: 'Sí',
-        optionCode: 'SI',
-        optionColor: '#10B981'
-      });
-    }
-
-    // Generar votos negativos (Opción 2)
-    for (let i = 0; i < votesDistribution.negative; i++) {
-      votes.push({
-        id: voteId++,
-        votingId: voting.id,
-        propertyUnitId: votingResidents[votesDistribution.positive + i],
-        votingOptionId: 2,
-        votedAt: new Date(Date.now() - Math.random() * 3600000).toISOString(),
-        ipAddress: '127.0.0.1',
-        userAgent: 'Mozilla/5.0 (Mock Browser)',
-        optionText: 'No',
-        optionCode: 'NO',
-        optionColor: '#EF4444'
-      });
-    }
-
-    // Generar abstenciones (Opción 3)
-    for (let i = 0; i < votesDistribution.abstention; i++) {
-      votes.push({
-        id: voteId++,
-        votingId: voting.id,
-        propertyUnitId: votingResidents[votesDistribution.positive + votesDistribution.negative + i],
-        votingOptionId: 3,
-        votedAt: new Date(Date.now() - Math.random() * 3600000).toISOString(),
-        ipAddress: '127.0.0.1',
-        userAgent: 'Mozilla/5.0 (Mock Browser)',
-        optionText: 'Abstención',
-        optionCode: 'ABS',
-        optionColor: '#6B7280'
-      });
-    }
-
-    return votes;
-  };
-
-  const mockVotes = generateMockVotes();
-
-  // Usar votos reales del SSE si están disponibles, sino usar votos iniciales o mock
-  const votesToUse = currentVotes.length > 0 ? currentVotes : (safeInitialVotes.length > 0 ? safeInitialVotes : mockVotes);
-
-  // Calcular estadísticas con coeficientes de participación
-  const totalCoefficient = 100; // La suma de todos los coeficientes siempre es 100
-
-  // Calcular estadísticas por opción (incluyendo coeficientes)
-  const optionStats = options.map(option => {
-    // Filtrar las unidades que votaron por esta opción
-    const unitsVotedForOption = votingDetails?.units.filter(
-      unit => unit.has_voted && unit.option_text === option.optionText
-    ) || [];
-
-    // Suma de coeficientes de las unidades que votaron por esta opción
-    const coefficientSum = unitsVotedForOption.reduce(
-      (sum, unit) => sum + (unit.participation_coefficient || 0),
-      0
-    );
-
-    const voteCount = unitsVotedForOption.length;
-
-    // Porcentaje por coeficiente (el válido legalmente)
-    const percentageByCoefficient = (coefficientSum / totalCoefficient) * 100;
-
-    // Porcentaje sobre los que votaron (participación efectiva)
-    const totalVoted = votingDetails?.units_voted || 1;
-    const percentageOfVoted = totalVoted > 0 ? (voteCount / totalVoted) * 100 : 0;
-
-    return {
-      ...option,
-      votes: voteCount,                                    // Cantidad de votos
-      coefficientSum: coefficientSum,                      // Suma de coeficientes
-      percentageByCoefficient: percentageByCoefficient,    // % por coeficiente (legal)
-      percentageOfVoted: percentageOfVoted,                // % de los que votaron
-    };
-  });
-
-  // Calcular estadísticas de "No Votado"
-  const unitsNotVoted = votingDetails?.units.filter(unit => !unit.has_voted) || [];
-  const notVotedCoefficient = unitsNotVoted.reduce(
-    (sum, unit) => sum + (unit.participation_coefficient || 0),
-    0
-  );
-  const notVotedCount = unitsNotVoted.length;
-  const notVotedPercentage = (notVotedCoefficient / totalCoefficient) * 100;
-
-  // Agregar "No Votado" como una opción más
-  const allStats = [
-    ...optionStats,
-    {
-      id: -1,
-      votingId: voting?.id || 0,
-      optionText: 'No Votado',
-      optionCode: 'NOT_VOTED',
-      displayOrder: 999,
-      isActive: true,
-      votes: notVotedCount,
-      coefficientSum: notVotedCoefficient,
-      percentageByCoefficient: notVotedPercentage,
-      percentageOfVoted: 0, // No aplica para no votados
-    }
-  ].sort((a, b) => b.coefficientSum - a.coefficientSum); // Ordenar por coeficiente
-
-  const pieChartData: PieChartSlice[] = allStats.map((stat) => {
-    const percentage =
-      typeof stat.percentageByCoefficient === 'number' && Number.isFinite(stat.percentageByCoefficient)
-        ? Math.max(stat.percentageByCoefficient, 0)
-        : 0;
-    const votesCount = (stat as { votes?: number }).votes ?? 0;
-    const coefficientSumValue = (stat as { coefficientSum?: number }).coefficientSum ?? 0;
-    const optionColorValue =
-      stat.id === -1
-        ? '#9CA3AF'
-        : getOptionColor(stat.id as number, (stat as { color?: string }).color);
-
-    return {
-      id: stat.id as number,
-      label: stat.optionText,
-      percentage,
-      votes: votesCount,
-      coefficientSum: coefficientSumValue,
-      color: optionColorValue,
-    };
-  });
+  // Resultados por coeficiente (el % legal). La suma de coeficientes del conjunto es 100.
+  const results: CoefficientResults | null = votingDetails
+    ? computeCoefficientResults(
+        paletteOptions,
+        votingDetails.units.map(unit => ({
+          hasVoted: unit.has_voted,
+          coef: unit.participation_coefficient || 0,
+          optionText: unit.option_text,
+        }))
+      )
+    : null;
 
   // Obtener unidades residenciales desde el endpoint
-  const residentialUnitsRaw = convertToResidentialUnits();
+  const residentialUnits = convertToResidentialUnits();
 
-  // Ordenar: primero las que NO han votado, luego las que SÍ han votado
-  // Dentro de cada grupo, ordenar por número de unidad
-  const residentialUnits = residentialUnitsRaw.sort((a, b) => {
-    // Primero ordenar por estado de voto (false antes que true)
-    if (a.hasVoted !== b.hasVoted) {
-      return a.hasVoted ? 1 : -1; // false primero (sin votar), true después (con voto)
-    }
-
-    // Dentro del mismo grupo (ambos votados o ambos sin votar), ordenar por número de unidad
-    return a.number.localeCompare(b.number, undefined, { numeric: true, sensitivity: 'base' });
+  // Ficha del registro manual (A7): coeficiente como % del total y asistencia por unidad
+  const totalCoefficient = votingDetails?.units.reduce((sum, u) => sum + (u.participation_coefficient || 0), 0) ?? 0;
+  const unitInfo: Record<number, { coefPct: number; hasAttendance: boolean }> = {};
+  votingDetails?.units.forEach((u) => {
+    unitInfo[u.property_unit_id] = {
+      coefPct: totalCoefficient > 0 ? ((u.participation_coefficient || 0) / totalCoefficient) * 100 : 0,
+      hasAttendance: u.has_attendance,
+    };
   });
 
   const handleVote = () => {
@@ -1075,102 +771,288 @@ export function LiveVotingModal({
     setSelectedUnitForVote(null);
   };
 
+  // Cerrar / reabrir la votación (A6 → A8 y "Reabrir" en A8)
+  const changeVotingStatus = async (open: boolean) => {
+    const token = TokenStorage.getBusinessToken();
+    if (!token) return;
+    setStatusBusy(true);
+    setStatusError(null);
+    try {
+      const action = open ? activateVotingAction : deactivateVotingAction;
+      const res = await action({ token, businessId, groupId: voting.votingGroupId, votingId: voting.id });
+      if (!res.success) throw new Error(res.error || (open ? 'No se pudo reabrir la votación' : 'No se pudo cerrar la votación'));
+      setIsActive(open);
+      if (open) {
+        setClosedAt(null);
+        setView('panel');
+      } else {
+        setClosedAt(new Date().toISOString());
+        setView('result');
+      }
+      setShowCloseConfirm(false);
+    } catch (err) {
+      setStatusError(err instanceof Error ? err.message : 'No se pudo cambiar el estado de la votación');
+    } finally {
+      setStatusBusy(false);
+    }
+  };
+
+  const toggleQrStrip = async () => {
+    const next = !showQrStrip;
+    setShowQrStrip(next);
+    if (next && !qr.data && !qr.loading) await qr.generate();
+  };
+
+  const copyQrLink = async () => {
+    if (!qr.data) return;
+    try {
+      await navigator.clipboard.writeText(qr.data.publicUrl);
+    } catch {
+      /* el enlace sigue visible para copiarlo a mano */
+    }
+  };
+
+  const orderLabel = votingsCount
+    ? `${formatOrder(voting.displayOrder)} / ${formatOrder(votingsCount)}`
+    : formatOrder(voting.displayOrder);
+
+  const secondaryButton =
+    'h-8 px-3 rounded-md bg-white text-[13px] font-medium transition-colors hover:bg-[#f5f5f4] disabled:opacity-50 disabled:cursor-not-allowed';
+
   return (
     <>
       {/* Overlay de pantalla completa */}
-      <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
-        {/* Contenedor de pantalla completa */}
-        <div className="w-full h-full bg-white flex flex-col">
+      <div className={`fixed inset-0 z-50 flex ${votingFontRoot}`} style={{ background: VT.paper, color: VT.ink }}>
+        <div className="w-full h-full flex flex-col">
           {/* Header fijo */}
-          <div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gray-50 flex-shrink-0">
-            <div className="flex items-center gap-4">
+          <div
+            className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-7 py-4 bg-white flex-shrink-0"
+            style={{ borderBottom: `1px solid ${VT.border}` }}
+          >
+            <div className="flex items-center gap-3.5 min-w-0 flex-wrap">
               <button
+                type="button"
                 onClick={onClose}
-                className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+                className="flex items-center gap-1.5 text-[13px] hover:text-[#c8603f] transition-colors"
+                style={{ color: '#6b6a66' }}
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                <span className="font-medium">Volver</span>
+                <VtIcon name="back" size={16} />
+                {groupName || 'Votaciones'}
               </button>
-              <div className="h-6 w-px bg-gray-300"></div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold text-gray-900">
-                  {voting.displayOrder}. {voting.title}
-                </h1>
-                <Badge type={voting.isActive ? 'success' : 'error'}>
-                  {voting.isActive ? 'Activa' : 'Inactiva'}
-                </Badge>
-                <Badge type={isLive ? 'error' : 'primary'}>
-                  {isLive ? '🔴 EN VIVO' : '⏸️ PAUSADA'}
-                </Badge>
+              <div className="w-px h-[18px]" style={{ background: VT.border }} />
+              <div className={`${vtMono} text-xs font-medium`} style={{ color: VT.muted }}>
+                {orderLabel}
               </div>
+              <h1 className="m-0 text-[17px] font-semibold tracking-[-.01em] min-w-0 truncate max-w-[60vw] sm:max-w-none">
+                {voting.title}
+              </h1>
+              {isActive ? (
+                isLive ? (
+                  <span className={`${vtMono} inline-flex items-center gap-1.5 text-[11px] font-medium tracking-[.06em]`} style={{ color: VT.live }}>
+                    <span className="w-[7px] h-[7px] rounded-full animate-pulse" style={{ background: VT.live }} />
+                    EN VIVO
+                  </span>
+                ) : (
+                  <span className={`${vtMono} inline-flex items-center gap-1.5 text-[11px] font-medium tracking-[.06em]`} style={{ color: VT.muted }}>
+                    <span className="w-[7px] h-[7px] rounded-full" style={{ background: VT.muted }} />
+                    PAUSADA
+                  </span>
+                )
+              ) : (
+                <span className={`${vtMono} text-[11px] font-medium tracking-[.06em] px-1.5 py-0.5 rounded`} style={{ color: VT.muted, border: `1px solid ${VT.borderStrong}` }}>
+                  CERRADA
+                </span>
+              )}
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-2 items-center flex-wrap">
               <button
-                onClick={() => setShowResetConfirm(true)}
-                className="btn btn-outline border-red-300 text-red-600 hover:bg-red-50"
-                disabled={!voting.isActive}
-                title="Eliminar todos los votos de esta votación"
+                type="button"
+                onClick={toggleQrStrip}
+                className={`${secondaryButton} inline-flex items-center gap-1.5`}
+                style={{ border: `1px solid ${VT.borderStrong}`, color: VT.inkSoft }}
+                aria-expanded={showQrStrip}
+                aria-controls="live-qr-strip"
               >
-                Resetear
+                <VtIcon name="qr" size={14} />
+                QR
               </button>
+              {isActive && (
+                <button
+                  type="button"
+                  onClick={() => setIsLive(!isLive)}
+                  className={secondaryButton}
+                  style={{ border: `1px solid ${VT.borderStrong}`, color: VT.inkSoft }}
+                  title="Pausa o reanuda la animación de en vivo en esta pantalla"
+                >
+                  {isLive ? 'Pausar' : 'Reanudar'}
+                </button>
+              )}
               <button
-                onClick={() => setShowPieChart(true)}
-                className="btn btn-outline"
-              >
-                Ver torta
-              </button>
-              <button
-                onClick={() => setIsLive(!isLive)}
-                className={`btn ${isLive ? 'btn-outline' : 'btn-primary'}`}
-              >
-                {isLive ? 'Pausar' : 'Reanudar'}
-              </button>
-              <button
+                type="button"
                 onClick={() => setShowBulkVoteModal(true)}
-                className="btn btn-outline"
-                disabled={!voting.isActive}
+                className={secondaryButton}
+                style={{ border: `1px solid ${VT.borderStrong}`, color: VT.inkSoft }}
+                disabled={!isActive}
+                title="Votación masiva"
               >
-                Votación Masiva
+                Masiva
               </button>
               <button
+                type="button"
                 onClick={handleVote}
-                className="btn btn-primary"
-                disabled={!voting.isActive}
+                className="h-8 px-3.5 rounded-md text-[13px] font-semibold text-white transition-colors hover:bg-[#c8603f] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#1a1a1a]"
+                style={{ background: VT.ink }}
+                disabled={!isActive}
               >
-                Votar
+                Registrar voto
               </button>
+              {isActive ? (
+                <button type="button" className={vtBtn.accent} onClick={() => setShowCloseConfirm(true)} disabled={statusBusy}>
+                  Cerrar votación
+                </button>
+              ) : (
+                <button type="button" className={vtBtn.accent} onClick={() => setView('result')} disabled={!results}>
+                  Ver resultado
+                </button>
+              )}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowMoreMenu(v => !v)}
+                  className="h-8 w-8 rounded-md bg-white flex items-center justify-center hover:bg-[#f5f5f4]"
+                  style={{ border: `1px solid ${VT.borderStrong}`, color: VT.inkSoft }}
+                  aria-haspopup="menu"
+                  aria-expanded={showMoreMenu}
+                  aria-label="Más acciones"
+                  title="Más acciones"
+                >
+                  <VtIcon name="more" size={16} />
+                </button>
+                {showMoreMenu && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setShowMoreMenu(false)} aria-hidden="true" />
+                    <div
+                      role="menu"
+                      className="absolute right-0 top-10 z-20 w-56 rounded-lg bg-white py-1 shadow-[0_8px_24px_rgba(0,0,0,.12)]"
+                      style={{ border: `1px solid ${VT.border}` }}
+                    >
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setShowMoreMenu(false);
+                          setView('result');
+                        }}
+                        disabled={!results}
+                        className="w-full text-left px-3 py-2 text-[13px] hover:bg-[#f5f5f4] disabled:opacity-50"
+                        style={{ color: VT.ink }}
+                      >
+                        Ver resultados ampliados
+                      </button>
+                      {!isActive && (
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={() => {
+                            setShowMoreMenu(false);
+                            changeVotingStatus(true);
+                          }}
+                          className="w-full text-left px-3 py-2 text-[13px] hover:bg-[#f5f5f4]"
+                          style={{ color: VT.ink }}
+                        >
+                          Reabrir votación
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setShowMoreMenu(false);
+                          setShowResetConfirm(true);
+                        }}
+                        disabled={!isActive}
+                        className="w-full text-left px-3 py-2 text-[13px] hover:bg-[#fbe9e4] disabled:opacity-50 disabled:cursor-not-allowed"
+                        style={{ color: VT.live }}
+                        title="Eliminar todos los votos de esta votación"
+                      >
+                        Resetear votación
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Contenido scrolleable con flex layout */}
-          <div className="flex-1 overflow-hidden p-6 flex flex-col">
-            {/* Componente unificado de resumen */}
-            <VotingSummaryBlock
-              voting={voting}
-              options={options}
-              votingDetails={votingDetails}
-            />
+          {/* QR plegable (A6) */}
+          {showQrStrip && (
+            <div
+              id="live-qr-strip"
+              className="flex flex-wrap items-center gap-5 px-4 sm:px-7 py-3.5 bg-white flex-shrink-0"
+              style={{ borderBottom: `1px solid ${VT.border}` }}
+            >
+              {qr.loading && <span className="text-[13px]" style={{ color: VT.muted }}>Generando código QR…</span>}
+              {qr.error && <span className="text-[13px]" style={{ color: VT.live }}>{qr.error}</span>}
+              {qr.data && (
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={qr.data.qrDataUrl}
+                    alt={`Código QR para votar en ${qr.data.groupName}`}
+                    className="w-[104px] h-[104px] rounded-lg"
+                    style={{ border: `1px solid ${VT.border}` }}
+                  />
+                  <div className="flex flex-col gap-1.5 min-w-0 flex-1">
+                    <div className={`${vtMono} text-[11px] font-medium tracking-[.06em]`} style={{ color: VT.muted }}>
+                      QR DEL GRUPO · {qr.data.votingsCount} {qr.data.votingsCount === 1 ? 'VOTACIÓN' : 'VOTACIONES'}
+                    </div>
+                    <div className={`${vtMono} text-[13px] truncate`} title={qr.data.publicUrl}>
+                      {qr.data.publicUrl.replace(/^https?:\/\//, '').split('?')[0]}
+                    </div>
+                    <div className="flex gap-2 flex-wrap">
+                      <button type="button" className={vtBtn.primary} onClick={() => setShowQrModal(true)}>
+                        Proyectar
+                      </button>
+                      <button type="button" className={vtBtn.ghost} onClick={copyQrLink}>
+                        Copiar enlace
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
 
-            {/* Votos por Unidad - Ocupa todo el espacio restante */}
-            <div className="flex-1 min-h-0">
+          {statusError && (
+            <div className="px-4 sm:px-7 pt-3">
+              <VtNotice>{statusError}</VtNotice>
+            </div>
+          )}
+
+          {/* Contenido */}
+          <div className="flex-1 min-h-0 flex flex-col overflow-y-auto lg:overflow-hidden">
+            {/* Resumen: cifras por opción + barra apilada + participación */}
+            <VotingSummaryBlock results={results} quorum={quorum} />
+
+            {/* Unidades por torre - ocupa el espacio restante */}
+            <div className="flex-1 min-h-[320px] lg:min-h-0 px-4 sm:px-7 py-[18px]">
               {loadingDetails ? (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center">
                     <Spinner size="lg" />
-                    <p className="mt-4 text-gray-600">Cargando detalles de votación...</p>
+                    <p className="mt-4 text-sm" style={{ color: VT.inkSoft }}>Cargando detalles de votación...</p>
                   </div>
                 </div>
               ) : detailsError ? (
                 <div className="flex items-center justify-center h-full">
-                  <div className="text-center">
-                    <div className="text-red-500 text-6xl mb-4">⚠️</div>
-                    <p className="text-red-600 font-medium mb-2">Error al cargar datos</p>
-                    <p className="text-gray-600 text-sm mb-4">{detailsError}</p>
+                  <div className="text-center max-w-md">
+                    <p className="font-semibold mb-1" style={{ color: VT.live }}>Error al cargar datos</p>
+                    <p className="text-sm mb-4" style={{ color: VT.inkSoft }}>{detailsError}</p>
                     <button
+                      type="button"
                       onClick={loadVotingDetails}
-                      className="btn btn-primary btn-sm"
+                      className="h-8 px-3.5 rounded-md text-[13px] font-semibold text-white"
+                      style={{ background: VT.ink }}
                     >
                       Reintentar
                     </button>
@@ -1178,21 +1060,9 @@ export function LiveVotingModal({
                 </div>
               ) : colorConfigError ? (
                 <div className="flex items-center justify-center h-full">
-                  <div className="text-center max-w-2xl mx-auto p-6">
-                    <div className="text-red-500 text-6xl mb-4">🎨</div>
-                    <p className="text-red-600 font-medium mb-4">Error de Configuración de Colores</p>
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                      <p className="text-red-800 text-sm leading-relaxed">{colorConfigError}</p>
-                    </div>
-                    <div className="text-gray-600 text-sm">
-                      <p className="mb-2">Para solucionar este problema:</p>
-                      <ul className="text-left space-y-1">
-                        <li>• Ve a la lista de votaciones</li>
-                        <li>• Edita las opciones de votación que no tienen color</li>
-                        <li>• Asigna un color a cada opción</li>
-                        <li>• Guarda los cambios</li>
-                      </ul>
-                    </div>
+                  <div className="max-w-2xl mx-auto p-6 rounded-lg bg-white" style={{ border: `1px solid ${VT.border}` }}>
+                    <p className="font-semibold mb-3" style={{ color: VT.live }}>Error de configuración de colores</p>
+                    <p className="text-sm leading-relaxed" style={{ color: VT.inkSoft }}>{colorConfigError}</p>
                   </div>
                 </div>
               ) : (
@@ -1202,7 +1072,8 @@ export function LiveVotingModal({
                   onVoteClick={handleVoteFromCard}
                   onDeleteVoteClick={handleDeleteVoteFromCard}
                   showVoteButton={true}
-                  votingActive={voting?.isActive || false}
+                  votingActive={isActive}
+                  resolveColor={palette.forText}
                 />
               )}
             </div>
@@ -1210,12 +1081,72 @@ export function LiveVotingModal({
         </div>
       </div>
 
-      {showPieChart && (
-        <PieChartOverlay
-          slices={pieChartData}
-          onClose={() => setShowPieChart(false)}
+      {/* A8 · Resultado (final si está cerrada; ampliado si sigue abierta) */}
+      {view === 'result' && results && (
+        <ResultsView
+          results={results}
+          quorum={quorum}
           votingTitle={voting.title}
+          displayOrder={voting.displayOrder}
+          totalVotings={votingsCount}
+          closed={!isActive}
+          closedAt={closedAt}
+          backLabel={isActive ? 'Volver al panel' : 'Ver panel por unidad'}
+          onBack={() => setView('panel')}
+          actions={
+            !isActive ? (
+              <>
+                {nextVoting && (
+                  <button
+                    type="button"
+                    className={`${vtBtn.primary} h-10`}
+                    onClick={() =>
+                      window.location.assign(`/properties/${businessId}/voting-groups/${voting.votingGroupId}/votings/${nextVoting.id}/live`)
+                    }
+                  >
+                    Siguiente votación · {formatOrder(nextVoting.displayOrder)}
+                  </button>
+                )}
+                <button type="button" className={`${vtBtn.ghost} h-10`} onClick={() => changeVotingStatus(true)} disabled={statusBusy}>
+                  {statusBusy ? 'Reabriendo…' : 'Reabrir'}
+                </button>
+                <button type="button" className={`${vtBtn.ghost} h-10`} onClick={onClose}>
+                  Volver a {groupName || 'las votaciones'}
+                </button>
+              </>
+            ) : undefined
+          }
         />
+      )}
+
+      {/* Confirmar cierre (A6 → A8) */}
+      <VtDialog
+        open={showCloseConfirm}
+        onClose={() => setShowCloseConfirm(false)}
+        busy={statusBusy}
+        eyebrow={`Votación ${orderLabel}`}
+        title="¿Cerrar la votación?"
+        width={460}
+        layer="over"
+        footer={
+          <>
+            <button type="button" className={vtBtn.ghost} onClick={() => setShowCloseConfirm(false)} disabled={statusBusy}>
+              Cancelar
+            </button>
+            <button type="button" className={vtBtn.primary} onClick={() => changeVotingStatus(false)} disabled={statusBusy}>
+              {statusBusy ? 'Cerrando…' : 'Cerrar y ver resultado'}
+            </button>
+          </>
+        }
+      >
+        <p className="m-0 text-sm leading-relaxed" style={{ color: VT.inkSoft }}>
+          Nadie más podrá votar en «{voting.title}». Podrás reabrirla desde el resultado si lo necesitas.
+        </p>
+        {statusError && <VtNotice>{statusError}</VtNotice>}
+      </VtDialog>
+
+      {showQrModal && qr.data && (
+        <GroupQRModal data={qr.data} validHours={GROUP_QR_VALID_HOURS} onClose={() => setShowQrModal(false)} />
       )}
 
       {/* Modal de Voto */}
@@ -1231,9 +1162,9 @@ export function LiveVotingModal({
           groupId={voting.votingGroupId}
           votingId={voting.id}
           votingTitle={voting.title}
-          votingType={voting.votingType}
-          allowAbstention={voting.allowAbstention}
+          displayOrder={voting.displayOrder}
           options={options}
+          unitInfo={unitInfo}
           currentVotes={sseVotes.map(vote => ({
             property_unit_id: vote.property_unit_id,
             voted_at: vote.voted_at
