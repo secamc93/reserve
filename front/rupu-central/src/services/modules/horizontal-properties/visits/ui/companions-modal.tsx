@@ -224,7 +224,7 @@ export function CompanionsModal({
             {showForm ? (
               <div className="border border-blue-200 rounded-lg p-4 bg-blue-50 space-y-3">
                 <h4 className="font-medium text-blue-800">Nuevo Acompañante</h4>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <Input
                     label="Nombre completo *"
                     value={formData.companionName}
@@ -262,7 +262,7 @@ export function CompanionsModal({
                     Es menor de edad
                   </label>
                 </div>
-                <div className="flex justify-end gap-2">
+                <div className="flex flex-col-reverse md:flex-row md:justify-end gap-2 [&>button]:min-h-[44px] md:[&>button]:min-h-0">
                   <Button
                     variant="outline"
                     onClick={() => {

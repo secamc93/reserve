@@ -514,14 +514,14 @@ export function CreateVisitModal({ isOpen, onClose, onSuccess, businessId }: Cre
         {step === 'form' && visitor && (
           <div className="space-y-6">
             {/* Información del visitante - Header */}
-            <div className="bg-gradient-to-r from-slate-50 to-slate-100 p-5 rounded-xl border border-slate-200">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-slate-700 rounded-full flex items-center justify-center text-white text-xl font-bold">
+            <div className="bg-gradient-to-r from-slate-50 to-slate-100 p-4 md:p-5 rounded-xl border border-slate-200">
+              <div className="flex flex-wrap items-center gap-3 md:gap-4">
+                <div className="w-12 h-12 md:w-14 md:h-14 shrink-0 bg-slate-700 rounded-full flex items-center justify-center text-white text-xl font-bold">
                   {visitor.fullName?.charAt(0)?.toUpperCase() || 'V'}
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-lg text-slate-800">{visitor.fullName}</h3>
-                  <div className="flex gap-4 text-sm text-slate-600">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-lg text-slate-800 truncate" title={visitor.fullName}>{visitor.fullName}</h3>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
                     <span>DNI: <strong>{visitor.dni}</strong></span>
                     <span>Tel: <strong>{visitor.phone}</strong></span>
                   </div>
@@ -538,7 +538,7 @@ export function CreateVisitModal({ isOpen, onClose, onSuccess, businessId }: Cre
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Columna izquierda */}
               <div className="space-y-5">
-                <div className="bg-white border border-slate-200 rounded-xl p-5">
+                <div className="bg-white border border-slate-200 rounded-xl p-4 md:p-5">
                   <h4 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
                     <span className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-sm">1</span>
                     Destino de la Visita
@@ -577,7 +577,7 @@ export function CreateVisitModal({ isOpen, onClose, onSuccess, businessId }: Cre
                 </div>
 
                 {/* Opciones adicionales */}
-                <div className="bg-white border border-slate-200 rounded-xl p-5">
+                <div className="bg-white border border-slate-200 rounded-xl p-4 md:p-5">
                   <h4 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
                     <span className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-sm">3</span>
                     Opciones Adicionales
@@ -591,7 +591,7 @@ export function CreateVisitModal({ isOpen, onClose, onSuccess, businessId }: Cre
               value={formData.numberOfVisitors?.toString() || '1'}
               onChange={(e) => setFormData({ ...formData, numberOfVisitors: parseInt(e.target.value) || 1 })}
             />
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <label className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
                 <input
                   type="checkbox"
@@ -636,7 +636,7 @@ export function CreateVisitModal({ isOpen, onClose, onSuccess, businessId }: Cre
               {/* Columna derecha */}
               <div className="space-y-5">
                 {/* Selector de Fecha y Hora */}
-                <div className="bg-white border border-slate-200 rounded-xl p-5">
+                <div className="bg-white border border-slate-200 rounded-xl p-4 md:p-5">
                   <h4 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
                     <span className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-sm">2</span>
                     Fecha y Hora de la Visita
@@ -972,7 +972,7 @@ export function CreateVisitModal({ isOpen, onClose, onSuccess, businessId }: Cre
                 </div>
 
                 {/* Notas */}
-                <div className="bg-white border border-slate-200 rounded-xl p-5">
+                <div className="bg-white border border-slate-200 rounded-xl p-4 md:p-5">
                   <h4 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
                     <span className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-sm">4</span>
                     Notas Adicionales
@@ -989,11 +989,11 @@ export function CreateVisitModal({ isOpen, onClose, onSuccess, businessId }: Cre
             </div>
 
             {/* Botones de acción */}
-            <div className="flex gap-4 pt-4 border-t border-slate-200">
-              <Button onClick={() => setStep('search')} variant="outline" className="flex-1 py-3">
+            <div className="flex flex-col-reverse md:flex-row gap-2 md:gap-4 pt-4 border-t border-slate-200">
+              <Button onClick={() => setStep('search')} variant="outline" className="flex-1 py-3 min-h-[44px]">
                 ← Volver
               </Button>
-              <Button onClick={handleSubmit} disabled={loading} className="flex-[2] py-3 text-lg font-semibold">
+              <Button onClick={handleSubmit} disabled={loading} className="flex-[2] py-3 min-h-[48px] text-lg font-semibold">
                 {loading ? 'Creando visita...' : '✓ Crear Visita'}
               </Button>
             </div>

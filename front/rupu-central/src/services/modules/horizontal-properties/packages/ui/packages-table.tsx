@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useIsMobile, mobileColumn, MobileCard, MobileActionButton } from '@/services/mobile-ui';
 import { Table, Badge, Alert, TableColumn, Button, Spinner, Select, Input } from '@shared/ui';
 import { usePaginationParams } from '@shared/ui/pagination';
 import { getPackagesAction, getPackageStatusesAction, deletePackageAction } from '../infrastructure/actions';
@@ -183,6 +184,52 @@ export function PackagesTable({ businessId }: PackagesTableProps) {
     setTimeout(() => setAlert(null), 5000);
   }, [loadPackages]);
 
+  const isMobile = useIsMobile();
+
+  /** Acciones permitidas de un paquete (las comparten la fila de escritorio y la tarjeta de teléfono). */
+  const packageFlags = (pkg: PackageListDTO) => {
+    const isDelivered = pkg.statusCode === 'delivered' || !!pkg.deliveredAt;
+    const canDeliver = pkg.statusCode === 'received' || pkg.statusCode === 'in_storage' || pkg.statusCode === 'notified';
+    return {
+      isProcessing: processingPackageId === pkg.id,
+      canDeliver: canDeliver && !isDelivered,
+      canDelete: !isDelivered && pkg.statusCode !== 'returned' && pkg.statusCode !== 'lost',
+    };
+  };
+
+  const fmtDate = (v?: string | null) => (v ? new Date(v).toLocaleDateString('es-CO') : '-');
+
+  const mobileColumns = mobileColumn<PackageListDTO>('Paquetes', (pkg) => {
+    const f = packageFlags(pkg);
+    return (
+      <MobileCard
+        title={`Unidad ${pkg.propertyUnitNumber}`}
+        subtitle={[pkg.trackingNumber, pkg.carrier].filter(Boolean).join(' · ')}
+        badge={<Badge color={getStatusBadgeColor(pkg.statusName)}>{pkg.statusName}</Badge>}
+        fields={[
+          { label: 'Residente', value: pkg.residentName || '-', full: true },
+          { label: 'Recibido', value: fmtDate(pkg.receivedAt) },
+          { label: 'Entregado', value: fmtDate(pkg.deliveredAt) },
+        ]}
+        actions={<>
+          {f.canDeliver && (
+            <MobileActionButton variant="primary" className="flex-1" disabled={f.isProcessing} onClick={() => handleDeliverClick(pkg)}>
+              <CheckCircleIcon className="h-5 w-5" /> Entregar
+            </MobileActionButton>
+          )}
+          <MobileActionButton className="flex-1" onClick={() => handleViewDetails(pkg)}>
+            <EyeIcon className="h-5 w-5" /> Detalle
+          </MobileActionButton>
+          {f.canDelete && (
+            <MobileActionButton variant="danger" title="Marcar como retornado" disabled={f.isProcessing} onClick={() => handleDeletePackage(pkg)}>
+              <TrashIcon className="h-5 w-5" />
+            </MobileActionButton>
+          )}
+        </>}
+      />
+    );
+  });
+
   const columns: TableColumn<PackageListDTO>[] = [
     {
       key: 'trackingNumber',
@@ -288,9 +335,9 @@ export function PackagesTable({ businessId }: PackagesTableProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center">
         <h2 className="text-xl font-semibold">Paquetes</h2>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-2 gap-2 md:flex [&>button]:min-h-[44px] md:[&>button]:min-h-0 [&>button]:justify-center [&>button]:whitespace-nowrap">
           <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
             <FunnelIcon className="h-5 w-5 mr-2" />
             Filtros
@@ -367,7 +414,7 @@ export function PackagesTable({ businessId }: PackagesTableProps) {
 
       <Table
         data={packages}
-        columns={columns}
+        columns={isMobile ? mobileColumns : columns}
         loading={loading}
         pagination={{ total: totalCount, totalPages }}
         emptyMessage="No hay paquetes registrados"

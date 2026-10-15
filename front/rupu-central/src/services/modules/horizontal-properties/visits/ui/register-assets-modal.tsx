@@ -155,7 +155,7 @@ export function RegisterAssetsModal({
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <Input
                   label="Nombre del activo *"
                   value={asset.assetName}

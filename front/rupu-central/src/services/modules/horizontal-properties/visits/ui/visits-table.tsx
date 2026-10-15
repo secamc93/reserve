@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useIsMobile, mobileColumn, MobileCard, MobileActionButton } from '@/services/mobile-ui';
 import { Table, Badge, Alert, TableColumn, Button, Modal, Input, Select } from '@shared/ui';
 import { usePaginationParams } from '@shared/ui/pagination';
 import { getVisitsAction, registerEntryAction, registerExitAction, deleteVisitAction, getVisitTypesAction, getVisitStatusesAction } from '../infrastructure/actions';
@@ -263,6 +264,63 @@ export function VisitsTable({ businessId }: VisitsTableProps) {
     }
   }, [visitToDelete, businessId, getBusinessToken, loadVisits]);
 
+  const isMobile = useIsMobile();
+
+  /** Estado de acciones de una visita (lo comparten la fila de escritorio y la tarjeta de teléfono). */
+  const visitFlags = (visit: VisitListDTO) => {
+    const statusLower = visit.visitStatusName.toLowerCase();
+    const isCancelledOrRejected = statusLower.includes('cancelada') || statusLower.includes('cancelled') ||
+                                   statusLower.includes('rechazada') || statusLower.includes('rejected');
+    const isCompleted = statusLower.includes('completada') || statusLower.includes('completed');
+    const hasEntry = !!visit.actualEntryTime;
+    const hasExit = !!visit.actualExitTime;
+    return {
+      isProcessing: processingVisitId === visit.id,
+      canEnter: !hasEntry && !isCancelledOrRejected,
+      canExit: hasEntry && !hasExit,
+      canCancel: !isCompleted && !isCancelledOrRejected && !hasEntry,
+    };
+  };
+
+  const fmtDateTime = (v?: string | null) => (v ? new Date(v).toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' }) : '-');
+
+  const mobileColumns = mobileColumn<VisitListDTO>('Visitas', (visit) => {
+    const f = visitFlags(visit);
+    return (
+      <MobileCard
+        title={visit.visitorName}
+        subtitle={`Unidad ${visit.propertyUnitNumber} · ${visit.visitTypeName}`}
+        badge={<Badge color={getStatusBadgeColor(visit.visitStatusName)}>{visit.visitStatusName}</Badge>}
+        fields={[
+          { label: 'DNI', value: visit.visitorDni || '-' },
+          { label: 'Programada', value: new Date(visit.scheduledDate).toLocaleDateString('es-CO') },
+          { label: 'Entrada', value: fmtDateTime(visit.actualEntryTime) },
+          { label: 'Salida', value: fmtDateTime(visit.actualExitTime) },
+        ]}
+        actions={<>
+          {f.canEnter && (
+            <MobileActionButton variant="primary" className="flex-1" disabled={f.isProcessing} onClick={() => handleRegisterEntryClick(visit)}>
+              <ArrowRightCircleIcon className="h-5 w-5" /> Entrada
+            </MobileActionButton>
+          )}
+          {f.canExit && (
+            <MobileActionButton variant="primary" className="flex-1" disabled={f.isProcessing} onClick={() => handleRegisterExitClick(visit)}>
+              <ArrowLeftCircleIcon className="h-5 w-5" /> Salida
+            </MobileActionButton>
+          )}
+          <MobileActionButton className="flex-1" onClick={() => handleViewDetails(visit.id)}>
+            <EyeIcon className="h-5 w-5" /> Detalle
+          </MobileActionButton>
+          {f.canCancel && (
+            <MobileActionButton variant="danger" title="Cancelar visita" disabled={f.isProcessing} onClick={() => handleDeleteClick(visit.id)}>
+              <TrashIcon className="h-5 w-5" />
+            </MobileActionButton>
+          )}
+        </>}
+      />
+    );
+  });
+
   const columns: TableColumn<VisitListDTO>[] = [
     {
       key: 'visitorName',
@@ -382,9 +440,9 @@ export function VisitsTable({ businessId }: VisitsTableProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center">
         <h2 className="text-xl font-semibold">Visitas</h2>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-2 gap-2 md:flex [&>button]:min-h-[44px] md:[&>button]:min-h-0 [&>button]:justify-center [&>button]:whitespace-nowrap">
           <Button
             variant={filtersVisible ? 'primary' : 'outline'}
             onClick={() => setFiltersVisible(!filtersVisible)}
@@ -469,7 +527,7 @@ export function VisitsTable({ businessId }: VisitsTableProps) {
 
       <Table
         data={visits}
-        columns={columns}
+        columns={isMobile ? mobileColumns : columns}
         loading={loading}
         pagination={{ total: totalCount, totalPages }}
         emptyMessage="No hay visitas registradas"
@@ -507,7 +565,7 @@ export function VisitsTable({ businessId }: VisitsTableProps) {
           <p className="text-gray-600">
             ¿Está seguro que desea cancelar la visita #{visitToDelete}? Esta acción no se puede deshacer.
           </p>
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-col-reverse md:flex-row md:justify-end gap-2 [&>button]:min-h-[44px] md:[&>button]:min-h-0">
             <Button
               variant="outline"
               onClick={() => {
@@ -570,7 +628,7 @@ export function VisitsTable({ businessId }: VisitsTableProps) {
             <p className="text-gray-600">
               ¿Confirma que desea registrar la <strong>entrada</strong> de este visitante en la puerta principal?
             </p>
-            <div className="flex justify-end gap-2 pt-4 border-t border-gray-200">
+            <div className="flex flex-col-reverse md:flex-row md:justify-end gap-2 pt-4 border-t border-gray-200 [&>button]:min-h-[44px] md:[&>button]:min-h-0">
               <Button
                 variant="outline"
                 onClick={() => {
@@ -642,7 +700,7 @@ export function VisitsTable({ businessId }: VisitsTableProps) {
             <p className="text-gray-600">
               ¿Confirma que desea registrar la <strong>salida</strong> de este visitante en la puerta principal?
             </p>
-            <div className="flex justify-end gap-2 pt-4 border-t border-gray-200">
+            <div className="flex flex-col-reverse md:flex-row md:justify-end gap-2 pt-4 border-t border-gray-200 [&>button]:min-h-[44px] md:[&>button]:min-h-0">
               <Button
                 variant="outline"
                 onClick={() => {
