@@ -167,8 +167,11 @@ func NewPaginationParams(page, pageSize int) PaginationParams {
     if page < 1 {
         page = 1
     }
-    if pageSize < 1 || pageSize > 100 {
+    if pageSize < 1 {
         pageSize = 10 // Default
+    }
+    if pageSize > 200 {
+        pageSize = 200 // Máximo
     }
     return PaginationParams{Page: page, PageSize: pageSize}
 }
@@ -318,7 +321,7 @@ func (h *handler) List(c *gin.Context) {
 
 - **Default Page:** 1
 - **Default PageSize:** 10
-- **Max PageSize:** 100 (validar en constructor)
+- **Max PageSize:** 200 (decisión 2026-10-14; en bindings `max=200` → 400 si se excede)
 - **Min PageSize:** 1
 - **Siempre retornar:** Total de registros y total de páginas
 - **Count query:** Usar `Model()` sin `Offset/Limit` para contar total
@@ -466,7 +469,7 @@ export function createPaginationParams(
 ): PaginationParams {
     return {
         page: Math.max(1, page),
-        pageSize: Math.min(Math.max(1, pageSize), 100) // Max 100
+        pageSize: Math.min(Math.max(1, pageSize), 200) // Max 200
     };
 }
 ```
@@ -579,7 +582,7 @@ export function Pagination({ currentPage, totalPages, total }: PaginationProps) 
 
 - **Default Page:** 1
 - **Default PageSize:** 10
-- **Max PageSize:** 100
+- **Max PageSize:** 200 (opciones del selector: 10, 20, 50, 100, 200)
 - **URL params:** `?page=1&page_size=10`
 - **Navegación:** Usar `router.push` con query params
 - **Caching:** `cache: 'no-store'` en fetch paginado
@@ -612,7 +615,7 @@ export function Pagination({ currentPage, totalPages, total }: PaginationProps) 
 ❌ **Modelos GORM locales en módulos**
 ❌ **`ports.go` en raíz de módulo**
 ❌ **Métodos GET sin paginación (excepto lookups únicos)**
-❌ **Paginación sin validación de límites (max 100)**
+❌ **Paginación sin validación de límites (max 200)**
 
 ### Frontend
 
@@ -640,7 +643,7 @@ export function Pagination({ currentPage, totalPages, total }: PaginationProps) 
 - [ ] ports.go solo en internal/domain/ports/
 - [ ] Métodos List/Get con paginación obligatoria
 - [ ] PaginationParams y PaginatedResponse en domain/dtos/
-- [ ] Validación de PageSize (max 100, default 10)
+- [ ] Validación de PageSize (max 200, default 10)
 - [ ] Count query antes de Offset/Limit en repositorios
 
 ### Frontend
