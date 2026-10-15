@@ -158,7 +158,7 @@ export function EditResourceModal({ isOpen, onClose, onSuccess, resource }: Edit
         </div>
 
         {/* Botones */}
-        <div className="flex gap-3 justify-end pt-4 border-t">
+        <div className="flex flex-col-reverse md:flex-row gap-3 justify-end pt-4 border-t [&>*]:w-full md:[&>*]:w-auto [&>*]:min-h-[44px] md:[&>*]:min-h-0">
           <Button
             type="button"
             variant="outline"

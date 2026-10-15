@@ -13,6 +13,7 @@ import { AssignPermissionsModal } from './assign-permissions-modal';
 import { useBusinessTypes } from '../../../business-types/ui/hooks';
 import { TokenStorage } from '@shared/config';
 import Link from 'next/link';
+import { useIsMobile, MobileCard, MobileActionButton, mobileColumn } from '@/services/mobile-ui';
 
 interface RolesTableProps {
   token: string;
@@ -381,14 +382,47 @@ export function RolesTable({ token }: RolesTableProps) {
 
   const pagination: TableUrlPagination = { total: totalCount, totalPages };
 
+  // Teléfono: cada rol es una tarjeta (nivel, tipo y scope en 2 columnas).
+  const isMobile = useIsMobile();
+  const mobileColumns = mobileColumn<Role>('Roles', (role) => (
+    <div className="[contain:inline-size]">
+      <MobileCard
+        title={role.name}
+        subtitle={role.description}
+        badge={<Badge className={role.isSystem ? 'badge-warning' : 'badge-success'}>{role.isSystem ? 'Sistema' : 'Personalizado'}</Badge>}
+        fields={[
+          { label: 'Nivel', value: `Nivel ${role.level}` },
+          { label: 'Scope', value: role.scopeName || String(role.scopeId) },
+          { label: 'Tipo de negocio', value: role.businessTypeName || '-', full: true },
+        ]}
+        actions={
+          <>
+            <MobileActionButton className="flex-1" onClick={() => handleOpenAssignPermissionsModal(role)}>
+              <KeyIcon className="w-5 h-5" /> Permisos
+            </MobileActionButton>
+            <MobileActionButton className="flex-1" onClick={() => handleEditRole(role)}>
+              <PencilIcon className="w-5 h-5" /> Editar
+            </MobileActionButton>
+            {!role.isSystem && (
+              <MobileActionButton variant="danger" title="Eliminar rol">
+                <TrashIcon className="w-5 h-5" />
+              </MobileActionButton>
+            )}
+          </>
+        }
+      />
+    </div>
+  ));
+
   const tableFilters: TableFiltersProps = {
     availableFilters,
     activeFilters,
     onAddFilter: handleAddFilter,
     onRemoveFilter: handleRemoveFilter,
     headerActions: (
-      <Link href="/iam/roles/create" className="btn btn-primary" title="Crear Rol">
+      <Link href="/iam/roles/create" className="btn btn-primary w-full md:w-auto min-h-[44px] md:min-h-0 justify-center" title="Crear Rol">
         <PlusIcon className="w-5 h-5" />
+        <span className="md:hidden">Crear rol</span>
       </Link>
     ),
   };
@@ -411,7 +445,7 @@ export function RolesTable({ token }: RolesTableProps) {
     <div className="space-y-6 w-full">
       {/* Tabla de roles con filtros y paginación integrada */}
       <Table
-        columns={columns}
+        columns={isMobile ? mobileColumns : columns}
         data={roles}
         loading={loading}
         keyExtractor={(role) => role.id.toString()}

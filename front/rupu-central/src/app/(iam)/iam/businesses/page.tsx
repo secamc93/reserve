@@ -25,7 +25,7 @@ export default function IAMBusinessesPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 w-full">
+    <div className="p-3 md:p-6 lg:p-8 w-full">
       <BusinessesTable token={token || ''} />
     </div>
   );

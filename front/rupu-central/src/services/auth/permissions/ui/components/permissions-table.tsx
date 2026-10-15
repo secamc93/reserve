@@ -7,6 +7,7 @@ import { usePaginationParams } from '@shared/ui/pagination';
 import { PencilIcon, TrashIcon, EyeIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { EditPermissionModal } from './edit-permission-modal';
 import Link from 'next/link';
+import { useIsMobile, MobileCard, MobileActionButton, mobileColumn } from '@/services/mobile-ui';
 
 interface PermissionsTableProps {
   token: string;
@@ -323,6 +324,32 @@ export function PermissionsTable({ token }: PermissionsTableProps) {
   // Configurar paginación
   const pagination: TableUrlPagination = { total: totalItems, totalPages };
 
+  // Teléfono: cada permiso es una tarjeta (recurso, acción y scope en 2 columnas).
+  const isMobile = useIsMobile();
+  const mobileColumns = mobileColumn<Permission>('Permisos', (permission) => (
+    <div className="[contain:inline-size]">
+      <MobileCard
+        title={permission.name || 'Sin nombre'}
+        badge={<Badge className="badge-primary">{permission.action}</Badge>}
+        fields={[
+          { label: 'Recurso', value: permission.resource },
+          { label: 'Scope', value: permission.scopeName },
+          { label: 'Tipo de negocio', value: permission.businessTypeName || '-', full: true },
+        ]}
+        actions={
+          <>
+            <MobileActionButton className="flex-1" onClick={() => handleEditClick(permission)}>
+              <PencilIcon className="w-5 h-5" /> Editar
+            </MobileActionButton>
+            <MobileActionButton variant="danger" title="Eliminar permiso" disabled={isDeleting} onClick={() => handleDeleteClick(permission)}>
+              <TrashIcon className="w-5 h-5" />
+            </MobileActionButton>
+          </>
+        }
+      />
+    </div>
+  ));
+
   // Configurar filtros
   const tableFilters: TableFiltersProps = {
     availableFilters,
@@ -330,8 +357,9 @@ export function PermissionsTable({ token }: PermissionsTableProps) {
     onAddFilter: handleAddFilter,
     onRemoveFilter: handleRemoveFilter,
     headerActions: (
-      <Link href="/iam/permissions/create" className="btn btn-primary" title="Crear Permiso">
+      <Link href="/iam/permissions/create" className="btn btn-primary w-full md:w-auto min-h-[44px] md:min-h-0 justify-center" title="Crear Permiso">
         <PlusIcon className="w-5 h-5" />
+        <span className="md:hidden">Crear permiso</span>
       </Link>
     ),
   };
@@ -354,7 +382,7 @@ export function PermissionsTable({ token }: PermissionsTableProps) {
     <>
       {/* Tabla de permisos con filtros y paginación integrada */}
       <Table
-        columns={columns}
+        columns={isMobile ? mobileColumns : columns}
         data={paginatedPermissions}
         loading={loading}
         keyExtractor={(permission) => permission.id.toString()}
