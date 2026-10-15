@@ -20,4 +20,7 @@ con tokens, fuentes Public Sans / JetBrains Mono solo en el módulo, barra apila
       votación del grupo hace falta un endpoint público de resultados por grupo.
 - [ ] Contador "01 / 04": el panel no conoce el total de votaciones del grupo.
 - [ ] Torre inferida del prefijo del número de unidad (`T2-804`); formatos tipo `101-A` agrupan mal.
+- [ ] E2E del panel en vivo del admin (CU-02 front): se escribe sobre el rediseño 1a (los
+      selectores del panel actual cambian con él). La ronda de API ya cubre registrar/anular/masiva.
+- [ ] Usar `percentage_by_coefficient` del back (nuevo, `b0da089e`) en vez de recalcular en el front.
 - [ ] PR a `main` después del PR #69.
