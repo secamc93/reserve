@@ -17,39 +17,42 @@ type MockVotingRepository struct {
 	DeleteVotingGroupFn          func(ctx context.Context, id uint) error
 
 	// Votings
-	CreateVotingFn      func(ctx context.Context, voting *domain.Voting) (*domain.Voting, error)
-	GetVotingByIDFn     func(ctx context.Context, id uint) (*domain.Voting, error)
+	CreateVotingFn       func(ctx context.Context, voting *domain.Voting) (*domain.Voting, error)
+	GetVotingByIDFn      func(ctx context.Context, id uint) (*domain.Voting, error)
 	ListVotingsByGroupFn func(ctx context.Context, groupID uint) ([]domain.Voting, error)
-	UpdateVotingFn      func(ctx context.Context, id uint, voting *domain.Voting) (*domain.Voting, error)
-	ActivateVotingFn    func(ctx context.Context, id uint) error
-	DeactivateVotingFn  func(ctx context.Context, id uint) error
-	DeleteVotingFn      func(ctx context.Context, id uint) error
+	UpdateVotingFn       func(ctx context.Context, id uint, voting *domain.Voting) (*domain.Voting, error)
+	ActivateVotingFn     func(ctx context.Context, id uint) error
+	DeactivateVotingFn   func(ctx context.Context, id uint) error
+	DeleteVotingFn       func(ctx context.Context, id uint) error
 
 	// Voting Options
-	CreateVotingOptionFn          func(ctx context.Context, option *domain.VotingOption) (*domain.VotingOption, error)
-	ListVotingOptionsByVotingFn   func(ctx context.Context, votingID uint) ([]domain.VotingOption, error)
-	GetVotingOptionByIDFn         func(ctx context.Context, id uint) (*domain.VotingOption, error)
-	UpdateVotingOptionStatusFn    func(ctx context.Context, id uint, isActive bool) error
-	DeleteVotingOptionFn          func(ctx context.Context, id uint) error
+	CreateVotingOptionFn        func(ctx context.Context, option *domain.VotingOption) (*domain.VotingOption, error)
+	ListVotingOptionsByVotingFn func(ctx context.Context, votingID uint) ([]domain.VotingOption, error)
+	GetVotingOptionByIDFn       func(ctx context.Context, id uint) (*domain.VotingOption, error)
+	UpdateVotingOptionStatusFn  func(ctx context.Context, id uint, isActive bool) error
+	DeleteVotingOptionFn        func(ctx context.Context, id uint) error
 
 	// Votes
-	CreateVoteFn                      func(ctx context.Context, vote domain.Vote) (*domain.Vote, error)
-	GetVoteByIDFn                     func(ctx context.Context, voteID uint) (*domain.Vote, error)
-	DeleteVoteFn                      func(ctx context.Context, voteID uint) error
-	HasUnitVotedFn                    func(ctx context.Context, votingID uint, propertyUnitID uint) (bool, error)
-	GetUnitVoteFn                     func(ctx context.Context, votingID, propertyUnitID uint) (*domain.Vote, error)
-	GetVotingResultsFn                func(ctx context.Context, votingID uint) ([]domain.VotingResultDTO, error)
-	GetVotingDetailsByUnitFn          func(ctx context.Context, votingID, hpID uint) ([]domain.VotingDetailByUnitDTO, error)
-	GetUnitsWithResidentsFn           func(ctx context.Context, hpID uint) ([]domain.UnitWithResidentDTO, error)
-	ListVotesByVotingFn               func(ctx context.Context, votingID uint) ([]domain.Vote, error)
-	GetUnvotedUnitsByVotingFn         func(ctx context.Context, votingID uint, unitNumberFilter string) ([]domain.UnvotedUnit, error)
-	GetResidentMainUnitIDFn           func(ctx context.Context, residentID uint) (uint, error)
-	CheckUnitAttendanceForVotingFn    func(ctx context.Context, votingID, propertyUnitID uint) (bool, error)
-	MarkUnitAttendanceForVotingFn     func(ctx context.Context, votingID, propertyUnitID uint, markAttendance bool) error
-	GetHorizontalPropertyBasicInfoFn     func(ctx context.Context, hpID uint) (*domain.HorizontalPropertyDTO, error)
-	ListPropertyUnitsFn                  func(ctx context.Context, filters domain.PropertyUnitFiltersDTO) (*domain.PaginatedPropertyUnitsDTO, error)
-	GetResidentByUnitAndDniFn            func(ctx context.Context, hpID, propertyUnitID uint, dni string) (*domain.ResidentBasicDTO, error)
-	ListVotingsByGroupWithVoteStatusFn   func(ctx context.Context, groupID uint, propertyUnitID uint) ([]domain.VotingWithStatusDTO, error)
+	CreateVoteFn                       func(ctx context.Context, vote domain.Vote) (*domain.Vote, error)
+	GetVoteByIDFn                      func(ctx context.Context, voteID uint) (*domain.Vote, error)
+	DeleteVoteFn                       func(ctx context.Context, voteID uint) error
+	DeleteAllVotesByVotingFn           func(ctx context.Context, votingID uint) (int64, error)
+	GetPreviousVotingFn                func(ctx context.Context, votingID uint, groupID uint) (*domain.Voting, error)
+	GetVotedUnitIDsByVotingFn          func(ctx context.Context, votingID uint) ([]uint, error)
+	HasUnitVotedFn                     func(ctx context.Context, votingID uint, propertyUnitID uint) (bool, error)
+	GetUnitVoteFn                      func(ctx context.Context, votingID, propertyUnitID uint) (*domain.Vote, error)
+	GetVotingResultsFn                 func(ctx context.Context, votingID uint) ([]domain.VotingResultDTO, error)
+	GetVotingDetailsByUnitFn           func(ctx context.Context, votingID, hpID uint) ([]domain.VotingDetailByUnitDTO, error)
+	GetUnitsWithResidentsFn            func(ctx context.Context, hpID uint) ([]domain.UnitWithResidentDTO, error)
+	ListVotesByVotingFn                func(ctx context.Context, votingID uint) ([]domain.Vote, error)
+	GetUnvotedUnitsByVotingFn          func(ctx context.Context, votingID uint, unitNumberFilter string) ([]domain.UnvotedUnit, error)
+	GetResidentMainUnitIDFn            func(ctx context.Context, residentID uint) (uint, error)
+	CheckUnitAttendanceForVotingFn     func(ctx context.Context, votingID, propertyUnitID uint) (bool, error)
+	MarkUnitAttendanceForVotingFn      func(ctx context.Context, votingID, propertyUnitID uint, markAttendance bool) error
+	GetHorizontalPropertyBasicInfoFn   func(ctx context.Context, hpID uint) (*domain.HorizontalPropertyDTO, error)
+	ListPropertyUnitsFn                func(ctx context.Context, filters domain.PropertyUnitFiltersDTO) (*domain.PaginatedPropertyUnitsDTO, error)
+	GetResidentByUnitAndDniFn          func(ctx context.Context, hpID, propertyUnitID uint, dni string) (*domain.ResidentBasicDTO, error)
+	ListVotingsByGroupWithVoteStatusFn func(ctx context.Context, groupID uint, propertyUnitID uint) ([]domain.VotingWithStatusDTO, error)
 }
 
 // NewMockVotingRepository crea una nueva instancia del mock del repositorio
@@ -208,6 +211,13 @@ func (m *MockVotingRepository) DeleteVote(ctx context.Context, voteID uint) erro
 	return nil
 }
 
+func (m *MockVotingRepository) DeleteAllVotesByVoting(ctx context.Context, votingID uint) (int64, error) {
+	if m.DeleteAllVotesByVotingFn != nil {
+		return m.DeleteAllVotesByVotingFn(ctx, votingID)
+	}
+	return 0, nil
+}
+
 func (m *MockVotingRepository) HasUnitVoted(ctx context.Context, votingID uint, propertyUnitID uint) (bool, error) {
 	if m.HasUnitVotedFn != nil {
 		return m.HasUnitVotedFn(ctx, votingID, propertyUnitID)
@@ -304,4 +314,18 @@ func (m *MockVotingRepository) ListVotingsByGroupWithVoteStatus(ctx context.Cont
 		return m.ListVotingsByGroupWithVoteStatusFn(ctx, groupID, propertyUnitID)
 	}
 	return []domain.VotingWithStatusDTO{}, nil
+}
+
+func (m *MockVotingRepository) GetPreviousVoting(ctx context.Context, votingID uint, groupID uint) (*domain.Voting, error) {
+	if m.GetPreviousVotingFn != nil {
+		return m.GetPreviousVotingFn(ctx, votingID, groupID)
+	}
+	return nil, nil
+}
+
+func (m *MockVotingRepository) GetVotedUnitIDsByVoting(ctx context.Context, votingID uint) ([]uint, error) {
+	if m.GetVotedUnitIDsByVotingFn != nil {
+		return m.GetVotedUnitIDsByVotingFn(ctx, votingID)
+	}
+	return nil, nil
 }

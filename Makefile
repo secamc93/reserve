@@ -3,7 +3,7 @@
 
 .PHONY: help run-centralback run-centralfront run-website run-migrations run-all stop-all run-backend run-frontend \
         svc-start svc-stop svc-restart svc-status svc-logs svc-health wt-new wt-list wt-remove \
-        test-front test-e2e typecheck-front
+        test-front test-e2e typecheck-front test-integration
 
 # ============================================
 # VARIABLES
@@ -291,6 +291,9 @@ typecheck-front: ## TypeScript sin emitir
 
 test-front: ## Pruebas unitarias del front (Vitest)
 	@cd $(FRONT_CENTRAL_DIR) && pnpm test
+
+test-integration: ## Pruebas de integración del back (tag integration) contra la BD local del checkout. SOLO local, no corren en CI
+	@set -a && . $(BACK_CENTRAL_DIR)/.env && set +a && cd $(BACK_CENTRAL_DIR) && go test -tags=integration -count=1 ./...
 
 test-e2e: ## E2E Playwright contra el front/back levantados (carga .env.test)
 	@set -a && . ./.env.test && set +a && cd $(FRONT_CENTRAL_DIR) && pnpm test:e2e
