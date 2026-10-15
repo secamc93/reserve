@@ -164,6 +164,9 @@ func TestCreateVote_UnitHasNoAttendance(t *testing.T) {
 		t.Errorf("Expected nil result, got: %v", result)
 	}
 
+	if !errors.Is(err, domain.ErrUnitWithoutAttendance) {
+		t.Errorf("el handler público mapea por errors.Is a 403: se esperaba domain.ErrUnitWithoutAttendance, got: %v", err)
+	}
 	if err.Error() != "unidad no registra asistencia" {
 		t.Errorf("Expected 'unidad no registra asistencia', got: %v", err)
 	}
@@ -249,6 +252,9 @@ func TestCreateVote_UnitAlreadyVoted(t *testing.T) {
 		t.Errorf("Expected nil result, got: %v", result)
 	}
 
+	if !errors.Is(err, domain.ErrUnitAlreadyVoted) {
+		t.Errorf("el handler público mapea por errors.Is a 409: se esperaba domain.ErrUnitAlreadyVoted, got: %v", err)
+	}
 	if err.Error() != "la unidad ya votó en esta votación" {
 		t.Errorf("Expected 'la unidad ya votó en esta votación', got: %v", err)
 	}

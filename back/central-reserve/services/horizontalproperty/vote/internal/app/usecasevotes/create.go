@@ -28,7 +28,7 @@ func (u *VotesUseCase) CreateVote(ctx context.Context, dto domain.CreateVoteDTO)
 	}
 	if !hasAttendance {
 		u.logger.Warn(ctx).Uint("voting_id", dto.VotingID).Uint("property_unit_id", dto.PropertyUnitID).Msg("Unidad no registra asistencia para votación")
-		return nil, fmt.Errorf("unidad no registra asistencia")
+		return nil, domain.ErrUnitWithoutAttendance
 	}
 
 	// Una unidad solo puede votar una vez por votación
@@ -39,7 +39,7 @@ func (u *VotesUseCase) CreateVote(ctx context.Context, dto domain.CreateVoteDTO)
 	}
 	if voted {
 		u.logger.Warn(ctx).Uint("voting_id", dto.VotingID).Uint("property_unit_id", dto.PropertyUnitID).Msg("Unidad ya votó en esta votación")
-		return nil, fmt.Errorf("la unidad ya votó en esta votación")
+		return nil, domain.ErrUnitAlreadyVoted
 	}
 
 	entity := domain.Vote{
