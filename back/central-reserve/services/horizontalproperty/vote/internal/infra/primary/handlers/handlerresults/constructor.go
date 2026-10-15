@@ -3,6 +3,7 @@ package handlerresults
 import (
 	"central_reserve/services/horizontalproperty/vote/internal/app/usecaseresults"
 	"central_reserve/services/horizontalproperty/vote/internal/app/usecasevotes"
+	"central_reserve/services/horizontalproperty/vote/internal/app/usecasevotinggroups"
 	"central_reserve/services/horizontalproperty/vote/internal/app/usecasevotings"
 	"central_reserve/services/horizontalproperty/vote/internal/domain"
 	"central_reserve/shared/log"
@@ -23,6 +24,7 @@ type ResultsHandler struct {
 	resultsUseCase usecaseresults.IResultsUseCase
 	votingsUseCase usecasevotings.IVotingsUseCase
 	votesUseCase   usecasevotes.IVotesUseCase
+	groupsUseCase  usecasevotinggroups.IVotingGroupUseCase
 	votingCache    domain.VotingCacheService
 	logger         log.ILogger
 }
@@ -32,6 +34,7 @@ func New(
 	resultsUseCase usecaseresults.IResultsUseCase,
 	votingsUseCase usecasevotings.IVotingsUseCase,
 	votesUseCase usecasevotes.IVotesUseCase,
+	groupsUseCase usecasevotinggroups.IVotingGroupUseCase,
 	votingCache domain.VotingCacheService,
 	logger log.ILogger,
 ) IResultsHandler {
@@ -40,6 +43,7 @@ func New(
 		resultsUseCase: resultsUseCase,
 		votingsUseCase: votingsUseCase,
 		votesUseCase:   votesUseCase,
+		groupsUseCase:  groupsUseCase,
 		votingCache:    votingCache,
 		logger:         contextualLogger,
 	}

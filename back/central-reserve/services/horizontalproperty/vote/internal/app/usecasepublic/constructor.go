@@ -9,7 +9,9 @@ import (
 
 // IPublicUseCase define la interfaz para casos de uso de votaciones públicas
 type IPublicUseCase interface {
-	ValidateResidentForVoting(ctx context.Context, hpID, propertyUnitID uint, dni string) (*domain.ResidentBasicDTO, error)
+	// ValidateResidentForVoting valida a quien vota por QR según la configuración del grupo
+	// (require_document_validation) y devuelve la unidad y el residente que votará.
+	ValidateResidentForVoting(ctx context.Context, hpID, groupID, propertyUnitID uint, dni string) (*domain.ValidatedVoterDTO, error)
 	ListVotingsByGroupWithVoteStatus(ctx context.Context, groupID uint, propertyUnitID uint) ([]domain.VotingWithStatusDTO, error)
 }
 

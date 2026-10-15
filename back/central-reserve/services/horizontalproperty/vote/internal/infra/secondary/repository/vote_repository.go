@@ -31,16 +31,17 @@ func New(db db.IDatabase, logger log.ILogger) *Repository {
 
 func (r *Repository) CreateVotingGroup(ctx context.Context, group *domain.VotingGroup) (*domain.VotingGroup, error) {
 	m := &models.VotingGroup{
-		BusinessID:       group.BusinessID,
-		Name:             group.Name,
-		Description:      group.Description,
-		VotingStartDate:  group.VotingStartDate,
-		VotingEndDate:    group.VotingEndDate,
-		IsActive:         true,
-		RequiresQuorum:   group.RequiresQuorum,
-		QuorumPercentage: group.QuorumPercentage,
-		CreatedByUserID:  group.CreatedByUserID,
-		Notes:            group.Notes,
+		BusinessID:                group.BusinessID,
+		Name:                      group.Name,
+		Description:               group.Description,
+		VotingStartDate:           group.VotingStartDate,
+		VotingEndDate:             group.VotingEndDate,
+		IsActive:                  true,
+		RequiresQuorum:            group.RequiresQuorum,
+		QuorumPercentage:          group.QuorumPercentage,
+		CreatedByUserID:           group.CreatedByUserID,
+		Notes:                     group.Notes,
+		RequireDocumentValidation: group.RequireDocumentValidation,
 	}
 	if err := r.db.Conn(ctx).Create(m).Error; err != nil {
 		r.logger.Error().Err(err).Msg("Error creando grupo de votación")
@@ -91,6 +92,7 @@ func (r *Repository) UpdateVotingGroup(ctx context.Context, id uint, group *doma
 	existing.RequiresQuorum = group.RequiresQuorum
 	existing.QuorumPercentage = group.QuorumPercentage
 	existing.Notes = group.Notes
+	existing.RequireDocumentValidation = group.RequireDocumentValidation
 	if err := r.db.Conn(ctx).Save(&existing).Error; err != nil {
 		r.logger.Error().Err(err).Uint("id", id).Msg("Error actualizando grupo de votación")
 		return nil, fmt.Errorf("error actualizando grupo de votación: %w", err)
@@ -738,19 +740,20 @@ func (r *Repository) ListVotesByVoting(ctx context.Context, votingID uint) ([]do
 
 func (r *Repository) mapVotingGroupToDomain(m *models.VotingGroup) *domain.VotingGroup {
 	return &domain.VotingGroup{
-		ID:               m.ID,
-		BusinessID:       m.BusinessID,
-		Name:             m.Name,
-		Description:      m.Description,
-		VotingStartDate:  m.VotingStartDate,
-		VotingEndDate:    m.VotingEndDate,
-		IsActive:         m.IsActive,
-		RequiresQuorum:   m.RequiresQuorum,
-		QuorumPercentage: m.QuorumPercentage,
-		CreatedByUserID:  m.CreatedByUserID,
-		Notes:            m.Notes,
-		CreatedAt:        m.CreatedAt,
-		UpdatedAt:        m.UpdatedAt,
+		ID:                        m.ID,
+		BusinessID:                m.BusinessID,
+		Name:                      m.Name,
+		Description:               m.Description,
+		VotingStartDate:           m.VotingStartDate,
+		VotingEndDate:             m.VotingEndDate,
+		IsActive:                  m.IsActive,
+		RequiresQuorum:            m.RequiresQuorum,
+		QuorumPercentage:          m.QuorumPercentage,
+		CreatedByUserID:           m.CreatedByUserID,
+		Notes:                     m.Notes,
+		RequireDocumentValidation: m.RequireDocumentValidation,
+		CreatedAt:                 m.CreatedAt,
+		UpdatedAt:                 m.UpdatedAt,
 	}
 }
 

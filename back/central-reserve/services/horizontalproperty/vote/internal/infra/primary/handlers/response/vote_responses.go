@@ -27,8 +27,10 @@ type VotingGroupResponse struct {
 	QuorumPercentage *float64  `json:"quorum_percentage,omitempty" example:"50.0"`
 	CreatedByUserID  *uint     `json:"created_by_user_id,omitempty" example:"5"`
 	Notes            string    `json:"notes,omitempty" example:"Notas adicionales"`
-	CreatedAt        time.Time `json:"created_at" example:"2025-01-15T10:30:00Z"`
-	UpdatedAt        time.Time `json:"updated_at" example:"2025-01-15T10:30:00Z"`
+	// El voto público por QR exige el documento de un residente de la unidad.
+	RequireDocumentValidation bool      `json:"require_document_validation" example:"false"`
+	CreatedAt                 time.Time `json:"created_at" example:"2025-01-15T10:30:00Z"`
+	UpdatedAt                 time.Time `json:"updated_at" example:"2025-01-15T10:30:00Z"`
 }
 
 // VotingResponse - Response para votación

@@ -42,7 +42,7 @@ func New(db db.IDatabase, jwtSecret string, logger log.ILogger, router *gin.Rout
 	votingsHandler := handlervotings.New(votingsUseCase, logger)
 	votingOptionsHandler := handlervotingoptions.New(votingOptionsUseCase, logger)
 	votesHandler := handlervotes.New(votesUseCase, logger)
-	resultsHandler := handlerresults.New(resultsUseCase, votingsUseCase, votesUseCase, votingCache, logger)
+	resultsHandler := handlerresults.New(resultsUseCase, votingsUseCase, votesUseCase, votingGroupsUseCase, votingCache, logger)
 	publicHandler := handlerpublic.New(publicUseCase, votingGroupsUseCase, votingsUseCase, votesUseCase, resultsUseCase, sharedUseCase, votingCache, jwtSecret, logger)
 
 	// Crear handler orquestador

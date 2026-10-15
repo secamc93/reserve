@@ -7018,6 +7018,11 @@ const docTemplate = `{
         "quorum_percentage": {
           "type": "number"
         },
+        "require_document_validation": {
+          "description": "RequireDocumentValidation: el voto público por QR exige el documento de un residente de la\nunidad. Opcional: al crear, por defecto false; al actualizar, si no se envía se conserva.",
+          "type": "boolean",
+          "example": false
+        },
         "requires_quorum": {
           "type": "boolean"
         },
@@ -7371,11 +7376,11 @@ const docTemplate = `{
     "services_horizontalproperty_vote_internal_infra_primary_handlers_handlerpublic.ValidateResidentRequest": {
       "type": "object",
       "required": [
-        "dni",
         "property_unit_id"
       ],
       "properties": {
         "dni": {
+          "description": "Dni es obligatorio solo si el grupo tiene require_document_validation = true; si no, se ignora.",
           "type": "string",
           "example": "123456789"
         },

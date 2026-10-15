@@ -19,8 +19,8 @@ func (uc *VotesUseCase) ResetVoting(ctx context.Context, votingID uint) (*domain
 		return nil, fmt.Errorf("error reseteando votación: %w", err)
 	}
 
-	// Limpiar cache SSE para que los clientes reconecten con estado vacío
-	if err := uc.cache.ClearVoting(votingID); err != nil {
+	// Vaciar el cache y avisar a los streams (evento votes_reset) sin cortar sus conexiones
+	if err := uc.cache.ResetVotes(votingID); err != nil {
 		uc.logger.Error().Err(err).Uint("voting_id", votingID).Msg("Error limpiando cache de votación")
 		// No retornar error, el reseteo en BD ya se hizo
 	}

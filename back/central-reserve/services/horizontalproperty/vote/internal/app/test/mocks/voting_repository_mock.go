@@ -54,6 +54,7 @@ type MockVotingRepository struct {
 	ListPropertyUnitsFn                func(ctx context.Context, filters domain.PropertyUnitFiltersDTO) (*domain.PaginatedPropertyUnitsDTO, error)
 	GetResidentByUnitAndDniFn          func(ctx context.Context, hpID, propertyUnitID uint, dni string) (*domain.ResidentBasicDTO, error)
 	ListVotingsByGroupWithVoteStatusFn func(ctx context.Context, groupID uint, propertyUnitID uint) ([]domain.VotingWithStatusDTO, error)
+	GetPublicVoterUnitFn               func(ctx context.Context, hpID, propertyUnitID uint) (*domain.PublicVoterUnitDTO, error)
 }
 
 // NewMockVotingRepository crea una nueva instancia del mock del repositorio
@@ -336,4 +337,11 @@ func (m *MockVotingRepository) ValidateVoteTarget(ctx context.Context, votingID,
 		return m.ValidateVoteTargetFn(ctx, votingID, propertyUnitID, votingOptionID)
 	}
 	return nil
+}
+
+func (m *MockVotingRepository) GetPublicVoterUnit(ctx context.Context, hpID, propertyUnitID uint) (*domain.PublicVoterUnitDTO, error) {
+	if m.GetPublicVoterUnitFn != nil {
+		return m.GetPublicVoterUnitFn(ctx, hpID, propertyUnitID)
+	}
+	return nil, nil
 }

@@ -142,14 +142,9 @@ func (h *PublicHandler) GetPublicVotingInfo(c *gin.Context) {
 		return
 	}
 
-	// Obtener la unidad principal del residente
-	propertyUnitID, err := h.sharedUseCase.GetResidentMainUnitID(c.Request.Context(), residentID)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] handlers/get-public-voting-info.go - Error obteniendo unidad principal: %v\n", err)
-		h.logger.Error().Err(err).Uint("resident_id", residentID).Msg("Error obteniendo unidad principal del residente")
-		// No retornamos error, solo asumimos que no ha votado
-		propertyUnitID = 0
-	}
+	// La unidad que vota es la del token (el voto es por unidad; resident_id puede ser 0 si el
+	// grupo no exige documento y la unidad no tiene residentes).
+	propertyUnitID := authClaims.PropertyUnitID
 
 	// Verificar si la unidad ya votó y obtener su voto
 	hasVoted, err := h.votesUseCase.HasUnitVoted(c.Request.Context(), votingID, propertyUnitID)

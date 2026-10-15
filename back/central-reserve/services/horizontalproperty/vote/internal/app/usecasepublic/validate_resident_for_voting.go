@@ -3,32 +3,81 @@ package usecasepublic
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"central_reserve/services/horizontalproperty/vote/internal/domain"
 	"central_reserve/shared/log"
 )
 
-// ValidateResidentForVoting valida que un residente pertenezca a una unidad específica por DNI
-func (uc *PublicUseCase) ValidateResidentForVoting(ctx context.Context, hpID, propertyUnitID uint, dni string) (*domain.ResidentBasicDTO, error) {
-	// Configurar contexto de logging
-	ctx = log.WithFunctionCtx(ctx, "FunctionName")
-	// Validar que el DNI no esté vacío
-	if dni == "" {
-		return nil, fmt.Errorf("el DNI es requerido")
-	}
+// ValidateResidentForVoting valida a quien vota por QR en la unidad propertyUnitID.
+//
+// La regla la define el grupo del token (groupID):
+//   - require_document_validation = true: el documento es obligatorio (ErrDocumentRequired) y
+//     debe ser el de un residente activo de la unidad.
+//   - require_document_validation = false: el documento se ignora; basta que la unidad exista,
+//     sea de la propiedad del grupo y esté activa. El voto es por unidad: si la unidad no tiene
+//     residentes se permite igual (ResidentID = 0, nombre "Unidad <número>").
+func (uc *PublicUseCase) ValidateResidentForVoting(ctx context.Context, hpID, groupID, propertyUnitID uint, dni string) (*domain.ValidatedVoterDTO, error) {
+	ctx = log.WithFunctionCtx(ctx, "ValidateResidentForVoting")
 
-	// Validar que property_unit_id sea válido
 	if propertyUnitID == 0 {
-		return nil, fmt.Errorf("el ID de unidad es requerido")
+		return nil, domain.ErrPropertyUnitRequired
 	}
 
-	// Buscar residente por unidad y DNI
-	resident, err := uc.repo.GetResidentByUnitAndDni(ctx, hpID, propertyUnitID, dni)
+	group, err := uc.repo.GetVotingGroupByID(ctx, groupID)
 	if err != nil {
-		uc.logger.Error(ctx).Err(err).Uint("hp_id", hpID).Uint("property_unit_id", propertyUnitID).Str("dni", dni).Msg("Error buscando residente para votación")
+		uc.logger.Error(ctx).Err(err).Uint("group_id", groupID).Msg("Error obteniendo grupo de votación para validar residente")
 		return nil, err
 	}
+	if group == nil || group.BusinessID != hpID {
+		return nil, domain.ErrVotingGroupNotFound
+	}
 
-	uc.logger.Info().Uint("resident_id", resident.ID).Uint("property_unit_id", propertyUnitID).Msg("Residente validado para votación pública")
-	return resident, nil
+	if group.RequireDocumentValidation {
+		dni = strings.TrimSpace(dni)
+		if dni == "" {
+			return nil, domain.ErrDocumentRequired
+		}
+		resident, err := uc.repo.GetResidentByUnitAndDni(ctx, hpID, propertyUnitID, dni)
+		if err != nil {
+			uc.logger.Error(ctx).Err(err).Uint("hp_id", hpID).Uint("property_unit_id", propertyUnitID).Msg("Error buscando residente para votación")
+			return nil, err
+		}
+		if resident == nil {
+			return nil, domain.ErrResidentNotFound
+		}
+		uc.logger.Info(ctx).Uint("resident_id", resident.ID).Uint("property_unit_id", propertyUnitID).Msg("Residente validado por documento para votación pública")
+		return &domain.ValidatedVoterDTO{
+			ResidentID:                resident.ID,
+			ResidentName:              resident.Name,
+			PropertyUnitID:            resident.PropertyUnitID,
+			PropertyUnitNumber:        resident.PropertyUnitNumber,
+			RequireDocumentValidation: true,
+		}, nil
+	}
+
+	unit, err := uc.repo.GetPublicVoterUnit(ctx, hpID, propertyUnitID)
+	if err != nil {
+		uc.logger.Error(ctx).Err(err).Uint("hp_id", hpID).Uint("property_unit_id", propertyUnitID).Msg("Error obteniendo unidad para votación pública")
+		return nil, err
+	}
+	if unit == nil {
+		return nil, domain.ErrPropertyUnitNotFound
+	}
+	if !unit.IsActive {
+		return nil, domain.ErrPropertyUnitInactive
+	}
+
+	name := unit.ResidentName
+	if unit.ResidentID == 0 || strings.TrimSpace(name) == "" {
+		name = fmt.Sprintf("Unidad %s", unit.PropertyUnitNumber)
+	}
+	uc.logger.Info(ctx).Uint("property_unit_id", unit.PropertyUnitID).Uint("resident_id", unit.ResidentID).Msg("Unidad validada sin documento para votación pública")
+	return &domain.ValidatedVoterDTO{
+		ResidentID:                unit.ResidentID,
+		ResidentName:              name,
+		PropertyUnitID:            unit.PropertyUnitID,
+		PropertyUnitNumber:        unit.PropertyUnitNumber,
+		RequireDocumentValidation: false,
+	}, nil
 }

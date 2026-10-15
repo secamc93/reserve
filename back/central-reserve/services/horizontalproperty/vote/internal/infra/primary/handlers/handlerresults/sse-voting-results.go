@@ -1,15 +1,12 @@
 package handlerresults
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/http"
-	"os"
 	"strconv"
-	"time"
 
-	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/mappers"
+	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/response"
+	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/votingstream"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,191 +14,64 @@ import (
 // SSEVotingResults godoc
 //
 //	@Summary		Stream de resultados de votación en tiempo real (SSE)
-//	@Description	Establece una conexión SSE para recibir votos en tiempo real de una votación específica
+//	@Description	Stream SSE de una votación para el admin. Requiere el business token en el header Authorization. La votación debe ser del grupo de la ruta y el grupo del negocio del token (super admin: ?business_id= opcional). Eventos: connected, initial_data ({voting_id, total_votes, results[], votes[]}), new_vote y vote_deleted ({voting_id, total_votes, results[], vote}), votes_reset ({voting_id, total_votes, results[]}), heartbeat.
 //	@Tags			Votaciones
-//	@Accept			json
 //	@Produce		text/event-stream
 //	@Security		BearerAuth
 //	@Param			group_id	path		int		true	"ID del grupo de votación"
 //	@Param			voting_id	path		int		true	"ID de la votación"
+//	@Param			business_id	query		int		false	"ID del negocio (solo super admin, opcional)"
 //	@Success		200			{string}	string	"Event stream"
-//	@Failure		400			{object}	object
-//	@Failure		500			{object}	object
+//	@Failure		400			{object}	response.ErrorResponse
+//	@Failure		401			{object}	response.ErrorResponse
+//	@Failure		404			{object}	response.ErrorResponse
 //	@Router			/horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/stream [get]
 func (h *ResultsHandler) SSEVotingResults(c *gin.Context) {
-	votingIDParam := c.Param("voting_id")
-	votingID, err := strconv.ParseUint(votingIDParam, 10, 32)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] handlers/sse-voting-results.go - Error parseando ID: %v\n", err)
-		h.logger.Error().Err(err).Str("voting_id", votingIDParam).Msg("Error parseando ID de votación para SSE")
-		c.JSON(http.StatusBadRequest, response.ErrorResponse{
-			Success: false,
-			Message: "ID de votación inválido",
-			Error:   "Debe ser numérico",
-		})
+	groupID, errG := strconv.ParseUint(c.Param("group_id"), 10, 32)
+	votingID, errV := strconv.ParseUint(c.Param("voting_id"), 10, 32)
+	if errG != nil || errV != nil || groupID == 0 || votingID == 0 {
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "IDs inválidos", Error: "group_id y voting_id deben ser numéricos"})
 		return
 	}
 
-	// Configurar headers para SSE
-	c.Writer.Header().Set("Content-Type", "text/event-stream")
-	c.Writer.Header().Set("Cache-Control", "no-cache")
-	c.Writer.Header().Set("Connection", "keep-alive")
-	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-
-	// Obtener estado actual de la votación desde el cache
-	existingVotes, err := h.votingCache.GetVotingState(uint(votingID))
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] handlers/sse-voting-results.go - Error obteniendo estado del cache: %v\n", err)
-		h.logger.Error().Err(err).Uint("voting_id", uint(votingID)).Msg("Error obteniendo estado del cache")
-		c.JSON(http.StatusInternalServerError, response.ErrorResponse{
-			Success: false,
-			Message: "Error obteniendo estado de la votación",
-			Error:   err.Error(),
-		})
-		return
-	}
-
-	// Si el cache está vacío, cargar desde la base de datos
-	if len(existingVotes) == 0 {
-		votes, err := h.votesUseCase.ListVotesByVoting(c.Request.Context(), uint(votingID))
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "[ERROR] handlers/sse-voting-results.go - Error cargando votos desde BD: %v\n", err)
-			h.logger.Error().Err(err).Uint("voting_id", uint(votingID)).Msg("Error cargando votos desde BD")
-			c.JSON(http.StatusInternalServerError, response.ErrorResponse{
-				Success: false,
-				Message: "Error cargando votos",
-				Error:   err.Error(),
-			})
+	// Aislamiento multi-tenant: el grupo debe ser del negocio del token. El super admin puede
+	// acotar con ?business_id=; si no lo envía, no se restringe.
+	var businessID uint
+	if middleware.IsSuperAdmin(c) {
+		if q := c.Query("business_id"); q != "" {
+			id, err := strconv.ParseUint(q, 10, 32)
+			if err != nil || id == 0 {
+				c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "business_id inválido", Error: "Debe ser numérico y > 0"})
+				return
+			}
+			businessID = uint(id)
+		}
+	} else {
+		bid, ok := middleware.GetBusinessID(c)
+		if !ok || bid == 0 {
+			c.JSON(http.StatusUnauthorized, response.ErrorResponse{Success: false, Message: "token inválido", Error: "business_id no encontrado"})
 			return
 		}
-
-		// Inicializar cache con votos existentes
-		if err := h.votingCache.InitializeVoting(uint(votingID), votes); err != nil {
-			fmt.Fprintf(os.Stderr, "[ERROR] handlers/sse-voting-results.go - Error inicializando cache: %v\n", err)
-			h.logger.Error().Err(err).Uint("voting_id", uint(votingID)).Msg("Error inicializando cache")
-		}
-		existingVotes = votes
+		businessID = bid
 	}
 
-	// Enviar precarga (votos existentes y resultados)
-	var votesResponse []response.VoteResponse
-	if len(existingVotes) > 0 {
-		votesResponse = mappers.MapVoteDTOsToResponses(existingVotes)
-		h.logger.Info().Uint("voting_id", uint(votingID)).Int("votes_count", len(existingVotes)).Msg("Enviando precarga de votos")
+	notFound := func() {
+		c.JSON(http.StatusNotFound, response.ErrorResponse{Success: false, Message: "Votación no encontrada", Error: "La votación no existe o no pertenece a este grupo/negocio"})
 	}
-
-	// Obtener resultados de votación con colores
-	votingResults, err := h.resultsUseCase.GetVotingResults(c.Request.Context(), uint(votingID))
-	var resultsResponse []response.VotingResultResponse
-	if err == nil && len(votingResults) > 0 {
-		resultsResponse = mappers.MapVotingResultsToResponses(votingResults)
-		h.logger.Info().Uint("voting_id", uint(votingID)).Int("results_count", len(votingResults)).Msg("Enviando resultados de votación")
+	group, err := h.groupsUseCase.GetVotingGroupByID(c.Request.Context(), uint(groupID))
+	if err != nil || group == nil || (businessID != 0 && group.BusinessID != businessID) {
+		notFound()
+		return
 	}
-
-	// Enviar datos iniciales completos
-	initialData := gin.H{
-		"votes":   votesResponse,
-		"results": resultsResponse,
-	}
-	data, err := json.Marshal(initialData)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] handlers/sse-voting-results.go - Error serializando datos iniciales: %v\n", err)
-		h.logger.Error().Err(err).Uint("voting_id", uint(votingID)).Msg("Error serializando datos iniciales")
+	if _, err := h.votingsUseCase.GetVotingByID(c.Request.Context(), group.BusinessID, group.ID, uint(votingID)); err != nil {
+		notFound()
 		return
 	}
 
-	event := fmt.Sprintf("event: initial_data\ndata: %s\n\n", string(data))
-	if _, err := c.Writer.WriteString(event); err != nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] handlers/sse-voting-results.go - Error enviando datos iniciales por SSE: %v\n", err)
-		h.logger.Error().Err(err).Uint("voting_id", uint(votingID)).Msg("Error enviando datos iniciales por SSE")
-		return
-	}
-	c.Writer.Flush()
-
-	// Suscribirse a nuevos votos
-	voteChan, err := h.votingCache.Subscribe(c.Request.Context(), uint(votingID))
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] handlers/sse-voting-results.go - Error suscribiéndose al cache: %v\n", err)
-		h.logger.Error().Err(err).Uint("voting_id", uint(votingID)).Msg("Error suscribiéndose al cache")
-		c.JSON(http.StatusInternalServerError, response.ErrorResponse{
-			Success: false,
-			Message: "Error suscribiéndose a la votación",
-			Error:   err.Error(),
-		})
-		return
-	}
-
-	h.logger.Info().Uint("voting_id", uint(votingID)).Msg("Cliente conectado al SSE de votación")
-
-	// Enviar evento de conexión establecida
-	connectedEvent := fmt.Sprintf("event: connected\ndata: {\"message\": \"Conectado a votación\", \"voting_id\": %d}\n\n", votingID)
-	c.Writer.WriteString(connectedEvent)
-	c.Writer.Flush()
-
-	// Mantener conexión y enviar nuevos votos
-	ticker := time.NewTicker(30 * time.Second)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-c.Request.Context().Done():
-			// Cliente desconectado
-			h.logger.Info().Uint("voting_id", uint(votingID)).Msg("Cliente desconectado del SSE")
-			return
-
-		case voteEvent, ok := <-voteChan:
-			if !ok {
-				// Canal cerrado
-				h.logger.Info().Uint("voting_id", uint(votingID)).Msg("Canal de votos cerrado")
-				return
-			}
-
-			// Enviar evento de voto y resultados actualizados
-			responseVote := mappers.MapVoteDTOToResponse(&voteEvent.Vote)
-
-			// Obtener resultados actualizados
-			updatedResults, err := h.resultsUseCase.GetVotingResults(c.Request.Context(), uint(votingID))
-			var resultsResponse []response.VotingResultResponse
-			if err == nil && len(updatedResults) > 0 {
-				resultsResponse = mappers.MapVotingResultsToResponses(updatedResults)
-			}
-
-			voteData := gin.H{
-				"vote":    responseVote,
-				"results": resultsResponse,
-			}
-
-			data, err := json.Marshal(voteData)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "[ERROR] handlers/sse-voting-results.go - Error serializando evento de voto: %v\n", err)
-				h.logger.Error().Err(err).Uint("voting_id", uint(votingID)).Msg("Error serializando evento de voto")
-				continue
-			}
-
-			// Determinar el tipo de evento
-			var eventType string
-			if voteEvent.Type == "vote_deleted" {
-				eventType = "vote_deleted"
-			} else {
-				eventType = "new_vote"
-			}
-
-			event := fmt.Sprintf("event: %s\ndata: %s\n\n", eventType, string(data))
-			if _, err := c.Writer.WriteString(event); err != nil {
-				fmt.Fprintf(os.Stderr, "[ERROR] handlers/sse-voting-results.go - Error enviando evento por SSE: %v\n", err)
-				h.logger.Error().Err(err).Uint("voting_id", uint(votingID)).Msg("Error enviando evento por SSE")
-				return
-			}
-			c.Writer.Flush()
-
-		case <-ticker.C:
-			// Enviar heartbeat cada 30 segundos para mantener la conexión viva
-			heartbeat := fmt.Sprintf("event: heartbeat\ndata: {\"timestamp\": \"%s\"}\n\n", time.Now().Format(time.RFC3339))
-			if _, err := c.Writer.WriteString(heartbeat); err != nil {
-				// Cliente desconectado
-				return
-			}
-			c.Writer.Flush()
-		}
-	}
+	h.logger.Info().Uint("voting_id", uint(votingID)).Msg("Cliente admin conectado al SSE de votación")
+	votingstream.Serve(c, votingstream.Options{
+		VotingID:     uint(votingID),
+		IncludeVotes: true,
+		Connected:    gin.H{"voting_group_id": group.ID},
+	}, h.votesUseCase, h.resultsUseCase, h.votingCache, h.logger)
 }

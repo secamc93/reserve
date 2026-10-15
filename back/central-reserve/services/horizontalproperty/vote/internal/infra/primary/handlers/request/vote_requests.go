@@ -11,6 +11,9 @@ type CreateVotingGroupRequest struct {
 	QuorumPercentage *float64  `json:"quorum_percentage"`
 	CreatedByUserID  *uint     `json:"created_by_user_id"`
 	Notes            string    `json:"notes" binding:"max=2000"`
+	// RequireDocumentValidation: el voto público por QR exige el documento de un residente de la
+	// unidad. Opcional: al crear, por defecto false; al actualizar, si no se envía se conserva.
+	RequireDocumentValidation *bool `json:"require_document_validation" example:"false"`
 }
 
 type CreateVotingRequest struct {

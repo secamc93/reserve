@@ -332,6 +332,9 @@ type VotingGroup struct {
 	QuorumPercentage *float64  `gorm:"type:decimal(5,2);default:50.00"` // Porcentaje de quórum requerido
 	CreatedByUserID  *uint     `gorm:"index"`                           // Usuario que creó el grupo
 	Notes            string    `gorm:"size:2000"`                       // Notas adicionales
+	// RequireDocumentValidation: si es true, el voto público por QR exige el documento (DNI)
+	// de un residente de la unidad; si es false basta con elegir la unidad (el voto es por unidad).
+	RequireDocumentValidation bool `gorm:"not null;default:false"`
 
 	// Relaciones
 	Business        Business         `gorm:"foreignKey:BusinessID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`

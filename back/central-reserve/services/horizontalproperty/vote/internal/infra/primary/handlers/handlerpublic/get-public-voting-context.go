@@ -146,6 +146,8 @@ func (h *PublicHandler) GetPublicVotingContext(c *gin.Context) {
 			"address": hp.Address,
 		},
 		"is_group_token": isGroupToken,
+		// Si es true, /public/validate-resident exige el documento (dni) del residente.
+		"require_document_validation": group != nil && group.RequireDocumentValidation,
 	}
 
 	// Solo agregar info de votación si es token individual
@@ -160,9 +162,10 @@ func (h *PublicHandler) GetPublicVotingContext(c *gin.Context) {
 	// Agregar info de grupo si está disponible
 	if group != nil {
 		responseData["voting_group"] = gin.H{
-			"id":          group.ID,
-			"name":        group.Name,
-			"description": group.Description,
+			"id":                          group.ID,
+			"name":                        group.Name,
+			"description":                 group.Description,
+			"require_document_validation": group.RequireDocumentValidation,
 		}
 	}
 

@@ -8,19 +8,20 @@ import (
 // MapVotingGroupDTOToResponse mapea DTO de dominio a response
 func MapVotingGroupDTOToResponse(dto *domain.VotingGroupDTO) response.VotingGroupResponse {
 	return response.VotingGroupResponse{
-		ID:               dto.ID,
-		BusinessID:       dto.BusinessID,
-		Name:             dto.Name,
-		Description:      dto.Description,
-		VotingStartDate:  dto.VotingStartDate,
-		VotingEndDate:    dto.VotingEndDate,
-		IsActive:         dto.IsActive,
-		RequiresQuorum:   dto.RequiresQuorum,
-		QuorumPercentage: dto.QuorumPercentage,
-		CreatedByUserID:  dto.CreatedByUserID,
-		Notes:            dto.Notes,
-		CreatedAt:        dto.CreatedAt,
-		UpdatedAt:        dto.UpdatedAt,
+		ID:                        dto.ID,
+		BusinessID:                dto.BusinessID,
+		Name:                      dto.Name,
+		Description:               dto.Description,
+		VotingStartDate:           dto.VotingStartDate,
+		VotingEndDate:             dto.VotingEndDate,
+		IsActive:                  dto.IsActive,
+		RequiresQuorum:            dto.RequiresQuorum,
+		QuorumPercentage:          dto.QuorumPercentage,
+		CreatedByUserID:           dto.CreatedByUserID,
+		Notes:                     dto.Notes,
+		RequireDocumentValidation: dto.RequireDocumentValidation,
+		CreatedAt:                 dto.CreatedAt,
+		UpdatedAt:                 dto.UpdatedAt,
 	}
 }
 

@@ -57,6 +57,9 @@ type VotingRepository interface {
 
 	// Resident methods (todo en el mismo repository)
 	GetResidentByUnitAndDni(ctx context.Context, hpID, propertyUnitID uint, dni string) (*ResidentBasicDTO, error)
+	// GetPublicVoterUnit obtiene una unidad de la propiedad hpID con su residente (principal
+	// primero). Devuelve ErrPropertyUnitNotFound si la unidad no existe o es de otra propiedad.
+	GetPublicVoterUnit(ctx context.Context, hpID, propertyUnitID uint) (*PublicVoterUnitDTO, error)
 
 	// Group voting methods (para QR por grupo)
 	ListVotingsByGroupWithVoteStatus(ctx context.Context, groupID uint, propertyUnitID uint) ([]VotingWithStatusDTO, error)
@@ -67,6 +70,9 @@ type VotingCacheService interface {
 	PublishVote(votingID uint, vote VoteDTO) error
 	RemoveVote(votingID uint, voteID uint) error
 	ClearVoting(votingID uint) error
+	// ResetVotes vacía los votos de una votación y avisa a los suscriptores con un evento
+	// "votes_reset" sin cerrar sus conexiones (a diferencia de ClearVoting).
+	ResetVotes(votingID uint) error
 	Subscribe(ctx context.Context, votingID uint) (<-chan VoteEvent, error)
 	GetVotingState(votingID uint) ([]VoteDTO, error)
 	InitializeVoting(votingID uint, votes []VoteDTO) error

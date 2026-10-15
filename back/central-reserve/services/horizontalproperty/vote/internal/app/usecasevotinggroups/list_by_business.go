@@ -21,19 +21,20 @@ func (u *VotingGroupUseCase) ListVotingGroupsByBusiness(ctx context.Context, bus
 	for i := range groups {
 		g := groups[i]
 		res[i] = domain.VotingGroupDTO{
-			ID:               g.ID,
-			BusinessID:       g.BusinessID,
-			Name:             g.Name,
-			Description:      g.Description,
-			VotingStartDate:  g.VotingStartDate,
-			VotingEndDate:    g.VotingEndDate,
-			IsActive:         g.IsActive,
-			RequiresQuorum:   g.RequiresQuorum,
-			QuorumPercentage: g.QuorumPercentage,
-			CreatedByUserID:  g.CreatedByUserID,
-			Notes:            g.Notes,
-			CreatedAt:        g.CreatedAt,
-			UpdatedAt:        g.UpdatedAt,
+			ID:                        g.ID,
+			BusinessID:                g.BusinessID,
+			Name:                      g.Name,
+			Description:               g.Description,
+			VotingStartDate:           g.VotingStartDate,
+			VotingEndDate:             g.VotingEndDate,
+			IsActive:                  g.IsActive,
+			RequiresQuorum:            g.RequiresQuorum,
+			QuorumPercentage:          g.QuorumPercentage,
+			CreatedByUserID:           g.CreatedByUserID,
+			Notes:                     g.Notes,
+			RequireDocumentValidation: g.RequireDocumentValidation,
+			CreatedAt:                 g.CreatedAt,
+			UpdatedAt:                 g.UpdatedAt,
 		}
 	}
 	return res, nil

@@ -1,13 +1,12 @@
 package handlerpublic
 
 import (
-	"fmt"
 	"net/http"
-	"os"
-	"time"
+	"strconv"
+	"strings"
 
-	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/response"
+	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/votingstream"
 	sharedjwt "central_reserve/shared/jwt"
 
 	"github.com/gin-gonic/gin"
@@ -16,33 +15,24 @@ import (
 // PublicSSEVotingResults godoc
 //
 //	@Summary		Stream público de resultados de votación en tiempo real (SSE)
-//	@Description	Establece una conexión SSE para recibir votos en tiempo real. Toda la información viene del token.
+//	@Description	Stream SSE con los resultados de una votación. Acepta el token de votación del residente (el que devuelve /public/validate-resident) por ?token= o header Authorization. Con token de GRUPO se debe indicar ?voting_id= (la votación debe pertenecer al grupo del token); con token de votación individual voting_id es opcional y debe coincidir. Eventos: connected, initial_data, new_vote, vote_deleted, votes_reset, heartbeat. El data de cada evento de resultados es {voting_id, total_votes, results[]} (results con vote_count, percentage y percentage_by_coefficient); el stream público no incluye votos individuales.
 //	@Tags			Votaciones Públicas
-//	@Accept			json
 //	@Produce		text/event-stream
-//	@Param			Authorization	header	string	true	"Token de autenticación de votación (Bearer token)"
+//	@Param			token			query	string	false	"Token de votación del residente (alternativa al header)"
+//	@Param			voting_id		query	int		false	"ID de la votación (obligatorio con token de grupo)"
+//	@Param			Authorization	header	string	false	"Token de votación del residente (Bearer token)"
 //	@Success		200				{string}	string	"Event stream"
-//	@Failure		401				{object}	object
-//	@Failure		500				{object}	object
+//	@Failure		400				{object}	response.ErrorResponse
+//	@Failure		401				{object}	response.ErrorResponse
+//	@Failure		404				{object}	response.ErrorResponse
 //	@Router			/public/voting-stream [get]
 func (h *PublicHandler) PublicSSEVotingResults(c *gin.Context) {
-
-	// Obtener token desde query string (EventSource no soporta headers personalizados)
+	// EventSource no permite headers: se acepta ?token= y, como alternativa, Authorization.
 	tokenString := c.Query("token")
 	if tokenString == "" {
-		// Intentar desde header como fallback
-		authHeader := c.GetHeader("Authorization")
-		if authHeader != "" {
-			if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
-				tokenString = authHeader[7:]
-			} else {
-				tokenString = authHeader
-			}
-		}
+		tokenString = strings.TrimPrefix(c.GetHeader("Authorization"), "Bearer ")
 	}
-
 	if tokenString == "" {
-		fmt.Fprintf(os.Stderr, "[ERROR] handlers/public-sse-voting-results.go - Token no proporcionado\n")
 		c.JSON(http.StatusUnauthorized, response.ErrorResponse{
 			Success: false,
 			Message: "Token de autenticación requerido",
@@ -51,11 +41,9 @@ func (h *PublicHandler) PublicSSEVotingResults(c *gin.Context) {
 		return
 	}
 
-	jwtService := sharedjwt.New(h.jwtSecret)
-	authClaims, err := jwtService.ValidateVotingAuthToken(tokenString)
+	claims, err := sharedjwt.New(h.jwtSecret).ValidateVotingAuthToken(tokenString)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] handlers/public-sse-voting-results.go - Token inválido: %v\n", err)
-		h.logger.Error().Err(err).Msg("Token de autenticación de votación inválido")
+		h.logger.Warn().Err(err).Msg("Token de votación inválido en stream público")
 		c.JSON(http.StatusUnauthorized, response.ErrorResponse{
 			Success: false,
 			Message: "Token de autenticación inválido",
@@ -64,132 +52,56 @@ func (h *PublicHandler) PublicSSEVotingResults(c *gin.Context) {
 		return
 	}
 
-	// Extraer información del token
-	votingID := authClaims.VotingID
-	residentID := authClaims.ResidentID
-	hpID := authClaims.HPID
-
-	// Este endpoint requiere votación específica
-	if votingID == nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] handlers/public-sse-voting-results.go - Token de grupo no válido para este endpoint\n")
-		h.logger.Error().Msg("Token de grupo no válido para SSE de resultados")
-		c.JSON(http.StatusBadRequest, response.ErrorResponse{
-			Success: false,
-			Message: "Token inválido",
-			Error:   "Este endpoint requiere un token de votación específica, no un token de grupo",
-		})
-		return
-	}
-
-	fmt.Printf("\n📡 [SSE PUBLICO] Nueva conexión SSE\n")
-	fmt.Printf("   Votación ID: %d\n", *votingID)
-	fmt.Printf("   Residente ID: %d\n", residentID)
-	fmt.Printf("   HP ID: %d\n\n", hpID)
-
-	// Configurar headers para SSE
-	c.Writer.Header().Set("Content-Type", "text/event-stream")
-	c.Writer.Header().Set("Cache-Control", "no-cache")
-	c.Writer.Header().Set("Connection", "keep-alive")
-	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-	c.Writer.Header().Set("X-Accel-Buffering", "no")
-
-	h.logger.Info().Uint("voting_id", *votingID).Uint("resident_id", residentID).Msg("Cliente SSE público conectado")
-
-	// Suscribirse al cache de votación
-	voteChan, err := h.votingCache.Subscribe(c.Request.Context(), *votingID)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] handlers/public-sse-voting-results.go - Error suscribiéndose al cache: %v\n", err)
-		h.logger.Error().Err(err).Uint("voting_id", *votingID).Msg("Error suscribiéndose al cache")
-		c.JSON(http.StatusInternalServerError, response.ErrorResponse{
-			Success: false,
-			Message: "Error suscribiéndose a la votación",
-			Error:   err.Error(),
-		})
-		return
-	}
-
-	defer func() {
-		fmt.Printf("📡 [SSE PUBLICO] Conexión cerrada para votación %d, residente %d\n", *votingID, residentID)
-	}()
-
-	// Enviar evento de conexión establecida
-	c.SSEvent("connected", gin.H{
-		"message":     "Conectado al stream de votación",
-		"voting_id":   votingID,
-		"resident_id": residentID,
-	})
-	c.Writer.Flush()
-
-	// Enviar datos iniciales (preload) - votos existentes y resultados
-	existingVotes, err := h.votesUseCase.ListVotesByVoting(c.Request.Context(), *votingID)
-	var votesResponse []response.VoteResponse
-	if err == nil && len(existingVotes) > 0 {
-		votesResponse = mappers.MapVoteDTOsToResponses(existingVotes)
-		fmt.Printf("📊 [SSE PUBLICO] Precarga enviada: %d votos existentes\n", len(existingVotes))
-	} else {
-		fmt.Printf("📊 [SSE PUBLICO] Precarga enviada: 0 votos\n")
-	}
-
-	// Obtener resultados de votación con colores
-	votingResults, err := h.resultsUseCase.GetVotingResults(c.Request.Context(), *votingID)
-	var resultsResponse []response.VotingResultResponse
-	if err == nil && len(votingResults) > 0 {
-		resultsResponse = mappers.MapVotingResultsToResponses(votingResults)
-		fmt.Printf("📊 [SSE PUBLICO] Resultados enviados: %d opciones\n", len(votingResults))
-	}
-
-	c.SSEvent("initial_data", gin.H{
-		"votes":   votesResponse,
-		"results": resultsResponse,
-	})
-	c.Writer.Flush()
-
-	// Mantener conexión abierta y enviar eventos
-	ticker := time.NewTicker(30 * time.Second)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-c.Request.Context().Done():
+	var queryVotingID uint
+	if q := c.Query("voting_id"); q != "" {
+		id, err := strconv.ParseUint(q, 10, 32)
+		if err != nil || id == 0 {
+			c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "voting_id inválido", Error: "Debe ser numérico y > 0"})
 			return
-		case <-ticker.C:
-			// Heartbeat (mantener conexión viva)
-			c.SSEvent("heartbeat", gin.H{"timestamp": time.Now().Unix()})
-			c.Writer.Flush()
-		case voteEvent, ok := <-voteChan:
-			if !ok {
-				// Canal cerrado
-				return
-			}
+		}
+		queryVotingID = uint(id)
+	}
 
-			// Evento de voto recibido - enviar voto y resultados actualizados
-			voteResponse := mappers.MapVoteDTOToResponse(&voteEvent.Vote)
-
-			// Obtener resultados actualizados
-			updatedResults, err := h.resultsUseCase.GetVotingResults(c.Request.Context(), *votingID)
-			var resultsResponse []response.VotingResultResponse
-			if err == nil && len(updatedResults) > 0 {
-				resultsResponse = mappers.MapVotingResultsToResponses(updatedResults)
-			}
-
-			// Determinar el tipo de evento
-			var eventType string
-			if voteEvent.Type == "vote_deleted" {
-				eventType = "vote_deleted"
-			} else {
-				eventType = "new_vote"
-			}
-
-			c.SSEvent(eventType, gin.H{
-				"vote":    voteResponse,
-				"results": resultsResponse,
+	var votingID uint
+	if claims.VotingID == nil {
+		// Token de grupo: la votación viene por query y debe ser del grupo del token.
+		if queryVotingID == 0 {
+			c.JSON(http.StatusBadRequest, response.ErrorResponse{
+				Success: false,
+				Message: "voting_id requerido",
+				Error:   "Con un token de grupo se debe indicar ?voting_id=",
 			})
-			c.Writer.Flush()
-
-			fmt.Printf("🗳️  [SSE PUBLICO] Evento de voto transmitido: %s\n", eventType)
-			fmt.Printf("   Unidad ID: %d\n", voteEvent.Vote.PropertyUnitID)
-			fmt.Printf("   Opción ID: %d\n", voteEvent.Vote.VotingOptionID)
-			fmt.Printf("   Votación ID: %d\n\n", votingID)
+			return
+		}
+		votingID = queryVotingID
+	} else {
+		votingID = *claims.VotingID
+		if queryVotingID != 0 && queryVotingID != votingID {
+			c.JSON(http.StatusBadRequest, response.ErrorResponse{
+				Success: false,
+				Message: "voting_id inválido",
+				Error:   "El voting_id debe coincidir con el del token",
+			})
+			return
 		}
 	}
+
+	if _, err := h.votingsUseCase.GetVotingByID(c.Request.Context(), claims.HPID, claims.VotingGroupID, votingID); err != nil {
+		c.JSON(http.StatusNotFound, response.ErrorResponse{
+			Success: false,
+			Message: "Votación no encontrada",
+			Error:   "La votación no existe o no pertenece al grupo del token",
+		})
+		return
+	}
+
+	h.logger.Info().Uint("voting_id", votingID).Uint("property_unit_id", claims.PropertyUnitID).Msg("Cliente SSE público conectado")
+	votingstream.Serve(c, votingstream.Options{
+		VotingID:     votingID,
+		IncludeVotes: false,
+		Connected: gin.H{
+			"voting_group_id":  claims.VotingGroupID,
+			"property_unit_id": claims.PropertyUnitID,
+		},
+	}, h.votesUseCase, h.resultsUseCase, h.votingCache, h.logger)
 }
