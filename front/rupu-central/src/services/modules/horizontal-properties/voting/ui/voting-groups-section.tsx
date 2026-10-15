@@ -14,6 +14,7 @@ import { AttendanceManagement } from '../../attendance/ui/attendance-management'
 import { TokenStorage } from '@shared/config';
 import { getVotingGroupsAction } from '../infrastructure/actions';
 import { generateGroupPublicUrlAction } from '../infrastructure/actions/public-voting';
+import { GroupQRModal } from './components/group-qr-modal';
 
 interface VotingGroup {
   id: number;
@@ -449,85 +450,13 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
         />
       )}
 
-      {/* Modal QR del grupo */}
+      {/* Modal QR del grupo (rediseño 1j; "Proyectar" abre la vista 1i) */}
       {showGroupQRModal && groupQRData && (
-        <div className="fixed inset-0 z-[60] bg-black bg-opacity-75 flex items-center justify-center p-6">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">
-                📱 QR del Grupo de Votación
-              </h2>
-              <button
-                onClick={() => setShowGroupQRModal(false)}
-                className="text-gray-500 hover:text-gray-700 text-3xl leading-none"
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="flex flex-col items-center space-y-6">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 w-full">
-                <h3 className="text-lg font-semibold text-blue-900 text-center">
-                  {groupQRData.groupName}
-                </h3>
-                <p className="text-sm text-blue-700 text-center mt-2">
-                  Acceso a {groupQRData.votingsCount} {groupQRData.votingsCount === 1 ? 'votación' : 'votaciones'} del grupo
-                </p>
-              </div>
-
-              <div className="bg-white p-6 rounded-xl border-4 border-gray-200">
-                <img
-                  src={groupQRData.qrDataUrl}
-                  alt="QR Code del Grupo"
-                  className="w-80 h-80"
-                />
-              </div>
-
-              <div className="w-full bg-gray-50 border border-gray-200 rounded-lg p-4">
-                <p className="text-xs text-gray-500 mb-1 font-semibold">URL Pública:</p>
-                <p className="text-sm text-gray-900 font-mono break-all">
-                  {groupQRData.publicUrl}
-                </p>
-              </div>
-
-              <div className="w-full grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(groupQRData.publicUrl);
-                    alert('✅ URL copiada al portapapeles');
-                  }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                  Copiar URL
-                </button>
-                <button
-                  onClick={() => {
-                    const link = document.createElement('a');
-                    link.download = `qr-grupo-${groupQRData.groupName.replace(/\s+/g, '-').toLowerCase()}.png`;
-                    link.href = groupQRData.qrDataUrl;
-                    link.click();
-                  }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                  Descargar QR
-                </button>
-              </div>
-
-              <button
-                onClick={() => setShowGroupQRModal(false)}
-                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
+        <GroupQRModal
+          data={groupQRData}
+          validHours={24}
+          onClose={() => setShowGroupQRModal(false)}
+        />
       )}
 
       {/* Modal de gestión de asistencia - Removed, now using routes */}
