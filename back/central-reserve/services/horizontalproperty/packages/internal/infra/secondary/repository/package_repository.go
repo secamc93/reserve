@@ -197,14 +197,14 @@ func (r *PackageRepository) ListPackages(ctx context.Context, filters domain.Pac
 		query = query.Where("packages.package_status_id = ?", *filters.PackageStatusID)
 	}
 	if filters.StartDate != nil {
-		query = query.Where("p.created_at >= ?", *filters.StartDate)
+		query = query.Where("packages.created_at >= ?", *filters.StartDate)
 	}
 	if filters.EndDate != nil {
-		query = query.Where("p.created_at <= ?", *filters.EndDate)
+		query = query.Where("packages.created_at <= ?", *filters.EndDate)
 	}
 
 	offset := (filters.Page - 1) * filters.PageSize
-	if err := query.Order("p.created_at DESC").
+	if err := query.Order("packages.created_at DESC").
 		Limit(filters.PageSize).
 		Offset(offset).
 		Scan(&rows).Error; err != nil {
