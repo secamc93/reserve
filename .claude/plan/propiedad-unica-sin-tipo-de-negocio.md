@@ -36,6 +36,11 @@ ejecutar, espera instrucciones"). No arrancar hasta que el usuario lo indique.
 - Token: el super admin siempre tiene `business_id = 0` (los módulos reciben `?business_id`). Un
   usuario con varias propiedades necesita un business token por propiedad (`/auth/business-token`).
 
+## Decisiones tomadas
+
+- 2026-10-14: el menú lateral y la barra superior usan **los colores (y logo) de la propiedad activa**;
+  al cambiar de propiedad cambian. No se aplica el shell neutro del diseño de votaciones.
+
 ## Decisiones a confirmar antes de ejecutar
 
 1. **Alcance en el back** (recomendado: A primero, B después en un PR aparte):

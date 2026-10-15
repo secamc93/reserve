@@ -10,6 +10,12 @@ en vivo (barra apilada + fichas por torre), **1e** resultados (dona), **1f/1g** 
 Código: `front/rupu-central/src/services/modules/horizontal-properties/voting/ui/` (+ `ui/design/`
 con tokens, fuentes Public Sans / JetBrains Mono solo en el módulo, barra apilada, cálculos).
 
+## Decisiones
+
+- 2026-10-14 (usuario): el shell (menú lateral y barra superior) **conserva los colores de cada
+  propiedad**; el diseño neutro de Claude Design ("Flujo completo") se aplica solo al contenido del
+  módulo de votaciones, aunque el diseño muestre el shell en negro/gris.
+
 ## Pendientes
 
 - [ ] Revisión visual en local con datos (propiedad con unidades por torre y una votación con
