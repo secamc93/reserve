@@ -1,5 +1,6 @@
 'use client';
 
+import { usePaginationParams } from '@shared/ui/pagination';
 import { useState, useEffect } from 'react';
 import { getActionsAction, deleteActionAction } from '../../infrastructure/actions';
 import { Table, TableColumn, Button, Input, ConfirmModal, Badge } from '@shared/ui';
@@ -26,10 +27,9 @@ export function ActionsTable({ token, onEdit, onCreate }: ActionsTableProps) {
     const [searchTerm, setSearchTerm] = useState('');
     const [actionToDelete, setActionToDelete] = useState<ActionItem | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
-    const [page, setPage] = useState(1);
+    const { page, pageSize, setPage } = usePaginationParams();
     const [totalPages, setTotalPages] = useState(1);
     const [total, setTotal] = useState(0);
-    const pageSize = 10;
 
     const loadActions = async () => {
         setLoading(true);
@@ -60,7 +60,7 @@ export function ActionsTable({ token, onEdit, onCreate }: ActionsTableProps) {
 
     useEffect(() => {
         loadActions();
-    }, [token, page, searchTerm]);
+    }, [token, page, pageSize, searchTerm]);
 
     const handleDeleteClick = (action: ActionItem) => {
         setActionToDelete(action);
@@ -185,9 +185,6 @@ export function ActionsTable({ token, onEdit, onCreate }: ActionsTableProps) {
                             Limpiar
                         </Button>
                     </div>
-                    <div className="mt-2 text-sm text-gray-600">
-                        Mostrando {actions.length} de {total} acciones
-                    </div>
                 </div>
             </div>
 
@@ -198,32 +195,8 @@ export function ActionsTable({ token, onEdit, onCreate }: ActionsTableProps) {
                 loading={loading}
                 keyExtractor={(action) => action.id}
                 emptyMessage={searchTerm ? "No se encontraron acciones." : "No hay acciones disponibles."}
+                pagination={{ total, totalPages }}
             />
-
-            {/* Paginación */}
-            {totalPages > 1 && (
-                <div className="flex justify-between items-center p-4 bg-white rounded-lg border border-gray-200">
-                    <div className="text-sm text-gray-600">
-                        Página {page} de {totalPages}
-                    </div>
-                    <div className="flex gap-2">
-                        <Button
-                            onClick={() => setPage(page - 1)}
-                            disabled={page === 1}
-                            className="btn-outline btn-sm"
-                        >
-                            ← Anterior
-                        </Button>
-                        <Button
-                            onClick={() => setPage(page + 1)}
-                            disabled={page === totalPages}
-                            className="btn-outline btn-sm"
-                        >
-                            Siguiente →
-                        </Button>
-                    </div>
-                </div>
-            )}
 
             {/* Modal de eliminación */}
             <ConfirmModal

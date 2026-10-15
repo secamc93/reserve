@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { getResourcesAction, deleteResourceAction } from '../../infrastructure/actions';
-import { Table, TableColumn, Button, ConfirmModal, PaginationProps, TableFiltersProps } from '@shared/ui';
+import { Table, TableColumn, Button, ConfirmModal, TableUrlPagination, TableFiltersProps } from '@shared/ui';
+import { usePaginationParams } from '@shared/ui/pagination';
 import { FilterOption, ActiveFilter } from '@shared/ui/dynamic-filters';
 import { PencilIcon, TrashIcon, CubeTransparentIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { useBusinessTypes } from '../../../business-types/ui/hooks';
@@ -32,8 +33,7 @@ export function ResourcesTable({ token }: ResourcesTableProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [resourceToDelete, setResourceToDelete] = useState<ResourceUI | null>(null);
   const [editResource, setEditResource] = useState<ResourceUI | null>(null);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const { page, pageSize, setPage } = usePaginationParams();
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [filters, setFilters] = useState<Record<string, any>>({});
@@ -288,16 +288,7 @@ export function ResourcesTable({ token }: ResourcesTableProps) {
   ];
 
   // Configurar paginación
-  const pagination: PaginationProps = {
-    currentPage: page,
-    totalPages: totalPages,
-    totalItems: total,
-    itemsPerPage: pageSize,
-    onPageChange: setPage,
-    onItemsPerPageChange: setPageSize,
-    showItemsPerPageSelector: true,
-    itemsPerPageOptions: [5, 10, 25, 50, 100],
-  };
+  const pagination: TableUrlPagination = { total: total, totalPages };
 
   // Configurar filtros
   const tableFilters: TableFiltersProps = {

@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { getCommonAreasAction } from '../infrastructure/actions/get-common-areas.action';
 import { CommonAreaListDTO } from '../domain';
 import { Table } from '@shared/ui/table';
+import { usePaginationParams } from '@shared/ui/pagination';
 import { Button } from '@shared/ui/button';
 import { Alert } from '@shared/ui/alert';
 import { Spinner } from '@shared/ui/spinner';
@@ -19,8 +20,7 @@ export function CommonAreasTable({ businessId }: CommonAreasTableProps) {
   const [commonAreas, setCommonAreas] = useState<CommonAreaListDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const { page, pageSize, setPage } = usePaginationParams();
   const [total, setTotal] = useState(0);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
@@ -145,16 +145,7 @@ export function CommonAreasTable({ businessId }: CommonAreasTableProps) {
         data={commonAreas}
         columns={columns}
         loading={loading}
-        pagination={{
-          currentPage: page,
-          totalItems: total,
-          totalPages: Math.ceil(total / pageSize),
-          itemsPerPage: pageSize,
-          onPageChange: setPage,
-          onItemsPerPageChange: setPageSize,
-          showItemsPerPageSelector: true,
-          itemsPerPageOptions: [5, 10, 25, 50, 100],
-        }}
+        pagination={{ total }}
       />
     </div>
   );

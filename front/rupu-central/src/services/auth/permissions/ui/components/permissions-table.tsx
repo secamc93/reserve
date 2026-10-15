@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { getPermissionsListAction, deletePermissionAction } from '../../infrastructure/actions';
-import { Table, TableColumn, Badge, Button, ConfirmModal, PaginationProps, TableFiltersProps, FilterOption, ActiveFilter } from '@shared/ui';
+import { Table, TableColumn, Badge, Button, ConfirmModal, TableUrlPagination, TableFiltersProps, FilterOption, ActiveFilter } from '@shared/ui';
+import { usePaginationParams } from '@shared/ui/pagination';
 import { PencilIcon, TrashIcon, EyeIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { EditPermissionModal } from './edit-permission-modal';
 import Link from 'next/link';
@@ -36,8 +37,7 @@ export function PermissionsTable({ token }: PermissionsTableProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   
   // Estado de paginación
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const { page: currentPage, pageSize, setPage: setCurrentPage } = usePaginationParams();
   
   // Estado de filtros
   const [filters, setFilters] = useState<{
@@ -321,19 +321,7 @@ export function PermissionsTable({ token }: PermissionsTableProps) {
   ];
 
   // Configurar paginación
-  const pagination: PaginationProps = {
-    currentPage,
-    totalPages,
-    totalItems,
-    itemsPerPage: pageSize,
-    onPageChange: setCurrentPage,
-    onItemsPerPageChange: (size) => {
-      setPageSize(size);
-      setCurrentPage(1);
-    },
-    showItemsPerPageSelector: true,
-    itemsPerPageOptions: [5, 10, 25, 50, 100],
-  };
+  const pagination: TableUrlPagination = { total: totalItems, totalPages };
 
   // Configurar filtros
   const tableFilters: TableFiltersProps = {

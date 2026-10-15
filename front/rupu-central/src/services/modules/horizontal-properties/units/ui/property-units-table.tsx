@@ -5,6 +5,7 @@ import { Alert, ConfirmModal } from '@shared/ui';
 import { getPropertyUnitsAction, deletePropertyUnitAction } from '../infrastructure/actions';
 import { PropertyUnit } from '../domain';
 import { TokenStorage } from '@shared/config';
+import { usePaginationParams } from '@shared/ui/pagination';
 import { generateBusinessTokenAction } from '@/services/auth/login/infrastructure/actions';
 import { CreatePropertyUnitModal } from './create-property-unit-modal';
 import { EditPropertyUnitModal } from './edit-property-unit-modal';
@@ -14,8 +15,7 @@ import { PropertyUnitsDataTable, PropertyUnitFilter, FilterOption } from './prop
 export function PropertyUnitsTable({ businessId }: { businessId: number }) {
   const [units, setUnits] = useState<PropertyUnit[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const { page: currentPage, pageSize, setPage: setCurrentPage } = usePaginationParams();
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -94,15 +94,6 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
       isFirstLoadRef.current = false;
     }
   }, [loadUnits]);
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  const handlePageSizeChange = (size: number) => {
-    setPageSize(size);
-    setCurrentPage(1);
-  };
 
   const handleDeleteClick = (unitId: number) => {
     setUnitToDelete(unitId);
@@ -281,11 +272,8 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
         onFilterRemove={handleRemoveFilter}
         onClearAllFilters={handleClearAllFilters}
         onAddFilter={handleAddFilter}
-        currentPage={currentPage}
         totalPages={totalPages}
         totalItems={totalCount}
-        pageSize={pageSize}
-        onPageChange={handlePageChange}
         loading={loading}
       />
 

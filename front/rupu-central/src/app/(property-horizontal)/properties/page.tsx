@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { ConsolidatedDashboard, useDashboardStats } from '@/services/modules/horizontal-properties/dashboard/ui';
 import { TokenStorage } from '@shared/config';
 import { Spinner, Button } from '@shared/ui';
+import { usePaginationParams } from '@shared/ui/pagination';
 
 export default function PropertiesPage() {
   const router = useRouter();
@@ -40,9 +41,8 @@ export default function PropertiesPage() {
     setShouldShowDashboard(true);
   }, [router]);
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const { stats, loading, error, refresh, setPage, setPageSize: handleSetPageSize } = useDashboardStats({
+  const { page: currentPage, pageSize } = usePaginationParams();
+  const { stats, loading, error, refresh } = useDashboardStats({
     businessId: undefined,
     page: currentPage,
     pageSize: pageSize,
@@ -82,10 +82,6 @@ export default function PropertiesPage() {
             <ConsolidatedDashboard
               data={stats}
               loading={loading}
-              currentPage={currentPage}
-              pageSize={pageSize}
-              onPageChange={setPage}
-              onPageSizeChange={handleSetPageSize}
             />
           ) : null}
         </div>

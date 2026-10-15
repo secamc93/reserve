@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Table, Badge, Alert, TableColumn, Button, Spinner, Select, Input } from '@shared/ui';
+import { usePaginationParams } from '@shared/ui/pagination';
 import { getPackagesAction, getPackageStatusesAction, deletePackageAction } from '../infrastructure/actions';
 import { PackageListDTO, PackageStatus } from '../domain';
 import { TokenStorage } from '@shared/config';
@@ -18,8 +19,7 @@ interface PackagesTableProps {
 export function PackagesTable({ businessId }: PackagesTableProps) {
   const [packages, setPackages] = useState<PackageListDTO[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const { page: currentPage, pageSize, setPage: setCurrentPage } = usePaginationParams();
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [alert, setAlert] = useState<{ type: 'success' | 'error' | 'warning' | 'info'; message: string } | null>(null);
@@ -369,16 +369,7 @@ export function PackagesTable({ businessId }: PackagesTableProps) {
         data={packages}
         columns={columns}
         loading={loading}
-        pagination={{
-          currentPage,
-          totalPages,
-          totalItems: totalCount,
-          itemsPerPage: pageSize,
-          onPageChange: setCurrentPage,
-          onItemsPerPageChange: setPageSize,
-          showItemsPerPageSelector: true,
-          itemsPerPageOptions: [5, 10, 25, 50, 100],
-        }}
+        pagination={{ total: totalCount, totalPages }}
         emptyMessage="No hay paquetes registrados"
       />
 

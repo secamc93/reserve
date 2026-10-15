@@ -8,6 +8,8 @@ import { useState, useEffect, useRef } from 'react';
 // Using CSS classes for buttons instead of Button component
 import { markAttendanceSimpleAction, unmarkAttendanceSimpleAction, getAttendanceListRecordsAction, getAttendanceListSummaryAction, createProxyAction, updateProxyAction, deleteProxyAction } from '../infrastructure/actions/index';
 import { envPublic } from '@shared/config';
+import { PaginationControls } from '@shared/ui/pagination';
+import { fetchAllPages } from '@shared/utils/pagination';
 import { getPropertyUnitsAction } from '../../units/infrastructure/actions';
 import { AttendanceList } from '../../../horizontal-properties/attendance/domain/entities';
 
@@ -122,13 +124,12 @@ export function AttendanceListModal({
       setError(null);
       try {
         const [unitsRes, recordsRes, summaryRes] = await Promise.all([
-          getPropertyUnitsAction({
-          businessId: businessId,
-          page: 1,
-          pageSize: 1000,
-            token,
-            number: searchText || undefined,
-          }),
+          // Los registros de la página pueden referir cualquier unidad: se traen todas en páginas
+          // de 200 (máximo del back) con fetchAllPages, en vez de un page_size=1000 que el back rechaza.
+          fetchAllPages((p, size) =>
+            getPropertyUnitsAction({ businessId, page: p, pageSize: size, token, number: searchText || undefined })
+              .then((r) => ({ items: r.units, total: r.total, totalPages: r.totalPages })),
+          ).then((all) => ({ units: all })),
           getAttendanceListRecordsAction({ token, id: attendanceList.id, page, pageSize, unitNumber: searchText || undefined, attended: attendedFilter === 'all' ? undefined : attendedFilter === 'true' }),
           getAttendanceListSummaryAction({ token, id: attendanceList.id }),
         ]);
@@ -596,44 +597,15 @@ export function AttendanceListModal({
                 </tbody>
               </table>
             </div>
-            {/* Paginación */}
-            <div className="pagination-alt">
-              <div className="flex items-center gap-2">
-                <button
-                  className="pagination-button"
-                  disabled={loading || page <= 1}
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                >
-                  ← Anterior
-                </button>
-                <div className="pagination-info">
-                  Página {page} de {total !== null ? Math.ceil(total / pageSize) : '?'} ({total ?? 0} registros)
-                </div>
-                <button
-                  className="pagination-button"
-                  disabled={loading || (total !== null && page * pageSize >= total)}
-                  onClick={() => setPage(p => p + 1)}
-                >
-                  Siguiente →
-                </button>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-gray-800">Por página</span>
-                <select
-                  className="input"
-                  value={pageSize}
-                  onChange={(e) => { setPage(1); setPageSize(parseInt(e.target.value, 10)); }}
-                  style={{ color: '#111827', backgroundColor: 'white', width: '80px' }}
-                >
-                  <option value={10}>10</option>
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                </select>
-                {total !== null && (
-                  <span className="text-sm font-semibold text-gray-800">Total: {total}</span>
-                )}
-              </div>
-            </div>
+            {/* Paginación (controlada: el modal no tiene URL propia) */}
+            <PaginationControls
+              page={page}
+              pageSize={pageSize}
+              total={total ?? 0}
+              onPageChange={setPage}
+              onPageSizeChange={(size) => { setPage(1); setPageSize(size); }}
+              disabled={loading}
+            />
           </div>
 
         </div>

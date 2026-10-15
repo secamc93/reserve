@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Table, Badge, Alert, TableColumn, Button, Modal, Input, Select } from '@shared/ui';
+import { usePaginationParams } from '@shared/ui/pagination';
 import { getVisitsAction, registerEntryAction, registerExitAction, deleteVisitAction, getVisitTypesAction, getVisitStatusesAction } from '../infrastructure/actions';
 import { VisitListDTO, VisitType, VisitStatus } from '../domain';
 import { TokenStorage } from '@shared/config';
@@ -17,8 +18,7 @@ interface VisitsTableProps {
 export function VisitsTable({ businessId }: VisitsTableProps) {
   const [visits, setVisits] = useState<VisitListDTO[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const { page: currentPage, pageSize, setPage: setCurrentPage } = usePaginationParams();
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [alert, setAlert] = useState<{ type: 'success' | 'error' | 'warning' | 'info'; message: string } | null>(null);
@@ -471,16 +471,7 @@ export function VisitsTable({ businessId }: VisitsTableProps) {
         data={visits}
         columns={columns}
         loading={loading}
-        pagination={{
-          currentPage,
-          totalPages,
-          totalItems: totalCount,
-          itemsPerPage: pageSize,
-          onPageChange: setCurrentPage,
-          onItemsPerPageChange: setPageSize,
-          showItemsPerPageSelector: true,
-          itemsPerPageOptions: [5, 10, 25, 50, 100],
-        }}
+        pagination={{ total: totalCount, totalPages }}
         emptyMessage="No hay visitas registradas"
       />
 

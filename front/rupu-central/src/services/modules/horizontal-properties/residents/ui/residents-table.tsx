@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Badge, Spinner, Alert, ConfirmModal, Button } from '@shared/ui';
-import { Table, TableColumn, PaginationProps, TableFiltersProps, FilterOption, ActiveFilter } from '@shared/ui/table';
+import { Table, TableColumn, TableUrlPagination, TableFiltersProps, FilterOption, ActiveFilter } from '@shared/ui/table';
+import { usePaginationParams } from '@shared/ui/pagination';
 import { getResidentsAction, deleteResidentAction } from '../infrastructure/actions';
 import { Resident } from '../domain/entities';
 import { TokenStorage } from '@shared/config';
@@ -15,8 +16,7 @@ import { PlusIcon } from '@heroicons/react/24/outline';
 export function ResidentsTable({ businessId }: { businessId: number }) {
   const [residents, setResidents] = useState<Resident[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const { page: currentPage, pageSize, setPage: setCurrentPage } = usePaginationParams();
   const [totalPages, setTotalPages] = useState(1);
   const [totalResidents, setTotalResidents] = useState(0);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -352,16 +352,7 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
   ];
 
   // Configuración de paginación
-  const pagination: PaginationProps = {
-    currentPage,
-    totalPages,
-    totalItems: totalResidents,
-    itemsPerPage: pageSize,
-    onPageChange: setCurrentPage,
-    onItemsPerPageChange: setPageSize,
-    showItemsPerPageSelector: true,
-    itemsPerPageOptions: [5, 10, 25, 50, 100],
-  };
+  const pagination: TableUrlPagination = { total: totalResidents, totalPages };
 
   // Configuración de filtros
   const tableFilters: TableFiltersProps = {

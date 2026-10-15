@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { 
   ParkingZonesTable, 
   ParkingSlotsTable, 
@@ -13,6 +13,20 @@ export default function ParkingPage() {
   const params = useParams();
   const businessId = parseInt(params.id as string);
   const [activeTab, setActiveTab] = useState<'zones' | 'slots' | 'assignments' | 'reservations'>('zones');
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // Cada pestaña es otra tabla: al cambiar, vuelve a la página 1 (conserva page_size y demás params).
+  const changeTab = (tab: typeof activeTab) => {
+    setActiveTab(tab);
+    if (searchParams.get('page') !== null) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete('page');
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    }
+  };
 
   if (isNaN(businessId)) {
     return (
@@ -45,7 +59,7 @@ export default function ParkingPage() {
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => changeTab(tab.id)}
                 className={`
                   py-4 px-1 border-b-2 font-medium text-sm
                   ${

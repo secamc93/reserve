@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { getParkingZonesAction } from '../infrastructure/actions/get-parking-zones.action';
 import { ParkingZoneListDTO } from '../domain';
 import { Table } from '@shared/ui/table';
+import { usePaginationParams } from '@shared/ui/pagination';
 import { Button } from '@shared/ui/button';
 import { Alert } from '@shared/ui/alert';
 import { Spinner } from '@shared/ui/spinner';
@@ -20,8 +21,7 @@ export function ParkingZonesTable({ businessId }: ParkingZonesTableProps) {
   const [zones, setZones] = useState<ParkingZoneListDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const { page, pageSize, setPage } = usePaginationParams();
   const [total, setTotal] = useState(0);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
@@ -148,16 +148,7 @@ export function ParkingZonesTable({ businessId }: ParkingZonesTableProps) {
         data={zones}
         columns={columns}
         loading={loading}
-        pagination={{
-          currentPage: page,
-          totalPages,
-          totalItems: total,
-          itemsPerPage: pageSize,
-          onPageChange: setPage,
-          onItemsPerPageChange: setPageSize,
-          showItemsPerPageSelector: true,
-          itemsPerPageOptions: [5, 10, 25, 50, 100],
-        }}
+        pagination={{ total, totalPages }}
         emptyMessage="No hay zonas de parqueo registradas"
       />
 

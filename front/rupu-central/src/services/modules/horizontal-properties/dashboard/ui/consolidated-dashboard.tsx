@@ -24,19 +24,13 @@ import {
 interface ConsolidatedDashboardProps {
   data: DashboardStats;
   loading?: boolean;
-  currentPage?: number;
-  pageSize?: number;
-  onPageChange?: (page: number) => void;
-  onPageSizeChange?: (pageSize: number) => void;
 }
+
+/** La paginación de la tabla de propiedades vive en la URL (?page=&page_size=). */
 
 export function ConsolidatedDashboard({ 
   data, 
   loading,
-  currentPage = 1,
-  pageSize = 10,
-  onPageChange,
-  onPageSizeChange,
 }: ConsolidatedDashboardProps) {
   const router = useRouter();
   const { summary, voting_stats, attendance_stats, business_summaries = [], pagination } = data;
@@ -251,16 +245,7 @@ export function ConsolidatedDashboard({
             emptyMessage="No hay propiedades horizontales disponibles"
             loading={loading}
             pagination={
-              pagination && onPageChange && onPageSizeChange
-                ? {
-                    currentPage: pagination.page,
-                    totalPages: pagination.total_pages,
-                    totalItems: pagination.total,
-                    itemsPerPage: pagination.page_size,
-                    onPageChange: onPageChange,
-                    onItemsPerPageChange: onPageSizeChange,
-                  }
-                : undefined
+              pagination ? { total: pagination.total, totalPages: pagination.total_pages } : undefined
             }
           />
         </div>

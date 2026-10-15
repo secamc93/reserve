@@ -8,12 +8,11 @@ import {
   Plus,
   Pencil,
   Trash2,
-  ChevronLeft,
-  ChevronRight,
   Upload,
   Filter
 } from 'lucide-react';
 import { PropertyUnit, UNIT_TYPE_LABELS } from '../domain';
+import { Pagination } from '@shared/ui/pagination';
 
 // ============================================================================
 // TIPOS E INTERFACES
@@ -46,11 +45,9 @@ export interface PropertyUnitsDataTableProps {
   onFilterRemove?: (filterId: string) => void;
   onClearAllFilters?: () => void;
   onAddFilter?: (filterKey: string, value: any) => void;
-  currentPage?: number;
+  /** page/page_size viven en la URL (ver usePaginationParams); aquí solo los totales del back. */
   totalPages?: number;
   totalItems?: number;
-  pageSize?: number;
-  onPageChange?: (page: number) => void;
   loading?: boolean;
 }
 
@@ -69,11 +66,8 @@ export const PropertyUnitsDataTable: React.FC<PropertyUnitsDataTableProps> = ({
   onFilterRemove,
   onClearAllFilters,
   onAddFilter,
-  currentPage = 1,
-  totalPages = 10,
+  totalPages,
   totalItems = 0,
-  pageSize = 10,
-  onPageChange,
   loading = false
 }) => {
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
@@ -138,91 +132,6 @@ export const PropertyUnitsDataTable: React.FC<PropertyUnitsDataTableProps> = ({
       text: 'text-[#E65100]',
       closeBg: 'bg-[#FF9800]'
     }
-  };
-
-  // Renderizar páginas para paginación
-  const renderPageNumbers = () => {
-    const pages = [];
-
-    if (totalPages <= 5) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(
-          <button
-            key={i}
-            onClick={() => onPageChange?.(i)}
-            className={`w-8 h-8 rounded flex items-center justify-center text-sm font-medium font-['Geist'] transition-colors ${
-              currentPage === i
-                ? 'bg-[#42A5F5] text-white'
-                : 'bg-white border border-[#E0E0E0] text-[#757575] hover:bg-gray-50'
-            }`}
-          >
-            {i}
-          </button>
-        );
-      }
-    } else {
-      pages.push(
-        <button
-          key={1}
-          onClick={() => onPageChange?.(1)}
-          className={`w-8 h-8 rounded flex items-center justify-center text-sm font-medium font-['Geist'] transition-colors ${
-            currentPage === 1
-              ? 'bg-[#42A5F5] text-white'
-              : 'bg-white border border-[#E0E0E0] text-[#757575] hover:bg-gray-50'
-          }`}
-        >
-          1
-        </button>
-      );
-
-      if (currentPage > 3) {
-        pages.push(
-          <div key="dots1" className="px-2 text-[#757575]">
-            ...
-          </div>
-        );
-      }
-
-      for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
-        pages.push(
-          <button
-            key={i}
-            onClick={() => onPageChange?.(i)}
-            className={`w-8 h-8 rounded flex items-center justify-center text-sm font-medium font-['Geist'] transition-colors ${
-              currentPage === i
-                ? 'bg-[#42A5F5] text-white'
-                : 'bg-white border border-[#E0E0E0] text-[#757575] hover:bg-gray-50'
-            }`}
-          >
-            {i}
-          </button>
-        );
-      }
-
-      if (currentPage < totalPages - 2) {
-        pages.push(
-          <div key="dots2" className="px-2 text-[#757575]">
-            ...
-          </div>
-        );
-      }
-
-      pages.push(
-        <button
-          key={totalPages}
-          onClick={() => onPageChange?.(totalPages)}
-          className={`w-8 h-8 rounded flex items-center justify-center text-sm font-medium font-['Geist'] transition-colors ${
-            currentPage === totalPages
-              ? 'bg-[#42A5F5] text-white'
-              : 'bg-white border border-[#E0E0E0] text-[#757575] hover:bg-gray-50'
-          }`}
-        >
-          {totalPages}
-        </button>
-      );
-    }
-
-    return pages;
   };
 
   if (loading) {
@@ -557,39 +466,8 @@ export const PropertyUnitsDataTable: React.FC<PropertyUnitsDataTableProps> = ({
         )}
       </div>
 
-      {/* ============== FOOTER / PAGINACIÓN ============== */}
-      <div className="bg-[#F5F5F5] h-16 px-6 rounded-b-xl border-t border-[#E0E0E0] flex items-center justify-between">
-        {/* Texto de resultados */}
-        <div className="text-[#757575] text-sm font-['Geist']">
-          Mostrando {data.length} de {totalItems} unidades
-        </div>
-
-        {/* Paginación */}
-        {totalPages > 1 && (
-          <div className="flex items-center gap-2">
-            {/* Botón anterior */}
-            <button
-              onClick={() => onPageChange?.(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              className="w-8 h-8 bg-white rounded border border-[#E0E0E0] flex items-center justify-center hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ChevronLeft className="w-4 h-4 text-[#757575]" />
-            </button>
-
-            {/* Números de página */}
-            {renderPageNumbers()}
-
-            {/* Botón siguiente */}
-            <button
-              onClick={() => onPageChange?.(Math.min(totalPages, currentPage + 1))}
-              disabled={currentPage === totalPages}
-              className="w-8 h-8 bg-white rounded border border-[#E0E0E0] flex items-center justify-center hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ChevronRight className="w-4 h-4 text-[#757575]" />
-            </button>
-          </div>
-        )}
-      </div>
+      {/* ============== FOOTER / PAGINACIÓN (estado en la URL) ============== */}
+      <Pagination total={totalItems} totalPages={totalPages} className="rounded-b-xl" />
     </div>
   );
 };

@@ -35,8 +35,6 @@ export function UsersPage() {
     totalCount,
     filters,
     loadUsers,
-    setPage,
-    setPageSize,
     setFilters,
     refresh
   } = useUsers({
@@ -295,12 +293,8 @@ export function UsersPage() {
         closeDeleteModal={closeDeleteModal}
         isViewModalOpen={isViewModalOpen}
         closeViewModal={closeViewModal}
-        currentPage={currentPage}
         totalPages={totalPages}
         totalCount={totalCount}
-        pageSize={pageSize}
-        onPageChange={setPage}
-        onPageSizeChange={setPageSize}
         filters={{
           availableFilters,
           activeFilters,

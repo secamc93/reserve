@@ -2,7 +2,8 @@
 
 import { useState, useMemo } from 'react';
 import { useBusinesses } from '../hooks';
-import { Table, TableColumn, PaginationProps, TableFiltersProps, FilterOption, ActiveFilter } from '@shared/ui/table';
+import { Table, TableColumn, TableUrlPagination, TableFiltersProps, FilterOption, ActiveFilter } from '@shared/ui/table';
+import { usePaginationParams } from '@shared/ui/pagination';
 import { Badge, Button } from '@shared/ui';
 import { BuildingOfficeIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { TokenStorage } from '@shared/config';
@@ -35,8 +36,7 @@ interface Filters {
 
 export function BusinessesTable({ token }: BusinessesTableProps) {
   const businessToken = token || TokenStorage.getBusinessToken() || '';
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const { page: currentPage, pageSize, setPage: setCurrentPage } = usePaginationParams();
   const [filters, setFilters] = useState<Filters>({});
 
   const { businessTypes } = useBusinessTypes();
@@ -233,16 +233,7 @@ export function BusinessesTable({ token }: BusinessesTableProps) {
     },
   ];
 
-  const pagination: PaginationProps = {
-    currentPage,
-    totalPages,
-    totalItems: total,
-    itemsPerPage: pageSize,
-    onPageChange: setCurrentPage,
-    onItemsPerPageChange: setPageSize,
-    showItemsPerPageSelector: true,
-    itemsPerPageOptions: [5, 10, 25, 50, 100],
-  };
+  const pagination: TableUrlPagination = { total: total, totalPages };
 
   const tableFilters: TableFiltersProps = {
     availableFilters,

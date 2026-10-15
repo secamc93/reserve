@@ -21,7 +21,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { Button } from '@shared/ui/button';
 import { Badge } from '@shared/ui/badge';
-import { Table, TableColumn, PaginationProps, TableFiltersProps } from '@shared/ui/table';
+import { Table, TableColumn, TableUrlPagination, TableFiltersProps } from '@shared/ui/table';
 import { ConfirmModal } from '@shared/ui/confirm-modal';
 import { Modal } from '@shared/ui/modal';
 import { deleteUserAction } from '../../infrastructure/actions';
@@ -72,13 +72,9 @@ interface UsersTableProps {
   closeDeleteModal?: () => void;
   isViewModalOpen?: boolean;
   closeViewModal?: () => void;
-  // Props de paginación
-  currentPage?: number;
+  // Paginación: page/page_size viven en la URL; aquí solo los totales del back
   totalPages?: number;
   totalCount?: number;
-  pageSize?: number;
-  onPageChange?: (page: number) => void;
-  onPageSizeChange?: (size: number) => void;
   // Props de filtros
   filters?: TableFiltersProps;
 }
@@ -96,12 +92,8 @@ export function UsersTable({
   closeDeleteModal,
   isViewModalOpen,
   closeViewModal,
-  currentPage = 1,
   totalPages = 1,
   totalCount = 0,
-  pageSize = 10,
-  onPageChange,
-  onPageSizeChange,
   filters
 }: UsersTableProps) {
   
@@ -385,16 +377,7 @@ export function UsersTable({
     },
   ];
 
-  const pagination: PaginationProps | undefined = onPageChange ? {
-    currentPage,
-    totalPages,
-    totalItems: totalCount,
-    itemsPerPage: pageSize,
-    onPageChange,
-    onItemsPerPageChange: onPageSizeChange,
-    showItemsPerPageSelector: true,
-    itemsPerPageOptions: [5, 10, 25, 50, 100],
-  } : undefined;
+  const pagination: TableUrlPagination = { total: totalCount, totalPages };
 
   return (
     <>
