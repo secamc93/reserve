@@ -1,5 +1,3 @@
-version: "3.8"
-
 # Configuración de servicios para producción con Docker
 # Actualizado: 2026-02-15
 
@@ -39,6 +37,7 @@ services:
           memory: 64M
 
   central_reserve:
+    platform: linux/arm64
     image: 334689162817.dkr.ecr.us-east-1.amazonaws.com/rupu-backend:latest
     container_name: central_reserve_prod
     ports:
@@ -94,6 +93,7 @@ services:
           memory: 128M
 
   nginx:
+    platform: linux/arm64
     image: 334689162817.dkr.ecr.us-east-1.amazonaws.com/rupu-nginx:latest
     container_name: nginx_prod
     ports:

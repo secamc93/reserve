@@ -1530,6 +1530,9 @@ definitions:
     type: object
   central_reserve_services_horizontalproperty_resident_internal_infra_primary_handlers_request.CreateResidentRequest:
     properties:
+      business_id:
+        example: 1
+        type: integer
       dni:
         example: "123456789"
         type: string
@@ -1567,6 +1570,7 @@ definitions:
         example: 1
         type: integer
     required:
+    - business_id
     - dni
     - email
     - name
@@ -2042,6 +2046,27 @@ definitions:
       success:
         type: boolean
     type: object
+  central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_request.CreateBulkVotesRequest:
+    properties:
+      auto_mark_attendance:
+        type: boolean
+      ip_address:
+        type: string
+      notes:
+        type: string
+      property_unit_ids:
+        items:
+          type: integer
+        minItems: 1
+        type: array
+      user_agent:
+        type: string
+      voting_option_id:
+        type: integer
+    required:
+    - property_unit_ids
+    - voting_option_id
+    type: object
   central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_request.CreateVoteRequest:
     properties:
       ip_address:
@@ -2132,12 +2157,144 @@ definitions:
     - title
     - voting_type
     type: object
+  central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_request.MarkAttendanceRequest:
+    properties:
+      mark_attendance:
+        type: boolean
+    required:
+    - mark_attendance
+    type: object
   central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_request.UpdateVotingOptionStatusRequest:
     properties:
       is_active:
         type: boolean
     required:
     - is_active
+    type: object
+  central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.BulkVoteItemResultResponse:
+    properties:
+      error:
+        type: string
+      property_unit_id:
+        type: integer
+      success:
+        type: boolean
+      vote:
+        $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.VoteResponse'
+    type: object
+  central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.BulkVoteResultResponse:
+    properties:
+      failed:
+        type: integer
+      results:
+        items:
+          $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.BulkVoteItemResultResponse'
+        type: array
+      succeeded:
+        type: integer
+      total_processed:
+        type: integer
+    type: object
+  central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.BulkVoteSuccess:
+    properties:
+      data:
+        $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.BulkVoteResultResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse:
+    properties:
+      error:
+        type: string
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.PreviousVotingVotedUnitsResponse:
+    properties:
+      previous_voting_id:
+        example: 1
+        type: integer
+      previous_voting_title:
+        example: Aprobación de presupuesto
+        type: string
+      total_voted:
+        example: 45
+        type: integer
+      voted_unit_ids:
+        example:
+        - 1
+        - 2
+        - 3
+        items:
+          type: integer
+        type: array
+    type: object
+  central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.PreviousVotingVotedUnitsSuccess:
+    properties:
+      data:
+        $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.PreviousVotingVotedUnitsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ResetVotingResultResponse:
+    properties:
+      deleted_count:
+        example: 45
+        type: integer
+      voting_id:
+        example: 1
+        type: integer
+    type: object
+  central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ResetVotingSuccess:
+    properties:
+      data:
+        $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ResetVotingResultResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.VoteResponse:
+    properties:
+      color:
+        example: '#22c55e'
+        type: string
+      id:
+        example: 1
+        type: integer
+      ip_address:
+        example: 192.168.1.100
+        type: string
+      notes:
+        example: Voto emitido correctamente
+        type: string
+      option_code:
+        example: "YES"
+        type: string
+      option_text:
+        example: Sí, apruebo
+        type: string
+      property_unit_id:
+        example: 10
+        type: integer
+      user_agent:
+        example: Mozilla/5.0
+        type: string
+      voted_at:
+        example: "2025-03-05T14:30:00Z"
+        type: string
+      voting_id:
+        example: 1
+        type: integer
+      voting_option_id:
+        example: 1
+        type: integer
     type: object
   services_horizontalproperty_vote_internal_infra_primary_handlers_handlerpublic.CreatePublicVoteRequest:
     properties:
@@ -2147,11 +2304,33 @@ definitions:
       property_unit_id:
         description: Opcional - viene del token
         type: integer
+      voting_id:
+        description: 'REQUERIDO: ID de la votación (para tokens de grupo)'
+        example: 1
+        type: integer
       voting_option_id:
+        description: 'REQUERIDO: Opción seleccionada'
         example: 1
         type: integer
     required:
+    - voting_id
     - voting_option_id
+    type: object
+  services_horizontalproperty_vote_internal_infra_primary_handlers_handlerpublic.GeneratePublicGroupURLRequest:
+    properties:
+      business_id:
+        description: ID del business (solo para super admin, opcional en body)
+        example: 19
+        type: integer
+      duration_hours:
+        description: Duración del token en horas
+        example: 24
+        type: integer
+      frontend_url:
+        description: URL base del frontend (opcional, usa URL_BASE_SWAGGER + /public/vote
+          si está vacío)
+        example: https://votacion.miconjunto.com/vote
+        type: string
     type: object
   services_horizontalproperty_vote_internal_infra_primary_handlers_handlerpublic.GeneratePublicVotingURLRequest:
     properties:
@@ -2186,12 +2365,12 @@ info:
   contact:
     email: backend@example.com
     name: Equipo de Backend
-  description: Servicio REST para la gestión de reservas multi-restaurante.
+  description: Servicio REST para la gestión de propiedades horizontales.
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
   termsOfService: https://ejemplo.com/terminos
-  title: Restaurant Reservation API
+  title: Rupü - Propiedad Horizontal API
   version: "1.0"
 paths:
   /actions:
@@ -2460,6 +2639,7 @@ paths:
       consumes:
       - application/json
       description: Lista todas las listas de asistencia por business con filtros opcionales
+        y paginación
       parameters:
       - description: ID del business (opcional para super admin)
         in: query
@@ -2476,6 +2656,14 @@ paths:
       - description: Filtro por ID del grupo de votación
         in: query
         name: voting_group_id
+        type: integer
+      - description: Página (default 1)
+        in: query
+        name: page
+        type: integer
+      - description: Tamaño de página (default 10, max 100)
+        in: query
+        name: page_size
         type: integer
       produces:
       - application/json
@@ -2738,6 +2926,7 @@ paths:
       consumes:
       - application/json
       description: Lista todos los apoderados de un business con filtros opcionales
+        y paginación
       parameters:
       - description: ID del business (opcional para super admin)
         in: query
@@ -2755,6 +2944,14 @@ paths:
         in: query
         name: is_active
         type: boolean
+      - description: Página (default 1)
+        in: query
+        name: page
+        type: integer
+      - description: Tamaño de página (default 10, max 100)
+        in: query
+        name: page_size
+        type: integer
       produces:
       - application/json
       responses:
@@ -5929,6 +6126,50 @@ paths:
       summary: Desactivar un grupo de votación
       tags:
       - Votaciones
+  /horizontal-properties/voting-groups/{group_id}/generate-public-url:
+    post:
+      consumes:
+      - application/json
+      description: 'Genera una URL con token especial para compartir vía QR y permitir
+        votación en todas las votaciones del grupo. La URL se construye usando: 1)
+        frontend_url del request, o 2) URL_BASE_SWAGGER + /public/vote'
+      parameters:
+      - description: ID del grupo de votación
+        in: path
+        name: group_id
+        required: true
+        type: integer
+      - description: ID del business (opcional para super admin, alternativo a body)
+        in: query
+        name: business_id
+        type: integer
+      - description: Configuración de la URL (business_id opcional en body para super
+          admin)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/services_horizontalproperty_vote_internal_infra_primary_handlers_handlerpublic.GeneratePublicGroupURLRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Generar URL pública para grupo de votación con QR
+      tags:
+      - Votaciones
   /horizontal-properties/voting-groups/{group_id}/votings:
     get:
       consumes:
@@ -6468,6 +6709,54 @@ paths:
       summary: Stream de resultados de votación en tiempo real (SSE)
       tags:
       - Votaciones
+  /horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/units/{unit_id}/attendance:
+    put:
+      consumes:
+      - application/json
+      description: Marca o desmarca la asistencia de una unidad para una votación
+        específica
+      parameters:
+      - description: ID del grupo de votación
+        in: path
+        name: group_id
+        required: true
+        type: integer
+      - description: ID de la votación
+        in: path
+        name: voting_id
+        required: true
+        type: integer
+      - description: ID de la unidad
+        in: path
+        name: unit_id
+        required: true
+        type: integer
+      - description: Datos de asistencia
+        in: body
+        name: attendance
+        required: true
+        schema:
+          $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_request.MarkAttendanceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Marcar/desmarcar asistencia de unidad
+      tags:
+      - Votaciones
   /horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/unvoted-units:
     get:
       consumes:
@@ -6641,6 +6930,90 @@ paths:
       summary: Eliminar voto (admin)
       tags:
       - Votaciones
+  /horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/votes/bulk:
+    post:
+      consumes:
+      - application/json
+      description: Registra múltiples votos para diferentes unidades con la misma
+        opción
+      parameters:
+      - description: ID de la votación
+        in: path
+        name: voting_id
+        required: true
+        type: integer
+      - description: Datos de votación masiva
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_request.CreateBulkVotesRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.BulkVoteSuccess'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse'
+      summary: Votación masiva
+      tags:
+      - votes
+  /horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/votes/previous-voted-units:
+    get:
+      description: Busca la votación anterior en el mismo grupo y retorna las unidades
+        que votaron
+      parameters:
+      - description: ID del grupo de votación
+        in: path
+        name: group_id
+        required: true
+        type: integer
+      - description: ID de la votación actual
+        in: path
+        name: voting_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.PreviousVotingVotedUnitsSuccess'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse'
+      summary: Obtener unidades que votaron en la votación anterior
+      tags:
+      - votes
+  /horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/votes/reset:
+    delete:
+      description: Elimina todos los votos de una votación (mantiene asistencia)
+      parameters:
+      - description: ID de la votación
+        in: path
+        name: voting_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ResetVotingSuccess'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse'
+      summary: Resetear votación
+      tags:
+      - votes
   /horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/voting-details:
     get:
       consumes:
@@ -7243,18 +7616,56 @@ paths:
       summary: Obtener contexto de votación pública
       tags:
       - Votaciones Públicas
-  /public/voting-info:
+  /public/voting-group/votings:
     get:
       consumes:
       - application/json
-      description: Obtiene toda la información de la votación usando solo el VOTING_AUTH_TOKEN.
-        Incluye título, descripción, opciones, etc.
+      description: Obtiene todas las votaciones de un grupo con información de si
+        la unidad ya votó en cada una
       parameters:
       - description: Token de autenticación de votación (Bearer token)
         in: header
         name: Authorization
         required: true
         type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Listar votaciones de un grupo (público)
+      tags:
+      - Votaciones Públicas
+  /public/voting-info:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene toda la información de la votación usando el VOTING_AUTH_TOKEN.
+        Para tokens de grupo, debe proporcionar voting_id como query param.
+      parameters:
+      - description: Token de autenticación de votación (Bearer token)
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: ID de votación (requerido solo para tokens de grupo)
+        in: query
+        name: voting_id
+        type: integer
       produces:
       - application/json
       responses:

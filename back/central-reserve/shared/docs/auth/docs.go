@@ -6162,6 +6162,7 @@ const docTemplate = `{
     "central_reserve_services_horizontalproperty_resident_internal_infra_primary_handlers_request.CreateResidentRequest": {
       "type": "object",
       "required": [
+        "business_id",
         "dni",
         "email",
         "name",
@@ -6169,6 +6170,10 @@ const docTemplate = `{
         "resident_type_id"
       ],
       "properties": {
+        "business_id": {
+          "type": "integer",
+          "example": 1
+        },
         "dni": {
           "type": "string",
           "example": "123456789"
@@ -6914,6 +6919,37 @@ const docTemplate = `{
         }
       }
     },
+    "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_request.CreateBulkVotesRequest": {
+      "type": "object",
+      "required": [
+        "property_unit_ids",
+        "voting_option_id"
+      ],
+      "properties": {
+        "auto_mark_attendance": {
+          "type": "boolean"
+        },
+        "ip_address": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        },
+        "property_unit_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "integer"
+          }
+        },
+        "user_agent": {
+          "type": "string"
+        },
+        "voting_option_id": {
+          "type": "integer"
+        }
+      }
+    },
     "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_request.CreateVoteRequest": {
       "type": "object",
       "required": [
@@ -7040,6 +7076,17 @@ const docTemplate = `{
         }
       }
     },
+    "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_request.MarkAttendanceRequest": {
+      "type": "object",
+      "required": [
+        "mark_attendance"
+      ],
+      "properties": {
+        "mark_attendance": {
+          "type": "boolean"
+        }
+      }
+    },
     "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_request.UpdateVotingOptionStatusRequest": {
       "type": "object",
       "required": [
@@ -7051,9 +7098,193 @@ const docTemplate = `{
         }
       }
     },
+    "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.BulkVoteItemResultResponse": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "property_unit_id": {
+          "type": "integer"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "vote": {
+          "$ref": "#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.VoteResponse"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.BulkVoteResultResponse": {
+      "type": "object",
+      "properties": {
+        "failed": {
+          "type": "integer"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.BulkVoteItemResultResponse"
+          }
+        },
+        "succeeded": {
+          "type": "integer"
+        },
+        "total_processed": {
+          "type": "integer"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.BulkVoteSuccess": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.BulkVoteResultResponse"
+        },
+        "message": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.PreviousVotingVotedUnitsResponse": {
+      "type": "object",
+      "properties": {
+        "previous_voting_id": {
+          "type": "integer",
+          "example": 1
+        },
+        "previous_voting_title": {
+          "type": "string",
+          "example": "Aprobación de presupuesto"
+        },
+        "total_voted": {
+          "type": "integer",
+          "example": 45
+        },
+        "voted_unit_ids": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "example": [
+            1,
+            2,
+            3
+          ]
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.PreviousVotingVotedUnitsSuccess": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.PreviousVotingVotedUnitsResponse"
+        },
+        "message": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ResetVotingResultResponse": {
+      "type": "object",
+      "properties": {
+        "deleted_count": {
+          "type": "integer",
+          "example": 45
+        },
+        "voting_id": {
+          "type": "integer",
+          "example": 1
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ResetVotingSuccess": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ResetVotingResultResponse"
+        },
+        "message": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.VoteResponse": {
+      "type": "object",
+      "properties": {
+        "color": {
+          "type": "string",
+          "example": "#22c55e"
+        },
+        "id": {
+          "type": "integer",
+          "example": 1
+        },
+        "ip_address": {
+          "type": "string",
+          "example": "192.168.1.100"
+        },
+        "notes": {
+          "type": "string",
+          "example": "Voto emitido correctamente"
+        },
+        "option_code": {
+          "type": "string",
+          "example": "YES"
+        },
+        "option_text": {
+          "type": "string",
+          "example": "Sí, apruebo"
+        },
+        "property_unit_id": {
+          "type": "integer",
+          "example": 10
+        },
+        "user_agent": {
+          "type": "string",
+          "example": "Mozilla/5.0"
+        },
+        "voted_at": {
+          "type": "string",
+          "example": "2025-03-05T14:30:00Z"
+        },
+        "voting_id": {
+          "type": "integer",
+          "example": 1
+        },
+        "voting_option_id": {
+          "type": "integer",
+          "example": 1
+        }
+      }
+    },
     "services_horizontalproperty_vote_internal_infra_primary_handlers_handlerpublic.CreatePublicVoteRequest": {
       "type": "object",
       "required": [
+        "voting_id",
         "voting_option_id"
       ],
       "properties": {
@@ -7065,9 +7296,35 @@ const docTemplate = `{
           "description": "Opcional - viene del token",
           "type": "integer"
         },
-        "voting_option_id": {
+        "voting_id": {
+          "description": "REQUERIDO: ID de la votación (para tokens de grupo)",
           "type": "integer",
           "example": 1
+        },
+        "voting_option_id": {
+          "description": "REQUERIDO: Opción seleccionada",
+          "type": "integer",
+          "example": 1
+        }
+      }
+    },
+    "services_horizontalproperty_vote_internal_infra_primary_handlers_handlerpublic.GeneratePublicGroupURLRequest": {
+      "type": "object",
+      "properties": {
+        "business_id": {
+          "description": "ID del business (solo para super admin, opcional en body)",
+          "type": "integer",
+          "example": 19
+        },
+        "duration_hours": {
+          "description": "Duración del token en horas",
+          "type": "integer",
+          "example": 24
+        },
+        "frontend_url": {
+          "description": "URL base del frontend (opcional, usa URL_BASE_SWAGGER + /public/vote si está vacío)",
+          "type": "string",
+          "example": "https://votacion.miconjunto.com/vote"
         }
       }
     },

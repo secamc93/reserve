@@ -95,3 +95,7 @@ infra/nginx/awscliv2.zip
 *.pfx
 cam.pem
 .cam.pem
+
+# Backups de archivos de entorno (contienen secretos)
+.env.bak*
+**/.env.bak*

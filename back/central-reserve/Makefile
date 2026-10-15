@@ -223,7 +223,7 @@ deps: ## Instalar dependencias
 	go mod download
 
 docs: ## Generar documentación completa (todos los módulos)
-	swag init -g ./cmd/main.go --output ./shared/docs --parseDependency --parseInternal --exclude services/reserve --exclude services/restaurants
+	swag init -g ./cmd/main.go --output ./shared/docs --parseDependency --parseInternal
 
 docs-auth: ## Generar documentación solo para módulo Auth (detecta entorno automáticamente)
 	@./scripts/generate-swagger.sh auth

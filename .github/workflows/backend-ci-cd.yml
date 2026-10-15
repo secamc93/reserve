@@ -4,182 +4,92 @@ on:
   push:
     branches:
       - main
-      - develop
     paths:
       - 'back/central-reserve/**'
+      - 'back/dbpostgres/**'
       - '.github/workflows/backend-ci-cd.yml'
+      - '.github/scripts/ssm-deploy.sh'
   pull_request:
     branches:
       - main
-      - develop
     paths:
       - 'back/central-reserve/**'
+      - 'back/dbpostgres/**'
   workflow_dispatch:
+
+# OIDC: permite asumir el rol IAM sin access keys
+permissions:
+  id-token: write
+  contents: read
 
 env:
   AWS_REGION: us-east-1
+  AWS_ROLE_ARN: arn:aws:iam::334689162817:role/github-actions-rupu
   ECR_REGISTRY: 334689162817.dkr.ecr.us-east-1.amazonaws.com
   IMAGE_NAME: rupu-backend
 
 jobs:
   build-and-push:
-    name: Build and Push to ECR
-    runs-on: ubuntu-24.04-arm  # Runner ARM64 nativo - más rápido y barato
-    
+    name: Build (ARM64) and Push to ECR
+    runs-on: ubuntu-24.04-arm  # Runner ARM64 nativo de GitHub (gratis en repos públicos)
+    # En PRs solo se construye para validar; push a ECR solo desde main o manual
+    env:
+      PUSH: ${{ github.event_name != 'pull_request' }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.23'
-
-      - name: Configure AWS credentials
+      - name: Configure AWS credentials (OIDC)
+        if: env.PUSH == 'true'
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to ECR
+        if: env.PUSH == 'true'
         run: |
           aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
             docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
       - name: Build image
-        working-directory: ./back/central-reserve
         run: |
-          # Cambiar al directorio padre para incluir dbpostgres en el contexto
-          cd ../..
-
-          # Generar timestamp único para este build
+          # Contexto en la raíz para incluir dbpostgres
           BUILD_TIMESTAMP=$(date +%Y%m%d-%H%M%S)
           echo "BUILD_TIMESTAMP=$BUILD_TIMESTAMP" >> $GITHUB_ENV
-
-          docker buildx build \
-            --platform linux/arm64 \
+          docker build \
             -f back/central-reserve/docker/Dockerfile \
             -t ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
             -t ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:$BUILD_TIMESTAMP \
-            --load \
             .
+          docker image inspect ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest --format 'Arquitectura: {{.Os}}/{{.Architecture}}'
 
       - name: Push image to ECR
+        if: env.PUSH == 'true'
         run: |
-          # Push tag con timestamp primero (inmutable)
           docker push ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:$BUILD_TIMESTAMP
-
-          # Luego push latest (sobrescribe)
           docker push ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-
-          echo "✅ Imagen pusheada: ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:$BUILD_TIMESTAMP"
-          echo "✅ Tag latest actualizado"
+          echo "✅ Imagen pusheada: $BUILD_TIMESTAMP (+ latest)"
 
   deploy:
-    name: Deploy to Server
+    name: Deploy via SSM
     needs: build-and-push
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-
-    # Prevenir ejecuciones concurrentes del mismo workflow
+    runs-on: ubuntu-24.04-arm
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     concurrency:
-      group: deploy-backend-${{ github.ref }}
+      group: deploy-backend
       cancel-in-progress: false
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
-
-      - name: Configure AWS credentials
+      - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Deploy to server
-        run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            set -e
-            cd ~/reserve/infra/compose-prod || exit 1
-
-            # Login a ECR
-            echo "🔐 Login a ECR..."
-            aws ecr get-login-password --region us-east-1 | \
-              docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
-
-            # Obtener digest de la imagen actual (si existe)
-            echo "📋 Verificando imagen actual..."
-            OLD_DIGEST=$(docker inspect ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest 2>/dev/null | jq -r '.[0].Digest // "none"' || echo "none")
-            echo "Digest anterior: $OLD_DIGEST"
-
-            # Pull latest image
-            echo "🔄 Pulling latest backend image..."
-            docker pull ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-
-            # Verificar que la imagen cambió
-            NEW_DIGEST=$(docker inspect ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest | jq -r '.[0].Digest')
-            echo "Digest nuevo: $NEW_DIGEST"
-
-            if [ "$OLD_DIGEST" = "$NEW_DIGEST" ] && [ "$OLD_DIGEST" != "none" ]; then
-              echo "⚠️ ADVERTENCIA: La imagen no cambió. Puede ser un problema de cache."
-            else
-              echo "✅ Nueva imagen descargada correctamente"
-            fi
-
-            # Stop del contenedor antiguo
-            echo "⏹️ Deteniendo contenedor antiguo..."
-            docker stop central_reserve_prod 2>/dev/null || true
-
-            # Remover contenedor antiguo
-            echo "🗑️ Removiendo contenedor antiguo..."
-            docker rm -f central_reserve_prod 2>/dev/null || true
-
-            # Levantar el nuevo contenedor
-            echo "🚀 Levantando nuevo contenedor..."
-            docker compose -f docker-compose.yaml up -d central_reserve
-
-            # Esperar que el contenedor inicie
-            echo "⏳ Esperando que el contenedor inicie..."
-            sleep 10
-
-            # Verificar health del servicio
-            echo "🏥 Verificando health del servicio..."
-            MAX_RETRIES=12
-            RETRY=0
-            while [ $RETRY -lt $MAX_RETRIES ]; do
-              if curl -sf http://localhost:3050/health > /dev/null 2>&1; then
-                echo "✅ Servicio healthy!"
-                break
-              fi
-              RETRY=$((RETRY + 1))
-              echo "Intento $RETRY/$MAX_RETRIES - esperando..."
-              sleep 5
-            done
-
-            if [ $RETRY -eq $MAX_RETRIES ]; then
-              echo "❌ ERROR: El servicio no pasó el health check"
-              echo "📋 Logs del contenedor:"
-              docker logs --tail 50 central_reserve_prod
-              exit 1
-            fi
-
-            # Mostrar estado
-            echo "📊 Estado del servicio:"
-            docker ps --filter "name=central_reserve_prod" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
-
-            # Clean up old images (mantener últimas 3)
-            echo "🧹 Limpiando imágenes antiguas..."
-            docker image prune -f
-
-            echo "✅ Backend desplegado y verificado exitosamente"
-          EOF
+      - name: Deploy backend on EC2 (SSM)
+        run: bash .github/scripts/ssm-deploy.sh backend

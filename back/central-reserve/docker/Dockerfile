@@ -1,10 +1,8 @@
 # Etapa 1: build con Go
-FROM golang:1.24-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.24-alpine AS builder
 
 # Variables de compilación (solo para build)
 ENV CGO_ENABLED=0 \
-    GOOS=linux \
-    GOARCH=arm64 \
     APP_ENV=production
 
 # Instalar herramientas necesarias para generar Swagger
@@ -42,10 +40,11 @@ RUN chmod +x scripts/generate-swagger.sh && \
     APP_ENV=production ./scripts/generate-swagger.sh all || echo "⚠️  Advertencia: La generación de Swagger falló, continuando con el build..."
 
 # Compilar la aplicación
-RUN go build -o central_reserve ./cmd/main.go
+# Cross-compile a ARM64 (Graviton) sin importar la arquitectura del builder
+RUN GOOS=linux GOARCH=arm64 go build -o central_reserve ./cmd/main.go
 
 # Etapa 2: Imagen final minimalista
-FROM alpine:3.19
+FROM --platform=linux/arm64 alpine:3.19
 
 # Solo variables no sensibles necesarias para runtime
 ENV TZ=America/Bogota

@@ -1,8 +1,8 @@
 // main.go
 
-// @title						Restaurant Reservation API
+// @title						Rupü - Propiedad Horizontal API
 // @version					1.0
-// @description				Servicio REST para la gestión de reservas multi-restaurante.
+// @description				Servicio REST para la gestión de propiedades horizontales.
 // @termsOfService				https://ejemplo.com/terminos
 //
 // @contact.name				Equipo de Backend

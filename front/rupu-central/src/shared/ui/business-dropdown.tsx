@@ -51,8 +51,6 @@ export function BusinessDropdown() {
             if (!businessTypeId) {
               const typeIdMap: Record<string, number> = {
                 'horizontal_property': 11,
-                'sport_training': 12,
-                'restaurants': 1,
               };
               businessTypeId = typeIdMap[activeType];
             }

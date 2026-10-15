@@ -6,10 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Rupü (Reserve)** is a PropTech monorepo platform for comprehensive property management. The system is modular and follows **strict Hexagonal Architecture** for both backend (Go) and frontend (Next.js).
 
-**Current State:** Multi-business system supporting:
-- Restaurants (reservations, menus, operations)
-- Horizontal Properties (condominiums, units, residents, parking, security, voting)
-- Sport Training (players, coaches, bookings, attendance)
+**Current State:** Focused exclusively on Horizontal Properties (condominiums, units, residents, parking, security, voting, packages, visits, common areas).
 
 ---
 
@@ -218,15 +215,11 @@ err := r.db.Table("users").Find(&users).Error  // Direct table name
 
 Each business domain gets its own PostgreSQL schema:
 - `horizontal_property` - Condominiums, units, residents
-- `sport_training` - Players, coaches, bookings
-- `restaurants` - Tables, reservations, menus
 
 ### Model Naming Conventions
 
-- Prefix models with domain abbreviation to avoid collisions
-- Example: `STPlayer`, `STGuardian`, `STBookingStatus` (ST = Sport Training)
-- Table names: `sport_training.players`, `sport_training.coaches`
-- Index names: `idx_st_player_name`
+- Prefix models with domain abbreviation when names could collide across domains
+- Table names include the schema: `horizontal_property.property_units`, `horizontal_property.residents`
 
 ### Migrations
 

@@ -44,8 +44,8 @@ func (br *BasicRoutes) Setup() {
 // configureSwagger configura la documentación de Swagger
 func (br *BasicRoutes) configureSwagger() {
 	// Configuración básica de Swagger
-	docs.SwaggerInfo.Title = "Restaurant Reservation API"
-	docs.SwaggerInfo.Description = "Servicio REST para la gestión de reservas multi-restaurante."
+	docs.SwaggerInfo.Title = "Rupü - Propiedad Horizontal API"
+	docs.SwaggerInfo.Description = "Servicio REST para la gestión de propiedades horizontales."
 	docs.SwaggerInfo.Version = "1.0"
 	docs.SwaggerInfo.BasePath = "/api/v1"
 
