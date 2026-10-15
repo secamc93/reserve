@@ -111,12 +111,13 @@ func MapVoteDTOsToResponses(dtos []domain.VoteDTO) []response.VoteResponse {
 // MapVotingResultToResponse mapea DTO de resultado a response
 func MapVotingResultToResponse(dto *domain.VotingResultDTO) response.VotingResultResponse {
 	return response.VotingResultResponse{
-		VotingOptionID: dto.VotingOptionID,
-		OptionText:     dto.OptionText,
-		OptionCode:     dto.OptionCode,
-		Color:          dto.Color,
-		VoteCount:      dto.VoteCount,
-		Percentage:     dto.Percentage,
+		VotingOptionID:          dto.VotingOptionID,
+		OptionText:              dto.OptionText,
+		OptionCode:              dto.OptionCode,
+		Color:                   dto.Color,
+		VoteCount:               dto.VoteCount,
+		Percentage:              dto.Percentage,
+		PercentageByCoefficient: dto.PercentageByCoefficient,
 	}
 }
 

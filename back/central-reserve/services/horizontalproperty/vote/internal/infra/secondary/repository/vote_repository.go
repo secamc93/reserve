@@ -461,6 +461,11 @@ func (r *Repository) GetVotingResults(ctx context.Context, votingID uint) ([]dom
 		totalVotes += result.VoteCount
 	}
 
+	coefByOption, totalCoef, err := r.coefficientsByOption(ctx, votingID)
+	if err != nil {
+		return nil, err
+	}
+
 	// Construir DTOs con porcentajes
 	dtos := make([]domain.VotingResultDTO, len(results))
 	for i, result := range results {
@@ -475,6 +480,9 @@ func (r *Repository) GetVotingResults(ctx context.Context, votingID uint) ([]dom
 			Color:          result.Color,
 			VoteCount:      result.VoteCount,
 			Percentage:     percentage,
+		}
+		if totalCoef > 0 {
+			dtos[i].PercentageByCoefficient = coefByOption[result.VotingOptionID] / totalCoef * 100
 		}
 	}
 
