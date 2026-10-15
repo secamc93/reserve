@@ -49,6 +49,7 @@ go.work.sum
 .env.development
 .env.development.local
 .env.test
+!.env.test.example
 .env.test.local
 .env.production
 .env.production.local
@@ -77,8 +78,15 @@ docker-compose.override.yml
 infra/nginx/awscliv2.zip
 *.zip
 
-# Claude Code
-.claude/
+# Claude Code: el contexto de agentes (.claude/) SÍ se versiona; solo se ignora lo local o secreto
+.claude/settings.local.json
+.claude/mcp.json
+.claude/worktrees/
+.claude/scheduled_tasks.lock
+.playwright-mcp/
+# Notas .claude viejas dentro de subcarpetas (no forman parte del contexto versionado)
+back/**/.claude/
+**/.claude/settings.local.json
 
 # Terraform
 .terraform/

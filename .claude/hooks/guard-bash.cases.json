@@ -1,0 +1,16 @@
+[
+  ["bloquear", "nohup go run ./cmd &"],
+  ["bloquear", "cd back && nohup pnpm dev"],
+  ["bloquear", "ls; nohup x"],
+  ["bloquear", "go run ./cmd/main.go &"],
+  ["bloquear", "git push origin main"],
+  ["bloquear", "git add -f .env"],
+  ["bloquear", "git add -f cualquier-cosa"],
+  ["bloquear", "cat > a.md <<'EOF'\ntexto\nEOF\nnohup x"],
+  ["bloquear", "cat <<EOF > a.md\ntexto\nEOF\ngit push origin main"],
+  ["permitir", "cat > f.md <<EOF\nprocesos sueltos (`nohup`, `&`) prohibidos\nEOF"],
+  ["permitir", "git commit -q -F - <<'EOF'\nguard-bash bloquea git add -f, nohup y git push origin main\nEOF\ngit log --oneline -1"],
+  ["permitir", "echo \"no usar nohup aqui\""],
+  ["permitir", "./scripts/dev-services.sh start backend"],
+  ["permitir", "git push -u origin chore/agent-context-testing"]
+]
