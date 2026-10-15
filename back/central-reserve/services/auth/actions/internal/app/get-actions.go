@@ -2,6 +2,7 @@ package app
 
 import (
 	"central_reserve/services/auth/actions/internal/domain"
+	"central_reserve/shared/pagination"
 	"context"
 	"math"
 )
@@ -11,12 +12,7 @@ func (uc *ActionUseCase) GetActions(ctx context.Context, page, pageSize int, nam
 	uc.logger.Info().Int("page", page).Int("page_size", pageSize).Str("name", name).Msg("Iniciando obtención de actions")
 
 	// Configurar valores por defecto para paginación
-	if pageSize <= 0 {
-		pageSize = 10
-	}
-	if page <= 0 {
-		page = 1
-	}
+	page, pageSize = pagination.Normalize(page, pageSize)
 
 	// Obtener actions del repositorio
 	actions, total, err := uc.repository.GetActions(ctx, page, pageSize, name)

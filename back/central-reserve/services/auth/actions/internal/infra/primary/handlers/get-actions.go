@@ -5,6 +5,7 @@ import (
 	"central_reserve/services/auth/actions/internal/infra/primary/handlers/request"
 	"central_reserve/services/auth/actions/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
+	"central_reserve/shared/pagination"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -18,7 +19,7 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Param			page		query		int						false	"Número de página"		default(1)	minimum(1)
-//	@Param			page_size	query		int						false	"Tamaño de página"		default(10)	minimum(1)	maximum(100)
+//	@Param			page_size	query		int						false	"Tamaño de página"		default(10)	minimum(1)	maximum(200)
 //	@Param			name		query		string					false	"Filtrar por nombre (búsqueda parcial)"
 //	@Success		200			{object}	map[string]interface{}	"Lista de actions obtenida exitosamente"
 //	@Failure		400			{object}	map[string]interface{}	"Parámetros de consulta inválidos"
@@ -40,6 +41,17 @@ func (h *ActionHandler) GetActionsHandler(c *gin.Context) {
 		})
 		return
 	}
+
+	page, pageSize, err := pagination.Resolve(req.Page, req.PageSize)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{
+			Success: false,
+			Message: "Parámetros de paginación inválidos",
+			Error:   err.Error(),
+		})
+		return
+	}
+	req.Page, req.PageSize = page, pageSize
 
 	// Llamar al caso de uso
 	result, err := h.usecase.GetActions(ctx, req.Page, req.PageSize, req.Name)

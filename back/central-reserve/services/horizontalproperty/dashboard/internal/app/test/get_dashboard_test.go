@@ -280,11 +280,18 @@ func TestGetDashboard_SuperAdmin_Pagination(t *testing.T) {
 			expectedPageSize: 10,
 		},
 		{
-			name:             "pageSize mayor que 100 se limita a 100",
+			name:             "pageSize 200 (máximo) se respeta",
 			inputPage:        1,
-			inputPageSize:    150,
+			inputPageSize:    200,
 			expectedPage:     1,
-			expectedPageSize: 100,
+			expectedPageSize: 200,
+		},
+		{
+			name:             "pageSize mayor que 200 se limita a 200",
+			inputPage:        1,
+			inputPageSize:    201,
+			expectedPage:     1,
+			expectedPageSize: 200,
 		},
 		{
 			name:             "valores válidos se mantienen",

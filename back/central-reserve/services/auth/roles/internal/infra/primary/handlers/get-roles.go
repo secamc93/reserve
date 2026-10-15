@@ -6,6 +6,7 @@ import (
 	"central_reserve/services/auth/roles/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/auth/roles/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
+	"central_reserve/shared/pagination"
 	"net/http"
 	"strconv"
 
@@ -21,7 +22,7 @@ import (
 //	@Produce		json
 //	@Security		BearerAuth
 //	@Param			page				query		int		false	"Número de página"	default(1)	minimum(1)
-//	@Param			page_size			query		int		false	"Tamaño de página"	default(10)	minimum(1)	maximum(100)
+//	@Param			page_size			query		int		false	"Tamaño de página"	default(10)	minimum(1)	maximum(200)
 //	@Param			business_type_id	query		int		false	"Filtrar por tipo de business"
 //	@Param			scope_id			query		int		false	"Filtrar por ID de scope"
 //	@Param			is_system			query		bool	false	"Filtrar por rol de sistema (true/false)"
@@ -40,20 +41,14 @@ func (h *handlers) GetRolesHandler(c *gin.Context) {
 	filters := domain.RoleFilters{}
 
 	// Paginación
-	page := 1
-	if pageStr := c.Query("page"); pageStr != "" {
-		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
-			page = p
-		}
+	page, pageSize, err := pagination.ParseQuery(c.Query("page"), c.Query("page_size"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.RoleErrorResponse{
+			Error: err.Error(),
+		})
+		return
 	}
 	filters.Page = page
-
-	pageSize := 10
-	if pageSizeStr := c.Query("page_size"); pageSizeStr != "" {
-		if ps, err := strconv.Atoi(pageSizeStr); err == nil && ps > 0 && ps <= 100 {
-			pageSize = ps
-		}
-	}
 	filters.PageSize = pageSize
 
 	// Ordenamiento

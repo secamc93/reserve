@@ -8,6 +8,7 @@ import (
 	"central_reserve/services/horizontalproperty/attendance/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/attendance/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
+	"central_reserve/shared/pagination"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,7 +26,7 @@ import (
 //	@Param			proxy_type		query	string	false	"Filtro por tipo de apoderado"
 //	@Param			is_active		query	bool	false	"Filtro por activo"
 //	@Param			page			query	int		false	"Página (default 1)"
-//	@Param			page_size		query	int		false	"Tamaño de página (default 10, max 100)"
+//	@Param			page_size		query	int		false	"Tamaño de página (default 10, max 200)"	minimum(1)	maximum(200)
 //	@Success		200				{object}	object
 //	@Failure		400				{object}	object
 //	@Failure		500				{object}	object
@@ -70,17 +71,14 @@ func (h *AttendanceHandler) ListProxies(c *gin.Context) {
 	ctx = log.WithBusinessIDCtx(ctx, businessID)
 
 	// Parse pagination
-	page := 1
-	pageSize := 10
-	if v := c.Query("page"); v != "" {
-		if n, err := strconv.Atoi(v); err == nil && n > 0 {
-			page = n
-		}
-	}
-	if v := c.Query("page_size"); v != "" {
-		if n, err := strconv.Atoi(v); err == nil && n > 0 {
-			pageSize = n
-		}
+	page, pageSize, err := pagination.ParseQuery(c.Query("page"), c.Query("page_size"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{
+			Success: false,
+			Message: "Parámetros de paginación inválidos",
+			Error:   err.Error(),
+		})
+		return
 	}
 
 	// Log de inicio de operación

@@ -162,13 +162,13 @@ func TestListHorizontalProperties_MaxPageSize(t *testing.T) {
 	// PageSize mayor al máximo permitido
 	filters := domain.HorizontalPropertyFiltersDTO{
 		Page:     1,
-		PageSize: 200, // Mayor a 100
+		PageSize: 201, // Mayor al máximo (200)
 	}
 
 	mockRepo.ListHorizontalPropertiesFunc = func(ctx context.Context, filters domain.HorizontalPropertyFiltersDTO) (*domain.PaginatedHorizontalPropertyDTO, error) {
 		// Verificar que se aplicó el máximo
-		if filters.PageSize != 100 {
-			t.Errorf("Expected max pageSize 100, got %d", filters.PageSize)
+		if filters.PageSize != 200 {
+			t.Errorf("Expected max pageSize 200, got %d", filters.PageSize)
 		}
 
 		return &domain.PaginatedHorizontalPropertyDTO{

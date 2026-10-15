@@ -6,6 +6,7 @@ import (
 
 	"central_reserve/services/horizontalproperty/dashboard/internal/domain"
 	"central_reserve/shared/log"
+	"central_reserve/shared/pagination"
 )
 
 // GetDashboard obtiene el dashboard completo según el tipo de usuario
@@ -72,15 +73,7 @@ func (uc *DashboardUseCase) GetDashboard(ctx context.Context, businessID uint, i
 	// Si es super admin, obtener resúmenes de todos los businesses con paginación
 	if isSuperAdmin && businessID == 0 {
 		// Validar parámetros de paginación
-		if page < 1 {
-			page = 1
-		}
-		if pageSize < 1 {
-			pageSize = 10
-		}
-		if pageSize > 100 {
-			pageSize = 100
-		}
+		page, pageSize = pagination.Normalize(page, pageSize)
 
 		businessSummaries, total, err := uc.repo.GetBusinessSummaries(ctx, page, pageSize)
 		if err != nil {

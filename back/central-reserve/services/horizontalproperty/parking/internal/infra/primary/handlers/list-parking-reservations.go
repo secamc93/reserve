@@ -8,6 +8,7 @@ import (
 	"central_reserve/services/horizontalproperty/parking/internal/infra/primary/handlers/request"
 	"central_reserve/services/horizontalproperty/parking/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
+	"central_reserve/shared/pagination"
 
 	"github.com/gin-gonic/gin"
 )
@@ -26,6 +27,17 @@ func (h *ParkingHandler) ListParkingReservations(c *gin.Context) {
 		})
 		return
 	}
+
+	page, pageSize, err := pagination.Resolve(req.Page, req.PageSize)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{
+			Success: false,
+			Message: "Parámetros de paginación inválidos",
+			Error:   err.Error(),
+		})
+		return
+	}
+	req.Page, req.PageSize = page, pageSize
 
 	businessID, exists := middleware.GetBusinessID(c)
 	if !exists {

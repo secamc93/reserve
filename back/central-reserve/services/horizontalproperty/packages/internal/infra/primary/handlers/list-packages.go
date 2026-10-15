@@ -5,6 +5,7 @@ import (
 	"central_reserve/services/horizontalproperty/packages/internal/domain"
 	"central_reserve/services/horizontalproperty/packages/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
+	"central_reserve/shared/pagination"
 	"net/http"
 	"strconv"
 	"time"
@@ -20,7 +21,7 @@ import (
 // @Produce json
 // @Security BearerAuth
 // @Param page query int false "Página" default(1)
-// @Param page_size query int false "Tamaño de página" default(10)
+// @Param page_size query int false "Tamaño de página (1-200)" default(10) minimum(1) maximum(200)
 // @Param property_unit_id query int false "ID de la unidad"
 // @Param resident_id query int false "ID del residente"
 // @Param package_status_id query int false "ID del estado"
@@ -42,8 +43,15 @@ func (h *PackageHandler) ListPackages(c *gin.Context) {
 		return
 	}
 
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "10"))
+	page, pageSize, err := pagination.ParseQuery(c.Query("page"), c.Query("page_size"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{
+			Success: false,
+			Message: "Parámetros de paginación inválidos",
+			Error:   err.Error(),
+		})
+		return
+	}
 
 	filters := domain.PackageFiltersDTO{
 		BusinessID: businessID,

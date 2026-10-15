@@ -2,8 +2,8 @@ package request
 
 // GetUsersRequest representa la solicitud para obtener usuarios filtrados
 type GetUsersRequest struct {
-	Page       int    `form:"page" binding:"min=1" default:"1"`
-	PageSize   int    `form:"page_size" binding:"min=1,max=100" default:"10"`
+	Page       int    `form:"page" default:"1"`        // 0 o ausente = 1 (se valida con shared/pagination)
+	PageSize   int    `form:"page_size" default:"10"`  // 0 o ausente = 10, máximo 200
 	Name       string `form:"name" binding:"omitempty,max=100"`
 	Email      string `form:"email" binding:"omitempty,email"`
 	Phone      string `form:"phone" binding:"omitempty,len=10"`

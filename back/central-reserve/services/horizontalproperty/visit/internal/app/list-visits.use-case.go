@@ -5,6 +5,7 @@ import (
 
 	"central_reserve/services/horizontalproperty/visit/internal/domain"
 	"central_reserve/shared/log"
+	"central_reserve/shared/pagination"
 )
 
 // ListVisits lista visitas con filtros y paginación
@@ -15,15 +16,7 @@ func (uc *visitUseCase) ListVisits(ctx context.Context, filters domain.VisitFilt
 	// El repositorio manejará el filtro apropiadamente
 
 	// Validar paginación
-	if filters.Page < 1 {
-		filters.Page = 1
-	}
-	if filters.PageSize < 1 {
-		filters.PageSize = 10
-	}
-	if filters.PageSize > 100 {
-		filters.PageSize = 100
-	}
+	filters.Page, filters.PageSize = pagination.Normalize(filters.Page, filters.PageSize)
 
 	// Llamar al repositorio
 	result, err := uc.visitRepo.ListVisits(ctx, filters)

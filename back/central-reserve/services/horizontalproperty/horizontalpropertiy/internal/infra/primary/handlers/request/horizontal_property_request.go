@@ -76,7 +76,7 @@ type ListHorizontalPropertiesRequest struct {
 	IsActive   *bool   `json:"is_active,omitempty" form:"is_active" example:"true"`
 	BusinessID *uint   `json:"business_id,omitempty" form:"business_id" example:"18"`
 	Page       int     `json:"page" form:"page" validate:"min=1" example:"1"`
-	PageSize   int     `json:"page_size" form:"page_size" validate:"min=1,max=100" example:"10"`
+	PageSize   int     `json:"page_size" form:"page_size" validate:"min=1,max=200" example:"10"`
 	OrderBy    string  `json:"order_by" form:"order_by" validate:"omitempty,oneof=name code created_at updated_at" example:"created_at"`
 	OrderDir   string  `json:"order_dir" form:"order_dir" validate:"omitempty,oneof=asc desc" example:"desc"`
 }

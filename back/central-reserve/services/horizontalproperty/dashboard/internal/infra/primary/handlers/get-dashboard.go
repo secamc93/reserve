@@ -8,6 +8,7 @@ import (
 	"central_reserve/services/horizontalproperty/dashboard/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/dashboard/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
+	"central_reserve/shared/pagination"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,7 +23,7 @@ import (
 //	@Produce		json
 //	@Param			business_id	query	uint	false	"ID del business (opcional para super admin, si no se envía ve todo)"
 //	@Param			page		query	int		false	"Página para business summaries (solo super admin, default: 1)"
-//	@Param			page_size	query	int		false	"Tamaño de página para business summaries (solo super admin, default: 10, max: 100)"
+//	@Param			page_size	query	int		false	"Tamaño de página para business summaries (solo super admin, default: 10, max: 200)"	minimum(1)	maximum(200)
 //	@Success		200			{object}	object
 //	@Failure		400			{object}	object
 //	@Failure		500			{object}	object
@@ -60,18 +61,17 @@ func (h *DashboardHandler) GetDashboard(c *gin.Context) {
 	h.logger.Info(ctx).Uint("business_id", businessID).Bool("is_super_admin", isSuperAdmin).Msg("Obteniendo dashboard")
 
 	// Obtener parámetros de paginación (solo para super admin)
-	page := 1
-	pageSize := 10
+	page, pageSize := pagination.DefaultPage, pagination.DefaultPageSize
 	if isSuperAdmin {
-		if pageStr := c.Query("page"); pageStr != "" {
-			if parsedPage := parseUint(pageStr); parsedPage > 0 {
-				page = int(parsedPage)
-			}
-		}
-		if pageSizeStr := c.Query("page_size"); pageSizeStr != "" {
-			if parsedPageSize := parseUint(pageSizeStr); parsedPageSize > 0 {
-				pageSize = int(parsedPageSize)
-			}
+		var err error
+		page, pageSize, err = pagination.ParseQuery(c.Query("page"), c.Query("page_size"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, response.ErrorResponse{
+				Success: false,
+				Message: "Parámetros de paginación inválidos",
+				Error:   err.Error(),
+			})
+			return
 		}
 	}
 

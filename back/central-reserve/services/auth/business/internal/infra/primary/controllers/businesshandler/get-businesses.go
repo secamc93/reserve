@@ -7,6 +7,7 @@ import (
 	"central_reserve/services/auth/middleware"
 	"central_reserve/services/auth/business/internal/infra/primary/controllers/businesshandler/mappers"
 	"central_reserve/shared/log"
+	"central_reserve/shared/pagination"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,7 +21,8 @@ import (
 //	@Produce		json
 //	@Security		BearerAuth
 //	@Param			page				query		int						false	"Número de página (por defecto 1)"
-//	@Param			per_page			query		int						false	"Elementos por página (por defecto 10)"
+//	@Param			page_size			query		int						false	"Elementos por página (por defecto 10, máximo 200)"	minimum(1)	maximum(200)
+//	@Param			per_page			query		int						false	"Alias de page_size (compatibilidad)"				minimum(1)	maximum(200)
 //	@Param			name				query		string					false	"Filtrar por nombre de negocio"
 //	@Param			business_type_id	query		int						false	"Filtrar por tipo de negocio"
 //	@Param			is_active			query		boolean					false	"Filtrar por estado activo/inactivo"
@@ -42,18 +44,15 @@ func (h *BusinessHandler) GetBusinesses(c *gin.Context) {
 
 	h.logger.Info(ctx).Msg("Super admin accediendo al listado de businesses")
 
-	// Obtener parámetros de paginación
-	pageStr := c.DefaultQuery("page", "1")
-	perPageStr := c.DefaultQuery("per_page", "10")
-
-	page, err := strconv.Atoi(pageStr)
-	if err != nil || page < 1 {
-		page = 1
+	// Obtener parámetros de paginación: page_size (estándar) o per_page (compatibilidad)
+	perPageStr := c.Query("page_size")
+	if perPageStr == "" {
+		perPageStr = c.Query("per_page")
 	}
-
-	perPage, err := strconv.Atoi(perPageStr)
-	if err != nil || perPage < 1 || perPage > 100 {
-		perPage = 10
+	page, perPage, err := pagination.ParseQuery(c.Query("page"), perPageStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, mappers.BuildErrorResponse("invalid_pagination", err.Error()))
+		return
 	}
 
 	// Obtener filtros opcionales

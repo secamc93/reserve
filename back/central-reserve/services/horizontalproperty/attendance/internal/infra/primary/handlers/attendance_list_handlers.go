@@ -9,6 +9,7 @@ import (
 	"central_reserve/services/horizontalproperty/attendance/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/attendance/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
+	"central_reserve/shared/pagination"
 
 	"github.com/gin-gonic/gin"
 )
@@ -26,7 +27,7 @@ import (
 //	@Param			is_active	query	bool	false	"Filtro por activo"
 //	@Param			voting_group_id	query	uint	false	"Filtro por ID del grupo de votación"
 //	@Param			page		query	int		false	"Página (default 1)"
-//	@Param			page_size	query	int		false	"Tamaño de página (default 10, max 100)"
+//	@Param			page_size	query	int		false	"Tamaño de página (default 10, max 200)"	minimum(1)	maximum(200)
 //	@Success		200			{object}	object
 //	@Failure		400			{object}	object
 //	@Failure		500			{object}	object
@@ -61,17 +62,14 @@ func (h *AttendanceHandler) ListAttendanceLists(c *gin.Context) {
 	ctx = log.WithBusinessIDCtx(ctx, businessID)
 
 	// Parse pagination
-	page := 1
-	pageSize := 10
-	if v := c.Query("page"); v != "" {
-		if n, err := strconv.Atoi(v); err == nil && n > 0 {
-			page = n
-		}
-	}
-	if v := c.Query("page_size"); v != "" {
-		if n, err := strconv.Atoi(v); err == nil && n > 0 {
-			pageSize = n
-		}
+	page, pageSize, err := pagination.ParseQuery(c.Query("page"), c.Query("page_size"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{
+			Success: false,
+			Message: "Parámetros de paginación inválidos",
+			Error:   err.Error(),
+		})
+		return
 	}
 
 	// Log de información con contexto estructurado
@@ -193,7 +191,7 @@ func (h *AttendanceHandler) GetAttendanceSummary(c *gin.Context) {
 //	@Produce		json
 //	@Param			id	path	uint	true	"ID de la lista"
 //	@Param			page	query	int	false	"Página (default 1)"
-//	@Param			page_size	query	int	false	"Tamaño de página (default 50)"
+//	@Param			page_size	query	int	false	"Tamaño de página (default 10, max 200)"	minimum(1)	maximum(200)
 //	@Param			unit_number	query	string	false	"Filtro por número de unidad (CASA)"
 //	@Param			attended	query	string	false	"Filtro de asistencia: true|false"
 //	@Success		200		{object}	object
@@ -207,17 +205,14 @@ func (h *AttendanceHandler) GetAttendanceRecordsByList(c *gin.Context) {
 		return
 	}
 
-	page := 1
-	pageSize := 50
-	if v := c.Query("page"); v != "" {
-		if n, err := strconv.Atoi(v); err == nil && n > 0 {
-			page = n
-		}
-	}
-	if v := c.Query("page_size"); v != "" {
-		if n, err := strconv.Atoi(v); err == nil && n > 0 {
-			pageSize = n
-		}
+	page, pageSize, err := pagination.ParseQuery(c.Query("page"), c.Query("page_size"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{
+			Success: false,
+			Message: "Parámetros de paginación inválidos",
+			Error:   err.Error(),
+		})
+		return
 	}
 	unitNumber := c.Query("unit_number")
 	var attendedPtr *bool

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/domain"
+	"central_reserve/shared/pagination"
 )
 
 // ListHorizontalProperties obtiene una lista paginada de propiedades horizontales
@@ -13,15 +14,7 @@ func (uc *HorizontalPropertyUseCase) ListHorizontalProperties(ctx context.Contex
 	uc.logger.Info().Interface("filters", filters).Msg("Obteniendo lista de propiedades horizontales")
 
 	// Establecer valores por defecto para paginación
-	if filters.Page <= 0 {
-		filters.Page = 1
-	}
-	if filters.PageSize <= 0 {
-		filters.PageSize = 10
-	}
-	if filters.PageSize > 100 {
-		filters.PageSize = 100
-	}
+	filters.Page, filters.PageSize = pagination.Normalize(filters.Page, filters.PageSize)
 	if filters.OrderBy == "" {
 		filters.OrderBy = "created_at"
 	}

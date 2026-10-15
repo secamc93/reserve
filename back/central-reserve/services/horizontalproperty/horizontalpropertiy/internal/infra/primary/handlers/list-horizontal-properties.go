@@ -6,6 +6,7 @@ import (
 	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/primary/handlers/mapper"
 	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/primary/handlers/request"
 	"central_reserve/services/horizontalproperty/horizontalpropertiy/internal/infra/primary/handlers/response"
+	"central_reserve/shared/pagination"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -23,8 +24,8 @@ import (
 //	@Param			name		query		string	false	"Filtro por nombre (búsqueda parcial)"
 //	@Param			code		query		string	false	"Filtro por código (búsqueda parcial)"
 //	@Param			is_active	query		bool	false	"Filtro por estado activo"
-//	@Param			page		query		int		false	"Número de página (mínimo 1)"	default(1)
-//	@Param			page_size	query		int		false	"Tamaño de página (1-100)"		default(10)
+//	@Param			page		query		int		false	"Número de página (mínimo 1)"	default(1)	minimum(1)
+//	@Param			page_size	query		int		false	"Tamaño de página (1-200)"		default(10)	minimum(1)	maximum(200)
 //	@Param			order_by	query		string	false	"Campo de ordenamiento"			Enums(name, code, created_at, updated_at)	default(created_at)
 //	@Param			order_dir	query		string	false	"Dirección de ordenamiento"		Enums(asc, desc)							default(desc)
 //	@Success		200			{object}	response.HorizontalPropertyListSuccessResponse
@@ -45,13 +46,17 @@ func (h *HorizontalPropertyHandler) ListHorizontalProperties(c *gin.Context) {
 		return
 	}
 
-	// Set default values if not provided
-	if req.Page <= 0 {
-		req.Page = 1
+	// Validar paginación y aplicar valores por defecto (page=1, page_size=10, máximo 200)
+	page, pageSize, err := pagination.Resolve(req.Page, req.PageSize)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{
+			Success: false,
+			Message: "Parámetros de paginación inválidos",
+			Error:   err.Error(),
+		})
+		return
 	}
-	if req.PageSize <= 0 {
-		req.PageSize = 10
-	}
+	req.Page, req.PageSize = page, pageSize
 	if req.OrderBy == "" {
 		req.OrderBy = "created_at"
 	}

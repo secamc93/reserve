@@ -2,6 +2,7 @@ package app
 
 import (
 	"central_reserve/services/auth/roles/internal/domain"
+	"central_reserve/shared/pagination"
 	"context"
 	"math"
 )
@@ -16,15 +17,7 @@ func (uc *RoleUseCase) GetRoles(ctx context.Context, filters domain.RoleFilters)
 		Msg("Iniciando caso de uso: obtener roles filtrados y paginados")
 
 	// Validar y normalizar parámetros de paginación
-	if filters.Page < 1 {
-		filters.Page = 1
-	}
-	if filters.PageSize < 1 {
-		filters.PageSize = 10
-	}
-	if filters.PageSize > 100 {
-		filters.PageSize = 100
-	}
+	filters.Page, filters.PageSize = pagination.Normalize(filters.Page, filters.PageSize)
 
 	// Validar ordenamiento
 	if filters.SortBy != "" {

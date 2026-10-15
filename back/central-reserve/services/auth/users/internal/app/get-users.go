@@ -2,6 +2,7 @@ package app
 
 import (
 	userdomain "central_reserve/services/auth/users/internal/domain"
+	"central_reserve/shared/pagination"
 	"context"
 	"fmt"
 	"strings"
@@ -20,15 +21,7 @@ func (uc *UserUseCase) GetUsers(ctx context.Context, filters userdomain.UserFilt
 		Msg("Iniciando caso de uso: obtener usuarios filtrados y paginados")
 
 	// Validar y normalizar parámetros de paginación
-	if filters.Page < 1 {
-		filters.Page = 1
-	}
-	if filters.PageSize < 1 {
-		filters.PageSize = 10
-	}
-	if filters.PageSize > 100 {
-		filters.PageSize = 100
-	}
+	filters.Page, filters.PageSize = pagination.Normalize(filters.Page, filters.PageSize)
 
 	// Validar ordenamiento
 	if filters.SortBy != "" {

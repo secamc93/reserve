@@ -159,11 +159,11 @@ func TestListResidents_MaxPageSize(t *testing.T) {
 	mockLogger := mocks.NewMockLogger()
 	useCase := app.New(mockRepo, mockLogger)
 
-	// Filtros con PageSize mayor a 100
+	// Filtros con PageSize mayor a 200
 	filters := domain.ResidentFiltersDTO{
 		BusinessID: 100,
 		Page:       1,
-		PageSize:   200, // Mayor al máximo permitido
+		PageSize:   201, // Mayor al máximo permitido (200)
 	}
 
 	// Act
@@ -174,12 +174,12 @@ func TestListResidents_MaxPageSize(t *testing.T) {
 		t.Fatalf("expected no error, got %v", err)
 	}
 
-	if capturedFilters.PageSize != 10 {
-		t.Errorf("expected page size limited to 10, got %d", capturedFilters.PageSize)
+	if capturedFilters.PageSize != 200 {
+		t.Errorf("expected page size limited to 200, got %d", capturedFilters.PageSize)
 	}
 
-	if result.PageSize != 10 {
-		t.Errorf("expected result page size 10, got %d", result.PageSize)
+	if result.PageSize != 200 {
+		t.Errorf("expected result page size 200, got %d", result.PageSize)
 	}
 }
 

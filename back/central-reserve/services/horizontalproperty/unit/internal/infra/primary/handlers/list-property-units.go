@@ -10,6 +10,7 @@ import (
 	"central_reserve/services/horizontalproperty/unit/internal/infra/primary/handlers/request"
 	"central_reserve/services/horizontalproperty/unit/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
+	"central_reserve/shared/pagination"
 
 	"github.com/gin-gonic/gin"
 )
@@ -29,7 +30,7 @@ import (
 //	@Param			block		query	string	false	"Bloque/Torre"
 //	@Param			is_active	query	bool	false	"Estado activo"
 //	@Param			page		query	int	false	"Página"			default(1)
-//	@Param			page_size	query	int	false	"Tamaño de página"	default(10)
+//	@Param			page_size	query	int	false	"Tamaño de página (1-200)"	default(10)	minimum(1)	maximum(200)
 //	@Success		200			{object}	object
 //	@Failure		400			{object}	object
 //	@Failure		500			{object}	object
@@ -65,6 +66,17 @@ func (h *PropertyUnitHandler) ListPropertyUnits(c *gin.Context) {
 		})
 		return
 	}
+
+	page, pageSize, err := pagination.Resolve(req.Page, req.PageSize)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{
+			Success: false,
+			Message: "Parámetros de paginación inválidos",
+			Error:   err.Error(),
+		})
+		return
+	}
+	req.Page, req.PageSize = page, pageSize
 
 	// Verificar super admin y decidir businessID (business_id)
 	isSuperAdmin := middleware.IsSuperAdmin(c)

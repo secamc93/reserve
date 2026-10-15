@@ -127,14 +127,14 @@ func TestListPropertyUnits_DefaultPagination(t *testing.T) {
 	filters := domain.PropertyUnitFiltersDTO{
 		BusinessID: 1,
 		Page:       -1,   // Debe convertirse a 1
-		PageSize:   2000, // Debe limitarse a 1000
+		PageSize:   2000, // Debe limitarse a 200
 	}
 
 	expectedResult := &domain.PaginatedPropertyUnitsDTO{
 		Units:      []domain.PropertyUnitListDTO{},
 		Total:      0,
 		Page:       1,
-		PageSize:   1000,
+		PageSize:   200,
 		TotalPages: 0,
 	}
 
@@ -144,8 +144,8 @@ func TestListPropertyUnits_DefaultPagination(t *testing.T) {
 		if filters.Page != 1 {
 			t.Errorf("expected Page to be normalized to 1, got %d", filters.Page)
 		}
-		if filters.PageSize != 1000 {
-			t.Errorf("expected PageSize to be capped at 1000, got %d", filters.PageSize)
+		if filters.PageSize != 200 {
+			t.Errorf("expected PageSize to be capped at 200, got %d", filters.PageSize)
 		}
 		return expectedResult, nil
 	}

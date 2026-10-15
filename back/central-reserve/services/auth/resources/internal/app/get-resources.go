@@ -2,6 +2,7 @@ package app
 
 import (
 	"central_reserve/services/auth/resources/internal/domain"
+	"central_reserve/shared/pagination"
 	"context"
 	"math"
 )
@@ -11,12 +12,7 @@ func (uc *ResourceUseCase) GetResources(ctx context.Context, filters domain.Reso
 	uc.logger.Info().Interface("filters", filters).Msg("Iniciando obtención de recursos")
 
 	// Configurar valores por defecto para paginación
-	if filters.PageSize <= 0 {
-		filters.PageSize = 10
-	}
-	if filters.Page <= 0 {
-		filters.Page = 1
-	}
+	filters.Page, filters.PageSize = pagination.Normalize(filters.Page, filters.PageSize)
 
 	// Obtener recursos del repositorio
 	resources, total, err := uc.repository.GetResources(ctx, filters)

@@ -13,8 +13,8 @@ type CreateParkingZoneRequest struct {
 // ListParkingZonesRequest - Request para listar zonas de parqueo
 type ListParkingZonesRequest struct {
 	IsActive *bool `form:"is_active"`
-	Page     int   `form:"page,default=1" binding:"min=1"`
-	PageSize int   `form:"page_size,default=10" binding:"min=1,max=100"`
+	Page     int   `form:"page,default=1"`
+	PageSize int   `form:"page_size,default=10"`
 }
 
 // CreateParkingSlotRequest - Request para crear espacio de parqueo
@@ -35,8 +35,8 @@ type ListParkingSlotsRequest struct {
 	ParkingTypeID *uint `form:"parking_type_id"`
 	IsActive      *bool `form:"is_active"`
 	IsAvailable   *bool `form:"is_available"`
-	Page          int   `form:"page,default=1" binding:"min=1"`
-	PageSize      int   `form:"page_size,default=10" binding:"min=1,max=100"`
+	Page          int   `form:"page,default=1"`
+	PageSize      int   `form:"page_size,default=10"`
 }
 
 // AssignParkingRequest - Request para asignar parqueadero permanente
@@ -59,8 +59,8 @@ type ListParkingAssignmentsRequest struct {
 	PropertyUnitID *uint `form:"property_unit_id"`
 	ResidentID     *uint `form:"resident_id"`
 	IsActive       *bool `form:"is_active"`
-	Page           int   `form:"page,default=1" binding:"min=1"`
-	PageSize       int   `form:"page_size,default=10" binding:"min=1,max=100"`
+	Page           int   `form:"page,default=1"`
+	PageSize       int   `form:"page_size,default=10"`
 }
 
 // CreateParkingReservationRequest - Request para crear reserva temporal
@@ -91,8 +91,8 @@ type ListParkingReservationsRequest struct {
 	ReservationStatusID *uint      `form:"reservation_status_id"`
 	StartDate           *time.Time `form:"start_date"`
 	EndDate             *time.Time `form:"end_date"`
-	Page                int        `form:"page,default=1" binding:"min=1"`
-	PageSize            int        `form:"page_size,default=10" binding:"min=1,max=100"`
+	Page                int        `form:"page,default=1"`
+	PageSize            int        `form:"page_size,default=10"`
 }
 
 // CheckParkingAvailabilityRequest - Request para verificar disponibilidad

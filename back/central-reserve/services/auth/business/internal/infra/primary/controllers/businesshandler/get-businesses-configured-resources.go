@@ -3,6 +3,7 @@ package businesshandler
 import (
 	"central_reserve/services/auth/middleware"
 	"central_reserve/shared/log"
+	"central_reserve/shared/pagination"
 	"net/http"
 	"strconv"
 
@@ -17,7 +18,8 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Param			page				query		int		false	"Número de página"							default(1)	minimum(1)
-//	@Param			per_page			query		int		false	"Elementos por página"						default(10)	minimum(1)	maximum(100)
+//	@Param			page_size			query		int		false	"Elementos por página (máximo 200)"			default(10)	minimum(1)	maximum(200)
+//	@Param			per_page			query		int		false	"Alias de page_size (compatibilidad)"		minimum(1)	maximum(200)
 //	@Param			business_id			query		int		false	"Filtrar por ID de business"
 //	@Param			business_type_id	query		int		false	"Filtrar por ID de tipo de business"
 //	@Success		200					{object}	map[string]interface{}	"Lista de businesses con recursos obtenida exitosamente"
@@ -30,28 +32,18 @@ import (
 func (h *BusinessHandler) GetBusinessesConfiguredResourcesHandler(c *gin.Context) {
 	ctx := log.WithFunctionCtx(c.Request.Context(), "GetBusinessesConfiguredResourcesHandler")
 
-	// Parsear parámetros de paginación
-	pageStr := c.DefaultQuery("page", "1")
-	perPageStr := c.DefaultQuery("per_page", "10")
-
-	page, err := strconv.Atoi(pageStr)
-	if err != nil || page < 1 {
-		h.logger.Error(ctx).Err(err).Str("page", pageStr).Msg("Error al parsear página")
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "Parámetro de página inválido",
-			"error":   "El parámetro 'page' debe ser un número mayor a 0",
-		})
-		return
+	// Parsear parámetros de paginación: page_size (estándar) o per_page (compatibilidad)
+	perPageStr := c.Query("page_size")
+	if perPageStr == "" {
+		perPageStr = c.Query("per_page")
 	}
-
-	perPage, err := strconv.Atoi(perPageStr)
-	if err != nil || perPage < 1 || perPage > 100 {
-		h.logger.Error(ctx).Err(err).Str("per_page", perPageStr).Msg("Error al parsear elementos por página")
+	page, perPage, err := pagination.ParseQuery(c.Query("page"), perPageStr)
+	if err != nil {
+		h.logger.Error(ctx).Err(err).Str("page", c.Query("page")).Str("page_size", perPageStr).Msg("Parámetros de paginación inválidos")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
-			"message": "Parámetro 'per_page' inválido",
-			"error":   "El parámetro 'per_page' debe ser un número entre 1 y 100",
+			"message": "Parámetros de paginación inválidos",
+			"error":   err.Error(),
 		})
 		return
 	}

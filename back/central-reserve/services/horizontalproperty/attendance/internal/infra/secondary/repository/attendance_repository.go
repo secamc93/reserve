@@ -11,6 +11,7 @@ import (
 	"central_reserve/services/horizontalproperty/attendance/internal/infra/secondary/repository/mapper"
 	"central_reserve/shared/db"
 	"central_reserve/shared/log"
+	"central_reserve/shared/pagination"
 
 	"gorm.io/gorm"
 )
@@ -76,12 +77,7 @@ func (r *AttendanceRepository) ListAttendanceListsPaged(ctx context.Context, bus
 	var total int64
 
 	// Validar parámetros de paginación
-	if page < 1 {
-		page = 1
-	}
-	if pageSize < 1 || pageSize > 100 {
-		pageSize = 10
-	}
+	page, pageSize = pagination.Normalize(page, pageSize)
 
 	query := r.db.Conn(ctx).Model(&models.AttendanceList{}).
 		Joins("JOIN horizontal_property.voting_groups vg ON vg.id = attendance_lists.voting_group_id").
@@ -230,12 +226,7 @@ func (r *AttendanceRepository) ListProxiesPaged(ctx context.Context, businessID 
 	var total int64
 
 	// Validar parámetros de paginación
-	if page < 1 {
-		page = 1
-	}
-	if pageSize < 1 || pageSize > 100 {
-		pageSize = 10
-	}
+	page, pageSize = pagination.Normalize(page, pageSize)
 
 	query := r.db.Conn(ctx).Model(&models.Proxy{}).
 		Where("business_id = ?", businessID)
@@ -361,12 +352,7 @@ func (r *AttendanceRepository) GetAttendanceRecordsByListPaged(ctx context.Conte
 		ParticipationCoefficient string
 	}
 
-	if page <= 0 {
-		page = 1
-	}
-	if pageSize <= 0 || pageSize > 200 {
-		pageSize = 50
-	}
+	page, pageSize = pagination.Normalize(page, pageSize)
 	offset := (page - 1) * pageSize
 
 	base := r.db.Conn(ctx).
