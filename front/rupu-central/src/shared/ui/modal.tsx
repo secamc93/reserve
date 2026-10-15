@@ -1,6 +1,8 @@
 /**
  * Componente Modal reutilizable
- * Usa clases globales definidas en globals.css
+ * Usa clases globales definidas en globals.css.
+ * En teléfono (< md) se muestra como hoja que sube desde abajo a todo el ancho (ver `.modal`
+ * en globals.css); en escritorio, centrado como siempre. FormModal y ConfirmModal lo heredan.
  */
 
 'use client';
@@ -79,7 +81,12 @@ export function Modal({ isOpen, onClose, title, children, size = 'md', glass = f
             <div className="flex-1 overflow-hidden">{children}</div>
           </div>
         ) : (
-          <div className={`${glass ? 'modal-glass' : 'modal-content'} ${sizeClasses[size]} max-h-[90vh] flex flex-col ${className}`}>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={title}
+            className={`${glass ? 'modal-glass' : 'modal-content'} ${sizeClasses[size]} max-h-[90vh] flex flex-col ${className}`}
+          >
             {/* Header */}
             {title && (
               <div className="relative mb-4 flex-shrink-0">

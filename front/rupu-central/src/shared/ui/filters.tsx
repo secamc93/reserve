@@ -158,7 +158,7 @@ export function Filters({
         )}
 
         {/* Controles */}
-        <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-gray-200">
           <div className="flex items-center gap-3">
             {/* Botón de filtros avanzados */}
             {advancedFields.length > 0 && (

@@ -1,6 +1,11 @@
 /**
  * Componente Table genérico reutilizable
- * Usa clases globales y colores dinámicos del negocio
+ * Usa clases globales y colores dinámicos del negocio.
+ *
+ * Teléfono (< md): la tabla conserva sus columnas y se desplaza horizontalmente DENTRO de su
+ * tarjeta (`overflow-x-auto`), nunca la página; las celdas se compactan (globals.css). Se eligió
+ * sobre la vista apilada por fila porque las columnas con `render` (acciones, badges) siguen
+ * funcionando igual y no cambia el DOM que usan las pruebas.
  */
 
 'use client';
@@ -156,7 +161,7 @@ export function Table<T = Record<string, unknown>>({
         className={`overflow-hidden p-0 w-full ${filters ? 'rounded-t-none rounded-b-lg border-l border-r border-b border-gray-200 bg-white' : 'rounded-lg border border-gray-200 bg-white'}`}
         style={filters ? {} : {}}
       >
-        <div className="overflow-x-auto w-full">
+        <div className="overflow-x-auto overscroll-x-contain w-full max-w-full">
           <table className="table w-full">
           {/* Header */}
           <thead>

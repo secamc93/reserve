@@ -162,13 +162,14 @@ export function DynamicFilters({
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 {/* Botón Añadir Filtro y Chips */}
                 <div className="flex-1 flex flex-wrap items-center gap-2">
-                    <div className="relative">
+                    {/* Teléfono: botón a todo el ancho y de al menos 44 px de alto (área táctil). */}
+                    <div className="relative w-full md:w-auto">
                         <Button
                             ref={buttonRef}
                             variant="primary"
                             size="sm"
                             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                            className="flex items-center gap-2"
+                            className="flex w-full items-center justify-center gap-2 min-h-11 md:w-auto md:min-h-0"
                         >
                             <FunnelIcon className="w-4 h-4" />
                             Añadir Filtro
@@ -178,7 +179,7 @@ export function DynamicFilters({
                         {isDropdownOpen && (
                             <div
                                 ref={dropdownRef}
-                                className="absolute top-full left-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50 p-3"
+                                className="absolute top-full left-0 mt-2 w-64 max-w-[calc(100vw-2rem)] bg-white border border-gray-200 rounded-lg shadow-lg z-50 p-3"
                             >
                                 {selectedFilterKey ? (
                                     // Mostrar input para el filtro seleccionado
@@ -365,7 +366,7 @@ export function DynamicFilters({
                 </div>
 
                 {/* Acciones del header y selectores de ordenamiento */}
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex flex-wrap items-center gap-2 flex-shrink-0 min-w-0">
                     {onSortChange && (
                         <>
                             <select

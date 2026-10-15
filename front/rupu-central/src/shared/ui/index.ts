@@ -22,3 +22,11 @@ export * from './table';
 // Re-exportar tipos útiles
 export type { TableColumn, PaginationProps, TableFiltersProps, TableUrlPagination } from './table';
 
+
+// Shell en teléfono (< md)
+export * from './bottom-sheet';
+export * from './mobile-nav';
+export * from './mobile-top-bar';
+export * from './property-logo';
+export * from './use-active-property';
+export * from './use-media-query';

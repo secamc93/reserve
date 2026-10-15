@@ -8,7 +8,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { TokenStorage } from '@shared/config';
-import { Sidebar, Spinner } from '@shared/ui';
+import { Sidebar, Spinner, MobileTopBar, useActiveProperty } from '@shared/ui';
 import { BusinessSelector } from '@/services/auth/businesses/ui';
 import { IAMNavigation } from '@shared/ui';
 
@@ -20,7 +20,7 @@ export default function IamLayout({
   const router = useRouter();
   const [user, setUser] = useState<{ userId: string; name: string; email: string; role: string; avatarUrl?: string; is_super_admin?: boolean; scope?: string } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const activeProperty = useActiveProperty();
   const [showBusinessSelector, setShowBusinessSelector] = useState(false);
 
   useEffect(() => {
@@ -168,16 +168,15 @@ export default function IamLayout({
   return (
     <div className="flex min-h-screen bg-white">
       {/* Sidebar */}
-      <Sidebar user={user ? { ...user, is_super_admin: user.is_super_admin } : null} />
+      <Sidebar user={user ? { ...user, is_super_admin: user.is_super_admin } : null} mobileNav />
 
       {/* Contenido principal */}
+      {/* En teléfono (< md) la barra lateral se oculta y aparece la barra inferior (MobileNav). */}
       <main
-        className="flex-1 transition-all duration-300 w-full overflow-x-hidden"
-        style={{
-          marginLeft: sidebarExpanded ? '250px' : '80px'
-        }}
-        onMouseEnter={() => setSidebarExpanded(false)}
+        className="flex-1 min-w-0 transition-all duration-300 w-full overflow-x-hidden md:ml-20 pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0"
       >
+        <MobileTopBar property={activeProperty} fallbackName="IAM" />
+
         {/* Navegación IAM horizontal */}
         <IAMNavigation />
 

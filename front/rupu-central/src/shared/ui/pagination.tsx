@@ -49,6 +49,8 @@ const btnBase =
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a1a1a] focus-visible:ring-offset-1 ' +
   'disabled:cursor-not-allowed disabled:opacity-40';
 const btnIdle = 'border-[#d6d3cd] bg-white text-[#1a1a1a] hover:bg-[#f5f5f4] hover:border-[#8a8580]';
+/** Primera/Última página: en teléfono (< md) se ocultan para que la barra quepa (quedan anterior/siguiente). */
+const btnEdge = btnBase.replace('inline-flex', 'hidden md:inline-flex');
 const btnCurrent = 'border-[#1a1a1a] bg-[#1a1a1a] text-white';
 
 function Chevron({ dir, double = false }: { dir: 'left' | 'right'; double?: boolean }) {
@@ -107,7 +109,7 @@ export function PaginationControls({
   return (
     <nav
       aria-label="Paginación"
-      className={`flex flex-wrap items-center justify-between gap-3 border-t border-[#e4e2dd] bg-[#f5f5f4] px-4 py-3 text-sm text-[#1a1a1a] ${className}`}
+      className={`flex flex-wrap items-center justify-between gap-3 border-t border-[#e4e2dd] bg-[#f5f5f4] px-3 md:px-4 py-3 text-sm text-[#1a1a1a] ${className}`}
     >
       <div className="flex flex-wrap items-center gap-3">
         {onPageSizeChange && (
@@ -136,7 +138,7 @@ export function PaginationControls({
       </div>
 
       <div className="flex flex-wrap items-center gap-1">
-        <button type="button" className={`${btnBase} ${btnIdle}`} onClick={() => go(1)} disabled={disabled || atStart} aria-label="Primera página">
+        <button type="button" className={`${btnEdge} ${btnIdle}`} onClick={() => go(1)} disabled={disabled || atStart} aria-label="Primera página">
           <Chevron dir="left" double />
         </button>
         <button type="button" className={`${btnBase} ${btnIdle}`} onClick={() => go(current - 1)} disabled={disabled || atStart} aria-label="Página anterior">
@@ -169,7 +171,7 @@ export function PaginationControls({
         <button type="button" className={`${btnBase} ${btnIdle}`} onClick={() => go(current + 1)} disabled={disabled || atEnd} aria-label="Página siguiente">
           <Chevron dir="right" />
         </button>
-        <button type="button" className={`${btnBase} ${btnIdle}`} onClick={() => go(pages)} disabled={disabled || atEnd} aria-label="Última página">
+        <button type="button" className={`${btnEdge} ${btnIdle}`} onClick={() => go(pages)} disabled={disabled || atEnd} aria-label="Última página">
           <Chevron dir="right" double />
         </button>
 

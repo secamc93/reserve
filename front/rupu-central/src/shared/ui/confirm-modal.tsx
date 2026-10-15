@@ -46,15 +46,16 @@ export function ConfirmModal({
         <p className="text-gray-700">{message}</p>
 
         {/* Botones */}
-        <div className="flex gap-3 justify-end">
+        {/* Teléfono: botones a todo el ancho, el de confirmar arriba; escritorio: en fila a la derecha. */}
+        <div className="flex flex-col-reverse gap-3 md:flex-row md:justify-end">
           <button 
-            className="btn btn-secondary btn-sm" 
+            className="btn btn-secondary btn-sm w-full md:w-auto" 
             onClick={onClose}
           >
             {cancelText}
           </button>
           <button 
-            className={`${confirmButtonClass[type]} btn-sm`}
+            className={`${confirmButtonClass[type]} btn-sm w-full md:w-auto`}
             onClick={handleConfirm}
           >
             {confirmText}
