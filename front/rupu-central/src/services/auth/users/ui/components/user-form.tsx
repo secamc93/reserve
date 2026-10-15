@@ -457,7 +457,7 @@ export function UserForm({ isOpen, onClose, onSuccess, user, mode }: UserFormPro
           )}
 
           {/* Botones */}
-          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+          <div className="flex flex-col-reverse md:flex-row justify-end gap-3 pt-4 border-t border-gray-200 [&>*]:w-full md:[&>*]:w-auto [&>*]:min-h-[44px] md:[&>*]:min-h-0">
             <Button
               type="button"
               variant="outline"
@@ -562,7 +562,7 @@ export function UserForm({ isOpen, onClose, onSuccess, user, mode }: UserFormPro
             </div>
           </div>
 
-          <div className="flex justify-end pt-4 border-t border-gray-200">
+          <div className="flex flex-col-reverse md:flex-row justify-end pt-4 border-t border-gray-200 gap-3 [&>*]:w-full md:[&>*]:w-auto [&>*]:min-h-[44px] md:[&>*]:min-h-0">
             <Button
               type="button"
               variant="primary"

@@ -1,6 +1,6 @@
 # El selector de negocio a veces queda vacío
 
-**Fecha:** 2026-10-14 · **Prioridad:** importante (se resuelve con el plan de propiedad única)
+**Fecha:** 2026-10-14 · **Prioridad:** deseable (mitigado con reintento; se cierra con el plan de propiedad única)
 
 ## Contexto
 
@@ -14,7 +14,7 @@ recargan una vez para no quedar intermitentes.
 - [ ] Importante: el plan `.claude/plan/propiedad-unica-sin-tipo-de-negocio.md` elimina este selector
       (entrada directa a la propiedad + "Cambiar propiedad"). Al ejecutarlo, quitar también la recarga
       de los e2e (`e2e/votaciones-flujo-admin.spec.ts`, `e2e/propiedad-horizontal-votaciones.spec.ts`).
-- [ ] Si el plan se demora: reintentar la carga o cargar al cambiar el token.
+- [x] 2026-10-15: reintento con espera creciente (`shared/utils/retry-until.ts`, 8 intentos) mientras falta el token o la lista llega vacía. e2e 16/16 en 4 corridas en paralelo. Queda el ítem del plan (eliminar el selector y la recarga defensiva de los e2e).
 
 ## Cierre
 

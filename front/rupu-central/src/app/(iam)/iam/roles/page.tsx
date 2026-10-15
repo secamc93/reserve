@@ -26,7 +26,7 @@ export default function IAMRolesPage() {
     );
   }
   return (
-    <div className="p-8 w-full">
+    <div className="p-3 md:p-8 w-full">
       <div className="w-full">
         {/* Roles Table */}
         <RolesTable token={token || ''} />

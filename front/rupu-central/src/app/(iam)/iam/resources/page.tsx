@@ -25,7 +25,7 @@ export default function IAMResourcesPage() {
     );
   }
   return (
-    <div className="p-8 w-full">
+    <div className="p-3 md:p-8 w-full">
       <div className="w-full">
         {/* Resources Table */}
         <ResourcesTable token={token || ''} />

@@ -390,11 +390,11 @@ export function BulkVoteModal({
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Opción de voto para todas las unidades *
           </label>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {sortedOptions.map(option => (
               <label
                 key={option.id}
-                className={`flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition-all ${
+                className={`flex items-center gap-3 p-3 min-h-11 border-2 rounded-lg cursor-pointer transition-all ${
                   selectedOptionId === option.id
                     ? 'border-blue-500 bg-blue-50'
                     : 'border-gray-200 hover:border-blue-300'
@@ -463,11 +463,11 @@ export function BulkVoteModal({
 
         {/* Selección de unidades */}
         <div>
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex flex-wrap items-center justify-between gap-y-1 mb-2">
             <label className="text-sm font-medium text-gray-700">
               Seleccionar unidades *
             </label>
-            <div className="flex gap-2 flex-wrap justify-end">
+            <div className="flex gap-2 flex-wrap justify-end max-md:justify-start max-md:w-full max-md:[&>button]:min-h-11 max-md:[&>button]:text-[13px]">
               <button
                 type="button"
                 onClick={handleLoadPreviousVotes}
@@ -504,7 +504,7 @@ export function BulkVoteModal({
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             disabled={submitting}
-            className="input w-full mb-2 text-sm"
+            className="input w-full mb-2 text-sm max-md:text-base max-md:min-h-11"
           />
 
           {/* Lista de unidades */}
@@ -528,7 +528,7 @@ export function BulkVoteModal({
                 return (
                   <label
                     key={unit.unit_id}
-                    className={`flex items-center gap-3 px-3 py-2 border-b border-gray-100 last:border-b-0 cursor-pointer hover:bg-gray-50 transition-colors ${
+                    className={`flex items-center gap-3 px-3 py-2 max-md:min-h-12 border-b border-gray-100 last:border-b-0 cursor-pointer hover:bg-gray-50 transition-colors ${
                       selectedUnitIds.has(unit.unit_id) ? 'bg-blue-50' : ''
                     }`}
                   >
@@ -560,7 +560,7 @@ export function BulkVoteModal({
         {/* Barra resumen */}
         {selectedUnitIds.size > 0 && selectedOption && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <div className="flex items-center gap-2 text-sm text-blue-800">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-blue-800">
               <span className="font-semibold">{selectedUnitIds.size} unidades</span>
               <span>votarán por</span>
               <span className="font-semibold flex items-center gap-1">
@@ -587,7 +587,7 @@ export function BulkVoteModal({
         )}
 
         {/* Botones */}
-        <div className="flex justify-end gap-3 pt-3 border-t">
+        <div className="flex justify-end gap-3 pt-3 border-t max-md:[&>button]:flex-1 max-md:[&>button]:min-h-12">
           <button
             type="button"
             onClick={handleClose}
@@ -600,7 +600,7 @@ export function BulkVoteModal({
             type="button"
             onClick={handleSubmit}
             disabled={submitting || selectedUnitIds.size === 0 || !selectedOptionId}
-            className={`btn min-w-[160px] ${
+            className={`btn md:min-w-[160px] ${
               submitting || selectedUnitIds.size === 0 || !selectedOptionId
                 ? 'btn-disabled opacity-50 cursor-not-allowed'
                 : 'btn-primary'

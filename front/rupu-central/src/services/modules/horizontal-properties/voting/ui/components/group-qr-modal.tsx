@@ -106,20 +106,20 @@ export function GroupQRModal({ data, validHours = 24, onClose }: GroupQRModalPro
   };
 
   const secondaryButton =
-    'h-9 rounded-[7px] bg-white text-[13px] font-medium transition-colors hover:bg-[#f5f5f4]';
+    'h-9 max-md:h-11 rounded-[7px] bg-white text-[13px] font-medium transition-colors hover:bg-[#f5f5f4]';
 
   return (
     <>
       {/* 1j · Modal compacto */}
       <div
-        className={`fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 ${votingFontRoot}`}
+        className={`fixed inset-0 z-[60] flex items-end md:items-center justify-center p-0 md:p-4 bg-black/50 overflow-y-auto ${votingFontRoot}`}
         onClick={onClose}
       >
         <div
           role="dialog"
           aria-modal="true"
           aria-labelledby="group-qr-title"
-          className="bg-white w-full max-w-[560px] rounded-lg p-5 sm:p-7 flex flex-col gap-[22px] shadow-[0_12px_40px_rgba(0,0,0,.18)]"
+          className="bg-white w-full max-w-[560px] rounded-t-2xl md:rounded-lg p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:p-7 flex flex-col gap-4 md:gap-[22px] shadow-[0_12px_40px_rgba(0,0,0,.18)] max-md:max-h-[92dvh] max-md:overflow-y-auto"
           style={{ color: VT.ink }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -128,7 +128,7 @@ export function GroupQRModal({ data, validHours = 24, onClose }: GroupQRModalPro
               <div className={`${vtMono} text-[11px] font-medium tracking-[.06em] mb-1.5`} style={{ color: VT.muted }}>
                 QR DEL GRUPO · {validUntil ? `VÁLIDO HASTA ${validUntil}` : `VÁLIDO ${validHours} H`}
               </div>
-              <h2 id="group-qr-title" className="m-0 text-xl font-semibold tracking-[-.015em]">{data.groupName}</h2>
+              <h2 id="group-qr-title" className="m-0 text-lg md:text-xl font-semibold tracking-[-.015em]">{data.groupName}</h2>
               <div className="text-[13px] mt-0.5" style={{ color: VT.muted }}>
                 {accessLabel(data.votingsCount)}
               </div>
@@ -136,7 +136,7 @@ export function GroupQRModal({ data, validHours = 24, onClose }: GroupQRModalPro
             <button
               type="button"
               onClick={onClose}
-              className="flex hover:text-[#1a1a1a] transition-colors"
+              className="flex items-center justify-center shrink-0 max-md:w-11 max-md:h-11 max-md:-mr-2 max-md:-mt-2 hover:text-[#1a1a1a] transition-colors"
               style={{ color: VT.muted }}
               aria-label="Cerrar"
             >
@@ -166,7 +166,7 @@ export function GroupQRModal({ data, validHours = 24, onClose }: GroupQRModalPro
                 <button
                   type="button"
                   onClick={() => setShowFullUrl((v) => !v)}
-                  className="self-start text-[11px] underline-offset-2 hover:underline"
+                  className="self-start text-[11px] max-md:text-xs max-md:min-h-9 underline-offset-2 hover:underline"
                   style={{ color: VT.muted }}
                 >
                   {showFullUrl ? 'ocultar enlace completo' : 'ver enlace completo'}
@@ -175,7 +175,7 @@ export function GroupQRModal({ data, validHours = 24, onClose }: GroupQRModalPro
               <button
                 type="button"
                 onClick={handleProject}
-                className="h-[38px] rounded-[7px] text-white text-[13px] font-semibold transition-colors hover:bg-[#c8603f]"
+                className="h-[38px] max-md:h-12 max-md:text-[15px] rounded-[7px] text-white text-[13px] font-semibold transition-colors hover:bg-[#c8603f]"
                 style={{ background: VT.ink }}
               >
                 Proyectar en pantalla completa
@@ -217,7 +217,7 @@ export function GroupQRModal({ data, validHours = 24, onClose }: GroupQRModalPro
           <button
             type="button"
             onClick={closeProjector}
-            className="absolute top-4 right-4 sm:top-6 sm:right-6 inline-flex items-center gap-1.5 h-9 px-3 rounded-md bg-white text-[13px] font-medium hover:bg-[#f5f5f4]"
+            className="absolute top-4 right-4 sm:top-6 sm:right-6 inline-flex items-center gap-1.5 h-9 max-md:h-11 px-3 rounded-md bg-white text-[13px] font-medium hover:bg-[#f5f5f4]"
             style={{ border: `1px solid ${VT.borderStrong}`, color: VT.inkSoft }}
           >
             <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
@@ -225,12 +225,12 @@ export function GroupQRModal({ data, validHours = 24, onClose }: GroupQRModalPro
             </svg>
             Salir
           </button>
-          <div className="min-h-full grid grid-cols-1 lg:grid-cols-2 items-center gap-10 lg:gap-16 px-6 sm:px-12 lg:px-20 py-16">
+          <div className="min-h-full grid grid-cols-1 lg:grid-cols-2 items-center gap-8 md:gap-10 lg:gap-16 px-5 sm:px-12 lg:px-20 pt-20 pb-10 md:py-16">
             <div className="flex flex-col gap-7 min-w-0">
               <div className={`${vtMono} text-xs font-medium tracking-[.08em]`} style={{ color: VT.muted }}>
                 {data.groupName.toUpperCase()} · {votingsLabel(data.votingsCount).toUpperCase()}
               </div>
-              <h1 className="m-0 text-4xl sm:text-5xl lg:text-[52px] leading-[1.05] font-semibold tracking-[-.03em]">
+              <h1 className="m-0 text-3xl sm:text-5xl lg:text-[52px] leading-[1.05] font-semibold tracking-[-.03em]">
                 Escanea el código para votar desde tu celular
               </h1>
               <ol className="m-0 p-0 list-none flex flex-col gap-3.5 text-lg" style={{ color: VT.inkSoft }}>

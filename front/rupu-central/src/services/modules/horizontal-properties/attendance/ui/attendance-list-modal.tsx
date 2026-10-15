@@ -373,13 +373,13 @@ export function AttendanceListModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-[60vw] max-w-[60vw] h-[90vh] mx-4 overflow-y-auto">
-        <div className="p-6">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-stretch md:items-center justify-center z-50">
+      <div className="bg-white md:rounded-lg shadow-xl w-full h-full md:w-[60vw] md:max-w-[60vw] md:h-[90vh] md:mx-4 overflow-y-auto">
+        <div className="p-4 md:p-6">
           {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">
+          <div className="flex flex-col-reverse gap-3 md:flex-row md:items-center md:justify-between mb-4 md:mb-6">
+            <div className="min-w-0">
+              <h2 className="text-lg md:text-xl font-semibold text-gray-900 break-words">
                 {attendanceList.title}
               </h2>
               {attendanceList.description && (
@@ -388,25 +388,26 @@ export function AttendanceListModal({
                 </p>
               )}
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 md:gap-3 [&>button]:min-h-[44px] md:[&>button]:min-h-0">
               <button
                 onClick={handleExportExcel}
-                className="btn btn-outline btn-sm"
+                className="btn btn-outline btn-sm flex-1 md:flex-none"
                 title="Descargar Excel para tomar asistencia"
               >
                 ⬇️ Excel
               </button>
               <button
                 onClick={handleExportDetailedExcel}
-                className="btn btn-secondary btn-sm"
+                className="btn btn-secondary btn-sm flex-1 md:flex-none"
                 title="Descargar Excel detallado del resumen"
               >
                 📊 Resumen Excel
               </button>
               <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-gray-400 hover:text-gray-600 transition-colors min-w-[44px] md:min-w-0"
                 title="Cerrar"
+                aria-label="Cerrar"
               >
                 ✕
               </button>
@@ -414,16 +415,16 @@ export function AttendanceListModal({
           </div>
 
           {/* Search */}
-          <div className="mb-4 flex items-center gap-3">
+          <div className="mb-4 flex flex-wrap md:flex-nowrap items-center gap-2 md:gap-3">
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar por número de unidad (ej: 101)"
-              className="input w-full"
+              className="input w-full min-h-[44px] md:min-h-0"
             />
             <select
-              className="input"
+              className="input flex-1 md:flex-none min-h-[44px] md:min-h-0"
               value={attendedFilter}
               onChange={(e) => { setPage(1); setAttendedFilter(e.target.value as 'all' | 'true' | 'false'); }}
               title="Filtrar asistencia"
@@ -435,7 +436,7 @@ export function AttendanceListModal({
             </select>
             <button
               onClick={() => { setPage(1); setSearch(search.trim()); }}
-              className="btn btn-primary"
+              className="btn btn-primary flex-1 md:flex-none min-h-[44px] md:min-h-0"
               disabled={loading}
             >
               Buscar
@@ -443,7 +444,7 @@ export function AttendanceListModal({
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-4 mb-4 md:mb-6">
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="text-2xl font-bold text-blue-600">{totalUnits}</div>
               <div className="text-sm text-blue-800">Total Unidades</div>
@@ -489,7 +490,58 @@ export function AttendanceListModal({
           {/* Units List (Table) */}
           <div className="space-y-3">
             <h3 className="font-medium text-gray-900">Unidades de Propiedad</h3>
-            <div className="overflow-x-auto">
+            {/* Teléfono: una tarjeta por unidad, con el botón de asistencia grande */}
+            <ul className="md:hidden divide-y divide-gray-200 border border-gray-200 rounded-lg" aria-label="Unidades">
+              {units.map((unit) => (
+                <li key={unit.id} className={`p-3 ${unit.hasAttended ? 'bg-green-50' : 'bg-white'}`}>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => handleToggleAttendance(unit)}
+                      disabled={loading}
+                      className={`w-11 h-11 shrink-0 rounded-full flex items-center justify-center text-lg ${
+                        unit.hasAttended ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600'
+                      }`}
+                      aria-label={unit.hasAttended ? `Desmarcar asistencia de ${unit.unitNumber}` : `Marcar asistencia de ${unit.unitNumber}`}
+                    >
+                      {unit.hasAttended ? '✓' : '○'}
+                    </button>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-semibold text-gray-900 truncate">{unit.unitNumber}</div>
+                      <div className="text-sm text-gray-600 truncate" title={unit.ownerName || undefined}>{unit.ownerName || 'Sin propietario'}</div>
+                    </div>
+                  </div>
+                  {editingProxyUnitId === unit.id ? (
+                    <div className="mt-2 space-y-2">
+                      <input
+                        value={proxyInput}
+                        onChange={(e) => setProxyInput(e.target.value)}
+                        placeholder="Nombre del apoderado"
+                        className="input w-full min-h-[44px] text-gray-900"
+                        aria-label="Nombre del apoderado"
+                      />
+                      <div className="grid grid-cols-3 gap-2 [&>button]:min-h-[44px]">
+                        <button onClick={() => submitUpdateProxy(unit)} className="btn btn-primary btn-sm" disabled={loading || !proxyInput.trim()}>Guardar</button>
+                        <button onClick={() => submitDeleteProxy(unit)} className="btn btn-outline btn-sm">Quitar</button>
+                        <button onClick={() => { setEditingProxyUnitId(null); setProxyInput(''); }} className="btn btn-secondary btn-sm">Cancelar</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-2 flex items-center justify-between gap-2">
+                      <span className="text-sm text-gray-700 truncate min-w-0" title={unit.proxyName || undefined}>
+                        Apoderado: {unit.proxyName || '-'}
+                      </span>
+                      <button
+                        onClick={() => { setEditingProxyUnitId(unit.id); setProxyInput(unit.proxyName || ''); }}
+                        className="btn btn-outline btn-sm min-h-[44px] shrink-0"
+                      >
+                        {unit.proxyName ? 'Editar' : '+ Apoderado'}
+                      </button>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+            <div className="hidden md:block overflow-x-auto">
               <table className="table w-3/5 mx-auto">
                 <thead>
                   <tr>

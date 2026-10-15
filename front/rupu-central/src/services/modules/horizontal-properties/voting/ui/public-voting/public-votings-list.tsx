@@ -136,7 +136,7 @@ export function PublicVotingsList({ votingAuthToken, residentData, onSelectVotin
                   <button
                     type="button"
                     onClick={() => onSelectVoting(voting.id, voting, total)}
-                    className="inline-flex items-center gap-1 text-[11px] font-semibold"
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold max-md:min-h-11 max-md:px-2 max-md:-mr-2 max-md:text-xs"
                     style={{ color: VT.yes }}
                     aria-label={`Ver resultado de ${voting.title}`}
                   >

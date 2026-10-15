@@ -11,26 +11,29 @@ import { votingFontRoot, vtMono } from './fonts';
 
 // ===================== Clases =====================
 
+/** Pie de diálogo: a la derecha en escritorio; en teléfono, botones a ancho completo repartidos. */
+export const vtDialogFooter = 'flex flex-wrap justify-end gap-2 pt-4 max-md:flex-nowrap max-md:[&>*]:flex-1 max-md:[&>*]:min-w-0';
+
 export const vtBtn = {
   primary:
-    'inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-[7px] text-[13px] font-semibold text-white bg-[#1a1a1a] transition-colors hover:bg-[#c8603f] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#1a1a1a]',
+    'inline-flex items-center justify-center gap-1.5 h-9 max-md:h-11 max-md:text-sm px-4 rounded-[7px] text-[13px] font-semibold text-white bg-[#1a1a1a] transition-colors hover:bg-[#c8603f] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#1a1a1a]',
   secondary:
-    'inline-flex items-center justify-center gap-1.5 h-9 px-3.5 rounded-[7px] text-[13px] font-medium bg-white text-[#1a1a1a] border border-[#d6d3cd] transition-colors hover:bg-[#f5f5f4] disabled:opacity-50 disabled:cursor-not-allowed',
+    'inline-flex items-center justify-center gap-1.5 h-9 max-md:h-11 max-md:text-sm px-3.5 rounded-[7px] text-[13px] font-medium bg-white text-[#1a1a1a] border border-[#d6d3cd] transition-colors hover:bg-[#f5f5f4] disabled:opacity-50 disabled:cursor-not-allowed',
   ghost:
-    'inline-flex items-center justify-center gap-1.5 h-9 px-3.5 rounded-[7px] text-[13px] font-medium bg-white text-[#4b4a46] border border-[#d6d3cd] transition-colors hover:bg-[#f5f5f4] disabled:opacity-50 disabled:cursor-not-allowed',
+    'inline-flex items-center justify-center gap-1.5 h-9 max-md:h-11 max-md:text-sm px-3.5 rounded-[7px] text-[13px] font-medium bg-white text-[#4b4a46] border border-[#d6d3cd] transition-colors hover:bg-[#f5f5f4] disabled:opacity-50 disabled:cursor-not-allowed',
   accent:
-    'inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-md text-[13px] font-semibold bg-white text-[#c8603f] border border-[#c8603f] transition-colors hover:bg-[#fbe9e4] disabled:opacity-50 disabled:cursor-not-allowed',
+    'inline-flex items-center justify-center gap-1.5 h-8 max-md:h-11 px-3 rounded-md text-[13px] font-semibold bg-white text-[#c8603f] border border-[#c8603f] transition-colors hover:bg-[#fbe9e4] disabled:opacity-50 disabled:cursor-not-allowed',
   icon:
-    'inline-flex items-center justify-center h-8 w-8 rounded-md bg-white text-[#4b4a46] border border-[#d6d3cd] transition-colors hover:bg-[#f5f5f4] disabled:opacity-50 disabled:cursor-not-allowed',
+    'inline-flex items-center justify-center h-8 w-8 max-md:h-11 max-md:w-11 rounded-md bg-white text-[#4b4a46] border border-[#d6d3cd] transition-colors hover:bg-[#f5f5f4] disabled:opacity-50 disabled:cursor-not-allowed',
   small:
-    'inline-flex items-center justify-center gap-1.5 h-[30px] px-3 rounded-md text-xs font-medium bg-white text-[#1a1a1a] border border-[#d6d3cd] transition-colors hover:bg-[#f5f5f4] disabled:opacity-50 disabled:cursor-not-allowed',
+    'inline-flex items-center justify-center gap-1.5 h-[30px] max-md:h-11 max-md:text-[13px] px-3 rounded-md text-xs font-medium bg-white text-[#1a1a1a] border border-[#d6d3cd] transition-colors hover:bg-[#f5f5f4] disabled:opacity-50 disabled:cursor-not-allowed',
 } as const;
 
 export const vtInput =
-  'w-full h-10 rounded-[7px] border border-[#d6d3cd] bg-white px-3 text-sm text-[#1a1a1a] placeholder:text-[#8a8580] outline-none transition-colors focus:border-[#1a1a1a] disabled:bg-[#f5f5f4]';
+  'w-full h-10 max-md:h-11 max-md:text-base rounded-[7px] border border-[#d6d3cd] bg-white px-3 text-sm text-[#1a1a1a] placeholder:text-[#8a8580] outline-none transition-colors focus:border-[#1a1a1a] disabled:bg-[#f5f5f4]';
 
 export const vtTextarea =
-  'w-full rounded-[7px] border border-[#d6d3cd] bg-white px-3 py-2.5 text-sm text-[#1a1a1a] placeholder:text-[#8a8580] outline-none transition-colors focus:border-[#1a1a1a] resize-none';
+  'w-full rounded-[7px] border border-[#d6d3cd] bg-white px-3 py-2.5 text-sm max-md:text-base text-[#1a1a1a] placeholder:text-[#8a8580] outline-none transition-colors focus:border-[#1a1a1a] resize-none';
 
 export const vtLabel = 'block text-xs font-semibold mb-1.5 text-[#1a1a1a]';
 
@@ -113,7 +116,7 @@ export function VtDialog({ open, onClose, eyebrow, title, subtitle, children, fo
 
   return (
     <div
-      className={`fixed inset-0 ${layer === 'over' ? 'z-[75]' : 'z-[60]'} flex items-start sm:items-center justify-center overflow-y-auto p-4 bg-black/45 ${votingFontRoot}`}
+      className={`fixed inset-0 ${layer === 'over' ? 'z-[75]' : 'z-[60]'} flex items-end md:items-center justify-center overflow-y-auto p-0 md:p-4 bg-black/45 ${votingFontRoot}`}
       onMouseDown={(e) => {
         if (e.target === e.currentTarget && !busy) onClose();
       }}
@@ -124,7 +127,7 @@ export function VtDialog({ open, onClose, eyebrow, title, subtitle, children, fo
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="bg-white w-full rounded-lg p-5 sm:p-7 flex flex-col gap-5 shadow-[0_12px_40px_rgba(0,0,0,.18)] outline-none my-auto"
+        className="bg-white w-full rounded-t-2xl md:rounded-lg p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:p-7 flex flex-col gap-4 md:gap-5 shadow-[0_12px_40px_rgba(0,0,0,.18)] outline-none md:my-auto max-md:max-h-[92dvh] max-md:overflow-y-auto"
         style={{ maxWidth: width, color: VT.ink }}
       >
         <div className="flex justify-between items-start gap-4">
@@ -134,7 +137,7 @@ export function VtDialog({ open, onClose, eyebrow, title, subtitle, children, fo
                 {eyebrow}
               </div>
             )}
-            <h2 id={titleId} className="m-0 text-xl font-semibold tracking-[-.015em]">
+            <h2 id={titleId} className="m-0 text-lg md:text-xl font-semibold tracking-[-.015em]">
               {title}
             </h2>
             {subtitle && (
@@ -147,7 +150,7 @@ export function VtDialog({ open, onClose, eyebrow, title, subtitle, children, fo
             type="button"
             onClick={onClose}
             disabled={busy}
-            className="flex hover:text-[#1a1a1a] transition-colors disabled:opacity-40"
+            className="flex items-center justify-center max-md:w-11 max-md:h-11 max-md:-mr-2 max-md:-mt-2 shrink-0 hover:text-[#1a1a1a] transition-colors disabled:opacity-40"
             style={{ color: VT.muted }}
             aria-label="Cerrar"
           >
@@ -156,7 +159,7 @@ export function VtDialog({ open, onClose, eyebrow, title, subtitle, children, fo
         </div>
         {children}
         {footer && (
-          <div className="flex flex-wrap justify-end gap-2 pt-4" style={{ borderTop: `1px solid ${VT.border}` }}>
+          <div className={vtDialogFooter} style={{ borderTop: `1px solid ${VT.border}` }}>
             {footer}
           </div>
         )}
@@ -227,7 +230,7 @@ export function VtMenu({ label, items, size = 30 }: { label: string; items: VtMe
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center justify-center rounded-md bg-white border border-[#d6d3cd] text-[#4b4a46] hover:bg-[#f5f5f4]"
+        className="inline-flex items-center justify-center rounded-md bg-white border border-[#d6d3cd] text-[#4b4a46] hover:bg-[#f5f5f4] max-md:w-11! max-md:h-11!"
         style={{ width: size, height: size }}
         aria-haspopup="menu"
         aria-expanded={open}
@@ -255,7 +258,7 @@ export function VtMenu({ label, items, size = 30 }: { label: string; items: VtMe
                   setOpen(false);
                   item.onSelect();
                 }}
-                className={`w-full text-left px-3 py-2 text-[13px] disabled:opacity-50 disabled:cursor-not-allowed ${item.danger ? 'hover:bg-[#fbe9e4]' : 'hover:bg-[#f5f5f4]'}`}
+                className={`w-full text-left px-3 py-2 max-md:py-3 max-md:text-sm text-[13px] disabled:opacity-50 disabled:cursor-not-allowed ${item.danger ? 'hover:bg-[#fbe9e4]' : 'hover:bg-[#f5f5f4]'}`}
                 style={{ color: item.danger ? VT.live : VT.ink }}
               >
                 {item.label}

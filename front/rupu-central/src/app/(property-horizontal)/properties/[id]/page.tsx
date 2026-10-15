@@ -141,7 +141,7 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
       {/* Navegación */}
 
       {/* Contenido del Dashboard */}
-      <div className="p-8">
+      <div className="p-3 md:p-8">
         <div className="max-w-7xl mx-auto">
           {/* Dashboard Stats */}
           {dashboardLoading && !dashboardStats ? (
@@ -157,7 +157,7 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
               </Button>
             </div>
           ) : dashboardStats ? (
-            <div className="mb-8">
+            <div className="mb-4 md:mb-8">
               <DashboardStats data={dashboardStats} />
             </div>
           ) : null}
@@ -165,20 +165,20 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
           {/* Información General */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden">
             {/* Header con gradiente */}
-            <div className="px-6 py-4" style={{ background: 'var(--color-primary)' }}>
-              <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                <span className="text-2xl">📋</span>
+            <div className="px-4 py-3 md:px-6 md:py-4" style={{ background: 'var(--color-primary)' }}>
+              <h3 className="text-lg md:text-xl font-bold text-white flex items-center gap-2">
+                <span className="text-xl md:text-2xl">📋</span>
                 Información General
               </h3>
             </div>
 
             {/* Contenido */}
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="p-3 md:p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
                 {/* Columna Izquierda */}
-                <div className="space-y-5">
+                <div className="space-y-3 md:space-y-5">
                   {/* Nombre */}
-                  <div className="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow">
+                  <div className="bg-white rounded-lg p-3 md:p-4 border border-gray-200 hover:shadow-md transition-shadow">
                     <div className="flex items-start gap-3">
                       <div className="bg-gray-100 rounded-lg p-2 flex-shrink-0">
                         <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -189,7 +189,7 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
                         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
                           Nombre
                         </p>
-                        <p className="text-lg font-bold text-gray-900 truncate">
+                        <p className="text-base md:text-lg font-bold text-gray-900 break-words md:truncate" title={property.name}>
                           {property.name}
                         </p>
                       </div>
@@ -197,7 +197,7 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
                   </div>
 
                   {/* Código */}
-                  <div className="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow">
+                  <div className="bg-white rounded-lg p-3 md:p-4 border border-gray-200 hover:shadow-md transition-shadow">
                     <div className="flex items-start gap-3">
                       <div className="bg-gray-100 rounded-lg p-2 flex-shrink-0">
                         <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -208,7 +208,7 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
                         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
                           Código
                         </p>
-                        <p className="text-lg font-bold text-gray-900 truncate font-mono">
+                        <p className="text-sm md:text-lg font-bold text-gray-900 break-all md:break-normal md:truncate font-mono" title={property.code}>
                           {property.code}
                         </p>
                       </div>
@@ -216,7 +216,7 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
                   </div>
 
                   {/* Dirección */}
-                  <div className="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow">
+                  <div className="bg-white rounded-lg p-3 md:p-4 border border-gray-200 hover:shadow-md transition-shadow">
                     <div className="flex items-start gap-3">
                       <div className="bg-gray-100 rounded-lg p-2 flex-shrink-0">
                         <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -228,7 +228,7 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
                         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
                           Dirección
                         </p>
-                        <p className="text-lg font-semibold text-gray-900">
+                        <p className="text-base md:text-lg font-semibold text-gray-900 break-words">
                           {property.address}
                         </p>
                       </div>
@@ -237,9 +237,9 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
                 </div>
 
                 {/* Columna Derecha */}
-                <div className="space-y-5">
+                <div className="space-y-3 md:space-y-5">
                   {/* Tipo de Negocio */}
-                  <div className="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow">
+                  <div className="bg-white rounded-lg p-3 md:p-4 border border-gray-200 hover:shadow-md transition-shadow">
                     <div className="flex items-start gap-3">
                       <div className="bg-gray-100 rounded-lg p-2 flex-shrink-0">
                         <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -258,7 +258,7 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
                   </div>
 
                   {/* Total de Unidades */}
-                  <div className="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow">
+                  <div className="bg-white rounded-lg p-3 md:p-4 border border-gray-200 hover:shadow-md transition-shadow">
                     <div className="flex items-start gap-3">
                       <div className="bg-gray-100 rounded-lg p-2 flex-shrink-0">
                         <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -281,7 +281,7 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
 
                   {/* Descripción */}
                   {property.description && (
-                    <div className="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow">
+                    <div className="bg-white rounded-lg p-3 md:p-4 border border-gray-200 hover:shadow-md transition-shadow">
                       <div className="flex items-start gap-3">
                         <div className="bg-gray-100 rounded-lg p-2 flex-shrink-0">
                           <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

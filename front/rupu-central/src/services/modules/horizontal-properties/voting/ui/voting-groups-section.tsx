@@ -23,6 +23,7 @@ import {
   VT,
   VtBadge,
   VtIcon,
+  VtMenu,
   VtNotice,
   formatDateRange,
   getGroupStatus,
@@ -91,17 +92,17 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
 
   return (
     <div className={`min-h-[calc(100vh-57px)] ${votingFontRoot}`} style={{ background: VT.paper, color: VT.ink }}>
-      <div className="px-4 sm:px-8 py-7 flex flex-col gap-5 w-full">
+      <div className="px-3 sm:px-8 py-4 md:py-7 flex flex-col gap-4 md:gap-5 w-full">
         <div className="flex flex-wrap justify-between items-end gap-3">
           <div>
             <div className={`${vtMono} text-[11px] font-medium tracking-[.06em] mb-1.5 uppercase`} style={{ color: VT.muted }}>
               Propiedad horizontal{propertyName ? ` · ${propertyName}` : ''}
             </div>
-            <h1 className="m-0 text-2xl font-semibold tracking-[-.02em]">Grupos de votación</h1>
+            <h1 className="m-0 text-xl md:text-2xl font-semibold tracking-[-.02em]">Grupos de votación</h1>
           </div>
           <button
             type="button"
-            className={vtBtn.primary}
+            className={`${vtBtn.primary} max-md:w-full`}
             onClick={() => {
               setEditing(null);
               setFormOpen(true);
@@ -231,6 +232,11 @@ function VotingGroupCard({ group, businessId, expanded, onToggle, onEdit, onDele
   }, [group, votings, attendance]);
 
   const closed = status.key === 'closed';
+  // Teléfono: editar y eliminar van en un menú para que QR y Asistencia queden anchos y táctiles.
+  const groupMenuItems = [
+    { label: 'Editar grupo', onSelect: onEdit },
+    { label: 'Eliminar grupo', danger: true, onSelect: onDelete },
+  ];
 
   return (
     <section
@@ -252,7 +258,7 @@ function VotingGroupCard({ group, businessId, expanded, onToggle, onEdit, onDele
           </div>
           {qr.error && <div className="text-xs" style={{ color: VT.live }}>{qr.error}</div>}
         </div>
-        <div className="flex gap-1.5 items-center flex-wrap">
+        <div className="flex gap-1.5 items-center flex-wrap max-md:flex-nowrap max-md:w-full max-md:[&>a]:flex-1 max-md:[&>a]:min-w-0 max-md:[&>button:not([aria-label])]:min-w-0 max-md:[&>button:not([aria-label])]:flex-1">
           {closed ? (
             <>
               {!expanded && (
@@ -265,12 +271,15 @@ function VotingGroupCard({ group, businessId, expanded, onToggle, onEdit, onDele
                   <Link href={`/properties/${businessId}/voting-groups/${group.id}/attendance`} className={`${vtBtn.small} h-8 text-[13px]`}>
                     Asistencia
                   </Link>
-                  <button type="button" className={vtBtn.icon} onClick={onEdit} aria-label={`Editar grupo ${group.name}`} title="Editar grupo">
+                  <button type="button" className={`${vtBtn.icon} max-md:hidden`} onClick={onEdit} aria-label={`Editar grupo ${group.name}`} title="Editar grupo">
                     <VtIcon name="edit" size={15} />
                   </button>
-                  <button type="button" className={vtBtn.icon} onClick={onDelete} aria-label={`Eliminar grupo ${group.name}`} title="Eliminar grupo">
+                  <button type="button" className={`${vtBtn.icon} max-md:hidden`} onClick={onDelete} aria-label={`Eliminar grupo ${group.name}`} title="Eliminar grupo">
                     <VtIcon name="trash" size={15} />
                   </button>
+                  <div className="md:hidden">
+                    <VtMenu label={`Más acciones del grupo ${group.name}`} items={groupMenuItems} />
+                  </div>
                 </>
               )}
             </>
@@ -283,18 +292,21 @@ function VotingGroupCard({ group, businessId, expanded, onToggle, onEdit, onDele
           <Link href={`/properties/${businessId}/voting-groups/${group.id}/attendance`} className={`${vtBtn.small} h-8 text-[13px]`}>
             Asistencia
           </Link>
-          <button type="button" className={vtBtn.icon} onClick={onEdit} aria-label={`Editar grupo ${group.name}`} title="Editar grupo">
+          <button type="button" className={`${vtBtn.icon} max-md:hidden`} onClick={onEdit} aria-label={`Editar grupo ${group.name}`} title="Editar grupo">
             <VtIcon name="edit" size={15} />
           </button>
-          <button type="button" className={vtBtn.icon} onClick={onDelete} aria-label={`Eliminar grupo ${group.name}`} title="Eliminar grupo">
+          <button type="button" className={`${vtBtn.icon} max-md:hidden`} onClick={onDelete} aria-label={`Eliminar grupo ${group.name}`} title="Eliminar grupo">
             <VtIcon name="trash" size={15} />
           </button>
+                  <div className="md:hidden">
+                    <VtMenu label={`Más acciones del grupo ${group.name}`} items={groupMenuItems} />
+                  </div>
           </>
           )}
           <button
             type="button"
             onClick={onToggle}
-            className="inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors hover:bg-[#e4e2dd]"
+            className="inline-flex items-center justify-center h-8 w-8 max-md:h-11 max-md:w-11 rounded-md transition-colors hover:bg-[#e4e2dd]"
             style={{ background: '#efedea', color: VT.ink }}
             aria-expanded={expanded}
             aria-label={expanded ? `Contraer grupo ${group.name}` : `Expandir grupo ${group.name}`}
@@ -305,7 +317,7 @@ function VotingGroupCard({ group, businessId, expanded, onToggle, onEdit, onDele
       </div>
 
       {expanded && (
-        <div className="px-4 sm:px-[22px] pt-4 pb-5" style={{ background: '#faf9f7' }}>
+        <div className="px-3 sm:px-[22px] pt-4 pb-5" style={{ background: '#faf9f7' }}>
           {votings === null ? (
             <div className="flex justify-center py-8">
               <Spinner size="sm" text="Cargando votaciones..." />

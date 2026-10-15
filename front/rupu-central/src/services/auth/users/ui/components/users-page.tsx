@@ -304,10 +304,11 @@ export function UsersPage() {
             <Button
               variant="primary"
               onClick={openCreateModal}
-              className="btn-primary"
+              className="btn-primary w-full md:w-auto min-h-[44px] md:min-h-0 justify-center"
               title="Nuevo Usuario"
             >
               <PlusIcon className="w-5 h-5" />
+              <span className="md:hidden">Nuevo usuario</span>
             </Button>
           ),
         }}

@@ -270,7 +270,7 @@ export function ReceivePackageModal({ isOpen, onClose, onSuccess, businessId }: 
           </label>
         </div>
 
-        <div className="flex justify-end gap-3 pt-4">
+        <div className="flex flex-col-reverse md:flex-row md:justify-end gap-3 pt-4 [&>button]:min-h-[44px] md:[&>button]:min-h-0">
           <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
             Cancelar
           </Button>

@@ -9,6 +9,7 @@
 import { useEffect, useState } from 'react';
 import { TokenStorage } from '@shared/config';
 import { generateBusinessTokenAction } from '@/services/auth/login/infrastructure/actions';
+import { retryUntil } from '@shared/utils/retry-until';
 import { getBusinessesAction } from '@/services/auth/businesses/infrastructure/actions/get-businesses.action';
 import { getBusinessTypesAction } from '@/services/auth/business-types/infrastructure/actions/get-business-types.action';
 
@@ -29,7 +30,10 @@ export function BusinessDropdown() {
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   useEffect(() => {
-    const loadBusinesses = async () => {
+    let cancelled = false;
+    // Devuelve true cuando la lista quedó cargada. Al montar puede que el token del negocio aún no
+    // esté guardado (select-type lo genera y recarga): sin reintento el selector quedaba vacío.
+    const loadBusinesses = async (): Promise<boolean> => {
       const userData = TokenStorage.getUser();
       const activeType = TokenStorage.getActiveBusinessType();
       const currentBusiness = TokenStorage.getActiveBusiness();
@@ -41,7 +45,8 @@ export function BusinessDropdown() {
       if (isSuper && activeType) {
         // Super admin: cargar TODOS los negocios del tipo desde API
         const token = TokenStorage.getBusinessToken() || TokenStorage.getSessionToken();
-        if (token) {
+        if (!token) return false;
+        {
           try {
             // Obtener business_type_id desde businesses_data o config
             const allLocal = TokenStorage.getBusinessesData() || [];
@@ -63,7 +68,8 @@ export function BusinessDropdown() {
                 business_type_id: businessTypeId,
               });
 
-              if (result.success && result.data) {
+              if (result.success && result.data && result.data.businesses.length > 0) {
+                if (cancelled) return true;
                 setBusinesses(result.data.businesses.map(b => ({
                   id: b.id,
                   name: b.name,
@@ -72,11 +78,13 @@ export function BusinessDropdown() {
                   tertiary_color: b.tertiary_color,
                   quaternary_color: b.quaternary_color,
                 })));
+                return true;
               }
             }
           } catch (err) {
             console.error('Error cargando negocios:', err);
           }
+          return false;
         }
       } else if (activeType) {
         // Usuario normal: filtrar desde localStorage
@@ -92,10 +100,15 @@ export function BusinessDropdown() {
         })));
       }
 
-      setLoadingList(false);
+      return true;
     };
 
-    loadBusinesses();
+    retryUntil(loadBusinesses, { attempts: 8, delayMs: 400, isCancelled: () => cancelled }).finally(() => {
+      if (!cancelled) setLoadingList(false);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {

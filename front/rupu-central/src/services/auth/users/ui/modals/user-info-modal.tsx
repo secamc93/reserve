@@ -136,7 +136,7 @@ export function UserInfoModal({ isOpen, onClose, onLogout, user }: UserInfoModal
         </div>
 
         {/* Información del usuario - 2 columnas simple */}
-        <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg">
           <div>
             <p className="text-xs font-bold text-gray-600 mb-1">Nombre</p>
             <p className="text-gray-900 font-semibold">{user.name}</p>

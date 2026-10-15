@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import { Modal, Spinner, Badge, Table, type TableColumn } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
 import { getVotesAction } from '../infrastructure/actions';
+import { useIsMobile, mobileColumn, MobileCard } from '@/services/mobile-ui';
 
 interface Vote {
   id: number;
@@ -80,6 +81,16 @@ export function VotesDetailModal({
     return option ? option.optionText : 'Desconocida';
   };
 
+  const isMobile = useIsMobile();
+  const formatVotedAt = (value: unknown) =>
+    new Date(String(value)).toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
   const columns: TableColumn<Vote>[] = [
     { key: 'id', label: 'ID', width: '80px', align: 'center' },
     {
@@ -98,14 +109,7 @@ export function VotesDetailModal({
       key: 'votedAt',
       label: 'Fecha de Voto',
       width: '180px',
-      render: (value) =>
-        new Date(String(value)).toLocaleDateString('es-ES', {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
+      render: (value) => formatVotedAt(value),
     },
     {
       key: 'notes',
@@ -120,16 +124,16 @@ export function VotesDetailModal({
     <Modal isOpen={isOpen} onClose={onClose} title={`Votos: ${votingTitle}`} size="full">
       <div className="flex flex-col h-full max-h-[85vh]">
         {/* Resumen - Fijo arriba */}
-        <div className="flex-shrink-0 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6 mb-4">
-          <h3 className="font-bold text-blue-900 mb-4 text-lg">📊 Resumen de Votación</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-blue-100">
+        <div className="flex-shrink-0 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-3 md:p-6 mb-4">
+          <h3 className="font-bold text-blue-900 mb-3 md:mb-4 text-base md:text-lg">📊 Resumen de Votación</h3>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-6">
+            <div className="bg-white rounded-lg p-3 md:p-4 shadow-sm border border-blue-100">
               <p className="text-sm text-blue-700 mb-1">Total de votos</p>
               <p className="text-3xl font-bold text-blue-900">{votes.length}</p>
             </div>
             {summary.map(({ option, count, percentage }) => (
-              <div key={option.id} className="bg-white rounded-lg p-4 shadow-sm border border-blue-100">
-                <p className="text-sm text-gray-600 mb-1">{option.optionText}</p>
+              <div key={option.id} className="bg-white rounded-lg p-3 md:p-4 shadow-sm border border-blue-100 min-w-0">
+                <p className="text-sm text-gray-600 mb-1 truncate" title={option.optionText}>{option.optionText}</p>
                 <div className="flex items-baseline gap-2">
                   <span className="text-2xl font-bold text-gray-900">{count}</span>
                   <Badge type="primary">{percentage}%</Badge>
@@ -153,7 +157,21 @@ export function VotesDetailModal({
           ) : (
             <div className="flex-1 overflow-auto bg-white rounded-lg border border-gray-200 shadow-sm">
               <Table
-                columns={columns}
+                columns={
+                  isMobile
+                    ? mobileColumn<Vote>('Votos', (v) => (
+                        <MobileCard
+                          title={`Residente #${v.propertyUnitId}`}
+                          badge={<Badge type="primary">{getOptionById(v.votingOptionId)}</Badge>}
+                          fields={[
+                            { label: 'Fecha', value: formatVotedAt(v.votedAt) },
+                            { label: 'ID', value: String(v.id) },
+                            ...(v.notes ? [{ label: 'Notas', value: v.notes, full: true }] : []),
+                          ]}
+                        />
+                      ))
+                    : columns
+                }
                 data={votes}
                 loading={loading}
                 emptyMessage="No hay votos registrados"
@@ -167,7 +185,7 @@ export function VotesDetailModal({
         <div className="flex-shrink-0 flex justify-end pt-4 mt-4 border-t">
           <button
             onClick={onClose}
-            className="px-6 py-2 bg-gray-600 text-white hover:bg-gray-700 rounded-lg transition-colors font-semibold"
+            className="px-6 py-2 max-md:w-full max-md:min-h-12 bg-gray-600 text-white hover:bg-gray-700 rounded-lg transition-colors font-semibold"
           >
             Cerrar
           </button>

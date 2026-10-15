@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Badge, Spinner, Alert, ConfirmModal, Button } from '@shared/ui';
+import { useIsMobile, mobileColumn, MobileCard, MobileActionButton } from '@/services/mobile-ui';
 import { Table, TableColumn, TableUrlPagination, TableFiltersProps, FilterOption, ActiveFilter } from '@shared/ui/table';
 import { usePaginationParams } from '@shared/ui/pagination';
 import { getResidentsAction, deleteResidentAction } from '../infrastructure/actions';
@@ -268,6 +269,7 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
   ];
 
   // Definir columnas de la tabla
+  const isMobile = useIsMobile();
   const columns: TableColumn<Resident>[] = [
     {
       key: 'name',
@@ -361,7 +363,7 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
     onAddFilter: handleAddFilter,
     onRemoveFilter: handleRemoveFilter,
     headerActions: (
-      <div className="flex items-center gap-2">
+      <div className="grid grid-cols-2 gap-2 w-full md:w-auto md:flex md:items-center [&>button]:min-h-[44px] md:[&>button]:min-h-0">
         <Button
           variant="outline"
           size="sm"
@@ -382,7 +384,7 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
           variant="primary"
           size="sm"
           onClick={() => setShowCreateModal(true)}
-          className="btn-primary btn-sm"
+          className="btn-primary btn-sm col-span-2 order-first md:order-none justify-center"
         >
           <PlusIcon className="w-4 h-4 mr-2" />
           Agregar Residente
@@ -392,10 +394,10 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Título */}
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">Residentes</h2>
+        <h2 className="text-xl md:text-2xl font-bold text-gray-900">Residentes</h2>
       </div>
 
       {/* Alertas */}
@@ -409,7 +411,22 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
 
       {/* Tabla con filtros y paginación integrados */}
       <Table
-        columns={columns}
+        columns={isMobile ? mobileColumn<Resident>('Residentes', (r) => (
+          <MobileCard
+            title={r.name}
+            subtitle={[r.propertyUnitNumber || 'Sin unidad', r.residentTypeName].filter(Boolean).join(' · ')}
+            badge={<Badge type={r.isActive ? 'success' : 'error'}>{r.isActive ? 'Activo' : 'Inactivo'}</Badge>}
+            fields={[
+              { label: 'Teléfono', value: r.phone || '-' },
+              { label: 'Principal', value: r.isMainResident ? 'Sí' : 'No' },
+              { label: 'Email', value: r.email || '-', full: true },
+            ]}
+            actions={<>
+              <MobileActionButton className="flex-1" onClick={() => handleEdit(r)}>✏️ Editar</MobileActionButton>
+              <MobileActionButton className="flex-1" variant="danger" onClick={() => handleDeleteClick(r.id)}>🗑️ Eliminar</MobileActionButton>
+            </>}
+          />
+        )) : columns}
         data={residents}
         loading={loading}
         emptyMessage="No hay residentes disponibles"

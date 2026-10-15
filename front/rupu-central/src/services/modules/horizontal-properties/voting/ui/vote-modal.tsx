@@ -25,6 +25,7 @@ import {
   vtInput,
   vtLabel,
   vtMono,
+  vtDialogFooter,
 } from './design';
 
 interface VoteModalOption {
@@ -222,7 +223,7 @@ export function VoteModal({
           </div>
           <button
             type="button"
-            className="text-xs underline underline-offset-2"
+            className="text-xs underline underline-offset-2 max-md:min-h-11 max-md:px-2 max-md:text-sm"
             style={{ color: VT.muted }}
             onClick={() => {
               setUnit(null);
@@ -269,7 +270,7 @@ export function VoteModal({
                   role="option"
                   aria-selected={false}
                   onClick={() => setUnit({ id: u.unit_id, number: u.unit_number, residentName: u.resident_name || '' })}
-                  className="w-full flex justify-between items-center px-3.5 py-2.5 text-left text-[13px] hover:bg-[#f5f5f4]"
+                  className="w-full flex justify-between items-center px-3.5 py-2.5 max-md:py-3.5 max-md:text-sm text-left text-[13px] hover:bg-[#f5f5f4]"
                   style={{ borderBottom: `1px solid #efedea` }}
                 >
                   <span className={`${vtMono} font-medium`}>{u.unit_number}</span>
@@ -328,7 +329,7 @@ export function VoteModal({
       )}
       {error && <VtNotice>{error}</VtNotice>}
 
-      <div className="flex justify-end gap-2 pt-4" style={{ borderTop: `1px solid ${VT.border}` }}>
+      <div className={vtDialogFooter} style={{ borderTop: `1px solid ${VT.border}` }}>
         <button type="button" className={vtBtn.ghost} onClick={onClose} disabled={saving}>
           Cancelar
         </button>

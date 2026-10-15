@@ -170,7 +170,7 @@ export function PublicVotingScreen({
 
   const backButton = (label: string) =>
     onBack ? (
-      <button type="button" onClick={onBack} className="inline-flex items-center gap-1.5 hover:text-[#1a1a1a]" aria-label="Volver a la lista de puntos">
+      <button type="button" onClick={onBack} className="inline-flex items-center gap-1.5 hover:text-[#1a1a1a] max-md:min-h-11 max-md:pr-3" aria-label="Volver a la lista de puntos">
         <VtIcon name="back" size={12} />
         {label}
       </button>
@@ -269,14 +269,14 @@ export function PublicVotingScreen({
               <button
                 type="button"
                 onClick={onSuccess}
-                className="h-10 px-4 rounded-lg bg-white text-[13px] font-medium"
+                className="h-10 max-md:h-11 px-4 rounded-lg bg-white text-[13px] font-medium"
                 style={{ border: `1px solid ${VT.borderStrong}`, color: VT.inkSoft }}
               >
                 Ver detalle por unidad
               </button>
             )}
             {isGroupToken && onBack && !isOpen && (
-              <button type="button" onClick={onBack} className="h-10 px-4 rounded-lg text-white text-[13px] font-semibold" style={{ background: VT.ink }}>
+              <button type="button" onClick={onBack} className="h-10 max-md:h-11 px-4 rounded-lg text-white text-[13px] font-semibold" style={{ background: VT.ink }}>
                 Volver a los puntos
               </button>
             )}

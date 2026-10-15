@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { getActionsAction, deleteActionAction } from '../../infrastructure/actions';
 import { Table, TableColumn, Button, Input, ConfirmModal, Badge } from '@shared/ui';
 import { PencilIcon, TrashIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { useIsMobile, MobileCard, MobileActionButton, mobileColumn } from '@/services/mobile-ui';
 
 interface ActionsTableProps {
     token: string;
@@ -143,6 +144,28 @@ export function ActionsTable({ token, onEdit, onCreate }: ActionsTableProps) {
         },
     ];
 
+    // Teléfono: cada acción es una tarjeta.
+    const isMobile = useIsMobile();
+    const mobileColumns = mobileColumn<ActionItem>('Acciones', (action) => (
+        <div className="[contain:inline-size]">
+          <MobileCard
+              title={action.name}
+              subtitle={action.description}
+              fields={[{ label: 'Creado', value: formatDate(action.created_at) }]}
+              actions={
+                  <>
+                      <MobileActionButton className="flex-1" onClick={() => onEdit?.(action)}>
+                          <PencilIcon className="w-5 h-5" /> Editar
+                      </MobileActionButton>
+                      <MobileActionButton variant="danger" title="Eliminar acción" disabled={isDeleting} onClick={() => handleDeleteClick(action)}>
+                          <TrashIcon className="w-5 h-5" />
+                      </MobileActionButton>
+                  </>
+              }
+          />
+        </div>
+    ));
+
     if (error) {
         return (
             <div className="alert alert-error">
@@ -162,16 +185,17 @@ export function ActionsTable({ token, onEdit, onCreate }: ActionsTableProps) {
             {/* Filtros */}
             <div className="card w-full">
                 <div className="card-body">
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-lg font-semibold">Acciones del Sistema</h3>
+                    <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 mb-4">
+                        <h3 className="text-base md:text-lg font-semibold">Acciones del Sistema</h3>
                         {onCreate && (
-                            <Button onClick={onCreate} className="btn-primary" title="Nueva Acción">
+                            <Button onClick={onCreate} className="btn-primary w-full md:w-auto min-h-[44px] md:min-h-0 justify-center" title="Nueva Acción">
                                 <PlusIcon className="w-5 h-5" />
+                                <span className="md:hidden">Nueva acción</span>
                             </Button>
                         )}
                     </div>
-                    <div className="flex gap-4">
-                        <div className="flex-1">
+                    <div className="flex gap-2 md:gap-4">
+                        <div className="flex-1 min-w-0">
                             <Input
                                 placeholder="Buscar por nombre..."
                                 value={searchTerm}
@@ -190,7 +214,7 @@ export function ActionsTable({ token, onEdit, onCreate }: ActionsTableProps) {
 
             {/* Tabla */}
             <Table
-                columns={columns}
+                columns={isMobile ? mobileColumns : columns}
                 data={actions}
                 loading={loading}
                 keyExtractor={(action) => action.id}

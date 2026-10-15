@@ -43,6 +43,7 @@ import {
   type OptionDraft,
   type VotingDraft,
   type VotingDraftErrors,
+  vtDialogFooter,
 } from './design';
 
 interface VotingFormModalProps {
@@ -253,7 +254,7 @@ export function VotingFormModal({ isOpen, onClose, onSuccess, businessId, groupI
             <div
               role="radiogroup"
               aria-labelledby="vf-type-label"
-              className="h-10 rounded-[7px] grid grid-cols-3 gap-[3px] p-[3px] text-[13px]"
+              className="h-10 max-md:h-11 rounded-[7px] grid grid-cols-3 gap-[3px] p-[3px] text-[13px] max-md:text-sm"
               style={{ border: `1px solid ${VT.borderStrong}` }}
             >
               {VOTING_TYPE_OPTIONS.map((type) => {
@@ -297,7 +298,7 @@ export function VotingFormModal({ isOpen, onClose, onSuccess, businessId, groupI
         {errors.requiredPercentage && <FieldError>{errors.requiredPercentage}</FieldError>}
 
         <div className="flex flex-wrap gap-x-[18px] gap-y-2 text-[13px]">
-          <label className="flex items-center gap-2 cursor-pointer">
+          <label className="flex items-center gap-2 cursor-pointer max-md:min-h-11">
             <input
               type="checkbox"
               className="w-4 h-4 accent-[#1a1a1a]"
@@ -307,7 +308,7 @@ export function VotingFormModal({ isOpen, onClose, onSuccess, businessId, groupI
             />
             Permitir abstención
           </label>
-          <label className="flex items-center gap-2 cursor-pointer">
+          <label className="flex items-center gap-2 cursor-pointer max-md:min-h-11">
             <input
               type="checkbox"
               className="w-4 h-4 accent-[#1a1a1a]"
@@ -338,7 +339,7 @@ export function VotingFormModal({ isOpen, onClose, onSuccess, businessId, groupI
             const existing = option.id != null;
             return (
               <div key={option.key} style={{ borderBottom: `1px solid #efedea` }}>
-                <div className="grid grid-cols-[28px_1fr_80px_auto] gap-2.5 items-center px-3.5 py-2 text-[13px]">
+                <div className="grid grid-cols-[24px_minmax(0,1fr)_64px_auto] md:grid-cols-[28px_1fr_80px_auto] gap-2 md:gap-2.5 items-center px-3 md:px-3.5 py-2 text-[13px]">
                   {existing ? (
                     <span className="w-5 h-5 rounded-[5px]" style={{ background: option.color }} aria-hidden="true" />
                   ) : (
@@ -355,7 +356,7 @@ export function VotingFormModal({ isOpen, onClose, onSuccess, businessId, groupI
                     <span className="truncate" style={{ opacity: option.isActive === false ? 0.5 : 1 }}>{option.text}</span>
                   ) : (
                     <input
-                      className="h-8 min-w-0 rounded-md px-2 text-[13px] outline-none border border-transparent focus:border-[#d6d3cd] bg-transparent"
+                      className="h-8 max-md:h-10 max-md:text-base min-w-0 rounded-md px-2 text-[13px] outline-none border border-transparent focus:border-[#d6d3cd] bg-transparent"
                       value={option.text}
                       onChange={(e) => {
                         const text = e.target.value;
@@ -372,7 +373,7 @@ export function VotingFormModal({ isOpen, onClose, onSuccess, businessId, groupI
                     <span className={`${vtMono} text-xs font-medium`} style={{ color: VT.muted }}>{option.code}</span>
                   ) : (
                     <input
-                      className={`${vtMono} h-8 min-w-0 rounded-md px-2 text-xs font-medium uppercase outline-none border border-transparent focus:border-[#d6d3cd] bg-transparent`}
+                      className={`${vtMono} h-8 max-md:h-10 max-md:text-base min-w-0 rounded-md px-2 text-xs font-medium uppercase outline-none border border-transparent focus:border-[#d6d3cd] bg-transparent`}
                       style={{ color: VT.muted }}
                       value={option.code}
                       onChange={(e) => patchOption(option.key, { code: e.target.value.toUpperCase() })}
@@ -394,7 +395,7 @@ export function VotingFormModal({ isOpen, onClose, onSuccess, businessId, groupI
                     <button
                       type="button"
                       onClick={() => removeOption(option.key)}
-                      className="flex w-7 h-7 items-center justify-center rounded hover:bg-[#f5f5f4]"
+                      className="flex w-7 h-7 max-md:w-10 max-md:h-10 items-center justify-center rounded hover:bg-[#f5f5f4]"
                       style={{ color: '#b0ada8' }}
                       aria-label={`Quitar opción ${name}`}
                       disabled={saving}
@@ -411,7 +412,7 @@ export function VotingFormModal({ isOpen, onClose, onSuccess, businessId, groupI
             type="button"
             onClick={addOption}
             disabled={saving}
-            className="w-full grid grid-cols-[28px_1fr] gap-2.5 items-center px-3.5 py-2.5 text-[13px] text-left hover:bg-[#faf9f7]"
+            className="w-full grid grid-cols-[28px_1fr] gap-2.5 items-center px-3.5 py-2.5 max-md:py-3.5 text-[13px] text-left hover:bg-[#faf9f7]"
             style={{ color: VT.muted }}
           >
             <span className="w-5 h-5 rounded-[5px]" style={{ border: `1px dashed ${VT.pendingBorder}` }} aria-hidden="true" />
@@ -427,7 +428,7 @@ export function VotingFormModal({ isOpen, onClose, onSuccess, businessId, groupI
 
         {submitError && <VtNotice>{submitError}</VtNotice>}
 
-        <div className="flex justify-end gap-2 pt-4 mt-1" style={{ borderTop: `1px solid ${VT.border}` }}>
+        <div className={`${vtDialogFooter} mt-1`} style={{ borderTop: `1px solid ${VT.border}` }}>
           <button type="button" className={vtBtn.ghost} onClick={onClose} disabled={saving}>
             Cancelar
           </button>

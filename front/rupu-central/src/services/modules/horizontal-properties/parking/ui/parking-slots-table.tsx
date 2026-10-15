@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { getParkingSlotsAction } from '../infrastructure/actions/get-parking-slots.action';
 import { ParkingSlotListDTO } from '../domain';
 import { Table } from '@shared/ui/table';
+import { useIsMobile, MobileCard, mobileColumn } from '@/services/mobile-ui';
 import { usePaginationParams } from '@shared/ui/pagination';
 import { Button } from '@shared/ui/button';
 import { Alert } from '@shared/ui/alert';
@@ -20,6 +21,7 @@ interface ParkingSlotsTableProps {
 }
 
 export function ParkingSlotsTable({ businessId, parkingZoneId }: ParkingSlotsTableProps) {
+  const isMobile = useIsMobile();
   const [slots, setSlots] = useState<ParkingSlotListDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -152,10 +154,10 @@ export function ParkingSlotsTable({ businessId, parkingZoneId }: ParkingSlotsTab
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Espacios de Parqueo</h2>
-        <Button onClick={() => setShowCreateModal(true)}>
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center mb-4">
+        <h2 className="text-lg md:text-xl font-semibold">Espacios de Parqueo</h2>
+        <Button onClick={() => setShowCreateModal(true)} className="w-full md:w-auto min-h-[44px] md:min-h-0 justify-center">
           <PlusIcon className="w-4 h-4 mr-2" />
           Nuevo Espacio
         </Button>
@@ -169,7 +171,18 @@ export function ParkingSlotsTable({ businessId, parkingZoneId }: ParkingSlotsTab
 
       <Table
         data={slots}
-        columns={columns}
+        columns={isMobile ? mobileColumn<ParkingSlotListDTO>('Espacios', (slot) => (
+            <MobileCard
+              title={slot.slotNumber}
+              subtitle={slot.parkingZoneName}
+              badge={slot.isOccupied ? <Badge color="danger">Ocupado</Badge> : slot.isAssigned ? <Badge color="warning">Asignado</Badge> : slot.isAvailable ? <Badge color="success">Disponible</Badge> : <Badge color="info">No disponible</Badge>}
+              fields={[
+                { label: 'Tipo', value: slot.parkingTypeName },
+                { label: 'Estado', value: slot.isActive ? 'Activo' : 'Inactivo' },
+                { label: 'Características', value: [slot.isCovered && 'Cubierto', slot.hasCharger && 'Cargador'].filter(Boolean).join(' · ') || '-', full: true },
+              ]}
+            />
+          )) : columns}
         loading={loading}
         pagination={{ total, totalPages }}
         emptyMessage="No hay espacios de parqueo registrados"

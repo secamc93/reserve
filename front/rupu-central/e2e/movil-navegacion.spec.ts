@@ -77,7 +77,7 @@ test.describe("navegación en teléfono", () => {
     // La barra lateral de escritorio no se ve (su botón "Cambiar Modulo" queda oculto).
     await expect(page.locator("aside")).toBeHidden();
     // Barra superior compacta con el nombre de la propiedad.
-    await expect(page.getByRole("banner").getByText(PROPERTY)).toBeVisible();
+    await expect(page.getByRole("banner").getByText(PROPERTY, { exact: true }).first()).toBeVisible();
     // 2 accesos a cada lado del logo.
     await expect(bottomBar(page).getByRole("link")).toHaveText(["Inicio", "Residentes", "Paquetes", "Votaciones"]);
 
@@ -108,7 +108,7 @@ test.describe("navegación en teléfono", () => {
     await logoButton(page).click();
     await expect(modulesMenu(page)).toBeVisible();
     await expect(logoButton(page)).toHaveAttribute("aria-expanded", "true");
-    await expect(modulesMenu(page).getByText(PROPERTY)).toBeVisible();
+    await expect(modulesMenu(page).getByText(PROPERTY, { exact: true }).first()).toBeVisible();
     for (const name of ["Cambiar módulo", "Cerrar sesión"]) {
       await expect(modulesMenu(page).getByRole("button", { name })).toBeVisible();
     }
